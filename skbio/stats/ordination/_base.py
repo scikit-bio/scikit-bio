@@ -13,8 +13,6 @@ from functools import partial
 
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-from IPython.core.pylabtools import print_figure
-from IPython.core.display import Image, SVG
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
@@ -377,15 +375,18 @@ class OrdinationResults(SkbioObject):
     @property
     def png(self):
         """Display basic 3-D scatterplot in IPython Notebook as PNG."""
+        from IPython.core.display import Image
         return Image(self._repr_png_(), embed=True)
 
     @property
     def svg(self):
         """Display basic 3-D scatterplot in IPython Notebook as SVG."""
+        from IPython.core.display import SVG
         return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
         import matplotlib.pyplot as plt
+        from IPython.core.pylabtools import print_figure
 
         fig = self.plot()
         data = print_figure(fig, format)
