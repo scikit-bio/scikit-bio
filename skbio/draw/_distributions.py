@@ -16,7 +16,6 @@ import warnings
 import numpy as np
 
 
-
 def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
              x_label=None, y_label=None, x_tick_labels_orientation='vertical',
              y_min=None, y_max=None, whisker_length=1.5, box_width=0.5,
