@@ -7,18 +7,17 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import unittest
 
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-from nose.tools import assert_almost_equal
-from unittest import TestCase
+import numpy.testing as npt
 
 from skbio.stats.distance import mantel
 from skbio.stats.evolve import hommola_cospeciation
 from skbio.stats.evolve._hommola import _get_dist, _gen_lists
 
 
-class HommolaCospeciationTests(TestCase):
+class HommolaCospeciationTests(unittest.TestCase):
     def setUp(self):
         # Test matrices, as presented in original paper by Hommola et al.
         self.hdist = np.array([[0, 3, 8, 8, 9], [3, 0, 7, 7, 8], [
@@ -65,10 +64,10 @@ class HommolaCospeciationTests(TestCase):
         exp_perm_stats = np.array([-0.14928122, 0.26299538, -0.21125858,
                                    0.24143838, 0.61557855, -0.24258293,
                                    0.09885203, 0.02858, 0.42742399])
-        assert_almost_equal(obs_p, exp_p)
-        assert_almost_equal(obs_r, exp_r)
+        self.assertAlmostEqual(obs_p, exp_p)
+        self.assertAlmostEqual(obs_r, exp_r)
 
-        assert_allclose(obs_perm_stats, exp_perm_stats)
+        npt.assert_allclose(obs_perm_stats, exp_perm_stats)
 
     def test_hommola_cospeciation_asymmetric(self):
         np.random.seed(1)
@@ -82,10 +81,10 @@ class HommolaCospeciationTests(TestCase):
                                    0.183711730709,  0.056057631956,
                                    0.945732487487,  0.056057631956,
                                    -0.020412414523])
-        assert_almost_equal(obs_p, exp_p)
-        assert_almost_equal(obs_r, exp_r)
+        self.assertAlmostEqual(obs_p, exp_p)
+        self.assertAlmostEqual(obs_r, exp_r)
 
-        assert_allclose(obs_perm_stats, exp_perm_stats)
+        npt.assert_allclose(obs_perm_stats, exp_perm_stats)
 
     def test_hommola_cospeciation_no_sig(self):
         np.random.seed(1)
@@ -97,33 +96,23 @@ class HommolaCospeciationTests(TestCase):
         exp_perm_stats = np.array([-0.22216543, -0.14836061, -0.04434843,
                                    0.1478281, -0.29105645, 0.56395839,
                                    0.47304992, 0.79125657, 0.06804138])
-        assert_almost_equal(obs_p, exp_p)
-        assert_almost_equal(obs_r, exp_r)
-        assert_allclose(obs_perm_stats, exp_perm_stats)
+        self.assertAlmostEqual(obs_p, exp_p)
+        self.assertAlmostEqual(obs_r, exp_r)
+        npt.assert_allclose(obs_perm_stats, exp_perm_stats)
 
     def test_hommola_vs_mantel(self):
-        z = 1
+        # we don't compare p-values because the two methods use different
+        # permutation strategies
+        r_mantel, p_mantel, _ = mantel(
+            self.hdist, self.pdist, method='pearson', permutations=0,
+            alternative='greater'
+        )
+        r_hommola, p_hommola, _ = hommola_cospeciation(
+            self.hdist, self.pdist, self.interact_1to1, permutations=0
+        )
 
-        obs_r_mantel = np.zeros(z)
-        obs_r_hommola = np.zeros(z)
-        obs_p_mantel = np.zeros(z)
-        obs_p_hommola = np.zeros(z)
-
-        for i in range(z):
-            np.random.seed(i)
-            obs_r_mantel[i], obs_p_mantel[i], n = mantel(
-                self.hdist, self.pdist, method='pearson', permutations=999,
-                alternative='greater'
-            )
-            np.random.seed(i)
-            obs_r_hommola[i], obs_p_hommola[i], s = hommola_cospeciation(
-                self.hdist, self.pdist, self.interact_1to1, permutations=999
-            )
-
-        assert_allclose(obs_r_mantel, obs_r_hommola)
-
-        assert_almost_equal(obs_p_mantel.mean(), obs_p_hommola.mean(),
-                            places=2)
+        self.assertAlmostEqual(r_hommola, r_mantel)
+        npt.assert_equal(p_hommola, p_mantel)
 
     def test_zero_permutations(self):
         obs_r, obs_p, obs_perm_stats = hommola_cospeciation(
@@ -133,9 +122,9 @@ class HommolaCospeciationTests(TestCase):
         exp_r = 0.83170965463247915
         exp_perm_stats = np.array([])
 
-        assert_equal(obs_p, exp_p)
-        assert_almost_equal(obs_r, exp_r)
-        assert_allclose(obs_perm_stats, exp_perm_stats)
+        npt.assert_equal(obs_p, exp_p)
+        self.assertAlmostEqual(obs_r, exp_r)
+        npt.assert_equal(obs_perm_stats, exp_perm_stats)
 
     def test_get_dist(self):
         labels = np.array([0, 1, 1, 2, 3])
@@ -147,7 +136,7 @@ class HommolaCospeciationTests(TestCase):
         expected_vec = np.array([7, 7, 5, 6, 0, 4, 3, 4, 3, 2])
         actual_vec = _get_dist(k_labels, t_labels, dists, index)
 
-        assert_allclose(actual_vec, expected_vec)
+        npt.assert_allclose(actual_vec, expected_vec)
 
     def test_gen_lists(self):
         exp_pars_k_labels = np.array([0, 0, 0, 0, 0, 1, 1, 1,
@@ -164,10 +153,10 @@ class HommolaCospeciationTests(TestCase):
         obs_pars_k_labels, obs_pars_t_labels = _gen_lists(pars)
         obs_hosts_k_labels, obs_hosts_t_labels = _gen_lists(hosts)
 
-        assert_allclose(exp_pars_k_labels, obs_pars_k_labels)
-        assert_allclose(exp_pars_t_labels, obs_pars_t_labels)
-        assert_allclose(exp_host_k_labels, obs_hosts_k_labels)
-        assert_allclose(exp_host_t_labels, obs_hosts_t_labels)
+        npt.assert_allclose(exp_pars_k_labels, obs_pars_k_labels)
+        npt.assert_allclose(exp_pars_t_labels, obs_pars_t_labels)
+        npt.assert_allclose(exp_host_k_labels, obs_hosts_k_labels)
+        npt.assert_allclose(exp_host_t_labels, obs_hosts_t_labels)
 
     def test_dm_too_small(self):
         with self.assertRaises(ValueError):
@@ -196,5 +185,4 @@ class HommolaCospeciationTests(TestCase):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule()
+    unittest.main()

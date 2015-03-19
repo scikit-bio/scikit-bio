@@ -16,7 +16,7 @@ from skbio import DistanceMatrix
 
 
 def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
-    """Performs a cospeciation test
+    """Perform Hommola et al (2009) host/parasite cospeciation test.
 
     This test for host/parasite cospeciation is as described in [1]_. This test
     is a modification of a Mantel test, expanded to accept the case where
@@ -45,44 +45,48 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     'cospeciation,' which is that each incidence of host speciation is
     recapitulated in an incidence of symbiont speciation (strict
     co-cladogenesis). Although there may be many factors that could contribute
-    to non-independence of host and symboint phylogenies, this loss of
+    to non-independence of host and symbiont phylogenies, this loss of
     explanatory specificity comes with increased robustness to phylogenetic
     uncertainty. Thus, this test may be especially useful for cases where host
     and/or symbiont phylogenies are poorly resolved, or when simple correlation
-    between host and symbiont evolution is of more interest than strict co-
-    cladogenesis.
+    between host and symbiont evolution is of more interest than strict
+    co-cladogenesis.
 
     This test requires pairwise distance matrices for hosts and symbionts, as
     well as an interaction matrix specifying links between hosts (in columns)
     and symbionts (in rows). This interaction matrix should have the same
     number of columns as the host distance matrix, and the same number of rows
     as the symbiont distance matrix. Interactions between hosts and symbionts
-    should be indicated by values of 1 or True, with non-interactions indicated
-    by values of 0 or False.
+    should be indicated by values of ``1`` or ``True``, with non-interactions
+    indicated by values of ``0`` or ``False``.
 
     Parameters
     ----------
-    host_dist : array_like or DistanceMatrix
-        Symmetric matrix of m x m pairwise distances between hosts
-    par_dist : array_like or DistanceMatrix
-        Symmetric matrix of n x n pairwise distances between parasites
+    host_dist : 2-D array_like or DistanceMatrix
+        Symmetric matrix of m x m pairwise distances between hosts.
+    par_dist : 2-D array_like or DistanceMatrix
+        Symmetric matrix of n x n pairwise distances between parasites.
     interaction : 2-D array_like, bool
         n x m binary matrix of parasite x host interactions. Order of hosts
-        (columns) should be identical to order of hosts in host_dist, as should
-        order of parasites (rows)
+        (columns) should be identical to order of hosts in `host_dist`, as
+        should order of parasites (rows) be identical to order of parasites in
+        `par_dist`.
     permutations : int, optional
-        Number of permutations to run. Default 999. Must be greater than or
+        Number of permutations used to compute p-value. Must be greater than or
         equal to zero. If zero, statistical significance calculations will be
-        skipped and the p-value will be ``np.nan``
+        skipped and the p-value will be ``np.nan``.
 
     Returns
     -------
-    r : float
-        Correlation coefficient of host : parasite association
-    p_val : float
-        Significance of host : parasite association
-    perm_stats : list of floats
-        List of r values observed using permuted host : parasite interactions
+    corr_coeff : float
+        Pearson correlation coefficient of host : parasite association.
+    p_value : float
+        Significance of host : parasite association computed using
+        `permutations` and a one-sided (greater) alternative hypothesis.
+    perm_stats : 1-D numpy.ndarray, float
+        Correlation coefficients observed using permuted host : parasite
+        interactions. Length will be equal to the number of permutations used
+        to compute p-value (see `permutations` parameter above).
 
     See Also
     --------
@@ -91,10 +95,9 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     Notes
     -----
-    It is assumed that the ordering of parasites in par_dist and hosts in
-    host_dist and are identical to their ordering in the rows and columns,
-    respectively, of the interaction matrix. No matching of labels is
-    performed.
+    It is assumed that the ordering of parasites in `par_dist` and hosts in
+    `host_dist` are identical to their ordering in the rows and columns,
+    respectively, of the interaction matrix.
 
     This code is loosely based on the original R code from [1]_.
 
@@ -106,38 +109,38 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
 
     Examples
     --------
-    >>> import numpy as np
     >>> from skbio.stats.evolve import hommola_cospeciation
 
-    Import arrays for host distances, parasite distances, and the interactions.
-    (Test data from example in [1]_.)
+    Create arrays for host distances, parasite distances, and their
+    interactions (data taken from example in [1]_):
 
-    >>> hdist = np.array([[0,3,8,8,9],[3,0,7,7,8],[8,7,0,6,7],[8,7,6,0,3],
-    ...                  [9,8,7,3,0]])
-    >>> pdist = np.array([[0,5,8,8,8],[5,0,7,7,7],[8,7,0,4,4],[8,7,4,0,2],
-    ...                  [8,7,4,2,0]])
-    >>> interaction = np.array([[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],
-    ...                        [0,0,0,1,0],[0,0,0,1,1]])
+    >>> hdist = [[0,3,8,8,9], [3,0,7,7,8], [8,7,0,6,7], [8,7,6,0,3],
+    ...          [9,8,7,3,0]]
+    >>> pdist = [[0,5,8,8,8], [5,0,7,7,7], [8,7,0,4,4], [8,7,4,0,2],
+    ...          [8,7,4,2,0]]
+    >>> interaction = [[1,0,0,0,0], [0,1,0,0,0], [0,0,1,0,0], [0,0,0,1,0],
+    ...                [0,0,0,1,1]]
 
-    Run the permutation test. Note that the correlation coefficient for the
-    observed values counts against the final reported p value.
+    Run the cospeciation test with 99 permutations. Note that the correlation
+    coefficient for the observed values counts against the final reported
+    p-value:
 
-    >>> r_val, p_val, perm_stats = hommola_cospeciation(hdist, pdist,
-    ...                                                 interaction, 99)
-    >>> r_val
-    0.83170965463247937
+    >>> corr_coeff, p_value, perm_stats = hommola_cospeciation(
+    ...     hdist, pdist, interaction, permutations=99)
+    >>> corr_coeff
+    0.83170965463247903
 
     In this case, the host distances have a fairly strong positive correlation
     with the symbiont distances. However, this may also reflect structure
     inherent in the phylogeny, and is not itself indicative of significance.
 
-    >>> p_val <= 0.05
+    >>> p_value <= 0.05
     True
 
     After permuting host : parasite interactions, we find that the observed
     correlation is indeed greater than we would expect by chance.
+
     """
-    # Regularize input objects
     host_dist = DistanceMatrix(host_dist)
     par_dist = DistanceMatrix(par_dist)
     interaction = np.asarray(interaction, dtype=bool)
@@ -145,22 +148,22 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     num_hosts = host_dist.shape[0]
     num_pars = par_dist.shape[0]
 
-    # Sanity check inputs
     if num_hosts < 3 or num_pars < 3:
-        raise ValueError("Distance matrices must be minimum of 3x3 in size).")
+        raise ValueError("Distance matrices must be a minimum of 3x3 in size.")
     if num_hosts != interaction.shape[1]:
         raise ValueError("Number of interaction matrix columns must match "
-                         "number of hosts in host_dist")
+                         "number of hosts in `host_dist`.")
     if num_pars != interaction.shape[0]:
         raise ValueError("Number of interaction matrix rows must match "
-                         "number of parasites in par_dist")
+                         "number of parasites in `par_dist`.")
     if permutations < 0:
         raise ValueError("Number of permutations must be greater than or "
                          "equal to zero.")
     if interaction.sum() < 3:
-        raise ValueError("Must have at least 3 host-parasite interactions")
+        raise ValueError("Must have at least 3 host-parasite interactions in "
+                         "`interaction`.")
 
-    # Shortcut to eliminate nested for loops specifying pairwise interaction
+    # shortcut to eliminate nested for-loops specifying pairwise interaction
     # partners as randomizeable indices
     pars, hosts = np.nonzero(interaction)
     pars_k_labels, pars_t_labels = _gen_lists(pars)
@@ -172,53 +175,41 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     y = _get_dist(pars_k_labels, pars_t_labels, par_dist.data,
                   np.arange(num_pars))
 
-    # calculate sorting index to ensure consistency from pearsonr
-    sort = (x + y).argsort()
+    # calculate the observed correlation coefficient for these hosts/symbionts
+    corr_coeff = pearsonr(x, y)[0]
 
-    # calculate the observed correlation coefficient for this host/symbionts
-    r = pearsonr(x[sort], y[sort])[0]
-
-    # now do permutatitons. Initialize index lists of the appropriate size.
+    # now do permutatitons. initialize index lists of the appropriate size
     mp = np.arange(num_pars)
     mh = np.arange(num_hosts)
 
     # initialize list of shuffled correlation vals
     perm_stats = np.empty(permutations)
 
-    if permutations == 0 or np.isnan(r):
-        p_val = np.nan
-        perm_stats[:] = np.nan
+    if permutations == 0 or np.isnan(corr_coeff):
+        p_value = np.nan
+        perm_stats.fill(np.nan)
     else:
         for i in range(permutations):
-            # Generate a shuffled list of indexes for each permutation. This
+            # generate a shuffled list of indexes for each permutation. this
             # effectively randomizes which host is associated with which
-            # symbiont, but maintains the distribution of genetic distances.
+            # symbiont, but maintains the distribution of genetic distances
             np.random.shuffle(mp)
             np.random.shuffle(mh)
 
-            # Get pairwise distances in shuffled order
+            # get pairwise distances in shuffled order
             y_p = _get_dist(pars_k_labels, pars_t_labels, par_dist.data, mp)
             x_p = _get_dist(hosts_k_labels, hosts_t_labels, host_dist.data, mh)
 
-            # calculate sorting index to ensure consistency from pearsonr
-            sort = (x_p + y_p).argsort()
+            # calculate shuffled correlation coefficient
+            perm_stats[i] = pearsonr(x_p, y_p)[0]
 
-            # calculate shuffled correlation.
-            # If greater than observed value, iterate counter below.
-            r_p = pearsonr(x_p[sort], y_p[sort])[0]
-            perm_stats[i] = r_p
+        p_value = ((perm_stats >= corr_coeff).sum() + 1) / (permutations + 1)
 
-        below = (perm_stats >= r).sum()
-
-        p_val = (below + 1) / (permutations + 1)
-
-    return r, p_val, perm_stats
+    return corr_coeff, p_value, perm_stats
 
 
 def _get_dist(k_labels, t_labels, dists, index):
-    """Function for picking a subset of pairwise distances from a distance
-    matrix according to a set of (randomizable) index labels.
-    Derived from [1]_.
+    """Subset a distance matrix using a set of (randomizable) index labels.
 
     Parameters
     ----------
@@ -234,25 +225,21 @@ def _get_dist(k_labels, t_labels, dists, index):
     Returns
     -------
     vec : list of float
-        Returns list of distances associated with host:parasite edges, per
-        description in [1]_.
+        List of distances associated with host:parasite edges.
 
-    References
-    ----------
-    .. [1] Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of
-       Host-Parasite Cospeciation. Molecular Biology and Evolution, 26,
-       1457-1468.
     """
     return dists[index[k_labels], index[t_labels]]
 
 
 def _gen_lists(labels):
-    """Shortcut function for generating matched lists of row and col index
-    labels for the set of pairwise comparisons specified by the list of those
-    indices recovered using np.nonzero(interaction).
+    """Generate matched lists of row and column index labels.
 
-    Reproduces values of iterated indices from the nested for loops contained
-    in 'get_dist' function in original code from [1]_.
+    Shortcut function for generating matched lists of row and col index
+    labels for the set of pairwise comparisons specified by the list of those
+    indices recovered using ``np.nonzero(interaction)``.
+
+    Reproduces values of iterated indices from the nested for-loops contained
+    in ``get_dist`` function in original code from [1]_.
 
     Parameters
     ----------
@@ -272,9 +259,8 @@ def _gen_lists(labels):
     .. [1] Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of
        Host-Parasite Cospeciation. Molecular Biology and Evolution, 26,
        1457-1468.
+
     """
     i_array, j_array = np.transpose(np.tri(len(labels)-1)).nonzero()
     j_array = j_array + 1
-    k_labels = labels[i_array]
-    t_labels = labels[j_array]
-    return k_labels, t_labels
+    return labels[i_array], labels[j_array]
