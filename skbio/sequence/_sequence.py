@@ -20,6 +20,7 @@ from scipy.spatial.distance import hamming
 
 from skbio._base import SkbioObject
 from skbio.sequence import BiologicalSequenceError
+from skbio.util import classproperty
 
 
 class BiologicalSequence(Sequence, SkbioObject):
@@ -89,7 +90,7 @@ class BiologicalSequence(Sequence, SkbioObject):
     """
     default_write_format = 'fasta'
 
-    @classmethod
+    @classproperty
     def alphabet(cls):
         """Return the set of characters allowed in a `BiologicalSequence`.
 
@@ -106,9 +107,9 @@ class BiologicalSequence(Sequence, SkbioObject):
         has_unsupported_characters
 
         """
-        return cls.iupac_characters()
+        return cls.iupac_characters
 
-    @classmethod
+    @classproperty
     def gap_alphabet(cls):
         """Return the set of characters defined as gaps.
 
@@ -129,7 +130,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         """
         return set('-.')
 
-    @classmethod
+    @classproperty
     def iupac_degenerate_characters(cls):
         """Return the degenerate IUPAC characters.
 
@@ -139,9 +140,9 @@ class BiologicalSequence(Sequence, SkbioObject):
             Degenerate IUPAC characters.
 
         """
-        return set(cls.iupac_degeneracies())
+        return set(cls.iupac_degeneracies)
 
-    @classmethod
+    @classproperty
     def iupac_characters(cls):
         """Return the non-degenerate and degenerate characters.
 
@@ -151,10 +152,10 @@ class BiologicalSequence(Sequence, SkbioObject):
             Non-degenerate and degenerate characters.
 
         """
-        return (cls.iupac_standard_characters() |
-                cls.iupac_degenerate_characters())
+        return (cls.iupac_standard_characters |
+                cls.iupac_degenerate_characters)
 
-    @classmethod
+    @classproperty
     def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC characters.
 
@@ -166,7 +167,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         """
         return set()
 
-    @classmethod
+    @classproperty
     def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -840,7 +841,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
 
         """
-        gaps = self.gap_alphabet()
+        gaps = self.gap_alphabet
         indices = [i for i, e in enumerate(self) if e not in gaps]
         return self[indices]
 
@@ -1074,7 +1075,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         has_unsupported_characters
 
         """
-        return set(self) - self.alphabet() - self.gap_alphabet()
+        return set(self) - self.alphabet - self.gap_alphabet
 
     def has_unsupported_characters(self):
         """Return bool indicating presence/absence of unsupported characters
@@ -1095,7 +1096,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         has_unsupported_characters
 
         """
-        all_supported = self.alphabet() | self.gap_alphabet()
+        all_supported = self.alphabet | self.gap_alphabet
         for e in self:
             if e not in all_supported:
                 return True
@@ -1156,7 +1157,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         True
 
         """
-        return char in cls.gap_alphabet()
+        return char in cls.gap_alphabet
 
     def is_gapped(self):
         """Return True if char(s) in `gap_alphabet` are present
@@ -1354,9 +1355,9 @@ class BiologicalSequence(Sequence, SkbioObject):
         TGG
 
         """
-        degen_chars = self.iupac_degeneracies()
-        nonexpansion_chars = self.iupac_standard_characters().union(
-            self.gap_alphabet())
+        degen_chars = self.iupac_degeneracies
+        nonexpansion_chars = self.iupac_standard_characters.union(
+            self.gap_alphabet)
 
         expansions = []
         for char in self:
@@ -1464,7 +1465,7 @@ class NucleotideSequence(BiologicalSequence):
 
     """
 
-    @classmethod
+    @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1483,7 +1484,7 @@ class NucleotideSequence(BiologicalSequence):
         """
         return {}
 
-    @classmethod
+    @classproperty
     def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC nucleotide characters.
 
@@ -1495,7 +1496,7 @@ class NucleotideSequence(BiologicalSequence):
         """
         return set("ACGTUacgtu")
 
-    @classmethod
+    @classproperty
     def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -1547,7 +1548,7 @@ class NucleotideSequence(BiologicalSequence):
 
         """
         result = []
-        complement_map = self.complement_map()
+        complement_map = self.complement_map
         seq_iterator = reversed(self) if reverse else self
         for base in seq_iterator:
             try:
@@ -1678,7 +1679,7 @@ class NucleotideSequence(BiologicalSequence):
         [(3, 6, 'T.T')]
 
         """
-        gaps = re.escape(''.join(self.gap_alphabet()))
+        gaps = re.escape(''.join(self.gap_alphabet))
         acceptable = gaps if allow_gaps else ''
 
         if feature_type == 'purine_run':
@@ -1693,7 +1694,7 @@ class NucleotideSequence(BiologicalSequence):
         for hits in self.regex_iter(pat):
             if allow_gaps:
                 degapped = hits[2]
-                for gap_char in self.gap_alphabet():
+                for gap_char in self.gap_alphabet:
                     degapped = degapped.replace(gap_char, '')
                 if len(degapped) >= min_length:
                     yield hits
@@ -1718,7 +1719,7 @@ class DNASequence(NucleotideSequence):
 
     """
 
-    @classmethod
+    @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1738,10 +1739,10 @@ class DNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        comp_map.update({c: c for c in cls.gap_alphabet()})
+        comp_map.update({c: c for c in cls.gap_alphabet})
         return comp_map
 
-    @classmethod
+    @classproperty
     def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC DNA characters.
 
@@ -1753,7 +1754,7 @@ class DNASequence(NucleotideSequence):
         """
         return set("ACGTacgt")
 
-    @classmethod
+    @classproperty
     def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -1794,7 +1795,7 @@ class RNASequence(NucleotideSequence):
 
     """
 
-    @classmethod
+    @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1814,10 +1815,10 @@ class RNASequence(NucleotideSequence):
             'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
         }
 
-        comp_map.update({c: c for c in cls.gap_alphabet()})
+        comp_map.update({c: c for c in cls.gap_alphabet})
         return comp_map
 
-    @classmethod
+    @classproperty
     def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC RNA characters.
 
@@ -1829,7 +1830,7 @@ class RNASequence(NucleotideSequence):
         """
         return set("ACGUacgu")
 
-    @classmethod
+    @classproperty
     def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -1873,7 +1874,7 @@ class ProteinSequence(BiologicalSequence):
 
     """
 
-    @classmethod
+    @classproperty
     def iupac_standard_characters(cls):
         """Return the non-degenerate IUPAC protein characters.
 
@@ -1885,7 +1886,7 @@ class ProteinSequence(BiologicalSequence):
         """
         return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
 
-    @classmethod
+    @classproperty
     def iupac_degeneracies(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 

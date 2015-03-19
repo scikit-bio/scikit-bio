@@ -1182,7 +1182,7 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         position_frequencies = self.position_frequencies()
-        gap_alphabet = self[0].gap_alphabet()
+        gap_alphabet = self[0].gap_alphabet
 
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
@@ -1230,7 +1230,7 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         base_frequencies = self.k_word_frequencies(k=1)
-        gap_alphabet = self[0].gap_alphabet()
+        gap_alphabet = self[0].gap_alphabet
         seqs_to_keep = []
         for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
@@ -1365,7 +1365,7 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return result
 
-        iupac_standard_characters = self[0].iupac_standard_characters()
+        iupac_standard_characters = self[0].iupac_standard_characters
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
                     len(viewkeys(f) - iupac_standard_characters) > 0):

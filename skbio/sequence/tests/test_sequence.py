@@ -414,10 +414,10 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(str(self.b3), "GREG")
 
     def test_alphabet(self):
-        self.assertEqual(self.b1.alphabet(), set())
+        self.assertEqual(self.b1.alphabet, set())
 
     def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+        self.assertEqual(self.b1.gap_alphabet, set('-.'))
 
     def test_sequence(self):
         self.assertEqual(self.b1.sequence, "GATTACA")
@@ -806,21 +806,21 @@ class NucelotideSequenceTests(TestCase):
         }
 
         # Test calling from an instance and purely static context.
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(NucleotideSequence.alphabet(), exp)
+        self.assertEqual(self.b1.alphabet, exp)
+        self.assertEqual(NucleotideSequence.alphabet, exp)
 
     def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+        self.assertEqual(self.b1.gap_alphabet, set('-.'))
 
     def test_complement_map(self):
         exp = {}
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(NucleotideSequence.complement_map(), exp)
+        self.assertEqual(self.b1.complement_map, exp)
+        self.assertEqual(NucleotideSequence.complement_map, exp)
 
     def test_iupac_standard_characters(self):
         exp = set("ACGTUacgtu")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_standard_characters(), exp)
+        self.assertEqual(self.b1.iupac_standard_characters, exp)
+        self.assertEqual(NucleotideSequence.iupac_standard_characters, exp)
 
     def test_iupac_degeneracies(self):
         exp = {
@@ -839,21 +839,21 @@ class NucelotideSequenceTests(TestCase):
             'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
             'y': set(['c', 'u', 't'])
         }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
+        self.assertEqual(self.b1.iupac_degeneracies, exp)
+        self.assertEqual(NucleotideSequence.iupac_degeneracies, exp)
 
         # Test that we can modify a copy of the mapping without altering the
         # canonical representation.
-        degen = NucleotideSequence.iupac_degeneracies()
+        degen = NucleotideSequence.iupac_degeneracies
         degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
         self.assertNotEqual(degen, exp)
-        self.assertEqual(NucleotideSequence.iupac_degeneracies(), exp)
+        self.assertEqual(NucleotideSequence.iupac_degeneracies, exp)
 
     def test_iupac_degenerate_characters(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_degenerate_characters(), exp)
+        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
+        self.assertEqual(NucleotideSequence.iupac_degenerate_characters, exp)
 
     def test_iupac_characters(self):
         exp = {
@@ -862,8 +862,8 @@ class NucelotideSequenceTests(TestCase):
             'r', 'u', 't', 'w', 'v', 'y'
         }
 
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(NucleotideSequence.iupac_characters(), exp)
+        self.assertEqual(self.b1.iupac_characters, exp)
+        self.assertEqual(NucleotideSequence.iupac_characters, exp)
 
     def test_complement(self):
         self.assertRaises(BiologicalSequenceError,
@@ -1010,11 +1010,11 @@ class DNASequenceTests(TestCase):
             't', 'w', 'v', 'y'
         }
 
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(DNASequence.alphabet(), exp)
+        self.assertEqual(self.b1.alphabet, exp)
+        self.assertEqual(DNASequence.alphabet, exp)
 
     def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+        self.assertEqual(self.b1.gap_alphabet, set('-.'))
 
     def test_complement_map(self):
         exp = {
@@ -1025,13 +1025,13 @@ class DNASequenceTests(TestCase):
             'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 't': 'a', 'w': 'w',
             'v': 'b', 'y': 'r'
         }
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(DNASequence.complement_map(), exp)
+        self.assertEqual(self.b1.complement_map, exp)
+        self.assertEqual(DNASequence.complement_map, exp)
 
     def test_iupac_standard_characters(self):
         exp = set("ACGTacgt")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(DNASequence.iupac_standard_characters(), exp)
+        self.assertEqual(self.b1.iupac_standard_characters, exp)
+        self.assertEqual(DNASequence.iupac_standard_characters, exp)
 
     def test_iupac_degeneracies(self):
         exp = {
@@ -1046,14 +1046,14 @@ class DNASequenceTests(TestCase):
             's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 't']),
             'v': set(['a', 'c', 'g']), 'y': set(['c', 't'])
         }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(DNASequence.iupac_degeneracies(), exp)
+        self.assertEqual(self.b1.iupac_degeneracies, exp)
+        self.assertEqual(DNASequence.iupac_degeneracies, exp)
 
     def test_iupac_degenerate_characters(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(DNASequence.iupac_degenerate_characters(), exp)
+        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
+        self.assertEqual(DNASequence.iupac_degenerate_characters, exp)
 
     def test_iupac_characters(self):
         exp = {
@@ -1061,8 +1061,8 @@ class DNASequenceTests(TestCase):
             'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
             't', 'w', 'v', 'y'
         }
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(DNASequence.iupac_characters(), exp)
+        self.assertEqual(self.b1.iupac_characters, exp)
+        self.assertEqual(DNASequence.iupac_characters, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
@@ -1185,11 +1185,11 @@ class RNASequenceTests(TestCase):
             'u', 'w', 'v', 'y'
         }
 
-        self.assertEqual(self.b1.alphabet(), exp)
-        self.assertEqual(RNASequence.alphabet(), exp)
+        self.assertEqual(self.b1.alphabet, exp)
+        self.assertEqual(RNASequence.alphabet, exp)
 
     def test_gap_alphabet(self):
-        self.assertEqual(self.b1.gap_alphabet(), set('-.'))
+        self.assertEqual(self.b1.gap_alphabet, set('-.'))
 
     def test_complement_map(self):
         exp = {
@@ -1200,13 +1200,13 @@ class RNASequenceTests(TestCase):
             'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 'u': 'a', 'w': 'w',
             'v': 'b', 'y': 'r'
         }
-        self.assertEqual(self.b1.complement_map(), exp)
-        self.assertEqual(RNASequence.complement_map(), exp)
+        self.assertEqual(self.b1.complement_map, exp)
+        self.assertEqual(RNASequence.complement_map, exp)
 
     def test_iupac_standard_characters(self):
         exp = set("ACGUacgu")
-        self.assertEqual(self.b1.iupac_standard_characters(), exp)
-        self.assertEqual(RNASequence.iupac_standard_characters(), exp)
+        self.assertEqual(self.b1.iupac_standard_characters, exp)
+        self.assertEqual(RNASequence.iupac_standard_characters, exp)
 
     def test_iupac_degeneracies(self):
         exp = {
@@ -1221,14 +1221,14 @@ class RNASequenceTests(TestCase):
             's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 'u']),
             'v': set(['a', 'c', 'g']), 'y': set(['c', 'u'])
         }
-        self.assertEqual(self.b1.iupac_degeneracies(), exp)
-        self.assertEqual(RNASequence.iupac_degeneracies(), exp)
+        self.assertEqual(self.b1.iupac_degeneracies, exp)
+        self.assertEqual(RNASequence.iupac_degeneracies, exp)
 
     def test_iupac_degenerate_characters(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-        self.assertEqual(self.b1.iupac_degenerate_characters(), exp)
-        self.assertEqual(RNASequence.iupac_degenerate_characters(), exp)
+        self.assertEqual(self.b1.iupac_degenerate_characters, exp)
+        self.assertEqual(RNASequence.iupac_degenerate_characters, exp)
 
     def test_iupac_characters(self):
         exp = {
@@ -1236,8 +1236,8 @@ class RNASequenceTests(TestCase):
             'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
             'u', 'w', 'v', 'y'
         }
-        self.assertEqual(self.b1.iupac_characters(), exp)
-        self.assertEqual(RNASequence.iupac_characters(), exp)
+        self.assertEqual(self.b1.iupac_characters, exp)
+        self.assertEqual(RNASequence.iupac_characters, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
@@ -1358,16 +1358,16 @@ class ProteinSequenceTests(TestCase):
             's', 't', 'v', 'w', 'x', 'y', 'z'
         }
 
-        self.assertEqual(self.p1.alphabet(), exp)
-        self.assertEqual(ProteinSequence.alphabet(), exp)
+        self.assertEqual(self.p1.alphabet, exp)
+        self.assertEqual(ProteinSequence.alphabet, exp)
 
     def test_gap_alphabet(self):
-        self.assertEqual(self.p1.gap_alphabet(), set('-.'))
+        self.assertEqual(self.p1.gap_alphabet, set('-.'))
 
     def test_iupac_standard_characters(self):
         exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
-        self.assertEqual(self.p1.iupac_standard_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_standard_characters(), exp)
+        self.assertEqual(self.p1.iupac_standard_characters, exp)
+        self.assertEqual(ProteinSequence.iupac_standard_characters, exp)
 
     def test_iupac_degeneracies(self):
         exp = {
@@ -1378,13 +1378,13 @@ class ProteinSequenceTests(TestCase):
             'x': set(['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
                       'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
         }
-        self.assertEqual(self.p1.iupac_degeneracies(), exp)
-        self.assertEqual(ProteinSequence.iupac_degeneracies(), exp)
+        self.assertEqual(self.p1.iupac_degeneracies, exp)
+        self.assertEqual(ProteinSequence.iupac_degeneracies, exp)
 
     def test_iupac_degenerate_characters(self):
         exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
-        self.assertEqual(self.p1.iupac_degenerate_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_degenerate_characters(), exp)
+        self.assertEqual(self.p1.iupac_degenerate_characters, exp)
+        self.assertEqual(ProteinSequence.iupac_degenerate_characters, exp)
 
     def test_iupac_characters(self):
         exp = {
@@ -1393,8 +1393,8 @@ class ProteinSequenceTests(TestCase):
             'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q',
             'r', 's', 't', 'v', 'w', 'x', 'y', 'z'
         }
-        self.assertEqual(self.p1.iupac_characters(), exp)
-        self.assertEqual(ProteinSequence.iupac_characters(), exp)
+        self.assertEqual(self.p1.iupac_characters, exp)
+        self.assertEqual(ProteinSequence.iupac_characters, exp)
 
     def test_nondegenerates(self):
         exp = [ProteinSequence('AD'), ProteinSequence('AN')]

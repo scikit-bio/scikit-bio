@@ -79,10 +79,10 @@ sequence clustering, phylogenetic reconstruction, etc.
 
 Class-level methods contain information about the molecule types.
 
->>> DNASequence.iupac_degeneracies()['B']
+>>> DNASequence.iupac_degeneracies['B']
 set(['C', 'T', 'G'])
 
->>> RNASequence.iupac_degeneracies()['B']
+>>> RNASequence.iupac_degeneracies['B']
 set(['C', 'U', 'G'])
 
 >>> DNASequence.is_gap('-')
