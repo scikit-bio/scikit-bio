@@ -31,6 +31,14 @@ You can verify your installation by running the scikit-bio unit tests as follows
 
     python -m skbio.test
 
+In addition to the dependencies required by scikit-bio you may want to install
+the following optional packages:
+
+    * matplotlib (>= 1.1.0)
+
+If a resource is used which requires one of these packages an ``ImportError``
+will be raised.
+
 Installation of development version
 -----------------------------------
 
