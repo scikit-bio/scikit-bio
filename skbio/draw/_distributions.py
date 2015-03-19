@@ -14,9 +14,7 @@ from itertools import cycle
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from matplotlib.patches import Polygon, Rectangle
+
 
 
 def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
@@ -107,6 +105,9 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
        ...     box_colors=('green', 'blue', 'red'))
 
     """
+
+    import matplotlib.pyplot as plt
+
     distributions = _validate_distributions(distributions)
     num_dists = len(distributions)
     _validate_x_values(x_values, x_tick_labels, num_dists)
@@ -225,6 +226,9 @@ def grouped_distributions(plot_type, data, x_values=None,
        ...                                                  'Treatment 2'])
 
     """
+
+    import matplotlib.pyplot as plt
+
     # Set up different behavior based on the plot type.
     if plot_type == 'bar':
         plotting_function = _plot_bar_data
@@ -573,6 +577,9 @@ def _color_box_plot(plot_axes, box_plot, colors):
     matplotlib's boxplot function, and the colors argument must consist of
     valid matplotlib colors.
     """
+
+    from matplotlib.patches import Polygon
+
     # Note: the following code is largely taken from this matplotlib boxplot
     # example:
     # http://matplotlib.sourceforge.net/examples/pylab_examples/
@@ -652,6 +659,10 @@ def _set_axes_options(plot_axes, title=None, x_label=None, y_label=None,
 def _create_legend(plot_axes, distribution_markers, distribution_labels,
                    marker_type):
     """Creates a legend on the supplied axes."""
+
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+
     # We have to use a proxy artist for the legend because box plots currently
     # don't have a very useful legend in matplotlib, and using the default
     # legend for bar/scatterplots chokes on empty/null distributions.

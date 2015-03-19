@@ -11,7 +11,6 @@ from six import string_types
 
 from copy import deepcopy
 
-import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 import numpy as np
@@ -347,6 +346,9 @@ class DissimilarityMatrix(SkbioObject):
            >>> fig = dm.plot(cmap='Reds', title='Example heatmap')
 
         """
+
+        import matplotlib.pyplot as plt
+
         # based on http://stackoverflow.com/q/14391959/3776794
         fig, ax = plt.subplots()
 
@@ -390,6 +392,8 @@ class DissimilarityMatrix(SkbioObject):
         return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
+        import matplotlib.pyplot as plt
+
         fig = self.plot()
         data = print_figure(fig, format)
         # We MUST close the figure, otherwise IPython's display machinery
