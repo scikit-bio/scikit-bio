@@ -50,8 +50,172 @@ class SequenceInterfaceTests(object):
     def test___ne__(self):
         pass
 
-    def test___getitem__(self):
-        pass
+    def test___getitem___gives_new_sequence(self):
+        seq = self.cls(self.sample_sequence)
+        self.assertFalse(seq is seq[:])
+
+
+    def test___getitem___with_int(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq1 = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+        max_range = len(self.sample_sequence)
+        for index in range(-max_range, max_range):
+            seq2 = self.cls(self.sample_sequence[index], id='id1',
+                            description='description', quality=quality[index])
+            no_quality2 = self.cls(self.sample_sequence[index], id='id1',
+                                   description='description')
+            seq1[index].equals(seq2, descriptive=True)
+            no_quality[index].equals(no_quality2, descriptive=True)
+
+    def generate_valid_slices(self, length):
+        use = 0
+        for i1 in range(-length, length):
+            for i2 in range(-length, length):
+                for step in range(-length, length):
+                    # Slice syntax is hard, so take the descriptivist approach.
+                    if step != 0 and ('a'*length)[i1:i2:step] != '':
+                        use +=1
+                        # Throttle, because there are a lot of combinations.
+                        # the prime number 7 was arbitrarily chosen.
+                        if use == 7:
+                            yield i1, i2, step
+                            use = 0
+
+    def test___getitem___with_slice(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq1 = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+        max_range = len(self.sample_sequence)
+        for index1, index2, step in self.generate_valid_slices(max_range):
+            seq2 = self.cls(self.sample_sequence[index1:index2:step],
+                            id='id1', description='description',
+                            quality=quality[index1:index2:step])
+            no_quality2 = self.cls(self.sample_sequence[index1:index2:step],
+                                   id='id1', description='description')
+            seq1[index1:index2:step].equals(seq2, descriptive=True)
+
+    def test___getitem___with_tuple_or_list_int(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq1 = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+        max_range = len(self.sample_sequence)
+        indicies = iter(range(max_range+1, max_range))
+        for i1 in indicies:
+            for i2 in indicies:
+                for i3 in indicies:
+                    sequence = ''
+                    q = np.array([], dtype=np.int)
+                    for i in [i1, i2, i3, i2]:
+                        sequence += self.sample_sequence[i]
+                        q = np.append(q, quality[i])
+                    seq2 = self.cls(sequence,
+                                    id='id1', description='description',
+                                    quality=q)
+                    no_quality2 = self.cls(sequence, id='id1',
+                                           description='description')
+                    seq1[i1, i2, i3, i2].equals(seq2, descriptive=True)
+                    seq1[[i1, i2, i3, i2]].equals(seq2, descriptive=True)
+                    no_quality[i1, i2, i3, i2].equals(no_quality2,
+                                                      descriptive=True)
+                    no_quality[[i1, i2, i3, i2]].equals(no_quality2,
+                                                        descriptive=True)
+
+    def test___getitem___with_tuple_slice(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq1 = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+        max_range = len(self.sample_sequence)
+        # The runtime is disgusting unless we use the same iterator.
+        slices = iter(self.generate_valid_slices(max_range))
+        for slice1 in slices:
+            for slice2 in slices:
+                for slice3 in slices:
+                    sequence = ''
+                    q = np.array([], dtype=np.int)
+                    for i1, i2, s in [slice1, slice2, slice3]:
+                        sequence += self.sample_sequence[i1:i2:s]
+                        q = np.append(q, quality[i1:i2:s])
+                    seq2 = self.cls(sequence,
+                                    id='id1', description='description',
+                                    quality=q)
+                    no_quality2 = self.cls(sequence,
+                                           id='id1', description='description')
+                    seq1[slice1[0]:slice1[1]:slice1[2],
+                         slice2[0]:slice2[1]:slice2[2],
+                         slice3[0]:slice3[1]:slice3[2]
+                         ].equals(seq2, descriptive=True)
+
+                    no_quality[slice1[0]:slice1[1]:slice1[2],
+                               slice2[0]:slice2[1]:slice2[2],
+                               slice3[0]:slice3[1]:slice3[2]
+                               ].equals(no_quality2, descriptive=True)
+
+    def test___getitem___with_mask(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+
+        mask = np.bincount(list(range(0, len(self.sample_sequence),
+                                      3))).astype(np.bool)
+
+        sequence = ""
+        q = np.array([], dtype=np.int)
+        for i in np.where(mask)[0]:
+            sequence += self.sample_sequence[i]
+            q = np.append(q, quality[i])
+
+        seq2 = self.cls(sequence, id='id1', description='description',
+                        quality=q)
+        seq[mask].equals(seq2, descriptive=True)
+
+
+    def test___getitem___with_invalid(self):
+        # This will make a numpy array of equal length
+        quality = np.fromstring(self.sample_sequence, dtype=np.uint8)
+        seq = self.cls(self.sample_sequence, id='id1',
+                        description='description', quality=quality)
+        no_quality = self.cls(self.sample_sequence, id='id1',
+                              description='description')
+
+        with self.assertRaises(TypeError):
+            seq['not an index']
+
+        with self.assertRaises(TypeError):
+            no_quality['not an index']
+
+        with self.assertRaises(IndexError):
+            seq[99999999999999999]
+
+        with self.assertRaises(IndexError):
+            no_quality[99999999999999999]
+
+        with self.assertRaises(IndexError):
+            seq[0, 0, 99999999999999999]
+
+        with self.assertRaises(IndexError):
+            no_quality[0, 0, 99999999999999999]
+
+        with self.assertRaises(IndexError):
+            seq[99999999999999999:2]
+
+        with self.assertRaises(IndexError):
+            no_quality[99999999999999999:2]
 
     def test___hash__(self):
         pass
@@ -172,6 +336,7 @@ class NucleotideInterfaceTests(IUPACSequenceInterfaceTests):
 class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
         self.cls = Sequence
+        self.sample_sequence = "This is a sample sequence."
 
         # These are defined for IDValidationTests
         self.id_cls = Sequence
@@ -185,6 +350,7 @@ class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
 class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
         self.cls = Protein
+        self.sample_sequence = ''.join(Protein.alphabet)
 
         # These are defined for IDValidationTests
         self.id_cls = Protein
@@ -213,6 +379,7 @@ class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
 class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
         self.cls = DNA
+        self.sample_sequence = ''.join(DNA.alphabet)
 
         # These are defined for IDValidationTests
         self.id_cls = DNA
@@ -247,6 +414,7 @@ class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
 class TestRNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
         self.cls = RNA
+        self.sample_sequence = ''.join(RNA.alphabet)
 
         # These are defined for IDValidationTests
         self.id_cls = RNA

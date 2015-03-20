@@ -236,7 +236,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 seq = [self.sequence[idx] for idx in i]
 
                 if self.has_quality():
-                    qual = [self.quality[idx] for idx in i]
+                    qual = np.hstack([self.quality[idx] for idx in i])
                 else:
                     qual = None
         except IndexError:
@@ -598,7 +598,7 @@ class Sequence(collections.Sequence, SkbioObject):
         defaults.update(kwargs)
         return self.__class__(**defaults)
 
-    def equals(self, other, ignore=None):
+    def equals(self, other, ignore=None, descriptive=False):
         """Compare two biological sequences for equality.
 
         By default, biological sequences are equal if their sequence,
@@ -673,27 +673,40 @@ class Sequence(collections.Sequence, SkbioObject):
         if ignore is None:
             ignore = {}
 
+        def raiser(feature, attr):
+            if descriptive:
+                raise AssertionError(
+                    "%r is not equal to %r because of feature %r (%r != %r)" %
+                    (self, other, feature,
+                     getattr(self, attr), getattr(other, attr)))
+
         # Checks are ordered from least to most expensive.
         if 'type' not in ignore and self.__class__ != other.__class__:
+            raiser('type', '__class__')
             return False
 
         if 'id' not in ignore and self.id != other.id:
+            raiser('id', 'id')
             return False
 
         if 'description' not in ignore and \
                 self.description != other.description:
+            raiser('description', 'description')
             return False
 
         # Use array_equal instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
         if 'quality' not in ignore and not np.array_equal(self.quality,
                                                           other.quality):
+            raiser('quality', 'quality')
             return False
 
         if 'sequence' not in ignore and self.sequence != other.sequence:
+            raiser('sequence', 'sequence')
             return False
 
         return True
+
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
