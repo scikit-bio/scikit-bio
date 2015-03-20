@@ -11,8 +11,8 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
 import unittest
-from skbio import (SequenceCollection, BiologicalSequence, NucleotideSequence,
-                   DNASequence, RNASequence, ProteinSequence)
+from skbio import (SequenceCollection, Sequence,
+                   DNA, RNA, Protein)
 
 from skbio import read
 from skbio.util import get_data_path
@@ -61,9 +61,9 @@ class TestQSeqBase(unittest.TestCase):
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 1},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 2},
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 3,
-                 'constructor': ProteinSequence},
+                 'constructor': Protein},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 4,
-                 'constructor': DNASequence},
+                 'constructor': DNA},
             ], [
                 ('illumina_1:3:34:-30:30#0/1', 'ACG....ACGTAC', [
                     50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8]),
@@ -202,7 +202,7 @@ class TestQSeqToGenerator(TestQSeqBase):
         for valid, kwargs, components in self.valid_files:
             for kwarg in kwargs:
                 _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', BiologicalSequence)
+                constructor = kwarg.get('constructor', Sequence)
                 expected = [constructor(c[1], id=c[0], quality=c[2]) for
                             c in components]
 
@@ -233,7 +233,7 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
         for valid, kwargs, components in self.valid_files:
             for kwarg in kwargs:
                 _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', BiologicalSequence)
+                constructor = kwarg.get('constructor', Sequence)
                 expected = SequenceCollection([constructor(c[1], id=c[0],
                                                quality=c[2]) for c in
                                                components])
@@ -247,8 +247,8 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
 
 class TestQSeqToSequences(TestQSeqBase):
     def test_invalid_files(self):
-        for constructor in [BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence]:
+        for constructor in [Sequence,
+                            DNA, RNA, Protein]:
             for invalid, kwargs, errors, etype in self.invalid_files:
                 with self.assertRaises(etype) as cm:
                     for kwarg in kwargs:
@@ -260,8 +260,8 @@ class TestQSeqToSequences(TestQSeqBase):
                     self.assertIn(e, str(cm.exception))
 
     def test_valid_files(self):
-        for constructor in [BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence]:
+        for constructor in [Sequence,
+                            DNA, RNA, Protein]:
             for valid, kwargs, components in self.valid_files:
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'constructor', 'filter')

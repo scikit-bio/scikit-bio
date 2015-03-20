@@ -18,11 +18,10 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   BiologicalSequence
-   NucleotideSequence
-   DNASequence
-   RNASequence
-   ProteinSequence
+   Sequence
+   DNA
+   RNA
+   Protein
    GeneticCode
 
 Functions
@@ -39,7 +38,7 @@ Exceptions
 .. autosummary::
    :toctree: generated/
 
-   BiologicalSequenceError
+   SequenceError
    GeneticCodeError
    GeneticCodeInitError
    InvalidCodonError
@@ -135,7 +134,7 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 >>> from skbio.sequence import genetic_code
 >>> gc = genetic_code(11)
 >>> gc.translate(d6)
-<ProteinSequence: MSK* (length: 4)>
+<Protein: MSK* (length: 4)>
 
 """
 
@@ -149,16 +148,14 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 
 from skbio.util import TestRunner
 
-from ._exception import (BiologicalSequenceError, GeneticCodeError,
+from ._exception import (SequenceError, GeneticCodeError,
                          GeneticCodeInitError, InvalidCodonError)
-from ._sequence import (BiologicalSequence, NucleotideSequence, DNASequence,
-                        RNASequence, ProteinSequence, DNA, RNA, Protein)
+from ._sequence import (Sequence, Protein, DNA, RNA)
 from ._genetic_code import GeneticCode, genetic_code
 
-__all__ = ['BiologicalSequenceError', 'GeneticCodeError',
-           'GeneticCodeInitError', 'InvalidCodonError', 'BiologicalSequence',
-           'NucleotideSequence', 'DNASequence', 'RNASequence',
-           'ProteinSequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
+__all__ = ['SequenceError', 'GeneticCodeError',
+           'GeneticCodeInitError', 'InvalidCodonError', 'Sequence',
+           'Protein', 'DNA', 'RNA', 'GeneticCode',
            'genetic_code']
 
 test = TestRunner(__file__).test

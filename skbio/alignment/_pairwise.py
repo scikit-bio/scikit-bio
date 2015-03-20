@@ -15,7 +15,7 @@ from future.builtins import range, zip
 from six import string_types
 
 from skbio.alignment import Alignment
-from skbio.sequence import BiologicalSequence
+from skbio.sequence import Sequence
 from skbio.util import EfficiencyWarning
 
 # This is temporary: blosum50 does not exist in skbio yet as per
@@ -129,9 +129,9 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : str or Sequence
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : str or Sequence
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -196,9 +196,9 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : str or Sequence
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : str or Sequence
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -254,9 +254,9 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
     Parameters
     ----------
-    seq1 : str or BiologicalSequence
+    seq1 : str or Sequence
         The first unaligned sequence.
-    seq2 : str or BiologicalSequence
+    seq2 : str or Sequence
         The second unaligned sequence.
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -331,9 +331,9 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : str, Sequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : str, Sequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -410,9 +410,9 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : str, Sequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : str, Sequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
         Penalty for opening a gap (this is substracted from previous best
@@ -479,9 +479,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     Parameters
     ----------
-    seq1 : str, BiologicalSequence, or Alignment
+    seq1 : str, Sequence, or Alignment
         The first unaligned sequence(s).
-    seq2 : str, BiologicalSequence, or Alignment
+    seq2 : str, Sequence, or Alignment
         The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -618,8 +618,8 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
     """ Converts variety of types into an skbio.Alignment object
     """
     if isinstance(seq, string_types):
-        return Alignment([BiologicalSequence(seq)])
-    elif isinstance(seq, BiologicalSequence):
+        return Alignment([Sequence(seq)])
+    elif isinstance(seq, Sequence):
         return Alignment([seq])
     elif isinstance(seq, Alignment):
         if disallow_alignment:
@@ -708,8 +708,8 @@ def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
                                 gap_substitution_score):
     substitution_score = 0
     for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
-        if BiologicalSequence.is_gap(aln1_char) or\
-           BiologicalSequence.is_gap(aln2_char):
+        if Sequence.is_gap(aln1_char) or\
+           Sequence.is_gap(aln2_char):
                 substitution_score += gap_substitution_score
         else:
             try:
@@ -877,12 +877,12 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
     for i in range(aln1_sequence_count):
         aligned_seq = ''.join(aligned_seqs1[i][::-1])
         seq_id = _get_seq_id(aln1[i], str(i))
-        aligned_seqs1[i] = BiologicalSequence(aligned_seq, id=seq_id)
+        aligned_seqs1[i] = Sequence(aligned_seq, id=seq_id)
 
     for i in range(aln2_sequence_count):
         aligned_seq = ''.join(aligned_seqs2[i][::-1])
         seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
-        aligned_seqs2[i] = BiologicalSequence(aligned_seq, id=seq_id)
+        aligned_seqs2[i] = Sequence(aligned_seq, id=seq_id)
 
     return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)

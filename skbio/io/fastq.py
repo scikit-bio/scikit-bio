@@ -36,21 +36,19 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |generator of :mod:`skbio.sequence.BiologicalSequence` objects  |
+|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects  |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.BiologicalSequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                       |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.NucleotideSequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                              |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.DNASequence`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.RNA`                              |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.RNASequence`                              |
-+------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.ProteinSequence`                          |
+|Yes   |Yes   |:mod:`skbio.sequence.Protein`                          |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -202,12 +200,12 @@ To load the sequences into a ``SequenceCollection``, we run:
 <SequenceCollection: n=2; mean +/- std length=36.50 +/- 1.50>
 
 Note that quality scores are decoded from Sanger. To load the second sequence
-as a ``DNASequence``:
+as a ``DNA``:
 
->>> from skbio import DNASequence
+>>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> DNASequence.read(fh, variant='sanger', seq_num=2)
-<DNASequence: TATGTATATA... (length: 35)>
+>>> DNA.read(fh, variant='sanger', seq_num=2)
+<DNA: TATGTATATA... (length: 35)>
 
 To write our ``SequenceCollection`` to a FASTQ file with quality scores encoded
 using the ``illumina1.3`` variant:
@@ -262,8 +260,8 @@ from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
                             _format_fasta_like_records)
 from skbio.alignment import SequenceCollection, Alignment
-from skbio.sequence import (BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence)
+from skbio.sequence import (Sequence,
+                            DNA, RNA, Protein)
 
 _whitespace_regex = re.compile(r'\s')
 
@@ -285,7 +283,7 @@ def _fastq_sniffer(fh):
 
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
-                        constructor=BiologicalSequence):
+                        constructor=Sequence):
     seq_header = next(_line_generator(fh))
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
@@ -306,51 +304,42 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
         yield constructor(seq, id=id_, description=desc, quality=phred_scores)
 
 
-@register_reader('fastq', BiologicalSequence)
+@register_reader('fastq', Sequence)
 def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
                                   seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=BiologicalSequence),
+                            constructor=Sequence),
         seq_num)
 
 
-@register_reader('fastq', NucleotideSequence)
-def _fastq_to_nucleotide_sequence(fh, variant=None, phred_offset=None,
-                                  seq_num=1):
-    return _get_nth_sequence(
-        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=NucleotideSequence),
-        seq_num)
-
-
-@register_reader('fastq', DNASequence)
+@register_reader('fastq', DNA)
 def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=DNASequence),
+                            constructor=DNA),
         seq_num)
 
 
-@register_reader('fastq', RNASequence)
+@register_reader('fastq', RNA)
 def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=RNASequence),
+                            constructor=RNA),
         seq_num)
 
 
-@register_reader('fastq', ProteinSequence)
+@register_reader('fastq', Protein)
 def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=ProteinSequence),
+                            constructor=Protein),
         seq_num)
 
 
 @register_reader('fastq', SequenceCollection)
 def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
-                                  constructor=BiologicalSequence):
+                                  constructor=Sequence):
     return SequenceCollection(
         list(_fastq_to_generator(fh, variant=variant,
                                  phred_offset=phred_offset,
@@ -359,7 +348,7 @@ def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
 
 @register_reader('fastq', Alignment)
 def _fastq_to_alignment(fh, variant=None, phred_offset=None,
-                        constructor=BiologicalSequence):
+                        constructor=Sequence):
     return Alignment(
         list(_fastq_to_generator(fh, variant=variant,
                                  phred_offset=phred_offset,
@@ -384,7 +373,7 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
         fh.write('\n')
 
 
-@register_writer('fastq', BiologicalSequence)
+@register_writer('fastq', Sequence)
 def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' '):
@@ -393,16 +382,8 @@ def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', NucleotideSequence)
-def _nucleotide_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' '):
-    _sequences_to_fastq([obj], fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement)
 
-
-@register_writer('fastq', DNASequence)
+@register_writer('fastq', DNA)
 def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' '):
@@ -411,7 +392,7 @@ def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', RNASequence)
+@register_writer('fastq', RNA)
 def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' '):
@@ -420,7 +401,7 @@ def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', ProteinSequence)
+@register_writer('fastq', Protein)
 def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' '):

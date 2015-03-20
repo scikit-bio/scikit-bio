@@ -18,59 +18,283 @@ import numpy.testing as npt
 from scipy.spatial.distance import euclidean
 
 from skbio import (
-    BiologicalSequence, NucleotideSequence, DNASequence, RNASequence,
-    ProteinSequence)
-from skbio.sequence import BiologicalSequenceError
+    Sequence, DNA, RNA,
+    Protein)
+from skbio.sequence import SequenceError
 
 with hooks():
     from itertools import zip_longest
 
 
-class BiologicalSequenceTests(TestCase):
+# Interface Tests
+class SequenceInterfaceTest(object):
+    def test_property_id(self):
+        pass
+
+    def test_property_sequence(self):
+        pass
+
+    def test_property_description(self):
+        pass
+
+    def test_property_quality(self):
+        pass
+
+    def test___contains__(self):
+        pass
+
+    def test___eq__(self):
+        pass
+
+    def test___ne__(self):
+        pass
+
+    def test___getitem__(self):
+        pass
+
+    def test___hash__(self):
+        pass
+
+    def test___iter__(self):
+        pass
+
+    def test___len__(self):
+        pass
+
+    def test___repr__(self):
+        pass
+
+    def test___reversed__(self):
+        pass
+
+    def test___str__(self):
+        pass
+
+    def test_to(self):
+        pass
+
+    def test_count(self):
+        pass
+
+    def test_distance(self):
+        pass
+
+    def test_equals(self):
+        pass
+
+    def test_hamming(self):
+        pass
+
+    def test_index(self):
+        pass
+
+    def test_rindex(self):
+        pass
+
+    def test_kmer(self):
+        pass
+
+    def test_kmer_counts(self):
+        pass
+
+    def test_iregex(self):
+        pass
+
+    def test_startswith(self):
+        pass
+
+    def test_endswith(self):
+        pass
+
+    def test_find(self):
+        pass
+
+    def test_rfind(self):
+        pass
+
+    def test_replace(self):
+        pass
+
+    def test_split(self):
+        pass
+
+    def test_rsplit(self):
+        pass
+
+    def test_reverse(self):
+        pass
+
+
+class IUPACSequenceInterfaceTest(SequenceInterfaceTest):
+    def test_degap(self):
+        pass
+
+    def test_gaps(self):
+        pass
+
+    def test_has_gaps(self):
+        pass
+
+    def test_expand_degenerates(self):
+        pass
+
+    def test_split_gaps(self):
+        pass
+
+    def test_has_degenerates(self):
+        pass
+
+class NucleotideInterfaceTest(IUPACSequenceInterfaceTest):
+    def test_property_rc(self):
+        pass
+
+    def test_complement(self):
+        pass
+
+    def test_find_features(self):
+        pass
+
+    def test_gc_content(self):
+        pass
+
+    def test_translate(self):
+        pass
+
+
+# Concrete Tests
+class TestSequence(SequenceInterfaceTest, TestCase):
+    def setUp(self):
+        pass
+
+    def test___init__(self):
+        pass
+
+
+class TestProtein(IUPACSequenceInterfaceTest, TestCase):
+    def setUp(self):
+        pass
+
+    def test_property_alphabet(self):
+        pass
+
+    def test_property_gap_chars(self):
+        pass
+
+    def test_property_nondegenerate_chars(self):
+        pass
+
+    def test_property_degenerate_chars(self):
+        pass
+
+    def test_property_degenerate_map(self):
+        pass
+
+    def test___init__(self):
+        pass
+
+
+class TestDNA(NucleotideInterfaceTest, TestCase):
+    def setUp(self):
+        pass
+
+    def test_property_alphabet(self):
+        pass
+
+    def test_property_gap_chars(self):
+        pass
+
+    def test_property_nondegenerate_chars(self):
+        pass
+
+    def test_property_degenerate_chars(self):
+        pass
+
+    def test_property_degenerate_map(self):
+        pass
+
+    def test_property_complement_map(self):
+        pass
+
+    def test_transcribe(self):
+        pass
+
+    def test___init__(self):
+        pass
+
+
+class TestRNA(NucleotideInterfaceTest, TestCase):
+    def setUp(self):
+        pass
+
+    def test_property_alphabet(self):
+        pass
+
+    def test_property_gap_chars(self):
+        pass
+
+    def test_property_nondegenerate_chars(self):
+        pass
+
+    def test_property_degenerate_chars(self):
+        pass
+
+    def test_property_degenerate_map(self):
+        pass
+
+    def test_property_complement_map(self):
+        pass
+
+    def test_reverse_transcribe(self):
+        pass
+
+    def test___init__(self):
+        pass
+
+class SequenceTests(TestCase):
 
     def setUp(self):
-        self.b1 = BiologicalSequence('GATTACA', quality=range(7))
-        self.b2 = BiologicalSequence(
+        self.b1 = Sequence('GATTACA', quality=range(7))
+        self.b2 = Sequence(
             'ACCGGTACC', id="test-seq-2",
             description="A test sequence")
-        self.b3 = BiologicalSequence(
+        self.b3 = Sequence(
             'GREG', id="test-seq-3", description="A protein sequence")
-        self.b4 = BiologicalSequence(
+        self.b4 = Sequence(
             'PRTEIN', id="test-seq-4")
-        self.b5 = BiologicalSequence(
+        self.b5 = Sequence(
             'LLPRTEIN', description="some description")
-        self.b6 = BiologicalSequence('ACGTACGTACGT')
-        self.b7 = BiologicalSequence('..--..', quality=range(6))
-        self.b8 = BiologicalSequence('HE..--..LLO', id='hello',
+        self.b6 = Sequence('ACGTACGTACGT')
+        self.b7 = Sequence('..--..', quality=range(6))
+        self.b8 = Sequence('HE..--..LLO', id='hello',
                                      description='gapped hello',
                                      quality=range(11))
 
     def test_init_varied_input(self):
         # init as string
-        b = BiologicalSequence('ACCGGXZY')
+        b = Sequence('ACCGGXZY')
         self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
         # init as string with optional values
-        b = BiologicalSequence(
+        b = Sequence(
             'ACCGGXZY', 'test-seq-1', 'The first test sequence')
         self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.id, "test-seq-1")
         self.assertEqual(b.description, "The first test sequence")
 
         # test init as a different string
-        b = BiologicalSequence('WRRTY')
+        b = Sequence('WRRTY')
         self.assertEqual(str(b), 'WRRTY')
 
         # init as list
-        b = BiologicalSequence(list('ACCGGXZY'))
+        b = Sequence(list('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
 
         # init as tuple
-        b = BiologicalSequence(tuple('ACCGGXZY'))
+        b = Sequence(tuple('ACCGGXZY'))
         self.assertEqual(str(b), 'ACCGGXZY')
         self.assertEqual(b.id, "")
         self.assertEqual(b.description, "")
@@ -78,20 +302,20 @@ class BiologicalSequenceTests(TestCase):
     def test_init_with_invalid_quality(self):
         # invalid dtype
         with self.assertRaises(TypeError):
-            BiologicalSequence('ACGT', quality=[2, 3, 4.1, 5])
+            Sequence('ACGT', quality=[2, 3, 4.1, 5])
 
         # wrong number of dimensions (2-D)
-        with self.assertRaisesRegexp(BiologicalSequenceError, '1-D'):
-            BiologicalSequence('ACGT', quality=[[2, 3], [4, 5]])
+        with self.assertRaisesRegexp(SequenceError, '1-D'):
+            Sequence('ACGT', quality=[[2, 3], [4, 5]])
 
         # wrong number of elements
-        with self.assertRaisesRegexp(BiologicalSequenceError, '\(3\).*\(4\)'):
-            BiologicalSequence('ACGT', quality=[2, 3, 4])
+        with self.assertRaisesRegexp(SequenceError, '\(3\).*\(4\)'):
+            Sequence('ACGT', quality=[2, 3, 4])
 
         # negatives
-        with self.assertRaisesRegexp(BiologicalSequenceError,
+        with self.assertRaisesRegexp(SequenceError,
                                      'quality scores.*greater than.*zero'):
-            BiologicalSequence('ACGT', quality=[2, 3, -1, 4])
+            Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
@@ -109,73 +333,67 @@ class BiologicalSequenceTests(TestCase):
         # identicial sequences of the same type are equal, even if they have
         # different ids, descriptions, and/or quality
         self.assertTrue(
-            BiologicalSequence('ACGT') == BiologicalSequence('ACGT'))
+            Sequence('ACGT') == Sequence('ACGT'))
         self.assertTrue(
-            BiologicalSequence('ACGT', id='a') ==
-            BiologicalSequence('ACGT', id='b'))
+            Sequence('ACGT', id='a') ==
+            Sequence('ACGT', id='b'))
         self.assertTrue(
-            BiologicalSequence('ACGT', description='c') ==
-            BiologicalSequence('ACGT', description='d'))
+            Sequence('ACGT', description='c') ==
+            Sequence('ACGT', description='d'))
         self.assertTrue(
-            BiologicalSequence('ACGT', id='a', description='c') ==
-            BiologicalSequence('ACGT', id='b', description='d'))
+            Sequence('ACGT', id='a', description='c') ==
+            Sequence('ACGT', id='b', description='d'))
         self.assertTrue(
-            BiologicalSequence('ACGT', id='a', description='c',
+            Sequence('ACGT', id='a', description='c',
                                quality=[1, 2, 3, 4]) ==
-            BiologicalSequence('ACGT', id='b', description='d',
+            Sequence('ACGT', id='b', description='d',
                                quality=[5, 6, 7, 8]))
 
         # different type causes sequences to not be equal
         self.assertFalse(
-            BiologicalSequence('ACGT') == DNASequence('ACGT'))
+            Sequence('ACGT') == DNA('ACGT'))
 
     def test_getitem(self):
         # use equals method to ensure that id, description, and sliced
         # quality are correctly propagated to the resulting sequence
         self.assertTrue(self.b1[0].equals(
-            BiologicalSequence('G', quality=(0,))))
+            Sequence('G', quality=(0,))))
 
         self.assertTrue(self.b1[:].equals(
-            BiologicalSequence('GATTACA', quality=range(7))))
+            Sequence('GATTACA', quality=range(7))))
 
         self.assertTrue(self.b1[::-1].equals(
-            BiologicalSequence('ACATTAG', quality=range(7)[::-1])))
+            Sequence('ACATTAG', quality=range(7)[::-1])))
 
         # test a sequence without quality scores
-        b = BiologicalSequence('ACGT', id='foo', description='bar')
+        b = Sequence('ACGT', id='foo', description='bar')
         self.assertTrue(b[2:].equals(
-            BiologicalSequence('GT', id='foo', description='bar')))
+            Sequence('GT', id='foo', description='bar')))
         self.assertTrue(b[2].equals(
-            BiologicalSequence('G', id='foo', description='bar')))
+            Sequence('G', id='foo', description='bar')))
 
     def test_getitem_indices(self):
         # no ordering, repeated items
         self.assertTrue(self.b1[[3, 5, 4, 0, 5, 0]].equals(
-            BiologicalSequence('TCAGCG', quality=(3, 5, 4, 0, 5, 0))))
-
-        # empty list
-        self.assertTrue(self.b1[[]].equals(BiologicalSequence('', quality=())))
-
-        # empty tuple
-        self.assertTrue(self.b1[()].equals(BiologicalSequence('', quality=())))
+            Sequence('TCAGCG', quality=(3, 5, 4, 0, 5, 0))))
 
         # single item
         self.assertTrue(
-            self.b1[[2]].equals(BiologicalSequence('T', quality=(2,))))
+            self.b1[[2]].equals(Sequence('T', quality=(2,))))
 
         # negatives
         self.assertTrue(self.b1[[2, -2, 4]].equals(
-            BiologicalSequence('TCA', quality=(2, 5, 4))))
+            Sequence('TCA', quality=(2, 5, 4))))
 
         # tuple
         self.assertTrue(self.b1[1, 2, 3].equals(
-            BiologicalSequence('ATT', quality=(1, 2, 3))))
+            Sequence('ATT', quality=(1, 2, 3))))
         self.assertTrue(self.b1[(1, 2, 3)].equals(
-            BiologicalSequence('ATT', quality=(1, 2, 3))))
+            Sequence('ATT', quality=(1, 2, 3))))
 
         # test a sequence without quality scores
         self.assertTrue(self.b2[5, 4, 1].equals(
-            BiologicalSequence('TGC', id='test-seq-2',
+            Sequence('TGC', id='test-seq-2',
                                description='A test sequence')))
 
     def test_getitem_wrong_type(self):
@@ -213,40 +431,40 @@ class BiologicalSequenceTests(TestCase):
 
     def test_k_words_overlapping_true(self):
         expected = [
-            BiologicalSequence('G', quality=[0]),
-            BiologicalSequence('A', quality=[1]),
-            BiologicalSequence('T', quality=[2]),
-            BiologicalSequence('T', quality=[3]),
-            BiologicalSequence('A', quality=[4]),
-            BiologicalSequence('C', quality=[5]),
-            BiologicalSequence('A', quality=[6])
+            Sequence('G', quality=[0]),
+            Sequence('A', quality=[1]),
+            Sequence('T', quality=[2]),
+            Sequence('T', quality=[3]),
+            Sequence('A', quality=[4]),
+            Sequence('C', quality=[5]),
+            Sequence('A', quality=[6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(1, overlapping=True), expected)
 
         expected = [
-            BiologicalSequence('GA', quality=[0, 1]),
-            BiologicalSequence('AT', quality=[1, 2]),
-            BiologicalSequence('TT', quality=[2, 3]),
-            BiologicalSequence('TA', quality=[3, 4]),
-            BiologicalSequence('AC', quality=[4, 5]),
-            BiologicalSequence('CA', quality=[5, 6])
+            Sequence('GA', quality=[0, 1]),
+            Sequence('AT', quality=[1, 2]),
+            Sequence('TT', quality=[2, 3]),
+            Sequence('TA', quality=[3, 4]),
+            Sequence('AC', quality=[4, 5]),
+            Sequence('CA', quality=[5, 6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(2, overlapping=True), expected)
 
         expected = [
-            BiologicalSequence('GAT', quality=[0, 1, 2]),
-            BiologicalSequence('ATT', quality=[1, 2, 3]),
-            BiologicalSequence('TTA', quality=[2, 3, 4]),
-            BiologicalSequence('TAC', quality=[3, 4, 5]),
-            BiologicalSequence('ACA', quality=[4, 5, 6])
+            Sequence('GAT', quality=[0, 1, 2]),
+            Sequence('ATT', quality=[1, 2, 3]),
+            Sequence('TTA', quality=[2, 3, 4]),
+            Sequence('TAC', quality=[3, 4, 5]),
+            Sequence('ACA', quality=[4, 5, 6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(3, overlapping=True), expected)
 
         expected = [
-            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(7, overlapping=True), expected)
@@ -255,34 +473,34 @@ class BiologicalSequenceTests(TestCase):
 
     def test_k_words_overlapping_false(self):
         expected = [
-            BiologicalSequence('G', quality=[0]),
-            BiologicalSequence('A', quality=[1]),
-            BiologicalSequence('T', quality=[2]),
-            BiologicalSequence('T', quality=[3]),
-            BiologicalSequence('A', quality=[4]),
-            BiologicalSequence('C', quality=[5]),
-            BiologicalSequence('A', quality=[6])
+            Sequence('G', quality=[0]),
+            Sequence('A', quality=[1]),
+            Sequence('T', quality=[2]),
+            Sequence('T', quality=[3]),
+            Sequence('A', quality=[4]),
+            Sequence('C', quality=[5]),
+            Sequence('A', quality=[6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(1, overlapping=False), expected)
 
         expected = [
-            BiologicalSequence('GA', quality=[0, 1]),
-            BiologicalSequence('TT', quality=[2, 3]),
-            BiologicalSequence('AC', quality=[4, 5])
+            Sequence('GA', quality=[0, 1]),
+            Sequence('TT', quality=[2, 3]),
+            Sequence('AC', quality=[4, 5])
         ]
         self._compare_k_words_results(
             self.b1.k_words(2, overlapping=False), expected)
 
         expected = [
-            BiologicalSequence('GAT', quality=[0, 1, 2]),
-            BiologicalSequence('TAC', quality=[3, 4, 5])
+            Sequence('GAT', quality=[0, 1, 2]),
+            Sequence('TAC', quality=[3, 4, 5])
         ]
         self._compare_k_words_results(
             self.b1.k_words(3, overlapping=False), expected)
 
         expected = [
-            BiologicalSequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
         self._compare_k_words_results(
             self.b1.k_words(7, overlapping=False), expected)
@@ -298,18 +516,16 @@ class BiologicalSequenceTests(TestCase):
 
     def test_k_words_different_sequences(self):
         expected = [
-            BiologicalSequence('HE.', quality=[0, 1, 2], id='hello',
+            Sequence('HE.', quality=[0, 1, 2], id='hello',
                                description='gapped hello'),
-            BiologicalSequence('.--', quality=[3, 4, 5], id='hello',
+            Sequence('.--', quality=[3, 4, 5], id='hello',
                                description='gapped hello'),
-            BiologicalSequence('..L', quality=[6, 7, 8], id='hello',
+            Sequence('..L', quality=[6, 7, 8], id='hello',
                                description='gapped hello')
         ]
         self._compare_k_words_results(
             self.b8.k_words(3, overlapping=False), expected)
 
-        b = BiologicalSequence('')
-        self.assertEqual(list(b.k_words(3)), [])
 
     def test_k_word_counts(self):
         # overlapping = True
@@ -356,17 +572,13 @@ class BiologicalSequenceTests(TestCase):
         expected['GATTACA'] = 1.0
         self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
                          expected)
-        expected = defaultdict(float)
-        empty = BiologicalSequence('')
-        self.assertEqual(empty.k_word_frequencies(1, overlapping=False),
-                         expected)
 
     def test_k_word_frequencies_floating_point_precision(self):
         # Test that a sequence having no variation in k-words yields a
         # frequency of exactly 1.0. Note that it is important to use
         # self.assertEqual here instead of self.assertAlmostEqual because we
         # want to test for exactly 1.0. A previous implementation of
-        # BiologicalSequence.k_word_frequencies added (1 / num_words) for each
+        # Sequence.k_word_frequencies added (1 / num_words) for each
         # occurrence of a k-word to compute the frequencies (see
         # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
         # this yielded a frequency slightly less than 1.0 due to roundoff
@@ -377,7 +589,7 @@ class BiologicalSequenceTests(TestCase):
         # identical), so 1/10 added 10 times yields a number slightly less than
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
-        seq = BiologicalSequence('AAAAAAAAAA')
+        seq = Sequence('AAAAAAAAAA')
         self.assertEqual(seq.k_word_frequencies(1),
                          defaultdict(float, {'A': 1.0}))
 
@@ -388,9 +600,9 @@ class BiologicalSequenceTests(TestCase):
 
     def test_repr(self):
         self.assertEqual(repr(self.b1),
-                         "<BiologicalSequence: GATTACA (length: 7)>")
+                         "<Sequence: GATTACA (length: 7)>")
         self.assertEqual(repr(self.b6),
-                         "<BiologicalSequence: ACGTACGTAC... (length: 12)>")
+                         "<Sequence: ACGTACGTAC... (length: 12)>")
 
     def test_reversed(self):
         b1_reversed = reversed(self.b1)
@@ -423,7 +635,7 @@ class BiologicalSequenceTests(TestCase):
         self.assertEqual(self.b3.description, "A protein sequence")
 
     def test_quality(self):
-        a = BiologicalSequence('ACA', quality=(22, 22, 1))
+        a = Sequence('ACA', quality=(22, 22, 1))
 
         # should get back a read-only numpy array of int dtype
         self.assertIsInstance(a.quality, np.ndarray)
@@ -439,28 +651,21 @@ class BiologicalSequenceTests(TestCase):
             a.quality = (22, 22, 42)
 
     def test_quality_not_provided(self):
-        b = BiologicalSequence('ACA')
+        b = Sequence('ACA')
         self.assertIs(b.quality, None)
 
     def test_quality_scalar(self):
-        b = BiologicalSequence('G', quality=2)
+        b = Sequence('G', quality=2)
 
         self.assertIsInstance(b.quality, np.ndarray)
         self.assertEqual(b.quality.dtype, np.int)
         self.assertEqual(b.quality.shape, (1,))
         npt.assert_equal(b.quality, np.array([2]))
 
-    def test_quality_empty(self):
-        b = BiologicalSequence('', quality=[])
-
-        self.assertIsInstance(b.quality, np.ndarray)
-        self.assertEqual(b.quality.dtype, np.int)
-        self.assertEqual(b.quality.shape, (0,))
-        npt.assert_equal(b.quality, np.array([]))
 
     def test_quality_no_copy(self):
         qual = np.array([22, 22, 1])
-        a = BiologicalSequence('ACA', quality=qual)
+        a = Sequence('ACA', quality=qual)
         self.assertIs(a.quality, qual)
 
         with self.assertRaises(ValueError):
@@ -470,16 +675,16 @@ class BiologicalSequenceTests(TestCase):
             qual[1] = 42
 
     def test_has_quality(self):
-        a = BiologicalSequence('ACA', quality=(5, 4, 67))
+        a = Sequence('ACA', quality=(5, 4, 67))
         self.assertTrue(a.has_quality())
 
-        b = BiologicalSequence('ACA')
+        b = Sequence('ACA')
         self.assertFalse(b.has_quality())
 
     def test_copy_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
-        # a subclass of BiologicalSequence
-        for seq in self.b6, self.b8, RNASequence('ACGU', id='rna seq'):
+        # a subclass of Sequence
+        for seq in self.b6, self.b8, RNA('ACGU', id='rna seq'):
             copy = seq.copy()
             self.assertTrue(seq.equals(copy))
             self.assertFalse(seq is copy)
@@ -528,8 +733,7 @@ class BiologicalSequenceTests(TestCase):
         # that aren't related to biological sequence attributes (i.e., they
         # aren't state that has to be copied)
 
-        # create an invalid DNA sequence
-        a = DNASequence('FOO', description='foo')
+        a = DNA('ACTG', description='foo')
 
         # should be able to copy it b/c validate defaults to False
         b = a.copy()
@@ -538,85 +742,85 @@ class BiologicalSequenceTests(TestCase):
 
         # specifying validate should raise an error when the copy is
         # instantiated
-#        with self.assertRaises(BiologicalSequenceError):
+#        with self.assertRaises(SequenceError):
 #            a.copy(validate=True)
 
     def test_equals_true(self):
         # sequences match, all other attributes are not provided
         self.assertTrue(
-            BiologicalSequence('ACGT').equals(BiologicalSequence('ACGT')))
+            Sequence('ACGT').equals(Sequence('ACGT')))
 
         # all attributes are provided and match
-        a = BiologicalSequence('ACGT', id='foo', description='abc',
+        a = Sequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', id='foo', description='abc',
+        b = Sequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
         self.assertTrue(a.equals(b))
 
         # ignore type
-        a = BiologicalSequence('ACGT')
-        b = DNASequence('ACGT')
+        a = Sequence('ACGT')
+        b = DNA('ACGT')
         self.assertTrue(a.equals(b, ignore=['type']))
 
         # ignore id
-        a = BiologicalSequence('ACGT', id='foo')
-        b = BiologicalSequence('ACGT', id='bar')
+        a = Sequence('ACGT', id='foo')
+        b = Sequence('ACGT', id='bar')
         self.assertTrue(a.equals(b, ignore=['id']))
 
         # ignore description
-        a = BiologicalSequence('ACGT', description='foo')
-        b = BiologicalSequence('ACGT', description='bar')
+        a = Sequence('ACGT', description='foo')
+        b = Sequence('ACGT', description='bar')
         self.assertTrue(a.equals(b, ignore=['description']))
 
         # ignore quality
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', quality=[5, 6, 7, 8])
+        a = Sequence('ACGT', quality=[1, 2, 3, 4])
+        b = Sequence('ACGT', quality=[5, 6, 7, 8])
         self.assertTrue(a.equals(b, ignore=['quality']))
 
         # ignore sequence
-        a = BiologicalSequence('ACGA')
-        b = BiologicalSequence('ACGT')
+        a = Sequence('ACGA')
+        b = Sequence('ACGT')
         self.assertTrue(a.equals(b, ignore=['sequence']))
 
         # ignore everything
-        a = BiologicalSequence('ACGA', id='foo', description='abc',
+        a = Sequence('ACGA', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
-        b = DNASequence('ACGT', id='bar', description='def',
+        b = DNA('ACGT', id='bar', description='def',
                         quality=[5, 6, 7, 8])
         self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id',
                                             'sequence', 'type']))
 
     def test_equals_false(self):
         # type mismatch
-        a = BiologicalSequence('ACGT', id='foo', description='abc',
+        a = Sequence('ACGT', id='foo', description='abc',
                                quality=[1, 2, 3, 4])
-        b = DNASequence('ACGT', id='bar', description='def',
+        b = DNA('ACGT', id='bar', description='def',
                         quality=[5, 6, 7, 8])
         self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
 
         # id mismatch
-        a = BiologicalSequence('ACGT', id='foo')
-        b = BiologicalSequence('ACGT', id='bar')
+        a = Sequence('ACGT', id='foo')
+        b = Sequence('ACGT', id='bar')
         self.assertFalse(a.equals(b))
 
         # description mismatch
-        a = BiologicalSequence('ACGT', description='foo')
-        b = BiologicalSequence('ACGT', description='bar')
+        a = Sequence('ACGT', description='foo')
+        b = Sequence('ACGT', description='bar')
         self.assertFalse(a.equals(b))
 
         # quality mismatch (both provided)
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT', quality=[1, 2, 3, 5])
+        a = Sequence('ACGT', quality=[1, 2, 3, 4])
+        b = Sequence('ACGT', quality=[1, 2, 3, 5])
         self.assertFalse(a.equals(b))
 
         # quality mismatch (one provided)
-        a = BiologicalSequence('ACGT', quality=[1, 2, 3, 4])
-        b = BiologicalSequence('ACGT')
+        a = Sequence('ACGT', quality=[1, 2, 3, 4])
+        b = Sequence('ACGT')
         self.assertFalse(a.equals(b))
 
         # sequence mismatch
-        a = BiologicalSequence('ACGT')
-        b = BiologicalSequence('TGCA')
+        a = Sequence('ACGT')
+        b = Sequence('TGCA')
         self.assertFalse(a.equals(b))
 
     def test_count(self):
@@ -636,18 +840,18 @@ class BiologicalSequenceTests(TestCase):
 #
 #        # everything is filtered, has quality
 #        self.assertTrue(self.b7.degap().equals(
-#            BiologicalSequence('', quality=[])))
+#            Sequence('', quality=[])))
 #
 #        # some filtering, has quality
 #        self.assertTrue(self.b8.degap().equals(
-#            BiologicalSequence('HELLO', id='hello', description='gapped hello',
+#            Sequence('HELLO', id='hello', description='gapped hello',
 #                               quality=[0, 1, 8, 9, 10])))
 
     def test_distance(self):
         # note that test_hamming_distance covers default behavior more
         # extensively
         self.assertEqual(self.b1.distance(self.b1), 0.0)
-        self.assertEqual(self.b1.distance(BiologicalSequence('GATTACC')), 1./7)
+        self.assertEqual(self.b1.distance(Sequence('GATTACC')), 1./7)
 
         def dumb_distance(x, y):
             return 42
@@ -661,30 +865,30 @@ class BiologicalSequenceTests(TestCase):
         # will. Therefore an error will be raised for sequences of unequal
         # length regardless of the function being passed.
         # With default hamming distance function
-        with self.assertRaises(BiologicalSequenceError):
+        with self.assertRaises(SequenceError):
             self.b1.distance(self.b2)
 
         # Alternate functions should also raise an error
         # Another distance function from scipy:
-        with self.assertRaises(BiologicalSequenceError):
+        with self.assertRaises(SequenceError):
             self.b1.distance(self.b2, distance_fn=euclidean)
 
         # Any other function should raise an error as well
         def dumb_distance(x, y):
             return 42
 
-        with self.assertRaises(BiologicalSequenceError):
+        with self.assertRaises(SequenceError):
             self.b1.distance(self.b2, distance_fn=dumb_distance)
 
     def test_fraction_diff(self):
         self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
         self.assertEqual(
-            self.b1.fraction_diff(BiologicalSequence('GATTACC')), 1. / 7., 5)
+            self.b1.fraction_diff(Sequence('GATTACC')), 1. / 7., 5)
 
     def test_fraction_same(self):
         self.assertAlmostEqual(self.b1.fraction_same(self.b1), 1., 5)
         self.assertAlmostEqual(
-            self.b1.fraction_same(BiologicalSequence('GATTACC')), 6. / 7., 5)
+            self.b1.fraction_same(Sequence('GATTACC')), 6. / 7., 5)
 
 #    def test_gap_maps(self):
 #        # in sequence with no gaps, the gap_maps are identical
@@ -701,7 +905,7 @@ class BiologicalSequenceTests(TestCase):
 #                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
 #
 #        # example from the gap_maps doc string
-#        self.assertEqual(BiologicalSequence('-ACCGA-TA-').gap_maps(),
+#        self.assertEqual(Sequence('-ACCGA-TA-').gap_maps(),
 #                         ([1, 2, 3, 4, 5, 7, 8],
 #                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
 
@@ -814,19 +1018,19 @@ class BiologicalSequenceTests(TestCase):
 #        self.assertEqual(NucleotideSequence.degenerate_chars, exp)
 #
 #    def test_complement(self):
-#        self.assertRaises(BiologicalSequenceError,
+#        self.assertRaises(SequenceError,
 #                          self.b1.complement)
 #
 #    def test_reverse_complement(self):
-#        self.assertRaises(BiologicalSequenceError,
+#        self.assertRaises(SequenceError,
 #                          self.b1.reverse_complement)
 #
 #    def test_is_reverse_complement(self):
-#        self.assertRaises(BiologicalSequenceError,
+#        self.assertRaises(SequenceError,
 #                          self.b1.is_reverse_complement, self.b1)
 #
 #    def test_nondegenerates_invalid(self):
-#        with self.assertRaises(BiologicalSequenceError):
+#        with self.assertRaises(SequenceError):
 #            list(NucleotideSequence('AZA').nondegenerates())
 #
 #    def test_nondegenerates_empty(self):
@@ -936,20 +1140,16 @@ class BiologicalSequenceTests(TestCase):
 #            self.assertTrue(o.equals(e))
 
 
-class DNASequenceTests(TestCase):
+class DNATests(TestCase):
 
     def setUp(self):
-        self.empty = DNASequence('')
-        self.b1 = DNASequence('GATTACA')
-        self.b2 = DNASequence('ACCGGTACC', id="test-seq-2",
+        self.b1 = DNA('GATTACA')
+        self.b2 = DNA('ACCGGTACC', id="test-seq-2",
                               description="A test sequence", quality=range(9))
-        self.b3 = DNASequence(
-            'ACCGGUACC', id="bad-seq-1",
-            description="Not a DNA sequence")
-        self.b4 = DNASequence(
+        self.b4 = DNA(
             'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
-        self.b5 = DNASequence('.G--ATTAC-A...')
+        self.b5 = DNA('.G--ATTAC-A...')
 
     def test_alphabet(self):
         exp = {
@@ -959,7 +1159,7 @@ class DNASequenceTests(TestCase):
         }
 
         self.assertEqual(self.b1.alphabet, exp)
-        self.assertEqual(DNASequence.alphabet, exp)
+        self.assertEqual(DNA.alphabet, exp)
 
     def test_gap_chars(self):
         self.assertEqual(self.b1.gap_chars, set('-.'))
@@ -974,12 +1174,12 @@ class DNASequenceTests(TestCase):
             'v': 'b', 'y': 'r'
         }
         self.assertEqual(self.b1.complement_map, exp)
-        self.assertEqual(DNASequence.complement_map, exp)
+        self.assertEqual(DNA.complement_map, exp)
 
     def test_nondegenerate_chars(self):
         exp = set("ACGTacgt")
         self.assertEqual(self.b1.nondegenerate_chars, exp)
-        self.assertEqual(DNASequence.nondegenerate_chars, exp)
+        self.assertEqual(DNA.nondegenerate_chars, exp)
 
     def test_degenerate_map(self):
         exp = {
@@ -995,47 +1195,43 @@ class DNASequenceTests(TestCase):
             'v': set(['a', 'c', 'g']), 'y': set(['c', 't'])
         }
         self.assertEqual(self.b1.degenerate_map, exp)
-        self.assertEqual(DNASequence.degenerate_map, exp)
+        self.assertEqual(DNA.degenerate_map, exp)
 
     def test_degenerate_chars(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
         self.assertEqual(self.b1.degenerate_chars, exp)
-        self.assertEqual(DNASequence.degenerate_chars, exp)
+        self.assertEqual(DNA.degenerate_chars, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
         # correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.complement().equals(DNASequence("CTAATGT")))
+        self.assertTrue(self.b1.complement().equals(DNA("CTAATGT")))
 
         self.assertTrue(self.b2.complement().equals(
-            DNASequence("TGGCCATGG", id="test-seq-2",
+            DNA("TGGCCATGG", id="test-seq-2",
                         description="A test sequence", quality=range(9))))
 
-        self.assertRaises(BiologicalSequenceError, self.b3.complement)
-
         self.assertTrue(self.b4.complement().equals(
-            DNASequence("KYWSRMBDHVN", id="degen",
+            DNA("KYWSRMBDHVN", id="degen",
                         description="All of the degenerate bases")))
 
         self.assertTrue(self.b5.complement().equals(
-            DNASequence(".C--TAATG-T...")))
+            DNA(".C--TAATG-T...")))
 
     def test_reverse_complement(self):
         # use equals method to ensure that id, description, and (reversed)
         # quality scores are correctly propagated to the resulting sequence
         self.assertTrue(self.b1.reverse_complement().equals(
-            DNASequence("TGTAATC")))
+            DNA("TGTAATC")))
 
         self.assertTrue(self.b2.reverse_complement().equals(
-            DNASequence("GGTACCGGT", id="test-seq-2",
+            DNA("GGTACCGGT", id="test-seq-2",
                         description="A test sequence",
                         quality=range(9)[::-1])))
 
-        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
-
         self.assertTrue(self.b4.reverse_complement().equals(
-            DNASequence("NVHDBMRSWYK", id="degen",
+            DNA("NVHDBMRSWYK", id="degen",
                         description="All of the degenerate bases")))
 
     def test_is_reverse_complement(self):
@@ -1044,66 +1240,57 @@ class DNASequenceTests(TestCase):
         # id, description, and quality scores should be ignored (only sequence
         # data and type should be compared)
         self.assertTrue(self.b1.is_reverse_complement(
-            DNASequence('TGTAATC', quality=range(7))))
+            DNA('TGTAATC', quality=range(7))))
 
         self.assertTrue(
-            self.b4.is_reverse_complement(DNASequence('NVHDBMRSWYK')))
+            self.b4.is_reverse_complement(DNA('NVHDBMRSWYK')))
 
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(DNASequence('AZA').nondegenerates())
 
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
 
     def test_nondegenerates_no_degens(self):
         self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
 
     def test_nondegenerates_all_degens(self):
         # Same chars.
-        exp = [DNASequence('CC'), DNASequence('CG'), DNASequence('GC'),
-               DNASequence('GG')]
+        exp = [DNA('CC'), DNA('CG'), DNA('GC'),
+               DNA('GG')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(DNASequence('SS').nondegenerates(), key=str)
+        obs = sorted(DNA('SS').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Different chars.
-        exp = [DNASequence('AC'), DNASequence('AG'), DNASequence('GC'),
-               DNASequence('GG')]
-        obs = sorted(DNASequence('RS').nondegenerates(), key=str)
+        exp = [DNA('AC'), DNA('AG'), DNA('GC'),
+               DNA('GG')]
+        obs = sorted(DNA('RS').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Odd number of chars.
-        obs = list(DNASequence('NNN').nondegenerates())
+        obs = list(DNA('NNN').nondegenerates())
         self.assertEqual(len(obs), 4**3)
 
     def test_nondegenerates_mixed_degens(self):
-        exp = [DNASequence('AGC'), DNASequence('AGT'), DNASequence('GGC'),
-               DNASequence('GGT')]
-        obs = sorted(DNASequence('RGY').nondegenerates(), key=str)
+        exp = [DNA('AGC'), DNA('AGT'), DNA('GGC'),
+               DNA('GGT')]
+        obs = sorted(DNA('RGY').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
     def test_nondegenerates_gap_mixed_case(self):
-        exp = [DNASequence('-A.a'), DNASequence('-A.c'),
-               DNASequence('-C.a'), DNASequence('-C.c')]
-        obs = sorted(DNASequence('-M.m').nondegenerates(), key=str)
+        exp = [DNA('-A.a'), DNA('-A.c'),
+               DNA('-C.a'), DNA('-C.c')]
+        obs = sorted(DNA('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
-class RNASequenceTests(TestCase):
+class RNATests(TestCase):
 
     def setUp(self):
-        self.empty = RNASequence('')
-        self.b1 = RNASequence('GAUUACA')
-        self.b2 = RNASequence('ACCGGUACC', id="test-seq-2",
+        self.b1 = RNA('GAUUACA')
+        self.b2 = RNA('ACCGGUACC', id="test-seq-2",
                               description="A test sequence", quality=range(9))
-        self.b3 = RNASequence(
-            'ACCGGTACC', id="bad-seq-1",
-            description="Not a RNA sequence")
-        self.b4 = RNASequence(
+        self.b4 = RNA(
             'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
-        self.b5 = RNASequence('.G--AUUAC-A...')
+        self.b5 = RNA('.G--AUUAC-A...')
 
     def test_alphabet(self):
         exp = {
@@ -1113,7 +1300,7 @@ class RNASequenceTests(TestCase):
         }
 
         self.assertEqual(self.b1.alphabet, exp)
-        self.assertEqual(RNASequence.alphabet, exp)
+        self.assertEqual(RNA.alphabet, exp)
 
     def test_gap_chars(self):
         self.assertEqual(self.b1.gap_chars, set('-.'))
@@ -1128,12 +1315,12 @@ class RNASequenceTests(TestCase):
             'v': 'b', 'y': 'r'
         }
         self.assertEqual(self.b1.complement_map, exp)
-        self.assertEqual(RNASequence.complement_map, exp)
+        self.assertEqual(RNA.complement_map, exp)
 
     def test_nondegenerate_chars(self):
         exp = set("ACGUacgu")
         self.assertEqual(self.b1.nondegenerate_chars, exp)
-        self.assertEqual(RNASequence.nondegenerate_chars, exp)
+        self.assertEqual(RNA.nondegenerate_chars, exp)
 
     def test_degenerate_map(self):
         exp = {
@@ -1149,47 +1336,45 @@ class RNASequenceTests(TestCase):
             'v': set(['a', 'c', 'g']), 'y': set(['c', 'u'])
         }
         self.assertEqual(self.b1.degenerate_map, exp)
-        self.assertEqual(RNASequence.degenerate_map, exp)
+        self.assertEqual(RNA.degenerate_map, exp)
 
     def test_degenerate_chars(self):
         exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
                    'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
         self.assertEqual(self.b1.degenerate_chars, exp)
-        self.assertEqual(RNASequence.degenerate_chars, exp)
+        self.assertEqual(RNA.degenerate_chars, exp)
 
     def test_complement(self):
         # use equals method to ensure that id, description, and quality are
         # correctly propagated to the resulting sequence
-        self.assertTrue(self.b1.complement().equals(RNASequence("CUAAUGU")))
+        self.assertTrue(self.b1.complement().equals(RNA("CUAAUGU")))
 
         self.assertTrue(self.b2.complement().equals(
-            RNASequence("UGGCCAUGG", id="test-seq-2",
+            RNA("UGGCCAUGG", id="test-seq-2",
                         description="A test sequence", quality=range(9))))
 
-        self.assertRaises(BiologicalSequenceError, self.b3.complement)
 
         self.assertTrue(self.b4.complement().equals(
-            RNASequence("KYWSRMBDHVN", id="degen",
+            RNA("KYWSRMBDHVN", id="degen",
                         description="All of the degenerate bases")))
 
         self.assertTrue(self.b5.complement().equals(
-            RNASequence(".C--UAAUG-U...")))
+            RNA(".C--UAAUG-U...")))
 
     def test_reverse_complement(self):
         # use equals method to ensure that id, description, and (reversed)
         # quality scores are correctly propagated to the resulting sequence
         self.assertTrue(self.b1.reverse_complement().equals(
-            RNASequence("UGUAAUC")))
+            RNA("UGUAAUC")))
 
         self.assertTrue(self.b2.reverse_complement().equals(
-            RNASequence("GGUACCGGU", id="test-seq-2",
+            RNA("GGUACCGGU", id="test-seq-2",
                         description="A test sequence",
                         quality=range(9)[::-1])))
 
-        self.assertRaises(BiologicalSequenceError, self.b3.reverse_complement)
 
         self.assertTrue(self.b4.reverse_complement().equals(
-            RNASequence("NVHDBMRSWYK", id="degen",
+            RNA("NVHDBMRSWYK", id="degen",
                         description="All of the degenerate bases")))
 
     def test_is_reverse_complement(self):
@@ -1198,63 +1383,52 @@ class RNASequenceTests(TestCase):
         # id, description, and quality scores should be ignored (only sequence
         # data and type should be compared)
         self.assertTrue(self.b1.is_reverse_complement(
-            RNASequence('UGUAAUC', quality=range(7))))
+            RNA('UGUAAUC', quality=range(7))))
 
         self.assertTrue(
-            self.b4.is_reverse_complement(RNASequence('NVHDBMRSWYK')))
-
-    def test_nondegenerates_invalid(self):
-        with self.assertRaises(BiologicalSequenceError):
-            list(RNASequence('AZA').nondegenerates())
-
-    def test_nondegenerates_empty(self):
-        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
+            self.b4.is_reverse_complement(RNA('NVHDBMRSWYK')))
 
     def test_nondegenerates_no_degens(self):
         self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
 
     def test_nondegenerates_all_degens(self):
         # Same chars.
-        exp = [RNASequence('CC'), RNASequence('CG'), RNASequence('GC'),
-               RNASequence('GG')]
+        exp = [RNA('CC'), RNA('CG'), RNA('GC'),
+               RNA('GG')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(RNASequence('SS').nondegenerates(), key=str)
+        obs = sorted(RNA('SS').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Different chars.
-        exp = [RNASequence('AC'), RNASequence('AG'), RNASequence('GC'),
-               RNASequence('GG')]
-        obs = sorted(RNASequence('RS').nondegenerates(), key=str)
+        exp = [RNA('AC'), RNA('AG'), RNA('GC'),
+               RNA('GG')]
+        obs = sorted(RNA('RS').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Odd number of chars.
-        obs = list(RNASequence('NNN').nondegenerates())
+        obs = list(RNA('NNN').nondegenerates())
         self.assertEqual(len(obs), 4**3)
 
     def test_nondegenerates_mixed_degens(self):
-        exp = [RNASequence('AGC'), RNASequence('AGU'), RNASequence('GGC'),
-               RNASequence('GGU')]
-        obs = sorted(RNASequence('RGY').nondegenerates(), key=str)
+        exp = [RNA('AGC'), RNA('AGU'), RNA('GGC'),
+               RNA('GGU')]
+        obs = sorted(RNA('RGY').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
     def test_nondegenerates_gap_mixed_case(self):
-        exp = [RNASequence('-A.a'), RNASequence('-A.c'),
-               RNASequence('-C.a'), RNASequence('-C.c')]
-        obs = sorted(RNASequence('-M.m').nondegenerates(), key=str)
+        exp = [RNA('-A.a'), RNA('-A.c'),
+               RNA('-C.a'), RNA('-C.c')]
+        obs = sorted(RNA('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
-class ProteinSequenceTests(TestCase):
+class ProteinTests(TestCase):
 
     def setUp(self):
-        self.empty = ProteinSequence('')
-        self.p1 = ProteinSequence('GREG')
-        self.p2 = ProteinSequence(
+        self.p1 = Protein('GREG')
+        self.p2 = Protein(
             'PRTEINSEQNCE', id="test-seq-2",
             description="A test sequence")
-        self.p3 = ProteinSequence(
-            'PROTEIN', id="bad-seq-1",
-            description="Not a protein sequence")
 
     def test_alphabet(self):
         exp = {
@@ -1265,7 +1439,7 @@ class ProteinSequenceTests(TestCase):
         }
 
         self.assertEqual(self.p1.alphabet, exp)
-        self.assertEqual(ProteinSequence.alphabet, exp)
+        self.assertEqual(Protein.alphabet, exp)
 
     def test_gap_chars(self):
         self.assertEqual(self.p1.gap_chars, set('-.'))
@@ -1273,7 +1447,7 @@ class ProteinSequenceTests(TestCase):
     def test_nondegenerate_chars(self):
         exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
         self.assertEqual(self.p1.nondegenerate_chars, exp)
-        self.assertEqual(ProteinSequence.nondegenerate_chars, exp)
+        self.assertEqual(Protein.nondegenerate_chars, exp)
 
     def test_degenerate_map(self):
         exp = {
@@ -1285,17 +1459,17 @@ class ProteinSequenceTests(TestCase):
                       'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
         }
         self.assertEqual(self.p1.degenerate_map, exp)
-        self.assertEqual(ProteinSequence.degenerate_map, exp)
+        self.assertEqual(Protein.degenerate_map, exp)
 
     def test_degenerate_chars(self):
         exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
         self.assertEqual(self.p1.degenerate_chars, exp)
-        self.assertEqual(ProteinSequence.degenerate_chars, exp)
+        self.assertEqual(Protein.degenerate_chars, exp)
 
     def test_nondegenerates(self):
-        exp = [ProteinSequence('AD'), ProteinSequence('AN')]
+        exp = [Protein('AD'), Protein('AN')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(ProteinSequence('AB').nondegenerates(), key=str)
+        obs = sorted(Protein('AB').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
 if __name__ == "__main__":

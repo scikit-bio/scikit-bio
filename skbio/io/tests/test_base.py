@@ -13,7 +13,7 @@ import unittest
 
 import numpy.testing as npt
 
-from skbio import BiologicalSequence, DNASequence, RNASequence
+from skbio import Sequence, DNA, RNA
 from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
                             _encode_phred_to_qual, _get_nth_sequence,
                             _parse_fasta_like_header,
@@ -277,11 +277,11 @@ class TestParseFASTALikeHeader(unittest.TestCase):
 class TestFormatFASTALikeRecords(unittest.TestCase):
     def setUp(self):
         def generator():
-            yield BiologicalSequence('ACGT', id='', description='',
+            yield Sequence('ACGT', id='', description='',
                                      quality=range(4))
-            yield RNASequence('GAU', id='  foo \t\t bar ', description='')
-            yield DNASequence('TAG', id='', description='foo\n\n bar\n')
-            yield BiologicalSequence('A', id='foo', description='bar baz',
+            yield RNA('GAU', id='  foo \t\t bar ', description='')
+            yield DNA('TAG', id='', description='foo\n\n bar\n')
+            yield Sequence('A', id='foo', description='bar baz',
                                      quality=[42])
         self.gen = generator()
 
@@ -334,8 +334,8 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_empty_sequence(self):
         def blank_seq_gen():
-            for seq in (DNASequence('A'), BiologicalSequence(''),
-                        RNASequence('GG')):
+            for seq in (DNA('A'), Sequence(''),
+                        RNA('GG')):
                 yield seq
 
         with self.assertRaisesRegexp(ValueError, '2nd.*empty'):
@@ -344,9 +344,9 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_missing_quality_scores(self):
         def missing_qual_gen():
-            for seq in (RNASequence('A', quality=[42]),
-                        BiologicalSequence('AG'),
-                        DNASequence('GG', quality=[41, 40])):
+            for seq in (RNA('A', quality=[42]),
+                        Sequence('AG'),
+                        DNA('GG', quality=[41, 40])):
                 yield seq
 
         with self.assertRaisesRegexp(ValueError,

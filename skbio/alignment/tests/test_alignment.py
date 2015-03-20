@@ -19,7 +19,7 @@ import tempfile
 import numpy as np
 from scipy.spatial.distance import hamming
 
-from skbio import (BiologicalSequence, DNASequence, RNASequence, DNA, RNA,
+from skbio import (Sequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError, AlignmentError)
@@ -27,17 +27,17 @@ from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
 
 class SequenceCollectionTests(TestCase):
     def setUp(self):
-        self.d1 = DNASequence('GATTACA', id="d1")
-        self.d2 = DNASequence('TTG', id="d2")
-        self.d3 = DNASequence('GTATACA', id="d3")
-        self.d1_lower = DNASequence('gattaca', id="d1")
-        self.d2_lower = DNASequence('ttg', id="d2")
-        self.d3_lower = DNASequence('gtataca', id="d3")
-        self.r1 = RNASequence('GAUUACA', id="r1")
-        self.r2 = RNASequence('UUG', id="r2")
-        self.r3 = RNASequence('U-----UGCC--', id="r3")
+        self.d1 = DNA('GATTACA', id="d1")
+        self.d2 = DNA('TTG', id="d2")
+        self.d3 = DNA('GTATACA', id="d3")
+        self.d1_lower = DNA('gattaca', id="d1")
+        self.d2_lower = DNA('ttg', id="d2")
+        self.d3_lower = DNA('gtataca', id="d3")
+        self.r1 = RNA('GAUUACA', id="r1")
+        self.r2 = RNA('UUG', id="r2")
+        self.r3 = RNA('U-----UGCC--', id="r3")
 
-        self.i1 = DNASequence('GATXACA', id="i1")
+        self.i1 = DNA('GATXACA', id="i1")
 
         self.seqs1 = [self.d1, self.d2]
         self.seqs1_lower = [self.d1_lower, self.d2_lower]
@@ -73,7 +73,7 @@ class SequenceCollectionTests(TestCase):
     def test_init_validate(self):
         SequenceCollection(self.seqs1, validate=True)
         SequenceCollection(self.seqs1, validate=True)
-        # can't validate self.seqs2 as a DNASequence
+        # can't validate self.seqs2 as a DNA
         self.assertRaises(SequenceCollectionError, SequenceCollection,
                           self.invalid_s1, validate=True)
 
@@ -189,7 +189,7 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.empty.k_word_frequencies(k=1), [])
 
         # Test to ensure floating point precision bug isn't present. See the
-        # tests for BiologicalSequence.k_word_frequencies for more details.
+        # tests for Sequence.k_word_frequencies for more details.
         sc = SequenceCollection([RNA('C' * 10, id='s1'),
                                  RNA('G' * 10, id='s2')])
         self.assertEqual(sc.k_word_frequencies(1),
@@ -244,9 +244,9 @@ class SequenceCollectionTests(TestCase):
 
     def test_degap(self):
         expected = SequenceCollection([
-            RNASequence('GAUUACA', id="r1"),
-            RNASequence('UUG', id="r2"),
-            RNASequence('UUGCC', id="r3")])
+            RNA('GAUUACA', id="r1"),
+            RNA('UUG', id="r2"),
+            RNA('UUGCC', id="r3")])
         actual = self.s2.degap()
         self.assertEqual(actual, expected)
 
@@ -436,12 +436,12 @@ class SequenceCollectionTests(TestCase):
 class AlignmentTests(TestCase):
 
     def setUp(self):
-        self.d1 = DNASequence('..ACC-GTTGG..', id="d1")
-        self.d2 = DNASequence('TTACCGGT-GGCC', id="d2")
-        self.d3 = DNASequence('.-ACC-GTTGC--', id="d3")
+        self.d1 = DNA('..ACC-GTTGG..', id="d1")
+        self.d2 = DNA('TTACCGGT-GGCC', id="d2")
+        self.d3 = DNA('.-ACC-GTTGC--', id="d3")
 
-        self.r1 = RNASequence('UUAU-', id="r1")
-        self.r2 = RNASequence('ACGUU', id="r2")
+        self.r1 = RNA('UUAU-', id="r1")
+        self.r2 = RNA('ACGUU', id="r2")
 
         self.seqs1 = [self.d1, self.d2, self.d3]
         self.seqs2 = [self.r1, self.r2]
@@ -465,15 +465,15 @@ class AlignmentTests(TestCase):
 
     def test_degap(self):
         expected = SequenceCollection([
-            DNASequence('ACCGTTGG', id="d1"),
-            DNASequence('TTACCGGTGGCC', id="d2"),
-            DNASequence('ACCGTTGC', id="d3")])
+            DNA('ACCGTTGG', id="d1"),
+            DNA('TTACCGGTGGCC', id="d2"),
+            DNA('ACCGTTGC', id="d3")])
         actual = self.a1.degap()
         self.assertEqual(actual, expected)
 
         expected = SequenceCollection([
-            RNASequence('UUAU', id="r1"),
-            RNASequence('ACGUU', id="r2")])
+            RNA('UUAU', id="r1"),
+            RNA('ACGUU', id="r2")])
         actual = self.a2.degap()
         self.assertEqual(actual, expected)
 
@@ -528,26 +528,26 @@ class AlignmentTests(TestCase):
 
         # keep positions
         actual = self.a1.subalignment(positions_to_keep=[0, 2, 3])
-        d1 = DNASequence('.AC', id="d1")
-        d2 = DNASequence('TAC', id="d2")
-        d3 = DNASequence('.AC', id="d3")
+        d1 = DNA('.AC', id="d1")
+        d2 = DNA('TAC', id="d2")
+        d3 = DNA('.AC', id="d3")
         expected = Alignment([d1, d2, d3])
         self.assertEqual(actual, expected)
 
         # keep positions (invert)
         actual = self.a1.subalignment(positions_to_keep=[0, 2, 3],
                                       invert_positions_to_keep=True)
-        d1 = DNASequence('.C-GTTGG..', id="d1")
-        d2 = DNASequence('TCGGT-GGCC', id="d2")
-        d3 = DNASequence('-C-GTTGC--', id="d3")
+        d1 = DNA('.C-GTTGG..', id="d1")
+        d2 = DNA('TCGGT-GGCC', id="d2")
+        d3 = DNA('-C-GTTGC--', id="d3")
         expected = Alignment([d1, d2, d3])
         self.assertEqual(actual, expected)
 
         # keep seqs and positions
         actual = self.a1.subalignment(seqs_to_keep=[0, 2],
                                       positions_to_keep=[0, 2, 3])
-        d1 = DNASequence('.AC', id="d1")
-        d3 = DNASequence('.AC', id="d3")
+        d1 = DNA('.AC', id="d1")
+        d3 = DNA('.AC', id="d3")
         expected = Alignment([d1, d3])
         self.assertEqual(actual, expected)
 
@@ -556,7 +556,7 @@ class AlignmentTests(TestCase):
                                       positions_to_keep=[0, 2, 3],
                                       invert_seqs_to_keep=True,
                                       invert_positions_to_keep=True)
-        d2 = DNASequence('TCGGT-GGCC', id="d2")
+        d2 = DNA('TCGGT-GGCC', id="d2")
         expected = Alignment([d2])
         self.assertEqual(actual, expected)
 
@@ -574,7 +574,7 @@ class AlignmentTests(TestCase):
 
     def test_init_not_equal_lengths(self):
         invalid_seqs = [self.d1, self.d2, self.d3,
-                        DNASequence('.-ACC-GTGC--', id="i2")]
+                        DNA('.-ACC-GTGC--', id="i2")]
         self.assertRaises(AlignmentError, Alignment,
                           invalid_seqs)
 
@@ -587,13 +587,13 @@ class AlignmentTests(TestCase):
 
         # invalid DNA character
         invalid_seqs1 = [self.d1, self.d2, self.d3,
-                         DNASequence('.-ACC-GTXGC--', id="i1")]
+                         DNA('.-ACC-GTXGC--', id="i1")]
         self.assertRaises(SequenceCollectionError, Alignment,
                           invalid_seqs1, validate=True)
 
     def test_iter_positions(self):
         actual = list(self.a2.iter_positions())
-        expected = [[RNASequence(j) for j in i] for i in
+        expected = [[RNA(j) for j in i] for i in
                     ['UA', 'UC', 'AG', 'UU', '-U']]
         self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
@@ -610,41 +610,41 @@ class AlignmentTests(TestCase):
     def test_majority_consensus(self):
         # empty cases
         self.assertTrue(
-            self.empty.majority_consensus().equals(BiologicalSequence('')))
+            self.empty.majority_consensus().equals(Sequence('')))
         self.assertTrue(
-            self.no_positions.majority_consensus().equals(RNASequence('')))
+            self.no_positions.majority_consensus().equals(RNA('')))
 
         # alignment where all sequences are the same
-        aln = Alignment([DNASequence('AG', id='a'),
-                         DNASequence('AG', id='b')])
-        self.assertTrue(aln.majority_consensus().equals(DNASequence('AG')))
+        aln = Alignment([DNA('AG', id='a'),
+                         DNA('AG', id='b')])
+        self.assertTrue(aln.majority_consensus().equals(DNA('AG')))
 
         # no ties
-        d1 = DNASequence('TTT', id="d1")
-        d2 = DNASequence('TT-', id="d2")
-        d3 = DNASequence('TC-', id="d3")
+        d1 = DNA('TTT', id="d1")
+        d2 = DNA('TT-', id="d2")
+        d3 = DNA('TC-', id="d3")
         a1 = Alignment([d1, d2, d3])
-        self.assertTrue(a1.majority_consensus().equals(DNASequence('TT-')))
+        self.assertTrue(a1.majority_consensus().equals(DNA('TT-')))
 
         # ties
-        d1 = DNASequence('T', id="d1")
-        d2 = DNASequence('A', id="d2")
+        d1 = DNA('T', id="d1")
+        d2 = DNA('A', id="d2")
         a1 = Alignment([d1, d2])
         self.assertTrue(a1.majority_consensus() in
-                        [DNASequence('T'), DNASequence('A')])
+                        [DNA('T'), DNA('A')])
 
     def test_omit_gap_positions(self):
         expected = self.a2
         self.assertEqual(self.a2.omit_gap_positions(1.0), expected)
         self.assertEqual(self.a2.omit_gap_positions(0.51), expected)
 
-        r1 = RNASequence('UUAU', id="r1")
-        r2 = RNASequence('ACGU', id="r2")
+        r1 = RNA('UUAU', id="r1")
+        r2 = RNA('ACGU', id="r2")
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.49), expected)
 
-        r1 = RNASequence('UUAU', id="r1")
-        r2 = RNASequence('ACGU', id="r2")
+        r1 = RNA('UUAU', id="r1")
+        r2 = RNA('ACGU', id="r2")
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.0), expected)
 
@@ -759,13 +759,13 @@ class AlignmentTests(TestCase):
         self.assertTrue(self.empty._validate_lengths())
 
         self.assertTrue(Alignment([
-            DNASequence('TTT', id="d1")])._validate_lengths())
+            DNA('TTT', id="d1")])._validate_lengths())
 
 
 class StockholmAlignmentTests(TestCase):
     def setUp(self):
-        self.seqs = [DNASequence("ACC-G-GGTA", id="seq1"),
-                     DNASequence("TCC-G-GGCA", id="seq2")]
+        self.seqs = [DNA("ACC-G-GGTA", id="seq1"),
+                     DNA("TCC-G-GGCA", id="seq2")]
         self.GF = OrderedDict([
             ("AC", "RF00360"),
             ("BM", ["cmbuild  -F CM SEED",

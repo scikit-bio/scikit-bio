@@ -12,24 +12,24 @@ from future.utils import viewitems, with_metaclass
 from six import string_types
 
 import re
+import collections
 from abc import ABCMeta, abstractmethod
-from collections import Sequence, Counter, defaultdict
 from itertools import product
 
 import numpy as np
 from scipy.spatial.distance import hamming
 
 from skbio._base import SkbioObject
-from skbio.sequence import BiologicalSequenceError
+from skbio.sequence import SequenceError
 from skbio.util import classproperty
 
 
-class BiologicalSequence(Sequence, SkbioObject):
+class Sequence(collections.Sequence, SkbioObject):
     """Base class for biological sequences.
 
     Parameters
     ----------
-    sequence : python Sequence (e.g., str, list or tuple)
+    sequence : python collections.Sequence (e.g., str, list or tuple)
         The biological sequence.
     id : str, optional
         The sequence id (e.g., an accession number).
@@ -54,18 +54,18 @@ class BiologicalSequence(Sequence, SkbioObject):
 
     Raises
     ------
-    skbio.sequence.BiologicalSequenceError
+    skbio.sequence.SequenceError
         If `quality` is not the correct shape.
 
     See Also
     --------
     NucleotideSequence
-    DNASequence
-    RNASequence
+    DNA
+    RNA
 
     Notes
     -----
-    `BiologicalSequence` objects are immutable. Where applicable, methods
+    `Sequence` objects are immutable. Where applicable, methods
     return a new object of the same class.
     Subclasses are typically defined by methods relevant to only a specific
     type of biological sequence, and by containing characters only contained in
@@ -73,9 +73,9 @@ class BiologicalSequence(Sequence, SkbioObject):
 
     Examples
     --------
-    >>> from skbio.sequence import BiologicalSequence
-    >>> s = BiologicalSequence('GGUCGUGAAGGA')
-    >>> t = BiologicalSequence('GGUCCUGAAGGU')
+    >>> from skbio.sequence import Sequence
+    >>> s = Sequence('GGUCGUGAAGGA')
+    >>> t = Sequence('GGUCCUGAAGGU')
 
     References
     ----------
@@ -111,8 +111,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
         >>> 'CCC' in s
@@ -132,7 +132,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : `BiologicalSequence`
+        other : `Sequence`
             The sequence to test for equality against.
 
         Returns
@@ -147,7 +147,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Notes
         -----
-        See ``BiologicalSequence.equals`` for more fine-grained control of
+        See ``Sequence.equals`` for more fine-grained control of
         equality testing.
 
         This method is equivalent to
@@ -155,19 +155,19 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
+        >>> t = Sequence('GGUCGUGAAGGA')
         >>> s == t
         True
-        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u = Sequence('GGUCGUGACCGA')
         >>> u == t
         False
 
         Note that even though the quality scores do not match between ``u`` and
         ``v``, they are considered equal:
 
-        >>> v = BiologicalSequence('GGUCGUGACCGA',
+        >>> v = Sequence('GGUCGUGACCGA',
         ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
         ...                                 42, 42])
         >>> u == v
@@ -184,37 +184,37 @@ class BiologicalSequence(Sequence, SkbioObject):
         Parameters
         ----------
         i : int, slice, or sequence of ints
-            The position(s) to return from the `BiologicalSequence`. If `i` is
+            The position(s) to return from the `Sequence`. If `i` is
             a sequence of ints, these are assumed to be indices in the sequence
             to keep.
 
         Returns
         -------
-        BiologicalSequence
+        Sequence
             New biological sequence containing the character(s) at position(s)
-            `i` in the current `BiologicalSequence`. If quality scores are
+            `i` in the current `Sequence`. If quality scores are
             present, the quality score at position(s) `i` will be included in
             the returned sequence. ID and description are also included.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
 
         Obtain a single character from the biological sequence:
 
         >>> s[1]
-        <BiologicalSequence: G (length: 1)>
+        <Sequence: G (length: 1)>
 
         Obtain a slice:
 
         >>> s[7:]
-        <BiologicalSequence: AAGGA (length: 5)>
+        <Sequence: AAGGA (length: 5)>
 
         Obtain characters at the following indices:
 
         >>> s[[3, 4, 7, 0, 3]]
-        <BiologicalSequence: CGAGC (length: 5)>
+        <Sequence: CGAGC (length: 5)>
 
         .. shownumpydoc
 
@@ -245,12 +245,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         int
-            The hash of the `BiologicalSequence`.
+            The hash of the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
         >>> hash(s)
         -1080059835405276950
 
@@ -265,12 +265,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         iterator
-            Position iterator for the `BiologicalSequence`.
+            Position iterator for the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
         >>> for c in s: print(c)
         G
         G
@@ -288,12 +288,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         int
-            The length of the `BiologicalSequence`.
+            The length of the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
         >>> len(s)
         4
 
@@ -311,7 +311,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : `BiologicalSequence`
+        other : `Sequence`
             The sequence to test for inequality against.
 
         Returns
@@ -326,17 +326,17 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Notes
         -----
-        See ``BiologicalSequence.equals`` for more fine-grained control of
+        See ``Sequence.equals`` for more fine-grained control of
         equality testing.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
+        >>> t = Sequence('GGUCGUGAAGGA')
         >>> s != t
         False
-        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u = Sequence('GGUCGUGACCGA')
         >>> u != t
         True
 
@@ -362,15 +362,15 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
         >>> repr(s)
-        '<BiologicalSequence: GGUCGUGAAG... (length: 12)>'
-        >>> t = BiologicalSequence('ACGT')
+        '<Sequence: GGUCGUGAAG... (length: 12)>'
+        >>> t = Sequence('ACGT')
         >>> repr(t)
-        '<BiologicalSequence: ACGT (length: 4)>'
+        '<Sequence: ACGT (length: 4)>'
         >>> t
-        <BiologicalSequence: ACGT (length: 4)>
+        <Sequence: ACGT (length: 4)>
 
         .. shownumpydoc
 
@@ -390,12 +390,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         iterator
-            Reverse position iterator for the `BiologicalSequence`.
+            Reverse position iterator for the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
         >>> for c in reversed(s): print(c)
         C
         U
@@ -413,7 +413,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         str
-            String representation of the `BiologicalSequence`. This will be the
+            String representation of the `Sequence`. This will be the
             full sequence, but will not contain information about the type,
             identifier, description, or quality scores.
 
@@ -426,8 +426,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
         >>> str(s)
         'GGUC'
         >>> print(s)
@@ -519,7 +519,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         Parameters
         ----------
         kwargs : dict, optional
-            Keyword arguments passed to the ``BiologicalSequence`` (or
+            Keyword arguments passed to the ``Sequence`` (or
             subclass) constructor. The returned copy will have its attributes
             updated based on the values in `kwargs`. If an attribute is
             missing, the copy will keep the same attribute as the current
@@ -530,7 +530,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Returns
         -------
-        BiologicalSequence
+        Sequence
             Copy of the current biological sequence, optionally with updated
             attributes based on `kwargs`. Will be the same type as the current
             biological sequence (`self`).
@@ -549,8 +549,8 @@ class BiologicalSequence(Sequence, SkbioObject):
         --------
         Create a biological sequence:
 
-        >>> from skbio import BiologicalSequence
-        >>> seq = BiologicalSequence('AACCGGTT', id='id1',
+        >>> from skbio import Sequence
+        >>> seq = Sequence('AACCGGTT', id='id1',
         ...                          description='biological sequence',
         ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
 
@@ -601,7 +601,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : BiologicalSequence
+        other : Sequence
             The sequence to test for equality against.
         ignore : iterable of str, optional
             List of features to ignore in the equality test. By default, all
@@ -624,9 +624,9 @@ class BiologicalSequence(Sequence, SkbioObject):
         Define two biological sequences that have the same underlying sequence
         of characters:
 
-        >>> from skbio import BiologicalSequence
-        >>> s = BiologicalSequence('GGUCGUGAAGGA')
-        >>> t = BiologicalSequence('GGUCGUGAAGGA')
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
+        >>> t = Sequence('GGUCGUGAAGGA')
 
         The two sequences are considered equal because they are the same type,
         their underlying sequence of characters are the same, and their
@@ -641,13 +641,13 @@ class BiologicalSequence(Sequence, SkbioObject):
         Define another biological sequence with a different sequence of
         characters than the previous two biological sequences:
 
-        >>> u = BiologicalSequence('GGUCGUGACCGA')
+        >>> u = Sequence('GGUCGUGACCGA')
         >>> u.equals(t)
         False
 
         Define a biological sequence with the same sequence of characters as
         ``u``, but with different identifier and quality scores:
-        >>> v = BiologicalSequence('GGUCGUGACCGA', id='abc',
+        >>> v = Sequence('GGUCGUGACCGA', id='abc',
         ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
         ...                                 42, 42])
 
@@ -700,12 +700,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         Returns
         -------
         int
-            The number of occurrences of substring in the `BiologicalSequence`.
+            The number of occurrences of substring in the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
         >>> s.count('G')
         2
 
@@ -717,8 +717,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : `BiologicalSequence`
-            The `BiologicalSequence` to compute the distance to.
+        other : `Sequence`
+            The `Sequence` to compute the distance to.
         distance_fn : function, optional
             Function used to compute the distance between `self` and `other`.
             If ``None`` (the default), `scipy.spatial.distance.hamming` will be
@@ -731,7 +731,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If ``len(self) != len(other)``
 
         See Also
@@ -743,9 +743,9 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
-        >>> t = BiologicalSequence('AGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('AGUC')
         >>> s.distance(t)
         0.25
         >>> def dumb_dist(s1, s2): return 0.42
@@ -754,10 +754,10 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         """
         if len(self) != len(other):
-            raise BiologicalSequenceError(
+            raise SequenceError(
                 "Sequences do not have equal length. "
                 "Distance can only be computed between "
-                "BiologicalSequences of equal length.")
+                "Sequences of equal length.")
         if distance_fn is None:
             distance_fn = hamming
         return distance_fn(self, other)
@@ -767,8 +767,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : `BiologicalSequence`
-            The `BiologicalSequence` to compare against.
+        other : `Sequence`
+            The `Sequence` to compare against.
 
         Returns
         -------
@@ -777,7 +777,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -797,9 +797,9 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
-        >>> t = BiologicalSequence('AGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('AGUC')
         >>> s.fraction_diff(t)
         0.25
 
@@ -811,8 +811,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : `BiologicalSequence`
-            The `BiologicalSequence` to compare against.
+        other : `Sequence`
+            The `Sequence` to compare against.
 
         Returns
         -------
@@ -822,7 +822,7 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If ``len(self) != len(other)``.
 
         See Also
@@ -833,9 +833,9 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC')
-        >>> t = BiologicalSequence('AGUC')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('AGUC')
         >>> s.fraction_same(t)
         0.75
 
@@ -849,12 +849,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         -------
         int
             The position where `subsequence` first occurs in the
-            `BiologicalSequence`.
+            `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACGACGTT-')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
 
@@ -878,9 +878,9 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Returns
         -------
-        iterator of BiologicalSequences
+        iterator of Sequences
             Iterator of words of length `k` contained in the
-            BiologicalSequence.
+            Sequence.
 
         Raises
         ------
@@ -889,8 +889,8 @@ class BiologicalSequence(Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACGACGTT')
         >>> [str(kw) for kw in s.k_words(4, overlapping=False)]
         ['ACAC', 'GACG']
         >>> [str(kw) for kw in s.k_words(3, overlapping=True)]
@@ -925,18 +925,18 @@ class BiologicalSequence(Sequence, SkbioObject):
         -------
         collections.Counter
             The counts of words of length `k` contained in the
-            BiologicalSequence.
+            Sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACAT')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACAT')
         >>> s.k_word_counts(3, overlapping=True)
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
         k_words = self.k_words(k, overlapping)
-        return Counter((str(seq) for seq in k_words))
+        return collections.Counter((str(seq) for seq in k_words))
 
     def k_word_frequencies(self, k, overlapping=True):
         """Get the frequencies of words of length `k`
@@ -953,12 +953,12 @@ class BiologicalSequence(Sequence, SkbioObject):
         -------
         collections.defaultdict
             The frequencies of words of length `k` contained in the
-            ``BiologicalSequence``.
+            ``Sequence``.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACAT')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACAT')
         >>> s.k_word_frequencies(3, overlapping=True)
         defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
 
@@ -968,7 +968,7 @@ class BiologicalSequence(Sequence, SkbioObject):
         else:
             num_words = len(self) // k
 
-        result = defaultdict(float)
+        result = collections.defaultdict(float)
         k_word_counts = self.k_word_counts(k, overlapping=overlapping)
         for word, count in viewitems(k_word_counts):
             result[str(word)] = count / num_words
@@ -993,15 +993,15 @@ class BiologicalSequence(Sequence, SkbioObject):
             quality.flags.writeable = False
 
             if quality.ndim != 1:
-                raise BiologicalSequenceError(
+                raise SequenceError(
                     "Phred quality scores must be 1-D.")
             if len(quality) != len(self):
-                raise BiologicalSequenceError(
+                raise SequenceError(
                     "Number of Phred quality scores (%d) must match the "
                     "number of characters in the biological sequence (%d)." %
                     (len(quality), len(self._sequence)))
             if (quality < 0).any():
-                raise BiologicalSequenceError(
+                raise SequenceError(
                     "Phred quality scores must be greater than or equal to "
                     "zero.")
 
@@ -1034,15 +1034,28 @@ class BiologicalSequence(Sequence, SkbioObject):
                 yield (match.start(g), match.end(g), match.group(g))
 
 
-class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
+_number_of_extended_ascii_codes = 256
+_ascii_lowercase_boundary = 90
+
+class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
+
+    @classproperty
+    def _validation_mask(cls):
+        # TODO: Memoize this
+        return np.invert(np.bincount(np.fromstring(''.join(cls.alphabet),
+                                                   dtype=np.uint8),
+                         minlength=_number_of_extended_ascii_codes
+                         ).astype(bool))
+
+
     @classproperty
     def alphabet(cls):
-        """Return the set of characters allowed in a `BiologicalSequence`.
+        """Return the set of characters allowed in a `Sequence`.
 
         Returns
         -------
         set
-            Characters that are allowed in a valid `BiologicalSequence`.
+            Characters that are allowed in a valid `Sequence`.
 
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
@@ -1098,6 +1111,65 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
         """
         pass
 
+    # Do not use super here because the implementation is dramatically
+    # different from optimization.
+    def __init__(self, sequence, id="", description="", quality=None,
+                 validate=True):
+        if not isinstance(sequence, string_types):
+            sequence = ''.join(sequence)
+        self._sequence = sequence
+        self._id = id
+        self._description = description
+        self._set_quality(quality)
+        self._set_sequence(sequence, validate)
+
+    def _set_sequence(self, sequence, validate):
+        """Munge the sequence data into a numpy array."""
+        is_ndarray = isinstance(sequence, np.ndarray)
+        if is_ndarray:
+            if np.issubdtype(sequence.dtype, np.uint8):
+                pass
+            elif np.issubdtype(sequence.dtype, '|S1'):
+                sequence = sequence.view(np.uint8)
+            else:
+                raise TypeError("Can only create sequence from numpy.ndarray"
+                                " of dtype np.uint8 or '|S1'.")
+        else:
+            sequence = np.fromstring(sequence, dtype=np.uint8)
+
+        if sequence.size == 0:
+            raise ValueError("Cannot create empty sequence.")
+
+        if validate:
+            lowercase = sequence > _ascii_lowercase_boundary
+            if np.any(lowercase):
+                if is_ndarray:
+                    sequence = sequence.copy()
+                # ASCII is built such that the difference between uppercase and
+                # lowercase is the 6th bit.
+                sequence[lowercase] ^= 32
+
+            # This is the fastest way that we have found to identify the
+            # presence or absence of certain characters (numbers).
+            # It works by multiplying a mask where the numbers which are
+            # permitted have a zero at their index, and all others have a one.
+            # The result is a vector which will propogate counts of invalid
+            # numbers and remove counts of valid numbers, so that we need only
+            # see if the array is empty to determine validity.
+            invalid_characters = np.bincount(
+                sequence, minlength=_number_of_extended_ascii_codes
+            ) * self._validation_mask
+            if np.any(invalid_characters):
+                bad = list(np.where(
+                    invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
+                raise ValueError("Invalid character(s) in sequence: %r" % bad)
+
+        sequence.flags.writeable = False
+
+        self._bytes = sequence
+        self._chars = sequence.view('|S1')
+
+
     def degap(self):
         """Return a new sequence with gap characters removed.
 
@@ -1119,11 +1191,11 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('GGUC-C--ACGTT-C.', quality=range(16))
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC-C--ACGTT-C.', quality=range(16))
         >>> t = s.degap()
         >>> t
-        <BiologicalSequence: GGUCCACGTT... (length: 11)>
+        <Sequence: GGUCCACGTT... (length: 11)>
         >>> print(t)
         GGUCCACGTTC
         >>> t.quality
@@ -1153,7 +1225,7 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
         Notes
         -----
         Visual aid is useful here. Imagine we have
-        ``BiologicalSequence('-ACCGA-TA-')``. The position numbers in the
+        ``Sequence('-ACCGA-TA-')``. The position numbers in the
         ungapped sequence and gapped sequence will be as follows::
 
               0123456
@@ -1169,8 +1241,8 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('-ACCGA-TA-')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('-ACCGA-TA-')
         >>> m = s.gap_maps()
         >>> m[0]
         [1, 2, 3, 4, 5, 7, 8]
@@ -1198,7 +1270,7 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
         list of booleans
             The list will be of length ``len(self)``, and a position will
             contain ``True`` if the character at that position in the
-            `BiologicalSequence` is in `self.gap_chars`, and ``False``
+            `Sequence` is in `self.gap_chars`, and ``False``
             otherwise.
 
         See Also
@@ -1207,8 +1279,8 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('..ACG--TT-')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('..ACG--TT-')
         >>> s.gap_vector()
         [True, True, False, False, False, True, True, False, False, True]
 
@@ -1222,13 +1294,13 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
         Parameters
         ----------
         char : str
-            The string to check for presence in the `BiologicalSequence`
+            The string to check for presence in the `Sequence`
             `gap_chars`.
 
         Returns
         -------
         bool
-            Indicates whether `char` is in the `BiologicalSequence` attribute
+            Indicates whether `char` is in the `Sequence` attribute
             `gap_chars`.
 
         Notes
@@ -1237,12 +1309,12 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> BiologicalSequence.is_gap('.')
+        >>> from skbio.sequence import Sequence
+        >>> Sequence.is_gap('.')
         True
-        >>> BiologicalSequence.is_gap('P')
+        >>> Sequence.is_gap('P')
         False
-        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> s = Sequence('ACACGACGTT')
         >>> s.is_gap('-')
         True
 
@@ -1256,15 +1328,15 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
         -------
         bool
             Indicates whether there are one or more occurences of any character
-            in `self.gap_chars` in the `BiologicalSequence`.
+            in `self.gap_chars` in the `Sequence`.
 
         Examples
         --------
-        >>> from skbio.sequence import BiologicalSequence
-        >>> s = BiologicalSequence('ACACGACGTT')
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACGACGTT')
         >>> s.is_gapped()
         False
-        >>> t = BiologicalSequence('A.CAC--GACGTT')
+        >>> t = Sequence('A.CAC--GACGTT')
         >>> t.is_gapped()
         True
 
@@ -1286,7 +1358,7 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 
         Raises
         ------
-        BiologicalSequenceError
+        SequenceError
             If the sequence contains an invalid character (a character that
             isn't an IUPAC character or a gap character).
 
@@ -1323,7 +1395,7 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
                 try:
                     expansions.append(degen_chars[char])
                 except KeyError:
-                    raise BiologicalSequenceError(
+                    raise SequenceError(
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
@@ -1333,13 +1405,13 @@ class IUPACSequence(with_metaclass(ABCMeta, BiologicalSequence)):
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     """Base class for nucleotide sequences.
 
-    A `NucleotideSequence` is a `BiologicalSequence` with additional methods
+    A `NucleotideSequence` is a `Sequence` with additional methods
     that are only applicable for nucleotide sequences, and containing only
     characters used in the IUPAC DNA or RNA lexicon.
 
     See Also
     --------
-    BiologicalSequence
+    Sequence
 
     Notes
     -----
@@ -1410,7 +1482,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If a character is present in the `NucleotideSequence` that is not
             in the complement map.
 
@@ -1427,7 +1499,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
             try:
                 result.append(complement_map[base])
             except KeyError:
-                raise BiologicalSequenceError(
+                raise SequenceError(
                     "Don't know how to complement base %s. Is it in "
                     "%s.complement_map?" % (base, self.__class__.__name__))
 
@@ -1448,7 +1520,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
@@ -1476,7 +1548,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If a character is present in `other` that is not in the
             `self.complement_map`.
 
@@ -1498,7 +1570,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Raises
         ------
-        skbio.sequence.BiologicalSequenceError
+        skbio.sequence.SequenceError
             If a character is present in the `NucleotideSequence` that is not
             in `self.complement_map`.
 
@@ -1575,22 +1647,78 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
                 yield hits
 
 
-class DNASequence(NucleotideSequence):
+class Protein(IUPACSequence):
+    """Base class for protein sequences.
+
+    A `Protein` is a `Sequence` containing only characters
+    used in the IUPAC protein lexicon.
+
+    See Also
+    --------
+    Sequence
+
+    Notes
+    -----
+    All uppercase and lowercase IUPAC protein characters are supported.
+
+    """
+
+    @classproperty
+    def nondegenerate_chars(cls):
+        """Return the non-degenerate IUPAC protein characters.
+
+        Returns
+        -------
+        set
+            Non-degenerate IUPAC protein characters.
+
+        """
+        return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+
+    @classproperty
+    def degenerate_map(cls):
+        """Return the mapping of degenerate to non-degenerate characters.
+
+        Returns
+        -------
+        dict of sets
+            Mapping of IUPAC degenerate protein character to the set of
+            non-degenerate IUPAC protein characters it represents.
+
+        """
+        degen_map = {
+            "B": set("DN"), "Z": set("EQ"),
+            "X": set("ACDEFGHIKLMNPQRSTVWY")
+        }
+
+        degen_map_lower = {}
+        for degen_char in degen_map:
+            nondegen_chars = degen_map[degen_char]
+            degen_map_lower[degen_char.lower()] = set(
+                ''.join(nondegen_chars).lower())
+
+        degen_map.update(degen_map_lower)
+
+        return degen_map
+
+
+class DNA(NucleotideSequence):
     """Base class for DNA sequences.
 
-    A `DNASequence` is a `NucelotideSequence` that is restricted to only
+    A `DNA` is a `NucelotideSequence` that is restricted to only
     containing characters used in IUPAC DNA lexicon.
 
     See Also
     --------
     NucleotideSequence
-    BiologicalSequence
+    Sequence
 
     Notes
     -----
     All uppercase and lowercase IUPAC DNA characters are supported.
 
     """
+
 
     @classproperty
     def complement_map(cls):
@@ -1652,14 +1780,10 @@ class DNASequence(NucleotideSequence):
         return degen_map
 
 
-# class is accessible with alternative name for convenience
-DNA = DNASequence
-
-
-class RNASequence(NucleotideSequence):
+class RNA(NucleotideSequence):
     """Base class for RNA sequences.
 
-    An `RNASequence` is a `NucelotideSequence` that is restricted to only
+    An `RNA` is a `NucelotideSequence` that is restricted to only
     containing characters used in the IUPAC RNA lexicon.
 
     Notes
@@ -1726,64 +1850,3 @@ class RNASequence(NucleotideSequence):
                 ''.join(nondegen_chars).lower())
 
         return degen_map
-
-# class is accessible with alternative name for convenience
-RNA = RNASequence
-
-
-class ProteinSequence(IUPACSequence):
-    """Base class for protein sequences.
-
-    A `ProteinSequence` is a `BiologicalSequence` containing only characters
-    used in the IUPAC protein lexicon.
-
-    See Also
-    --------
-    BiologicalSequence
-
-    Notes
-    -----
-    All uppercase and lowercase IUPAC protein characters are supported.
-
-    """
-
-    @classproperty
-    def nondegenerate_chars(cls):
-        """Return the non-degenerate IUPAC protein characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC protein characters.
-
-        """
-        return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
-
-    @classproperty
-    def degenerate_map(cls):
-        """Return the mapping of degenerate to non-degenerate characters.
-
-        Returns
-        -------
-        dict of sets
-            Mapping of IUPAC degenerate protein character to the set of
-            non-degenerate IUPAC protein characters it represents.
-
-        """
-        degen_map = {
-            "B": set("DN"), "Z": set("EQ"),
-            "X": set("ACDEFGHIKLMNPQRSTVWY")
-        }
-
-        degen_map_lower = {}
-        for degen_char in degen_map:
-            nondegen_chars = degen_map[degen_char]
-            degen_map_lower[degen_char.lower()] = set(
-                ''.join(nondegen_chars).lower())
-
-        degen_map.update(degen_map_lower)
-
-        return degen_map
-
-# class is accessible with alternative name for convenience
-Protein = ProteinSequence

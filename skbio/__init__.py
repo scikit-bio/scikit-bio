@@ -14,8 +14,8 @@ from skbio.util import TestRunner
 import skbio.io
 # imports included for convenience
 from skbio.sequence import (
-    BiologicalSequence, NucleotideSequence, DNA, DNASequence, RNA, RNASequence,
-    Protein, ProteinSequence)
+    Sequence, DNA, RNA,
+    Protein)
 from skbio.stats.distance import DistanceMatrix
 from skbio.alignment import (
     local_pairwise_align_ssw, SequenceCollection, Alignment)
@@ -25,8 +25,8 @@ from skbio.io import read, write
 
 skbio.io  # Stop flake8 error
 
-__all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
-           'RNA', 'RNASequence', 'Protein', 'ProteinSequence',
+__all__ = ['Sequence', 'DNA',
+           'RNA', 'Protein',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
            'Alignment', 'TreeNode', 'nj', 'read', 'write']
 
@@ -37,7 +37,9 @@ mottos = [
     # 03/15/2014
     "It's gonna get weird, bro.",
     # 05/14/2014
-    "no cog yay"
+    "no cog yay",
+    # 03/18/2015
+    "bincount!",
 ]
 motto = mottos[-1]
 
