@@ -21,6 +21,7 @@ from skbio import (
     Sequence, DNA, RNA,
     Protein)
 from skbio.sequence import SequenceError
+from skbio.util._testing import IDValidationTests
 
 with hooks():
     from itertools import zip_longest
@@ -162,17 +163,21 @@ class NucleotideInterfaceTests(IUPACSequenceInterfaceTests):
 
 
 # Concrete Tests
-class TestSequence(SequenceInterfaceTests, TestCase):
+class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
-        pass
+        self.id_cls = Sequence
+        self.id_kwargs = {'sequence':'A'}
+
 
     def test___init__(self):
         pass
 
 
-class TestProtein(IUPACSequenceInterfaceTests, TestCase):
+class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
-        pass
+        self.id_cls = Protein
+        self.id_kwargs = {'sequence':'A'}
+
 
     def test_property_alphabet(self):
         pass
@@ -193,9 +198,11 @@ class TestProtein(IUPACSequenceInterfaceTests, TestCase):
         pass
 
 
-class TestDNA(NucleotideInterfaceTests, TestCase):
+class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
-        pass
+        self.id_cls = DNA
+        self.id_kwargs = {'sequence':'A'}
+
 
     def test_property_alphabet(self):
         pass
@@ -222,9 +229,10 @@ class TestDNA(NucleotideInterfaceTests, TestCase):
         pass
 
 
-class TestRNA(NucleotideInterfaceTests, TestCase):
+class TestRNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
-        pass
+        self.id_cls = RNA
+        self.id_kwargs = {'sequence':'A'}
 
     def test_property_alphabet(self):
         pass
