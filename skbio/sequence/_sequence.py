@@ -1321,41 +1321,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return self[np.invert(self.gaps())]
 
-    @classmethod
-    def is_gap(cls, char):
-        """Return True if `char` is in the `gap_chars` set
-
-        Parameters
-        ----------
-        char : str
-            The string to check for presence in the `Sequence`
-            `gap_chars`.
-
-        Returns
-        -------
-        bool
-            Indicates whether `char` is in the `Sequence` attribute
-            `gap_chars`.
-
-        Notes
-        -----
-        This is a class method.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> Sequence.is_gap('.')
-        True
-        >>> Sequence.is_gap('P')
-        False
-        >>> s = Sequence('ACACGACGTT')
-        >>> s.is_gap('-')
-        True
-
-        """
-        return char in cls.gap_chars
-
-    def is_gapped(self):
+    def has_gaps(self):
         """Return True if char(s) in `gap_chars` are present
 
         Returns
@@ -1368,17 +1334,14 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> s.is_gapped()
+        >>> s.has_gaps()
         False
         >>> t = Sequence('A.CAC--GACGTT')
-        >>> t.is_gapped()
+        >>> t.has_gaps()
         True
 
         """
-        for e in self:
-            if self.is_gap(e):
-                return True
-        return False
+        return self.gaps().any()
 
     def nondegenerates(self):
         """Yield all nondegenerate versions of the sequence.

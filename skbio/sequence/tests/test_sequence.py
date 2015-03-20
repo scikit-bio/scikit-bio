@@ -922,19 +922,11 @@ class SequenceTests(TestCase):
         self.assertEqual(self.b1.index('AC'), 4)
         self.assertRaises(ValueError, self.b1.index, 'x')
 
-#    def test_is_gap(self):
-#        self.assertTrue(self.b1.is_gap('.'))
-#        self.assertTrue(self.b1.is_gap('-'))
-#        self.assertFalse(self.b1.is_gap('A'))
-#        self.assertFalse(self.b1.is_gap('x'))
-#        self.assertFalse(self.b1.is_gap(' '))
-#        self.assertFalse(self.b1.is_gap(''))
-
-#    def test_is_gapped(self):
-#        self.assertFalse(self.b1.is_gapped())
-#        self.assertFalse(self.b2.is_gapped())
-#        self.assertTrue(self.b7.is_gapped())
-#        self.assertTrue(self.b8.is_gapped())
+    # def test_has_gaps(self):
+    #     self.assertFalse(self.b1.has_gaps())
+    #     self.assertFalse(self.b2.has_gaps())
+    #     self.assertTrue(self.b7.has_gaps())
+    #     self.assertTrue(self.b8.has_gaps())
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')
