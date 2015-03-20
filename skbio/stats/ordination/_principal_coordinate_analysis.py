@@ -89,11 +89,12 @@ def _ssvd(F_matrix, k=10, p=10, qiter=0, **kwargs):
     F_matrix : np.ndarray
         The result of PCoABase._F_matrix
     k : unsigned int
-        The number of eigenvectors and values to find.
+        The number of eigenvectors and values to find. A lower k will result in
+        lower quality resulting eignvectors and values.
     p : unsigned int
-        Undefined
+        Oversampling parameter, this is added to k to boost accuracy.
     qiter : unsigned int
-        Undefined
+        The number of iterations to perform.
 
     Returns
     -------
