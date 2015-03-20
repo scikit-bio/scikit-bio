@@ -27,7 +27,7 @@ with hooks():
 
 
 # Interface Tests
-class SequenceInterfaceTest(object):
+class SequenceInterfaceTests(object):
     def test_property_id(self):
         pass
 
@@ -125,7 +125,7 @@ class SequenceInterfaceTest(object):
         pass
 
 
-class IUPACSequenceInterfaceTest(SequenceInterfaceTest):
+class IUPACSequenceInterfaceTests(SequenceInterfaceTest):
     def test_degap(self):
         pass
 
@@ -144,7 +144,7 @@ class IUPACSequenceInterfaceTest(SequenceInterfaceTest):
     def test_has_degenerates(self):
         pass
 
-class NucleotideInterfaceTest(IUPACSequenceInterfaceTest):
+class NucleotideInterfaceTests(IUPACSequenceInterfaceTest):
     def test_property_rc(self):
         pass
 
@@ -162,7 +162,7 @@ class NucleotideInterfaceTest(IUPACSequenceInterfaceTest):
 
 
 # Concrete Tests
-class TestSequence(SequenceInterfaceTest, TestCase):
+class TestSequence(SequenceInterfaceTests, TestCase):
     def setUp(self):
         pass
 
@@ -170,7 +170,7 @@ class TestSequence(SequenceInterfaceTest, TestCase):
         pass
 
 
-class TestProtein(IUPACSequenceInterfaceTest, TestCase):
+class TestProtein(IUPACSequenceInterfaceTests, TestCase):
     def setUp(self):
         pass
 
@@ -193,7 +193,7 @@ class TestProtein(IUPACSequenceInterfaceTest, TestCase):
         pass
 
 
-class TestDNA(NucleotideInterfaceTest, TestCase):
+class TestDNA(NucleotideInterfaceTests, TestCase):
     def setUp(self):
         pass
 
@@ -222,7 +222,7 @@ class TestDNA(NucleotideInterfaceTest, TestCase):
         pass
 
 
-class TestRNA(NucleotideInterfaceTest, TestCase):
+class TestRNA(NucleotideInterfaceTests, TestCase):
     def setUp(self):
         pass
 

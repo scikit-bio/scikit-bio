@@ -1123,6 +1123,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         self._set_quality(quality)
         self._set_sequence(sequence, validate)
 
+    def __str__(self):
+        return str(self._chars.view('|S%d' % self._chars.size)[0])
+
+    def __len__(self):
+        return self._bytes.size
+
     def _set_sequence(self, sequence, validate):
         """Munge the sequence data into a numpy array."""
         is_ndarray = isinstance(sequence, np.ndarray)
@@ -1162,7 +1168,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             if np.any(invalid_characters):
                 bad = list(np.where(
                     invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
-                raise ValueError("Invalid character(s) in sequence: %r" % bad)
+                raise ValueError("Invalid character%s in sequence: %r" %
+                                 ('s' if len(bad)>1 else '',
+                                  bad if len(bad)>1 else bad[0]))
 
         sequence.flags.writeable = False
 
