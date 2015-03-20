@@ -76,6 +76,41 @@ def _eigsh(F_matrix, k=10, **kwargs):
     return val, vec.T
 
 
+def _ssvd(F_matrix, k=10, p=10, qiter=0, **kwargs):
+    """Runs the SSVD method
+
+    This method is based on the algorithm described in "Finding Structure with
+    Randomness: Probabilistic Algorithms for Constructing Approximate Matrix
+    Decompositions [1]. The method implemented is derived from the R
+    implementation found in [2].
+
+    Parameters
+    ----------
+    F_matrix : np.ndarray
+        The result of PCoABase._F_matrix
+    k : unsigned int
+        The number of eigenvectors and values to find.
+    p : unsigned int
+        Undefined
+    qiter : unsigned int
+        Undefined
+
+    Returns
+    -------
+    array
+        The resulting k eigenvalues.
+    array
+        The resulting k eigenvectors.
+
+    References
+    ----------
+    .. [1] http://epubs.siam.org/doi/abs/10.1137/090771806
+    .. [2] https://cwiki.apache.org/confluence/display/MAHOUT/Stochastic+Singular+Value+Decomposition
+
+    """
+    raise NotImplementedError
+
+
 class PCoABase(Ordination):
     r"""Perform Principal Coordinate Analysis.
 
@@ -216,7 +251,7 @@ class PCoABase(Ordination):
 class PCoA(PCoABase):
     short_method_name = 'PCoA'
     long_method_name = 'Principal Coordinate Analysis'
-    eig_methods = {'eigh': _eigh}
+    eig_methods = {'eigh': _eigh, 'eigsh': _eigsh}
 
     def scores(self):
         """Compute coordinates in transformed space.
