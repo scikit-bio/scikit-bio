@@ -1154,8 +1154,7 @@ class DNATests(TestCase):
     def test_alphabet(self):
         exp = {
             'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'T', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            't', 'w', 'v', 'y', '-', '.'
+            'V', 'Y', '-', '.'
         }
 
         self.assertEqual(self.b1.alphabet, exp)
@@ -1168,16 +1167,13 @@ class DNATests(TestCase):
         exp = {
             '-': '-', '.': '.', 'A': 'T', 'C': 'G', 'B': 'V', 'D': 'H',
             'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
-            'R': 'Y', 'T': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 't',
-            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
-            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 't': 'a', 'w': 'w',
-            'v': 'b', 'y': 'r'
+            'R': 'Y', 'T': 'A', 'W': 'W', 'V': 'B', 'Y': 'R'
         }
         self.assertEqual(self.b1.complement_map, exp)
         self.assertEqual(DNA.complement_map, exp)
 
     def test_nondegenerate_chars(self):
-        exp = set("ACGTacgt")
+        exp = set("ACGT")
         self.assertEqual(self.b1.nondegenerate_chars, exp)
         self.assertEqual(DNA.nondegenerate_chars, exp)
 
@@ -1187,19 +1183,13 @@ class DNATests(TestCase):
             'H': set(['A', 'C', 'T']), 'K': set(['T', 'G']),
             'M': set(['A', 'C']), 'N': set(['A', 'C', 'T', 'G']),
             'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'T']),
-            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'T']),
-            'b': set(['c', 't', 'g']), 'd': set(['a', 't', 'g']),
-            'h': set(['a', 'c', 't']), 'k': set(['t', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 't', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 't']),
-            'v': set(['a', 'c', 'g']), 'y': set(['c', 't'])
+            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'T'])
         }
         self.assertEqual(self.b1.degenerate_map, exp)
         self.assertEqual(DNA.degenerate_map, exp)
 
     def test_degenerate_chars(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
+        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])
         self.assertEqual(self.b1.degenerate_chars, exp)
         self.assertEqual(DNA.degenerate_chars, exp)
 
@@ -1275,8 +1265,8 @@ class DNATests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_nondegenerates_gap_mixed_case(self):
-        exp = [DNA('-A.a'), DNA('-A.c'),
-               DNA('-C.a'), DNA('-C.c')]
+        exp = [DNA('-A.A'), DNA('-A.C'),
+               DNA('-C.A'), DNA('-C.C')]
         obs = sorted(DNA('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
@@ -1295,8 +1285,7 @@ class RNATests(TestCase):
     def test_alphabet(self):
         exp = {
             'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'W',
-            'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's', 'r',
-            'u', 'w', 'v', 'y', '-', '.'
+            'V', 'Y', '-', '.'
         }
 
         self.assertEqual(self.b1.alphabet, exp)
@@ -1309,16 +1298,13 @@ class RNATests(TestCase):
         exp = {
             '-': '-', '.': '.', 'A': 'U', 'C': 'G', 'B': 'V', 'D': 'H',
             'G': 'C', 'H': 'D', 'K': 'M', 'M': 'K', 'N': 'N', 'S': 'S',
-            'R': 'Y', 'U': 'A', 'W': 'W', 'V': 'B', 'Y': 'R', 'a': 'u',
-            'c': 'g', 'b': 'v', 'd': 'h', 'g': 'c', 'h': 'd', 'k': 'm',
-            'm': 'k', 'n': 'n', 's': 's', 'r': 'y', 'u': 'a', 'w': 'w',
-            'v': 'b', 'y': 'r'
+            'R': 'Y', 'U': 'A', 'W': 'W', 'V': 'B', 'Y': 'R'
         }
         self.assertEqual(self.b1.complement_map, exp)
         self.assertEqual(RNA.complement_map, exp)
 
     def test_nondegenerate_chars(self):
-        exp = set("ACGUacgu")
+        exp = set("ACGU")
         self.assertEqual(self.b1.nondegenerate_chars, exp)
         self.assertEqual(RNA.nondegenerate_chars, exp)
 
@@ -1328,19 +1314,13 @@ class RNATests(TestCase):
             'H': set(['A', 'C', 'U']), 'K': set(['U', 'G']),
             'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'G']),
             'S': set(['C', 'G']), 'R': set(['A', 'G']), 'W': set(['A', 'U']),
-            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'U']),
-            'b': set(['c', 'u', 'g']), 'd': set(['a', 'u', 'g']),
-            'h': set(['a', 'c', 'u']), 'k': set(['u', 'g']),
-            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 'g']),
-            's': set(['c', 'g']), 'r': set(['a', 'g']), 'w': set(['a', 'u']),
-            'v': set(['a', 'c', 'g']), 'y': set(['c', 'u'])
+            'V': set(['A', 'C', 'G']), 'Y': set(['C', 'U'])
         }
         self.assertEqual(self.b1.degenerate_map, exp)
         self.assertEqual(RNA.degenerate_map, exp)
 
     def test_degenerate_chars(self):
-        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
+        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y'])
         self.assertEqual(self.b1.degenerate_chars, exp)
         self.assertEqual(RNA.degenerate_chars, exp)
 
@@ -1416,8 +1396,8 @@ class RNATests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_nondegenerates_gap_mixed_case(self):
-        exp = [RNA('-A.a'), RNA('-A.c'),
-               RNA('-C.a'), RNA('-C.c')]
+        exp = [RNA('-A.A'), RNA('-A.C'),
+               RNA('-C.A'), RNA('-C.C')]
         obs = sorted(RNA('-M.m').nondegenerates(), key=str)
         self.assertEqual(obs, exp)
 
@@ -1433,9 +1413,7 @@ class ProteinTests(TestCase):
     def test_alphabet(self):
         exp = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
-            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-            'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r',
-            's', 't', 'v', 'w', 'x', 'y', 'z', '-', '.'
+            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', '-', '.'
         }
 
         self.assertEqual(self.p1.alphabet, exp)
@@ -1445,7 +1423,7 @@ class ProteinTests(TestCase):
         self.assertEqual(self.p1.gap_chars, set('-.'))
 
     def test_nondegenerate_chars(self):
-        exp = set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+        exp = set("ACDEFGHIKLMNPQRSTVWY")
         self.assertEqual(self.p1.nondegenerate_chars, exp)
         self.assertEqual(Protein.nondegenerate_chars, exp)
 
@@ -1453,16 +1431,13 @@ class ProteinTests(TestCase):
         exp = {
             'B': set(['D', 'N']), 'Z': set(['E', 'Q']),
             'X': set(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
-                      'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']),
-            'b': set(['d', 'n']), 'z': set(['e', 'q']),
-            'x': set(['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm',
-                      'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y']),
+                      'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'])
         }
         self.assertEqual(self.p1.degenerate_map, exp)
         self.assertEqual(Protein.degenerate_map, exp)
 
     def test_degenerate_chars(self):
-        exp = set(['B', 'X', 'Z', 'b', 'x', 'z'])
+        exp = set(['B', 'X', 'Z'])
         self.assertEqual(self.p1.degenerate_chars, exp)
         self.assertEqual(Protein.degenerate_chars, exp)
 

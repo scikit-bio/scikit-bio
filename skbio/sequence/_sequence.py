@@ -1037,24 +1037,26 @@ class Sequence(collections.Sequence, SkbioObject):
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
+    __validation_mask = None
 
     @classproperty
     def _validation_mask(cls):
-        # TODO: Memoize this
-        return np.invert(np.bincount(np.fromstring(''.join(cls.alphabet),
-                                                   dtype=np.uint8),
-                         minlength=cls._number_of_extended_ascii_codes
-                         ).astype(bool))
-
+        # TODO These masks could be defined (as literals) on each concrete
+        # object. For now, memoize!
+        if cls.__validation_mask is None:
+            cls.__validation_mask = np.invert(np.bincount(
+                np.fromstring(''.join(cls.alphabet), dtype=np.uint8),
+                minlength=cls._number_of_extended_ascii_codes).astype(bool))
+        return cls.__validation_mask
 
     @classproperty
     def alphabet(cls):
-        """Return the set of characters allowed in a `Sequence`.
+        """Return the set of characters allowed in an `IUPACSequence`.
 
         Returns
         -------
         set
-            Characters that are allowed in a valid `Sequence`.
+            Characters that are allowed in a valid `IUPACSequence`.
 
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
@@ -1127,6 +1129,29 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     def __len__(self):
         return self._bytes.size
+
+    def __iter__(self):
+        """The iter operator.
+
+        Returns
+        -------
+        iterator
+            Position iterator for the `IUPACSequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
+        >>> for c in s: print(c)
+        G
+        G
+        U
+        C
+
+        .. shownumpydoc
+
+        """
+        return iter(self._chars)
 
     def _set_sequence(self, sequence, validate):
         """Munge the sequence data into a numpy array."""
@@ -1680,7 +1705,7 @@ class Protein(IUPACSequence):
             Non-degenerate IUPAC protein characters.
 
         """
-        return set("ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy")
+        return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
     def degenerate_map(cls):
@@ -1693,20 +1718,10 @@ class Protein(IUPACSequence):
             non-degenerate IUPAC protein characters it represents.
 
         """
-        degen_map = {
+        return {
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
-
-        degen_map_lower = {}
-        for degen_char in degen_map:
-            nondegen_chars = degen_map[degen_char]
-            degen_map_lower[degen_char.lower()] = set(
-                ''.join(nondegen_chars).lower())
-
-        degen_map.update(degen_map_lower)
-
-        return degen_map
 
 
 class DNA(NucleotideSequence):
@@ -1726,7 +1741,6 @@ class DNA(NucleotideSequence):
 
     """
 
-
     @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
@@ -1742,9 +1756,7 @@ class DNA(NucleotideSequence):
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
             'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
-            'H': 'D', 'V': 'B', 'N': 'N', 'a': 't', 't': 'a', 'g': 'c',
-            'c': 'g', 'y': 'r', 'r': 'y', 's': 's', 'w': 'w', 'k': 'm',
-            'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
+            'H': 'D', 'V': 'B', 'N': 'N'
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -1760,7 +1772,7 @@ class DNA(NucleotideSequence):
             Non-degenerate IUPAC DNA characters.
 
         """
-        return set("ACGTacgt")
+        return set("ACGT")
 
     @classproperty
     def degenerate_map(cls):
@@ -1773,18 +1785,11 @@ class DNA(NucleotideSequence):
             non-degenerate IUPAC DNA characters it represents.
 
         """
-        degen_map = {
+        return {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
-
-        for degen_char in list(degen_map.keys()):
-            nondegen_chars = degen_map[degen_char]
-            degen_map[degen_char.lower()] = set(
-                ''.join(nondegen_chars).lower())
-
-        return degen_map
 
 
 class RNA(NucleotideSequence):
@@ -1814,9 +1819,7 @@ class RNA(NucleotideSequence):
         comp_map = {
             'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
             'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
-            'H': 'D', 'V': 'B', 'N': 'N', 'a': 'u', 'u': 'a', 'g': 'c',
-            'c': 'g', 'y': 'r', 'r': 'y', 's': 's', 'w': 'w', 'k': 'm',
-            'm': 'k', 'b': 'v', 'd': 'h', 'h': 'd', 'v': 'b', 'n': 'n'
+            'H': 'D', 'V': 'B', 'N': 'N'
         }
 
         comp_map.update({c: c for c in cls.gap_chars})
@@ -1832,7 +1835,7 @@ class RNA(NucleotideSequence):
             Non-degenerate IUPAC RNA characters.
 
         """
-        return set("ACGUacgu")
+        return set("ACGU")
 
     @classproperty
     def degenerate_map(cls):
@@ -1845,15 +1848,8 @@ class RNA(NucleotideSequence):
             non-degenerate IUPAC RNA characters it represents.
 
         """
-        degen_map = {
+        return {
             "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
-
-        for degen_char in list(degen_map.keys()):
-            nondegen_chars = degen_map[degen_char]
-            degen_map[degen_char.lower()] = set(
-                ''.join(nondegen_chars).lower())
-
-        return degen_map
