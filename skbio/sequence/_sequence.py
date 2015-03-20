@@ -127,7 +127,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return other in self._sequence
+        return other in self.sequence
 
     def __eq__(self, other):
         """The equality operator.
@@ -263,7 +263,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return hash(self._sequence)
+        return hash(self.sequence)
 
     def __iter__(self):
         """The iter operator.
@@ -286,7 +286,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return iter(self._sequence)
+        return iter(self.sequence)
 
     def __len__(self):
         """The len operator.
@@ -306,7 +306,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return len(self._sequence)
+        return len(self.sequence)
 
     def __ne__(self, other):
         """The inequality operator.
@@ -411,7 +411,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return reversed(self._sequence)
+        return reversed(self.sequence)
 
     def __str__(self):
         """The str operator
@@ -716,7 +716,7 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
-        return self._sequence.count(subsequence)
+        return self.sequence.count(subsequence)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -866,7 +866,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return self._sequence.index(subsequence)
+            return self.sequence.index(subsequence)
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
@@ -1005,7 +1005,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 raise SequenceError(
                     "Number of Phred quality scores (%d) must match the "
                     "number of characters in the biological sequence (%d)." %
-                    (len(quality), len(self._sequence)))
+                    (len(quality), len(self.sequence)))
             if (quality < 0).any():
                 raise SequenceError(
                     "Phred quality scores must be greater than or equal to "
@@ -1035,7 +1035,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         start = 0 if retrieve_group_0 else 1
 
-        for match in regex.finditer(self._sequence):
+        for match in regex.finditer(self.sequence):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
 
@@ -1122,13 +1122,23 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     # different from optimization.
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=True):
-        if not isinstance(sequence, string_types):
-            sequence = ''.join(sequence)
-        self._sequence = sequence
         self._set_id(id)
         self._description = description
         self._set_sequence(sequence, validate)
         self._set_quality(quality)
+
+    @property
+    def sequence(self):
+        """String containing underlying biological sequence characters.
+
+        A string representing the characters of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        """
+        return str(self)
 
     def __str__(self):
         return str(self._chars.view('|S%d' % self._chars.size)[0])
@@ -1158,6 +1168,75 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         return iter(self._chars)
+
+    def __getitem__(self, item):
+        """The indexing operator.
+
+        Parameters
+        ----------
+        item : int, slice, or sequence of ints
+            The position(s) to return from the `Sequence`. If `i` is
+            a sequence of ints, these are assumed to be indices in the sequence
+            to keep.
+
+        Returns
+        -------
+        Sequence
+            New biological sequence containing the character(s) at position(s)
+            `i` in the current `Sequence`. If quality scores are
+            present, the quality score at position(s) `i` will be included in
+            the returned sequence. ID and description are also included.
+
+        Examples
+        --------
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
+
+        Obtain a single character from the biological sequence:
+
+        >>> s[1]
+        <Sequence: G (length: 1)>
+
+        Obtain a slice:
+
+        >>> s[7:]
+        <Sequence: AAGGA (length: 5)>
+
+        Obtain characters at the following indices:
+
+        >>> s[[3, 4, 7, 0, 3]]
+        <Sequence: CGAGC (length: 5)>
+
+        .. shownumpydoc
+
+        """
+        # TODO update this method when #60 is resolved. we have to deal with
+        # discrepancies in indexing rules between str and ndarray... hence the
+        # ugly code
+        # try:
+        #     try:
+        #         seq = self.sequence[i]
+        #         qual = self.quality[i] if self.has_quality() else None
+        #     except TypeError:
+        #         seq = [self.sequence[idx] for idx in i]
+        #
+        #         if self.has_quality():
+        #             qual = [self.quality[idx] for idx in i]
+        #         else:
+        #             qual = None
+        # except IndexError:
+        #     raise IndexError(
+        #         "Position %r is out of range for %r." % (i, self))
+
+        seq = self._bytes[item]
+        qual = self.quality[item] if self.has_quality() else None
+
+        return self.copy(sequence=seq, quality=qual)
+
+    def gaps(self):
+        # TODO remove magic gap numbers, rewrite as ufunc so only one pass is
+        # necessary
+        return (self._bytes == 45) | (self._bytes == 46)
 
     def _set_sequence(self, sequence, validate):
         """Munge the sequence data into a numpy array."""
@@ -1240,9 +1319,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
 
         """
-        gaps = self.gap_chars
-        indices = [i for i, e in enumerate(self) if e not in gaps]
-        return self[indices]
+        return self[np.invert(self.gaps())]
 
     def gap_maps(self):
         """Return tuples mapping b/w gapped and ungapped positions
@@ -1323,7 +1400,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         [True, True, False, False, False, True, True, False, False, True]
 
         """
-        return [self.is_gap(c) for c in self._sequence]
+        return [self.is_gap(c) for c in self.sequence]
 
     @classmethod
     def is_gap(cls, char):
@@ -1437,7 +1514,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
-        return (self.copy(sequence=nondegen_seq) for nondegen_seq in result)
+        return (self.copy(sequence=''.join(nondegen_seq)) for nondegen_seq in result)
 
 
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
@@ -1545,7 +1622,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         if self.has_quality() and reverse:
             quality = self.quality[::-1]
 
-        return self.copy(sequence=result, quality=quality)
+        return self.copy(sequence=''.join(result), quality=quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`
