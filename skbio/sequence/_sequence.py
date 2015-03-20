@@ -1034,17 +1034,16 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield (match.start(g), match.end(g), match.group(g))
 
 
-_number_of_extended_ascii_codes = 256
-_ascii_lowercase_boundary = 90
-
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
+    _number_of_extended_ascii_codes = 256
+    _ascii_lowercase_boundary = 90
 
     @classproperty
     def _validation_mask(cls):
         # TODO: Memoize this
         return np.invert(np.bincount(np.fromstring(''.join(cls.alphabet),
                                                    dtype=np.uint8),
-                         minlength=_number_of_extended_ascii_codes
+                         minlength=cls._number_of_extended_ascii_codes
                          ).astype(bool))
 
 
@@ -1120,8 +1119,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         self._sequence = sequence
         self._id = id
         self._description = description
-        self._set_quality(quality)
         self._set_sequence(sequence, validate)
+        self._set_quality(quality)
 
     def __str__(self):
         return str(self._chars.view('|S%d' % self._chars.size)[0])
@@ -1147,7 +1146,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             raise ValueError("Cannot create empty sequence.")
 
         if validate:
-            lowercase = sequence > _ascii_lowercase_boundary
+            lowercase = sequence > self._ascii_lowercase_boundary
             if np.any(lowercase):
                 if is_ndarray:
                     sequence = sequence.copy()
@@ -1163,7 +1162,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             # numbers and remove counts of valid numbers, so that we need only
             # see if the array is empty to determine validity.
             invalid_characters = np.bincount(
-                sequence, minlength=_number_of_extended_ascii_codes
+                sequence, minlength=self._number_of_extended_ascii_codes
             ) * self._validation_mask
             if np.any(invalid_characters):
                 bad = list(np.where(

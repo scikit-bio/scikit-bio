@@ -125,7 +125,7 @@ class SequenceInterfaceTests(object):
         pass
 
 
-class IUPACSequenceInterfaceTests(SequenceInterfaceTest):
+class IUPACSequenceInterfaceTests(SequenceInterfaceTests):
     def test_degap(self):
         pass
 
@@ -144,7 +144,7 @@ class IUPACSequenceInterfaceTests(SequenceInterfaceTest):
     def test_has_degenerates(self):
         pass
 
-class NucleotideInterfaceTests(IUPACSequenceInterfaceTest):
+class NucleotideInterfaceTests(IUPACSequenceInterfaceTests):
     def test_property_rc(self):
         pass
 
