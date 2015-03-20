@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 from warnings import warn
 
 import numpy as np
+import scipy as sp
 
 from skbio.stats.distance import DistanceMatrix
 from ._base import Ordination, OrdinationResults
@@ -25,8 +26,54 @@ from ._base import Ordination, OrdinationResults
 
 
 def _eigh(F_matrix, **ignored):
-    """Wrapper around np.linalg.eigh to conform to eig method prototype"""
+    """Wrapper around np.linalg.eigh
+
+    The eigh method is described in [1].
+
+    Parameters
+    ----------
+    F_matrix : np.ndarray
+        The result of PCoABase._F_matrix
+
+    Returns
+    -------
+    array
+        The resulting eigenvalues.
+    array
+        The resulting eigenvectors.
+
+    References
+    ----------
+    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html
+    """
     return np.linalg.eigh(F_matrix)
+
+
+def _eigsh(F_matrix, k=10, **kwargs):
+    """Wrapper around scipy.sparse.linalg.eigsh
+
+    The eigsh method is described in [1].
+
+    Parameters
+    ----------
+    F_matrix : np.ndarray
+        The result of PCoABase._F_matrix
+    k : unsigned int
+        The number of eigenvectors and values to find.
+
+    Returns
+    -------
+    array
+        The resulting k eigenvalues.
+    array
+        The resulting k eigenvectors.
+
+    References
+    ----------
+    .. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html
+    """
+    val, vec = sp.sparse.linalg.eigsh(F_matrix, k=k, **kwargs)
+    return val, vec.T
 
 
 class PCoABase(Ordination):
@@ -218,4 +265,4 @@ class APCoA(PCoABase):
     eig_methods = {}
 
     def scores(self):
-        return "magic"
+        return OrdinationResults(eigvals=self.eigvals, site
