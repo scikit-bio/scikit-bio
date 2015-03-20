@@ -619,10 +619,10 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     .. note:: Deprecated in scikit-bio 0.2.3-dev
-    ``bootstrap_power_curve`` will be removed in scikit-bio 0.3.1. It is
-    depreciated in favor of using ``subsample_power`` or
-    ``sample_paired_power`` to calculate a power array, and then using
-    ``confidence_bound`` to perform bootstrapping.
+       ``bootstrap_power_curve`` will be removed in scikit-bio 0.3.1. It is
+       Deprecated in favor of using ``subsample_power`` or
+       ``sample_paired_power`` to calculate a power array, and then using
+       ``confidence_bound`` to perform bootstrapping.
 
     Parameters
     ----------
