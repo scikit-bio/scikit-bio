@@ -1044,6 +1044,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
     __validation_mask = None
+    __degenerate_codes = None
+    __gap_codes = None
 
     @classproperty
     def _validation_mask(cls):
@@ -1054,6 +1056,20 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                 np.fromstring(''.join(cls.alphabet), dtype=np.uint8),
                 minlength=cls._number_of_extended_ascii_codes).astype(bool))
         return cls.__validation_mask
+
+    @classproperty
+    def _degenerate_codes(cls):
+        if cls.__degenerate_codes is None:
+            degens = cls.degenerate_chars
+            cls.__degenerate_codes = np.asarray([ord(d) for d in degens])
+        return cls.__degenerate_codes
+
+    @classproperty
+    def _gap_codes(cls):
+        if cls.__gap_codes is None:
+            gaps = cls.gap_chars
+            cls.__gap_codes = np.asarray([ord(g) for g in gaps])
+        return cls.__gap_codes
 
     @classproperty
     def alphabet(cls):
@@ -1234,9 +1250,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return self.copy(sequence=seq, quality=qual)
 
     def gaps(self):
-        # TODO remove magic gap numbers, rewrite as ufunc so only one pass is
-        # necessary
-        return (self._bytes == 45) | (self._bytes == 46)
+        return np.in1d(self._bytes, self._gap_codes)
 
     def _set_sequence(self, sequence, validate):
         """Munge the sequence data into a numpy array."""
@@ -1341,7 +1355,15 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         True
 
         """
+        # TODO use bincount!
         return self.gaps().any()
+
+    def degenerates(self):
+        return np.in1d(self._bytes, self._degenerate_codes)
+
+    def has_degenerates(self):
+        # TODO use bincount!
+        return self.degenerates().any()
 
     def nondegenerates(self):
         """Yield all nondegenerate versions of the sequence.
