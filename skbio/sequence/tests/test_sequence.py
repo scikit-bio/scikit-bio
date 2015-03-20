@@ -127,6 +127,12 @@ class SequenceInterfaceTests(object):
 
 
 class IUPACSequenceInterfaceTests(SequenceInterfaceTests):
+    def test___str__(self):
+        seq = ''.join(self.cls.alphabet).lower() \
+            + ''.join(self.cls.alphabet).upper()
+        # IUPAC sequences are uppercase
+        self.assertEqual(seq.upper(), str(self.cls(seq)))
+
     def test_degap(self):
         pass
 
@@ -165,6 +171,9 @@ class NucleotideInterfaceTests(IUPACSequenceInterfaceTests):
 # Concrete Tests
 class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
+        self.cls = Sequence
+
+        # These are defined for IDValidationTests
         self.id_cls = Sequence
         self.id_kwargs = {'sequence':'A'}
 
@@ -175,6 +184,9 @@ class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
 
 class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
+        self.cls = Protein
+
+        # These are defined for IDValidationTests
         self.id_cls = Protein
         self.id_kwargs = {'sequence':'A'}
 
@@ -200,6 +212,9 @@ class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
 
 class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
+        self.cls = DNA
+
+        # These are defined for IDValidationTests
         self.id_cls = DNA
         self.id_kwargs = {'sequence':'A'}
 
@@ -231,6 +246,9 @@ class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
 
 class TestRNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
     def setUp(self):
+        self.cls = RNA
+
+        # These are defined for IDValidationTests
         self.id_cls = RNA
         self.id_kwargs = {'sequence':'A'}
 
