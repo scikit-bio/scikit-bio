@@ -916,34 +916,6 @@ class SequenceTests(TestCase):
         self.assertAlmostEqual(
             self.b1.fraction_same(Sequence('GATTACC')), 6. / 7., 5)
 
-#    def test_gap_maps(self):
-#        # in sequence with no gaps, the gap_maps are identical
-#        self.assertEqual(self.b1.gap_maps(),
-#                         ([0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6]))
-#        # in sequence with all gaps, the map of degapped to gapped is the empty
-#        # list (bc its length is 0), and the map of gapped to degapped is all
-#        # None
-#        self.assertEqual(self.b7.gap_maps(),
-#                         ([], [None, None, None, None, None, None]))
-#
-#        self.assertEqual(self.b8.gap_maps(),
-#                         ([0, 1, 8, 9, 10],
-#                          [0, 1, None, None, None, None, None, None, 2, 3, 4]))
-#
-#        # example from the gap_maps doc string
-#        self.assertEqual(Sequence('-ACCGA-TA-').gap_maps(),
-#                         ([1, 2, 3, 4, 5, 7, 8],
-#                          [None, 0, 1, 2, 3, 4, None, 5, 6, None]))
-
-#    def test_gap_vector(self):
-#        self.assertEqual(self.b1.gap_vector(),
-#                         [False] * len(self.b1))
-#        self.assertEqual(self.b7.gap_vector(),
-#                         [True] * len(self.b7))
-#        self.assertEqual(self.b8.gap_vector(),
-#                         [False, False, True, True, True, True,
-#                          True, True, False, False, False])
-
     def test_index(self):
         self.assertEqual(self.b1.index('G'), 0)
         self.assertEqual(self.b1.index('A'), 1)
