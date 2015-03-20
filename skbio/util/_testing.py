@@ -128,7 +128,6 @@ class IDValidationTests(object):
 
         with self.assertRaises(ValueError) as e:
             self.create_instance(invalid_id)
-        print str(e.exception)
         self.assertIn('ID', str(e.exception))
 
     def test_set_id(self):

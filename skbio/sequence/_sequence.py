@@ -92,9 +92,15 @@ class Sequence(collections.Sequence, SkbioObject):
             sequence = ''.join(sequence)
         self._sequence = sequence
 
-        self._id = id
+        self._set_id(id)
         self._description = description
         self._set_quality(quality)
+
+    def _set_id(self, id):
+        if isinstance(id, string_types):
+            self._id = id
+        else:
+            raise ValueError('ID is not valid.')
 
     def __contains__(self, other):
         """The in operator.
@@ -1119,7 +1125,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         if not isinstance(sequence, string_types):
             sequence = ''.join(sequence)
         self._sequence = sequence
-        self._id = id
+        self._set_id(id)
         self._description = description
         self._set_sequence(sequence, validate)
         self._set_quality(quality)
@@ -1152,6 +1158,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         return iter(self._chars)
+
+    def _set_id(self, id):
+        if isinstance(id, string_types):
+            self._id = id
+        else:
+            raise ValueError('ID is not valid.')
 
     def _set_sequence(self, sequence, validate):
         """Munge the sequence data into a numpy array."""
