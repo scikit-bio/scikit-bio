@@ -27,16 +27,16 @@ class SSVDTests(TestCase):
 
     def test_ssvd(self):
         np.random.seed(0)
-        test_s, test_U, test_V = ssvd(mat1, k=3)
-        actual_U, actual_s, actual_V = scipy.sparse.linalg.svds(mat1, k=3)
+        test_s, test_U, test_V = ssvd(self.mat1, k=3)
+        actual_U, actual_s, actual_V = scipy.sparse.linalg.svds(self.mat1, k=3)
         npt.assert_allclose(-1*test_U, actual_U, rtol=4)
         npt.assert_allclose(test_s, actual_s, rtol=4)
         npt.assert_allclose(-1*test_V, actual_V, rtol=4)
 
     def test_ssvd_eig(self):
         np.random.seed(0)
-        test_s, test_U = ssvd(mat2, k=5, compute_v=False)
-        actual_s, actual_U = scipy.sparse.linalg.eigsh(mat2, k=5)
+        test_s, test_U = ssvd(self.mat2, k=5, compute_v=False)
+        actual_s, actual_U = scipy.sparse.linalg.eigsh(self.mat2, k=5)
         npt.assert_allclose(-1*test_U, actual_U, rtol=4)
         npt.assert_allclose(test_s, actual_s, rtol=4)
 
