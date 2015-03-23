@@ -39,7 +39,8 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
     - Autodetect Python version and disable doctests for Python 3.
 * `numpy` is no longer required to be installed before installing scikit-bio!
 * Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
-* The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results.
+* The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results. 
+* Power calculations (`skbio.stats.power.subsample_paired_power` and `skbio.stats.power.subsample_power`) now accept tests which return a 1-dimensional array of p-values. For example, the method could be applied to a linear model which returns a p value for each variable being tested.<br/>The tests can also calculate power for uneven group sizes (for example, twice as many elements from group A than from Group B). Before this change, the number of elements drawn from Group A and Group B were equal.
 
 ## Version 0.2.3 (2015-02-13)
 

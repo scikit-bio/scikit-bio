@@ -151,8 +151,9 @@ import scipy.stats
 
 
 def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
-                    min_observations=20, max_counts=50, counts_interval=10,
-                    min_counts=None, num_iter=500, num_runs=10):
+                    min_observations=20, max_counts=50,
+                    counts_interval=10, min_counts=None, num_iter=500,
+                    num_runs=10):
     r"""Subsamples data to iteratively calculate power
 
     Parameters
@@ -179,10 +180,6 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
         assigned to each group. If this is a 1-D array, it must be the same
         length as `samples`. If no value is supplied (`ratio` is None),
         then an equal number of observations will be drawn for each sample.
-    num_p : unsigned int, optional
-        The number of p-values produced by the statistical test. If you are
-        using a test like a multivariate regression, this can be set to accept
-        the p-values for each predictor variable.
     min_observations : unsigned int, optional
         The minimum number of observations in any sample to
         perform power analysis. Note that this is not the same as the minimum
@@ -393,6 +390,11 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
         `control_cats` can be considered matches.
     alpha_pwr : float, optional
         The critical value used to calculate the power.
+    ratio : 1-D array, optional
+        The fraction of the sample counts which should be
+        assigned to each group. If this is a 1-D array, it must be the same
+        length as `samples`. If no value is supplied (`ratio` is None),
+        then an equal number of observations will be drawn for each sample.
     min_observations : unsigned int, optional
         The minimum number of paired samples which must exist
         for a category and set of control categories to be able to subsample
