@@ -3,6 +3,7 @@
 ## Version 0.2.3-dev (changes since 0.2.3 release go here)
 
 ### Features
+* Added `ratio` parameter to `skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`. This allows the user to calculate power on groups for uneven size (For example, draw twice as many samples from Group B than Group A). If `ratio` is not set, group sizes will remain equal across all groups.* Power calculations (`skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`) can use test functions that return multiple p values, like some multivariate linear regression models. Previously, the power calculations required the test to return a single p value.
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
@@ -40,7 +41,6 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * `numpy` is no longer required to be installed before installing scikit-bio!
 * Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
 * The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results. 
-* Power calculations (`skbio.stats.power.subsample_paired_power` and `skbio.stats.power.subsample_power`) now accept tests which return a 1-dimensional array of p-values. For example, the method could be applied to a linear model which returns a p value for each variable being tested.<br/>The tests can also calculate power for uneven group sizes (for example, twice as many elements from group A than from Group B). Before this change, the number of elements drawn from Group A and Group B were equal.
 
 ## Version 0.2.3 (2015-02-13)
 
