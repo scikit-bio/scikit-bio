@@ -13,6 +13,7 @@ from six import string_types
 
 import re
 import collections
+import numbers
 from abc import ABCMeta, abstractmethod
 from itertools import product
 
@@ -88,12 +89,9 @@ class Sequence(collections.Sequence, SkbioObject):
     default_write_format = 'fasta'
 
     def __init__(self, sequence, id="", description="", quality=None):
-        if not isinstance(sequence, string_types):
-            sequence = ''.join(sequence)
-        self._sequence = sequence
-
         self._set_id(id)
-        self._description = description
+        self._set_description(description)
+        self._set_sequence(sequence)
         self._set_quality(quality)
 
     def _set_id(self, id_):
@@ -101,6 +99,74 @@ class Sequence(collections.Sequence, SkbioObject):
             self._id = id_
         else:
             raise ValueError('ID %r is not valid.' % (id_,))
+
+    def _set_description(self, description):
+        if isinstance(description, string_types):
+            self._description = description
+        else:
+            raise ValueError('Description %r is not valid.' % (description,))
+
+    def _set_sequence(self, sequence):
+        """Munge the sequence data into a numpy array."""
+        is_ndarray = isinstance(sequence, np.ndarray)
+        if is_ndarray:
+            if np.issubdtype(sequence.dtype, np.uint8):
+                pass
+            elif np.issubdtype(sequence.dtype, '|S1'):
+                sequence = sequence.view(np.uint8)
+            else:
+                raise TypeError("Can only create sequence from numpy.ndarray"
+                                " of dtype np.uint8 or '|S1'.")
+
+            # numpy doesn't support views of non-contiguous arrays. Since we're
+            # making heavy use of views internally, and users may also supply
+            # us with a view, make sure we *always* store a contiguous array to
+            # avoid hard-to-track bugs. See
+            # https://github.com/numpy/numpy/issues/5716
+            sequence = np.ascontiguousarray(sequence)
+        else:
+            sequence = np.fromstring(sequence, dtype=np.uint8)
+
+        if sequence.size == 0:
+            raise ValueError("Cannot create empty sequence.")
+
+        sequence.flags.writeable = False
+
+        self._bytes = sequence
+        self._chars = sequence.view('|S1')
+
+    def _set_quality(self, quality):
+        if quality is not None:
+            quality = np.asarray(quality)
+
+            if quality.ndim == 0:
+                # We have something scalar-like, so create a single-element
+                # vector to store it.
+                quality = np.reshape(quality, 1)
+
+            if quality.shape == (0,):
+                # cannot safe cast an empty vector from float to int
+                cast_type = 'unsafe'
+            else:
+                cast_type = 'safe'
+
+            quality = quality.astype(int, casting=cast_type, copy=False)
+            quality.flags.writeable = False
+
+            if quality.ndim != 1:
+                raise SequenceError(
+                    "Phred quality scores must be 1-D.")
+            if len(quality) != len(self):
+                raise SequenceError(
+                    "Number of Phred quality scores (%d) must match the "
+                    "number of characters in the biological sequence (%d)." %
+                    (len(quality), len(self.sequence)))
+            if (quality < 0).any():
+                raise SequenceError(
+                    "Phred quality scores must be greater than or equal to "
+                    "zero.")
+
+        self._quality = quality
 
     def __contains__(self, other):
         """The in operator.
@@ -184,12 +250,12 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.equals(other, ignore=['id', 'description', 'quality'])
 
-    def __getitem__(self, i):
+    def __getitem__(self, indexable):
         """The indexing operator.
 
         Parameters
         ----------
-        i : int, slice, or sequence of ints
+        indexable : int, slice, or sequence of ints
             The position(s) to return from the `Sequence`. If `i` is
             a sequence of ints, these are assumed to be indices in the sequence
             to keep.
@@ -225,25 +291,40 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        # TODO update this method when #60 is resolved. we have to deal with
-        # discrepancies in indexing rules between str and ndarray... hence the
-        # ugly code
-        try:
-            try:
-                seq = self.sequence[i]
-                qual = self.quality[i] if self.has_quality() else None
-            except TypeError:
-                seq = [self.sequence[idx] for idx in i]
+        qual = None
+        if not isinstance(indexable, np.ndarray):
+            if not (isinstance(indexable, string_types) or
+                    hasattr(indexable, '__iter__')):
+                indexable = (indexable,)
 
-                if self.has_quality():
-                    qual = np.hstack([self.quality[idx] for idx in i])
-                else:
-                    qual = None
-        except IndexError:
-            raise IndexError(
-                "Position %r is out of range for %r." % (i, self))
+            indexable = list(indexable)
+            seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
+            if self.has_quality():
+                qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
+        else:
+            seq = self._bytes[indexable]
+            if self.has_quality():
+                qual = self.quality[indexable]
 
         return self.copy(sequence=seq, quality=qual)
+
+    def _slices_from_iter(self, array, indexables):
+        for i in indexables:
+            if isinstance(i, slice):
+                pass
+            elif isinstance(i, numbers.Integral):
+                if i == -1:
+                    i = slice(i, None)
+                else:
+                    i = slice(i, i+1)
+            else:
+                raise TypeError("Cannot slice sequence from iterable "
+                                "containing %r." % i)
+
+            piece = array[i]
+            if piece.size < 1:
+                raise IndexError("Index %r out of range." % i)
+            yield piece
 
     def __hash__(self):
         """The hash operator.
@@ -414,35 +495,8 @@ class Sequence(collections.Sequence, SkbioObject):
         return reversed(self.sequence)
 
     def __str__(self):
-        """The str operator
-
-        Returns
-        -------
-        str
-            String representation of the `Sequence`. This will be the
-            full sequence, but will not contain information about the type,
-            identifier, description, or quality scores.
-
-        See Also
-        --------
-        to_fasta
-        id
-        description
-        __repr__
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC')
-        >>> str(s)
-        'GGUC'
-        >>> print(s)
-        GGUC
-
-        .. shownumpydoc
-
-        """
-        return self.sequence
+        """Document me?"""
+        return str(self._chars.view('|S%d' % self._chars.size)[0])
 
     @property
     def sequence(self):
@@ -455,7 +509,7 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable.
 
         """
-        return self._sequence
+        return str(self)
 
     @property
     def id(self):
@@ -993,39 +1047,6 @@ class Sequence(collections.Sequence, SkbioObject):
             result[str(word)] = count / num_words
         return result
 
-    def _set_quality(self, quality):
-        if quality is not None:
-            quality = np.asarray(quality)
-
-            if quality.ndim == 0:
-                # We have something scalar-like, so create a single-element
-                # vector to store it.
-                quality = np.reshape(quality, 1)
-
-            if quality.shape == (0,):
-                # cannot safe cast an empty vector from float to int
-                cast_type = 'unsafe'
-            else:
-                cast_type = 'safe'
-
-            quality = quality.astype(int, casting=cast_type, copy=False)
-            quality.flags.writeable = False
-
-            if quality.ndim != 1:
-                raise SequenceError(
-                    "Phred quality scores must be 1-D.")
-            if len(quality) != len(self):
-                raise SequenceError(
-                    "Number of Phred quality scores (%d) must match the "
-                    "number of characters in the biological sequence (%d)." %
-                    (len(quality), len(self.sequence)))
-            if (quality < 0).any():
-                raise SequenceError(
-                    "Phred quality scores must be greater than or equal to "
-                    "zero.")
-
-        self._quality = quality
-
     def regex_iter(self, regex, retrieve_group_0=False):
         """Find patterns specified by regular expression
 
@@ -1156,22 +1177,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         self._set_sequence(sequence, validate)
         self._set_quality(quality)
 
-    @property
-    def sequence(self):
-        """String containing underlying biological sequence characters.
-
-        A string representing the characters of the biological sequence.
-
-        Notes
-        -----
-        This property is not writeable.
-
-        """
-        return str(self)
-
-    def __str__(self):
-        return str(self._chars.view('|S%d' % self._chars.size)[0])
-
     def __len__(self):
         return self._bytes.size
 
@@ -1197,73 +1202,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         return iter(self._chars)
-
-    def __getitem__(self, indexable):
-        """The indexing operator.
-
-        Parameters
-        ----------
-        indexable : int, slice, or sequence of ints and/or slices
-            The position(s) to return from the `Sequence`. If `i` is
-            a sequence of ints, these are assumed to be indices in the sequence
-            to keep.
-
-        Returns
-        -------
-        Sequence
-            New biological sequence containing the character(s) at position(s)
-            `i` in the current `Sequence`. If quality scores are
-            present, the quality score at position(s) `i` will be included in
-            the returned sequence. ID and description are also included.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-
-        Obtain a single character from the biological sequence:
-
-        >>> s[1]
-        <Sequence: G (length: 1)>
-
-        Obtain a slice:
-
-        >>> s[7:]
-        <Sequence: AAGGA (length: 5)>
-
-        Obtain characters at the following indices:
-
-        >>> s[[3, 4, 7, 0, 3]]
-        <Sequence: CGAGC (length: 5)>
-
-        .. shownumpydoc
-
-        """
-        qual = None
-        if hasattr(indexable, '__iter__') and not isinstance(indexable,
-                                                             np.ndarray):
-            indexable = list(indexable)
-            seq = np.concatenate(list(self._slices_from_iter(self._bytes,
-                                                             indexable)))
-            if self.has_quality():
-                qual = np.concatenate(list(self._slices_from_iter(self.quality,
-                                                                  indexable)))
-        else:
-            seq = self._bytes[indexable]
-            if self.has_quality():
-                qual = self.quality[indexable]
-
-        return self.copy(sequence=seq, quality=qual)
-
-    def _slices_from_iter(self, array, indexables):
-        for i in indexables:
-            if not isinstance(i, slice):
-                if i == -1:
-                    i = slice(i, None)
-                else:
-                    i = slice(i, i+1)
-
-            yield array[i]
 
     def gaps(self):
         return np.in1d(self._bytes, self._gap_codes)

@@ -180,7 +180,7 @@ class SequenceInterfaceTests(object):
             seq['not an index']
 
         with self.assertRaises(TypeError):
-            seq[[1, 2]]
+            seq[['1', '2']]
 
         with self.assertRaises(IndexError):
             seq[99999999999999999]
@@ -454,18 +454,6 @@ class SequenceTests(TestCase):
         # test init as a different string
         b = Sequence('WRRTY')
         self.assertEqual(str(b), 'WRRTY')
-
-        # init as list
-        b = Sequence(list('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
-
-        # init as tuple
-        b = Sequence(tuple('ACCGGXZY'))
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
 
     def test_init_with_invalid_quality(self):
         # invalid dtype
