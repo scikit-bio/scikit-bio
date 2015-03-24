@@ -50,6 +50,7 @@ Warnings
    :toctree: generated/
 
    EfficiencyWarning
+   RepresentationWarning
 
 """
 
@@ -61,13 +62,13 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._warning import EfficiencyWarning
+from ._warning import EfficiencyWarning, RepresentationWarning
 from ._exception import TestingUtilError
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import get_data_path, TestRunner
 
-__all__ = ['EfficiencyWarning', 'TestingUtilError',
+__all__ = ['EfficiencyWarning', 'RepresentationWarning', 'TestingUtilError',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
            'get_data_path', 'TestRunner']

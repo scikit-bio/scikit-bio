@@ -20,3 +20,14 @@ class EfficiencyWarning(Warning):
 
     """
     pass
+
+
+class RepresentationWarning(Warning):
+    """Warn about substitions, assumptions, or particular alterations
+       that were made for the successful completion of a process.
+
+    For example, if a value that is required for a task is not present
+    the best guess or least deleterious value will be used where necessary.
+
+    """
+    pass

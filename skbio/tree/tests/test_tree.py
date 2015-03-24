@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+import warnings
 
 import numpy as np
 import numpy.testing as nptest
@@ -18,6 +19,7 @@ from six import StringIO
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
+from skbio.util import RepresentationWarning
 
 
 class TreeTests(TestCase):
@@ -598,8 +600,22 @@ class TreeTests(TestCase):
 
     def test_tip_tip_distances_no_length(self):
         t = TreeNode.read(StringIO(u"((a,b)c,(d,e)f);"))
-        with self.assertRaises(NoLengthError):
-            t.tip_tip_distances()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error")
+            with self.assertRaises(RepresentationWarning):
+                t.tip_tip_distances()
+        for node in t.preorder():
+            self.assertEqual(node.length, None)
+
+    def test_tip_tip_distances_no_length_are_maintained(self):
+        t = TreeNode.read(StringIO(u"((a,b:6)c:4,(d,e:0)f);"))
+        exp_t = TreeNode.read(StringIO(u"((a:0,b:6)c:4,(d:0,e:0)f:0);"))
+        exp_t_dm = exp_t.tip_tip_distances()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+
+            t_dm = t.tip_tip_distances()
+            self.assertEqual(t_dm, exp_t_dm)
 
     def test_neighbors(self):
         """Get neighbors of a node"""
