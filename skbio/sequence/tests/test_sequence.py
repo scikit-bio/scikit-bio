@@ -101,8 +101,10 @@ class SequenceInterfaceTests(object):
 
             # Descriptive equality will raise an error if they are not equal.
             # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-            seq[index].equals(exp_seq, descriptive=True)
-            no_qual[index].equals(exp_no_qual, descriptive=True)
+            # self.assertTrue used as a fail-safe.
+            self.assertTrue(seq[index].equals(exp_seq, descriptive=True))
+            self.assertTrue(no_qual[index].equals(exp_no_qual,
+                                                  descriptive=True))
 
     def test___getitem___with_tuple_and_list_of_int_and_slice(self):
         Seq, string, qual, max_range = self._getitem_compenents()
@@ -130,10 +132,15 @@ class SequenceInterfaceTests(object):
 
             # Descriptive equality will raise an error if they are not equal.
             # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-            seq[tuple(indexable)].equals(exp_seq, descriptive=True)
-            seq[list(indexable)].equals(exp_seq, descriptive=True)
-            no_qual[tuple(indexable)].equals(exp_no_qual, descriptive=True)
-            no_qual[list(indexable)].equals(exp_no_qual, descriptive=True)
+            # self.assertTrue used as a fail-safe.
+            self.assertTrue(seq[tuple(indexable)].equals(exp_seq,
+                                                         descriptive=True))
+            self.assertTrue(seq[list(indexable)].equals(exp_seq,
+                                                        descriptive=True))
+            self.assertTrue(no_qual[tuple(indexable)].equals(exp_no_qual,
+                                                             descriptive=True))
+            self.assertTrue(no_qual[list(indexable)].equals(exp_no_qual,
+                                                            descriptive=True))
 
     def test___getitem___with_mask(self):
         Seq, string, qual, max_range = self._getitem_compenents()
@@ -160,8 +167,9 @@ class SequenceInterfaceTests(object):
 
         # Descriptive equality will raise an error if they are not equal.
         # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-        seq[mask].equals(exp_seq, descriptive=True)
-        no_qual[mask].equals(exp_no_qual, descriptive=True)
+        # self.assertTrue used as a fail-safe.
+        self.assertTrue(seq[mask].equals(exp_seq, descriptive=True))
+        self.assertTrue(no_qual[mask].equals(exp_no_qual, descriptive=True))
 
     def test___getitem___with_invalid(self):
         Seq, string, qual, max_range = self._getitem_compenents()

@@ -1198,12 +1198,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return iter(self._chars)
 
-    def __getitem__(self, item):
+    def __getitem__(self, indexable):
         """The indexing operator.
 
         Parameters
         ----------
-        item : int, slice, or sequence of ints
+        indexable : int, slice, or sequence of ints and/or slices
             The position(s) to return from the `Sequence`. If `i` is
             a sequence of ints, these are assumed to be indices in the sequence
             to keep.
@@ -1239,28 +1239,31 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         .. shownumpydoc
 
         """
-        # TODO update this method when #60 is resolved. we have to deal with
-        # discrepancies in indexing rules between str and ndarray... hence the
-        # ugly code
-        # try:
-        #     try:
-        #         seq = self.sequence[i]
-        #         qual = self.quality[i] if self.has_quality() else None
-        #     except TypeError:
-        #         seq = [self.sequence[idx] for idx in i]
-        #
-        #         if self.has_quality():
-        #             qual = [self.quality[idx] for idx in i]
-        #         else:
-        #             qual = None
-        # except IndexError:
-        #     raise IndexError(
-        #         "Position %r is out of range for %r." % (i, self))
-
-        seq = self._bytes[item]
-        qual = self.quality[item] if self.has_quality() else None
+        qual = None
+        if hasattr(indexable, '__iter__') and not isinstance(indexable,
+                                                             np.ndarray):
+            indexable = list(indexable)
+            seq = np.concatenate(list(self._slices_from_iter(self._bytes,
+                                                             indexable)))
+            if self.has_quality():
+                qual = np.concatenate(list(self._slices_from_iter(self.quality,
+                                                                  indexable)))
+        else:
+            seq = self._bytes[indexable]
+            if self.has_quality():
+                qual = self.quality[indexable]
 
         return self.copy(sequence=seq, quality=qual)
+
+    def _slices_from_iter(self, array, indexables):
+        for i in indexables:
+            if not isinstance(i, slice):
+                if i == -1:
+                    i = slice(i, None)
+                else:
+                    i = slice(i, i+1)
+
+            yield array[i]
 
     def gaps(self):
         return np.in1d(self._bytes, self._gap_codes)
@@ -1276,6 +1279,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             else:
                 raise TypeError("Can only create sequence from numpy.ndarray"
                                 " of dtype np.uint8 or '|S1'.")
+
+            sequence = np.ascontiguousarray(sequence)
         else:
             sequence = np.fromstring(sequence, dtype=np.uint8)
 
