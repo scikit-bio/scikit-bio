@@ -29,12 +29,28 @@ from skbio.stats.power import (subsample_power,
 class PowerAnalysisTest(TestCase):
 
     def setUp(self):
-        # Defines a testing function
+
+        # Defines a testing functions
         def test_meta(ids, meta, cat, div):
             """Checks thhe div metric with a kruskal wallis"""
             out = [meta.loc[id_, div] for id_ in ids]
             return kruskal(*out)[1]
+
+        def meta_f(x):
+            """Applies `test_meta` to a result"""
+            test_meta(x, self.meta, 'INT', 'DIV')
+
+        def f(x):
+            """returns the p value of a kruskal wallis test"""
+            return kruskal(*x)[1]
+
+        def multi_f(x):
+            pass
+
         self.test_meta = test_meta
+        self.f = f
+        self.meta_f = meta_f
+
         # Sets the random seed
         np.random.seed(5)
         # Sets up the distributions of data for use
@@ -47,8 +63,6 @@ class PowerAnalysisTest(TestCase):
         self.alpha = np.power(10, np.array([-1, -1.301, -2, -3])).round(3)
         # Sets up a vector of samples
         self.num_samps = np.arange(10, 100, 10)
-        # Sets up the test function, a rank-sum test
-        self.f = lambda x: kruskal(*x)[1]
         # Sets up a mapping file
         meta = {'GW': {'INT': 'N', 'ABX': np.nan, 'DIV': 19.5, 'AGE': '30s',
                        'SEX': 'M'},
@@ -75,7 +89,6 @@ class PowerAnalysisTest(TestCase):
                 'NR': {'INT': 'Y', 'ABX': 'Y', 'DIV': 15.7, 'AGE': '20s',
                        'SEX': 'F'}}
         self.meta = pd.DataFrame.from_dict(meta, orient='index')
-        self.meta_f = lambda x: test_meta(x, self.meta, 'INT', 'DIV')
         self.counts = np.array([5, 15, 25, 35, 45])
         self.powers = [np.array([[0.105, 0.137, 0.174, 0.208, 0.280],
                                  [0.115, 0.135, 0.196, 0.204, 0.281],
@@ -154,8 +167,7 @@ class PowerAnalysisTest(TestCase):
         npt.assert_array_equal(np.array([10, 20, 30, 40]), test_c)
 
     def test_subsample_power_multi_p(self):
-        f = lambda x: np.array([0.5, 0.5])
-        test_p, test_c = subsample_power(f,
+        test_p, test_c = subsample_power(lambda x: np.array([0.5, 0.5]),
                                          samples=self.pop,
                                          num_iter=10,
                                          num_runs=5)

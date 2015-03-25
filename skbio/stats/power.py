@@ -50,6 +50,7 @@ Functions
     subsample_paired_power
     confidence_bound
     paired_subsamples
+    bootstrap_power_curve
 
 Examples
 --------
