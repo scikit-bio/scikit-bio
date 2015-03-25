@@ -44,7 +44,7 @@ def _eigh(F_matrix, **ignored):
 
     References
     ----------
-    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html
+    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html  # noqa
     """
     return np.linalg.eigh(F_matrix)
 
@@ -70,7 +70,7 @@ def _eigsh(F_matrix, k=10, **kwargs):
 
     References
     ----------
-    .. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html
+    .. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html  # noqa
     """
     val, vec = sp.sparse.linalg.eigsh(F_matrix, k=k, **kwargs)
     return val, vec.T
