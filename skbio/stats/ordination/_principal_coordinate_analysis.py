@@ -72,8 +72,7 @@ def _eigsh(F_matrix, k=10, **kwargs):
     ----------
     .. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html  # noqa
     """
-    val, vec = sp.sparse.linalg.eigsh(F_matrix, k=k, **kwargs)
-    return val, vec.T
+    return sp.sparse.linalg.eigsh(F_matrix, k=k, **kwargs)
 
 
 class PCoABase(Ordination):
