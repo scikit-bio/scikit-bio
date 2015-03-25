@@ -292,19 +292,21 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         qual = None
-        if not isinstance(indexable, np.ndarray):
-            if not (isinstance(indexable, string_types) or
-                    hasattr(indexable, '__iter__')):
-                indexable = (indexable,)
+        if not isinstance(indexable, np.ndarray) and ((not isinstance(indexable, string_types)) and hasattr(indexable, '__iter__')):
+            indexable = np.asarray(indexable)
+            if indexable.dtype == object:
+                indexable = list(indexable)
+                seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
+                if self.has_quality():
+                    qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
 
-            indexable = list(indexable)
-            seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
-            if self.has_quality():
-                qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
-        else:
-            seq = self._bytes[indexable]
-            if self.has_quality():
-                qual = self.quality[indexable]
+                return self.copy(sequence=seq, quality=qual)
+        elif isinstance(indexable, string_types) or isinstance(indexable, bool):
+            raise IndexError("Cannot index with that type: %r" % indexable)
+
+        seq = self._bytes[indexable]
+        if self.has_quality():
+            qual = self.quality[indexable]
 
         return self.copy(sequence=seq, quality=qual)
 
@@ -312,14 +314,14 @@ class Sequence(collections.Sequence, SkbioObject):
         for i in indexables:
             if isinstance(i, slice):
                 pass
-            elif isinstance(i, numbers.Integral):
+            elif isinstance(i, numbers.Integral) and not isinstance(i, bool):
                 if i == -1:
                     i = slice(i, None)
                 else:
                     i = slice(i, i+1)
             else:
-                raise TypeError("Cannot slice sequence from iterable "
-                                "containing %r." % i)
+                raise IndexError("Cannot slice sequence from iterable "
+                                 "containing %r." % i)
 
             piece = array[i]
             if piece.size < 1:
@@ -644,7 +646,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         defaults = {
-            'sequence': self.sequence,
+            'sequence': self._bytes,
             'id': self.id,
             'description': self.description,
             'quality': self.quality

@@ -150,14 +150,15 @@ class SequenceInterfaceTests(object):
         no_qual = Seq(string, id='idq', description='no_qual')
 
         # Create an arbitrary mask, will be True, False, False repeated.
-        mask = np.bincount(list(range(0, len(self.sample_sequence),
-                                      3))).astype(np.bool)
+        np_mask = np.bincount(list(range(0, len(self.sample_sequence),
+                                         3))).astype(np.bool)
+        py_mask = list(np_mask)
 
 
         # Build the expected string and quality data
         e_string = ""
         e_qual = np.array([], dtype=np.int)
-        for i in np.where(mask)[0]: # np.where is the inverse of bincount
+        for i in np.where(np_mask)[0]: # np.where is the inverse of bincount
             e_string += string[i]
             e_qual = np.append(e_qual, qual[i])
 
@@ -168,19 +169,57 @@ class SequenceInterfaceTests(object):
         # Descriptive equality will raise an error if they are not equal.
         # Correctness of `equals(..., descriptive=True)` tested elsewhere.
         # self.assertTrue used as a fail-safe.
-        self.assertTrue(seq[mask].equals(exp_seq, descriptive=True))
-        self.assertTrue(no_qual[mask].equals(exp_no_qual, descriptive=True))
+        self.assertTrue(seq[np_mask].equals(exp_seq, descriptive=True))
+        self.assertTrue(no_qual[np_mask].equals(exp_no_qual, descriptive=True))
+        self.assertTrue(seq[py_mask].equals(exp_seq, descriptive=True))
+        self.assertTrue(no_qual[py_mask].equals(exp_no_qual, descriptive=True))
+
+    def test___getitem___with_short_mask(self):
+        Seq, string, qual, max_range = self._getitem_compenents()
+
+        # These are the objects to test.
+        seq = Seq(string, id='id', description='dsc', quality=qual)
+        no_qual = Seq(string, id='idq', description='no_qual')
+
+        py_mask = [True, True, False, True]
+        np_mask = np.asarray(py_mask)
+
+        e_string = string[0] + string[1] + string[3]
+        e_qual = np.array([], dtype=np.int)
+        for a in [qual[0], qual[1], qual[3]]:
+            e_qual = np.append(e_qual, a)
+
+        # Expected objects
+        exp_seq = Seq(e_string, id='id', description='dsc', quality=e_qual)
+        exp_no_qual = Seq(e_string, id='idq', description='no_qual')
+
+        # Descriptive equality will raise an error if they are not equal.
+        # Correctness of `equals(..., descriptive=True)` tested elsewhere.
+        # self.assertTrue used as a fail-safe.
+        self.assertTrue(seq[np_mask].equals(exp_seq, descriptive=True))
+        self.assertTrue(no_qual[np_mask].equals(exp_no_qual, descriptive=True))
+        self.assertTrue(seq[py_mask].equals(exp_seq, descriptive=True))
+        self.assertTrue(no_qual[py_mask].equals(exp_no_qual, descriptive=True))
 
     def test___getitem___with_invalid(self):
         Seq, string, qual, max_range = self._getitem_compenents()
 
         seq = Seq(string, id='idm', description='description', quality=qual)
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(IndexError):
             seq['not an index']
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(IndexError):
             seq[['1', '2']]
+
+        with self.assertRaises(IndexError):
+            seq[[1, slice(1, 2), 'a']]
+
+        with self.assertRaises(IndexError):
+            seq[[1, slice(1, 2), True]]
+
+        with self.assertRaises(IndexError):
+            seq[True]
 
         with self.assertRaises(IndexError):
             seq[99999999999999999]
@@ -188,8 +227,11 @@ class SequenceInterfaceTests(object):
         with self.assertRaises(IndexError):
             seq[0, 0, 99999999999999999]
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises(ValueError):
             seq[99999999999999999:2]
+
+        with self.assertRaises(ValueError):
+            seq[100 * [True, False, True]]
 
     def test___hash__(self):
         pass
@@ -553,7 +595,7 @@ class SequenceTests(TestCase):
                                description='A test sequence')))
 
     def test_getitem_wrong_type(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(IndexError):
             self.b1['1']
 
     def test_getitem_out_of_range(self):
