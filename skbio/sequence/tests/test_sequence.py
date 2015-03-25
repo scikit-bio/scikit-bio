@@ -818,9 +818,9 @@ class SequenceTests(TestCase):
 #        self.assertEqual(self.b1.gap_chars, set('-.'))
 
     def test_sequence(self):
-        self.assertEqual(self.b1.sequence, "GATTACA")
-        self.assertEqual(self.b2.sequence, "ACCGGTACC")
-        self.assertEqual(self.b3.sequence, "GREG")
+        npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
+        npt.assert_array_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
+        npt.assert_array_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
 
     def test_id(self):
         self.assertEqual(self.b1.id, "")
@@ -912,14 +912,14 @@ class SequenceTests(TestCase):
 
         # attributes should be what we specified in the to call...
         self.assertEqual(to.id, 'new id')
-        npt.assert_equal(to.quality, np.array([20, 21, 22, 23, 24]))
-        self.assertEqual(to.sequence, 'ACGTA')
+        npt.assert_array_equal(to.quality, np.array([20, 21, 22, 23, 24]))
+        npt.assert_array_equal(to.sequence, np.array('ACGTA', dtype='c'))
         self.assertEqual(to.description, 'new desc')
 
         # ..and shouldn't have changed on the original sequence
         self.assertEqual(self.b8.id, 'hello')
-        npt.assert_equal(self.b8.quality, range(11))
-        self.assertEqual(self.b8.sequence, 'HE..--..LLO')
+        npt.assert_array_equal(self.b8.quality, range(11))
+        npt.assert_array_equal(self.b8.sequence, np.array('HE..--..LLO', dtype='c'))
         self.assertEqual(self.b8.description, 'gapped hello')
 
     def test_to_invalid_kwargs(self):

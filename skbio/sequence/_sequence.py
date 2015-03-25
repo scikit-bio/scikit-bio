@@ -160,7 +160,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 raise SequenceError(
                     "Number of Phred quality scores (%d) must match the "
                     "number of characters in the biological sequence (%d)." %
-                    (len(quality), len(self.sequence)))
+                    (len(quality), self.sequence.size))
             if (quality < 0).any():
                 raise SequenceError(
                     "Phred quality scores must be greater than or equal to "
@@ -193,7 +193,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return other in self.sequence
+        return other in str(self)
 
     def __eq__(self, other):
         """The equality operator.
@@ -346,7 +346,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return hash(self.sequence)
+        return hash(str(self))
 
     def __iter__(self):
         """The iter operator.
@@ -369,7 +369,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return iter(self.sequence)
+        return iter(str(self))
 
     def __len__(self):
         """The len operator.
@@ -389,7 +389,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return len(self.sequence)
+        return self.sequence.size
 
     def __ne__(self, other):
         """The inequality operator.
@@ -464,7 +464,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        first_ten = self.sequence[:10]
+        first_ten = str(self)[:10]
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
@@ -494,11 +494,11 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return reversed(self.sequence)
+        return reversed(str(self))
 
     def __str__(self):
         """Document me?"""
-        return str(self._chars.view('|S%d' % self._chars.size)[0])
+        return str(self.sequence.view('|S%d' % len(self))[0])
 
     @property
     def sequence(self):
@@ -511,7 +511,7 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable.
 
         """
-        return str(self)
+        return self._chars
 
     @property
     def id(self):
@@ -760,7 +760,7 @@ class Sequence(collections.Sequence, SkbioObject):
             raiser('quality', 'quality')
             return False
 
-        if 'sequence' not in ignore and self.sequence != other.sequence:
+        if 'sequence' not in ignore and str(self) != str(other):
             raiser('sequence', 'sequence')
             return False
 
@@ -788,7 +788,7 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
-        return self.sequence.count(subsequence)
+        return str(self).count(subsequence)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -938,7 +938,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return self.sequence.index(subsequence)
+            return str(self).index(subsequence)
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
@@ -1074,7 +1074,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         start = 0 if retrieve_group_0 else 1
 
-        for match in regex.finditer(self.sequence):
+        for match in regex.finditer(str(self)):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
 
@@ -1181,32 +1181,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         self._description = description
         self._set_sequence(sequence, validate)
         self._set_quality(quality)
-
-    def __len__(self):
-        return self._bytes.size
-
-    def __iter__(self):
-        """The iter operator.
-
-        Returns
-        -------
-        iterator
-            Position iterator for the `IUPACSequence`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC')
-        >>> for c in s: print(c)
-        G
-        G
-        U
-        C
-
-        .. shownumpydoc
-
-        """
-        return iter(self._chars)
 
     def gaps(self):
         return np.in1d(self._bytes, self._gap_codes)
