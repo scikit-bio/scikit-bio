@@ -104,6 +104,7 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
+        self._chars = self._bytes.view('|S1')
 
     def _set_id(self, id_):
         if isinstance(id_, string_types):
@@ -1190,8 +1191,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         pass
 
-    # Do not use super here because the implementation is dramatically
-    # different from optimization.
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=True, case_insensitive=True):
         super(IUPACSequence, self).__init__(sequence, id, description, quality)
@@ -1209,8 +1208,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                 # ASCII is built such that the difference between uppercase and
                 # lowercase is the 6th bit.
                 self._bytes[lowercase] ^= 32
-
-            self._chars = self._bytes.view('|S1')
 
     def _validate(self):
         # This is the fastest way that we have found to identify the
