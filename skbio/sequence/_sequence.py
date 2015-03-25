@@ -16,6 +16,7 @@ import collections
 import numbers
 from abc import ABCMeta, abstractmethod
 from itertools import product
+from contextlib import contextmanager
 
 import numpy as np
 from scipy.spatial.distance import hamming
@@ -94,6 +95,16 @@ class Sequence(collections.Sequence, SkbioObject):
         self._set_sequence(sequence)
         self._set_quality(quality)
 
+    @contextmanager
+    def _byte_ownership(self):
+        if not self._owns_bytes:
+            self._bytes = self._bytes.copy()
+            self._owns_bytes = True
+
+        self._bytes.flags.writeable = True
+        yield
+        self._bytes.flags.writeable = False
+
     def _set_id(self, id_):
         if isinstance(id_, string_types):
             self._id = id_
@@ -123,9 +134,15 @@ class Sequence(collections.Sequence, SkbioObject):
             # us with a view, make sure we *always* store a contiguous array to
             # avoid hard-to-track bugs. See
             # https://github.com/numpy/numpy/issues/5716
-            sequence = np.ascontiguousarray(sequence)
+            potential_copy = np.ascontiguousarray(sequence)
+            if potential_copy is not sequence:
+                self._owns_bytes = True
+            else:
+                self._owns_bytes = False
+            sequence = potential_copy
         else:
             sequence = np.fromstring(sequence, dtype=np.uint8)
+            self._owns_bytes = True
 
         if sequence.size == 0:
             raise ValueError("Cannot create empty sequence.")
@@ -1176,67 +1193,49 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     # Do not use super here because the implementation is dramatically
     # different from optimization.
     def __init__(self, sequence, id="", description="", quality=None,
-                 validate=True):
-        self._set_id(id)
-        self._description = description
-        self._set_sequence(sequence, validate)
-        self._set_quality(quality)
+                 validate=True, case_insensitive=True):
+        super(IUPACSequence, self).__init__(sequence, id, description, quality)
+        if case_insensitive:
+            self._convert_to_uppercase()
+
+        if validate:
+            self._validate()
+
+
+    def _convert_to_uppercase(self):
+        lowercase = self._bytes > self._ascii_lowercase_boundary
+        if np.any(lowercase):
+            with self._byte_ownership():
+                # ASCII is built such that the difference between uppercase and
+                # lowercase is the 6th bit.
+                self._bytes[lowercase] ^= 32
+
+            self._chars = self._bytes.view('|S1')
+
+    def _validate(self):
+        # This is the fastest way that we have found to identify the
+        # presence or absence of certain characters (numbers).
+        # It works by multiplying a mask where the numbers which are
+        # permitted have a zero at their index, and all others have a one.
+        # The result is a vector which will propogate counts of invalid
+        # numbers and remove counts of valid numbers, so that we need only
+        # see if the array is empty to determine validity.
+        invalid_characters = np.bincount(
+            self._bytes, minlength=self._number_of_extended_ascii_codes
+        ) * self._validation_mask
+        if np.any(invalid_characters):
+            bad = list(np.where(
+                invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
+            raise ValueError("Invalid character%s in sequence: %r" %
+                             ('s' if len(bad)>1 else '',
+                              bad if len(bad)>1 else bad[0]))
+
+
+    def _constructor(self, kwargs):
+        return self.__class__(validate=False, case_insensitive=False, **kwargs)
 
     def gaps(self):
         return np.in1d(self._bytes, self._gap_codes)
-
-    def _set_sequence(self, sequence, validate):
-        """Munge the sequence data into a numpy array."""
-        is_ndarray = isinstance(sequence, np.ndarray)
-        if is_ndarray:
-            if np.issubdtype(sequence.dtype, np.uint8):
-                pass
-            elif np.issubdtype(sequence.dtype, '|S1'):
-                sequence = sequence.view(np.uint8)
-            else:
-                raise TypeError("Can only create sequence from numpy.ndarray"
-                                " of dtype np.uint8 or '|S1'.")
-
-            sequence = np.ascontiguousarray(sequence)
-        else:
-            sequence = np.fromstring(sequence, dtype=np.uint8)
-
-        if sequence.size == 0:
-            raise ValueError("Cannot create empty sequence.")
-
-        if validate:
-            lowercase = sequence > self._ascii_lowercase_boundary
-            if np.any(lowercase):
-                if is_ndarray:
-                    sequence = sequence.copy()
-                # ASCII is built such that the difference between uppercase and
-                # lowercase is the 6th bit.
-                sequence[lowercase] ^= 32
-
-            # This is the fastest way that we have found to identify the
-            # presence or absence of certain characters (numbers).
-            # It works by multiplying a mask where the numbers which are
-            # permitted have a zero at their index, and all others have a one.
-            # The result is a vector which will propogate counts of invalid
-            # numbers and remove counts of valid numbers, so that we need only
-            # see if the array is empty to determine validity.
-            invalid_characters = np.bincount(
-                sequence, minlength=self._number_of_extended_ascii_codes
-            ) * self._validation_mask
-            if np.any(invalid_characters):
-                bad = list(np.where(
-                    invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
-                raise ValueError("Invalid character%s in sequence: %r" %
-                                 ('s' if len(bad)>1 else '',
-                                  bad if len(bad)>1 else bad[0]))
-
-        sequence.flags.writeable = False
-
-        self._bytes = sequence
-        self._chars = sequence.view('|S1')
-
-    def _constructor(self, kwargs):
-        return self.__class__(validate=False, **kwargs)
 
     def degap(self):
         """Return a new sequence with gap characters removed.
