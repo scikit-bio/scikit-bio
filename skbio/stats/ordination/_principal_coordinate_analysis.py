@@ -25,56 +25,6 @@ from ._base import Ordination, OrdinationResults
 #   so, so I'm not doing that.
 
 
-def _eigh(F_matrix, **ignored):
-    """Wrapper around np.linalg.eigh
-
-    The eigh method is described in [1].
-
-    Parameters
-    ----------
-    F_matrix : np.ndarray
-        The result of PCoABase._F_matrix
-
-    Returns
-    -------
-    array
-        The resulting eigenvalues.
-    array
-        The resulting eigenvectors.
-
-    References
-    ----------
-    .. [1] http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html  # noqa
-    """
-    return np.linalg.eigh(F_matrix)
-
-
-def _eigsh(F_matrix, k=10, **kwargs):
-    """Wrapper around scipy.sparse.linalg.eigsh
-
-    The eigsh method is described in [1].
-
-    Parameters
-    ----------
-    F_matrix : np.ndarray
-        The result of PCoABase._F_matrix
-    k : unsigned int
-        The number of eigenvectors and values to find.
-
-    Returns
-    -------
-    array
-        The resulting k eigenvalues.
-    array
-        The resulting k eigenvectors.
-
-    References
-    ----------
-    .. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html  # noqa
-    """
-    return sp.sparse.linalg.eigsh(F_matrix, k=k, **kwargs)
-
-
 class PCoABase(Ordination):
     r"""Perform Principal Coordinate Analysis.
 
@@ -119,16 +69,16 @@ class PCoABase(Ordination):
     long_method_name = None
     eig_methods = {}
 
-    def __init__(self, distance_matrix, eig_f=None, eig_args=None):
+    def __init__(self, distance_matrix, eig_f=None, **eig_kwargs):
         if isinstance(distance_matrix, DistanceMatrix):
             self.dm = np.asarray(distance_matrix.data, dtype=np.float64)
             self.ids = distance_matrix.ids
         else:
             raise TypeError("Input must be a DistanceMatrix.")
 
-        self._eig_args = eig_args if eig_args is not None else {}
+        self._eig_kwargs = eig_kwargs
         if eig_f is None:
-            self._eig_f = _eigh
+            self._eig_f = np.linalg.eigh
             self._eig_name = 'eigh'
         else:
             if eig_f not in self._eig_methods:
@@ -152,7 +102,7 @@ class PCoABase(Ordination):
         # If the eigendecomposition ever became a bottleneck, it could
         # be replaced with an iterative version that computes the
         # largest k eigenvectors.
-        eigvals, eigvecs = self._eig_f(F_matrix, **self._eig_args)
+        eigvals, eigvecs = self._eig_f(F_matrix, **self._eig_kwargs)
 
         # eigvals might not be ordered, so we order them (at least one
         # is zero). cogent makes eigenvalues positive by taking the
@@ -217,7 +167,8 @@ class PCoABase(Ordination):
 class PCoA(PCoABase):
     short_method_name = 'PCoA'
     long_method_name = 'Principal Coordinate Analysis'
-    eig_methods = {'eigh': _eigh, 'eigsh': _eigsh}
+    eig_methods = {'eigh': np.linalg.eigh,
+                   'eigsh': sp.sparse.linalg.eigsh}
 
     def scores(self):
         """Compute coordinates in transformed space.
