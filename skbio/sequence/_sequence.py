@@ -300,7 +300,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 if self.has_quality():
                     qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
 
-                return self.copy(sequence=seq, quality=qual)
+                return self.to(sequence=seq, quality=qual)
         elif isinstance(indexable, string_types) or isinstance(indexable, bool):
             raise IndexError("Cannot index with that type: %r" % indexable)
 
@@ -308,7 +308,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.has_quality():
             qual = self.quality[indexable]
 
-        return self.copy(sequence=seq, quality=qual)
+        return self.to(sequence=seq, quality=qual)
 
     def _slices_from_iter(self, array, indexables):
         for i in indexables:
@@ -572,7 +572,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.quality is not None
 
-    def copy(self, **kwargs):
+    def to(self, **kwargs):
         """Return a copy of the current biological sequence.
 
         Returns a copy of the current biological sequence, optionally with
@@ -652,7 +652,10 @@ class Sequence(collections.Sequence, SkbioObject):
             'quality': self.quality
         }
         defaults.update(kwargs)
-        return self.__class__(**defaults)
+        return self._constructor(defaults)
+
+    def _constructor(self, kwargs):
+        return self.__class__(**kwargs)
 
     def equals(self, other, ignore=None, descriptive=False):
         """Compare two biological sequences for equality.
@@ -1258,6 +1261,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         self._bytes = sequence
         self._chars = sequence.view('|S1')
 
+    def _constructor(self, kwargs):
+        return self.__class__(validate=False, **kwargs)
 
     def degap(self):
         """Return a new sequence with gap characters removed.
@@ -1376,7 +1381,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
-        return (self.copy(sequence=''.join(nondegen_seq)) for nondegen_seq in result)
+        return (self.to(sequence=''.join(nondegen_seq)) for nondegen_seq in result)
 
 
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
@@ -1484,7 +1489,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         if self.has_quality() and reverse:
             quality = self.quality[::-1]
 
-        return self.copy(sequence=''.join(result), quality=quality)
+        return self.to(sequence=''.join(result), quality=quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`

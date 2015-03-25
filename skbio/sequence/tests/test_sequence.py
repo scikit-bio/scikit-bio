@@ -879,42 +879,42 @@ class SequenceTests(TestCase):
         b = Sequence('ACA')
         self.assertFalse(b.has_quality())
 
-    def test_copy_default_behavior(self):
+    def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
         # a subclass of Sequence
         for seq in self.b6, self.b8, RNA('ACGU', id='rna seq'):
-            copy = seq.copy()
-            self.assertTrue(seq.equals(copy))
-            self.assertFalse(seq is copy)
+            to = seq.to()
+            self.assertTrue(seq.equals(to))
+            self.assertFalse(seq is to)
 
-    def test_copy_update_single_attribute(self):
-        copy = self.b8.copy(id='new id')
-        self.assertFalse(self.b8 is copy)
+    def test_to_update_single_attribute(self):
+        to = self.b8.to(id='new id')
+        self.assertFalse(self.b8 is to)
 
         # they don't compare equal when we compare all attributes...
-        self.assertFalse(self.b8.equals(copy))
+        self.assertFalse(self.b8.equals(to))
 
         # ...but they *do* compare equal when we ignore id, as that was the
         # only attribute that changed
-        self.assertTrue(self.b8.equals(copy, ignore=['id']))
+        self.assertTrue(self.b8.equals(to, ignore=['id']))
 
-        # id should be what we specified in the copy call...
-        self.assertEqual(copy.id, 'new id')
+        # id should be what we specified in the to call...
+        self.assertEqual(to.id, 'new id')
 
         # ..and shouldn't have changed on the original sequence
         self.assertEqual(self.b8.id, 'hello')
 
-    def test_copy_update_multiple_attributes(self):
-        copy = self.b8.copy(id='new id', quality=range(20, 25),
+    def test_to_update_multiple_attributes(self):
+        to = self.b8.to(id='new id', quality=range(20, 25),
                             sequence='ACGTA', description='new desc')
-        self.assertFalse(self.b8 is copy)
-        self.assertFalse(self.b8.equals(copy))
+        self.assertFalse(self.b8 is to)
+        self.assertFalse(self.b8.equals(to))
 
-        # attributes should be what we specified in the copy call...
-        self.assertEqual(copy.id, 'new id')
-        npt.assert_equal(copy.quality, np.array([20, 21, 22, 23, 24]))
-        self.assertEqual(copy.sequence, 'ACGTA')
-        self.assertEqual(copy.description, 'new desc')
+        # attributes should be what we specified in the to call...
+        self.assertEqual(to.id, 'new id')
+        npt.assert_equal(to.quality, np.array([20, 21, 22, 23, 24]))
+        self.assertEqual(to.sequence, 'ACGTA')
+        self.assertEqual(to.description, 'new desc')
 
         # ..and shouldn't have changed on the original sequence
         self.assertEqual(self.b8.id, 'hello')
@@ -922,26 +922,26 @@ class SequenceTests(TestCase):
         self.assertEqual(self.b8.sequence, 'HE..--..LLO')
         self.assertEqual(self.b8.description, 'gapped hello')
 
-    def test_copy_invalid_kwargs(self):
+    def test_to_invalid_kwargs(self):
         with self.assertRaises(TypeError):
-            self.b2.copy(id='bar', unrecognized_kwarg='baz')
+            self.b2.to(id='bar', unrecognized_kwarg='baz')
 
-    def test_copy_extra_non_attribute_kwargs(self):
+    def test_to_extra_non_attribute_kwargs(self):
         # test that we can pass through additional kwargs to the constructor
         # that aren't related to biological sequence attributes (i.e., they
         # aren't state that has to be copied)
 
         a = DNA('ACTG', description='foo')
 
-        # should be able to copy it b/c validate defaults to False
-        b = a.copy()
+        # should be able to `to` it b/c validate defaults to False
+        b = a.to()
         self.assertTrue(a.equals(b))
         self.assertFalse(a is b)
 
         # specifying validate should raise an error when the copy is
         # instantiated
 #        with self.assertRaises(SequenceError):
-#            a.copy(validate=True)
+#            a.to(validate=True)
 
     def test_equals_true(self):
         # sequences match, all other attributes are not provided
