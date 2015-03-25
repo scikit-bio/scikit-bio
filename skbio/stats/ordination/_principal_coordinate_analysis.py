@@ -76,42 +76,6 @@ def _eigsh(F_matrix, k=10, **kwargs):
     return val, vec.T
 
 
-def _ssvd(F_matrix, k=10, p=10, qiter=0, **kwargs):
-    """Runs the SSVD method
-
-    This method is based on the algorithm described in "Finding Structure with
-    Randomness: Probabilistic Algorithms for Constructing Approximate Matrix
-    Decompositions [1]. The method implemented is derived from the R
-    implementation found in [2].
-
-    Parameters
-    ----------
-    F_matrix : np.ndarray
-        The result of PCoABase._F_matrix
-    k : unsigned int
-        The number of eigenvectors and values to find. A lower k will result in
-        lower quality resulting eignvectors and values.
-    p : unsigned int
-        Oversampling parameter, this is added to k to boost accuracy.
-    qiter : unsigned int
-        The number of iterations to perform.
-
-    Returns
-    -------
-    array
-        The resulting k eigenvalues.
-    array
-        The resulting k eigenvectors.
-
-    References
-    ----------
-    .. [1] http://epubs.siam.org/doi/abs/10.1137/090771806
-    .. [2] https://cwiki.apache.org/confluence/display/MAHOUT/Stochastic+Singular+Value+Decomposition
-
-    """
-    raise NotImplementedError
-
-
 class PCoABase(Ordination):
     r"""Perform Principal Coordinate Analysis.
 
@@ -293,12 +257,3 @@ class PCoA(PCoABase):
         return OrdinationResults(eigvals=eigvals, site=coordinates,
                                  proportion_explained=proportion_explained,
                                  site_ids=self.ids)
-
-
-class APCoA(PCoABase):
-    short_method_name = 'APCoA'
-    long_method_name = 'Approximate Principal Coordinate Analysis'
-    eig_methods = {}
-
-    def scores(self):
-        return OrdinationResults(eigvals=self.eigvals, site
