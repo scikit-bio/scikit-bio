@@ -130,6 +130,7 @@ class PCoABase(Ordination):
         self._eig_args = eig_args if eig_args is not None else {}
         if eig_f is None:
             self._eig_f = _eigh
+            self._eig_name = 'eigh'
         else:
             if eig_f not in self._eig_methods:
                 eig_methods = ', '.join(self._eig_methods)
@@ -137,6 +138,7 @@ class PCoABase(Ordination):
                                "are: %s" % (eig_f, eig_methods))
             else:
                 self._eig_f = self._eig_methods[eig_f]
+                self._eig_name = eig_f
 
         self._pcoa()
 
