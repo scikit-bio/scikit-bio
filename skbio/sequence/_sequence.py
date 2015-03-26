@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems, with_metaclass
+from future.standard_library import hooks
 from six import string_types
 
 import re
@@ -24,6 +25,9 @@ from scipy.spatial.distance import hamming
 from skbio._base import SkbioObject
 from skbio.sequence import SequenceError
 from skbio.util import classproperty, overrides
+
+with hooks():
+    from itertools import zip_longest
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -400,7 +404,13 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return iter(self._string)
+        if self.has_quality():
+            qual = self.quality
+        else:
+            qual = []
+
+        for c, q in zip_longest(self._string, qual, fillvalue=None):
+            yield self._constructor(sequence=c, quality=q)
 
     def __len__(self):
         """The len operator.
@@ -684,9 +694,9 @@ class Sequence(collections.Sequence, SkbioObject):
             'quality': self.quality
         }
         defaults.update(kwargs)
-        return self._constructor(defaults)
+        return self._constructor(**defaults)
 
-    def _constructor(self, kwargs):
+    def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
 
     def equals(self, other, ignore=None, descriptive=False):
@@ -1241,7 +1251,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                               bad if len(bad)>1 else bad[0]))
 
     @overrides(Sequence)
-    def _constructor(self, kwargs):
+    def _constructor(self, **kwargs):
         return self.__class__(validate=False, case_insensitive=False, **kwargs)
 
     def gaps(self):
@@ -1351,6 +1361,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         expansions = []
         for char in self:
+            char = str(char)
             if char in nonexpansion_chars:
                 expansions.append(char)
             else:
@@ -1461,6 +1472,8 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         complement_map = self.complement_map
         seq_iterator = reversed(self) if reverse else self
         for base in seq_iterator:
+            # TODO fix me!
+            base = str(base)
             try:
                 result.append(complement_map[base])
             except KeyError:

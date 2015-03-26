@@ -618,8 +618,9 @@ class SequenceTests(TestCase):
 
     def test_iter(self):
         b1_iter = iter(self.b1)
-        for actual, expected in zip(b1_iter, "GATTACA"):
-            self.assertEqual(actual, expected)
+        for actual, exp_c, exp_q in zip(b1_iter, "GATTACA", range(7)):
+            expected = Sequence(exp_c, quality=exp_q)
+            self.assertTrue(actual.equals(expected, descriptive=True))
 
         self.assertRaises(StopIteration, lambda: next(b1_iter))
 
