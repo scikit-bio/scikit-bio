@@ -90,6 +90,16 @@ class Sequence(collections.Sequence, SkbioObject):
     default_write_format = 'fasta'
 
     def __init__(self, sequence, id="", description="", quality=None):
+        if isinstance(sequence, Sequence):
+            if id == "":
+                id = sequence.id
+            if description == "":
+                description = sequence.description
+            if quality is None:
+                quality = sequence.quality
+
+            sequence = sequence._bytes
+
         self._set_id(id)
         self._set_description(description)
         self._set_sequence(sequence)
@@ -211,7 +221,12 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return other in str(self)
+        # It isn't even funny how fast python string manipulation is.
+        # We can memoize the string later on...
+        if isinstance(other, string_types):
+            return other in str(self)
+
+        return str(Sequence(other)) in str(self)
 
     def __eq__(self, other):
         """The equality operator.
@@ -961,16 +976,16 @@ class Sequence(collections.Sequence, SkbioObject):
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
 
-    def k_words(self, k, overlapping=True):
+    def kmers(self, k, overlap=True):
         """Get the list of words of length k
 
         Parameters
         ----------
         k : int
             The word length.
-        overlapping : bool, optional
-            Defines whether the k-words should be overlapping or not
-            overlapping.
+        overlap : bool, optional
+            Defines whether the k-words should be overlap or not
+            overlap.
 
         Returns
         -------
@@ -987,35 +1002,33 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> [str(kw) for kw in s.k_words(4, overlapping=False)]
+        >>> [str(kw) for kw in s.k_words(4, overlap=False)]
         ['ACAC', 'GACG']
-        >>> [str(kw) for kw in s.k_words(3, overlapping=True)]
+        >>> [str(kw) for kw in s.k_words(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
 
-        sequence_length = len(self)
-
-        if overlapping:
+        if overlap:
             step = 1
         else:
             step = k
 
-        for i in range(0, sequence_length - k + 1, step):
+        for i in range(0, len(self) - k + 1, step):
             yield self[i:i+k]
 
-    def k_word_counts(self, k, overlapping=True):
+    def kmer_counts(self, k, overlap=True):
         """Get the counts of words of length k
 
         Parameters
         ----------
         k : int
             The word length.
-        overlapping : bool, optional
-            Defines whether the k-words should be overlapping or not
-            overlapping.
+        overlap : bool, optional
+            Defines whether the k-words should be overlap or not
+            overlap.
 
         Returns
         -------
@@ -1027,23 +1040,23 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACAT')
-        >>> s.k_word_counts(3, overlapping=True)
+        >>> s.k_word_counts(3, overlap=True)
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
-        k_words = self.k_words(k, overlapping)
+        k_words = self.kmers(k, overlap)
         return collections.Counter((str(seq) for seq in k_words))
 
-    def k_word_frequencies(self, k, overlapping=True):
+    def k_word_frequencies(self, k, overlap=True):
         """Get the frequencies of words of length `k`
 
         Parameters
         ----------
         k : int
             The word length.
-        overlapping : bool, optional
-            Defines whether the k-words should be overlapping or not
-            overlapping. This is only relevant when `k` > 1.
+        overlap : bool, optional
+            Defines whether the k-words should be overlap or not
+            overlap. This is only relevant when `k` > 1.
 
         Returns
         -------
@@ -1055,18 +1068,18 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACAT')
-        >>> s.k_word_frequencies(3, overlapping=True)
+        >>> s.k_word_frequencies(3, overlap=True)
         defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
 
         """
-        if overlapping:
+        if overlap:
             num_words = len(self) - k + 1
         else:
             num_words = len(self) // k
 
         result = collections.defaultdict(float)
-        k_word_counts = self.k_word_counts(k, overlapping=overlapping)
-        for word, count in viewitems(k_word_counts):
+        kmer_counts = self.kmer_counts(k, overlap=overlap)
+        for word, count in viewitems(kmer_counts):
             result[str(word)] = count / num_words
         return result
 

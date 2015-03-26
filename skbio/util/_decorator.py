@@ -25,8 +25,6 @@ class classproperty(property):
     instance. However, the property can always be redefined on the class, since
     Python classes are mutable.
 
-    Must be used **above** the ``classmethod`` decorator.
-
     Parameters
     ----------
     func : function

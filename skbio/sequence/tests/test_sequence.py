@@ -272,10 +272,10 @@ class SequenceInterfaceTests(object):
     def test_rindex(self):
         pass
 
-    def test_kmer(self):
+    def test_kmers(self):
         pass
 
-    def test_kmer_counts(self):
+    def test_kmers_counts(self):
         pass
 
     def test_iregex(self):
@@ -621,13 +621,13 @@ class SequenceTests(TestCase):
 
         self.assertRaises(StopIteration, lambda: next(b1_iter))
 
-    def _compare_k_words_results(self, observed, expected):
+    def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
             # use equals to compare quality, id, description, sequence, and
             # type
             self.assertTrue(obs.equals(exp))
 
-    def test_k_words_overlapping_true(self):
+    def test_kmers_overlap_true(self):
         expected = [
             Sequence('G', quality=[0]),
             Sequence('A', quality=[1]),
@@ -637,8 +637,8 @@ class SequenceTests(TestCase):
             Sequence('C', quality=[5]),
             Sequence('A', quality=[6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(1, overlapping=True), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(1, overlap=True), expected)
 
         expected = [
             Sequence('GA', quality=[0, 1]),
@@ -648,8 +648,8 @@ class SequenceTests(TestCase):
             Sequence('AC', quality=[4, 5]),
             Sequence('CA', quality=[5, 6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(2, overlapping=True), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(2, overlap=True), expected)
 
         expected = [
             Sequence('GAT', quality=[0, 1, 2]),
@@ -658,18 +658,18 @@ class SequenceTests(TestCase):
             Sequence('TAC', quality=[3, 4, 5]),
             Sequence('ACA', quality=[4, 5, 6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(3, overlapping=True), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(3, overlap=True), expected)
 
         expected = [
             Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(7, overlapping=True), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(7, overlap=True), expected)
 
-        self.assertEqual(list(self.b1.k_words(8, overlapping=True)), [])
+        self.assertEqual(list(self.b1.kmers(8, overlap=True)), [])
 
-    def test_k_words_overlapping_false(self):
+    def test_kmers_overlap_false(self):
         expected = [
             Sequence('G', quality=[0]),
             Sequence('A', quality=[1]),
@@ -679,40 +679,40 @@ class SequenceTests(TestCase):
             Sequence('C', quality=[5]),
             Sequence('A', quality=[6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(1, overlapping=False), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(1, overlap=False), expected)
 
         expected = [
             Sequence('GA', quality=[0, 1]),
             Sequence('TT', quality=[2, 3]),
             Sequence('AC', quality=[4, 5])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(2, overlapping=False), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(2, overlap=False), expected)
 
         expected = [
             Sequence('GAT', quality=[0, 1, 2]),
             Sequence('TAC', quality=[3, 4, 5])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(3, overlapping=False), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(3, overlap=False), expected)
 
         expected = [
             Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
-        self._compare_k_words_results(
-            self.b1.k_words(7, overlapping=False), expected)
+        self._compare_kmers_results(
+            self.b1.kmers(7, overlap=False), expected)
 
-        self.assertEqual(list(self.b1.k_words(8, overlapping=False)), [])
+        self.assertEqual(list(self.b1.kmers(8, overlap=False)), [])
 
-    def test_k_words_invalid_k(self):
+    def test_kmers_invalid_k(self):
         with self.assertRaises(ValueError):
-            list(self.b1.k_words(0))
+            list(self.b1.kmers(0))
 
         with self.assertRaises(ValueError):
-            list(self.b1.k_words(-42))
+            list(self.b1.kmers(-42))
 
-    def test_k_words_different_sequences(self):
+    def test_kmers_different_sequences(self):
         expected = [
             Sequence('HE.', quality=[0, 1, 2], id='hello',
                                description='gapped hello'),
@@ -721,35 +721,35 @@ class SequenceTests(TestCase):
             Sequence('..L', quality=[6, 7, 8], id='hello',
                                description='gapped hello')
         ]
-        self._compare_k_words_results(
-            self.b8.k_words(3, overlapping=False), expected)
+        self._compare_kmers_results(
+            self.b8.kmers(3, overlap=False), expected)
 
 
-    def test_k_word_counts(self):
-        # overlapping = True
+    def test_kmer_counts(self):
+        # overlap = True
         expected = Counter('GATTACA')
-        self.assertEqual(self.b1.k_word_counts(1, overlapping=True),
+        self.assertEqual(self.b1.kmer_counts(1, overlap=True),
                          expected)
         expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(self.b1.k_word_counts(3, overlapping=True),
+        self.assertEqual(self.b1.kmer_counts(3, overlap=True),
                          expected)
 
-        # overlapping = False
+        # overlap = False
         expected = Counter(['GAT', 'TAC'])
-        self.assertEqual(self.b1.k_word_counts(3, overlapping=False),
+        self.assertEqual(self.b1.kmer_counts(3, overlap=False),
                          expected)
         expected = Counter(['GATTACA'])
-        self.assertEqual(self.b1.k_word_counts(7, overlapping=False),
+        self.assertEqual(self.b1.kmer_counts(7, overlap=False),
                          expected)
 
     def test_k_word_frequencies(self):
-        # overlapping = True
+        # overlap = True
         expected = defaultdict(float)
         expected['A'] = 3/7.
         expected['C'] = 1/7.
         expected['G'] = 1/7.
         expected['T'] = 2/7.
-        self.assertEqual(self.b1.k_word_frequencies(1, overlapping=True),
+        self.assertEqual(self.b1.k_word_frequencies(1, overlap=True),
                          expected)
         expected = defaultdict(float)
         expected['GAT'] = 1/5.
@@ -757,18 +757,18 @@ class SequenceTests(TestCase):
         expected['TTA'] = 1/5.
         expected['TAC'] = 1/5.
         expected['ACA'] = 1/5.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=True),
+        self.assertEqual(self.b1.k_word_frequencies(3, overlap=True),
                          expected)
 
-        # overlapping = False
+        # overlap = False
         expected = defaultdict(float)
         expected['GAT'] = 1/2.
         expected['TAC'] = 1/2.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlapping=False),
+        self.assertEqual(self.b1.k_word_frequencies(3, overlap=False),
                          expected)
         expected = defaultdict(float)
         expected['GATTACA'] = 1.0
-        self.assertEqual(self.b1.k_word_frequencies(7, overlapping=False),
+        self.assertEqual(self.b1.k_word_frequencies(7, overlap=False),
                          expected)
 
     def test_k_word_frequencies_floating_point_precision(self):
