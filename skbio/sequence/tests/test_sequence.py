@@ -230,7 +230,9 @@ class SequenceInterfaceTests(object):
         with self.assertRaises(ValueError):
             seq[99999999999999999:2]
 
-        with self.assertRaises(ValueError):
+        # numpy 1.8.1 and 1.9.2 raise different error types
+        # (ValueError, IndexError).
+        with self.assertRaises(Exception):
             seq[100 * [True, False, True]]
 
     def test___hash__(self):

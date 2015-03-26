@@ -114,7 +114,7 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
-        self._chars = self._bytes.view('|S1')
+        self._string = self._bytes.view('|S%d' % self._bytes.size)[0]
 
     def _set_id(self, id_):
         if isinstance(id_, string_types):
@@ -161,7 +161,7 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
 
         self._bytes = sequence
-        self._chars = sequence.view('|S1')
+        self._string = sequence.view('|S%d' % sequence.size)[0]
 
     def _set_quality(self, quality):
         if quality is not None:
@@ -221,12 +221,10 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        # It isn't even funny how fast python string manipulation is.
-        # We can memoize the string later on...
         if isinstance(other, string_types):
-            return other in str(self)
+            return other in self._string
 
-        return str(Sequence(other)) in str(self)
+        return Sequence(other)._string in self._string
 
     def __eq__(self, other):
         """The equality operator.
@@ -379,7 +377,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return hash(str(self))
+        return hash(self._string)
 
     def __iter__(self):
         """The iter operator.
@@ -402,7 +400,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return iter(str(self))
+        return iter(self._string)
 
     def __len__(self):
         """The len operator.
@@ -497,7 +495,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        first_ten = str(self)[:10]
+        first_ten = self._string[:10]
         cn = self.__class__.__name__
         length = len(self)
         if length > 10:
@@ -527,7 +525,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return reversed(str(self))
+        return reversed(self._string)
 
     def __str__(self):
         """Document me?"""
@@ -544,7 +542,8 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable.
 
         """
-        return self._chars
+        # TODO what type do we return??
+        return self._bytes.view('|S1')
 
     @property
     def id(self):
@@ -793,7 +792,7 @@ class Sequence(collections.Sequence, SkbioObject):
             raiser('quality', 'quality')
             return False
 
-        if 'sequence' not in ignore and str(self) != str(other):
+        if 'sequence' not in ignore and self._string != other._string:
             raiser('sequence', 'sequence')
             return False
 
@@ -821,7 +820,7 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
-        return str(self).count(subsequence)
+        return self._string.count(subsequence)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -971,7 +970,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return str(self).index(subsequence)
+            return self._string.index(subsequence)
         except ValueError:
             raise ValueError(
                 "%s is not present in %r." % (subsequence, self))
@@ -1105,7 +1104,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         start = 0 if retrieve_group_0 else 1
 
-        for match in regex.finditer(str(self)):
+        for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
                 yield (match.start(g), match.end(g), match.group(g))
 
