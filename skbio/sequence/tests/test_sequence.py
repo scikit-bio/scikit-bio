@@ -807,9 +807,13 @@ class SequenceTests(TestCase):
 
     def test_reversed(self):
         b1_reversed = reversed(self.b1)
-        for actual, expected in zip(b1_reversed, "ACATTAG"):
-            self.assertEqual(actual, expected)
+        loop_ran = False
+        for actual, exp_c, exp_q in zip(b1_reversed, "ACATTAG", reversed(range(7))):
+            loop_ran = True
+            expected = Sequence(exp_c, quality=exp_q)
+            self.assertTrue(actual.equals(expected, descriptive=True))
 
+        self.assertTrue(loop_ran)
         self.assertRaises(StopIteration, lambda: next(b1_reversed))
 
     def test_str(self):

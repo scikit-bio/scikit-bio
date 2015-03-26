@@ -430,7 +430,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return self.sequence.size
+        return self._bytes.size
 
     def __ne__(self, other):
         """The inequality operator.
@@ -535,7 +535,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return reversed(self._string)
+        return iter(self[::-1])
 
     def __str__(self):
         """Document me?"""
