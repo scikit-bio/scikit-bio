@@ -23,7 +23,7 @@ from scipy.spatial.distance import hamming
 
 from skbio._base import SkbioObject
 from skbio.sequence import SequenceError
-from skbio.util import classproperty
+from skbio.util import classproperty, overrides
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -1191,6 +1191,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         pass
 
+    @overrides(Sequence)
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=True, case_insensitive=True):
         super(IUPACSequence, self).__init__(sequence, id, description, quality)
@@ -1227,7 +1228,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                              ('s' if len(bad)>1 else '',
                               bad if len(bad)>1 else bad[0]))
 
-
+    @overrides(Sequence)
     def _constructor(self, kwargs):
         return self.__class__(validate=False, case_insensitive=False, **kwargs)
 
@@ -1616,6 +1617,7 @@ class Protein(IUPACSequence):
     """
 
     @classproperty
+    @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC protein characters.
 
@@ -1628,6 +1630,7 @@ class Protein(IUPACSequence):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
+    @overrides(IUPACSequence)
     def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -1662,6 +1665,7 @@ class DNA(NucleotideSequence):
     """
 
     @classproperty
+    @overrides(NucleotideSequence)
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1683,6 +1687,7 @@ class DNA(NucleotideSequence):
         return comp_map
 
     @classproperty
+    @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC DNA characters.
 
@@ -1695,6 +1700,7 @@ class DNA(NucleotideSequence):
         return set("ACGT")
 
     @classproperty
+    @overrides(IUPACSequence)
     def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 
@@ -1725,6 +1731,7 @@ class RNA(NucleotideSequence):
     """
 
     @classproperty
+    @overrides(NucleotideSequence)
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
@@ -1746,6 +1753,7 @@ class RNA(NucleotideSequence):
         return comp_map
 
     @classproperty
+    @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC RNA characters.
 
@@ -1758,6 +1766,7 @@ class RNA(NucleotideSequence):
         return set("ACGU")
 
     @classproperty
+    @overrides(IUPACSequence)
     def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
 

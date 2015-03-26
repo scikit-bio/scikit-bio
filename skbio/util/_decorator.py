@@ -7,7 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from ._exception import OverrideError
 
+# Adapted from http://stackoverflow.com/a/8313042/579416
+def overrides(interface_class):
+    def overrider(method):
+        if method.__name__ not in dir(interface_class):
+            raise OverrideError("%r is not present in parent class: %r." %
+                                (method.__name__, interface_class.__name__))
+        return method
+    return overrider
 
 class classproperty(property):
     """Decorator for class-level properties.
