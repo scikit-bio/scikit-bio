@@ -346,7 +346,7 @@ def clr(mat):
     """
     mat = closure(mat)
     lmat = np.log(mat)
-    gm = lmat.mean(axis=lmat.ndim-1, keepdims=True)
+    gm = lmat.mean(axis=-1, keepdims=True)
     return (lmat - gm).squeeze()
 
 
