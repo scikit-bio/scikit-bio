@@ -201,7 +201,7 @@ def perturb(x, y):
 
     Notes
     -----
-    - All of the values in x and y must be greater than zero
+    - All of the values in x and y must be non negative
 
     Examples
     --------
@@ -247,7 +247,7 @@ def perturb_inv(x, y):
 
     Notes
     -----
-    - All of the values in x and y must be greater than zero
+    - All of the values in x and y must be non negative
 
     Examples
     --------
@@ -294,7 +294,7 @@ def power(x, a):
     -----
     - Each row must add up to 1 for x
 
-    - All of the values in x must be greater than zero
+    - All of the values in x must be non negative
 
     >>> import numpy as np
     >>> from skbio.stats.composition import power
@@ -335,7 +335,7 @@ def clr(mat):
     -----
     - Each row must add up to 1
 
-    - All of the values must be greater than zero for mat
+    - All of the values must be non negative for mat
 
     >>> import numpy as np
     >>> from skbio.stats.composition import clr
@@ -369,7 +369,7 @@ def centralize(mat):
     -----
     - Each row must add up to 1 for mat
 
-    - All of the values must be greater than zero
+    - All of the values must be non negative
 
     >>> import numpy as np
     >>> from skbio.stats.composition import centralize
