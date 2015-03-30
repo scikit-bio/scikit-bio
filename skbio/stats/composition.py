@@ -6,32 +6,34 @@ Composition Statistics (:mod:`skbio.stats.composition`)
 
 This module provides functions for compositional data analysis.
 
-Many 'omics datasets are inheriently compositional - meaning that they are best
-interpreted as proportions or percentages rather than absolute counts.
+Many 'omics datasets are inherently compositional - meaning that they
+are best interpreted as proportions or percentages rather than
+absolute counts.
 
-Formally, :math:`x` is a composition if :math:`\sum_{i=0}^D x_{i} = c` and
-:math:`x_{i} > 0`, :math:`1 \leq i \leq D`  and :math:`c` is a real valued
-constant and there are :math:`D` components for each composition. In this
-module :math:`c=1`. Compositional data can be analyzed using Aitchison
-geometry [1]_
+Formally, :math:`x` is a composition if :math:`\sum_{i=0}^D x_{i} = c`
+and :math:`x_{i} > 0`, :math:`1 \leq i \leq D` and :math:`c` is a real
+valued constant and there are :math:`D` components for each
+composition. In this module :math:`c=1`. Compositional data can be
+analyzed using Aitchison geometry. [1]_
 
-However, in this framework, standard real Euclidean operations such as addition
-and multiplication no longer apply.  Only operations such as perturbation and
-power can be used to manipulate this data [1]_
+However, in this framework, standard real Euclidean operations such as
+addition and multiplication no longer apply. Only operations such as
+perturbation and power can be used to manipulate this data. [1]_
 
 This module allows two styles of manipulation of compositional data.
-Compositional data can be analyzed using perturbation and power operations,
-which can be useful for simulation studies. The alternative strategy is to
-transform compositional data into the real space.  Right now, the centre log
-ratio transform (clr) [1]_ can be used to accomplish this.  This transform can
-be useful for performing standard statistical tools such as parametric
-hypothesis testing, regressions and more.
+Compositional data can be analyzed using perturbation and power
+operations, which can be useful for simulation studies. The
+alternative strategy is to transform compositional data into the real
+space.  Right now, the centre log ratio transform (clr) [1]_ can be
+used to accomplish this.  This transform can be useful for performing
+standard statistical tools such as parametric hypothesis testing,
+regressions and more.
 
-The major caveat of using this framework is dealing with zeros.
-In the Aitchison geometry, only compositions with nonzero components can be
-considered. The multiplicative replacement technique [2]_ can be used to
-substitute these zeros with small pseudocounts without introducing major
-distortions to the data.
+The major caveat of using this framework is dealing with zeros.  In
+the Aitchison geometry, only compositions with nonzero components can
+be considered. The multiplicative replacement technique [2]_ can be
+used to substitute these zeros with small pseudocounts without
+introducing major distortions to the data.
 
 Functions
 ---------
@@ -52,15 +54,15 @@ Examples
 
 >>> import numpy as np
 
-Consider a very simple environment with only 3 species.
-The species in the environment are equally distributed and their
-proportions are equilvalent:
+Consider a very simple environment with only 3 species. The species
+in the environment are equally distributed and their proportions are
+equilvalent:
 
 >>> otus = np.array([1./3, 1./3., 1./3])
 
 Suppose that an antibiotic kills off half of the population for the
-first two species, but doesn't harm the third species.
-Then the perturbation vector would be as follows
+first two species, but doesn't harm the third species. Then the
+perturbation vector would be as follows
 
 >>> antibiotic = np.array([1./2, 1./2, 1])
 
@@ -92,7 +94,7 @@ import scipy.stats as ss
 
 def closure(mat):
     """
-    Performs closure to ensure that all elements add up to 1
+    Performs closure to ensure that all elements add up to 1.
 
     Parameters
     ----------
@@ -118,11 +120,11 @@ def closure(mat):
 
 
 def multiplicative_replacement(mat, delta=None):
-    """
-    Performs multiplicative replacement strategy to replace
-    all of the zeros with small non-zero values.  A closure
-    operation is applied so that the compositions still
-    add up to 1
+    """Replace all zeros with small non-zero values.
+
+    It uses the multiplicative replacement strategy, replacing zeros
+    with small positive values and performing a closure operation so
+    that the compositions still add up to 1
 
     Parameters
     ----------
@@ -170,7 +172,7 @@ def multiplicative_replacement(mat, delta=None):
 
 def perturb(x, y):
     r"""
-    Performs the perturbation operation
+    Performs the perturbation operation.
 
     This operation is defined as
     :math:`x \oplus y = C[x_1 y_1, ..., x_D y_D]`
@@ -220,7 +222,7 @@ def perturb(x, y):
 
 def perturb_inv(x, y):
     r"""
-    Performs the inverse perturbation operation
+    Performs the inverse perturbation operation.
 
     This operation is defined as
     :math:`x \ominus y = C[x_1 y_1^{-1}, ..., x_D y_D^{-1}]`
@@ -269,7 +271,7 @@ def perturb_inv(x, y):
 
 def power(x, a):
     r"""
-    Performs the power operation
+    Performs the power operation.
 
     This operation is defined as follows
     :math:`x \odot a = C[x_1^a, ..., x_D^a]`
@@ -317,11 +319,11 @@ def power(x, a):
 
 def clr(mat):
     r"""
-    Performs centre log ratio transformation that transforms
-    compositions from Aitchison geometry to the real space.
-    This transformation is an isometry, but not an isomorphism.
+    Performs centre log ratio transformation.
 
-    This transformation is defined for a composition :math:`x` as follows
+    This function transforms compositions from Aitchison geometry to
+    the real space. This transformation is an isometry, but not an
+    isomorphism. It is defined for a composition :math:`x` as follows:
 
     :math:`clr(x) = ln[\frac{x_1}{g_m(x)}, ..., \frac{x_D}{g_m(x)}]`
     where :math:`g_m(x) = (\prod_{i=1}^{D} x_i)^{1/D}` is the geometric
@@ -368,9 +370,7 @@ def clr(mat):
 
 
 def centralize(mat):
-    """
-    This calculates the average sample and centers the data
-    around this sample.
+    """Center data around its geometric average.
 
     Parameters
     ----------
