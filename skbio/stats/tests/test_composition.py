@@ -97,8 +97,6 @@ class CompositionTests(TestCase):
                                       [.16/.36, .16/.36, .04/.36]]))
 
         with self.assertRaises(ValueError):
-            power(self.data1, 2)
-        with self.assertRaises(ValueError):
             power(self.bad1, 2)
 
     def test_perturb_inv(self):
@@ -173,9 +171,6 @@ class CompositionTests(TestCase):
         npt.assert_allclose(cmat,
                             [np.log(A / np.exp(np.log(A).mean())),
                              np.log(B / np.exp(np.log(B).mean()))])
-
-        with self.assertRaises(ValueError):
-            clr(self.data1)
         with self.assertRaises(ValueError):
             clr(self.bad1)
         with self.assertRaises(ValueError):
@@ -191,8 +186,6 @@ class CompositionTests(TestCase):
                             np.array([[0.22474487, 0.22474487, 0.55051026],
                                       [0.41523958, 0.41523958, 0.16952085]]))
 
-        with self.assertRaises(ValueError):
-            centralize(self.data1)
         with self.assertRaises(ValueError):
             centralize(self.bad1)
         with self.assertRaises(ValueError):

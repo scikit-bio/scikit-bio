@@ -213,10 +213,7 @@ def perturb(x, y):
     array([ 0.0625,  0.1875,  0.5   ,  0.25  ])
 
     """
-    x = np.asarray(x, dtype=np.float64)
-    y = np.asarray(y, dtype=np.float64)
-    if np.any(x < 0) or np.any(y < 0):
-        raise ValueError("Cannot have negative proportions")
+    x, y = closure(x), closure(y)
     return closure(x * y)
 
 
@@ -262,10 +259,7 @@ def perturb_inv(x, y):
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
 
     """
-    x = np.asarray(x, dtype=np.float64)
-    y = np.asarray(y, dtype=np.float64)
-    if np.any(x < 0) or np.any(y < 0):
-        raise ValueError("Cannot have negative proportions")
+    x, y = closure(x), closure(y)
     return closure(x / y)
 
 
@@ -309,11 +303,7 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
-    x = np.atleast_2d(x)
-    if np.any(x < 0):
-        raise ValueError("Cannot have negative proportions")
-    if not np.all(np.isclose(x.sum(axis=1), 1)):
-        raise ValueError("Rows need to sum up to 1")
+    x = closure(x)
     return closure(x**a).squeeze()
 
 
@@ -354,18 +344,9 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    mat = np.atleast_2d(mat)
-    if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
-    if np.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
-    if not np.all(np.isclose(mat.sum(axis=1), 1)):
-        raise ValueError("Rows need to sum up to 1")
-
+    mat = closure(mat)
     lmat = np.log(mat)
-    num_samps, num_feats = lmat.shape
-    gm = lmat.mean(axis=1, keepdims=True)
-
+    gm = lmat.mean(axis=lmat.ndim-1, keepdims=True)
     return (lmat - gm).squeeze()
 
 
@@ -398,13 +379,6 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
-    mat = np.atleast_2d(mat)
-    if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
-    if np.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
-    if not np.all(np.isclose(mat.sum(axis=1), 1)):
-        raise ValueError("Rows need to sum up to 1")
-
+    mat = closure(mat)
     cen = ss.gmean(mat, axis=0)
     return perturb_inv(mat, cen)
