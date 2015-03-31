@@ -14,6 +14,7 @@ Subpackages
    :toctree: generated/
 
    distance
+   evolve
    ordination
    spatial
    gradient
