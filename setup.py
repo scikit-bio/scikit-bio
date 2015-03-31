@@ -102,7 +102,7 @@ setup(name='scikit-bio',
       extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8",
                                "python-dateutil"],
                       'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"],
-                      'optional': ['matplotlib >= 1.1.0']},
+                      'plot': ['matplotlib >= 1.1.0']},
       classifiers=classifiers,
       package_data={
           'skbio.io.tests': ['data/*'],
