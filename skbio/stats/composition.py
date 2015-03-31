@@ -49,6 +49,13 @@ Functions
    clr
    centralize
 
+References
+----------
+.. [1] V. Pawlowsky-Glahn. "Lecture Notes on Compositional Data Analysis"
+.. [2] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
+       Compositional Data Sets Using Nonparametric Imputation"
+
+
 Examples
 --------
 
@@ -70,12 +77,6 @@ And the resulting perturbation would be
 
 >>> perturb(otus, antibiotic)
 array([ 0.25,  0.25,  0.5 ])
-
-Reference
----------
-.. [1] V. Pawlowsky-Glahn. "Lecture Notes on Compositional Data Analysis"
-.. [2] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
-       Compositional Data Sets Using Nonparametric Imputation"
 
 """
 
@@ -115,17 +116,19 @@ def closure(mat):
         raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
-    mat = mat.astype(np.float64)
+    if mat.dtype != np.float64:
+        mat = mat.astype(np.float64)
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
 
 def multiplicative_replacement(mat, delta=None):
-    """Replace all zeros with small non-zero values.
+    r"""Replace all zeros with small non-zero values. [1]_
 
     It uses the multiplicative replacement strategy, replacing zeros
-    with small positive values and performing a closure operation so
-    that the compositions still add up to 1
+    with a small positive :math:`\delta` and ensuring that the
+    compositions still add up to 1.
+
 
     Parameters
     ----------
@@ -135,12 +138,21 @@ def multiplicative_replacement(mat, delta=None):
        columns = components
     delta: float, optional
        a small number to be used to replace zeros
+       If delta is not specified, then the default delta is
+       :math:`\delta = \frac{1}{N^2}` where :math:`N`
+       is the number of components
 
     Returns
     -------
     numpy.ndarray, np.float64
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
+
+    References
+    ----------
+    .. [1] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
+           Compositional Data Sets Using Nonparametric Imputation"
+
 
     Examples
     --------
@@ -150,11 +162,6 @@ def multiplicative_replacement(mat, delta=None):
     >>> multiplicative_replacement(X)
     array([[ 0.1875,  0.375 ,  0.375 ,  0.0625],
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
-
-
-    References
-    .. [1] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
-           Compositional Data Sets Using Nonparametric Imputation"
 
     """
     mat = closure(mat)
