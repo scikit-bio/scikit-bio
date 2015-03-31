@@ -12,7 +12,10 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 from skbio.draw import boxplots, grouped_distributions
 from skbio.draw._distributions import (
@@ -20,10 +23,15 @@ from skbio.draw._distributions import (
     _create_legend, _get_distribution_markers, _is_single_matplotlib_color,
     _plot_bar_data, _plot_box_data, _plot_scatter_data, _set_axes_options,
     _set_figure_size, _validate_input, _validate_x_values)
+from skbio.util import _skip_if_no_matplotlib
 
 
 class DistributionsTests(TestCase):
     def setUp(self):
+        # Calling at test set up enables skipping all tests and yet
+        # showing how many were skipped
+        _skip_if_no_matplotlib()
+
         # Test null data list.
         self.Null = None
 
