@@ -94,3 +94,12 @@ def get_data_path(fn, subfolder='data'):
     path = os.path.dirname(os.path.abspath(callers_filename))
     data_path = os.path.join(path, subfolder, fn)
     return data_path
+
+
+def _skip_if_no_matplotlib():
+    """Skip rest of a test if matplotlib is not available."""
+    try:
+        import matplotlib  # noqa
+    except ImportError:
+        import nose
+        raise nose.SkipTest("matplotlib not installed")
