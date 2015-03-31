@@ -133,6 +133,8 @@ def multiplicative_replacement(mat, delta=None):
        a matrix of proportions where
        rows = compositions and
        columns = components
+    delta: float, optional
+       a small number to be used to replace zeros
 
     Returns
     -------
@@ -148,6 +150,11 @@ def multiplicative_replacement(mat, delta=None):
     >>> multiplicative_replacement(X)
     array([[ 0.1875,  0.375 ,  0.375 ,  0.0625],
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
+
+
+    References
+    .. [1] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
+           Compositional Data Sets Using Nonparametric Imputation"
 
     """
     mat = closure(mat)
@@ -193,10 +200,6 @@ def perturb(x, y):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
-    Notes
-    -----
-    - All of the values in x and y must be non negative
-
     Examples
     --------
     >>> import numpy as np
@@ -239,10 +242,6 @@ def perturb_inv(x, y):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
-    Notes
-    -----
-    - All of the values in x and y must be non negative
-
     Examples
     --------
     >>> import numpy as np
@@ -284,12 +283,6 @@ def power(x, a):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
-    Notes
-    -----
-    - Each row must add up to 1 for x
-
-    - All of the values in x must be non negative
-
     >>> import numpy as np
     >>> from skbio.stats.composition import power
     >>> x = np.array([.1,.3,.4, .2])
@@ -325,12 +318,6 @@ def clr(mat):
     numpy.ndarray
          clr transformed matrix
 
-    Notes
-    -----
-    - Each row must add up to 1
-
-    - All of the values must be non negative for mat
-
     >>> import numpy as np
     >>> from skbio.stats.composition import clr
     >>> x = np.array([.1,.3,.4, .2])
@@ -358,12 +345,6 @@ def centralize(mat):
     -------
     numpy.ndarray
          centered composition matrix
-
-    Notes
-    -----
-    - Each row must add up to 1 for mat
-
-    - All of the values must be non negative
 
     >>> import numpy as np
     >>> from skbio.stats.composition import centralize
