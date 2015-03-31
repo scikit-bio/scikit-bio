@@ -56,7 +56,7 @@ Examples
 
 Consider a very simple environment with only 3 species. The species
 in the environment are equally distributed and their proportions are
-equilvalent:
+equivalent:
 
 >>> otus = np.array([1./3, 1./3., 1./3])
 

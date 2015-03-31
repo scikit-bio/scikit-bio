@@ -3,6 +3,7 @@
 ## Version 0.2.3-dev (changes since 0.2.3 release go here)
 
 ### Features
+* Added `skbio.stats.composition` for analyzing data made up of proportions
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
@@ -42,7 +43,6 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 ## Version 0.2.3 (2015-02-13)
 
 ### Features
-* Added `skbio.stats.composition` for analyzing data made up of proportions
 * Modified ``skbio.stats.distance.pwmantel`` to accept a list of filepaths. This is useful as it allows for a smaller amount of memory consumption as it only loads two matrices at a time as opposed to requiring that all distance matrices are loaded into memory.
 * Added ``skbio.util.find_duplicates`` for finding duplicate elements in an iterable.
 
