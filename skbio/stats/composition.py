@@ -240,6 +240,7 @@ def perturb_inv(x, y):
         rows = compositions and
         columns = components
     y : array_like
+        a matrix of proportions where
         rows = compositions and
         columns = components
 
