@@ -21,6 +21,16 @@ To install the latest release version of scikit-bio you should run::
 
     pip install scikit-bio
 
+Some plotting features require extra dependencies, and an
+``ImportError`` will be raised if you try to use them without them.
+Thus, you may want to install the following optional packages:
+
+    * matplotlib (>= 1.1.0)
+
+for example, by running::
+
+    pip install scikit-bio[plot]
+
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and all its dependencies, without having to compile them::
 
      conda install scikit-bio
@@ -30,14 +40,6 @@ Finally, most scikit-bio's dependencies (in particular, the ones that are tricki
 You can verify your installation by running the scikit-bio unit tests as follows::
 
     python -m skbio.test
-
-In addition to the dependencies required by scikit-bio you may want to install
-the following optional packages:
-
-    * matplotlib (>= 1.1.0)
-
-If a resource is used which requires one of these packages an ``ImportError``
-will be raised.
 
 Installation of development version
 -----------------------------------
