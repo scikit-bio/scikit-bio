@@ -110,24 +110,31 @@ def closure(mat):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import closure
+    >>> X = np.array([[2, 2, 6], [4, 4, 2]])
+    >>> closure(X)
+    array([[ 0.2,  0.2,  0.6],
+           [ 0.4,  0.4,  0.2]])
+
     """
     mat = np.atleast_2d(mat)
     if np.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
-    if mat.dtype != np.float64:
-        mat = mat.astype(np.float64)
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
 
 def multiplicative_replacement(mat, delta=None):
-    r"""Replace all zeros with small non-zero values. [1]_
+    r"""Replace all zeros with small non-zero values
 
-    It uses the multiplicative replacement strategy, replacing zeros
-    with a small positive :math:`\delta` and ensuring that the
-    compositions still add up to 1.
+    It uses the multiplicative replacement strategy [1]_ ,
+    replacing zeros with a small positive :math:`\delta`
+    and ensuring that the compositions still add up to 1.
 
 
     Parameters
@@ -291,6 +298,8 @@ def power(x, a):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
+    Examples
+    --------
     >>> import numpy as np
     >>> from skbio.stats.composition import power
     >>> x = np.array([.1,.3,.4, .2])
@@ -326,6 +335,8 @@ def clr(mat):
     numpy.ndarray
          clr transformed matrix
 
+    Examples
+    --------
     >>> import numpy as np
     >>> from skbio.stats.composition import clr
     >>> x = np.array([.1,.3,.4, .2])
@@ -354,6 +365,8 @@ def centralize(mat):
     numpy.ndarray
          centered composition matrix
 
+    Examples
+    --------
     >>> import numpy as np
     >>> from skbio.stats.composition import centralize
     >>> X = np.array([[.1,.3,.4, .2],[.2,.2,.2,.4]])
