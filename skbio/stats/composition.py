@@ -115,6 +115,7 @@ def closure(mat):
         raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
+    mat = mat.astype(np.float64)
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
@@ -149,18 +150,11 @@ def multiplicative_replacement(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    mat = np.atleast_2d(mat)
-    if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
-    if np.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
-    if not np.all(np.isclose(mat.sum(axis=1), 1)):
-        raise ValueError("Rows need to sum up to 1")
-
+    mat = closure(mat)
     z_mat = (mat == 0)
 
-    num_samps, num_feats = mat.shape
-    tot = z_mat.sum(axis=1, keepdims=True)
+    num_feats = mat.shape[-1]
+    tot = z_mat.sum(axis=-1, keepdims=True)
 
     if delta is None:
         delta = (1. / num_feats)**2

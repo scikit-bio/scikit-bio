@@ -35,7 +35,7 @@ class CompositionTests(TestCase):
         self.bad1 = np.array([1, 2, -1])
         self.bad2 = np.array([[[1, 2, 3, 0, 5]]])
 
-    def testclosure(self):
+    def test_closure(self):
         npt.assert_allclose(closure(self.data1),
                             np.array([[.2, .2, .6],
                                       [.4, .4, .2]]))
@@ -148,8 +148,6 @@ class CompositionTests(TestCase):
             multiplicative_replacement(self.bad1)
         with self.assertRaises(ValueError):
             multiplicative_replacement(self.bad2)
-        with self.assertRaises(ValueError):
-            multiplicative_replacement(self.data1)
 
     def test_clr(self):
         cmat = clr(closure(self.data1))
