@@ -119,7 +119,6 @@ class CompositionTests(TestCase):
             perturb_inv(closure(self.data1), self.bad1)
 
     def test_multiplicative_replacement(self):
-        np.set_printoptions(precision=10)
         amat = multiplicative_replacement(closure(self.data3))
         npt.assert_allclose(amat,
                             np.array([[0.087273, 0.174545, 0.261818,
