@@ -12,7 +12,6 @@ from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
-import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -24,7 +23,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
-
+from skbio.util import _skip_if_no_matplotlib
 
 class DissimilarityMatrixTestData(TestCase):
     def setUp(self):
@@ -276,6 +275,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             self.dm_3x3.filter([])
 
     def test_plot_default(self):
+        _skip_if_no_matplotlib()
+        import matplotlib as mpl
+
         fig = self.dm_1x1.plot()
         self.assertIsInstance(fig, mpl.figure.Figure)
         axes = fig.get_axes()
@@ -292,6 +294,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(yticks, ['a'])
 
     def test_plot_no_default(self):
+        _skip_if_no_matplotlib()
+        import matplotlib as mpl
+
         ids = ['0', 'one', '2', 'three', '4.000']
         data = ([0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2],
                 [3, 2, 1, 0, 1], [4, 3, 2, 1, 0])
@@ -312,12 +317,14 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
 
     def test_repr_png(self):
+        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         obs = dm._repr_png_()
         self.assertIsInstance(obs, binary_type)
         self.assertTrue(len(obs) > 0)
 
     def test_repr_svg(self):
+        _skip_if_no_matplotlib()
         obs = self.dm_1x1._repr_svg_()
         # print_figure(format='svg') can return text or bytes depending on the
         # version of IPython
@@ -326,10 +333,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         self.assertTrue(len(obs) > 0)
 
     def test_png(self):
+        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         self.assertIsInstance(dm.png, Image)
 
     def test_svg(self):
+        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
 
