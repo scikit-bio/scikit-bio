@@ -25,6 +25,7 @@ from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from skbio.util import _skip_if_no_matplotlib
 
+
 class DissimilarityMatrixTestData(TestCase):
     def setUp(self):
         self.dm_1x1_data = [[0.0]]
