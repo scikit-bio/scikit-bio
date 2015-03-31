@@ -12,13 +12,9 @@ from future.builtins import zip
 from functools import partial
 
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
-
-# avoid flake8 unused import error
-Axes3D
 
 
 class OrdinationResults(SkbioObject):
@@ -224,6 +220,7 @@ class OrdinationResults(SkbioObject):
         """
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D  # noqa
 
         # Note: New features should not be added to this method and should
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
