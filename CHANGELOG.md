@@ -3,6 +3,7 @@
 ## Version 0.2.3-dev (changes since 0.2.3 release go here)
 
 ### Features
+* Added `skbio.stats.composition` for analyzing data made up of proportions
 * Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
 
 ### Bug fixes

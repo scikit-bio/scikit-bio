@@ -19,6 +19,7 @@ Subpackages
    spatial
    gradient
    power
+   composition
 
 Functions
 ---------
