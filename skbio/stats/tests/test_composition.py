@@ -52,9 +52,8 @@ class CompositionTests(TestCase):
             closure(self.bad2)
 
         # make sure that inplace modification is not occurring
-        cdata2 = closure(self.data2)
+        closure(self.data2)
         npt.assert_allclose(self.data2, np.array([2, 2, 6]))
-
 
     def test_perturb(self):
         pmat = perturb(closure(self.data1),
@@ -92,7 +91,6 @@ class CompositionTests(TestCase):
         perturb(self.data2, [1, 2, 3])
         npt.assert_allclose(self.data2, np.array([2, 2, 6]))
 
-
     def test_power(self):
         pmat = power(closure(self.data1), 2)
         npt.assert_allclose(pmat,
@@ -113,7 +111,6 @@ class CompositionTests(TestCase):
         # make sure that inplace modification is not occurring
         power(self.data2, 4)
         npt.assert_allclose(self.data2, np.array([2, 2, 6]))
-
 
     def test_perturb_inv(self):
         pmat = perturb_inv(closure(self.data1),
@@ -137,7 +134,6 @@ class CompositionTests(TestCase):
         # make sure that inplace modification is not occurring
         perturb_inv(self.data2, [1, 2, 3])
         npt.assert_allclose(self.data2, np.array([2, 2, 6]))
-
 
     def test_multiplicative_replacement(self):
         amat = multiplicative_replacement(closure(self.data3))
@@ -173,8 +169,6 @@ class CompositionTests(TestCase):
         multiplicative_replacement(self.data4)
         npt.assert_allclose(self.data4, np.array([1, 2, 3, 0, 5]))
 
-
-
     def test_clr(self):
         cmat = clr(closure(self.data1))
         A = np.array([.2, .2, .6])
@@ -200,6 +194,10 @@ class CompositionTests(TestCase):
         with self.assertRaises(ValueError):
             clr(self.bad2)
 
+        # make sure that inplace modification is not occurring
+        clr(self.data2)
+        npt.assert_allclose(self.data2, np.array([2, 2, 6]))
+
     def test_centralize(self):
         cmat = centralize(closure(self.data1))
         npt.assert_allclose(cmat,
@@ -214,6 +212,11 @@ class CompositionTests(TestCase):
             centralize(self.bad1)
         with self.assertRaises(ValueError):
             centralize(self.bad2)
+
+        centralize(self.data1)
+        npt.assert_allclose(self.data1,
+                            np.array([[2, 2, 6],
+                                      [4, 4, 2]]))
 
 if __name__ == "__main__":
     main()
