@@ -118,7 +118,11 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
-        self._string = self._bytes.view('|S%d' % self._bytes.size)[0]
+        self.__chars = self._bytes.view('|S%d' % self._bytes.size)
+
+    @property
+    def _string(self):
+        return self.__chars[0]
 
     def _set_id(self, id_):
         if isinstance(id_, string_types):
@@ -165,7 +169,7 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
 
         self._bytes = sequence
-        self._string = sequence.view('|S%d' % sequence.size)[0]
+        self.__chars = sequence.view('|S%d' % sequence.size)
 
     def _set_quality(self, quality):
         if quality is not None:
@@ -539,7 +543,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     def __str__(self):
         """Document me?"""
-        return str(self.sequence.view('|S%d' % len(self))[0])
+        return str(self._string)
 
     @property
     def sequence(self):
