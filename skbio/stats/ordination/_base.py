@@ -12,11 +12,7 @@ from future.builtins import zip
 from functools import partial
 
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from IPython.core.pylabtools import print_figure
-from IPython.core.display import Image, SVG
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
@@ -226,6 +222,9 @@ class OrdinationResults(SkbioObject):
            ...                         cmap='Set1', s=50)
 
         """
+
+        import matplotlib.pyplot as plt
+
         # Note: New features should not be added to this method and should
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
@@ -299,6 +298,9 @@ class OrdinationResults(SkbioObject):
         each category (str) to color (used for legend creation).
 
         """
+
+        import matplotlib.pyplot as plt
+
         if ((df is None and column is not None) or (df is not None and
                                                     column is None)):
             raise ValueError("Both df and column must be provided, or both "
@@ -338,6 +340,9 @@ class OrdinationResults(SkbioObject):
 
     def _plot_categorical_legend(self, ax, color_dict):
         """Add legend to plot using specified mapping of category to color."""
+
+        import matplotlib as mpl
+
         # derived from http://stackoverflow.com/a/20505720
         proxies = []
         labels = []
@@ -370,14 +375,19 @@ class OrdinationResults(SkbioObject):
     @property
     def png(self):
         """Display basic 3-D scatterplot in IPython Notebook as PNG."""
+        from IPython.core.display import Image
         return Image(self._repr_png_(), embed=True)
 
     @property
     def svg(self):
         """Display basic 3-D scatterplot in IPython Notebook as SVG."""
+        from IPython.core.display import SVG
         return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
+        import matplotlib.pyplot as plt
+        from IPython.core.pylabtools import print_figure
+
         fig = self.plot()
         data = print_figure(fig, format)
         # We MUST close the figure, otherwise IPython's display machinery
