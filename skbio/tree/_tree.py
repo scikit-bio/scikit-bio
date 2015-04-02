@@ -233,7 +233,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        self.children.extend([self._adopt(n) for n in nodes])
+        self.children.extend([self._adopt(n) for n in nodes[:]])
 
     def pop(self, index=-1):
         r"""Remove a `TreeNode` from `self`.
