@@ -1,5 +1,10 @@
 # scikit-bio changelog
 
+## Version 0.2.3-dev
+
+### Bug fixes
+* Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
+
 ## Version 0.2.3 (2015-02-13)
 
 ### Features
