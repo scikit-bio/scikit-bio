@@ -25,6 +25,7 @@ from scipy.spatial.distance import hamming
 from skbio._base import SkbioObject
 from skbio.sequence import SequenceError
 from skbio.util import classproperty, overrides
+from skbio.util._misc import reprnator
 
 with hooks():
     from itertools import zip_longest
@@ -509,14 +510,32 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        first_ten = self._string[:10]
-        cn = self.__class__.__name__
-        length = len(self)
-        if length > 10:
-            ellipses = "..."
-        else:
-            ellipses = ""
-        return '<%s: %s%s (length: %d)>' % (cn, first_ten, ellipses, length)
+        start = self.__class__.__name__ + "("
+        end = ")[0:%d]" % len(self)
+
+        tokens = []
+
+        tokens.append(self._format_str(self))
+        if self.id:
+            tokens.append("id=" + self._format_str(self.id))
+        if self.description:
+            tokens.append("description=" + self._format_str(self.description))
+        if self.has_quality():
+            tokens.append("quality=" + self._format_list(self.quality))
+
+        return reprnator(start, tokens, end)
+
+    def _format_str(self, s):
+        s = repr(str(s))
+        if len(s) > 20:
+            return "%s ... %s" % (s[:7], s[-7:])
+        return s
+
+    def _format_list(self, l):
+        l = list(l)
+        if len(l) > 13:
+            return "[%s, ..., %s]" % (repr(l[:6])[1:-1], repr(l[-6:])[1:-1])
+        return "%r" % l
 
     def __reversed__(self):
         """The reversed operator.
