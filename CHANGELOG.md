@@ -3,6 +3,8 @@
 ## Version 0.2.3-dev (changes since 0.2.3 release go here)
 
 ### Features
+* Added `skbio.stats.composition` for analyzing data made up of proportions
+* Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
 * Added `ratio` parameter to `skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`. This allows the user to calculate power on groups for uneven size (For example, draw twice as many samples from Group B than Group A). If `ratio` is not set, group sizes will remain equal across all groups.* Power calculations (`skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`) can use test functions that return multiple p values, like some multivariate linear regression models. Previously, the power calculations required the test to return a single p value.
 
 ### Bug fixes

@@ -14,10 +14,12 @@ Subpackages
    :toctree: generated/
 
    distance
+   evolve
    ordination
    spatial
    gradient
    power
+   composition
 
 Functions
 ---------
