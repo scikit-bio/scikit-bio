@@ -92,7 +92,16 @@ class TreeTests(TestCase):
         """Extend a few nodes"""
         second_tree = TreeNode.from_newick("(x1,y1)z1;")
         third_tree = TreeNode.from_newick("(x2,y2)z2;")
+        first_tree = TreeNode.from_newick("(x1,y1)z1;")
+        fourth_tree = TreeNode.from_newick("(x2,y2)z2;")
         self.simple_t.extend([second_tree, third_tree])
+
+        first_tree.extend(fourth_tree.children)
+        self.assertEqual(0, len(fourth_tree.children))
+        self.assertEqual(first_tree.children[0].name, 'x1')
+        self.assertEqual(first_tree.children[1].name, 'y1')
+        self.assertEqual(first_tree.children[2].name, 'x2')
+        self.assertEqual(first_tree.children[3].name, 'y2')
 
         self.assertEqual(self.simple_t.children[0].name, 'i1')
         self.assertEqual(self.simple_t.children[1].name, 'i2')
