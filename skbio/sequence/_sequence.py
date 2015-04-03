@@ -1143,7 +1143,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
-                yield (match.start(g), match.end(g), match.group(g))
+                yield slice(match.start(g), match.end(g))
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):

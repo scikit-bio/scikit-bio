@@ -1112,11 +1112,11 @@ class SequenceTests(TestCase):
         pat = re_compile('(T+A)(CA)')
 
         obs = list(self.b1.regex_iter(pat))
-        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
         obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 7), slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
 
