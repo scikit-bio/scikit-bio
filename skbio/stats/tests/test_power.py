@@ -38,7 +38,7 @@ class PowerAnalysisTest(TestCase):
 
         def meta_f(x):
             """Applies `test_meta` to a result"""
-            test_meta(x, self.meta, 'INT', 'DIV')
+            return test_meta(x, self.meta, 'INT', 'DIV')
 
         def f(x):
             """returns the p value of a kruskal wallis test"""
