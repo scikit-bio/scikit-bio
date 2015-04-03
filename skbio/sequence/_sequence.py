@@ -288,7 +288,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return self.equals(other, ignore=['id', 'description', 'quality'])
+        return self.equals(other)
 
     def __getitem__(self, indexable):
         """The indexing operator.
