@@ -288,7 +288,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return self.equals(other, ignore=['id', 'description', 'quality'])
+        return self.equals(other)
 
     def __getitem__(self, indexable):
         """The indexing operator.
@@ -909,18 +909,31 @@ class Sequence(collections.Sequence, SkbioObject):
             distance_fn = hamming
         return float(distance_fn(self.sequence, other.sequence))
 
-    def fraction_diff(self, other):
-        """Return fraction of positions that differ relative to `other`
+    def matches(self, other):
+        if len(self) != len(other):
+            raise ValueError("Match and mismatch vectors can only be "
+                             "generated from equal length sequences.")
+        return self._bytes == other._bytes
+
+    def mismatches(self, other):
+        return np.invert(self.matches(other))
+
+    def mismatch_frequency(self, other, relative=False):
+        """Return number of positions that differ relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
+        relative : ``bool``
+            If ``True``, return the fraction of mismatches.
 
         Returns
         -------
-        float
-            The fraction of positions that differ between `self` and `other`.
+        int, float
+            The number of positions that differ between `self` and `other`.
+            This will be an ``int`` if ``relative == False``, and a ``float``
+            if ``relative == True``.
 
         Raises
         ------
@@ -930,42 +943,41 @@ class Sequence(collections.Sequence, SkbioObject):
         See Also
         --------
         distance
-        fraction_same
+        match_frequency
         scipy.spatial.distance.hamming
-
-        Notes
-        -----
-        Computed as the Hamming distance between `self` and `other`. This is
-        available in addition to `distance` in case the `distance` method is
-        updated to use something other than ``scipy.spatial.distance.hamming``
-        as the default distance metric. So, if you specifically want the
-        fraction of positions that differ, you should use this function instead
-        of `distance` to ensure backward compatibility.
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
-        >>> s.fraction_diff(t)
+        >>> s.mismatch_frequency(t)
+        1
+        >>> s.mismatch_frequency(t, relative=True)
         0.25
 
         """
-        return self.distance(other, distance_fn=hamming)
+        if relative:
+            return self.mismatches(other).mean()
+        else:
+            return self.mismatches(other).sum()
 
-    def fraction_same(self, other):
-        """Return fraction of positions that are the same relative to `other`
+    def match_frequency(self, other, relative=False):
+        """Return number of positions that are the same relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
+        relative : `bool`
+            If ``True``, return the fraction of matches.
 
         Returns
         -------
-        float
-            The fraction of positions that are the same between `self` and
-            `other`.
+        int, float
+            The number of positions that are the same between `self` and
+            `other`. This will be an ``int`` if ``relative == False``, and a
+            ``float`` if ``relative == True``.
 
         Raises
         ------
@@ -975,7 +987,7 @@ class Sequence(collections.Sequence, SkbioObject):
         See Also
         --------
         distance
-        fraction_diff
+        mismatch_frequency
         scipy.spatial.distance.hamming
 
         Examples
@@ -983,11 +995,16 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
-        >>> s.fraction_same(t)
+        >>> s.match_frequency(t)
+        3
+        >>> s.match_frequency(t, relative=True)
         0.75
 
         """
-        return 1. - self.fraction_diff(other)
+        if relative:
+            return self.matches(other).mean()
+        else:
+            return self.matches(other).sum()
 
     def index(self, subsequence):
         """Return the position where subsequence first occurs
@@ -1007,10 +1024,12 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return self._string.index(subsequence)
+            if isinstance(subsequence, string_types):
+                return self._string.index(subsequence)
+            return self._string.index(Sequence(subsequence)._string)
         except ValueError:
             raise ValueError(
-                "%s is not present in %r." % (subsequence, self))
+                "%r is not present in %r." % (subsequence, self))
 
     def kmers(self, k, overlap=True):
         """Get the list of words of length k
@@ -1120,7 +1139,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
-                yield (match.start(g), match.end(g), match.group(g))
+                yield slice(match.start(g), match.end(g))
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
@@ -1539,7 +1558,8 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
-        return self == other.reverse_complement()
+        return self.equals(other.reverse_complement(),
+                           ignore=['id', 'description', 'quality'])
 
     def reverse_complement(self):
         """Return the reverse complement of the `NucleotideSequence`

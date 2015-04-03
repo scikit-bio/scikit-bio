@@ -535,17 +535,17 @@ class SequenceTests(TestCase):
         self.assertTrue(
             Sequence('ACGT') == Sequence('ACGT'))
         self.assertTrue(
-            Sequence('ACGT', id='a') ==
+            Sequence('ACGT', id='a') !=
             Sequence('ACGT', id='b'))
         self.assertTrue(
-            Sequence('ACGT', description='c') ==
+            Sequence('ACGT', description='c') !=
             Sequence('ACGT', description='d'))
         self.assertTrue(
-            Sequence('ACGT', id='a', description='c') ==
+            Sequence('ACGT', id='a', description='c') !=
             Sequence('ACGT', id='b', description='d'))
         self.assertTrue(
             Sequence('ACGT', id='a', description='c',
-                               quality=[1, 2, 3, 4]) ==
+                               quality=[1, 2, 3, 4]) !=
             Sequence('ACGT', id='b', description='d',
                                quality=[5, 6, 7, 8]))
 
@@ -1090,15 +1090,28 @@ class SequenceTests(TestCase):
         with self.assertRaises(ValueError):
             self.b1.distance(self.b2, distance_fn=dumb_distance)
 
-    def test_fraction_diff(self):
-        self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
-        self.assertEqual(
-            self.b1.fraction_diff(Sequence('GATTACC')), 1. / 7., 5)
+    def test_mismatch_frequency(self):
+        # relative = False (default)
+        self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
+        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC')), 1)
+        # relative = True
+        self.assertEqual(self.b1.mismatch_frequency(self.b1, relative=True),
+                         0., 5)
+        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC'),
+                                                    relative=True),
+                         1. / 7., 5)
 
-    def test_fraction_same(self):
-        self.assertAlmostEqual(self.b1.fraction_same(self.b1), 1., 5)
+    def test_match_frequency(self):
+        # relative = False (default)
+        self.assertAlmostEqual(self.b1.match_frequency(self.b1), 7)
         self.assertAlmostEqual(
-            self.b1.fraction_same(Sequence('GATTACC')), 6. / 7., 5)
+            self.b1.match_frequency(Sequence('GATTACC')), 6)
+        # relative = True
+        self.assertAlmostEqual(self.b1.match_frequency(self.b1, relative=True),
+                               1., 5)
+        self.assertAlmostEqual(self.b1.match_frequency(Sequence('GATTACC'),
+                                                       relative=True),
+                               6. / 7., 5)
 
     def test_index(self):
         self.assertEqual(self.b1.index('G'), 0)
@@ -1116,11 +1129,11 @@ class SequenceTests(TestCase):
         pat = re_compile('(T+A)(CA)')
 
         obs = list(self.b1.regex_iter(pat))
-        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
         obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 7), slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
 
