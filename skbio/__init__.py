@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 from skbio.util import TestRunner
 
 # Add skbio.io to sys.modules to prevent cycles in our imports
-import skbio.io
+import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import (
     Sequence, DNA, RNA,
@@ -23,7 +23,6 @@ from skbio.tree import (
     TreeNode, nj)
 from skbio.io import read, write
 
-skbio.io  # Stop flake8 error
 
 __all__ = ['Sequence', 'DNA',
            'RNA', 'Protein',

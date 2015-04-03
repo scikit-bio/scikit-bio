@@ -1,7 +1,7 @@
 Contributing to scikit-bio
 ==========================
 
-[scikit-bio](http://www.scikit-bio.org) is an open source software package, and we welcome community contributions. You can find the source code and test code for scikit-bio under public revision control in the scikit-bio git repository on [GitHub](https://github.com/biocore/scikit-bio). We very much welcome contributions.
+[scikit-bio](http://www.scikit-bio.org) is an open source software package, and we welcome community contributions. You can find the source code and test code for scikit-bio under public revision control in the scikit-bio git repository on [GitHub](https://github.com/biocore/scikit-bio).
 
 This document covers what you should do to get started with contributing to scikit-bio. You should read this whole document before considering submitting code to scikit-bio. This will save time for both you and the scikit-bio developers.
 
@@ -18,12 +18,13 @@ When considering submitting a new feature to scikit-bio, you should begin by pos
 
  You should include the following information in your bug report:
 
- 1. The exact command or function call that you issue to create the bug.
- 2. A link to all necessary input files for reproducing the bug. These files should only be as large as necessary to create the bug. For example, if you have an input file with 10,000 fasta-formatted sequences but the error only arises due to one of the sequences, create a new fasta file with only that sequence, run the command that was giving you problems, and verify that you still get an error. Then post that command and link to the trimmed fasta file. This is *extremely* useful to other developer, and it is likely that if you don't provide this information you'll get a response asking for it. Often this process helps you to better understand the bug as well.
+ 1. The exact command or function call that can be run to reproduce the bug.
+ 2. A link to all necessary input files for reproducing the bug. These files should only be as large as necessary to create the bug. For example, if you have an input file with 10,000 fasta-formatted sequences but the error only arises due to one of the sequences, create a new fasta file with only that sequence, run the command that was giving you problems, and verify that you still get an error. Then post that command and link to the trimmed fasta file. This is *extremely* useful to other developers, and it is likely that if you don't provide this information you'll get a response asking for it. Often this process helps you to better understand the bug as well.
+
 
 * For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing, and how you propose to address it. For more information about building and contributing to scikit-bio's documentation, see [this guide](doc/README.md).
 
-When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio.
+When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is particularly important prior to our beta (0.4.0) release, as scikit-bio is rapidly changing. This includes complete re-writes of some of the core objects, so if you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.** You should review our [roadmap to beta](https://github.com/biocore/scikit-bio/wiki/beta-release-roadmap) to learn about what is changing prior to 0.4.0.
 
 
 Getting started:
@@ -57,7 +58,7 @@ Submitting code to scikit-bio
 
 scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for accepting submissions. You should go through the following steps to submit code to scikit-bio.
 
-1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change. This should include a description of your proposed change (is it a new feature, a bug fix, etc.), and note in the issue description that you want to work on it. Once you hear back from a maintainer that it is OK to make changes (i.e., they dont't have local edits, they agree with the change you'd like to make, and they're comfortable with you editing their code), we will assign the issue to you on GitHub.
+1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change. This should include a description of your proposed change (is it a new feature, a bug fix, etc.?), and note in the issue description that you want to work on it. Once you hear back from a maintainer that it is OK to make changes (i.e., they don't have local edits, they agree with the change you'd like to make, and they're comfortable with you editing their code), we will assign the issue to you on GitHub.
 
 2. [Fork](https://help.github.com/articles/fork-a-repo) the scikit-bio repository on the GitHub website to your GitHub account.
 
@@ -104,7 +105,7 @@ We adhere to the [PEP 8](http://www.python.org/dev/peps/pep-0008/) python coding
 Testing Guidelines
 ------------------
 
-All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml), this build verifies that the:
+All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml). This build verifies that the:
 
 - Full test suite executes without errors.
 - Doctests execute correctly (currently only for Python 2.7).
