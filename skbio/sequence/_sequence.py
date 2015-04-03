@@ -909,18 +909,22 @@ class Sequence(collections.Sequence, SkbioObject):
             distance_fn = hamming
         return float(distance_fn(self.sequence, other.sequence))
 
-    def fraction_diff(self, other):
-        """Return fraction of positions that differ relative to `other`
+    def mismatch_frequency(self, other, relative=False):
+        """Return number of positions that differ relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
+        relative : ``bool``
+            If ``True``, return the fraction of mismatches.
 
         Returns
         -------
-        float
-            The fraction of positions that differ between `self` and `other`.
+        int, float
+            The number of positions that differ between `self` and `other`.
+            This will be an ``int`` if ``relative == False``, and a ``float``
+            if ``relative == True``.
 
         Raises
         ------
@@ -930,7 +934,7 @@ class Sequence(collections.Sequence, SkbioObject):
         See Also
         --------
         distance
-        fraction_same
+        match_frequency
         scipy.spatial.distance.hamming
 
         Notes
@@ -947,25 +951,37 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
-        >>> s.fraction_diff(t)
+        >>> s.mismatch_frequency(t)
+        1
+        >>> s.mismatch_frequency(t, relative=True)
         0.25
 
         """
-        return self.distance(other, distance_fn=hamming)
+        len_self = len(self)
+        # we probably want to have a better way to get this count
+        mismatch_count = round(self.distance(other) * len_self)
+        print(mismatch_count)
+        if relative:
+            return mismatch_count / len_self
+        else:
+            return mismatch_count
 
-    def fraction_same(self, other):
-        """Return fraction of positions that are the same relative to `other`
+    def match_frequency(self, other, relative=False):
+        """Return number of positions that are the same relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
+        relative : `bool`
+            If ``True``, return the fraction of matches.
 
         Returns
         -------
-        float
-            The fraction of positions that are the same between `self` and
-            `other`.
+        int, float
+            The number of positions that are the same between `self` and
+            `other`. This will be an ``int`` if ``relative == False``, and a
+            ``float`` if ``relative == True``.
 
         Raises
         ------
@@ -975,7 +991,7 @@ class Sequence(collections.Sequence, SkbioObject):
         See Also
         --------
         distance
-        fraction_diff
+        mismatch_frequency
         scipy.spatial.distance.hamming
 
         Examples
@@ -983,11 +999,18 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
-        >>> s.fraction_same(t)
+        >>> s.match_frequency(t)
+        3
+        >>> s.match_frequency(t, relative=True)
         0.75
 
         """
-        return 1. - self.fraction_diff(other)
+        len_self = len(self)
+        match_count = len_self - self.mismatch_frequency(other)
+        if relative:
+            return match_count / len_self
+        else:
+            return match_count
 
     def index(self, subsequence):
         """Return the position where subsequence first occurs

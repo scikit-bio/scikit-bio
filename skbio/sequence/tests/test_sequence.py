@@ -1086,15 +1086,28 @@ class SequenceTests(TestCase):
         with self.assertRaises(ValueError):
             self.b1.distance(self.b2, distance_fn=dumb_distance)
 
-    def test_fraction_diff(self):
-        self.assertEqual(self.b1.fraction_diff(self.b1), 0., 5)
-        self.assertEqual(
-            self.b1.fraction_diff(Sequence('GATTACC')), 1. / 7., 5)
+    def test_mismatch_frequency(self):
+        # relative = False (default)
+        self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
+        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC')), 1)
+        # relative = True
+        self.assertEqual(self.b1.mismatch_frequency(self.b1, relative=True),
+                         0., 5)
+        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC'),
+                                                    relative=True),
+                         1. / 7., 5)
 
-    def test_fraction_same(self):
-        self.assertAlmostEqual(self.b1.fraction_same(self.b1), 1., 5)
+    def test_match_frequency(self):
+        # relative = False (default)
+        self.assertAlmostEqual(self.b1.match_frequency(self.b1), 7)
         self.assertAlmostEqual(
-            self.b1.fraction_same(Sequence('GATTACC')), 6. / 7., 5)
+            self.b1.match_frequency(Sequence('GATTACC')), 6)
+        # relative = True
+        self.assertAlmostEqual(self.b1.match_frequency(self.b1, relative=True),
+                               1., 5)
+        self.assertAlmostEqual(self.b1.match_frequency(Sequence('GATTACC'),
+                                                       relative=True),
+                               6. / 7., 5)
 
     def test_index(self):
         self.assertEqual(self.b1.index('G'), 0)
