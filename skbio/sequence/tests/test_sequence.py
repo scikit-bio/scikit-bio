@@ -728,31 +728,32 @@ class SequenceTests(TestCase):
             self.b8.kmers(3, overlap=False), expected)
 
 
-    def test_kmer_counts(self):
+    def test_kmer_frequencies(self):
         # overlap = True
         expected = Counter('GATTACA')
-        self.assertEqual(self.b1.kmer_counts(1, overlap=True),
+        self.assertEqual(self.b1.kmer_frequencies(1, overlap=True),
                          expected)
         expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(self.b1.kmer_counts(3, overlap=True),
+        self.assertEqual(self.b1.kmer_frequencies(3, overlap=True),
                          expected)
 
         # overlap = False
         expected = Counter(['GAT', 'TAC'])
-        self.assertEqual(self.b1.kmer_counts(3, overlap=False),
+        self.assertEqual(self.b1.kmer_frequencies(3, overlap=False),
                          expected)
         expected = Counter(['GATTACA'])
-        self.assertEqual(self.b1.kmer_counts(7, overlap=False),
+        self.assertEqual(self.b1.kmer_frequencies(7, overlap=False),
                          expected)
 
-    def test_k_word_frequencies(self):
+    def test_kmer_frequencies_relative(self):
         # overlap = True
         expected = defaultdict(float)
         expected['A'] = 3/7.
         expected['C'] = 1/7.
         expected['G'] = 1/7.
         expected['T'] = 2/7.
-        self.assertEqual(self.b1.k_word_frequencies(1, overlap=True),
+        self.assertEqual(self.b1.kmer_frequencies(1, overlap=True,
+                                                  relative=True),
                          expected)
         expected = defaultdict(float)
         expected['GAT'] = 1/5.
@@ -760,27 +761,30 @@ class SequenceTests(TestCase):
         expected['TTA'] = 1/5.
         expected['TAC'] = 1/5.
         expected['ACA'] = 1/5.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlap=True),
+        self.assertEqual(self.b1.kmer_frequencies(3, overlap=True,
+                                                  relative=True),
                          expected)
 
         # overlap = False
         expected = defaultdict(float)
         expected['GAT'] = 1/2.
         expected['TAC'] = 1/2.
-        self.assertEqual(self.b1.k_word_frequencies(3, overlap=False),
+        self.assertEqual(self.b1.kmer_frequencies(3, overlap=False,
+                                                  relative=True),
                          expected)
         expected = defaultdict(float)
         expected['GATTACA'] = 1.0
-        self.assertEqual(self.b1.k_word_frequencies(7, overlap=False),
+        self.assertEqual(self.b1.kmer_frequencies(7, overlap=False,
+                                                  relative=True),
                          expected)
 
-    def test_k_word_frequencies_floating_point_precision(self):
+    def test_kmer_frequencies_floating_point_precision(self):
         # Test that a sequence having no variation in k-words yields a
         # frequency of exactly 1.0. Note that it is important to use
         # self.assertEqual here instead of self.assertAlmostEqual because we
         # want to test for exactly 1.0. A previous implementation of
-        # Sequence.k_word_frequencies added (1 / num_words) for each
-        # occurrence of a k-word to compute the frequencies (see
+        # Sequence.kmer_frequencies(relative=True) added (1 / num_words) for
+        # each occurrence of a k-word to compute the frequencies (see
         # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
         # this yielded a frequency slightly less than 1.0 due to roundoff
         # error. The test case here uses a sequence with 10 characters that are
@@ -791,7 +795,7 @@ class SequenceTests(TestCase):
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
         seq = Sequence('AAAAAAAAAA')
-        self.assertEqual(seq.k_word_frequencies(1),
+        self.assertEqual(seq.kmer_frequencies(1, relative=True),
                          defaultdict(float, {'A': 1.0}))
 
     def test_len(self):

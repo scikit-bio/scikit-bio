@@ -1055,7 +1055,7 @@ class Sequence(collections.Sequence, SkbioObject):
         for i in range(0, len(self) - k + 1, step):
             yield self[i:i+k]
 
-    def kmer_counts(self, k, overlap=True):
+    def kmer_frequencies(self, k, overlap=True, relative=False):
         """Get the counts of words of length k
 
         Parameters
@@ -1080,44 +1080,21 @@ class Sequence(collections.Sequence, SkbioObject):
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
-        k_words = self.kmers(k, overlap)
-        return collections.Counter((str(seq) for seq in k_words))
+        kmers = self.kmers(k, overlap=overlap)
+        freqs = collections.Counter((str(seq) for seq in kmers))
 
-    def k_word_frequencies(self, k, overlap=True):
-        """Get the frequencies of words of length `k`
+        if relative:
+            if overlap:
+                num_kmers = len(self) - k + 1
+            else:
+                num_kmers = len(self) // k
 
-        Parameters
-        ----------
-        k : int
-            The word length.
-        overlap : bool, optional
-            Defines whether the k-words should be overlap or not
-            overlap. This is only relevant when `k` > 1.
+            relative_freqs = collections.defaultdict(float)
+            for kmer, count in viewitems(freqs):
+                relative_freqs[kmer] = count / num_kmers
+            freqs = relative_freqs
 
-        Returns
-        -------
-        collections.defaultdict
-            The frequencies of words of length `k` contained in the
-            ``Sequence``.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('ACACAT')
-        >>> s.k_word_frequencies(3, overlap=True)
-        defaultdict(<type 'float'>, {'CAC': 0.25, 'ACA': 0.5, 'CAT': 0.25})
-
-        """
-        if overlap:
-            num_words = len(self) - k + 1
-        else:
-            num_words = len(self) // k
-
-        result = collections.defaultdict(float)
-        kmer_counts = self.kmer_counts(k, overlap=overlap)
-        for word, count in viewitems(kmer_counts):
-            result[str(word)] = count / num_words
-        return result
+        return freqs
 
     def regex_iter(self, regex, retrieve_group_0=False):
         """Find patterns specified by regular expression
