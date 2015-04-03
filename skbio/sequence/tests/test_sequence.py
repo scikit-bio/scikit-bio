@@ -1071,19 +1071,19 @@ class SequenceTests(TestCase):
         # will. Therefore an error will be raised for sequences of unequal
         # length regardless of the function being passed.
         # With default hamming distance function
-        with self.assertRaises(SequenceError):
+        with self.assertRaises(ValueError):
             self.b1.distance(self.b2)
 
         # Alternate functions should also raise an error
         # Another distance function from scipy:
-        with self.assertRaises(SequenceError):
+        with self.assertRaises(ValueError):
             self.b1.distance(self.b2, distance_fn=euclidean)
 
         # Any other function should raise an error as well
         def dumb_distance(x, y):
             return 42
 
-        with self.assertRaises(SequenceError):
+        with self.assertRaises(ValueError):
             self.b1.distance(self.b2, distance_fn=dumb_distance)
 
     def test_fraction_diff(self):
@@ -1112,11 +1112,11 @@ class SequenceTests(TestCase):
         pat = re_compile('(T+A)(CA)')
 
         obs = list(self.b1.regex_iter(pat))
-        exp = [(2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
         obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [(2, 7, 'TTACA'), (2, 5, 'TTA'), (5, 7, 'CA')]
+        exp = [slice(2, 7), slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
 

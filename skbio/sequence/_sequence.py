@@ -897,14 +897,17 @@ class Sequence(collections.Sequence, SkbioObject):
         0.42
 
         """
+        # TODO refactor this method to accept a name (string) of the distance
+        # metric to apply and accept **kwargs
+        other = Sequence(other)
         if len(self) != len(other):
-            raise SequenceError(
+            raise ValueError(
                 "Sequences do not have equal length. "
                 "Distance can only be computed between "
-                "Sequences of equal length.")
+                "sequences of equal length.")
         if distance_fn is None:
             distance_fn = hamming
-        return distance_fn(self, other)
+        return float(distance_fn(self.sequence, other.sequence))
 
     def fraction_diff(self, other):
         """Return fraction of positions that differ relative to `other`
@@ -1004,10 +1007,12 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return self._string.index(subsequence)
+            if isinstance(subsequence, string_types):
+                return self._string.index(subsequence)
+            return self._string.index(Sequence(subsequence)._string)
         except ValueError:
             raise ValueError(
-                "%s is not present in %r." % (subsequence, self))
+                "%r is not present in %r." % (subsequence, self))
 
     def kmers(self, k, overlap=True):
         """Get the list of words of length k
@@ -1140,7 +1145,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
-                yield (match.start(g), match.end(g), match.group(g))
+                yield slice(match.start(g), match.end(g))
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):

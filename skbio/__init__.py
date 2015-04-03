@@ -23,6 +23,7 @@ from skbio.tree import (
     TreeNode, nj)
 from skbio.io import read, write
 
+
 __all__ = ['Sequence', 'DNA',
            'RNA', 'Protein',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
