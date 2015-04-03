@@ -535,17 +535,17 @@ class SequenceTests(TestCase):
         self.assertTrue(
             Sequence('ACGT') == Sequence('ACGT'))
         self.assertTrue(
-            Sequence('ACGT', id='a') ==
+            Sequence('ACGT', id='a') !=
             Sequence('ACGT', id='b'))
         self.assertTrue(
-            Sequence('ACGT', description='c') ==
+            Sequence('ACGT', description='c') !=
             Sequence('ACGT', description='d'))
         self.assertTrue(
-            Sequence('ACGT', id='a', description='c') ==
+            Sequence('ACGT', id='a', description='c') !=
             Sequence('ACGT', id='b', description='d'))
         self.assertTrue(
             Sequence('ACGT', id='a', description='c',
-                               quality=[1, 2, 3, 4]) ==
+                               quality=[1, 2, 3, 4]) !=
             Sequence('ACGT', id='b', description='d',
                                quality=[5, 6, 7, 8]))
 

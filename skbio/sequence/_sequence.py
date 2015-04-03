@@ -1581,7 +1581,8 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
-        return self == other.reverse_complement()
+        return self.equals(other.reverse_complement(),
+                           ignore=['id', 'description', 'quality'])
 
     def reverse_complement(self):
         """Return the reverse complement of the `NucleotideSequence`
