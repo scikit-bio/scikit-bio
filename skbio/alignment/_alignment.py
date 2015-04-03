@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
-from skbio.sequence import BiologicalSequence
+from skbio.sequence import Sequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -29,8 +29,8 @@ class SequenceCollection(SkbioObject):
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load into
+    seqs : list of `skbio.sequence.Sequence` objects
+        The `skbio.sequence.Sequence` objects to load into
         a new `SequenceCollection` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
@@ -43,7 +43,7 @@ class SequenceCollection(SkbioObject):
 
     See Also
     --------
-    skbio.sequence.BiologicalSequence
+    skbio.sequence.Sequence
     skbio.sequence.NucleotideSequence
     skbio.sequence.DNASequence
     skbio.sequence.RNASequence
@@ -118,7 +118,7 @@ class SequenceCollection(SkbioObject):
         -----
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
-        `skbio.sequence.BiologicalSequence` objects, in order, are equal.
+        `skbio.sequence.Sequence` objects, in order, are equal.
 
         .. shownumpydoc
 
@@ -140,13 +140,13 @@ class SequenceCollection(SkbioObject):
         ----------
         index : int, str
             The position or sequence id of the
-            `skbio.sequence.BiologicalSequence` to return from the
+            `skbio.sequence.Sequence` to return from the
             `SequenceCollection`.
 
         Returns
         -------
-        `skbio.sequence.BiologicalSequence`
-            The `skbio.sequence.BiologicalSequence` at the specified
+        `skbio.sequence.Sequence`
+            The `skbio.sequence.Sequence` at the specified
             index in the `SequenceCollection`.
 
         Examples
@@ -175,7 +175,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio.sequence.BiologicalSequence` iterator for the
+            `skbio.sequence.Sequence` iterator for the
             `SequenceCollection`.
 
         .. shownumpydoc
@@ -256,7 +256,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio.sequence.BiologicalSequence` iterator for the
+            `skbio.sequence.Sequence` iterator for the
             `SequenceCollection` in reverse order.
 
         .. shownumpydoc
@@ -289,7 +289,7 @@ class SequenceCollection(SkbioObject):
         distance_fn : function
             Function for computing the distance between a pair of sequences.
             This must take two sequences as input (as
-            `skbio.sequence.BiologicalSequence` objects) and return a
+            `skbio.sequence.Sequence` objects) and return a
             single integer or float value.
 
         Returns
@@ -299,7 +299,7 @@ class SequenceCollection(SkbioObject):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.util.exception.SequenceError
             If ``len(self) != len(other)`` and ``distance_fn`` ==
             ``scipy.spatial.distance.hamming``.
 
@@ -386,7 +386,7 @@ class SequenceCollection(SkbioObject):
         -------
         SequenceCollection
             A new `SequenceCollection` where
-            `skbio.sequence.BiologicalSequence.degap` has been called on
+            `skbio.sequence.Sequence.degap` has been called on
             each sequence.
 
         Examples
@@ -413,8 +413,8 @@ class SequenceCollection(SkbioObject):
 
         Returns
         -------
-        skbio.sequence.BiologicalSequence
-            The `skbio.sequence.BiologicalSequence` with `id`.
+        skbio.sequence.Sequence
+            The `skbio.sequence.Sequence` with `id`.
 
         Raises
         ------
@@ -435,13 +435,13 @@ class SequenceCollection(SkbioObject):
         return self[self._id_to_index[id]]
 
     def ids(self):
-        """Returns the `BiologicalSequence` ids
+        """Returns the `Sequence` ids
 
         Returns
         -------
         list
             The ordered list of ids for the
-            `skbio.sequence.BiologicalSequence` objects in the
+            `skbio.sequence.Sequence` objects in the
             `SequenceCollection`.
 
         Examples
@@ -600,7 +600,7 @@ class SequenceCollection(SkbioObject):
 
         See Also
         --------
-        skbio.alignment.BiologicalSequence.is_valid
+        skbio.alignment.Sequence.is_valid
 
         Examples
         --------
@@ -627,8 +627,8 @@ class SequenceCollection(SkbioObject):
         -------
         generator of tuples
             Each tuple contains ordered
-            (`skbio.sequence.BiologicalSequence.id`,
-            `skbio.sequence.BiologicalSequence`) pairs.
+            (`skbio.sequence.Sequence.id`,
+            `skbio.sequence.Sequence`) pairs.
 
         """
         for seq in self:
@@ -641,12 +641,12 @@ class SequenceCollection(SkbioObject):
         -------
         SequenceCollection
             New `SequenceCollection` object where
-            `skbio.sequence.BiologicalSequence.lower()` has been called
+            `skbio.sequence.Sequence.lower()` has been called
             on each sequence.
 
         See Also
         --------
-        skbio.sequence.BiologicalSequence.lower
+        skbio.sequence.Sequence.lower
         upper
 
         """
@@ -732,12 +732,12 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         SequenceCollection
-            New `SequenceCollection` object where `BiologicalSequence.upper()`
+            New `SequenceCollection` object where `Sequence.upper()`
             has been called on each sequence.
 
         See Also
         --------
-        BiologicalSequence.upper
+        Sequence.upper
         lower
 
         """
@@ -761,8 +761,8 @@ class Alignment(SequenceCollection):
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load into
+    seqs : list of `skbio.sequence.Sequence` objects
+        The `skbio.sequence.Sequence` objects to load into
         a new `Alignment` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
@@ -792,7 +792,7 @@ class Alignment(SequenceCollection):
 
     See Also
     --------
-    skbio.sequence.BiologicalSequence
+    skbio.sequence.Sequence
     skbio.sequence.NucleotideSequence
     skbio.sequence.DNASequence
     skbio.sequence.RNASequence
@@ -829,7 +829,7 @@ class Alignment(SequenceCollection):
         distance_fn : function, optional
             Function for computing the distance between a pair of sequences.
             This must take two sequences as input (as
-            `skbio.sequence.BiologicalSequence` objects) and return a
+            `skbio.sequence.Sequence` objects) and return a
             single integer or float value. Defaults to
             `scipy.spatial.distance.hamming`.
 
@@ -840,7 +840,7 @@ class Alignment(SequenceCollection):
 
         Raises
         ------
-        skbio.util.exception.BiologicalSequenceError
+        skbio.util.exception.SequenceError
             If ``len(self) != len(other)`` and ``distance_fn`` ==
             ``scipy.spatial.distance.hamming``.
 
@@ -1048,8 +1048,8 @@ class Alignment(SequenceCollection):
         constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `skbio.sequence.BiologicalSequence` in the `Alignment` object, but
-            you can pass a `skbio.sequence.BiologicalSequence` class here to
+            `skbio.sequence.Sequence` in the `Alignment` object, but
+            you can pass a `skbio.sequence.Sequence` class here to
             ensure that they are all of consistent type, or ``str`` to have
             them returned as strings.
 
@@ -1103,14 +1103,14 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.sequence.BiologicalSequence
+        skbio.sequence.Sequence
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence. The sequence will not have
             its ID, description, or quality set; only the consensus sequence
             will be set. The type of biological sequence that is returned will
             be the same type as the first sequence in the alignment, or
-            ``BiologicalSequence`` if the alignment is empty.
+            ``Sequence`` if the alignment is empty.
 
         Notes
         -----
@@ -1131,7 +1131,7 @@ class Alignment(SequenceCollection):
 
         """
         if self.is_empty():
-            seq_constructor = BiologicalSequence
+            seq_constructor = Sequence
         else:
             seq_constructor = self[0].__class__
 
@@ -1182,7 +1182,7 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         position_frequencies = self.position_frequencies()
-        gap_alphabet = self[0].gap_alphabet()
+        gap_alphabet = self[0].gap_alphabet
 
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
@@ -1230,7 +1230,7 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         base_frequencies = self.k_word_frequencies(k=1)
-        gap_alphabet = self[0].gap_alphabet()
+        gap_alphabet = self[0].gap_alphabet
         seqs_to_keep = []
         for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_alphabet])
@@ -1365,7 +1365,7 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return result
 
-        iupac_standard_characters = self[0].iupac_standard_characters()
+        iupac_standard_characters = self[0].iupac_standard_characters
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
                     len(viewkeys(f) - iupac_standard_characters) > 0):
@@ -1420,8 +1420,8 @@ class StockholmAlignment(Alignment):
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load.
+    seqs : list of `skbio.sequence.Sequence` objects
+        The `skbio.sequence.Sequence` objects to load.
     gf : dict, optional
         GF info in the format {feature: info}
     gs : dict of dicts, optional
@@ -1761,8 +1761,8 @@ class StockholmAlignment(Alignment):
         infile : open file object
             An open stockholm file.
 
-        seq_constructor : BiologicalSequence object
-            The biologicalsequence object that corresponds to what the
+        seq_constructor : Sequence object
+            The Sequence object that corresponds to what the
             stockholm file holds. See skbio.sequence
 
         strict : bool (optional)

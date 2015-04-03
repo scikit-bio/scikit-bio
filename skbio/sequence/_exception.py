@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 
-class BiologicalSequenceError(Exception):
+class SequenceError(Exception):
     """General error for biological sequence validation failures."""
     pass
 

@@ -7,12 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.standard_library import hooks
 
 import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from warnings import warn
+
+with hooks():
+    from itertools import zip_longest
 
 
 def cardinal_to_ordinal(n):
@@ -308,6 +312,34 @@ def flatten(items):
         except TypeError:
             result.append(i)
     return result
+
+
+def reprnator(start, tokens, end, separator=', '):
+    """Live your dreams"""
+    offset = len(start)
+    indent = '\n%s' % (' ' * offset)
+    remaining = 79 - offset
+
+    repr_ = [start]
+
+    for token, sep in zip_longest(tokens, [separator] * (len(tokens) - 1),
+                                  fillvalue=''):
+        token_len = len(token)
+        sep_len = len(sep)
+
+        if remaining - token_len - sep_len >= 0:
+            repr_.append(token + sep)
+            remaining -= token_len + sep_len
+        else:
+            repr_.append('%s%s' % (indent, token + sep))
+            remaining = 79 - offset - token_len - sep_len
+
+    if remaining - len(end) >= 0:
+        repr_.append(end)
+    else:
+        repr_.append('%s%s' % (indent, end))
+
+    return ''.join(repr_)
 
 
 def _get_create_dir_error_codes():

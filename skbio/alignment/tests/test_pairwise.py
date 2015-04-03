@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from skbio import Protein, DNA, BiologicalSequence, Alignment
+from skbio import Protein, DNA, Sequence, Alignment
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
@@ -512,8 +512,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([BiologicalSequence("ACG-")],
-                    [BiologicalSequence("ACGT")], 1, 0, 0)
+        expected = ([Sequence("ACG-")],
+                    [Sequence("ACGT")], 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
@@ -532,8 +532,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([BiologicalSequence("ACG-"), BiologicalSequence("ACG-")],
-                    [BiologicalSequence("ACGT"), BiologicalSequence("ACGT")],
+        expected = ([Sequence("ACG-"), Sequence("ACG-")],
+                    [Sequence("ACGT"), Sequence("ACGT")],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
@@ -542,8 +542,8 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([BiologicalSequence("ACG")],
-                    [BiologicalSequence("ACG")], 6, 0, 0)
+        expected = ([Sequence("ACG")],
+                    [Sequence("ACG")], 6, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
@@ -556,8 +556,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
-        expected = ([BiologicalSequence("G")],
-                    [BiologicalSequence("G")], 6, 2, 2)
+        expected = ([Sequence("G")],
+                    [Sequence("G")], 6, 2, 2)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
