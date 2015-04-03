@@ -1007,10 +1007,12 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            return self._string.index(subsequence)
+            if isinstance(subsequence, string_types):
+                return self._string.index(subsequence)
+            return self._string.index(Sequence(subsequence)._string)
         except ValueError:
             raise ValueError(
-                "%s is not present in %r." % (subsequence, self))
+                "%r is not present in %r." % (subsequence, self))
 
     def kmers(self, k, overlap=True):
         """Get the list of words of length k
