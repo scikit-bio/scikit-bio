@@ -897,14 +897,17 @@ class Sequence(collections.Sequence, SkbioObject):
         0.42
 
         """
+        # TODO refactor this method to accept a name (string) of the distance
+        # metric to apply and accept **kwargs
+        other = Sequence(other)
         if len(self) != len(other):
-            raise SequenceError(
+            raise ValueError(
                 "Sequences do not have equal length. "
                 "Distance can only be computed between "
-                "Sequences of equal length.")
+                "sequences of equal length.")
         if distance_fn is None:
             distance_fn = hamming
-        return distance_fn(self, other)
+        return float(distance_fn(self.sequence, other.sequence))
 
     def fraction_diff(self, other):
         """Return fraction of positions that differ relative to `other`
