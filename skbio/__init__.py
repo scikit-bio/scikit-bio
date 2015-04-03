@@ -40,7 +40,7 @@ __all__ = ['BiologicalSequence', 'NucleotideSequence', 'DNA', 'DNASequence',
 test = Tester().test
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 mottos = [
     # 03/15/2014
