@@ -335,7 +335,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if not isinstance(indexable, np.ndarray) and ((not isinstance(indexable, string_types)) and hasattr(indexable, '__iter__')):
             indexable = np.asarray(indexable)
             if indexable.dtype == object:
-                indexable = list(indexable)
+                indexable = list(indexable) # TODO: Don't blow out memory if generator
                 seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
                 if self.has_quality():
                     qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
@@ -575,7 +575,6 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable.
 
         """
-        # TODO what type do we return??
         return self._bytes.view('|S1')
 
     @property
@@ -853,7 +852,9 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
-        return self._string.count(subsequence)
+        if isinstance(subsequence, string_types):
+            return self._string.count(subsequence)
+        return self._string.count(Sequence(subsequence)._string)
 
     def distance(self, other, distance_fn=None):
         """Returns the distance to other
@@ -1238,7 +1239,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def __init__(self, sequence, id="", description="", quality=None,
-                 validate=True, case_insensitive=True):
+                 validate=True, case_insensitive=False):
         super(IUPACSequence, self).__init__(sequence, id, description, quality)
         if case_insensitive:
             self._convert_to_uppercase()
@@ -1334,7 +1335,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         True
 
         """
-        # TODO use bincount!
+        # TODO use count, there aren't that many gap chars
         return self.gaps().any()
 
     def degenerates(self):
