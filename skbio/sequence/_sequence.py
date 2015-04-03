@@ -909,6 +909,15 @@ class Sequence(collections.Sequence, SkbioObject):
             distance_fn = hamming
         return float(distance_fn(self.sequence, other.sequence))
 
+    def matches(self, other):
+        if len(self) != len(other):
+            raise ValueError("Match and mismatch vectors can only be "
+                             "generated from equal length sequences.")
+        return self._bytes == other._bytes
+
+    def mismatches(self, other):
+        return np.invert(self.matches(other))
+
     def mismatch_frequency(self, other, relative=False):
         """Return number of positions that differ relative to `other`
 
@@ -937,15 +946,6 @@ class Sequence(collections.Sequence, SkbioObject):
         match_frequency
         scipy.spatial.distance.hamming
 
-        Notes
-        -----
-        Computed as the Hamming distance between `self` and `other`. This is
-        available in addition to `distance` in case the `distance` method is
-        updated to use something other than ``scipy.spatial.distance.hamming``
-        as the default distance metric. So, if you specifically want the
-        fraction of positions that differ, you should use this function instead
-        of `distance` to ensure backward compatibility.
-
         Examples
         --------
         >>> from skbio.sequence import Sequence
@@ -957,14 +957,10 @@ class Sequence(collections.Sequence, SkbioObject):
         0.25
 
         """
-        len_self = len(self)
-        # we probably want to have a better way to get this count
-        mismatch_count = round(self.distance(other) * len_self)
-        print(mismatch_count)
         if relative:
-            return mismatch_count / len_self
+            return self.mismatches(other).mean()
         else:
-            return mismatch_count
+            return self.mismatches(other).sum()
 
     def match_frequency(self, other, relative=False):
         """Return number of positions that are the same relative to `other`
@@ -1005,12 +1001,10 @@ class Sequence(collections.Sequence, SkbioObject):
         0.75
 
         """
-        len_self = len(self)
-        match_count = len_self - self.mismatch_frequency(other)
         if relative:
-            return match_count / len_self
+            return self.matches(other).mean()
         else:
-            return match_count
+            return self.matches(other).sum()
 
     def index(self, subsequence):
         """Return the position where subsequence first occurs
