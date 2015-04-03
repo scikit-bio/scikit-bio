@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
 
 from re import compile as re_compile
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
 from itertools import product, chain
 
@@ -614,7 +614,9 @@ class SequenceTests(TestCase):
             self.b2[[2, 3, 22, 1]]
 
     def test_hash(self):
-        self.assertTrue(isinstance(hash(self.b1), int))
+        with self.assertRaises(TypeError):
+            hash(self.b1)
+        self.assertNotIsInstance(self.b1, Hashable)
 
     def test_iter(self):
         b1_iter = iter(self.b1)

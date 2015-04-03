@@ -93,6 +93,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     """
     default_write_format = 'fasta'
+    __hash__ = None # TODO revisit hashability when all properties are present
 
     def __init__(self, sequence, id="", description="", quality=None):
         if isinstance(sequence, Sequence):
@@ -367,26 +368,6 @@ class Sequence(collections.Sequence, SkbioObject):
             if piece.size < 1:
                 raise IndexError("Index %r out of range." % i)
             yield piece
-
-    def __hash__(self):
-        """The hash operator.
-
-        Returns
-        -------
-        int
-            The hash of the `Sequence`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> hash(s)
-        -1080059835405276950
-
-        .. shownumpydoc
-
-        """
-        return hash(self._string)
 
     def __iter__(self):
         """The iter operator.
