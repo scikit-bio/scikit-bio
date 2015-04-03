@@ -884,12 +884,12 @@ class SequenceTests(TestCase):
         with self.assertRaises(ValueError):
             qual[1] = 42
 
-    def test_has_quality(self):
+    def test__has_quality(self):
         a = Sequence('ACA', quality=(5, 4, 67))
-        self.assertTrue(a.has_quality())
+        self.assertTrue(a._has_quality())
 
         b = Sequence('ACA')
-        self.assertFalse(b.has_quality())
+        self.assertFalse(b._has_quality())
 
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and

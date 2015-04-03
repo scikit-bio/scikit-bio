@@ -337,7 +337,7 @@ class Sequence(collections.Sequence, SkbioObject):
             if indexable.dtype == object:
                 indexable = list(indexable) # TODO: Don't blow out memory if generator
                 seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
-                if self.has_quality():
+                if self._has_quality():
                     qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
 
                 return self.to(sequence=seq, quality=qual)
@@ -345,7 +345,7 @@ class Sequence(collections.Sequence, SkbioObject):
             raise IndexError("Cannot index with that type: %r" % indexable)
 
         seq = self._bytes[indexable]
-        if self.has_quality():
+        if self._has_quality():
             qual = self.quality[indexable]
 
         return self.to(sequence=seq, quality=qual)
@@ -409,7 +409,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        if self.has_quality():
+        if self._has_quality():
             qual = self.quality
         else:
             qual = []
@@ -520,7 +520,7 @@ class Sequence(collections.Sequence, SkbioObject):
             tokens.append("id=" + self._format_str(self.id))
         if self.description:
             tokens.append("description=" + self._format_str(self.description))
-        if self.has_quality():
+        if self._has_quality():
             tokens.append("quality=" + self._format_list(self.quality))
 
         return reprnator(start, tokens, end)
@@ -620,7 +620,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._quality
 
-    def has_quality(self):
+    def _has_quality(self):
         """Return bool indicating presence of quality scores in the sequence.
 
         Returns
@@ -1505,7 +1505,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
                     "%s.complement_map?" % (base, self.__class__.__name__))
 
         quality = self.quality
-        if self.has_quality() and reverse:
+        if self._has_quality() and reverse:
             quality = self.quality[::-1]
 
         return self.to(sequence=''.join(result), quality=quality)
