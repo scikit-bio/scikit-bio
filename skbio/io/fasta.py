@@ -785,20 +785,26 @@ def _parse_fasta_raw(fh, data_parser, format_label):
             (format_label, line))
 
     data_chunks = []
+    prev_was_blank = False
     for line in fh:
         if line.startswith('>'):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
+            prev_was_blank = False
         else:
             line = line.strip()
             if line:
+                # ensure no blank lines within a single record
+                if prev_was_blank:
+                    raise FASTAFormatError(
+                        "Found blank or whitespace-only line within %s record"
+                        % format_label)
                 data_chunks.append(line)
+                prev_was_blank = False
             else:
-                raise FASTAFormatError(
-                    "Found blank or whitespace-only line in %s-formatted "
-                    "file." % format_label)
+                prev_was_blank = True
     # yield last record in file
     yield data_parser(data_chunks), id_, desc
 

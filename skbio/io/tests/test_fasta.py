@@ -30,6 +30,7 @@ from skbio.util import get_data_path
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
+            'fasta_blank_line_between_records',
             'fasta_3_seqs_defaults',
             'fasta_max_width_1',
             'fasta_single_bio_seq_non_defaults',
@@ -63,12 +64,16 @@ class SnifferTests(TestCase):
             'empty',
             'whitespace_only',
             'fasta_invalid_missing_header',
-            'fasta_invalid_blank_line',
-            'fasta_invalid_whitespace_only_line',
+            'fasta_invalid_blank_line_after_header',
+            'fasta_invalid_blank_sequence',
+            'fasta_invalid_blank_line_within_sequence',
+            'fasta_invalid_whitespace_only_line_within_sequence',
+            'fasta_invalid_whitespace_line_after_header',
             'fasta_invalid_missing_seq_data_first',
             'fasta_invalid_missing_seq_data_middle',
             'fasta_invalid_missing_seq_data_last',
             'fasta_invalid_legacy_format',
+            'fasta_invalid_whitespace_only_sequence',
             'fasta_id_whitespace_replacement_none',
             'fasta_description_newline_replacement_none',
             'qual_2_seqs_defaults',
@@ -84,13 +89,17 @@ class SnifferTests(TestCase):
             'qual_id_whitespace_replacement_empty_str',
             'qual_id_whitespace_replacement_multi_char',
             'qual_id_whitespace_replacement_none',
-            'qual_invalid_blank_line',
+            'qual_invalid_blank_line_within_sequence',
             'qual_invalid_legacy_format',
             'qual_invalid_missing_header',
             'qual_invalid_missing_qual_scores_first',
             'qual_invalid_missing_qual_scores_last',
             'qual_invalid_missing_qual_scores_middle',
-            'qual_invalid_whitespace_only_line',
+            'qual_invalid_whitespace_line_in_seq',
+            'qual_invalid_blank_line_after_header',
+            'qual_invalid_blank_sequence',
+            'qual_invalid_whitespace_only_sequence',
+            'qual_invalid_ws_line_after_header',
             'qual_max_width_1',
             'qual_max_width_5',
             'qual_multi_seq',
@@ -154,8 +163,12 @@ class ReaderTests(TestCase):
                  description='detailed description \t\twith  new  lines',
                  quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])],
             {},
-            list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5'])),
-            list(map(get_data_path, ['qual_multi_seq', 'qual_max_width_5']))
+            list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
+                                     'fasta_blank_line_between_records',
+                                     'fasta_whitespace_line_between_records'])),
+            list(map(get_data_path, ['qual_multi_seq', 'qual_max_width_5',
+                                     'qual_blank_line_between_records',
+                                     'qual_whitespace_line_between_records']))
         )
 
         # test constructor parameter, as well as odd labels (label only
@@ -216,18 +229,46 @@ class ReaderTests(TestCase):
              {'qual': get_data_path('qual_invalid_missing_header')},
              FASTAFormatError, 'without a header.*QUAL'),
 
-            # fasta and qual with blank line
-            ('fasta_invalid_blank_line', {}, FASTAFormatError,
+            # fasta and qual with blank line after header
+            ('fasta_invalid_blank_line_within_sequence', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_blank_line')},
+             {'qual': get_data_path('qual_invalid_blank_line_within_sequence')},
              FASTAFormatError, 'whitespace-only.*QUAL'),
 
-            # fasta and qual with whitespace-only line
-            ('fasta_invalid_whitespace_only_line', {}, FASTAFormatError,
+            # fasta and qual with blank sequence
+            ('fasta_invalid_blank_sequence', {}, FASTAFormatError,
+             'without sequence data'),
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_blank_sequence')},
+             FASTAFormatError, 'without quality scores'),
+
+            # fasta and qual with whitespace only sequence
+            ('fasta_invalid_whitespace_only_sequence', {}, FASTAFormatError,
+             'without sequence data'),
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_whitespace_only_sequence')},
+             FASTAFormatError, 'without quality scores'),
+
+            # fasta and qual with blank line within sequence
+            ('fasta_invalid_blank_line_after_header', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('qual_invalid_whitespace_only_line')},
+             {'qual': get_data_path('qual_invalid_blank_line_after_header')},
+             FASTAFormatError, 'whitespace-only.*QUAL'),
+
+            # fasta and qual with whitespace-only line within sequence
+            ('fasta_invalid_whitespace_only_line_within_sequence',
+              {}, FASTAFormatError, 'whitespace-only.*FASTA'),
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_whitespace_line_in_seq')},
+             FASTAFormatError, 'whitespace-only.*QUAL'),
+
+            # fasta and qual with whitespace-only line after header
+            ('fasta_invalid_whitespace_line_after_header',
+              {}, FASTAFormatError, 'whitespace-only.*FASTA'),
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_ws_line_after_header')},
              FASTAFormatError, 'whitespace-only.*QUAL'),
 
             # fasta and qual missing record data (first record)
