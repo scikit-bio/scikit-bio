@@ -48,8 +48,9 @@ def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
         if phred_range[0] <= score <= phred_range[1]:
             phred.append(score)
         else:
-            raise ValueError("Decoded Phred score %d is out of range [%d, %d]."
-                             % (score, phred_range[0], phred_range[1]))
+            raise ValueError("Decoded Phred score %d (char '%c') is out of "
+                             "range [%d, %d]."
+                             % (score, c, phred_range[0], phred_range[1]))
     return phred
 
 
