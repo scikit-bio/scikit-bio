@@ -449,9 +449,9 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
 
 def _line_generator(fh):
     for line in fh:
-        line = line.rstrip('\n')
+        line = line.strip()
         if not line:
-            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
+            raise FASTQFormatError("Found blank line within FASTQ record.")
         yield line
 
 
@@ -480,21 +480,30 @@ def _parse_sequence_data(fh):
 def _parse_quality_scores(fh, seq_len, variant, phred_offset):
     phred_scores = []
     qual_len = 0
-    for chunk in _line_generator(fh):
-        if chunk.startswith('@') and qual_len == seq_len:
-            return phred_scores, chunk
+    prev_was_blank = False
+    for chunk in fh:
+        chunk = chunk.strip()
+        if chunk:
+            if chunk.startswith('@') and qual_len == seq_len:
+                return phred_scores, chunk
+            else:
+                if prev_was_blank:
+                    raise FASTQFormatError("Found blank line within FASTQ "
+                                           "record.")
+                qual_len += len(chunk)
+
+                if qual_len > seq_len:
+                    raise FASTQFormatError(
+                        "Found more quality score characters than sequence "
+                        "characters. Extra quality score characters: %r" %
+                        chunk[-(qual_len - seq_len):])
+
+                phred_scores.extend(
+                    _decode_qual_to_phred(chunk, variant=variant,
+                                          phred_offset=phred_offset))
+            prev_was_blank = False
         else:
-            qual_len += len(chunk)
-
-            if qual_len > seq_len:
-                raise FASTQFormatError(
-                    "Found more quality score characters than sequence "
-                    "characters. Extra quality score characters: %r" %
-                    chunk[-(qual_len - seq_len):])
-
-            phred_scores.extend(
-                _decode_qual_to_phred(chunk, variant=variant,
-                                      phred_offset=phred_offset))
+            prev_was_blank = True
 
     if qual_len != seq_len:
         raise FASTQFormatError(

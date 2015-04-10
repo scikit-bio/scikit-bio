@@ -49,6 +49,8 @@ class TestSniffer(unittest.TestCase):
     def setUp(self):
         self.positives = [get_data_path(e) for e in [
             'fastq_multi_seq_sanger',
+            'fastq_blank_lines',
+            'fastq_whitespace_only_lines',
             'fastq_single_seq_illumina1.3',
             'fastq_wrapping_as_illumina_no_description',
             'fastq_wrapping_as_sanger_no_description',
@@ -80,6 +82,16 @@ class TestSniffer(unittest.TestCase):
         self.negatives = [get_data_path(e) for e in [
             'empty',
             'whitespace_only',
+            'fastq_invalid_blank_after_header',
+            'fastq_invalid_blank_after_seq',
+            'fastq_invalid_blank_after_plus',
+            'fastq_invalid_blank_within_seq',
+            'fastq_invalid_blank_within_qual',
+            'fastq_invalid_ws_line_after_header',
+            'fastq_invalid_ws_line_after_seq',
+            'fastq_invalid_ws_line_after_plus',
+            'fastq_invalid_ws_line_within_seq',
+            'fastq_invalid_ws_line_within_qual',
             'fastq_invalid_missing_header',
             'fastq_invalid_missing_seq_data',
             'error_diff_ids.fastq',
@@ -145,10 +157,68 @@ class TestReaders(unittest.TestCase):
                 ('baz', 'foo bar', 'GATTTC',
                  [20, 21, 22, 23, 24, 18])
             ]),
+
+            (get_data_path('fastq_blank_lines'), [
+                {'variant': 'sanger'},
+                {'phred_offset': 33, 'seq_num': 2},
+                {'variant': 'sanger', 'constructor': RNASequence,
+                 'seq_num': 3},
+            ], [
+                ('foo', 'bar baz', 'AACCGG',
+                 [16, 17, 18, 19, 20, 21]),
+                ('bar', 'baz foo', 'TTGGCC',
+                 [23, 22, 21, 20, 19, 18]),
+                ('baz', 'foo bar', 'GATTTC',
+                 [20, 21, 22, 23, 24, 18])
+            ]),
+
+            (get_data_path('fastq_whitespace_only_lines'), [
+                {'variant': 'sanger'},
+                {'phred_offset': 33, 'seq_num': 2},
+                {'variant': 'sanger', 'constructor': RNASequence,
+                 'seq_num': 3},
+            ], [
+                ('foo', 'bar baz', 'AACCGG',
+                 [16, 17, 18, 19, 20, 21]),
+                ('bar', 'baz foo', 'TTGGCC',
+                 [23, 22, 21, 20, 19, 18]),
+                ('baz', 'foo bar', 'GATTTC',
+                 [20, 21, 22, 23, 24, 18])
+            ]),
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
             ('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
+
+            ('fastq_invalid_blank_after_header', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_blank_after_seq', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_blank_after_plus', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_blank_within_seq', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_blank_within_qual', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_ws_line_after_header', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_ws_line_after_seq', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_ws_line_after_plus', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_ws_line_within_seq', FASTQFormatError,
+              'blank line.*FASTQ'),
+
+            ('fastq_invalid_ws_line_within_qual', FASTQFormatError,
+              'blank line.*FASTQ'),
 
             ('fastq_invalid_missing_header', FASTQFormatError,
              "sequence.*header.*start of file: 'seq1 desc1'"),
