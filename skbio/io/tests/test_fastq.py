@@ -191,34 +191,34 @@ class TestReaders(unittest.TestCase):
             ('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_after_header', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_after_seq', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_after_plus', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_within_seq', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_within_qual', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_ws_line_after_header', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_ws_line_after_seq', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_ws_line_after_plus', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_ws_line_within_seq', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_ws_line_within_qual', FASTQFormatError,
-              'blank line.*FASTQ'),
+             'blank line.*FASTQ'),
 
             ('fastq_invalid_missing_header', FASTQFormatError,
              "sequence.*header.*start of file: 'seq1 desc1'"),
