@@ -63,7 +63,9 @@ stored sequentially, with a *record* for each sequence (also referred to as a
 *FASTA record*). Each *record* consists of a single-line *header* (sometimes
 referred to as a *defline*, *label*, *description*, or *comment*) followed by
 the sequence data, optionally split over multiple lines. Blank or
-whitespace-only lines are not allowed anywhere in the FASTA file.
+whitespace-only lines are only allowed between FASTA records. A blank or
+whitespace-only line after the header line, within the sequence, or
+within quality scores is an error.
 
 .. note:: scikit-bio does not currently support legacy FASTA format (i.e.,
    headers/comments denoted with a semicolon). The format supported by
