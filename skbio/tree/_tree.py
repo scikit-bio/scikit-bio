@@ -2675,24 +2675,26 @@ class TreeNode(SkbioObject):
         ((h,(g,(a,b)))c,(d,e)f)root;
         <BLANKLINE>
         """
-        for n in self.postorder():
+        for n in self.traverse(include_self=True):
             if n.is_tip():
                 continue
             if len(n.children) == 1 and remove_singles:
                 i = n.children[0]
-                for j in n.children:
-                    n.append(j)
-                n.remove(i)
-            if len(n.children) > 2:
+                if i.is_tip():
+                    n.parent.append(i)
+                    n.parent.remove(n)
+                else:
+                    n.extend(i.children)
+                    n.remove(i)
+            elif len(n.children) > 2:
                 stack = n.children
                 curnode = n
                 while len(stack) > 2:
                     ind = stack.pop()
-                    intermediate = TreeNode(children=stack, parent=curnode)
-                    curnode.children = []
-                    curnode.children.extend([ind, intermediate])
-                    #intermediate.children = stack
-                    #intermediate.parent = curnode
+                    intermediate = TreeNode()
+                    curnode.children = [ind, intermediate]
+                    intermediate.children = stack
+                    intermediate.parent = curnode
                     curnode = intermediate
         self.assign_ids()
 
