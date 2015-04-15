@@ -2649,6 +2649,54 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
+
+    def bifurcate(self, remove_singles=True):
+        """ Restructures tree into a bifurcating tree
+
+        All nodes that have more than 2 children will
+        have additional intermediate nodes injected to ensure that
+        every node has only 2 children
+
+        Also, any nodes that have a single child will be collapsed
+
+        Parameters
+        ----------
+        remove_singles : bool, optional
+            Removes all nodes that have only a single child and relink
+            of their childrent to their parent node
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> from six import StringIO
+        >>> tree = TreeNode.read(StringIO("((a,b,g,h)c,(d,e)f)root;"))
+        >>> tree.bifurcate()
+        >>> str(tree)
+        ((h,(g,(a,b)))c,(d,e)f)root;
+        <BLANKLINE>
+        """
+        for n in self.postorder():
+            if n.is_tip():
+                continue
+            if len(n.children) == 1 and remove_singles:
+                i = n.children[0]
+                for j in n.children:
+                    n.append(j)
+                n.remove(i)
+            if len(n.children) > 2:
+                stack = n.children
+                curnode = n
+                while len(stack) > 2:
+                    ind = stack.pop()
+                    intermediate = TreeNode(children=stack, parent=curnode)
+                    curnode.children = []
+                    curnode.children.extend([ind, intermediate])
+                    #intermediate.children = stack
+                    #intermediate.parent = curnode
+                    curnode = intermediate
+        self.assign_ids()
+
+
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
 
