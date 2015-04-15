@@ -2649,7 +2649,6 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
-
     def bifurcate(self, remove_singles=True):
         """ Restructures tree into a bifurcating tree
 
@@ -2697,7 +2696,6 @@ class TreeNode(SkbioObject):
                     intermediate.parent = curnode
                     curnode = intermediate
         self.assign_ids()
-
 
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
