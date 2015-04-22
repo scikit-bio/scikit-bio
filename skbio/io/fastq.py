@@ -78,8 +78,10 @@ provided in the publication's supplementary data.
    exactly the same way as FASTA headers (:mod:`skbio.io.fasta`).
 
    Whitespace is not allowed in sequence data or quality scores. Leading and
-   trailing whitespace is not stripped from sequence data or quality scores,
-   resulting in an error being raised if found.
+   trailing whitespace is stripped from sequence data and quality scores.
+   Blank or whitespace-only lines are only allowed between FASTA records.
+   A blank or whitespace-only line after the header line, within the sequence, 
+   or within quality scores is an error.
 
    scikit-bio will write FASTQ files in a normalized format, with each record
    section on a single line. Thus, each record will be composed of *exactly*
