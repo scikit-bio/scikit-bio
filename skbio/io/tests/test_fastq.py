@@ -188,7 +188,8 @@ class TestReaders(unittest.TestCase):
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
-            #('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
+            ('whitespace_only', FASTQFormatError,
+             "sequence.*header.*start of file: ''"),
 
             ('fastq_invalid_blank_after_header', FASTQFormatError,
              'blank or whitespace-only line.*after header.*in FASTQ'),
