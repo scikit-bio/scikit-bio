@@ -111,7 +111,9 @@ class SnifferTests(TestCase):
             'qual_single_nuc_seq_non_defaults',
             'qual_single_prot_seq_non_defaults',
             'qual_single_rna_seq_non_defaults',
-            'qual_single_seq'
+            'qual_single_seq',
+            'qual_ws_line_between_records',
+            'qual_blank_line_between_records'
         ]))
 
     def test_positives(self):
@@ -229,14 +231,14 @@ class ReaderTests(TestCase):
              {'qual': get_data_path('qual_invalid_missing_header')},
              FASTAFormatError, 'without a header.*QUAL'),
 
-            # fasta and qual with blank line after header
+            # fasta and qual with blank line within sequence 
             ('fasta_invalid_blank_line_within_sequence', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_blank_line_within_seq')},
              FASTAFormatError, 'whitespace-only.*QUAL'),
 
-            # fasta and qual with blank sequence
+            # fasta and qual with blank after header
             ('fasta_invalid_blank_sequence', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
