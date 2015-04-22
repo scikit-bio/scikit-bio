@@ -188,37 +188,37 @@ class TestReaders(unittest.TestCase):
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
-            ('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
+            #('whitespace_only', FASTQFormatError, 'blank line.*FASTQ'),
 
             ('fastq_invalid_blank_after_header', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'blank or whitespace-only line.*after header.*in FASTQ'),
 
             ('fastq_invalid_blank_after_seq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*before '\+' in FASTQ"),
 
             ('fastq_invalid_blank_after_plus', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('fastq_invalid_blank_within_seq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'blank or whitespace-only line.*within sequence.*FASTQ'),
 
             ('fastq_invalid_blank_within_qual', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*within quality scores.*in FASTQ"),
 
             ('fastq_invalid_ws_line_after_header', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'blank or whitespace-only line.*after header.*in FASTQ'),
 
             ('fastq_invalid_ws_line_after_seq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*before '\+' in FASTQ"),
 
             ('fastq_invalid_ws_line_after_plus', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('fastq_invalid_ws_line_within_seq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'blank or whitespace-only line.*within sequence.*FASTQ'),
 
             ('fastq_invalid_ws_line_within_qual', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*within quality scores.*in FASTQ"),
 
             ('fastq_invalid_missing_header', FASTQFormatError,
              "sequence.*header.*start of file: 'seq1 desc1'"),
@@ -240,7 +240,7 @@ class TestReaders(unittest.TestCase):
             ('error_long_qual.fastq', FASTQFormatError, "Extra quality.*'Y'"),
 
             ('error_no_qual.fastq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             "blank or whitespace-only line.*after '\+'.*in FASTQ"),
 
             ('error_qual_del.fastq', ValueError,
              'Decoded Phred score.*out of range'),
@@ -273,10 +273,10 @@ class TestReaders(unittest.TestCase):
              r"whitespace.*sequence data: 'GATGTGCAA\\tTACCTTTGTA\\tGAGGAA'"),
 
             ('error_trunc_at_seq.fastq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'incomplete/truncated.*FASTQ'),
 
             ('error_trunc_at_plus.fastq', FASTQFormatError,
-             'blank line.*FASTQ'),
+             'incomplete/truncated.*FASTQ'),
 
             ('error_trunc_at_qual.fastq', FASTQFormatError,
              'incomplete/truncated.*end of file'),
