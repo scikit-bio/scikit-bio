@@ -117,7 +117,7 @@ been ported to scikit-bio are: Rob Knight (`@rob-knight
 <https://github.com/wasade>`__), Micah Hamady, Antonio Gonzalez
 (`@antgonza <https://github.com/antgonza>`__), Sandra Smit, Greg
 Caporaso (`@gregcaporaso <https://github.com/gregcaporaso>`__), Jai
-Ram Rideout (`@ElBrogrammer <https://github.com/ElBrogrammer>`__),
+Ram Rideout (`@jairideout <https://github.com/jairideout>`__),
 Cathy Lozupone (`@clozupone <https://github.com/clozupone>`__), Mike Robeson
 (`@mikerobeson <https://github.com/mikerobeson>`__), Marcin Cieslik,
 Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
