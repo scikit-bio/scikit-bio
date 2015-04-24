@@ -62,21 +62,24 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
 3. Clone your forked repository to the system where you'll be developing with ``git clone``. ``cd`` into the ``scikit-bio`` directory that was created by ``git clone``.
 
 4. Ensure that you have the latest version of all files. This is especially important if you cloned a long time ago, but you'll need to do this before submitting changes regardless. You should do this by adding scikit-bio as a remote repository and then pulling from that repository. You'll only need to run the ``git remote`` command the first time you do this:
-```
-git remote add upstream https://github.com/biocore/scikit-bio.git
-git checkout master
-git pull upstream master
-```
+
+ ```
+ git remote add upstream https://github.com/biocore/scikit-bio.git
+ git checkout master
+ git pull upstream master
+ ```
 
 5. Install scikit-bio in "development mode" so that your changes are reflected in the installed package without having to reinstall the package each time:
-```
-pip install -e .
-```
+
+ ```
+ pip install -e .
+ ```
 
 6. Create a new topic branch that you will make your changes in with ``git checkout -b``:
-```
-git checkout -b my-topic-branch
-```
+
+ ```
+ git checkout -b my-topic-branch
+ ```
 
  What you name your topic branch is up to you, though we recommend including the issue number in the topic branch, since there is usually already an issue associated with the changes being made in the pull request. For example, if you were addressing issue number 42, you might name your topic branch ``issue-42``.
 
@@ -87,19 +90,21 @@ git checkout -b my-topic-branch
 9. Please mention your changes in [CHANGELOG.md](CHANGELOG.md). This file informs scikit-bio *users* of changes made in each release, so be sure to describe your changes with this audience in mind. It is especially important to note API additions and changes, particularly if they are backward-incompatible, as well as bug fixes. Be sure to make your updates under the section designated for the latest development version of scikit-bio (this will be at the top of the file). Describe your changes in detail under the most appropriate section heading(s). For example, if your pull request fixes a bug, describe the bug fix under the "Bug fixes" section of [CHANGELOG.md](CHANGELOG.md). Please also include a link to the issue(s) addressed by your changes. See [CHANGELOG.md](CHANGELOG.md) for examples of how we recommend formatting these descriptions.
 
 10. When you're ready to submit your code, ensure that you have the latest version of all files in case some changed while you were working on your edits. You can do this by merging master into your topic branch:
-```
-git checkout master
-git pull upstream master
-git checkout my-topic-branch
-git merge master
-```
+
+ ```
+ git checkout master
+ git pull upstream master
+ git checkout my-topic-branch
+ git merge master
+ ```
 
 11. Run ``make test`` to ensure that your changes did not cause anything expected to break.
 
 12. Once the tests pass, you should push your changes to your forked repository on GitHub using:
-```
-git push origin my-topic-branch
-```
+
+ ```
+ git push origin my-topic-branch
+ ```
 
 13. Issue a [pull request](https://help.github.com/articles/using-pull-requests) on the GitHub website to request that we merge your branch's changes into scikit-bio's master branch. Be sure to include a description of your changes in the pull request, as well as any other information that will help the scikit-bio developers involved in reviewing your code. Please include ``fixes #<issue-number>`` in your pull request description or in one of your commit messages so that the corresponding issue will be closed when the pull request is merged (see [here](https://help.github.com/articles/closing-issues-via-commit-messages/) for more details). One of the scikit-bio developers will review your code at this stage. If we request changes (which is very common), *don't issue a new pull request*. You should make changes on your topic branch, and commit and push them to GitHub. Your pull request will update automatically.
 
