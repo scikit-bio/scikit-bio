@@ -231,7 +231,7 @@ class ReaderTests(TestCase):
              {'qual': get_data_path('qual_invalid_missing_header')},
              FASTAFormatError, 'without a header.*QUAL'),
 
-            # fasta and qual with blank line within sequence 
+            # fasta and qual with blank line within sequence
             ('fasta_invalid_blank_line_within_sequence', {}, FASTAFormatError,
              'whitespace-only.*FASTA'),
             ('fasta_3_seqs_defaults',

@@ -49,6 +49,11 @@ class TestSniffer(unittest.TestCase):
     def setUp(self):
         self.positives = [get_data_path(e) for e in [
             'fastq_multi_seq_sanger',
+            'fastq_multi_blank_between_records',
+            'fastq_multi_ws_lines_between_records',
+            'fastq_multi_blank_end_of_file',
+            'fastq_multi_ws_lines_end_of_file',
+            'fastq_multi_whitespace_stripping',
             'fastq_blank_lines',
             'fastq_whitespace_only_lines',
             'fastq_single_seq_illumina1.3',
@@ -129,14 +134,14 @@ class TestSniffer(unittest.TestCase):
 
 class TestReaders(unittest.TestCase):
     def setUp(self):
-        self.valid_files = [
-            (get_data_path('empty'),
+        self.valid_configurations = [
+            ([get_data_path('empty')],
              [{},
               {'variant': 'illumina1.8'},
               {'phred_offset': 33, 'constructor': DNASequence}],
              []),
 
-            (get_data_path('fastq_single_seq_illumina1.3'), [
+            ([get_data_path('fastq_single_seq_illumina1.3')], [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3', 'constructor': ProteinSequence},
@@ -144,7 +149,14 @@ class TestReaders(unittest.TestCase):
                 ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
             ]),
 
-            (get_data_path('fastq_multi_seq_sanger'), [
+            ([get_data_path('fastq_multi_seq_sanger'),
+              get_data_path('fastq_whitespace_only_lines'),
+              get_data_path('fastq_blank_lines'),
+              get_data_path('fastq_multi_blank_between_records'),
+              get_data_path('fastq_multi_ws_lines_between_records'),
+              get_data_path('fastq_multi_blank_end_of_file'),
+              get_data_path('fastq_multi_ws_lines_end_of_file'),
+              get_data_path('fastq_multi_whitespace_stripping')], [
                 {'variant': 'sanger'},
                 {'phred_offset': 33, 'seq_num': 2},
                 {'variant': 'sanger', 'constructor': RNASequence,
@@ -158,33 +170,7 @@ class TestReaders(unittest.TestCase):
                  [20, 21, 22, 23, 24, 18])
             ]),
 
-            (get_data_path('fastq_blank_lines'), [
-                {'variant': 'sanger'},
-                {'phred_offset': 33, 'seq_num': 2},
-                {'variant': 'sanger', 'constructor': RNASequence,
-                 'seq_num': 3},
-            ], [
-                ('foo', 'bar baz', 'AACCGG',
-                 [16, 17, 18, 19, 20, 21]),
-                ('bar', 'baz foo', 'TTGGCC',
-                 [23, 22, 21, 20, 19, 18]),
-                ('baz', 'foo bar', 'GATTTC',
-                 [20, 21, 22, 23, 24, 18])
-            ]),
 
-            (get_data_path('fastq_whitespace_only_lines'), [
-                {'variant': 'sanger'},
-                {'phred_offset': 33, 'seq_num': 2},
-                {'variant': 'sanger', 'constructor': RNASequence,
-                 'seq_num': 3},
-            ], [
-                ('foo', 'bar baz', 'AACCGG',
-                 [16, 17, 18, 19, 20, 21]),
-                ('bar', 'baz foo', 'TTGGCC',
-                 [23, 22, 21, 20, 19, 18]),
-                ('baz', 'foo bar', 'GATTTC',
-                 [20, 21, 22, 23, 24, 18])
-            ]),
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
@@ -297,17 +283,18 @@ class TestReaders(unittest.TestCase):
         ]]
 
     def test_fastq_to_generator_valid_files(self):
-        for valid, kwargs, components in self.valid_files:
-            for kwarg in kwargs:
-                _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', BiologicalSequence)
-                expected = [constructor(c[2], id=c[0], description=c[1],
-                            quality=c[3]) for c in components]
+        for valid_files, kwargs, components in self.valid_configurations:
+            for valid in valid_files:
+                for kwarg in kwargs:
+                    _drop_kwargs(kwarg, 'seq_num')
+                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    expected = [constructor(c[2], id=c[0], description=c[1],
+                                quality=c[3]) for c in components]
 
-                observed = list(_fastq_to_generator(valid, **kwarg))
-                self.assertEqual(len(expected), len(observed))
-                for o, e in zip(observed, expected):
-                    self.assertTrue(o.equals(e))
+                    observed = list(_fastq_to_generator(valid, **kwarg))
+                    self.assertEqual(len(expected), len(observed))
+                    for o, e in zip(observed, expected):
+                        self.assertTrue(o.equals(e))
 
     def test_fastq_to_generator_invalid_files_all_variants(self):
         # files that should be invalid for all variants, as well as custom
@@ -344,53 +331,58 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_sequence(self):
         for constructor in [BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence]:
-            for valid, kwargs, components in self.valid_files:
-                # skip empty file case since we cannot read a specific sequence
-                # from an empty file
-                if len(components) == 0:
-                    continue
+            for valid_files, kwargs, components in self.valid_configurations:
+                for valid in valid_files:
+                    # skip empty file case since we cannot read a specific
+                    # sequencefrom an empty file
+                    if len(components) == 0:
+                        continue
 
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'constructor')
+                    for kwarg in kwargs:
+                        _drop_kwargs(kwarg, 'constructor')
 
-                    seq_num = kwarg.get('seq_num', 1)
-                    c = components[seq_num - 1]
-                    expected = constructor(c[2], id=c[0], description=c[1],
-                                           quality=c[3])
+                        seq_num = kwarg.get('seq_num', 1)
+                        c = components[seq_num - 1]
+                        expected = constructor(c[2], id=c[0],
+                                               description=c[1], quality=c[3])
 
-                    observed = read(valid, into=constructor, format='fastq',
-                                    verify=False, **kwarg)
-                    self.assertTrue(observed.equals(expected))
+                        observed = read(valid, into=constructor,
+                                        format='fastq', verify=False, **kwarg)
+                        self.assertTrue(observed.equals(expected))
 
     def test_fastq_to_sequence_collection(self):
-        for valid, kwargs, components in self.valid_files:
-            for kwarg in kwargs:
-                _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', BiologicalSequence)
-                expected = SequenceCollection(
-                    [constructor(c[2], id=c[0], description=c[1], quality=c[3])
-                     for c in components])
+        for valid_files, kwargs, components in self.valid_configurations:
+            for valid in valid_files:
+                for kwarg in kwargs:
+                    _drop_kwargs(kwarg, 'seq_num')
+                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    expected = SequenceCollection(
+                        [constructor(c[2], id=c[0], description=c[1],
+                                     quality=c[3])
+                         for c in components])
 
-                observed = _fastq_to_sequence_collection(valid, **kwarg)
-                # TODO remove when #656 is resolved
-                self.assertEqual(observed, expected)
-                for o, e in zip(observed, expected):
-                    self.assertTrue(o.equals(e))
+                    observed = _fastq_to_sequence_collection(valid, **kwarg)
+                    # TODO remove when #656 is resolved
+                    self.assertEqual(observed, expected)
+                    for o, e in zip(observed, expected):
+                        self.assertTrue(o.equals(e))
 
     def test_fastq_to_alignment(self):
-        for valid, kwargs, components in self.valid_files:
-            for kwarg in kwargs:
-                _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', BiologicalSequence)
-                expected = Alignment(
-                    [constructor(c[2], id=c[0], description=c[1], quality=c[3])
-                     for c in components])
+        for valid_files, kwargs, components in self.valid_configurations:
+            for valid in valid_files:
+                for kwarg in kwargs:
+                    _drop_kwargs(kwarg, 'seq_num')
+                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    expected = Alignment(
+                        [constructor(c[2], id=c[0], description=c[1],
+                                     quality=c[3])
+                         for c in components])
 
-                observed = _fastq_to_alignment(valid, **kwarg)
-                # TODO remove when #656 is resolved
-                self.assertEqual(observed, expected)
-                for o, e in zip(observed, expected):
-                    self.assertTrue(o.equals(e))
+                    observed = _fastq_to_alignment(valid, **kwarg)
+                    # TODO remove when #656 is resolved
+                    self.assertEqual(observed, expected)
+                    for o, e in zip(observed, expected):
+                        self.assertTrue(o.equals(e))
 
 
 class TestWriters(unittest.TestCase):
