@@ -288,7 +288,7 @@ def _fastq_sniffer(fh):
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
-    seq_header, _ = next(_line_generator(fh))
+    seq_header = next(_line_generator(fh))
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
             "Expected sequence (@) header line at start of file: %r"
@@ -450,26 +450,24 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
 
 
 def _line_generator(fh):
-    line_number = 1
     for line in fh:
         line = line.strip()
-        yield line, line_number
-        line_number += 1
+        yield line
 
 
-def _blank_error(unique_text, line_no):
+def _blank_error(unique_text):
     error_string = ("Found blank or whitespace-only line {} in "
-                    "FASTQ file at line {}").format(unique_text, line_no)
+                    "FASTQ file").format(unique_text)
     raise FASTQFormatError(error_string)
 
 
 def _parse_sequence_data(fh):
     seq_chunks = []
     prev = '@'
-    for chunk, line_number in _line_generator(fh):
+    for chunk in _line_generator(fh):
         if chunk.startswith('+'):
             if not prev:
-                _blank_error("before '+'", line_number)
+                _blank_error("before '+'")
             if not seq_chunks:
                 raise FASTQFormatError(
                     "Found FASTQ record without sequence data.")
@@ -480,7 +478,7 @@ def _parse_sequence_data(fh):
                 "after sequence data.")
         else:
             if not prev:
-                _blank_error("after header or within sequence", line_number)
+                _blank_error("after header or within sequence")
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
                     "Found whitespace in sequence data: %r" % chunk)
@@ -495,14 +493,13 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
     phred_scores = []
     qual_len = 0
     prev = '+'
-    for chunk, line_number in _line_generator(fh):
+    for chunk in _line_generator(fh):
         if chunk:
             if chunk.startswith('@') and qual_len == seq_len:
                 return phred_scores, chunk
             else:
                 if not prev:
-                    _blank_error("after '+' or within quality scores",
-                                 line_number)
+                    _blank_error("after '+' or within quality scores")
                 qual_len += len(chunk)
 
                 if qual_len > seq_len:
