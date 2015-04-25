@@ -125,7 +125,7 @@ class TestFilePathsOpening(unittest.TestCase):
             with open_files(['http://google.com/foo-seqs.fna']) as fhs:
                 for f in fhs:
                     f.read()
-        self.assertEquals(e.exception.message, '404 Client Error: Not Found')
+        self.assertEquals(str(e.exception), '404 Client Error: Not Found')
 
     def test_remote_fna(self):
         url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
@@ -143,12 +143,12 @@ class TestFilePathsOpening(unittest.TestCase):
             for f in fhs:
                 self.assertEqual(f.read(), FASTA)
 
-FASTA = ('>gi|459567|dbj|D28543.1|HPCNS5PC Hepatitis C virus gene for NS5 prot'
-         'ein, partial cds, isolate: B4/92\nGAGCACGACATCTACCAATGTTGCCAACTGAACC'
-         'CAGAGGCCAAGAAAGCCATAACATCCTTGACAGAGA\nGGCTTTACCTTGGTGGTCCCATGTTTAACT'
-         'CGCGAGGTCAGCTCTGCGGGACACGCAGATGCCGGGCGAG\nCGGGGTTCTTCCAACCAGCATGGGCA'
-         'ATACCCTCACATGTTACCTGAAAGCACAGGCAGCTTGCCGTGCA\nGCAGGCCTCACCAATTCTGACA'
-         'TGTTGGTTTGCGGAGATGATTTGGTAGTCATCACTGAGAGTGCCGGAG\nTC\n\n')
+FASTA = (b'>gi|459567|dbj|D28543.1|HPCNS5PC Hepatitis C virus gene for NS5 pr'
+         b'otein, partial cds, isolate: B4/92\nGAGCACGACATCTACCAATGTTGCCAACTG'
+         b'AACCCAGAGGCCAAGAAAGCCATAACATCCTTGACAGAGA\nGGCTTTACCTTGGTGGTCCCATGT'
+         b'TTAACTCGCGAGGTCAGCTCTGCGGGACACGCAGATGCCGGGCGAG\nCGGGGTTCTTCCAACCAG'
+         b'CATGGGCAATACCCTCACATGTTACCTGAAAGCACAGGCAGCTTGCCGTGCA\nGCAGGCCTCACC'
+         b'AATTCTGACATGTTGGTTTGCGGAGATGATTTGGTAGTCATCACTGAGAGTGCCGGAG\nTC\n\n')
 
 
 if __name__ == '__main__':
