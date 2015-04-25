@@ -34,7 +34,6 @@ from cachecontrol.caches import FileCache
 
 from contextlib import contextmanager
 from tempfile import gettempdir
-from urlparse import urlparse
 
 
 def _is_string_or_bytes(s):
@@ -48,7 +47,7 @@ def _get_filehandle(filepath_or, *args, **kwargs):
     pass through.
     """
     if _is_string_or_bytes(filepath_or):
-        if urlparse(filepath_or).scheme in {'http', 'https'}:
+        if requests.compat.urlparse(filepath_or).scheme in {'http', 'https'}:
             sess = CacheControl(requests.Session(),
                                 cache=FileCache(gettempdir()))
             req = sess.get(filepath_or, **kwargs)
