@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from six import StringIO, BytesIO
+from requests import HTTPError
 
 import unittest
 import tempfile

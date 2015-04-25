@@ -27,8 +27,14 @@ Functions
 # ----------------------------------------------------------------------------
 
 from future.builtins import bytes, str
+from six import BytesIO
+import requests
+from cachecontrol import CacheControl
+from cachecontrol.caches import FileCache
 
 from contextlib import contextmanager
+from tempfile import gettempdir
+from urlparse import urlparse
 
 
 def _is_string_or_bytes(s):
@@ -42,7 +48,17 @@ def _get_filehandle(filepath_or, *args, **kwargs):
     pass through.
     """
     if _is_string_or_bytes(filepath_or):
-        fh, own_fh = open(filepath_or, *args, **kwargs), True
+        if urlparse(filepath_or).scheme in {'http', 'https'}:
+            sess = CacheControl(requests.Session(),
+                                cache=FileCache(gettempdir()))
+            req = sess.get(filepath_or, **kwargs)
+
+            # if the response is not 200, an exception will be raised
+            req.raise_for_status()
+
+            fh, own_fh = BytesIO(req.content), True
+        else:
+            fh, own_fh = open(filepath_or, *args, **kwargs), True
     else:
         fh, own_fh = filepath_or, False
     return fh, own_fh
