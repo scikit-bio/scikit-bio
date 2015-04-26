@@ -78,10 +78,12 @@ provided in the publication's supplementary data.
    exactly the same way as FASTA headers (:mod:`skbio.io.fasta`).
 
    Whitespace is not allowed in sequence data or quality scores. Leading and
-   trailing whitespace is stripped from sequence data and quality scores.
-   Blank or whitespace-only lines are only allowed between FASTA records.
-   A blank or whitespace-only line after the header line, within the sequence,
-   or within quality scores is an error.
+   trailing whitespace is stripped from the file. Blank or whitespace-only
+   lines are only permitted at the beginning of the file, between FASTQ
+   records, or at the end of the file. A blank or whitespace-only line after
+   the header line, within the sequence, or within quality scores is an
+   error. If more than 5 blank or whitespace-only lines are at the beginning
+   of the file, the sniffer will issue a warning.
 
    scikit-bio will write FASTQ files in a normalized format, with each record
    section on a single line. Thus, each record will be composed of *exactly*
@@ -272,6 +274,14 @@ _whitespace_regex = re.compile(r'\s')
 
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
+    # First check to make sure there aren't more than 5 blank lines at the
+    # beginning of the file
+    for i, line in enumerate(_line_generator(fh)):
+        if line:
+            break
+        elif i >= 5:
+            return False, {}
+    fh.seek(0)
     # Strategy:
     #   Read up to 10 records. If at least one record is read (i.e. the file
     #   isn't empty) and the quality scores are in printable ASCII range,
@@ -288,24 +298,33 @@ def _fastq_sniffer(fh):
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
-    seq_header = next(_line_generator(fh))
-    if not seq_header.startswith('@'):
-        raise FASTQFormatError(
-            "Expected sequence (@) header line at start of file: %r"
-            % seq_header)
+    # SKip any blank or whitespace-only lines at beginning of file
+    seq_header = ''
+    for line in _line_generator(fh):
+        seq_header = line
+        if seq_header:
+            break
 
-    while seq_header is not None:
-        id_, desc = _parse_fasta_like_header(seq_header)
-        seq, qual_header = _parse_sequence_data(fh)
-
-        if qual_header != '+' and qual_header[1:] != seq_header[1:]:
+    if seq_header:
+        if not seq_header.startswith('@'):
             raise FASTQFormatError(
-                "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (seq_header[1:], qual_header[1:]))
+                "Expected sequence (@) header line at start of file: %r"
+                % seq_header)
 
-        phred_scores, seq_header = _parse_quality_scores(fh, len(seq), variant,
-                                                         phred_offset)
-        yield constructor(seq, id=id_, description=desc, quality=phred_scores)
+        while seq_header is not None:
+            id_, desc = _parse_fasta_like_header(seq_header)
+            seq, qual_header = _parse_sequence_data(fh)
+
+            if qual_header != '+' and qual_header[1:] != seq_header[1:]:
+                raise FASTQFormatError(
+                    "Sequence (@) and quality (+) header lines do not match: "
+                    "%r != %r" % (seq_header[1:], qual_header[1:]))
+
+            phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
+                                                             variant,
+                                                             phred_offset)
+            yield constructor(seq, id=id_, description=desc,
+                              quality=phred_scores)
 
 
 @register_reader('fastq', BiologicalSequence)

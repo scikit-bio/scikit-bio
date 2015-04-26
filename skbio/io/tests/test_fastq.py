@@ -63,6 +63,8 @@ class TestSniffer(unittest.TestCase):
             'fastq_writer_illumina1.3_defaults',
             'fastq_writer_sanger_defaults',
             'fastq_writer_sanger_non_defaults',
+            'fastq_5_blanks_start_of_file',
+            'fastq_5_ws_lines_start_of_file',
             'illumina_full_range_as_illumina.fastq',
             'illumina_full_range_as_sanger.fastq',
             'illumina_full_range_original_illumina.fastq',
@@ -87,6 +89,8 @@ class TestSniffer(unittest.TestCase):
         self.negatives = [get_data_path(e) for e in [
             'empty',
             'whitespace_only',
+            'fastq_multi_blank_start_of_file',
+            'fastq_multi_ws_lines_start_of_file',
             'fastq_invalid_blank_after_header',
             'fastq_invalid_blank_after_seq',
             'fastq_invalid_blank_after_plus',
@@ -135,7 +139,8 @@ class TestSniffer(unittest.TestCase):
 class TestReaders(unittest.TestCase):
     def setUp(self):
         self.valid_configurations = [
-            ([get_data_path('empty')],
+            ([get_data_path('empty'),
+              get_data_path('whitespace_only')],
              [{},
               {'variant': 'illumina1.8'},
               {'phred_offset': 33, 'constructor': DNASequence}],
@@ -156,6 +161,8 @@ class TestReaders(unittest.TestCase):
               get_data_path('fastq_multi_ws_lines_between_records'),
               get_data_path('fastq_multi_blank_end_of_file'),
               get_data_path('fastq_multi_ws_lines_end_of_file'),
+              get_data_path('fastq_multi_blank_start_of_file'),
+              get_data_path('fastq_multi_ws_lines_start_of_file'),
               get_data_path('fastq_multi_whitespace_stripping')], [
                 {'variant': 'sanger'},
                 {'phred_offset': 33, 'seq_num': 2},
@@ -174,9 +181,6 @@ class TestReaders(unittest.TestCase):
         ]
 
         self.invalid_files = [(get_data_path(e[0]), e[1], e[2]) for e in [
-            ('whitespace_only', FASTQFormatError,
-             "sequence.*header.*start of file: ''"),
-
             ('fastq_invalid_blank_after_header', FASTQFormatError,
              'blank or whitespace-only line.*after header.*in FASTQ'),
 
