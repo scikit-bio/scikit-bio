@@ -559,6 +559,14 @@ with hooks():
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
+    # First check to make sure there aren't more than 5 blank lines at the
+    # beginning of the file
+    for i, line in enumerate(_line_generator(fh)):
+        if line:
+            break
+        elif i >= 5:
+            return False, {}
+    fh.seek(0)
     # Strategy:
     #   Read up to 10 FASTA records. If at least one record is read (i.e. the
     #   file isn't empty) and no errors are thrown during reading, assume the
@@ -674,6 +682,12 @@ def _fasta_to_alignment(fh, qual=FileSentinel, constructor=BiologicalSequence):
         list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
 
 
+def _line_generator(fh):
+    for line in fh:
+        line = line.strip()
+        yield line
+
+
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
@@ -777,38 +791,42 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     the caller to construct the correct in-memory object to hold the data.
 
     """
-    line = next(fh)
-    # header check inlined here and below for performance
-    if line.startswith('>'):
-        id_, desc = _parse_fasta_like_header(line)
-    else:
-        raise FASTAFormatError(
-            "Found line without a header in %s-formatted file:\n%s" %
-            (format_label, line))
 
-    data_chunks = []
-    prev_was_blank = False
-    for line in fh:
-        if line.startswith('>'):
-            # new header, so yield current record and reset state
-            yield data_parser(data_chunks), id_, desc
-            data_chunks = []
-            id_, desc = _parse_fasta_like_header(line)
-            prev_was_blank = False
+    # Skip any blank or whitespace-only lines at beginning of file
+    seq_header = ''
+    for line in _line_generator(fh):
+        seq_header = line
+        if seq_header:
+            break
+
+    if seq_header:
+        # header check inlined here and below for performance
+        if seq_header.startswith('>'):
+            id_, desc = _parse_fasta_like_header(seq_header)
         else:
-            line = line.strip()
-            if line:
-                # ensure no blank lines within a single record
-                if prev_was_blank:
-                    raise FASTAFormatError(
-                        "Found blank or whitespace-only line within %s record"
-                        % format_label)
-                data_chunks.append(line)
-                prev_was_blank = False
+            raise FASTAFormatError(
+                "Found line without a header in %s-formatted file:\n%s" %
+                (format_label, seq_header))
+
+        data_chunks = []
+        prev = seq_header
+        for line in _line_generator(fh):
+            if line.startswith('>'):
+                # new header, so yield current record and reset state
+                yield data_parser(data_chunks), id_, desc
+                data_chunks = []
+                id_, desc = _parse_fasta_like_header(line)
             else:
-                prev_was_blank = True
-    # yield last record in file
-    yield data_parser(data_chunks), id_, desc
+                if line:
+                    # ensure no blank lines within a single record
+                    if not prev:
+                        raise FASTAFormatError(
+                            "Found blank or whitespace-only line within %s record"
+                            % format_label)
+                    data_chunks.append(line)
+            prev = line
+        # yield last record in file
+        yield data_parser(data_chunks), id_, desc
 
 
 def _parse_sequence_data(chunks):

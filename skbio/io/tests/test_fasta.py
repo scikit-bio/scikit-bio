@@ -30,7 +30,11 @@ from skbio.util import get_data_path
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
-            'fasta_blank_line_between_records',
+            'fasta_5_blanks_start_of_file',
+            'fasta_5_ws_lines_start_of_file',
+            'fasta_blanks_end_of_file',
+            'fasta_ws_lines_end_of_file',
+            'fasta_blank_lines_between_records',
             'fasta_3_seqs_defaults',
             'fasta_max_width_1',
             'fasta_single_bio_seq_non_defaults',
@@ -76,6 +80,8 @@ class SnifferTests(TestCase):
             'fasta_invalid_whitespace_only_sequence',
             'fasta_id_whitespace_replacement_none',
             'fasta_description_newline_replacement_none',
+            'fasta_6_blanks_start_of_file',
+            'fasta_6_ws_lines_start_of_file',
             'qual_2_seqs_defaults',
             'qual_3_seqs_defaults',
             'qual_3_seqs_defaults_desc_mismatch',
@@ -113,7 +119,7 @@ class SnifferTests(TestCase):
             'qual_single_rna_seq_non_defaults',
             'qual_single_seq',
             'qual_ws_line_between_records',
-            'qual_blank_line_between_records'
+            'qual_blank_lines_between_records'
         ]))
 
     def test_positives(self):
@@ -133,8 +139,8 @@ class ReaderTests(TestCase):
         # deserialize into the expected generator results
 
         # empty file shouldn't yield sequences
-        self.empty = ([], {}, list(map(get_data_path, ['empty'])),
-                      list(map(get_data_path, ['empty'])))
+        self.empty = ([], {}, list(map(get_data_path, ['empty', 'whitespace_only'])),
+                      list(map(get_data_path, ['empty', 'whitespace_only'])))
 
         # single sequence
         self.single = (
@@ -166,10 +172,10 @@ class ReaderTests(TestCase):
                  quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])],
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
-                                     'fasta_blank_line_between_records',
+                                     'fasta_blank_lines_between_records',
                                      'fasta_ws_line_between_records'])),
             list(map(get_data_path, ['qual_multi_seq', 'qual_max_width_5',
-                                     'qual_blank_line_between_records',
+                                     'qual_blank_lines_between_records',
                                      'qual_ws_line_between_records']))
         )
 
@@ -217,13 +223,6 @@ class ReaderTests(TestCase):
         # fasta remains in python)
         self.invalid_fps = list(map(lambda e: (get_data_path(e[0]),
                                                e[1], e[2], e[3]), [
-            # whitespace-only fasta and qual
-            ('whitespace_only', {}, FASTAFormatError,
-             'without a header.*FASTA'),
-            ('fasta_3_seqs_defaults',
-             {'qual': get_data_path('whitespace_only')}, FASTAFormatError,
-             'without a header.*QUAL'),
-
             # fasta and qual missing header
             ('fasta_invalid_missing_header', {}, FASTAFormatError,
              'without a header.*FASTA'),
