@@ -118,8 +118,14 @@ class SnifferTests(TestCase):
             'qual_single_prot_seq_non_defaults',
             'qual_single_rna_seq_non_defaults',
             'qual_single_seq',
-            'qual_ws_line_between_records',
-            'qual_blank_lines_between_records'
+            'qual_ws_lines_between_records',
+            'qual_blank_lines_between_records',
+            'qual_5_blanks_start_of_file',
+            'qual_5_ws_lines_start_of_file',
+            'qual_6_blanks_start_of_file',
+            'qual_6_ws_lines_start_of_file',
+            'qual_blanks_end_of_file',
+            'qual_ws_lines_end_of_file'
         ]))
 
     def test_positives(self):
@@ -174,10 +180,17 @@ class ReaderTests(TestCase):
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
                                      'fasta_blank_lines_between_records',
-                                     'fasta_ws_line_between_records'])),
+                                     'fasta_ws_lines_between_records'])),
             list(map(get_data_path, ['qual_multi_seq', 'qual_max_width_5',
                                      'qual_blank_lines_between_records',
-                                     'qual_ws_line_between_records']))
+                                     'qual_ws_lines_between_records',
+                                     'qual_5_blanks_start_of_file',
+                                     'qual_5_ws_lines_start_of_file',
+                                     'qual_6_blanks_start_of_file',
+                                     'qual_6_ws_lines_start_of_file',
+                                     'qual_blanks_end_of_file',
+                                     'qual_ws_lines_end_of_file']))
+
         )
 
         # test constructor parameter, as well as odd labels (label only
