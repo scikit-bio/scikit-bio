@@ -186,3 +186,20 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
                 "scores associated with it." % cardinal_to_ordinal(idx + 1))
 
         yield header, seq.sequence, seq.quality
+
+
+def _line_generator(fh):
+    for line in fh:
+        line = line.strip()
+        yield line
+
+
+def _count_blank_lines(fh):
+    count = 0
+    for line in _line_generator(fh):
+        if line:
+            break
+        else:
+            count += 1
+    fh.seek(0)
+    return count

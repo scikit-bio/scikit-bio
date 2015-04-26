@@ -264,7 +264,7 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
-                            _format_fasta_like_records)
+                            _format_fasta_like_records, _line_generator)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -274,14 +274,10 @@ _whitespace_regex = re.compile(r'\s')
 
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
-    # First check to make sure there aren't more than 5 blank lines at the
-    # beginning of the file
-    for i, line in enumerate(_line_generator(fh)):
-        if line:
-            break
-        elif i >= 5:
-            return False, {}
-    fh.seek(0)
+
+    if _count_blank_lines(fh) > 5:
+        return False, {}
+
     # Strategy:
     #   Read up to 10 records. If at least one record is read (i.e. the file
     #   isn't empty) and the quality scores are in printable ASCII range,
@@ -466,12 +462,6 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement)
-
-
-def _line_generator(fh):
-    for line in fh:
-        line = line.strip()
-        yield line
 
 
 def _blank_error(unique_text):

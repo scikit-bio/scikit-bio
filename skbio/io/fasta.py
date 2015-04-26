@@ -548,7 +548,8 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, FileSentinel)
 from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _parse_fasta_like_header,
-                            _format_fasta_like_records)
+                            _format_fasta_like_records, _line_generator,
+                            _count_blank_lines)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -559,14 +560,10 @@ with hooks():
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
-    # First check to make sure there aren't more than 5 blank lines at the
-    # beginning of the file
-    for i, line in enumerate(_line_generator(fh)):
-        if line:
-            break
-        elif i >= 5:
-            return False, {}
-    fh.seek(0)
+
+    if _count_blank_lines(fh) > 5:
+        return False, {}
+
     # Strategy:
     #   Read up to 10 FASTA records. If at least one record is read (i.e. the
     #   file isn't empty) and no errors are thrown during reading, assume the
@@ -680,12 +677,6 @@ def _fasta_to_sequence_collection(fh, qual=FileSentinel,
 def _fasta_to_alignment(fh, qual=FileSentinel, constructor=BiologicalSequence):
     return Alignment(
         list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
-
-
-def _line_generator(fh):
-    for line in fh:
-        line = line.strip()
-        yield line
 
 
 @register_writer('fasta')
