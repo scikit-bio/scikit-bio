@@ -139,7 +139,8 @@ class ReaderTests(TestCase):
         # deserialize into the expected generator results
 
         # empty file shouldn't yield sequences
-        self.empty = ([], {}, list(map(get_data_path, ['empty', 'whitespace_only'])),
+        self.empty = ([], {}, list(map(get_data_path, ['empty',
+                                                       'whitespace_only'])),
                       list(map(get_data_path, ['empty', 'whitespace_only'])))
 
         # single sequence

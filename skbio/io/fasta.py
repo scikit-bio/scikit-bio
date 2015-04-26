@@ -812,7 +812,8 @@ def _parse_fasta_raw(fh, data_parser, format_label):
                     # ensure no blank lines within a single record
                     if not prev:
                         raise FASTAFormatError(
-                            "Found blank or whitespace-only line within %s record"
+                            "Found blank or whitespace-only line within %s "
+                            "record"
                             % format_label)
                     data_chunks.append(line)
             prev = line
