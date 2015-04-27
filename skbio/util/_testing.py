@@ -103,3 +103,12 @@ def _skip_if_no_matplotlib():
     except ImportError:
         import nose
         raise nose.SkipTest("matplotlib not installed")
+
+
+def _not_has_matplotlib():
+    """Return whether matplotib is available or not."""
+    try:
+        import matplotlib  # noqa
+    except ImportError:
+        return True
+    return False

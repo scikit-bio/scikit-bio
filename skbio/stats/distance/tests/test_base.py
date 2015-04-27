@@ -23,7 +23,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
-from skbio.util import _skip_if_no_matplotlib
+from skbio.util import _not_has_matplotlib
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -275,8 +275,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             self.dm_3x3.filter([])
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_default(self):
-        _skip_if_no_matplotlib()
         import matplotlib as mpl
 
         fig = self.dm_1x1.plot()
@@ -294,8 +294,8 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['a'])
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_no_default(self):
-        _skip_if_no_matplotlib()
         import matplotlib as mpl
 
         ids = ['0', 'one', '2', 'three', '4.000']
@@ -317,15 +317,15 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ['0', 'one', '2', 'three', '4.000'])
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_repr_png(self):
-        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         obs = dm._repr_png_()
         self.assertIsInstance(obs, binary_type)
         self.assertTrue(len(obs) > 0)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_repr_svg(self):
-        _skip_if_no_matplotlib()
         obs = self.dm_1x1._repr_svg_()
         # print_figure(format='svg') can return text or bytes depending on the
         # version of IPython
@@ -333,13 +333,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                         isinstance(obs, binary_type))
         self.assertTrue(len(obs) > 0)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_png(self):
-        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         self.assertIsInstance(dm.png, Image)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_svg(self):
-        _skip_if_no_matplotlib()
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
 

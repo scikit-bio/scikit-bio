@@ -23,7 +23,7 @@ from skbio import DistanceMatrix
 from skbio.stats.ordination import (
     CA, RDA, CCA, PCoA, OrdinationResults, corr, mean_and_std,
     assert_ordination_results_equal)
-from skbio.util import get_data_path, _skip_if_no_matplotlib
+from skbio.util import get_data_path, _not_has_matplotlib
 
 
 def normalize_signs(arr1, arr2):
@@ -719,28 +719,28 @@ class TestOrdinationResults(unittest.TestCase):
         npt.assert_equal(ax.get_ylabel(), exp_ylabel)
         npt.assert_equal(ax.get_zlabel(), exp_zlabel)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_no_metadata(self):
-        _skip_if_no_matplotlib()
         fig = self.min_ord_results.plot()
         self.check_basic_figure_sanity(fig, 1, '', False, '0', '1', '2')
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_with_numeric_metadata_and_plot_options(self):
-        _skip_if_no_matplotlib()
         fig = self.min_ord_results.plot(
             self.df, 'numeric', axes=(1, 0, 2),
             axis_labels=['PC 2', 'PC 1', 'PC 3'], title='a title', cmap='Reds')
         self.check_basic_figure_sanity(
             fig, 2, 'a title', False, 'PC 2', 'PC 1', 'PC 3')
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_with_categorical_metadata_and_plot_options(self):
-        _skip_if_no_matplotlib()
         fig = self.min_ord_results.plot(
             self.df, 'categorical', axes=[2, 0, 1], title='a title',
             cmap='Accent')
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_with_invalid_axis_labels(self):
-        _skip_if_no_matplotlib()
         with assert_raises_regexp(ValueError, 'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
                                       axis_labels=('a', 'b', 'c', 'd'))
@@ -751,8 +751,8 @@ class TestOrdinationResults(unittest.TestCase):
         self.min_ord_results._validate_plot_axes(self.min_ord_results.site.T,
                                                  (1, 2, 0))
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_validate_plot_axes_invalid_input(self):
-        _skip_if_no_matplotlib()
         # not enough dimensions
         with assert_raises_regexp(ValueError, '2 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
@@ -777,8 +777,8 @@ class TestOrdinationResults(unittest.TestCase):
         with assert_raises_regexp(ValueError, 'axes\[2\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_get_plot_point_colors_invalid_input(self):
-        _skip_if_no_matplotlib()
         # column provided without df
         with npt.assert_raises(ValueError):
             self.min_ord_results._get_plot_point_colors(None, 'numeric',
@@ -804,14 +804,14 @@ class TestOrdinationResults(unittest.TestCase):
             self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
                                                         ['B', 'C', 'A'], 'jet')
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_get_plot_point_colors_no_df_or_column(self):
-        _skip_if_no_matplotlib()
         obs = self.min_ord_results._get_plot_point_colors(None, None,
                                                           ['B', 'C'], 'jet')
         npt.assert_equal(obs, (None, None))
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_get_plot_point_colors_numeric_column(self):
-        _skip_if_no_matplotlib()
         # subset of the ids in df
         exp = [0.0, -4.2, 42.0]
         obs = self.min_ord_results._get_plot_point_colors(
@@ -826,8 +826,8 @@ class TestOrdinationResults(unittest.TestCase):
         npt.assert_almost_equal(obs[0], exp)
         assert_true(obs[1] is None)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_get_plot_point_colors_categorical_column(self):
-        _skip_if_no_matplotlib()
         # subset of the ids in df
         exp_colors = [[0., 0., 0.5, 1.], [0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
         exp_color_dict = {
@@ -848,8 +848,8 @@ class TestOrdinationResults(unittest.TestCase):
         # should get same color dict as before
         npt.assert_equal(obs[1], exp_color_dict)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_plot_categorical_legend(self):
-        _skip_if_no_matplotlib()
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D  # noqa
 
@@ -875,26 +875,26 @@ class TestOrdinationResults(unittest.TestCase):
         colors = [l.get_color() for l in legend.get_lines()]
         npt.assert_equal(sorted(colors), ['green', 'red'])
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_repr_png(self):
-        _skip_if_no_matplotlib()
         obs = self.min_ord_results._repr_png_()
         assert_is_instance(obs, binary_type)
         assert_true(len(obs) > 0)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_repr_svg(self):
-        _skip_if_no_matplotlib()
         obs = self.min_ord_results._repr_svg_()
         # print_figure(format='svg') can return text or bytes depending on the
         # version of IPython
         assert_true(isinstance(obs, text_type) or isinstance(obs, binary_type))
         assert_true(len(obs) > 0)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_png(self):
-        _skip_if_no_matplotlib()
         assert_is_instance(self.min_ord_results.png, Image)
 
+    @npt.decorators.skipif(_not_has_matplotlib)
     def test_svg(self):
-        _skip_if_no_matplotlib()
         assert_is_instance(self.min_ord_results.svg, SVG)
 
 
