@@ -2651,13 +2651,10 @@ class TreeNode(SkbioObject):
 
     def bifurcate(self, remove_singles=True):
         """ Restructures tree into a bifurcating tree
-
         All nodes that have more than 2 children will
         have additional intermediate nodes injected to ensure that
         every node has only 2 children
-
         Also, any nodes that have a single child will be collapsed
-
         Parameters
         ----------
         remove_singles : bool, optional
@@ -2695,7 +2692,6 @@ class TreeNode(SkbioObject):
                     intermediate.children = stack
                     intermediate.parent = curnode
                     curnode = intermediate
-        self.assign_ids()
 
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
