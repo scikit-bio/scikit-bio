@@ -13,6 +13,10 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 try:
+    # If matplotlib is not installed, we still want to go through the
+    # test classes and methods, which will be then skipped if they
+    # need matplotlib. Importing it once on top is nicer than
+    # repeating the import inside most methods.
     import matplotlib.pyplot as plt
 except ImportError:
     pass
