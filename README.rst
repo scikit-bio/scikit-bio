@@ -44,7 +44,7 @@ Some of the projects that we know of that are using scikit-bio are:
 - `QIIME <http://qiime.org/>`__
 - `Emperor <http://biocore.github.io/emperor/>`__
 - `An Introduction to Applied
-  Bioinformatics <http://applied-bioinformatics.org>`__
+  Bioinformatics <http://readIAB.org>`__
 - `tax2tree <https://github.com/biocore/tax2tree>`__
 - `Qiita <http://qiita.microbio.me>`__
 - `ghost-tree <https://github.com/JTFouquier/ghost-tree>`__
