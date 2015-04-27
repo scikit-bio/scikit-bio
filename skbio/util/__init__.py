@@ -66,13 +66,11 @@ from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
-from ._testing import (get_data_path, _skip_if_no_matplotlib,
-                       _not_has_matplotlib, TestRunner)
+from ._testing import get_data_path, _not_has_matplotlib, TestRunner
 
 __all__ = ['EfficiencyWarning', 'TestingUtilError',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', '_skip_if_no_matplotlib',
-           '_not_has_matplotlib']
+           'get_data_path', 'TestRunner', '_not_has_matplotlib']
 
 test = TestRunner(__file__).test

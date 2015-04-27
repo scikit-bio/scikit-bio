@@ -96,15 +96,6 @@ def get_data_path(fn, subfolder='data'):
     return data_path
 
 
-def _skip_if_no_matplotlib():
-    """Skip rest of a test if matplotlib is not available."""
-    try:
-        import matplotlib  # noqa
-    except ImportError:
-        import nose
-        raise nose.SkipTest("matplotlib not installed")
-
-
 def _not_has_matplotlib():
     """Return whether matplotib is available or not."""
     try:
