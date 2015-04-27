@@ -48,6 +48,7 @@ Some of the projects that we know of that are using scikit-bio are:
 - `tax2tree <https://github.com/biocore/tax2tree>`__
 - `Qiita <http://qiita.microbio.me>`__
 - `ghost-tree <https://github.com/JTFouquier/ghost-tree>`__
+- `Platypus-Conquistador <https://github.com/biocore/Platypus-Conquistador>`__
 
 If you're using scikit-bio in your own projects, feel free to issue a pull request to add them to this list.
 
