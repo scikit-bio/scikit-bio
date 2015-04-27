@@ -17,7 +17,7 @@ Common functionality to support testing in skbio.
    :toctree: generated/
 
    get_data_path
-   _skip_if_no_matplotlib
+   _not_has_matplotlib
    TestRunner
 
 Miscellaneous functionality
