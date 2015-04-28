@@ -2650,11 +2650,13 @@ class TreeNode(SkbioObject):
         return dist_f(self_matrix, other_matrix)
 
     def bifurcate(self, remove_singles=True):
-        """ Restructures tree into a bifurcating tree
+        r""" Restructures tree into a bifurcating tree
+
         All nodes that have more than 2 children will
         have additional intermediate nodes injected to ensure that
         every node has only 2 children
         Also, any nodes that have a single child will be collapsed
+
         Parameters
         ----------
         remove_singles : bool, optional
@@ -2670,6 +2672,7 @@ class TreeNode(SkbioObject):
         >>> str(tree)
         ((h,(g,(a,b)))c,(d,e)f)root;
         <BLANKLINE>
+
         """
         for n in self.traverse(include_self=True):
             if n.is_tip():
