@@ -2669,7 +2669,7 @@ class TreeNode(SkbioObject):
         >>> from six import StringIO
         >>> tree = TreeNode.read(StringIO("((a,b,g,h)c,(d,e)f)root;"))
         >>> tree.bifurcate()
-        >>> str(tree)
+        >>> print(tree)
         ((h,(g,(a,b)))c,(d,e)f)root;
         <BLANKLINE>
 
