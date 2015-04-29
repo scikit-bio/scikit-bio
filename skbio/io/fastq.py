@@ -296,32 +296,28 @@ def _fastq_sniffer(fh):
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
     # SKip any blank or whitespace-only lines at beginning of file
-    seq_header = ''
-    for line in _line_generator(fh):
-        seq_header = line
-        if seq_header:
-            break
+    seq_header = next(_line_generator(fh, skip_blanks=True))
 
-    if seq_header:
-        if not seq_header.startswith('@'):
+    if not seq_header.startswith('@'):
+        raise FASTQFormatError(
+            "Expected sequence (@) header line at start of file: %r"
+            % seq_header)
+
+    while seq_header is not None:
+        id_, desc = _parse_fasta_like_header(seq_header)
+        seq, qual_header = _parse_sequence_data(fh, seq_header)
+
+        if qual_header != '+' and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
-                "Expected sequence (@) header line at start of file: %r"
-                % seq_header)
+                "Sequence (@) and quality (+) header lines do not match: "
+                "%r != %r" % (seq_header[1:], qual_header[1:]))
 
-        while seq_header is not None:
-            id_, desc = _parse_fasta_like_header(seq_header)
-            seq, qual_header = _parse_sequence_data(fh)
-
-            if qual_header != '+' and qual_header[1:] != seq_header[1:]:
-                raise FASTQFormatError(
-                    "Sequence (@) and quality (+) header lines do not match: "
-                    "%r != %r" % (seq_header[1:], qual_header[1:]))
-
-            phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
-                                                             variant,
-                                                             phred_offset)
-            yield constructor(seq, id=id_, description=desc,
-                              quality=phred_scores)
+        phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
+                                                         variant,
+                                                         phred_offset,
+                                                         qual_header)
+        yield constructor(seq, id=id_, description=desc,
+                          quality=phred_scores)
 
 
 @register_reader('fastq', BiologicalSequence)
@@ -471,9 +467,8 @@ def _blank_error(unique_text):
     raise FASTQFormatError(error_string)
 
 
-def _parse_sequence_data(fh):
+def _parse_sequence_data(fh, prev):
     seq_chunks = []
-    prev = '@'
     for chunk in _line_generator(fh):
         if chunk.startswith('+'):
             if not prev:
@@ -499,10 +494,9 @@ def _parse_sequence_data(fh):
         "Found incomplete/truncated FASTQ record at end of file.")
 
 
-def _parse_quality_scores(fh, seq_len, variant, phred_offset):
+def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
     phred_scores = []
     qual_len = 0
-    prev = '+'
     for chunk in _line_generator(fh):
         if chunk:
             if chunk.startswith('@') and qual_len == seq_len:

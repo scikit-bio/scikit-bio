@@ -188,10 +188,11 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         yield header, seq.sequence, seq.quality
 
 
-def _line_generator(fh):
+def _line_generator(fh, skip_blanks=False):
     for line in fh:
         line = line.strip()
-        yield line
+        if line or not skip_blanks:
+            yield line
 
 
 def _count_blank_lines(fh):

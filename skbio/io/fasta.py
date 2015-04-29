@@ -787,41 +787,36 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     """
 
     # Skip any blank or whitespace-only lines at beginning of file
-    seq_header = ''
+    seq_header = next(_line_generator(fh, skip_blanks=True))
+
+    # header check inlined here and below for performance
+    if seq_header.startswith('>'):
+        id_, desc = _parse_fasta_like_header(seq_header)
+    else:
+        raise FASTAFormatError(
+            "Found line without a header in %s-formatted file:\n%s" %
+            (format_label, seq_header))
+
+    data_chunks = []
+    prev = seq_header
     for line in _line_generator(fh):
-        seq_header = line
-        if seq_header:
-            break
-
-    if seq_header:
-        # header check inlined here and below for performance
-        if seq_header.startswith('>'):
-            id_, desc = _parse_fasta_like_header(seq_header)
+        if line.startswith('>'):
+            # new header, so yield current record and reset state
+            yield data_parser(data_chunks), id_, desc
+            data_chunks = []
+            id_, desc = _parse_fasta_like_header(line)
         else:
-            raise FASTAFormatError(
-                "Found line without a header in %s-formatted file:\n%s" %
-                (format_label, seq_header))
-
-        data_chunks = []
-        prev = seq_header
-        for line in _line_generator(fh):
-            if line.startswith('>'):
-                # new header, so yield current record and reset state
-                yield data_parser(data_chunks), id_, desc
-                data_chunks = []
-                id_, desc = _parse_fasta_like_header(line)
-            else:
-                if line:
-                    # ensure no blank lines within a single record
-                    if not prev:
-                        raise FASTAFormatError(
-                            "Found blank or whitespace-only line within %s "
-                            "record"
-                            % format_label)
-                    data_chunks.append(line)
-            prev = line
-        # yield last record in file
-        yield data_parser(data_chunks), id_, desc
+            if line:
+                # ensure no blank lines within a single record
+                if not prev:
+                    raise FASTAFormatError(
+                        "Found blank or whitespace-only line within %s "
+                        "record"
+                        % format_label)
+                data_chunks.append(line)
+        prev = line
+    # yield last record in file
+    yield data_parser(data_chunks), id_, desc
 
 
 def _parse_sequence_data(chunks):
