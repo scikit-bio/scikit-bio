@@ -75,7 +75,8 @@ class PhredDecoderTests(unittest.TestCase):
         self.assertIn("'illumina'", str(cm.exception))
 
     def test_empty_qual_str(self):
-        npt.assert_equal(_decode_qual_to_phred('', variant='sanger'), np.array([], dtype=np.uint8))
+        npt.assert_equal(_decode_qual_to_phred('', variant='sanger'),
+                         np.array([], dtype=np.uint8))
 
     def test_sanger_variant(self):
         # test entire range of possible ascii chars for sanger
