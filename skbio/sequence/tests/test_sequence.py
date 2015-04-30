@@ -686,12 +686,10 @@ class SequenceTests(TestCase):
 
 
     def test_str(self):
-        self.assertEqual(str(self.b1), "GATTACA")
-        self.assertEqual(str(self.b2), "ACCGGTACC")
-        self.assertEqual(str(self.b3), "GREG")
-
-#    def test_gap_chars(self):
-#        self.assertEqual(self.b1.gap_chars, set('-.'))
+        self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
+        self.assertEqual(str(Sequence("ACCGGTACC")), "ACCGGTACC")
+        self.assertEqual(str(Sequence("GREG")), "GREG")
+        self.assertEqual(str(Sequence("ABC", quality=[1, 2, 3])), "ABC")
 
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
