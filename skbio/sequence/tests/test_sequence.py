@@ -27,29 +27,60 @@ from skbio.util._testing import IDValidationTests
 with hooks():
     from itertools import zip_longest
 
+class SequenceTests(TestCase):
 
-# Interface Tests
-class SequenceInterfaceTests(object):
-    def test_property_id(self):
-        pass
+    def setUp(self):
+        self.b1 = Sequence('GATTACA', quality=range(7))
+        self.b2 = Sequence(
+            'ACCGGTACC', id="test-seq-2",
+            description="A test sequence")
+        self.b3 = Sequence(
+            'GREG', id="test-seq-3", description="A protein sequence")
+        self.b4 = Sequence(
+            'PRTEIN', id="test-seq-4")
+        self.b5 = Sequence(
+            'LLPRTEIN', description="some description")
+        self.b6 = Sequence('ACGTACGTACGT')
+        self.b7 = Sequence('..--..', quality=range(6))
+        self.b8 = Sequence('HE..--..LLO', id='hello',
+                                     description='gapped hello',
+                                     quality=range(11))
 
-    def test_property_sequence(self):
-        pass
+    def test_init_varied_input(self):
+        # init as string
+        b = Sequence('ACCGGXZY')
+        self.assertEqual(str(b), 'ACCGGXZY')
+        self.assertEqual(b.id, "")
+        self.assertEqual(b.description, "")
 
-    def test_property_description(self):
-        pass
+        # init as string with optional values
+        b = Sequence(
+            'ACCGGXZY', 'test-seq-1', 'The first test sequence')
+        self.assertEqual(str(b), 'ACCGGXZY')
+        self.assertEqual(b.id, "test-seq-1")
+        self.assertEqual(b.description, "The first test sequence")
 
-    def test_property_quality(self):
-        pass
+        # test init as a different string
+        b = Sequence('WRRTY')
+        self.assertEqual(str(b), 'WRRTY')
 
-    def test___contains__(self):
-        pass
+    def test_init_with_invalid_quality(self):
+        # invalid dtype
+        with self.assertRaises(TypeError):
+            Sequence('ACGT', quality=[2, 3, 4.1, 5])
 
-    def test___eq__(self):
-        pass
+        # wrong number of dimensions (2-D)
+        with self.assertRaisesRegexp(SequenceError, '1-D'):
+            Sequence('ACGT', quality=[[2, 3], [4, 5]])
 
-    def test___ne__(self):
-        pass
+        # wrong number of elements
+        with self.assertRaisesRegexp(SequenceError, '\(3\).*\(4\)'):
+            Sequence('ACGT', quality=[2, 3, 4])
+
+        # negatives
+        with self.assertRaisesRegexp(SequenceError,
+                                     'quality scores.*greater than.*zero'):
+            Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def _generate_valid_slices(self, length):
         """Helper function used for getitem tests."""
@@ -68,8 +99,8 @@ class SequenceInterfaceTests(object):
     def _getitem_compenents(self):
         """Return the Class, a string, a quality array, and the length"""
         # Get our class and sample string
-        Seq = self.cls
-        string = self.sample_sequence
+        Seq = Sequence
+        string = "This is a sample sequence."
         # This will make an arbitrary numpy int array of correct length
         qual = np.fromstring(string, dtype=np.uint8)
         max_range = len(string)
@@ -150,7 +181,7 @@ class SequenceInterfaceTests(object):
         no_qual = Seq(string, id='idq', description='no_qual')
 
         # Create an arbitrary mask, will be True, False, False repeated.
-        np_mask = np.bincount(list(range(0, len(self.sample_sequence),
+        np_mask = np.bincount(list(range(0, len(string),
                                          3))).astype(np.bool)
         py_mask = list(np_mask)
 
@@ -235,287 +266,6 @@ class SequenceInterfaceTests(object):
         with self.assertRaises(Exception):
             seq[100 * [True, False, True]]
 
-    def test___hash__(self):
-        pass
-
-    def test___iter__(self):
-        pass
-
-    def test___len__(self):
-        pass
-
-    def test___repr__(self):
-        pass
-
-    def test___reversed__(self):
-        pass
-
-    def test___str__(self):
-        pass
-
-    def test_to(self):
-        pass
-
-    def test_count(self):
-        pass
-
-    def test_distance(self):
-        pass
-
-    def test_equals(self):
-        pass
-
-    def test_hamming(self):
-        pass
-
-    def test_index(self):
-        pass
-
-    def test_rindex(self):
-        pass
-
-    def test_kmers(self):
-        pass
-
-    def test_kmers_counts(self):
-        pass
-
-    def test_iregex(self):
-        pass
-
-    def test_startswith(self):
-        pass
-
-    def test_endswith(self):
-        pass
-
-    def test_find(self):
-        pass
-
-    def test_rfind(self):
-        pass
-
-    def test_replace(self):
-        pass
-
-    def test_split(self):
-        pass
-
-    def test_rsplit(self):
-        pass
-
-    def test_reverse(self):
-        pass
-
-
-class IUPACSequenceInterfaceTests(SequenceInterfaceTests):
-    def test___str__(self):
-        seq = ''.join(self.cls.alphabet).lower() \
-            + ''.join(self.cls.alphabet).upper()
-        # IUPAC sequences are uppercase
-        self.assertEqual(seq.upper(), str(self.cls(seq, case_insensitive=True)))
-
-    def test_degap(self):
-        pass
-
-    def test_gaps(self):
-        pass
-
-    def test_has_gaps(self):
-        pass
-
-    def test_expand_degenerates(self):
-        pass
-
-    def test_split_gaps(self):
-        pass
-
-    def test_has_degenerates(self):
-        pass
-
-class NucleotideInterfaceTests(IUPACSequenceInterfaceTests):
-    def test_property_rc(self):
-        pass
-
-    def test_complement(self):
-        pass
-
-    def test_find_features(self):
-        pass
-
-    def test_gc_content(self):
-        pass
-
-    def test_translate(self):
-        pass
-
-
-# Concrete Tests
-class TestSequence(SequenceInterfaceTests, IDValidationTests, TestCase):
-    def setUp(self):
-        self.cls = Sequence
-        self.sample_sequence = "This is a sample sequence."
-
-        # These are defined for IDValidationTests
-        self.id_cls = Sequence
-        self.id_kwargs = {'sequence':'A'}
-
-
-    def test___init__(self):
-        pass
-
-
-class TestProtein(IUPACSequenceInterfaceTests, IDValidationTests, TestCase):
-    def setUp(self):
-        self.cls = Protein
-        self.sample_sequence = ''.join(Protein.alphabet)
-
-        # These are defined for IDValidationTests
-        self.id_cls = Protein
-        self.id_kwargs = {'sequence':'A'}
-
-
-    def test_property_alphabet(self):
-        pass
-
-    def test_property_gap_chars(self):
-        pass
-
-    def test_property_nondegenerate_chars(self):
-        pass
-
-    def test_property_degenerate_chars(self):
-        pass
-
-    def test_property_degenerate_map(self):
-        pass
-
-    def test___init__(self):
-        pass
-
-
-class TestDNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
-    def setUp(self):
-        self.cls = DNA
-        self.sample_sequence = ''.join(DNA.alphabet)
-
-        # These are defined for IDValidationTests
-        self.id_cls = DNA
-        self.id_kwargs = {'sequence':'A'}
-
-
-    def test_property_alphabet(self):
-        pass
-
-    def test_property_gap_chars(self):
-        pass
-
-    def test_property_nondegenerate_chars(self):
-        pass
-
-    def test_property_degenerate_chars(self):
-        pass
-
-    def test_property_degenerate_map(self):
-        pass
-
-    def test_property_complement_map(self):
-        pass
-
-    def test_transcribe(self):
-        pass
-
-    def test___init__(self):
-        pass
-
-
-class TestRNA(NucleotideInterfaceTests, IDValidationTests, TestCase):
-    def setUp(self):
-        self.cls = RNA
-        self.sample_sequence = ''.join(RNA.alphabet)
-
-        # These are defined for IDValidationTests
-        self.id_cls = RNA
-        self.id_kwargs = {'sequence':'A'}
-
-    def test_property_alphabet(self):
-        pass
-
-    def test_property_gap_chars(self):
-        pass
-
-    def test_property_nondegenerate_chars(self):
-        pass
-
-    def test_property_degenerate_chars(self):
-        pass
-
-    def test_property_degenerate_map(self):
-        pass
-
-    def test_property_complement_map(self):
-        pass
-
-    def test_reverse_transcribe(self):
-        pass
-
-    def test___init__(self):
-        pass
-
-class SequenceTests(TestCase):
-
-    def setUp(self):
-        self.b1 = Sequence('GATTACA', quality=range(7))
-        self.b2 = Sequence(
-            'ACCGGTACC', id="test-seq-2",
-            description="A test sequence")
-        self.b3 = Sequence(
-            'GREG', id="test-seq-3", description="A protein sequence")
-        self.b4 = Sequence(
-            'PRTEIN', id="test-seq-4")
-        self.b5 = Sequence(
-            'LLPRTEIN', description="some description")
-        self.b6 = Sequence('ACGTACGTACGT')
-        self.b7 = Sequence('..--..', quality=range(6))
-        self.b8 = Sequence('HE..--..LLO', id='hello',
-                                     description='gapped hello',
-                                     quality=range(11))
-
-    def test_init_varied_input(self):
-        # init as string
-        b = Sequence('ACCGGXZY')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
-
-        # init as string with optional values
-        b = Sequence(
-            'ACCGGXZY', 'test-seq-1', 'The first test sequence')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "test-seq-1")
-        self.assertEqual(b.description, "The first test sequence")
-
-        # test init as a different string
-        b = Sequence('WRRTY')
-        self.assertEqual(str(b), 'WRRTY')
-
-    def test_init_with_invalid_quality(self):
-        # invalid dtype
-        with self.assertRaises(TypeError):
-            Sequence('ACGT', quality=[2, 3, 4.1, 5])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaisesRegexp(SequenceError, '1-D'):
-            Sequence('ACGT', quality=[[2, 3], [4, 5]])
-
-        # wrong number of elements
-        with self.assertRaisesRegexp(SequenceError, '\(3\).*\(4\)'):
-            Sequence('ACGT', quality=[2, 3, 4])
-
-        # negatives
-        with self.assertRaisesRegexp(SequenceError,
-                                     'quality scores.*greater than.*zero'):
-            Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
