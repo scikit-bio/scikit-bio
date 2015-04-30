@@ -84,6 +84,22 @@ class SequenceTests(TestCase):
             Sequence(seq, id='abc', description='123', quality=[42] * 4),
             Sequence('ACGT', id='abc', description='123', quality=[42] * 4))
 
+        # subclasses work too
+        seq = DNA('ACGT', id='foo', description='bar baz', quality=range(4))
+        self.assertEqual(
+            Sequence(seq),
+            Sequence('ACGT', id='foo', description='bar baz',
+                     quality=range(4)))
+
+    def test_init_empty_sequence(self):
+        for s in (b'',  # bytes
+                  u'',  # unicode
+                  np.array('', dtype='c'),  # char vector
+                  np.fromstring('', dtype=np.uint8),  # byte vec
+                  Sequence('')):  # another Sequence object
+            seq = Sequence(s)
+            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
+
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
         with self.assertRaises(TypeError):
@@ -109,6 +125,10 @@ class SequenceTests(TestCase):
             Sequence(42)
         with self.assertRaisesRegexp(TypeError, 'float'):
             Sequence(4.2)
+        with self.assertRaisesRegexp(TypeError, 'Foo'):
+            class Foo(object):
+                pass
+            Sequence(Foo())
 
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
