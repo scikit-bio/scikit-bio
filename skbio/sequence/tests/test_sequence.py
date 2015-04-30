@@ -28,7 +28,6 @@ with hooks():
     from itertools import zip_longest
 
 class SequenceTests(TestCase):
-
     def setUp(self):
         self.b1 = Sequence('GATTACA', quality=range(7))
         self.b2 = Sequence(
@@ -63,6 +62,34 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
 
+    def test_init_invalid_id(self):
+        with self.assertRaises(TypeError):
+            Sequence('abc', id=('f', 'o', 'o'))
+
+    def test_init_invalid_description(self):
+        with self.assertRaises(TypeError):
+            Sequence('abc', description=('f', 'o', 'o'))
+
+    def test_init_invalid_quality(self):
+        # invalid dtype
+        with self.assertRaises(TypeError):
+            Sequence('ACGT', quality=[2, 3, 4.1, 5])
+        with self.assertRaises(TypeError):
+            Sequence('ACGT', quality=[2, np.nan, 4, 5])
+
+        # wrong number of dimensions
+        with self.assertRaisesRegexp(ValueError, '2.*1-D'):
+            Sequence('ACGT', quality=[[2, 3], [4, 5]])
+
+        # wrong number of elements
+        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+            Sequence('ACGT', quality=[2, 3, 4])
+
+        # negatives
+        with self.assertRaisesRegexp(ValueError,
+                                     'Quality scores.*greater than.*zero'):
+            Sequence('ACGT', quality=[2, 3, -1, 4])
+
     def test_init_varied_input(self):
         # init as string
         b = Sequence('ACCGGXZY')
@@ -80,24 +107,6 @@ class SequenceTests(TestCase):
         # test init as a different string
         b = Sequence('WRRTY')
         self.assertEqual(str(b), 'WRRTY')
-
-    def test_init_with_invalid_quality(self):
-        # invalid dtype
-        with self.assertRaises(TypeError):
-            Sequence('ACGT', quality=[2, 3, 4.1, 5])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaisesRegexp(SequenceError, '1-D'):
-            Sequence('ACGT', quality=[[2, 3], [4, 5]])
-
-        # wrong number of elements
-        with self.assertRaisesRegexp(SequenceError, '\(3\).*\(4\)'):
-            Sequence('ACGT', quality=[2, 3, 4])
-
-        # negatives
-        with self.assertRaisesRegexp(SequenceError,
-                                     'quality scores.*greater than.*zero'):
-            Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_sequence(self):
         npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))

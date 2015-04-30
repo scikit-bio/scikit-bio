@@ -130,13 +130,14 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(id_, string_types):
             self._id = id_
         else:
-            raise ValueError('ID %r is not valid.' % (id_,))
+            raise TypeError("Sequence ID %r must be a string type." % (id_,))
 
     def _set_description(self, description):
         if isinstance(description, string_types):
             self._description = description
         else:
-            raise ValueError('Description %r is not valid.' % (description,))
+            raise TypeError("Sequence description %r must be a string type." %
+                            (description,))
 
     def _set_sequence(self, sequence):
         """Munge the sequence data into a numpy array."""
@@ -192,16 +193,19 @@ class Sequence(collections.Sequence, SkbioObject):
             quality.flags.writeable = False
 
             if quality.ndim != 1:
-                raise SequenceError(
-                    "Phred quality scores must be 1-D.")
+                raise ValueError(
+                    "Quality scores have %d dimension(s). Quality scores must "
+                    "be 1-D." % quality.ndim)
+
             if len(quality) != len(self):
-                raise SequenceError(
-                    "Number of Phred quality scores (%d) must match the "
-                    "number of characters in the biological sequence (%d)." %
-                    (len(quality), self.sequence.size))
+                raise ValueError(
+                    "Number of quality scores (%d) must match the "
+                    "number of characters in the sequence (%d)." %
+                    (len(quality), len(self)))
+
             if (quality < 0).any():
-                raise SequenceError(
-                    "Phred quality scores must be greater than or equal to "
+                raise ValueError(
+                    "Quality scores must be greater than or equal to "
                     "zero.")
 
         self._quality = quality
