@@ -150,7 +150,10 @@ from skbio.util import TestRunner
 
 from ._exception import (SequenceError, GeneticCodeError,
                          GeneticCodeInitError, InvalidCodonError)
-from ._sequence import (Sequence, Protein, DNA, RNA)
+from ._sequence import Sequence
+from ._protein import Protein
+from ._dna import DNA
+from ._rna import RNA
 from ._genetic_code import GeneticCode, genetic_code
 
 __all__ = ['SequenceError', 'GeneticCodeError',
