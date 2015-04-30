@@ -46,6 +46,23 @@ class SequenceTests(TestCase):
                                      description='gapped hello',
                                      quality=range(11))
 
+    def test_init_default_parameters(self):
+        seq = Sequence('.ABC123xyz-')
+
+        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        self.assertEqual(seq.id, "")
+        self.assertEqual(seq.description, "")
+        self.assertIsNone(seq.quality)
+
+    def test_init_nondefault_parameters(self):
+        seq = Sequence('.ABC123xyz-', id='foo', description='bar baz',
+                       quality=range(11))
+
+        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        self.assertEqual(seq.id, 'foo')
+        self.assertEqual(seq.description, 'bar baz')
+        npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
+
     def test_init_varied_input(self):
         # init as string
         b = Sequence('ACCGGXZY')
@@ -81,6 +98,67 @@ class SequenceTests(TestCase):
         with self.assertRaisesRegexp(SequenceError,
                                      'quality scores.*greater than.*zero'):
             Sequence('ACGT', quality=[2, 3, -1, 4])
+
+    def test_sequence(self):
+        npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
+        npt.assert_array_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
+        npt.assert_array_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
+
+    def test_id(self):
+        self.assertEqual(self.b1.id, "")
+        self.assertEqual(self.b2.id, "test-seq-2")
+        self.assertEqual(self.b3.id, "test-seq-3")
+
+    def test_description(self):
+        self.assertEqual(self.b1.description, "")
+        self.assertEqual(self.b2.description, "A test sequence")
+        self.assertEqual(self.b3.description, "A protein sequence")
+
+    def test_quality(self):
+        a = Sequence('ACA', quality=(22, 22, 1))
+
+        # should get back a read-only numpy array of int dtype
+        self.assertIsInstance(a.quality, np.ndarray)
+        self.assertEqual(a.quality.dtype, np.int)
+        npt.assert_equal(a.quality, np.array((22, 22, 1)))
+
+        # test that we can't mutate the quality scores
+        with self.assertRaises(ValueError):
+            a.quality[1] = 42
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            a.quality = (22, 22, 42)
+
+    def test_quality_not_provided(self):
+        b = Sequence('ACA')
+        self.assertIs(b.quality, None)
+
+    def test_quality_scalar(self):
+        b = Sequence('G', quality=2)
+
+        self.assertIsInstance(b.quality, np.ndarray)
+        self.assertEqual(b.quality.dtype, np.int)
+        self.assertEqual(b.quality.shape, (1,))
+        npt.assert_equal(b.quality, np.array([2]))
+
+    def test_quality_no_copy(self):
+        qual = np.array([22, 22, 1])
+        a = Sequence('ACA', quality=qual)
+        self.assertIs(a.quality, qual)
+
+        with self.assertRaises(ValueError):
+            a.quality[1] = 42
+
+        with self.assertRaises(ValueError):
+            qual[1] = 42
+
+    def test__has_quality(self):
+        a = Sequence('ACA', quality=(5, 4, 67))
+        self.assertTrue(a._has_quality())
+
+        b = Sequence('ACA')
+        self.assertFalse(b._has_quality())
 
     def _generate_valid_slices(self, length):
         """Helper function used for getitem tests."""
@@ -580,68 +658,6 @@ class SequenceTests(TestCase):
 
 #    def test_gap_chars(self):
 #        self.assertEqual(self.b1.gap_chars, set('-.'))
-
-    def test_sequence(self):
-        npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
-        npt.assert_array_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
-        npt.assert_array_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
-
-    def test_id(self):
-        self.assertEqual(self.b1.id, "")
-        self.assertEqual(self.b2.id, "test-seq-2")
-        self.assertEqual(self.b3.id, "test-seq-3")
-
-    def test_description(self):
-        self.assertEqual(self.b1.description, "")
-        self.assertEqual(self.b2.description, "A test sequence")
-        self.assertEqual(self.b3.description, "A protein sequence")
-
-    def test_quality(self):
-        a = Sequence('ACA', quality=(22, 22, 1))
-
-        # should get back a read-only numpy array of int dtype
-        self.assertIsInstance(a.quality, np.ndarray)
-        self.assertEqual(a.quality.dtype, np.int)
-        npt.assert_equal(a.quality, np.array((22, 22, 1)))
-
-        # test that we can't mutate the quality scores
-        with self.assertRaises(ValueError):
-            a.quality[1] = 42
-
-        # test that we can't set the property
-        with self.assertRaises(AttributeError):
-            a.quality = (22, 22, 42)
-
-    def test_quality_not_provided(self):
-        b = Sequence('ACA')
-        self.assertIs(b.quality, None)
-
-    def test_quality_scalar(self):
-        b = Sequence('G', quality=2)
-
-        self.assertIsInstance(b.quality, np.ndarray)
-        self.assertEqual(b.quality.dtype, np.int)
-        self.assertEqual(b.quality.shape, (1,))
-        npt.assert_equal(b.quality, np.array([2]))
-
-
-    def test_quality_no_copy(self):
-        qual = np.array([22, 22, 1])
-        a = Sequence('ACA', quality=qual)
-        self.assertIs(a.quality, qual)
-
-        with self.assertRaises(ValueError):
-            a.quality[1] = 42
-
-        with self.assertRaises(ValueError):
-            qual[1] = 42
-
-    def test__has_quality(self):
-        a = Sequence('ACA', quality=(5, 4, 67))
-        self.assertTrue(a._has_quality())
-
-        b = Sequence('ACA')
-        self.assertFalse(b._has_quality())
 
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
