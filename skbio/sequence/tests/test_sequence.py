@@ -169,6 +169,34 @@ class SequenceTests(TestCase):
         b = Sequence('ACA')
         self.assertFalse(b._has_quality())
 
+    def test_eq_and_ne(self):
+        seq_a = Sequence("A")
+        seq_b = Sequence("B")
+
+        class Subclass(Sequence):
+            pass
+
+        self.assertTrue(seq_a == seq_a)
+        self.assertTrue(Sequence("a") == Sequence("a"))
+        self.assertTrue(Sequence("a", id='b') == Sequence("a", id='b'))
+        self.assertTrue(Sequence("a", id='b', description='c') ==
+                        Sequence("a", id='b', description='c'))
+        self.assertTrue(Sequence("a", id='b', description='c', quality=[1]) ==
+                        Sequence("a", id='b', description='c', quality=[1]))
+
+        self.assertTrue(seq_a != seq_b)
+        self.assertTrue(Sequence("a") != Sequence("b"))
+        self.assertTrue(Sequence("a") != Sequence("a", id='b'))
+        self.assertTrue(Sequence("a", id='c') !=
+                        Sequence("a", id='c', description='t'))
+        self.assertTrue(Sequence("a", quality=[1]) != Sequence("a"))
+        self.assertTrue(Sequence("a", quality=[2]) !=
+                        Sequence("a", quality=[1]))
+        self.assertTrue(Sequence("c", quality=[3]) !=
+                        Sequence("b", quality=[3]))
+        self.assertTrue(Sequence("a", id='b') != Sequence("c", id='b'))
+        self.assertTrue(Subclass("a") != Sequence("a"))
+
     def test_getitem_gives_new_sequence(self):
         seq = Sequence("Sequence string !1@2#3?.,")
         self.assertFalse(seq is seq[:])
@@ -368,98 +396,6 @@ class SequenceTests(TestCase):
     def test_contains(self):
         self.assertTrue('G' in self.b1)
         self.assertFalse('g' in self.b1)
-
-    def test_eq_and_ne(self):
-        self.assertTrue(self.b1 == self.b1)
-        self.assertTrue(self.b2 == self.b2)
-        self.assertTrue(self.b3 == self.b3)
-
-        self.assertTrue(self.b1 != self.b3)
-        self.assertTrue(self.b1 != self.b2)
-        self.assertTrue(self.b2 != self.b3)
-
-        # identicial sequences of the same type are equal, even if they have
-        # different ids, descriptions, and/or quality
-        self.assertTrue(
-            Sequence('ACGT') == Sequence('ACGT'))
-        self.assertTrue(
-            Sequence('ACGT', id='a') !=
-            Sequence('ACGT', id='b'))
-        self.assertTrue(
-            Sequence('ACGT', description='c') !=
-            Sequence('ACGT', description='d'))
-        self.assertTrue(
-            Sequence('ACGT', id='a', description='c') !=
-            Sequence('ACGT', id='b', description='d'))
-        self.assertTrue(
-            Sequence('ACGT', id='a', description='c',
-                               quality=[1, 2, 3, 4]) !=
-            Sequence('ACGT', id='b', description='d',
-                               quality=[5, 6, 7, 8]))
-
-        # different type causes sequences to not be equal
-        self.assertFalse(
-            Sequence('ACGT') == DNA('ACGT'))
-
-    def test_getitem(self):
-        # use equals method to ensure that id, description, and sliced
-        # quality are correctly propagated to the resulting sequence
-        self.assertTrue(self.b1[0].equals(
-            Sequence('G', quality=(0,))))
-
-        self.assertTrue(self.b1[:].equals(
-            Sequence('GATTACA', quality=range(7))))
-
-        self.assertTrue(self.b1[::-1].equals(
-            Sequence('ACATTAG', quality=range(7)[::-1])))
-
-        # test a sequence without quality scores
-        b = Sequence('ACGT', id='foo', description='bar')
-        self.assertTrue(b[2:].equals(
-            Sequence('GT', id='foo', description='bar')))
-        self.assertTrue(b[2].equals(
-            Sequence('G', id='foo', description='bar')))
-
-    def test_getitem_indices(self):
-        # no ordering, repeated items
-        self.assertTrue(self.b1[[3, 5, 4, 0, 5, 0]].equals(
-            Sequence('TCAGCG', quality=(3, 5, 4, 0, 5, 0))))
-
-        # single item
-        self.assertTrue(
-            self.b1[[2]].equals(Sequence('T', quality=(2,))))
-
-        # negatives
-        self.assertTrue(self.b1[[2, -2, 4]].equals(
-            Sequence('TCA', quality=(2, 5, 4))))
-
-        # tuple
-        self.assertTrue(self.b1[1, 2, 3].equals(
-            Sequence('ATT', quality=(1, 2, 3))))
-        self.assertTrue(self.b1[(1, 2, 3)].equals(
-            Sequence('ATT', quality=(1, 2, 3))))
-
-        # test a sequence without quality scores
-        self.assertTrue(self.b2[5, 4, 1].equals(
-            Sequence('TGC', id='test-seq-2',
-                               description='A test sequence')))
-
-    def test_getitem_wrong_type(self):
-        with self.assertRaises(IndexError):
-            self.b1['1']
-
-    def test_getitem_out_of_range(self):
-        # seq with quality
-        with self.assertRaises(IndexError):
-            self.b1[42]
-        with self.assertRaises(IndexError):
-            self.b1[[1, 0, 23, 3]]
-
-        # seq without quality
-        with self.assertRaises(IndexError):
-            self.b2[43]
-        with self.assertRaises(IndexError):
-            self.b2[[2, 3, 22, 1]]
 
     def test_hash(self):
         with self.assertRaises(TypeError):
