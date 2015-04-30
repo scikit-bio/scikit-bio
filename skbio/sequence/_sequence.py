@@ -247,6 +247,12 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(other, string_types):
             return other in self._string
 
+        if isinstance(other, Sequence) and type(other) != type(self):
+            klass = self.__class__.__name__
+            oklass = other.__class__.__name__
+            raise TypeError("'in <%s>' requires string, numpy array, or %s as"
+                            " left operand, not %s" % (klass, klass, oklass))
+
         return Sequence(other)._string in self._string
 
     def __eq__(self, other):

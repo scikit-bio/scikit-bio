@@ -453,9 +453,47 @@ class SequenceTests(TestCase):
         self.assertEqual(len(Sequence("a")), 1)
         self.assertEqual(len(Sequence("abcdef")), 6)
 
-    def test_contains(self):
-        self.assertTrue('G' in self.b1)
-        self.assertFalse('g' in self.b1)
+    def test_contains_simple_str(self):
+        seq = Sequence("#@ACGT,24.13**02")
+        self.assertTrue(',24' in seq)
+        self.assertTrue('*' in seq)
+
+        self.assertFalse("$" in seq)
+        self.assertFalse("AGT" in seq)
+
+    def test_contains_sequence(self):
+        seq = Sequence("#@ACGT,24.13**02")
+        self.assertTrue(Sequence(',24') in seq)
+        self.assertTrue(Sequence('*') in seq)
+
+        self.assertFalse(Sequence("$") in seq)
+        self.assertFalse(Sequence("AGT") in seq)
+
+    def test_contains_numpy_uint(self):
+        seq = Sequence("#@ACGT,24.13**02")
+        self.assertTrue(np.fromstring(',24', dtype=np.uint8) in seq)
+        self.assertTrue(np.fromstring('*', dtype=np.uint8) in seq)
+
+        self.assertFalse(np.fromstring('$', dtype=np.uint8) in seq)
+        self.assertFalse(np.fromstring('AGT', dtype=np.uint8) in seq)
+
+    def test_contains_numpy_s1(self):
+        seq = Sequence("#@ACGT,24.13**02")
+        self.assertTrue(np.fromstring(',24', dtype="|S1") in seq)
+        self.assertTrue(np.fromstring('*', dtype="|S1") in seq)
+
+        self.assertFalse(np.fromstring('$', dtype="|S1") in seq)
+        self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
+
+    def test_contains_sequence_subclass(self):
+        class SequenceSubclass(Sequence):
+            pass
+
+        with self.assertRaises(TypeError):
+            SequenceSubclass("A") in Sequence("AAA")
+
+        self.assertTrue(SequenceSubclass("A").sequence in Sequence("AAA"))
+
 
     def test_hash(self):
         with self.assertRaises(TypeError):
