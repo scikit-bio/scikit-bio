@@ -62,6 +62,30 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
 
+    def test_init_varied_sequence_input_types(self):
+        for s in (b'.ABC\t123  xyz-', # bytes
+                  u'.ABC\t123  xyz-', # unicode
+                  np.array('.ABC\t123  xyz-', dtype='c'), # char vector
+                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8), # byte vec
+                  Sequence('.ABC\t123  xyz-')): # another Sequence object
+            seq = Sequence(s)
+            npt.assert_equal(seq.sequence, np.array('.ABC\t123  xyz-', dtype='c'))
+
+    def test_init_from_sequence_object(self):
+        # just the sequence, no other metadata
+        seq = Sequence('ACGT')
+        self.assertEqual(Sequence(seq), seq)
+
+        # sequence with metadata should have everything propagated
+        seq = Sequence('ACGT', id='foo', description='bar baz',
+                       quality=range(4))
+        self.assertEqual(Sequence(seq), seq)
+
+        # should be able to override metadata
+        self.assertEqual(
+            Sequence(seq, id='abc', description='123', quality=[42] * 4),
+            Sequence('ACGT', id='abc', description='123', quality=[42] * 4))
+
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
         with self.assertRaises(TypeError):
@@ -88,8 +112,9 @@ class SequenceTests(TestCase):
         with self.assertRaisesRegexp(TypeError, 'float'):
             Sequence(4.2)
 
-        # byte overflow
-        #Sequence()
+        # out of ASCII range
+        with self.assertRaises(UnicodeEncodeError):
+            Sequence(u'abc\u1F30')
 
     def test_init_invalid_id(self):
         with self.assertRaises(TypeError):
@@ -118,24 +143,6 @@ class SequenceTests(TestCase):
         with self.assertRaisesRegexp(ValueError,
                                      'Quality scores.*greater than.*zero'):
             Sequence('ACGT', quality=[2, 3, -1, 4])
-
-    def test_init_varied_input(self):
-        # init as string
-        b = Sequence('ACCGGXZY')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "")
-        self.assertEqual(b.description, "")
-
-        # init as string with optional values
-        b = Sequence(
-            'ACCGGXZY', 'test-seq-1', 'The first test sequence')
-        self.assertEqual(str(b), 'ACCGGXZY')
-        self.assertEqual(b.id, "test-seq-1")
-        self.assertEqual(b.description, "The first test sequence")
-
-        # test init as a different string
-        b = Sequence('WRRTY')
-        self.assertEqual(str(b), 'WRRTY')
 
     def test_sequence(self):
         npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
