@@ -144,20 +144,42 @@ class SequenceTests(TestCase):
                                      'Quality scores.*greater than.*zero'):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
-    def test_sequence(self):
-        npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
-        npt.assert_array_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
-        npt.assert_array_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
+    def test_sequence_property(self):
+        npt.assert_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
+        npt.assert_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
+        npt.assert_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
 
-    def test_id(self):
-        self.assertEqual(self.b1.id, "")
-        self.assertEqual(self.b2.id, "test-seq-2")
-        self.assertEqual(self.b3.id, "test-seq-3")
+    def test_id_property(self):
+        self.assertEqual(Sequence('').id, '')
+        self.assertEqual(Sequence('', id=b'abc\ndef').id, b'abc\ndef')
+        self.assertEqual(Sequence('', id=u'abc\ndef').id, u'abc\ndef')
 
-    def test_description(self):
-        self.assertEqual(self.b1.description, "")
-        self.assertEqual(self.b2.description, "A test sequence")
-        self.assertEqual(self.b3.description, "A protein sequence")
+        seq = Sequence('ACGT', id='foo')
+
+        # test that we can't mutate the property
+        with self.assertRaises(TypeError):
+            seq.id[1] = 42
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            seq.id = 'bar'
+
+    def test_description_property(self):
+        self.assertEqual(Sequence('').description, '')
+        self.assertEqual(Sequence('', description=b'abc\ndef').description,
+                         b'abc\ndef')
+        self.assertEqual(Sequence('', description=u'abc\ndef').description,
+                         u'abc\ndef')
+
+        seq = Sequence('ACGT', description='foo')
+
+        # test that we can't mutate the property
+        with self.assertRaises(TypeError):
+            seq.description[1] = 42
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            seq.description = 'bar'
 
     def test_quality_property(self):
         # test various quality input types that should be equivalent
