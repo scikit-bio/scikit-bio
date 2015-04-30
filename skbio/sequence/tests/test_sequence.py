@@ -456,14 +456,40 @@ class SequenceTests(TestCase):
         self.assertNotIsInstance(self.b1, Hashable)
 
     def test_iter_has_quality(self):
-        seq = Sequence("0123456789", id="a", description="b", quality=np.arange(10))
+        tested = False
+        seq = Sequence("0123456789", id="a", description="b",
+                       quality=np.arange(10))
         for i, s in enumerate(seq):
-            self.assertEqual(s, Sequence(str(i), id='a', description='b', quality=[i]))
+            tested = True
+            self.assertEqual(s, Sequence(str(i), id='a', description='b',
+                                         quality=[i]))
+        self.assertTrue(tested)
 
     def test_iter_no_quality(self):
+        tested = False
         seq = Sequence("0123456789", id="a", description="b")
         for i, s in enumerate(seq):
+            tested = True
             self.assertEqual(s, Sequence(str(i), id='a', description='b'))
+        self.assertTrue(tested)
+
+    def test_reversed_has_quality(self):
+        tested = False
+        seq = Sequence("0123456789", id="a", description="b",
+                      quality=np.arange(10))
+        for i, s in enumerate(reversed(seq)):
+            tested = True
+            self.assertEqual(s, Sequence(str(9 - i), id='a', description='b',
+                                         quality=[9 - i]))
+        self.assertTrue(tested)
+
+    def test_reversed_no_quality(self):
+        tested = False
+        seq = Sequence("0123456789", id="a", description="b")
+        for i, s in enumerate(reversed(seq)):
+            tested = True
+            self.assertEqual(s, Sequence(str(9 - i), id='a', description='b'))
+        self.assertTrue(tested)
 
     def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
@@ -646,16 +672,6 @@ class SequenceTests(TestCase):
         # self.assertEqual(repr(self.b6),
         #                  "<Sequence: ACGTACGTAC... (length: 12)>")
 
-    def test_reversed(self):
-        b1_reversed = reversed(self.b1)
-        loop_ran = False
-        for actual, exp_c, exp_q in zip(b1_reversed, "ACATTAG", reversed(range(7))):
-            loop_ran = True
-            expected = Sequence(exp_c, quality=exp_q)
-            self.assertTrue(actual.equals(expected, descriptive=True))
-
-        self.assertTrue(loop_ran)
-        self.assertRaises(StopIteration, lambda: next(b1_reversed))
 
     def test_str(self):
         self.assertEqual(str(self.b1), "GATTACA")
