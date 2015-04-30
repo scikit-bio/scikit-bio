@@ -96,6 +96,7 @@ class Sequence(collections.Sequence, SkbioObject):
     __hash__ = None # TODO revisit hashability when all properties are present
 
     def __init__(self, sequence, id="", description="", quality=None):
+        """4 types to rule them all: char vector, byte vector, Sequence, or string_types"""
         if isinstance(sequence, Sequence):
             if id == "":
                 id = sequence.id
@@ -145,11 +146,13 @@ class Sequence(collections.Sequence, SkbioObject):
         if is_ndarray:
             if np.issubdtype(sequence.dtype, np.uint8):
                 pass
-            elif np.issubdtype(sequence.dtype, '|S1'):
+            elif sequence.dtype == '|S1':
                 sequence = sequence.view(np.uint8)
             else:
-                raise TypeError("Can only create sequence from numpy.ndarray"
-                                " of dtype np.uint8 or '|S1'.")
+                raise TypeError(
+                    "Can only create sequence from numpy.ndarray of dtype "
+                    "np.uint8 or '|S1'. Invalid dtype: %s" %
+                    sequence.dtype)
 
             # numpy doesn't support views of non-contiguous arrays. Since we're
             # making heavy use of views internally, and users may also supply
@@ -165,9 +168,6 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             sequence = np.fromstring(sequence, dtype=np.uint8)
             self._owns_bytes = True
-
-        if sequence.size == 0:
-            raise ValueError("Cannot create empty sequence.")
 
         sequence.flags.writeable = False
 

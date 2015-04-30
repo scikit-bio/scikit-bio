@@ -62,6 +62,35 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
 
+    def test_init_invalid_sequence(self):
+        # invalid dtype (numpy.ndarray input)
+        with self.assertRaises(TypeError):
+            # int64
+            Sequence(np.array([1, 2, 3]))
+        with self.assertRaises(TypeError):
+            # |S21
+            Sequence(np.array([1, "23", 3]))
+        with self.assertRaises(TypeError):
+            # object
+            Sequence(np.array([1, {}, ()]))
+
+        # invalid input type (non-numpy.ndarray input)
+        with self.assertRaisesRegexp(TypeError, 'tuple'):
+            Sequence(('a', 'b', 'c'))
+        with self.assertRaisesRegexp(TypeError, 'list'):
+            Sequence(['a', 'b', 'c'])
+        with self.assertRaisesRegexp(TypeError, 'set'):
+            Sequence({'a', 'b', 'c'})
+        with self.assertRaisesRegexp(TypeError, 'dict'):
+            Sequence({'a': 42, 'b': 43, 'c': 44})
+        with self.assertRaisesRegexp(TypeError, 'int'):
+            Sequence(42)
+        with self.assertRaisesRegexp(TypeError, 'float'):
+            Sequence(4.2)
+
+        # byte overflow
+        #Sequence()
+
     def test_init_invalid_id(self):
         with self.assertRaises(TypeError):
             Sequence('abc', id=('f', 'o', 'o'))
