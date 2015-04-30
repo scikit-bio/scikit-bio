@@ -7,23 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.standard_library import hooks
 
-from re import compile as re_compile
-from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
-from itertools import product, chain
-
-import numpy as np
-import numpy.testing as npt
-from scipy.spatial.distance import euclidean
 
 from skbio import DNA
-from skbio.sequence import SequenceError
-from skbio.util._testing import IDValidationTests
-
-with hooks():
-    from itertools import zip_longest
 
 
 class DNATests(TestCase):
@@ -31,7 +18,7 @@ class DNATests(TestCase):
     def setUp(self):
         self.b1 = DNA('GATTACA')
         self.b2 = DNA('ACCGGTACC', id="test-seq-2",
-                              description="A test sequence", quality=range(9))
+                      description="A test sequence", quality=range(9))
         self.b4 = DNA(
             'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
@@ -120,8 +107,6 @@ class DNATests(TestCase):
 
         self.assertTrue(
             self.b4.is_reverse_complement(DNA('NVHDBMRSWYK')))
-
-
 
     def test_nondegenerates_no_degens(self):
         self.assertEqual(list(self.b1.nondegenerates()), [self.b1])

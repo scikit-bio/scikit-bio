@@ -7,23 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.standard_library import hooks
 
-from re import compile as re_compile
-from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
-from itertools import product, chain
-
-import numpy as np
-import numpy.testing as npt
-from scipy.spatial.distance import euclidean
 
 from skbio import RNA
-from skbio.sequence import SequenceError
-from skbio.util._testing import IDValidationTests
-
-with hooks():
-    from itertools import zip_longest
 
 
 class RNATests(TestCase):
@@ -31,7 +18,7 @@ class RNATests(TestCase):
     def setUp(self):
         self.b1 = RNA('GAUUACA')
         self.b2 = RNA('ACCGGUACC', id="test-seq-2",
-                              description="A test sequence", quality=range(9))
+                      description="A test sequence", quality=range(9))
         self.b4 = RNA(
             'MRWSYKVHDBN', id="degen",
             description="All of the degenerate bases")
@@ -86,12 +73,11 @@ class RNATests(TestCase):
 
         self.assertTrue(self.b2.complement().equals(
             RNA("UGGCCAUGG", id="test-seq-2",
-                        description="A test sequence", quality=range(9))))
-
+                description="A test sequence", quality=range(9))))
 
         self.assertTrue(self.b4.complement().equals(
             RNA("KYWSRMBDHVN", id="degen",
-                        description="All of the degenerate bases")))
+                description="All of the degenerate bases")))
 
         self.assertTrue(self.b5.complement().equals(
             RNA(".C--UAAUG-U...")))
@@ -104,9 +90,8 @@ class RNATests(TestCase):
 
         self.assertTrue(self.b2.reverse_complement().equals(
             RNA("GGUACCGGU", id="test-seq-2",
-                        description="A test sequence",
-                        quality=range(9)[::-1])))
-
+                description="A test sequence",
+                quality=range(9)[::-1])))
 
         self.assertTrue(self.b4.reverse_complement().equals(
             RNA("NVHDBMRSWYK", id="degen",

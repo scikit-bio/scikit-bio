@@ -8,23 +8,18 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
-from future.utils import viewitems, with_metaclass
+from future.utils import viewitems
 from future.standard_library import hooks
 from six import string_types
 
-import re
 import collections
 import numbers
-from abc import ABCMeta, abstractmethod
-from itertools import product
 from contextlib import contextmanager
 
 import numpy as np
 from scipy.spatial.distance import hamming
 
 from skbio._base import SkbioObject
-from skbio.sequence import SequenceError
-from skbio.util import classproperty, overrides
 from skbio.util._misc import reprnator
 
 with hooks():
@@ -93,10 +88,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
     """
     default_write_format = 'fasta'
-    __hash__ = None # TODO revisit hashability when all properties are present
+    __hash__ = None  # TODO revisit hashability when all properties are present
 
     def __init__(self, sequence, id="", description="", quality=None):
-        """4 types to rule them all: char vector, byte vector, Sequence, or string_types"""
+        """4 types to rule them all: char vector, byte vector, Sequence, or
+        string_types"""
         if isinstance(sequence, Sequence):
             if id == "":
                 id = sequence.id
@@ -352,17 +348,22 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         qual = None
-        if not isinstance(indexable, np.ndarray) and ((not isinstance(indexable, string_types)) and hasattr(indexable, '__iter__')):
+        if (not isinstance(indexable, np.ndarray) and
+            ((not isinstance(indexable, string_types)) and
+             hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
             if indexable.dtype == object:
-                indexable = list(indexable_) # TODO: Don't blow out memory if generator
-                seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
+                indexable = list(indexable_)  # TODO: Don't blow out memory
+                seq = np.concatenate(list(self._slices_from_iter(self._bytes,
+                                                                 indexable)))
                 if self._has_quality():
-                    qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
+                    qual = np.concatenate(list(self._slices_from_iter(
+                        self.quality, indexable)))
 
                 return self.to(sequence=seq, quality=qual)
-        elif isinstance(indexable, string_types) or isinstance(indexable, bool):
+        elif isinstance(indexable, string_types) or \
+                isinstance(indexable, bool):
             raise IndexError("Cannot index with that type: %r" % indexable)
 
         seq = self._bytes[indexable]
@@ -827,7 +828,6 @@ class Sequence(collections.Sequence, SkbioObject):
             return False
 
         return True
-
 
     def count(self, subsequence):
         """Returns the number of occurences of subsequence.
