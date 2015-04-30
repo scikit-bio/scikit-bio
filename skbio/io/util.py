@@ -79,7 +79,7 @@ def get_filehandle(filepath_or, *args, **kwargs):
 
             # Replace unsupported U flag in args or kwargs.
             if mode is None or mode in {'U', 'rU'}:
-                mode = 'rt'
+                mode = 'r'
 
             fh = gzip_open(filepath_or, *args, mode=mode, **kwargs)
             own_fh = True
