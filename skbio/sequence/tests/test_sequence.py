@@ -441,6 +441,10 @@ class SequenceTests(TestCase):
         with self.assertRaises(Exception):
             seq[100 * [True, False, True]]
 
+    def test_len(self):
+        self.assertEqual(len(Sequence("")), 0)
+        self.assertEqual(len(Sequence("a")), 1)
+        self.assertEqual(len(Sequence("abcdef")), 6)
 
     def test_contains(self):
         self.assertTrue('G' in self.b1)
@@ -632,11 +636,6 @@ class SequenceTests(TestCase):
         seq = Sequence('AAAAAAAAAA')
         self.assertEqual(seq.kmer_frequencies(1, relative=True),
                          defaultdict(float, {'A': 1.0}))
-
-    def test_len(self):
-        self.assertEqual(len(self.b1), 7)
-        self.assertEqual(len(self.b2), 9)
-        self.assertEqual(len(self.b3), 4)
 
     def test_repr(self):
         pass
