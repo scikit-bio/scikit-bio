@@ -202,7 +202,7 @@ class SequenceTests(TestCase):
         seq_a = Sequence("A")
         seq_b = Sequence("B")
 
-        class Subclass(Sequence):
+        class SequenceSubclass(Sequence):
             pass
 
         self.assertTrue(seq_a == seq_a)
@@ -214,6 +214,7 @@ class SequenceTests(TestCase):
                         Sequence("a", id='b', description='c', quality=[1]))
 
         self.assertTrue(seq_a != seq_b)
+        self.assertTrue(SequenceSubclass("a") != Sequence("a"))
         self.assertTrue(Sequence("a") != Sequence("b"))
         self.assertTrue(Sequence("a") != Sequence("a", id='b'))
         self.assertTrue(Sequence("a", id='c') !=
@@ -224,7 +225,6 @@ class SequenceTests(TestCase):
         self.assertTrue(Sequence("c", quality=[3]) !=
                         Sequence("b", quality=[3]))
         self.assertTrue(Sequence("a", id='b') != Sequence("c", id='b'))
-        self.assertTrue(Subclass("a") != Sequence("a"))
 
     def test_getitem_gives_new_sequence(self):
         seq = Sequence("Sequence string !1@2#3?.,")
@@ -286,6 +286,14 @@ class SequenceTests(TestCase):
         self.assertEquals(seq[length::-2], eseq)
         self.assertEquals(seq[::-2], eseq)
 
+        self.assertEquals(seq[0:500:], seq)
+
+        eseq = Sequence('', id='id3', description='dsc3',
+                        quality=[])
+        self.assertEquals(seq[length:0], eseq)
+        self.assertEquals(seq[-length:0], eseq)
+        self.assertEquals(seq[1:0], eseq)
+
 
         eseq = Sequence("0", id='id3', description='dsc3',
                         quality=[0])
@@ -311,7 +319,7 @@ class SequenceTests(TestCase):
         eseq = Sequence("00000", id='id5', description='dsc5',
                         quality=[0, 0, 0, 0, 0])
         self.assertEquals(seq[0, 0, 0, 0, 0], eseq)
-        self.assertEquals(seq[0, 0:1, 0, -length::-1, 0], eseq)
+        self.assertEquals(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
         self.assertEquals(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
         self.assertEquals(seq[0:1, 0, 0, 0, 0], eseq)
 
@@ -319,7 +327,7 @@ class SequenceTests(TestCase):
                         quality=[0, 1, 2, 3, 15, 14, 13, 9])
         self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
         self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEquals(seq[0:4, :-4:-1, 9, 1:0], eseq)
         self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
 
     def test_getitem_with_tuple_of_mixed_no_qual(self):
@@ -338,6 +346,7 @@ class SequenceTests(TestCase):
 
         def generator():
             yield slice(0, 4)
+            yield slice(200, 400)
             yield slice(None, -4, -1)
             yield 9
 
@@ -350,7 +359,21 @@ class SequenceTests(TestCase):
                           eseq)
 
     def test_getitem_with_iterable_of_mixed_no_qual(self):
-        pass
+        s = "0123456789abcdef"
+        seq = Sequence(s, id='id7', description="dsc7")
+
+        def generator():
+            yield slice(0, 4)
+            yield slice(200, 400)
+            yield slice(None, -4, -1)
+            yield 9
+
+        eseq = Sequence("0123fed9", id='id7', description='dsc7')
+        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEquals(seq[generator()], eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), 9]], eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), slice(9, 10)]],
+                          eseq)
 
     def test_getitem_with_numpy_index_has_qual(self):
         s = "0123456789abcdef"
@@ -412,9 +435,6 @@ class SequenceTests(TestCase):
 
         with self.assertRaises(IndexError):
             seq[0, 0, 99999999999999999]
-
-        with self.assertRaises(ValueError):
-            seq[99999999999999999:2]
 
         # numpy 1.8.1 and 1.9.2 raise different error types
         # (ValueError, IndexError).

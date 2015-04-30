@@ -121,11 +121,20 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
-        self.__chars = self._bytes.view('|S%d' % self._bytes.size)
+        self._refresh_chars()
+
+    def _refresh_chars(self):
+        if self._bytes.size == 0:
+            self.__chars = self._bytes.view('|S1')
+        else:
+            self.__chars = self._bytes.view('|S%d' % self._bytes.size)
 
     @property
     def _string(self):
-        return self.__chars[0]
+        if self.__chars.size == 0:
+            return ''
+        else:
+            return self.__chars[0]
 
     def _set_id(self, id_):
         if isinstance(id_, string_types):
@@ -172,7 +181,7 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
 
         self._bytes = sequence
-        self.__chars = sequence.view('|S%d' % sequence.size)
+        self._refresh_chars()
 
     def _set_quality(self, quality):
         if quality is not None:
@@ -369,10 +378,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 raise IndexError("Cannot slice sequence from iterable "
                                  "containing %r." % i)
 
-            piece = array[i]
-            if piece.size < 1:
-                raise IndexError("Index %r out of range." % i)
-            yield piece
+            yield array[i]
 
     def __iter__(self):
         """The iter operator.
