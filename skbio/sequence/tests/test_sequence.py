@@ -12,20 +12,17 @@ from future.standard_library import hooks
 from re import compile as re_compile
 from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
-from itertools import product, chain
 
 import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import euclidean
 
 from skbio import (
-    Sequence, DNA, RNA,
-    Protein)
-from skbio.sequence import SequenceError
-from skbio.util._testing import IDValidationTests
+    Sequence, DNA, RNA)
 
 with hooks():
     from itertools import zip_longest
+
 
 class SequenceTests(TestCase):
     def setUp(self):
@@ -42,8 +39,8 @@ class SequenceTests(TestCase):
         self.b6 = Sequence('ACGTACGTACGT')
         self.b7 = Sequence('..--..', quality=range(6))
         self.b8 = Sequence('HE..--..LLO', id='hello',
-                                     description='gapped hello',
-                                     quality=range(11))
+                           description='gapped hello',
+                           quality=range(11))
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
@@ -63,13 +60,14 @@ class SequenceTests(TestCase):
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
 
     def test_init_varied_sequence_input_types(self):
-        for s in (b'.ABC\t123  xyz-', # bytes
-                  u'.ABC\t123  xyz-', # unicode
-                  np.array('.ABC\t123  xyz-', dtype='c'), # char vector
-                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8), # byte vec
-                  Sequence('.ABC\t123  xyz-')): # another Sequence object
+        for s in (b'.ABC\t123  xyz-',  # bytes
+                  u'.ABC\t123  xyz-',  # unicode
+                  np.array('.ABC\t123  xyz-', dtype='c'),  # char vector
+                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),  # byte vec
+                  Sequence('.ABC\t123  xyz-')):  # another Sequence object
             seq = Sequence(s)
-            npt.assert_equal(seq.sequence, np.array('.ABC\t123  xyz-', dtype='c'))
+            npt.assert_equal(seq.sequence, np.array('.ABC\t123  xyz-',
+                                                    dtype='c'))
 
     def test_init_from_sequence_object(self):
         # just the sequence, no other metadata
@@ -145,9 +143,11 @@ class SequenceTests(TestCase):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_sequence(self):
-        npt.assert_array_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
-        npt.assert_array_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
-        npt.assert_array_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
+        npt.assert_array_equal(self.b1.sequence,
+                               np.array("GATTACA", dtype='c'))
+        npt.assert_array_equal(self.b2.sequence,
+                               np.array("ACCGGTACC", dtype='c'))
+        npt.assert_array_equal(self.b3.sequence, np.array("GREG", dtype='c'))
 
     def test_id(self):
         self.assertEqual(self.b1.id, "")
@@ -301,7 +301,6 @@ class SequenceTests(TestCase):
         self.assertEquals(seq[-length:0], eseq)
         self.assertEquals(seq[1:0], eseq)
 
-
         eseq = Sequence("0", id='id3', description='dsc3',
                         quality=[0])
         self.assertEquals(seq[0:1], eseq)
@@ -361,9 +360,9 @@ class SequenceTests(TestCase):
                         quality=[0, 1, 2, 3, 15, 14, 13, 9])
         self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
         self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), 9]], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), slice(9, 10)]],
-                          eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEquals(seq[
+            [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_iterable_of_mixed_no_qual(self):
         s = "0123456789abcdef"
@@ -378,9 +377,9 @@ class SequenceTests(TestCase):
         eseq = Sequence("0123fed9", id='id7', description='dsc7')
         self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
         self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), 9]], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), slice(9, 10)]],
-                          eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEquals(seq[
+            [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_numpy_index_has_qual(self):
         s = "0123456789abcdef"
@@ -420,7 +419,7 @@ class SequenceTests(TestCase):
 
     def test_getitem_with_invalid(self):
         seq = Sequence("123456", id='idm', description='description',
-                      quality=[1, 2, 3, 4, 5, 6])
+                       quality=[1, 2, 3, 4, 5, 6])
 
         with self.assertRaises(IndexError):
             seq['not an index']
@@ -498,8 +497,6 @@ class SequenceTests(TestCase):
 
         self.assertTrue(SequenceSubclass("A").sequence in Sequence("AAA"))
 
-
-
     def test_hash(self):
         with self.assertRaises(TypeError):
             hash(self.b1)
@@ -526,7 +523,7 @@ class SequenceTests(TestCase):
     def test_reversed_has_quality(self):
         tested = False
         seq = Sequence("0123456789", id="a", description="b",
-                      quality=np.arange(10))
+                       quality=np.arange(10))
         for i, s in enumerate(reversed(seq)):
             tested = True
             self.assertEqual(s, Sequence(str(9 - i), id='a', description='b',
@@ -635,15 +632,14 @@ class SequenceTests(TestCase):
     def test_kmers_different_sequences(self):
         expected = [
             Sequence('HE.', quality=[0, 1, 2], id='hello',
-                               description='gapped hello'),
+                     description='gapped hello'),
             Sequence('.--', quality=[3, 4, 5], id='hello',
-                               description='gapped hello'),
+                     description='gapped hello'),
             Sequence('..L', quality=[6, 7, 8], id='hello',
-                               description='gapped hello')
+                     description='gapped hello')
         ]
         self._compare_kmers_results(
             self.b8.kmers(3, overlap=False), expected)
-
 
     def test_kmer_frequencies(self):
         # overlap = True
@@ -727,13 +723,12 @@ class SequenceTests(TestCase):
                                         10))
         self.assertEqual(repr(seq_simple), "Sequence('ACGT')[0:4]")
         self.assertEqual(repr(seq_med),
-                        ("Sequence('ACGT', id='id', description='desc', qual"
-                         "ity=[1, 2, 3, 4])[0:4]"))
+                         ("Sequence('ACGT', id='id', description='desc', qual"
+                          "ity=[1, 2, 3, 4])[0:4]"))
         self.assertEqual(repr(seq_complex),
                          ("Sequence('ASDKJH ... @#(*HJ', id='This is a long id"
                           "', description='desc', \n         quality=[1, 2, 3,"
                           " 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])[0:120]"))
-
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
@@ -768,7 +763,7 @@ class SequenceTests(TestCase):
 
     def test_to_update_multiple_attributes(self):
         to = self.b8.to(id='new id', quality=range(20, 25),
-                            sequence='ACGTA', description='new desc')
+                        sequence='ACGTA', description='new desc')
         self.assertFalse(self.b8 is to)
         self.assertFalse(self.b8.equals(to))
 
@@ -781,7 +776,8 @@ class SequenceTests(TestCase):
         # ..and shouldn't have changed on the original sequence
         self.assertEqual(self.b8.id, 'hello')
         npt.assert_array_equal(self.b8.quality, range(11))
-        npt.assert_array_equal(self.b8.sequence, np.array('HE..--..LLO', dtype='c'))
+        npt.assert_array_equal(self.b8.sequence, np.array('HE..--..LLO',
+                                                          dtype='c'))
         self.assertEqual(self.b8.description, 'gapped hello')
 
     def test_to_invalid_kwargs(self):
@@ -812,9 +808,9 @@ class SequenceTests(TestCase):
 
         # all attributes are provided and match
         a = Sequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
+                     quality=[1, 2, 3, 4])
         b = Sequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
+                     quality=[1, 2, 3, 4])
         self.assertTrue(a.equals(b))
 
         # ignore type
@@ -844,18 +840,18 @@ class SequenceTests(TestCase):
 
         # ignore everything
         a = Sequence('ACGA', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
+                     quality=[1, 2, 3, 4])
         b = DNA('ACGT', id='bar', description='def',
-                        quality=[5, 6, 7, 8])
+                quality=[5, 6, 7, 8])
         self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id',
                                             'sequence', 'type']))
 
     def test_equals_false(self):
         # type mismatch
         a = Sequence('ACGT', id='foo', description='abc',
-                               quality=[1, 2, 3, 4])
+                     quality=[1, 2, 3, 4])
         b = DNA('ACGT', id='bar', description='def',
-                        quality=[5, 6, 7, 8])
+                quality=[5, 6, 7, 8])
         self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
 
         # id mismatch

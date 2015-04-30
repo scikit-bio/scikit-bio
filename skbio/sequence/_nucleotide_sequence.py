@@ -7,29 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
-from future.utils import viewitems, with_metaclass
-from future.standard_library import hooks
-from six import string_types
+from future.utils import with_metaclass
 
 import re
-import collections
-import numbers
 from abc import ABCMeta, abstractmethod
-from itertools import product
-from contextlib import contextmanager
 
-import numpy as np
-from scipy.spatial.distance import hamming
-
-from skbio._base import SkbioObject
 from skbio.sequence import SequenceError
-from skbio.util import classproperty, overrides
-from skbio.util._misc import reprnator
+from skbio.util import classproperty
 from ._iupac_sequence import IUPACSequence
-
-with hooks():
-    from itertools import zip_longest
 
 
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):

@@ -7,25 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.standard_library import hooks
 
-from re import compile as re_compile
-from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
-from itertools import product, chain
 
-import numpy as np
-import numpy.testing as npt
-from scipy.spatial.distance import euclidean
 
-from skbio.sequence._nucleotide_sequence import NucleotideSequence
-from skbio.sequence import SequenceError
-from skbio.util._testing import IDValidationTests
+class TestNucelotideSequence(TestCase):
+    pass
 
-with hooks():
-    from itertools import zip_longest
-
-#class NucelotideSequenceTests(TestCase):
+# class NucelotideSequenceTests(TestCase):
 #
 #    def setUp(self):
 #        self.empty = NucleotideSequence('')
@@ -210,8 +199,8 @@ with hooks():
 #        obs = sorted(seq.nondegenerates(), key=str)
 #
 #        for o, e in zip(obs, exp):
-#            # use equals method to ensure that id, description, and quality are
-#            # correctly propagated to the resulting sequence
+#            # use equals method to ensure that id, description, and quality
+#            # are correctly propagated to the resulting sequence
 #            self.assertTrue(o.equals(e))
 
 

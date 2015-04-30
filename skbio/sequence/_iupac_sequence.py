@@ -7,29 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
-from future.utils import viewitems, with_metaclass
-from future.standard_library import hooks
-from six import string_types
+from future.utils import with_metaclass
 
-import re
-import collections
-import numbers
 from abc import ABCMeta, abstractmethod
 from itertools import product
-from contextlib import contextmanager
 
 import numpy as np
-from scipy.spatial.distance import hamming
 
-from skbio._base import SkbioObject
 from skbio.sequence import SequenceError
 from skbio.util import classproperty, overrides
-from skbio.util._misc import reprnator
 from ._sequence import Sequence
-
-with hooks():
-    from itertools import zip_longest
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
@@ -136,7 +123,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         if validate:
             self._validate()
 
-
     def _convert_to_uppercase(self):
         lowercase = self._bytes > self._ascii_lowercase_boundary
         if np.any(lowercase):
@@ -160,8 +146,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             bad = list(np.where(
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
             raise ValueError("Invalid character%s in sequence: %r" %
-                             ('s' if len(bad)>1 else '',
-                              bad if len(bad)>1 else bad[0]))
+                             ('s' if len(bad) > 1 else '',
+                              bad if len(bad) > 1 else bad[0]))
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):
@@ -288,4 +274,5 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         "Sequence contains an invalid character: %s" % char)
 
         result = product(*expansions)
-        return (self.to(sequence=''.join(nondegen_seq)) for nondegen_seq in result)
+        return (self.to(sequence=''.join(nondegen_seq)) for nondegen_seq in
+                result)
