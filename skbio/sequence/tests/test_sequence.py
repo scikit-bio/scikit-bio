@@ -457,6 +457,7 @@ class SequenceTests(TestCase):
         seq = Sequence("#@ACGT,24.13**02")
         self.assertTrue(',24' in seq)
         self.assertTrue('*' in seq)
+        self.assertTrue('' in seq)
 
         self.assertFalse("$" in seq)
         self.assertFalse("AGT" in seq)
@@ -465,6 +466,7 @@ class SequenceTests(TestCase):
         seq = Sequence("#@ACGT,24.13**02")
         self.assertTrue(Sequence(',24') in seq)
         self.assertTrue(Sequence('*') in seq)
+        self.assertTrue(Sequence('') in seq)
 
         self.assertFalse(Sequence("$") in seq)
         self.assertFalse(Sequence("AGT") in seq)
@@ -473,6 +475,7 @@ class SequenceTests(TestCase):
         seq = Sequence("#@ACGT,24.13**02")
         self.assertTrue(np.fromstring(',24', dtype=np.uint8) in seq)
         self.assertTrue(np.fromstring('*', dtype=np.uint8) in seq)
+        self.assertTrue(np.fromstring('', dtype=np.uint8) in seq)
 
         self.assertFalse(np.fromstring('$', dtype=np.uint8) in seq)
         self.assertFalse(np.fromstring('AGT', dtype=np.uint8) in seq)
@@ -481,6 +484,7 @@ class SequenceTests(TestCase):
         seq = Sequence("#@ACGT,24.13**02")
         self.assertTrue(np.fromstring(',24', dtype="|S1") in seq)
         self.assertTrue(np.fromstring('*', dtype="|S1") in seq)
+        self.assertTrue(np.fromstring('', dtype="|S1") in seq)
 
         self.assertFalse(np.fromstring('$', dtype="|S1") in seq)
         self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
@@ -493,6 +497,7 @@ class SequenceTests(TestCase):
             SequenceSubclass("A") in Sequence("AAA")
 
         self.assertTrue(SequenceSubclass("A").sequence in Sequence("AAA"))
+
 
 
     def test_hash(self):
