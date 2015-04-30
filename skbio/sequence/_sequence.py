@@ -407,7 +407,7 @@ class Sequence(collections.Sequence, SkbioObject):
             qual = []
 
         for c, q in zip_longest(self._string, qual, fillvalue=None):
-            yield self._constructor(sequence=c, quality=q)
+            yield self.to(sequence=c, quality=q)
 
     def __len__(self):
         """The len operator.
