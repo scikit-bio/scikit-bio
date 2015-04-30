@@ -455,13 +455,15 @@ class SequenceTests(TestCase):
             hash(self.b1)
         self.assertNotIsInstance(self.b1, Hashable)
 
-    def test_iter(self):
-        b1_iter = iter(self.b1)
-        for actual, exp_c, exp_q in zip(b1_iter, "GATTACA", range(7)):
-            expected = Sequence(exp_c, quality=exp_q)
-            self.assertTrue(actual.equals(expected, descriptive=True))
+    def test_iter_has_quality(self):
+        seq = Sequence("0123456789", id="a", description="b", quality=np.arange(10))
+        for i, s in enumerate(seq):
+            self.assertEqual(s, Sequence(str(i), id='a', description='b', quality=[i]))
 
-        self.assertRaises(StopIteration, lambda: next(b1_iter))
+    def test_iter_no_quality(self):
+        seq = Sequence("0123456789", id="a", description="b")
+        for i, s in enumerate(seq):
+            self.assertEqual(s, Sequence(str(i), id='a', description='b'))
 
     def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
