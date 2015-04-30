@@ -159,51 +159,61 @@ class SequenceTests(TestCase):
         self.assertEqual(self.b2.description, "A test sequence")
         self.assertEqual(self.b3.description, "A protein sequence")
 
-    def test_quality(self):
-        a = Sequence('ACA', quality=(22, 22, 1))
+    def test_quality_property(self):
+        # test various quality input types that should be equivalent
+        for q in ((22, 22, 0),
+                  [22, 22, 0],
+                  np.array([22, 22, 0])):
+            seq = Sequence('ACA', quality=q)
 
-        # should get back a read-only numpy array of int dtype
-        self.assertIsInstance(a.quality, np.ndarray)
-        self.assertEqual(a.quality.dtype, np.int)
-        npt.assert_equal(a.quality, np.array((22, 22, 1)))
+            # should get back a read-only numpy.ndarray of int dtype
+            self.assertIsInstance(seq.quality, np.ndarray)
+            self.assertEqual(seq.quality.dtype, np.int)
+            npt.assert_equal(seq.quality, np.array([22, 22, 0]))
 
-        # test that we can't mutate the quality scores
-        with self.assertRaises(ValueError):
-            a.quality[1] = 42
+            # test that we can't mutate the quality scores
+            with self.assertRaises(ValueError):
+                seq.quality[1] = 42
 
-        # test that we can't set the property
-        with self.assertRaises(AttributeError):
-            a.quality = (22, 22, 42)
+            # test that we can't set the property
+            with self.assertRaises(AttributeError):
+                seq.quality = (22, 22, 42)
 
-    def test_quality_not_provided(self):
-        b = Sequence('ACA')
-        self.assertIs(b.quality, None)
+    def test_quality_property_none(self):
+        seq = Sequence('ACA', quality=None)
+        self.assertIsNone(seq.quality)
 
-    def test_quality_scalar(self):
-        b = Sequence('G', quality=2)
+    def test_quality_property_scalar(self):
+        seq = Sequence('G', quality=2)
 
-        self.assertIsInstance(b.quality, np.ndarray)
-        self.assertEqual(b.quality.dtype, np.int)
-        self.assertEqual(b.quality.shape, (1,))
-        npt.assert_equal(b.quality, np.array([2]))
+        self.assertIsInstance(seq.quality, np.ndarray)
+        self.assertEqual(seq.quality.dtype, np.int)
+        self.assertEqual(seq.quality.shape, (1,))
+        npt.assert_equal(seq.quality, np.array([2]))
 
     def test_quality_no_copy(self):
         qual = np.array([22, 22, 1])
-        a = Sequence('ACA', quality=qual)
-        self.assertIs(a.quality, qual)
+        seq = Sequence('ACA', quality=qual)
+        self.assertIs(seq.quality, qual)
 
         with self.assertRaises(ValueError):
-            a.quality[1] = 42
+            seq.quality[1] = 42
 
         with self.assertRaises(ValueError):
             qual[1] = 42
 
     def test_has_quality(self):
-        a = Sequence('ACA', quality=(5, 4, 67))
-        self.assertTrue(a._has_quality())
+        seq = Sequence('')
+        self.assertFalse(seq._has_quality())
 
-        b = Sequence('ACA')
-        self.assertFalse(b._has_quality())
+        seq = Sequence('', quality=[])
+        self.assertTrue(seq._has_quality())
+
+        seq = Sequence('ACA', quality=(5, 4, 67))
+        self.assertTrue(seq._has_quality())
+
+        seq = Sequence('ACA')
+        self.assertFalse(seq._has_quality())
 
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
