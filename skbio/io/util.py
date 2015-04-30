@@ -35,7 +35,7 @@ from cachecontrol.caches import FileCache
 from contextlib import contextmanager
 from tempfile import gettempdir
 from io import TextIOWrapper
-from gzip import open as gzip_open
+from gzip import open as gzip_open, GzipFile
 
 
 def _is_string_or_bytes(s):
@@ -79,7 +79,7 @@ def get_filehandle(filepath_or, *args, **kwargs):
 
             # Replace unsupported U flag in args or kwargs.
             if mode is None or mode in {'U', 'rU'}:
-                mode = 'r'
+                mode = 'rt'
 
             fh = gzip_open(filepath_or, *args, mode=mode, **kwargs)
             own_fh = True
@@ -93,11 +93,16 @@ def get_filehandle(filepath_or, *args, **kwargs):
 def get_filemode(fh):
     if _is_gzip(fh.name):
         if isinstance(fh, TextIOWrapper):
-            # Text gzip case.
+            # Text gzip case in Python 3.x.
             mode = fh.buffer.fileobj.mode
             mode = mode.replace('b', 't')
+        elif isinstance(fh, GzipFile):
+            # Binary/text gzip case in Python 2.x.
+            mode = fh.fileobj.mode
+            if mode == 'rtb':
+                mode = 'rt'
         else:
-            # Binary gzip case.
+            # Binary gzip case in Python 3.x.
             mode = fh.fileobj.mode
     else:
         mode = fh.mode

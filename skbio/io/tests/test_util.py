@@ -198,6 +198,9 @@ class TestGetFilemode(unittest.TestCase):
             with gzip.open(tmp_path, 'rb') as fh:
                 self.assertEqual(get_filemode(fh), 'rb')
 
+            with gzip.open(tmp_path, 'rt') as fh:
+                self.assertEqual(get_filemode(fh), 'rt')
+
             with gzip.open(tmp_path, 'wb') as fh:
                 self.assertEqual(get_filemode(fh), 'wb')
         finally:
