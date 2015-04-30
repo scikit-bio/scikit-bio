@@ -666,11 +666,23 @@ class SequenceTests(TestCase):
                          defaultdict(float, {'A': 1.0}))
 
     def test_repr(self):
-        pass
-        # self.assertEqual(repr(self.b1),
-        #                  "<Sequence: GATTACA (length: 7)>")
-        # self.assertEqual(repr(self.b6),
-        #                  "<Sequence: ACGTACGTAC... (length: 12)>")
+        seq_simple = Sequence("ACGT")
+        seq_med = Sequence("ACGT", id="id", description="desc",
+                           quality=[1, 2, 3, 4])
+        seq_complex = Sequence(("ASDKJHDJHFGUGF*&@KFHKHSDGKASDHGKDUYGKFHJ#&*YJ"
+                                "FE&I@#JH@#ASJDHGF*&@#IG#*&IGUJKSADHAKSDJHI#*Y"
+                                "LFUFLIU#RHL*Y#HHFLI#*FHL@#(*HJ"),
+                               id="This is a long id", description="desc",
+                               quality=([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2] *
+                                        10))
+        self.assertEqual(repr(seq_simple), "Sequence('ACGT')[0:4]")
+        self.assertEqual(repr(seq_med),
+                        ("Sequence('ACGT', id='id', description='desc', qual"
+                         "ity=[1, 2, 3, 4])[0:4]"))
+        self.assertEqual(repr(seq_complex),
+                         ("Sequence('ASDKJH ... @#(*HJ', id='This is a long id"
+                          "', description='desc', \n         quality=[1, 2, 3,"
+                          " 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])[0:120]"))
 
 
     def test_str(self):
