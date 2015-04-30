@@ -19,7 +19,7 @@ from future.builtins import zip
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import open_file, open_files
+from .util import open_file, open_files, get_filehandle, get_filemode
 
 _formats = {}
 _sniffers = {}
@@ -106,7 +106,8 @@ def register_sniffer(format):
                 # reflects the position of the read-ahead buffer and not the
                 # true offset of the iterator.
                 if hasattr(fh, 'name'):
-                    cfh = open(fh.name, fh.mode)
+                    mode = get_filemode(fh)
+                    cfh, _ = get_filehandle(fh.name, mode)
                 else:
                     cfh = copy.copy(fh)
                     cfh.seek(0)

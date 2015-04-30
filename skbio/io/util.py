@@ -34,6 +34,8 @@ from cachecontrol.caches import FileCache
 
 from contextlib import contextmanager
 from tempfile import gettempdir
+from io import TextIOWrapper
+from gzip import open as gzip_open
 
 
 def _is_string_or_bytes(s):
@@ -42,7 +44,17 @@ def _is_string_or_bytes(s):
     return isinstance(s, str) or isinstance(s, bytes)
 
 
-def _get_filehandle(filepath_or, *args, **kwargs):
+def _is_gzip(fp):
+    """Checks the first two bytes of the file for the gzip magic number
+    If the first two bytes of the file are 1f 8b (the "magic number" of a
+    gzip file), return True; otherwise, return false.
+    """
+    with open(fp, 'rb') as file_:
+        is_gzip = file_.read(2) == b'\x1f\x8b'
+    return is_gzip
+
+
+def get_filehandle(filepath_or, *args, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
     """
@@ -56,11 +68,41 @@ def _get_filehandle(filepath_or, *args, **kwargs):
             req.raise_for_status()
 
             fh, own_fh = BytesIO(req.content), True
+        elif _is_gzip(filepath_or):
+            # Extract mode from args or kwargs.
+            if 'mode' in kwargs:
+                mode = kwargs.pop('mode')
+            elif len(args) > 0:
+                mode, args = args[0], args[1:]
+            else:
+                mode = None
+
+            # Replace unsupported U flag in args or kwargs.
+            if mode is None or mode in {'U', 'rU'}:
+                mode = 'rt'
+
+            fh = gzip_open(filepath_or, *args, mode=mode, **kwargs)
+            own_fh = True
         else:
             fh, own_fh = open(filepath_or, *args, **kwargs), True
     else:
         fh, own_fh = filepath_or, False
     return fh, own_fh
+
+
+def get_filemode(fh):
+    if _is_gzip(fh.name):
+        if isinstance(fh, TextIOWrapper):
+            # Text gzip case.
+            mode = fh.buffer.fileobj.mode
+            mode = mode.replace('b', 't')
+        else:
+            # Binary gzip case.
+            mode = fh.fileobj.mode
+    else:
+        mode = fh.mode
+
+    return mode
 
 
 @contextmanager
@@ -111,7 +153,7 @@ def open_file(filepath_or, *args, **kwargs):
     requests.get
 
     """
-    fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
+    fh, own_fh = get_filehandle(filepath_or, *args, **kwargs)
     try:
         yield fh
     finally:
@@ -121,7 +163,7 @@ def open_file(filepath_or, *args, **kwargs):
 
 @contextmanager
 def open_files(fp_list, *args, **kwargs):
-    fhs, owns = zip(*[_get_filehandle(f, *args, **kwargs) for f in fp_list])
+    fhs, owns = zip(*[get_filehandle(f, *args, **kwargs) for f in fp_list])
     try:
         yield fhs
     finally:
