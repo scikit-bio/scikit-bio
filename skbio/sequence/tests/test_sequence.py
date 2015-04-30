@@ -153,167 +153,178 @@ class SequenceTests(TestCase):
         with self.assertRaises(ValueError):
             qual[1] = 42
 
-    def test__has_quality(self):
+    def test_has_quality(self):
         a = Sequence('ACA', quality=(5, 4, 67))
         self.assertTrue(a._has_quality())
 
         b = Sequence('ACA')
         self.assertFalse(b._has_quality())
 
-    def _generate_valid_slices(self, length):
-        """Helper function used for getitem tests."""
-        full_range = range(-length, length)
-        # Cartesian product gives us all possible combinations of full_range.
-        for start, stop, step in product(full_range, repeat=3):
-            # Slice syntax is hard, so take the descriptivist approach.
-            if step != 0 and ('a'*length)[start:stop:step] != '':
-                yield slice(start, stop, step)
-            else:
-                # Would have yielded a slice that would be empty.
-                # An empty sequence will raise an error from the
-                # constructor.
-                pass
-
-    def _getitem_compenents(self):
-        """Return the Class, a string, a quality array, and the length"""
-        # Get our class and sample string
-        Seq = Sequence
-        string = "This is a sample sequence."
-        # This will make an arbitrary numpy int array of correct length
-        qual = np.fromstring(string, dtype=np.uint8)
-        max_range = len(string)
-        return Seq, string, qual, max_range
-
-
-    def test___getitem___gives_new_sequence(self):
-        Seq, string, _, _ = self._getitem_compenents()
-
-        seq = Seq(string)
+    def test_getitem_gives_new_sequence(self):
+        seq = Sequence("Sequence string !1@2#3?.,")
         self.assertFalse(seq is seq[:])
 
-    def test___getitem___with_int_and_slice(self):
-        Seq, string, qual, max_range = self._getitem_compenents()
-        # These are the objects to test.
-        seq = Seq(string, id='id', description='dsc', quality=qual)
-        no_qual = Seq(string, id='idq', description='no_qual')
+    def test_getitem_with_int_has_qual(self):
+        s = "Sequence string !1@2#3?.,"
+        length = len(s)
+        seq = Sequence(s, id='id', description='dsc',
+                       quality=np.arange(length))
 
-        # We should be able to index and slice into the entire range.
-        for index in (list(range(-max_range, max_range)) +
-                      list(self._generate_valid_slices(max_range))):
-            # Expected string and quality data
-            e_string = string[index]
-            e_qual = qual[index]
+        eseq = Sequence("S", id='id', description='dsc', quality=np.array([0]))
+        self.assertEqual(seq[0], eseq)
 
-            # Expected objects
-            exp_seq = Seq(e_string, id='id', description='dsc', quality=e_qual)
-            exp_no_qual = Seq(e_string, id='idq', description='no_qual')
+        eseq = Sequence(",", id='id', description='dsc',
+                        quality=np.array([len(seq) - 1]))
+        self.assertEqual(seq[len(seq) - 1], eseq)
 
-            # Descriptive equality will raise an error if they are not equal.
-            # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-            # self.assertTrue used as a fail-safe.
-            self.assertTrue(seq[index].equals(exp_seq, descriptive=True))
-            self.assertTrue(no_qual[index].equals(exp_no_qual,
-                                                  descriptive=True))
+        eseq = Sequence("t", id='id', description='dsc',
+                        quality=[10])
+        self.assertEqual(seq[10], eseq)
 
-    def test___getitem___with_tuple_and_list_of_int_and_slice(self):
-        Seq, string, qual, max_range = self._getitem_compenents()
-        # These are the objects to test.
-        seq = Seq(string, id='id', description='dsc', quality=qual)
-        no_qual = Seq(string, id='idq', description='no_qual')
+    def test_getitem_with_int_no_qual(self):
+        seq = Sequence("Sequence string !1@2#3?.,", id='id2',
+                       description='no_qual')
 
-        # Different cases to try
-        slices = list(self._generate_valid_slices(max_range))
-        indices = list(range(-max_range, max_range))
-        mixed = (list(chain.from_iterable(zip(indices, slices))) +
-                 list(chain.from_iterable(zip(indices, slices[::-1]))))
+        eseq = Sequence("t", id='id2', description='no_qual')
+        self.assertEqual(seq[10], eseq)
 
-        for indexable in [slices, indices, mixed]:
-            # Build the expected string and quality data
-            e_string = ''
-            e_qual = np.array([], dtype=np.int)
-            for i in indexable:
-                e_string += string[i]
-                e_qual = np.append(e_qual, qual[i])
+    def test_getitem_with_slice_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id3', description="dsc3",
+                       quality=np.arange(length))
 
-            # Expected objects
-            exp_seq = Seq(e_string, id='id', description='dsc', quality=e_qual)
-            exp_no_qual = Seq(e_string, id='idq', description='no_qual')
+        eseq = Sequence("012", id='id3', description="dsc3",
+                        quality=np.arange(3))
+        self.assertEquals(seq[0:3], eseq)
+        self.assertEquals(seq[:3], eseq)
+        self.assertEquals(seq[:3:1], eseq)
 
-            # Descriptive equality will raise an error if they are not equal.
-            # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-            # self.assertTrue used as a fail-safe.
-            self.assertTrue(seq[tuple(indexable)].equals(exp_seq,
-                                                         descriptive=True))
-            self.assertTrue(seq[list(indexable)].equals(exp_seq,
-                                                        descriptive=True))
-            self.assertTrue(no_qual[tuple(indexable)].equals(exp_no_qual,
-                                                             descriptive=True))
-            self.assertTrue(no_qual[list(indexable)].equals(exp_no_qual,
-                                                            descriptive=True))
+        eseq = Sequence("def", id='id3', description="dsc3",
+                        quality=[13, 14, 15])
+        self.assertEquals(seq[-3:], eseq)
+        self.assertEquals(seq[-3::1], eseq)
 
-    def test___getitem___with_mask(self):
-        Seq, string, qual, max_range = self._getitem_compenents()
+        eseq = Sequence("02468ace", id='id3', description='dsc3',
+                        quality=[0, 2, 4, 6, 8, 10, 12, 14])
+        self.assertEquals(seq[0:length:2], eseq)
+        self.assertEquals(seq[::2], eseq)
 
-        # These are the objects to test.
-        seq = Seq(string, id='id', description='dsc', quality=qual)
-        no_qual = Seq(string, id='idq', description='no_qual')
+        eseq = Sequence(s[::-1], id='id3', description='dsc3',
+                        quality=np.arange(length)[::-1])
+        self.assertEquals(seq[length::-1], eseq)
+        self.assertEquals(seq[::-1], eseq)
 
-        # Create an arbitrary mask, will be True, False, False repeated.
-        np_mask = np.bincount(list(range(0, len(string),
-                                         3))).astype(np.bool)
-        py_mask = list(np_mask)
+        eseq = Sequence('fdb97531', id='id3', description='dsc3',
+                        quality=[15, 13, 11, 9, 7, 5, 3, 1])
+        self.assertEquals(seq[length::-2], eseq)
+        self.assertEquals(seq[::-2], eseq)
 
 
-        # Build the expected string and quality data
-        e_string = ""
-        e_qual = np.array([], dtype=np.int)
-        for i in np.where(np_mask)[0]: # np.where is the inverse of bincount
-            e_string += string[i]
-            e_qual = np.append(e_qual, qual[i])
+        eseq = Sequence("0", id='id3', description='dsc3',
+                        quality=[0])
+        self.assertEquals(seq[0:1], eseq)
+        self.assertEquals(seq[0:1:1], eseq)
+        self.assertEquals(seq[-length::-1], eseq)
 
-        # Expected objects
-        exp_seq = Seq(e_string, id='id', description='dsc', quality=e_qual)
-        exp_no_qual = Seq(e_string, id='idq', description='no_qual')
+    def test_getitem_with_slice_no_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id4', description="no_qual4")
 
-        # Descriptive equality will raise an error if they are not equal.
-        # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-        # self.assertTrue used as a fail-safe.
-        self.assertTrue(seq[np_mask].equals(exp_seq, descriptive=True))
-        self.assertTrue(no_qual[np_mask].equals(exp_no_qual, descriptive=True))
-        self.assertTrue(seq[py_mask].equals(exp_seq, descriptive=True))
-        self.assertTrue(no_qual[py_mask].equals(exp_no_qual, descriptive=True))
+        eseq = Sequence("02468ace", id='id4', description='no_qual4')
+        self.assertEquals(seq[0:length:2], eseq)
+        self.assertEquals(seq[::2], eseq)
 
-    def test___getitem___with_short_mask(self):
-        Seq, string, qual, max_range = self._getitem_compenents()
+    def test_getitem_with_tuple_of_mixed_with_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id5', description="dsc5",
+                       quality=np.arange(length))
 
-        # These are the objects to test.
-        seq = Seq(string, id='id', description='dsc', quality=qual)
-        no_qual = Seq(string, id='idq', description='no_qual')
+        eseq = Sequence("00000", id='id5', description='dsc5',
+                        quality=[0, 0, 0, 0, 0])
+        self.assertEquals(seq[0, 0, 0, 0, 0], eseq)
+        self.assertEquals(seq[0, 0:1, 0, -length::-1, 0], eseq)
+        self.assertEquals(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
+        self.assertEquals(seq[0:1, 0, 0, 0, 0], eseq)
 
-        py_mask = [True, True, False, True]
-        np_mask = np.asarray(py_mask)
+        eseq = Sequence("0123fed9", id='id5', description='dsc5',
+                        quality=[0, 1, 2, 3, 15, 14, 13, 9])
+        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEquals(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
 
-        e_string = string[0] + string[1] + string[3]
-        e_qual = np.array([], dtype=np.int)
-        for a in [qual[0], qual[1], qual[3]]:
-            e_qual = np.append(e_qual, a)
+    def test_getitem_with_tuple_of_mixed_no_qual(self):
+        seq = Sequence("0123456789abcdef", id='id6', description="no_qual6")
+        eseq = Sequence("0123fed9", id='id6', description='no_qual6')
+        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEquals(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
 
-        # Expected objects
-        exp_seq = Seq(e_string, id='id', description='dsc', quality=e_qual)
-        exp_no_qual = Seq(e_string, id='idq', description='no_qual')
+    def test_getitem_with_iterable_of_mixed_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id7', description="dsc7",
+                       quality=np.arange(length))
 
-        # Descriptive equality will raise an error if they are not equal.
-        # Correctness of `equals(..., descriptive=True)` tested elsewhere.
-        # self.assertTrue used as a fail-safe.
-        self.assertTrue(seq[np_mask].equals(exp_seq, descriptive=True))
-        self.assertTrue(no_qual[np_mask].equals(exp_no_qual, descriptive=True))
-        self.assertTrue(seq[py_mask].equals(exp_seq, descriptive=True))
-        self.assertTrue(no_qual[py_mask].equals(exp_no_qual, descriptive=True))
+        def generator():
+            yield slice(0, 4)
+            yield slice(None, -4, -1)
+            yield 9
 
-    def test___getitem___with_invalid(self):
-        Seq, string, qual, max_range = self._getitem_compenents()
+        eseq = Sequence("0123fed9", id='id7', description='dsc7',
+                        quality=[0, 1, 2, 3, 15, 14, 13, 9])
+        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEquals(seq[generator()], eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), 9]], eseq)
+        self.assertEquals(seq[[slice(0, 4), slice(None, -4,-1), slice(9, 10)]],
+                          eseq)
 
-        seq = Seq(string, id='idm', description='description', quality=qual)
+    def test_getitem_with_iterable_of_mixed_no_qual(self):
+        pass
+
+    def test_getitem_with_numpy_index_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id9', description="dsc9",
+                       quality=np.arange(length))
+
+        eseq = Sequence("0123fed9", id='id9', description='dsc9',
+                        quality=[0, 1, 2, 3, 15, 14, 13, 9])
+        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+
+    def test_getitem_with_numpy_index_no_qual(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, id='id10', description="dsc10")
+
+        eseq = Sequence("0123fed9", id='id10', description='dsc10')
+        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+
+    def test_getitem_with_boolean_vector_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id11', description="dsc11",
+                       quality=np.arange(length))
+
+        eseq = Sequence("13579bdf", id='id11', description="dsc11",
+                        quality=[1, 3, 5, 7, 9, 11, 13, 15])
+
+        self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+
+    def test_getitem_with_boolean_vector_no_qual(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, id='id11', description="dsc11")
+
+        eseq = Sequence("13579bdf", id='id11', description="dsc11")
+
+        self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+
+    def test_getitem_with_invalid(self):
+        seq = Sequence("123456", id='idm', description='description',
+                      quality=[1, 2, 3, 4, 5, 6])
 
         with self.assertRaises(IndexError):
             seq['not an index']

@@ -334,9 +334,10 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         qual = None
         if not isinstance(indexable, np.ndarray) and ((not isinstance(indexable, string_types)) and hasattr(indexable, '__iter__')):
+            indexable_ = indexable
             indexable = np.asarray(indexable)
             if indexable.dtype == object:
-                indexable = list(indexable) # TODO: Don't blow out memory if generator
+                indexable = list(indexable_) # TODO: Don't blow out memory if generator
                 seq = np.concatenate(list(self._slices_from_iter(self._bytes, indexable)))
                 if self._has_quality():
                     qual = np.concatenate(list(self._slices_from_iter(self.quality, indexable)))
