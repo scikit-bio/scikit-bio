@@ -807,6 +807,7 @@ class SequenceTests(TestCase):
         self.assertEqual(str(Sequence("ACCGGTACC")), "ACCGGTACC")
         self.assertEqual(str(Sequence("GREG")), "GREG")
         self.assertEqual(str(Sequence("ABC", quality=[1, 2, 3])), "ABC")
+        self.assertIs(type(str(Sequence("A"))), str)
 
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
@@ -991,10 +992,10 @@ class SequenceTests(TestCase):
 
     def test_distance(self):
         tested = 0
-        for c in self.sequence_kinds:
+        for constructor in self.sequence_kinds:
             tested += 1
             seq1 = Sequence("abcdef")
-            seq2 = c("12bcef")
+            seq2 = constructor("12bcef")
 
             self.assertIsInstance(seq1.distance(seq1), float)
             self.assertEqual(seq1.distance(seq2), 2.0/3.0)
