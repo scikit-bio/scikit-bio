@@ -985,10 +985,40 @@ class SequenceTests(TestCase):
         self.assertIn("SequenceSubclass", str(cm.exception))
 
     def test_matches(self):
-        pass
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([True, False] * 4)
+            npt.assert_equal(seq1.matches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_matches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.matches(seq2)
 
     def test_mismatches(self):
-        pass
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([False, True] * 4)
+            npt.assert_equal(seq1.mismatches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_mismatches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
 
     def test_distance(self):
         tested = 0
