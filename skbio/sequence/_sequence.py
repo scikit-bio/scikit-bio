@@ -220,13 +220,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : str
+        other : str, Sequence, numpy.ndarray
             The putative subsequence.
 
         Returns
         -------
         bool
             Indicates whether `other` is contained in `self`.
+
+        Raises
+        ------
+        TypeError
+            If `other` is a `Sequence`, but a different `Sequence` type than
+            `self`, or if `other` is not a supported type.
 
         Examples
         --------
@@ -296,8 +302,7 @@ class Sequence(collections.Sequence, SkbioObject):
         ``v``, they are considered equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
-        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
-        ...                                 42, 42])
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
         >>> u == v
         True
 
@@ -311,18 +316,26 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        indexable : int, slice, or sequence of ints
-            The position(s) to return from the `Sequence`. If `i` is
+        indexable : int, slice, sequence of ints, or sequence of bools
+            The position(s) to return from the `Sequence`. If `indexable` is
             a sequence of ints, these are assumed to be indices in the sequence
-            to keep.
+            to keep. If `indexable` is a sequence of bools, these are assumed
+            to be the positions in the sequence to keep.
 
         Returns
         -------
         Sequence
             New biological sequence containing the character(s) at position(s)
-            `i` in the current `Sequence`. If quality scores are
-            present, the quality score at position(s) `i` will be included in
-            the returned sequence. ID and description are also included.
+            `indexable` in the current `Sequence`. If quality scores are
+            present, the quality score at position(s) `indexable` will be
+            included in the returned sequence. ID and description are also
+            included.
+
+        Raises
+        ------
+        IndexError
+            If `indexable` is not a supported type, or if `indexable` is a
+            sequence that is not equal in length to `self`.
 
         Examples
         --------
@@ -332,17 +345,23 @@ class Sequence(collections.Sequence, SkbioObject):
         Obtain a single character from the biological sequence:
 
         >>> s[1]
-        <Sequence: G (length: 1)>
+        Sequence('G')[0:1]
 
         Obtain a slice:
 
         >>> s[7:]
-        <Sequence: AAGGA (length: 5)>
+        Sequence('AAGGA')[0:5]
 
         Obtain characters at the following indices:
 
         >>> s[[3, 4, 7, 0, 3]]
-        <Sequence: CGAGC (length: 5)>
+        Sequence('CGAGC')[0:5]
+
+        Obtain characters at positions evaluating to `True`:
+
+        >>> s = Sequence('GGUCG')
+        >>> s[[True, False, True, 'a' is 'a', False]]
+        Sequence('GUC')[0:3]
 
         .. shownumpydoc
 
@@ -489,32 +508,39 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        String representation contains the class name, the first ten characters
-        of the sequence followed by ellipses (or the full sequence
-        and no ellipses, if the sequence is less than 11 characters long),
-        followed by the sequence length.
+        String representation contains the class name, the first seven
+        characters of the sequence, followed by ellipses, followed by the last
+        seven characters of the sequence (or the full sequence no ellipses,
+        if the sequence is less than 21 characters long), followed by the
+        sequence length. If any of `id`, `decription`, or `quality` are not
+        `None`, those will be printed after the sequence length.
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> repr(s)
-        '<Sequence: GGUCGUGAAG... (length: 12)>'
+        "Sequence('GGUCGUGAAGGA', length=12)"
         >>> t = Sequence('ACGT')
         >>> repr(t)
-        '<Sequence: ACGT (length: 4)>'
+        "Sequence('ACGT', length=4)"
         >>> t
-        <Sequence: ACGT (length: 4)>
+        Sequence('ACGT', length=4)
+        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA')
+        Sequence('GGUCGU ... AAAGGA', length=22)
+        >>> Sequence('ACGT', id='seq1')
+        Sequence('ACGT', length=4, id='seq1')
 
         .. shownumpydoc
 
         """
         start = self.__class__.__name__ + "("
-        end = ")[0:%d]" % len(self)
+        end = ")"
 
         tokens = []
 
         tokens.append(self._format_str(self))
+        tokens.append("length=%d" % len(self))
         if self.id:
             tokens.append("id=" + self._format_str(self.id))
         if self.description:
