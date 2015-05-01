@@ -23,6 +23,8 @@ from skbio import (
 with hooks():
     from itertools import zip_longest
 
+class SequenceSubclass(Sequence):
+    pass
 
 class SequenceTests(TestCase):
     def setUp(self):
@@ -295,9 +297,6 @@ class SequenceTests(TestCase):
         seq_a = Sequence("A")
         seq_b = Sequence("B")
 
-        class SequenceSubclass(Sequence):
-            pass
-
         self.assertTrue(seq_a == seq_a)
         self.assertTrue(Sequence("a") == Sequence("a"))
         self.assertTrue(Sequence("a", id='b') == Sequence("a", id='b'))
@@ -494,6 +493,7 @@ class SequenceTests(TestCase):
                         quality=[1, 3, 5, 7, 9, 11, 13, 15])
 
         self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+        self.assertEqual(seq[[False, True] * 8], eseq)
 
     def test_getitem_with_boolean_vector_no_qual(self):
         s = "0123456789abcdef"
@@ -521,6 +521,9 @@ class SequenceTests(TestCase):
 
         with self.assertRaises(IndexError):
             seq[True]
+
+        with self.assertRaises(IndexError):
+            seq[np.array([True, False])]
 
         with self.assertRaises(IndexError):
             seq[99999999999999999]
@@ -575,9 +578,6 @@ class SequenceTests(TestCase):
         self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
 
     def test_contains_sequence_subclass(self):
-        class SequenceSubclass(Sequence):
-            pass
-
         with self.assertRaises(TypeError):
             SequenceSubclass("A") in Sequence("AAA")
 
@@ -989,39 +989,34 @@ class SequenceTests(TestCase):
 #            Sequence('HELLO', id='hello', description='gapped hello',
 #                               quality=[0, 1, 8, 9, 10])))
 
-    def test_distance(self):
-        # note that test_hamming_distance covers default behavior more
-        # extensively
-        self.assertEqual(self.b1.distance(self.b1), 0.0)
-        self.assertEqual(self.b1.distance(Sequence('GATTACC')), 1./7)
+    def test_distance_arbitrary_function(self):
+        def metric(x, y):
+            return len(x) ** 2 + len(y) ** 2
 
-        def dumb_distance(x, y):
-            return 42
+        seq1 = Sequence("12345678")
+        seq2 = Sequence("1234")
+        result = seq1.distance(seq2, metric=metric)
+        self.assertIsInstance(result, float)
+        self.assertEqual(result, 80.0)
 
-        self.assertEqual(
-            self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
+    def test_distance_default_metric(self):
+        seq1 = Sequence("abcdef")
+        seq2 = Sequence("12bcef")
+        seq_wrong = Sequence("abcdefghijklmnop")
 
-    def test_distance_unequal_length(self):
-        # distance requires sequences to be of equal length
-        # While some functions passed to distance may throw an error not all
-        # will. Therefore an error will be raised for sequences of unequal
-        # length regardless of the function being passed.
-        # With default hamming distance function
-        with self.assertRaises(ValueError):
-            self.b1.distance(self.b2)
-
-        # Alternate functions should also raise an error
-        # Another distance function from scipy:
-        with self.assertRaises(ValueError):
-            self.b1.distance(self.b2, distance_fn=euclidean)
-
-        # Any other function should raise an error as well
-        def dumb_distance(x, y):
-            return 42
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq1), 0.0)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
 
         with self.assertRaises(ValueError):
-            self.b1.distance(self.b2, distance_fn=dumb_distance)
+            seq1.distance(seq_wrong)
 
+        with self.assertRaises(ValueError):
+            seq_wrong.distance(seq1)
+
+    def test_distance_on_subclass(self):
+        pass
+        
     def test_mismatch_frequency(self):
         # relative = False (default)
         self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
