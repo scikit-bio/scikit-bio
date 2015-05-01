@@ -23,16 +23,17 @@ from skbio import (
 with hooks():
     from itertools import zip_longest
 
-_sequence_kinds = frozenset([str, Sequence,
-                             lambda s: np.fromstring(s, dtype='|S1'),
-                             lambda s: np.fromstring(s, dtype=np.uint8)])
-
 class SequenceSubclass(Sequence):
     """Used for testing purposes."""
     pass
 
 class SequenceTests(TestCase):
     def setUp(self):
+        # DONT DELETE THIS!! JUST REMOVE THIS COMMENT
+        self.sequence_kinds = frozenset([
+            str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+        # BELOW THIS CAN BE REMOVED
         self.b1 = Sequence('GATTACA', quality=range(7))
         self.b2 = Sequence(
             'ACCGGTACC', id="test-seq-2",
@@ -48,6 +49,7 @@ class SequenceTests(TestCase):
         self.b8 = Sequence('HE..--..LLO', id='hello',
                            description='gapped hello',
                            quality=range(11))
+
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
@@ -549,14 +551,14 @@ class SequenceTests(TestCase):
     def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
         tested = 0
-        for c in _sequence_kinds:
+        for c in self.sequence_kinds:
             tested += 1
-            self.assertTrue(',24' in seq)
-            self.assertTrue('*' in seq)
-            self.assertTrue('' in seq)
+            self.assertTrue(c(',24') in seq)
+            self.assertTrue(c('*') in seq)
+            self.assertTrue(c('') in seq)
 
-            self.assertFalse("$" in seq)
-            self.assertFalse("AGT" in seq)
+            self.assertFalse(c("$") in seq)
+            self.assertFalse(c("AGT") in seq)
 
         self.assertEqual(tested, 4)
 
@@ -958,7 +960,7 @@ class SequenceTests(TestCase):
 
         seq = Sequence("1234567899876555")
         tested = 0
-        for c in _sequence_kinds:
+        for c in self.sequence_kinds:
             tested += 1
             self.assertEqual(seq.count(c('4')), 1)
             self.assertEqual(seq.count(c('8')), 2)
@@ -989,7 +991,7 @@ class SequenceTests(TestCase):
 
     def test_distance(self):
         tested = 0
-        for c in _sequence_kinds:
+        for c in self.sequence_kinds:
             tested += 1
             seq1 = Sequence("abcdef")
             seq2 = c("12bcef")
