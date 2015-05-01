@@ -25,7 +25,6 @@ from skbio.util._misc import reprnator
 with hooks():
     from itertools import zip_longest
 
-
 class Sequence(collections.Sequence, SkbioObject):
     """Base class for biological sequences.
 
@@ -220,13 +219,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        other : str
+        other : str, Sequence, numpy.ndarray
             The putative subsequence.
 
         Returns
         -------
         bool
             Indicates whether `other` is contained in `self`.
+
+        Raises
+        ------
+        TypeError
+            If `other` is a `Sequence`, but a different `Sequence` type than
+            `self`, or if `other` is not a supported type.
 
         Examples
         --------
@@ -243,13 +248,9 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(other, string_types):
             return other in self._string
 
-        if isinstance(other, Sequence) and type(other) != type(self):
-            klass = self.__class__.__name__
-            oklass = other.__class__.__name__
-            raise TypeError("'in <%s>' requires string, numpy array, or %s as"
-                            " left operand, not %s" % (klass, klass, oklass))
+        other = self._munge_to_sequence(other, "in")
 
-        return Sequence(other)._string in self._string
+        return other._string in self._string
 
     def __eq__(self, other):
         """The equality operator.
@@ -296,8 +297,7 @@ class Sequence(collections.Sequence, SkbioObject):
         ``v``, they are considered equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
-        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
-        ...                                 42, 42])
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
         >>> u == v
         True
 
@@ -311,18 +311,26 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        indexable : int, slice, or sequence of ints
-            The position(s) to return from the `Sequence`. If `i` is
+        indexable : int, slice, sequence of ints, or sequence of bools
+            The position(s) to return from the `Sequence`. If `indexable` is
             a sequence of ints, these are assumed to be indices in the sequence
-            to keep.
+            to keep. If `indexable` is a sequence of bools, these are assumed
+            to be the positions in the sequence to keep.
 
         Returns
         -------
         Sequence
             New biological sequence containing the character(s) at position(s)
-            `i` in the current `Sequence`. If quality scores are
-            present, the quality score at position(s) `i` will be included in
-            the returned sequence. ID and description are also included.
+            `indexable` in the current `Sequence`. If quality scores are
+            present, the quality score at position(s) `indexable` will be
+            included in the returned sequence. ID and description are also
+            included.
+
+        Raises
+        ------
+        IndexError
+            If `indexable` is not a supported type, or if `indexable` is a
+            sequence that is not equal in length to `self`.
 
         Examples
         --------
@@ -332,17 +340,23 @@ class Sequence(collections.Sequence, SkbioObject):
         Obtain a single character from the biological sequence:
 
         >>> s[1]
-        <Sequence: G (length: 1)>
+        Sequence('G')[0:1]
 
         Obtain a slice:
 
         >>> s[7:]
-        <Sequence: AAGGA (length: 5)>
+        Sequence('AAGGA')[0:5]
 
         Obtain characters at the following indices:
 
         >>> s[[3, 4, 7, 0, 3]]
-        <Sequence: CGAGC (length: 5)>
+        Sequence('CGAGC')[0:5]
+
+        Obtain characters at positions evaluating to `True`:
+
+        >>> s = Sequence('GGUCG')
+        >>> s[[True, False, True, 'a' is 'a', False]]
+        Sequence('GUC')[0:3]
 
         .. shownumpydoc
 
@@ -496,32 +510,39 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        String representation contains the class name, the first ten characters
-        of the sequence followed by ellipses (or the full sequence
-        and no ellipses, if the sequence is less than 11 characters long),
-        followed by the sequence length.
+        String representation contains the class name, the first seven
+        characters of the sequence, followed by ellipses, followed by the last
+        seven characters of the sequence (or the full sequence no ellipses,
+        if the sequence is less than 21 characters long), followed by the
+        sequence length. If any of `id`, `decription`, or `quality` are not
+        `None`, those will be printed after the sequence length.
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> repr(s)
-        '<Sequence: GGUCGUGAAG... (length: 12)>'
+        "Sequence('GGUCGUGAAGGA', length=12)"
         >>> t = Sequence('ACGT')
         >>> repr(t)
-        '<Sequence: ACGT (length: 4)>'
+        "Sequence('ACGT', length=4)"
         >>> t
-        <Sequence: ACGT (length: 4)>
+        Sequence('ACGT', length=4)
+        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA')
+        Sequence('GGUCGU ... AAAGGA', length=22)
+        >>> Sequence('ACGT', id='seq1')
+        Sequence('ACGT', length=4, id='seq1')
 
         .. shownumpydoc
 
         """
         start = self.__class__.__name__ + "("
-        end = ")[0:%d]" % len(self)
+        end = ")"
 
         tokens = []
 
         tokens.append(self._format_str(self))
+        tokens.append("length=%d" % len(self))
         if self.id:
             tokens.append("id=" + self._format_str(self.id))
         if self.description:
@@ -567,7 +588,20 @@ class Sequence(collections.Sequence, SkbioObject):
         return iter(self[::-1])
 
     def __str__(self):
-        """Document me?"""
+        """ The str method.
+
+        Returns
+        -------
+        str
+            Sequence as a str. This will contain the sequence only, no metadata
+            (e.g., `id`, `desctiption`, or `quality`) will be included.
+
+        Examples
+        --------
+        >>>  s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> str(s)
+        'GGUCGUAAAGGA'
+        """
         return str(self._string)
 
     @property
@@ -836,7 +870,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return True
 
-    def count(self, subsequence):
+    def count(self, subsequence, start=None, end=None):
         """Returns the number of occurences of subsequence.
 
         Parameters
@@ -857,9 +891,15 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
+        if len(subsequence) == 0:
+            raise ValueError("count is not defined for empty sequences.")
+
         if isinstance(subsequence, string_types):
-            return self._string.count(subsequence)
-        return self._string.count(Sequence(subsequence)._string)
+            return self._string.count(subsequence, start, end)
+
+        subsequence = self._munge_to_sequence(subsequence, "count")
+
+        return self._string.count(subsequence._string, start, end)
 
     def distance(self, other, metric=None):
         """Returns the distance to other
@@ -904,7 +944,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
-        other = Sequence(other)
+        other = self._munge_to_sequence(other, 'distance')
         if metric is None:
             # Hamming requires equal length sequences. We are checking this
             # here because the error you would get otherwise is cryptic.
@@ -917,6 +957,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
+        other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
             raise ValueError("Match and mismatch vectors can only be "
                              "generated from equal length sequences.")
@@ -1147,3 +1188,13 @@ class Sequence(collections.Sequence, SkbioObject):
         for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
                 yield slice(match.start(g), match.end(g))
+
+    def _munge_to_sequence(self, other, method):
+        if isinstance(other, Sequence):
+            if type(other) != type(self):
+                raise TypeError("Cannot use %s and %s together with `%s`" %
+                                (self.__class__.__name__,
+                                 other.__class__.__name__, method))
+            else:
+                return other
+        return Sequence(other)

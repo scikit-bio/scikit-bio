@@ -25,10 +25,16 @@ with hooks():
     from itertools import zip_longest
 
 class SequenceSubclass(Sequence):
+    """Used for testing purposes."""
     pass
 
 class SequenceTests(TestCase):
     def setUp(self):
+        # DONT DELETE THIS!! JUST REMOVE THIS COMMENT
+        self.sequence_kinds = frozenset([
+            str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+        # BELOW THIS CAN BE REMOVED
         self.b1 = Sequence('GATTACA', quality=range(7))
         self.b2 = Sequence(
             'ACCGGTACC', id="test-seq-2",
@@ -44,6 +50,7 @@ class SequenceTests(TestCase):
         self.b8 = Sequence('HE..--..LLO', id='hello',
                            description='gapped hello',
                            quality=range(11))
+
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
@@ -650,41 +657,19 @@ class SequenceTests(TestCase):
         self.assertEqual(len(Sequence("a")), 1)
         self.assertEqual(len(Sequence("abcdef")), 6)
 
-    def test_contains_simple_str(self):
+    def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(',24' in seq)
-        self.assertTrue('*' in seq)
-        self.assertTrue('' in seq)
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            self.assertTrue(c(',24') in seq)
+            self.assertTrue(c('*') in seq)
+            self.assertTrue(c('') in seq)
 
-        self.assertFalse("$" in seq)
-        self.assertFalse("AGT" in seq)
+            self.assertFalse(c("$") in seq)
+            self.assertFalse(c("AGT") in seq)
 
-    def test_contains_sequence(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(Sequence(',24') in seq)
-        self.assertTrue(Sequence('*') in seq)
-        self.assertTrue(Sequence('') in seq)
-
-        self.assertFalse(Sequence("$") in seq)
-        self.assertFalse(Sequence("AGT") in seq)
-
-    def test_contains_numpy_uint(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(np.fromstring(',24', dtype=np.uint8) in seq)
-        self.assertTrue(np.fromstring('*', dtype=np.uint8) in seq)
-        self.assertTrue(np.fromstring('', dtype=np.uint8) in seq)
-
-        self.assertFalse(np.fromstring('$', dtype=np.uint8) in seq)
-        self.assertFalse(np.fromstring('AGT', dtype=np.uint8) in seq)
-
-    def test_contains_numpy_s1(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(np.fromstring(',24', dtype="|S1") in seq)
-        self.assertTrue(np.fromstring('*', dtype="|S1") in seq)
-        self.assertTrue(np.fromstring('', dtype="|S1") in seq)
-
-        self.assertFalse(np.fromstring('$', dtype="|S1") in seq)
-        self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
+        self.assertEqual(tested, 4)
 
     def test_contains_sequence_subclass(self):
         with self.assertRaises(TypeError):
@@ -916,20 +901,22 @@ class SequenceTests(TestCase):
                                id="This is a long id", description="desc",
                                quality=([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2] *
                                         10))
-        self.assertEqual(repr(seq_simple), "Sequence('ACGT')[0:4]")
+        self.assertEqual(repr(seq_simple), "Sequence('ACGT', length=4)")
         self.assertEqual(repr(seq_med),
-                         ("Sequence('ACGT', id='id', description='desc', qual"
-                          "ity=[1, 2, 3, 4])[0:4]"))
+                         ("Sequence('ACGT', length=4, id='id',"
+                         " description='desc', quality=[1, 2, 3, 4])"))
         self.assertEqual(repr(seq_complex),
-                         ("Sequence('ASDKJH ... @#(*HJ', id='This is a long id"
-                          "', description='desc', \n         quality=[1, 2, 3,"
-                          " 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])[0:120]"))
+                         ("Sequence('ASDKJH ... @#(*HJ', length=120, id='This"
+                          " is a long id', \n         description='desc', "
+                          "quality=[1, 2, 3, 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])")
+                          )
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
         self.assertEqual(str(Sequence("ACCGGTACC")), "ACCGGTACC")
         self.assertEqual(str(Sequence("GREG")), "GREG")
         self.assertEqual(str(Sequence("ABC", quality=[1, 2, 3])), "ABC")
+        self.assertIs(type(str(Sequence("A"))), str)
 
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
@@ -1075,28 +1062,85 @@ class SequenceTests(TestCase):
         self.assertFalse(a.equals(b))
 
     def test_count(self):
-        self.assertEqual(self.b1.count('A'), 3)
-        self.assertEqual(self.b1.count('T'), 2)
-        self.assertEqual(self.b1.count('TT'), 1)
+        def construct_char_array(s):
+            return np.fromstring(s, dtype='|S1')
 
-#    def test_degap(self):
-#        # use equals method to ensure that id, description, and filtered
-#        # quality are correctly propagated to the resulting sequence
-#
-#        # no filtering, has quality
-#        self.assertTrue(self.b1.degap().equals(self.b1))
-#
-#        # no filtering, doesn't have quality
-#        self.assertTrue(self.b2.degap().equals(self.b2))
-#
-#        # everything is filtered, has quality
-#        self.assertTrue(self.b7.degap().equals(
-#            Sequence('', quality=[])))
-#
-#        # some filtering, has quality
-#        self.assertTrue(self.b8.degap().equals(
-#            Sequence('HELLO', id='hello', description='gapped hello',
-#                               quality=[0, 1, 8, 9, 10])))
+        def construct_uint8_array(s):
+            return np.fromstring(s, dtype=np.uint8)
+
+        seq = Sequence("1234567899876555")
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            self.assertEqual(seq.count(c('4')), 1)
+            self.assertEqual(seq.count(c('8')), 2)
+            self.assertEqual(seq.count(c('5')), 4)
+            self.assertEqual(seq.count(c('555')), 1)
+            self.assertEqual(seq.count(c('555'), 0, 4), 0)
+            self.assertEqual(seq.count(c('555'), start=0, end=4), 0)
+            self.assertEqual(seq.count(c('5'), start=10), 3)
+            self.assertEqual(seq.count(c('5'), end=10), 1)
+
+            with self.assertRaises(ValueError):
+                seq.count(c(''))
+
+        self.assertEquals(tested, 4)
+
+    def test_count_on_subclass(self):
+        with self.assertRaises(TypeError) as cm:
+            Sequence("abcd").count(SequenceSubclass("a"))
+
+        self.assertIn("Sequence", str(cm.exception))
+        self.assertIn("SequenceSubclass", str(cm.exception))
+
+    def test_matches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([True, False] * 4)
+            npt.assert_equal(seq1.matches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_matches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.matches(seq2)
+
+    def test_mismatches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([False, True] * 4)
+            npt.assert_equal(seq1.mismatches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_mismatches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
+
+    def test_distance(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("abcdef")
+            seq2 = constructor("12bcef")
+
+            self.assertIsInstance(seq1.distance(seq1), float)
+            self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+
+        self.assertEqual(tested, 4)
+
 
     def test_distance_arbitrary_function(self):
         def metric(x, y):
@@ -1124,7 +1168,11 @@ class SequenceTests(TestCase):
             seq_wrong.distance(seq1)
 
     def test_distance_on_subclass(self):
-        pass
+        seq1 = Sequence("abcdef")
+        seq2 = SequenceSubclass("12bcef")
+
+        with self.assertRaises(TypeError):
+            seq1.distance(seq2)
 
     def test_mismatch_frequency(self):
         # relative = False (default)
@@ -1154,12 +1202,6 @@ class SequenceTests(TestCase):
         self.assertEqual(self.b1.index('A'), 1)
         self.assertEqual(self.b1.index('AC'), 4)
         self.assertRaises(ValueError, self.b1.index, 'x')
-
-    # def test_has_gaps(self):
-    #     self.assertFalse(self.b1.has_gaps())
-    #     self.assertFalse(self.b2.has_gaps())
-    #     self.assertTrue(self.b7.has_gaps())
-    #     self.assertTrue(self.b8.has_gaps())
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')
