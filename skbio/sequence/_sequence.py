@@ -593,7 +593,20 @@ class Sequence(collections.Sequence, SkbioObject):
         return iter(self[::-1])
 
     def __str__(self):
-        """Document me?"""
+        """ The str method.
+
+        Returns
+        -------
+        str
+            Sequence as a str. This will contain the sequence only, no metadata
+            (e.g., `id`, `desctiption`, or `quality`) will be included.
+
+        Examples
+        --------
+        >>>  s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> str(s)
+        'GGUCGUAAAGGA'
+        """
         return str(self._string)
 
     @property
