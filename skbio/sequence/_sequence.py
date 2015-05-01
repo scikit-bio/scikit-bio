@@ -385,6 +385,13 @@ class Sequence(collections.Sequence, SkbioObject):
                 isinstance(indexable, bool):
             raise IndexError("Cannot index with that type: %r" % indexable)
 
+        if (isinstance(indexable, np.ndarray) and
+            indexable.dtype == bool and
+            len(indexable) != len(self)):
+            raise IndexError("An boolean vector index must be the same length"
+                            " as the sequence (%d, not %d)." % (len(self),
+                                                                len(indexable)))
+
         seq = self._bytes[indexable]
         if self._has_quality():
             qual = self.quality[indexable]
@@ -880,7 +887,7 @@ class Sequence(collections.Sequence, SkbioObject):
             return self._string.count(subsequence)
         return self._string.count(Sequence(subsequence)._string)
 
-    def distance(self, other, distance_fn=None):
+    def distance(self, other, metric=None):
         """Returns the distance to other
 
         Parameters
@@ -923,15 +930,22 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
+        if isinstance(other, Sequence) and type(other) != type(self):
+            klass = self.__class__.__name__
+            oklass = self.__class__.__name__
+            raise TypeError("Cannot calculate distance between %s and %s." %
+                           (klass, oklass))
         other = Sequence(other)
-        if len(self) != len(other):
-            raise ValueError(
-                "Sequences do not have equal length. "
-                "Distance can only be computed between "
-                "sequences of equal length.")
-        if distance_fn is None:
-            distance_fn = hamming
-        return float(distance_fn(self.sequence, other.sequence))
+        if metric is None:
+            # Hamming requires equal length sequences. We are checking this
+            # here because the error you would get otherwise is cryptic.
+            if len(self) != len(other):
+                raise ValueError(
+                    "Sequences do not have equal length. "
+                    "Hamming distances can only be computed between "
+                    "sequences of equal length.")
+            metric = hamming
+        return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
         if len(self) != len(other):

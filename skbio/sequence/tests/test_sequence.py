@@ -23,6 +23,8 @@ from skbio import (
 with hooks():
     from itertools import zip_longest
 
+class SequenceSubclass(Sequence):
+    pass
 
 class SequenceTests(TestCase):
     def setUp(self):
@@ -59,17 +61,40 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
 
-    def test_init_varied_sequence_input_types(self):
-        for s in (b'.ABC\t123  xyz-',  # bytes
-                  u'.ABC\t123  xyz-',  # unicode
-                  np.array('.ABC\t123  xyz-', dtype='c'),  # char vector
-                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),  # byte vec
-                  Sequence('.ABC\t123  xyz-')):  # another Sequence object
+    def test_init_empty_sequence(self):
+        # Test constructing an empty sequence using each supported input type.
+        for s in (b'',  # bytes
+                  u'',  # unicode
+                  np.array('', dtype='c'),  # char vector
+                  np.fromstring('', dtype=np.uint8),  # byte vec
+                  Sequence('')):  # another Sequence object
             seq = Sequence(s)
-            npt.assert_equal(seq.sequence, np.array('.ABC\t123  xyz-',
-                                                    dtype='c'))
+            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
+
+    def test_init_single_character_sequence(self):
+        for s in (b'A',
+                  u'A',
+                  np.array('A', dtype='c'),
+                  np.fromstring('A', dtype=np.uint8),
+                  Sequence('A')):
+            seq = Sequence(s)
+            npt.assert_equal(seq.sequence, np.array('A', dtype='c'))
+
+    def test_init_multiple_character_sequence(self):
+        for s in (b'.ABC\t123  xyz-',
+                  u'.ABC\t123  xyz-',
+                  np.array('.ABC\t123  xyz-', dtype='c'),
+                  np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
+                  Sequence('.ABC\t123  xyz-')):
+            seq = Sequence(s)
+            npt.assert_equal(seq.sequence,
+                             np.array('.ABC\t123  xyz-', dtype='c'))
 
     def test_init_from_sequence_object(self):
+        # We're testing this in its simplest form in other tests. This test
+        # exercises more complicated cases of building a sequence from another
+        # sequence.
+
         # just the sequence, no other metadata
         seq = Sequence('ACGT')
         self.assertEqual(Sequence(seq), seq)
@@ -90,15 +115,6 @@ class SequenceTests(TestCase):
             Sequence(seq),
             Sequence('ACGT', id='foo', description='bar baz',
                      quality=range(4)))
-
-    def test_init_empty_sequence(self):
-        for s in (b'',  # bytes
-                  u'',  # unicode
-                  np.array('', dtype='c'),  # char vector
-                  np.fromstring('', dtype=np.uint8),  # byte vec
-                  Sequence('')):  # another Sequence object
-            seq = Sequence(s)
-            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
 
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
@@ -163,12 +179,12 @@ class SequenceTests(TestCase):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_sequence_property(self):
-        npt.assert_equal(Sequence('').sequence, np.array('', dtype='c'))
-        npt.assert_equal(Sequence('A').sequence, np.array('A', dtype='c'))
+        # Sequence property tests are only concerned with testing the interface
+        # provided by the property.
+        seq = Sequence('ACGT')
+
         npt.assert_equal(Sequence('ACGT').sequence,
                          np.array('ACGT', dtype='c'))
-
-        seq = Sequence('ACGT')
 
         # test that we can't mutate the property
         with self.assertRaises(ValueError):
@@ -280,9 +296,6 @@ class SequenceTests(TestCase):
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
         seq_b = Sequence("B")
-
-        class SequenceSubclass(Sequence):
-            pass
 
         self.assertTrue(seq_a == seq_a)
         self.assertTrue(Sequence("a") == Sequence("a"))
@@ -480,6 +493,7 @@ class SequenceTests(TestCase):
                         quality=[1, 3, 5, 7, 9, 11, 13, 15])
 
         self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+        self.assertEqual(seq[[False, True] * 8], eseq)
 
     def test_getitem_with_boolean_vector_no_qual(self):
         s = "0123456789abcdef"
@@ -507,6 +521,9 @@ class SequenceTests(TestCase):
 
         with self.assertRaises(IndexError):
             seq[True]
+
+        with self.assertRaises(IndexError):
+            seq[np.array([True, False])]
 
         with self.assertRaises(IndexError):
             seq[99999999999999999]
@@ -561,9 +578,6 @@ class SequenceTests(TestCase):
         self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
 
     def test_contains_sequence_subclass(self):
-        class SequenceSubclass(Sequence):
-            pass
-
         with self.assertRaises(TypeError):
             SequenceSubclass("A") in Sequence("AAA")
 
@@ -976,38 +990,60 @@ class SequenceTests(TestCase):
 #            Sequence('HELLO', id='hello', description='gapped hello',
 #                               quality=[0, 1, 8, 9, 10])))
 
-    def test_distance(self):
-        # note that test_hamming_distance covers default behavior more
-        # extensively
-        self.assertEqual(self.b1.distance(self.b1), 0.0)
-        self.assertEqual(self.b1.distance(Sequence('GATTACC')), 1./7)
+    def test_distance_arbitrary_function(self):
+        def metric(x, y):
+            return len(x) ** 2 + len(y) ** 2
 
-        def dumb_distance(x, y):
-            return 42
+        seq1 = Sequence("12345678")
+        seq2 = Sequence("1234")
+        result = seq1.distance(seq2, metric=metric)
+        self.assertIsInstance(result, float)
+        self.assertEqual(result, 80.0)
 
-        self.assertEqual(
-            self.b1.distance(self.b1, distance_fn=dumb_distance), 42)
+    def test_distance_default_metric(self):
+        seq1 = Sequence("abcdef")
+        seq2 = Sequence("12bcef")
+        seq_wrong = Sequence("abcdefghijklmnop")
 
-    def test_distance_unequal_length(self):
-        # distance requires sequences to be of equal length
-        # While some functions passed to distance may throw an error not all
-        # will. Therefore an error will be raised for sequences of unequal
-        # length regardless of the function being passed.
-        # With default hamming distance function
-        with self.assertRaises(ValueError):
-            self.b1.distance(self.b2)
-
-        # Alternate functions should also raise an error
-        # Another distance function from scipy:
-        with self.assertRaises(ValueError):
-            self.b1.distance(self.b2, distance_fn=euclidean)
-
-        # Any other function should raise an error as well
-        def dumb_distance(x, y):
-            return 42
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq1), 0.0)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
 
         with self.assertRaises(ValueError):
-            self.b1.distance(self.b2, distance_fn=dumb_distance)
+            seq1.distance(seq_wrong)
+
+        with self.assertRaises(ValueError):
+            seq_wrong.distance(seq1)
+
+    def test_distance_on_subclass(self):
+        seq1 = Sequence("abcdef")
+        seq2 = SequenceSubclass("12bcef")
+
+        with self.assertRaises(TypeError):
+            seq1.distance(seq2)
+
+    def test_distance_on_string(self):
+        seq1 = Sequence("abcdef")
+        seq2 = "12bcef"
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+
+    def test_distance_on_char_array(self):
+        seq1 = Sequence("abcdef")
+        seq2 = np.fromstring("12bcef", dtype='|S1')
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+        self.assertEqual(seq1.distance(SequenceSubclass("12bcef").sequence),
+                         2.0/3.0)
+
+    def test_distance_on_uint8_array(self):
+        seq1 = Sequence("abcdef")
+        seq2 = np.fromstring("12bcef", dtype=np.uint8)
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
 
     def test_mismatch_frequency(self):
         # relative = False (default)
