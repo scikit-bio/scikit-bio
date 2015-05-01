@@ -904,6 +904,11 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
+        if isinstance(other, Sequence) and type(other) != type(self):
+            klass = self.__class__.__name__
+            oklass = self.__class__.__name__
+            raise TypeError("Cannot calculate distance between %s and %s." %
+                           (klass, oklass))
         other = Sequence(other)
         if metric is None:
             # Hamming requires equal length sequences. We are checking this

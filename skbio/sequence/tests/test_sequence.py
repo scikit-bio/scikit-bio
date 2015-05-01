@@ -1001,8 +1001,35 @@ class SequenceTests(TestCase):
             seq_wrong.distance(seq1)
 
     def test_distance_on_subclass(self):
-        pass
-        
+        seq1 = Sequence("abcdef")
+        seq2 = SequenceSubclass("12bcef")
+
+        with self.assertRaises(TypeError):
+            seq1.distance(seq2)
+
+    def test_distance_on_string(self):
+        seq1 = Sequence("abcdef")
+        seq2 = "12bcef"
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+
+    def test_distance_on_char_array(self):
+        seq1 = Sequence("abcdef")
+        seq2 = np.fromstring("12bcef", dtype='|S1')
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+        self.assertEqual(seq1.distance(SequenceSubclass("12bcef").sequence),
+                         2.0/3.0)
+
+    def test_distance_on_uint8_array(self):
+        seq1 = Sequence("abcdef")
+        seq2 = np.fromstring("12bcef", dtype=np.uint8)
+
+        self.assertIsInstance(seq1.distance(seq1), float)
+        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+
     def test_mismatch_frequency(self):
         # relative = False (default)
         self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
