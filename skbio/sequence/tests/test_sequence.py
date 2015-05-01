@@ -966,9 +966,36 @@ class SequenceTests(TestCase):
         self.assertFalse(a.equals(b))
 
     def test_count(self):
-        self.assertEqual(self.b1.count('A'), 3)
-        self.assertEqual(self.b1.count('T'), 2)
-        self.assertEqual(self.b1.count('TT'), 1)
+        def construct_char_array(s):
+            return np.fromstring(s, dtype='|S1')
+
+        def construct_uint8_array(s):
+            return np.fromstring(s, dtype=np.uint8)
+
+        seq = Sequence("1234567899876555")
+        tested = 0
+        for c in [str, Sequence, construct_char_array, construct_uint8_array]:
+            tested += 1
+            self.assertEqual(seq.count(c('4')), 1)
+            self.assertEqual(seq.count(c('8')), 2)
+            self.assertEqual(seq.count(c('5')), 4)
+            self.assertEqual(seq.count(c('555')), 1)
+            self.assertEqual(seq.count(c('555'), 0, 4), 0)
+            self.assertEqual(seq.count(c('555'), start=0, end=4), 0)
+            self.assertEqual(seq.count(c('5'), start=10), 3)
+            self.assertEqual(seq.count(c('5'), end=10), 1)
+
+            with self.assertRaises(ValueError):
+                seq.count(c(''))
+
+        self.assertEquals(tested, 4)
+
+    def test_count_on_subclass(self):
+        with self.assertRaises(TypeError) as cm:
+            Sequence("abcd").count(SequenceSubclass("a"))
+
+        self.assertIn("Sequence", str(cm.exception))
+        self.assertIn("SequenceSubclass", str(cm.exception))
 
 #    def test_degap(self):
 #        # use equals method to ensure that id, description, and filtered

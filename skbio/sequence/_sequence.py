@@ -836,7 +836,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return True
 
-    def count(self, subsequence):
+    def count(self, subsequence, start=None, end=None):
         """Returns the number of occurences of subsequence.
 
         Parameters
@@ -857,9 +857,20 @@ class Sequence(collections.Sequence, SkbioObject):
         2
 
         """
+        if len(subsequence) == 0:
+            raise ValueError("count is not defined for empty sequences.")
+
         if isinstance(subsequence, string_types):
-            return self._string.count(subsequence)
-        return self._string.count(Sequence(subsequence)._string)
+            return self._string.count(subsequence, start, end)
+
+        if isinstance(subsequence, Sequence) and \
+                type(subsequence) != type(self):
+            klass = self.__class__.__name__
+            oklass = subsequence.__class__.__name__
+            raise TypeError("Instances of %s cannot counted in %s." %
+                           (oklass, klass))
+
+        return self._string.count(Sequence(subsequence)._string, start, end)
 
     def distance(self, other, metric=None):
         """Returns the distance to other
@@ -906,7 +917,7 @@ class Sequence(collections.Sequence, SkbioObject):
         # metric to apply and accept **kwargs
         if isinstance(other, Sequence) and type(other) != type(self):
             klass = self.__class__.__name__
-            oklass = self.__class__.__name__
+            oklass = other.__class__.__name__
             raise TypeError("Cannot calculate distance between %s and %s." %
                            (klass, oklass))
         other = Sequence(other)
