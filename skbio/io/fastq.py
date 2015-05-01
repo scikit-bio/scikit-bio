@@ -265,7 +265,7 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
-                            _count_blank_lines)
+                            _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -276,7 +276,7 @@ _whitespace_regex = re.compile(r'\s')
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
 
-    if _count_blank_lines(fh) > 5:
+    if _too_many_blanks(fh, 5):
         return False, {}
 
     # Strategy:

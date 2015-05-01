@@ -195,12 +195,16 @@ def _line_generator(fh, skip_blanks=False):
             yield line
 
 
-def _count_blank_lines(fh):
+def _too_many_blanks(fh, max_blanks):
     count = 0
+    too_many = False
     for line in _line_generator(fh):
         if line:
             break
         else:
             count += 1
+            if count > max_blanks:
+                too_many = True
+                break
     fh.seek(0)
-    return count
+    return too_many
