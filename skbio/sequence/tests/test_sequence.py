@@ -84,6 +84,22 @@ class SequenceTests(TestCase):
             Sequence(seq, id='abc', description='123', quality=[42] * 4),
             Sequence('ACGT', id='abc', description='123', quality=[42] * 4))
 
+        # subclasses work too
+        seq = DNA('ACGT', id='foo', description='bar baz', quality=range(4))
+        self.assertEqual(
+            Sequence(seq),
+            Sequence('ACGT', id='foo', description='bar baz',
+                     quality=range(4)))
+
+    def test_init_empty_sequence(self):
+        for s in (b'',  # bytes
+                  u'',  # unicode
+                  np.array('', dtype='c'),  # char vector
+                  np.fromstring('', dtype=np.uint8),  # byte vec
+                  Sequence('')):  # another Sequence object
+            seq = Sequence(s)
+            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
+
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
         with self.assertRaises(TypeError):
@@ -109,6 +125,10 @@ class SequenceTests(TestCase):
             Sequence(42)
         with self.assertRaisesRegexp(TypeError, 'float'):
             Sequence(4.2)
+        with self.assertRaisesRegexp(TypeError, 'Foo'):
+            class Foo(object):
+                pass
+            Sequence(Foo())
 
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
@@ -143,9 +163,31 @@ class SequenceTests(TestCase):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_sequence_property(self):
-        npt.assert_equal(self.b1.sequence, np.array("GATTACA", dtype='c'))
-        npt.assert_equal(self.b2.sequence,  np.array("ACCGGTACC", dtype='c'))
-        npt.assert_equal(self.b3.sequence,  np.array("GREG", dtype='c'))
+        npt.assert_equal(Sequence('').sequence, np.array('', dtype='c'))
+        npt.assert_equal(Sequence('A').sequence, np.array('A', dtype='c'))
+        npt.assert_equal(Sequence('ACGT').sequence,
+                         np.array('ACGT', dtype='c'))
+
+        seq = Sequence('ACGT')
+
+        # test that we can't mutate the property
+        with self.assertRaises(ValueError):
+            seq.sequence[1] = 'A'
+
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            seq.sequence = np.array("GGGG", dtype='c')
+
+    def test_sequence_property_no_copy(self):
+        # TODO this isn't really testing Sequence.sequence. Move to a better
+        # location.
+        bytes = np.array([65, 66, 65], dtype=np.uint8)
+        seq = Sequence(bytes)
+
+        self.assertIs(seq._bytes, bytes)
+
+        with self.assertRaises(ValueError):
+            bytes[1] = 42
 
     def test_id_property(self):
         self.assertEqual(Sequence('').id, '')
@@ -211,7 +253,7 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.quality.shape, (1,))
         npt.assert_equal(seq.quality, np.array([2]))
 
-    def test_quality_no_copy(self):
+    def test_quality_property_no_copy(self):
         qual = np.array([22, 22, 1])
         seq = Sequence('ACA', quality=qual)
         self.assertIs(seq.quality, qual)
