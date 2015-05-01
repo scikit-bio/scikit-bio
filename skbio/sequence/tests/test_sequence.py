@@ -807,14 +807,15 @@ class SequenceTests(TestCase):
                                id="This is a long id", description="desc",
                                quality=([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2] *
                                         10))
-        self.assertEqual(repr(seq_simple), "Sequence('ACGT')[0:4]")
+        self.assertEqual(repr(seq_simple), "Sequence('ACGT', length=4)")
         self.assertEqual(repr(seq_med),
-                         ("Sequence('ACGT', id='id', description='desc', qual"
-                          "ity=[1, 2, 3, 4])[0:4]"))
+                         ("Sequence('ACGT', length=4, id='id',"
+                         " description='desc', quality=[1, 2, 3, 4])"))
         self.assertEqual(repr(seq_complex),
-                         ("Sequence('ASDKJH ... @#(*HJ', id='This is a long id"
-                          "', description='desc', \n         quality=[1, 2, 3,"
-                          " 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])[0:120]"))
+                         ("Sequence('ASDKJH ... @#(*HJ', length=120, id='This"
+                          " is a long id', \n         description='desc', "
+                          "quality=[1, 2, 3, 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])")
+                          )
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
