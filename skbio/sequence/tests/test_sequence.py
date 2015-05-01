@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
+from six import string_types
 
 from re import compile as re_compile
 from collections import Counter, defaultdict, Hashable
@@ -69,6 +70,10 @@ class SequenceTests(TestCase):
                   np.fromstring('', dtype=np.uint8),  # byte vec
                   Sequence('')):  # another Sequence object
             seq = Sequence(s)
+
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (0,))
             npt.assert_equal(seq.sequence, np.array('', dtype='c'))
 
     def test_init_single_character_sequence(self):
@@ -78,6 +83,10 @@ class SequenceTests(TestCase):
                   np.fromstring('A', dtype=np.uint8),
                   Sequence('A')):
             seq = Sequence(s)
+
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (1,))
             npt.assert_equal(seq.sequence, np.array('A', dtype='c'))
 
     def test_init_multiple_character_sequence(self):
@@ -87,6 +96,10 @@ class SequenceTests(TestCase):
                   np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
                   Sequence('.ABC\t123  xyz-')):
             seq = Sequence(s)
+
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (14,))
             npt.assert_equal(seq.sequence,
                              np.array('.ABC\t123  xyz-', dtype='c'))
 
@@ -110,11 +123,149 @@ class SequenceTests(TestCase):
             Sequence('ACGT', id='abc', description='123', quality=[42] * 4))
 
         # subclasses work too
-        seq = DNA('ACGT', id='foo', description='bar baz', quality=range(4))
+        seq = SequenceSubclass('ACGT', id='foo', description='bar baz',
+                               quality=range(4))
         self.assertEqual(
             Sequence(seq),
             Sequence('ACGT', id='foo', description='bar baz',
                      quality=range(4)))
+
+    def test_init_from_contiguous_sequence_bytes_view(self):
+        bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
+        view = bytes[:3]
+        seq = Sequence(view)
+
+        # sequence should be what we'd expect
+        self.assertEqual(seq, Sequence('A*B'))
+
+        # we shouldn't own the memory because no copy should have been made
+        self.assertFalse(seq._owns_bytes)
+
+        # can't mutate view because it isn't writeable anymore
+        with self.assertRaises(ValueError):
+            view[1] = 100
+
+        # sequence shouldn't have changed
+        self.assertEqual(seq, Sequence('A*B'))
+
+        # mutate bytes (*not* the view)
+        bytes[0] = 99
+
+        # Sequence changed because we are only able to make the view read-only,
+        # not its source (bytes). This is somewhat inconsistent behavior that
+        # is (to the best of our knowledge) outside our control.
+        self.assertEqual(seq, Sequence('c*B'))
+
+    def test_init_from_noncontiguous_sequence_bytes_view(self):
+        bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
+        view = bytes[::2]
+        seq = Sequence(view)
+
+        # sequence should be what we'd expect
+        self.assertEqual(seq, Sequence('ABA'))
+
+        # we should own the memory because a copy should have been made
+        self.assertTrue(seq._owns_bytes)
+
+        # mutate bytes and its view
+        bytes[0] = 99
+        view[1] = 100
+
+        # sequence shouldn't have changed
+        self.assertEqual(seq, Sequence('ABA'))
+
+    def test_init_no_copy_of_sequence(self):
+        bytes = np.array([65, 66, 65], dtype=np.uint8)
+        seq = Sequence(bytes)
+
+        # should share the same memory
+        self.assertIs(seq._bytes, bytes)
+
+        # shouldn't be able to mutate the Sequence object's internals by
+        # mutating the shared memory
+        with self.assertRaises(ValueError):
+            bytes[1] = 42
+
+    def test_init_empty_id(self):
+        for i in (b'', u''):
+            seq = Sequence('', id=i)
+
+            self.assertIsInstance(seq.id, string_types)
+            self.assertEqual(seq.id, '')
+
+    def test_init_single_character_id(self):
+        for i in (b'z', u'z'):
+            seq = Sequence('', id=i)
+
+            self.assertIsInstance(seq.id, string_types)
+            self.assertEqual(seq.id, 'z')
+
+    def test_init_multiple_character_id(self):
+        for i in (b'\nabc\tdef  G123', u'\nabc\tdef  G123'):
+            seq = Sequence('', id=i)
+
+            self.assertIsInstance(seq.id, string_types)
+            self.assertEqual(seq.id, '\nabc\tdef  G123')
+
+    def test_init_empty_description(self):
+        for i in (b'', u''):
+            seq = Sequence('', description=i)
+
+            self.assertIsInstance(seq.description, string_types)
+            self.assertEqual(seq.description, '')
+
+    def test_init_single_character_description(self):
+        for i in (b'z', u'z'):
+            seq = Sequence('', description=i)
+
+            self.assertIsInstance(seq.description, string_types)
+            self.assertEqual(seq.description, 'z')
+
+    def test_init_multiple_character_description(self):
+        for i in (b'\nabc\tdef  G123', u'\nabc\tdef  G123'):
+            seq = Sequence('', description=i)
+
+            self.assertIsInstance(seq.description, string_types)
+            self.assertEqual(seq.description, '\nabc\tdef  G123')
+
+    def test_init_empty_quality(self):
+        for q in ([], (), np.array([])):
+            seq = Sequence('', quality=q)
+
+            self.assertIsInstance(seq.quality, np.ndarray)
+            self.assertEqual(seq.quality.dtype, np.int)
+            self.assertEqual(seq.quality.shape, (0,))
+            npt.assert_equal(seq.quality, np.array([]))
+
+    def test_init_single_quality_score(self):
+        for q in (2, [2], (2,), np.array([2])):
+            seq = Sequence('G', quality=q)
+
+            self.assertIsInstance(seq.quality, np.ndarray)
+            self.assertEqual(seq.quality.dtype, np.int)
+            self.assertEqual(seq.quality.shape, (1,))
+            npt.assert_equal(seq.quality, np.array([2]))
+
+    def test_init_multiple_quality_scores(self):
+        for q in ([0, 42, 42, 1, 0, 8, 100, 0, 0],
+                  (0, 42, 42, 1, 0, 8, 100, 0, 0),
+                  np.array([0, 42, 42, 1, 0, 8, 100, 0, 0])):
+            seq = Sequence('G' * 9, quality=q)
+
+            self.assertIsInstance(seq.quality, np.ndarray)
+            self.assertEqual(seq.quality.dtype, np.int)
+            self.assertEqual(seq.quality.shape, (9,))
+            npt.assert_equal(seq.quality,
+                             np.array([0, 42, 42, 1, 0, 8, 100, 0, 0]))
+
+    def test_init_no_copy_of_quality(self):
+        qual = np.array([22, 22, 1])
+        seq = Sequence('ACA', quality=qual)
+
+        self.assertIs(seq.quality, qual)
+
+        with self.assertRaises(ValueError):
+            qual[1] = 42
 
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
@@ -179,12 +330,19 @@ class SequenceTests(TestCase):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
     def test_sequence_property(self):
-        # Sequence property tests are only concerned with testing the interface
-        # provided by the property.
+        # Property tests are only concerned with testing the interface
+        # provided by the property: that it can be accessed, can't be
+        # reassigned or mutated in place, and that the correct type is
+        # returned. More extensive testing of border cases (e.g., different
+        # sequence lengths or input types, odd characters, etc.) are performed
+        # in Sequence.__init__ tests.
+
         seq = Sequence('ACGT')
 
-        npt.assert_equal(Sequence('ACGT').sequence,
-                         np.array('ACGT', dtype='c'))
+        # should get back a numpy.ndarray of '|S1' dtype
+        self.assertIsInstance(seq.sequence, np.ndarray)
+        self.assertEqual(seq.sequence.dtype, '|S1')
+        npt.assert_equal(seq.sequence, np.array('ACGT', dtype='c'))
 
         # test that we can't mutate the property
         with self.assertRaises(ValueError):
@@ -194,91 +352,42 @@ class SequenceTests(TestCase):
         with self.assertRaises(AttributeError):
             seq.sequence = np.array("GGGG", dtype='c')
 
-    def test_sequence_property_no_copy(self):
-        # TODO this isn't really testing Sequence.sequence. Move to a better
-        # location.
-        bytes = np.array([65, 66, 65], dtype=np.uint8)
-        seq = Sequence(bytes)
-
-        self.assertIs(seq._bytes, bytes)
-
-        with self.assertRaises(ValueError):
-            bytes[1] = 42
-
     def test_id_property(self):
-        self.assertEqual(Sequence('').id, '')
-        self.assertEqual(Sequence('', id=b'abc\ndef').id, b'abc\ndef')
-        self.assertEqual(Sequence('', id=u'abc\ndef').id, u'abc\ndef')
+        seq = Sequence('', id='foo')
 
-        seq = Sequence('ACGT', id='foo')
+        self.assertIsInstance(seq.id, string_types)
+        self.assertEqual(seq.id, 'foo')
 
-        # test that we can't mutate the property
         with self.assertRaises(TypeError):
             seq.id[1] = 42
 
-        # test that we can't set the property
         with self.assertRaises(AttributeError):
             seq.id = 'bar'
 
     def test_description_property(self):
-        self.assertEqual(Sequence('').description, '')
-        self.assertEqual(Sequence('', description=b'abc\ndef').description,
-                         b'abc\ndef')
-        self.assertEqual(Sequence('', description=u'abc\ndef').description,
-                         u'abc\ndef')
+        seq = Sequence('', description='foo')
 
-        seq = Sequence('ACGT', description='foo')
+        self.assertIsInstance(seq.description, string_types)
+        self.assertEqual(seq.description, 'foo')
 
-        # test that we can't mutate the property
         with self.assertRaises(TypeError):
             seq.description[1] = 42
 
-        # test that we can't set the property
         with self.assertRaises(AttributeError):
             seq.description = 'bar'
 
     def test_quality_property(self):
-        # test various quality input types that should be equivalent
-        for q in ((22, 22, 0),
-                  [22, 22, 0],
-                  np.array([22, 22, 0])):
-            seq = Sequence('ACA', quality=q)
-
-            # should get back a read-only numpy.ndarray of int dtype
-            self.assertIsInstance(seq.quality, np.ndarray)
-            self.assertEqual(seq.quality.dtype, np.int)
-            npt.assert_equal(seq.quality, np.array([22, 22, 0]))
-
-            # test that we can't mutate the quality scores
-            with self.assertRaises(ValueError):
-                seq.quality[1] = 42
-
-            # test that we can't set the property
-            with self.assertRaises(AttributeError):
-                seq.quality = (22, 22, 42)
-
-    def test_quality_property_none(self):
-        seq = Sequence('ACA', quality=None)
-        self.assertIsNone(seq.quality)
-
-    def test_quality_property_scalar(self):
-        seq = Sequence('G', quality=2)
+        seq = Sequence('ACA', quality=[22, 22, 0])
 
         self.assertIsInstance(seq.quality, np.ndarray)
         self.assertEqual(seq.quality.dtype, np.int)
-        self.assertEqual(seq.quality.shape, (1,))
-        npt.assert_equal(seq.quality, np.array([2]))
-
-    def test_quality_property_no_copy(self):
-        qual = np.array([22, 22, 1])
-        seq = Sequence('ACA', quality=qual)
-        self.assertIs(seq.quality, qual)
+        npt.assert_equal(seq.quality, np.array([22, 22, 0]))
 
         with self.assertRaises(ValueError):
             seq.quality[1] = 42
 
-        with self.assertRaises(ValueError):
-            qual[1] = 42
+        with self.assertRaises(AttributeError):
+            seq.quality = [22, 22, 42]
 
     def test_has_quality(self):
         seq = Sequence('')
@@ -1016,7 +1125,7 @@ class SequenceTests(TestCase):
 
     def test_distance_on_subclass(self):
         pass
-        
+
     def test_mismatch_frequency(self):
         # relative = False (default)
         self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
