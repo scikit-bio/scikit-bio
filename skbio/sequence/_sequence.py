@@ -25,7 +25,6 @@ from skbio.util._misc import reprnator
 with hooks():
     from itertools import zip_longest
 
-
 class Sequence(collections.Sequence, SkbioObject):
     """Base class for biological sequences.
 
@@ -249,13 +248,9 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(other, string_types):
             return other in self._string
 
-        if isinstance(other, Sequence) and type(other) != type(self):
-            klass = self.__class__.__name__
-            oklass = other.__class__.__name__
-            raise TypeError("'in <%s>' requires string, numpy array, or %s as"
-                            " left operand, not %s" % (klass, klass, oklass))
+        other = self._munge_to_sequence(other, "in")
 
-        return Sequence(other)._string in self._string
+        return other._string in self._string
 
     def __eq__(self, other):
         """The equality operator.
@@ -902,14 +897,9 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(subsequence, string_types):
             return self._string.count(subsequence, start, end)
 
-        if isinstance(subsequence, Sequence) and \
-                type(subsequence) != type(self):
-            klass = self.__class__.__name__
-            oklass = subsequence.__class__.__name__
-            raise TypeError("Instances of %s cannot counted in %s." %
-                           (oklass, klass))
+        subsequence = self._munge_to_sequence(subsequence, "count")
 
-        return self._string.count(Sequence(subsequence)._string, start, end)
+        return self._string.count(subsequence._string, start, end)
 
     def distance(self, other, metric=None):
         """Returns the distance to other
@@ -954,12 +944,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
-        if isinstance(other, Sequence) and type(other) != type(self):
-            klass = self.__class__.__name__
-            oklass = other.__class__.__name__
-            raise TypeError("Cannot calculate distance between %s and %s." %
-                           (klass, oklass))
-        other = Sequence(other)
+        other = self._munge_to_sequence(other, 'distance')
         if metric is None:
             # Hamming requires equal length sequences. We are checking this
             # here because the error you would get otherwise is cryptic.
@@ -972,6 +957,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
+        other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
             raise ValueError("Match and mismatch vectors can only be "
                              "generated from equal length sequences.")
@@ -1202,3 +1188,13 @@ class Sequence(collections.Sequence, SkbioObject):
         for match in regex.finditer(self._string):
             for g in range(start, len(match.groups())+1):
                 yield slice(match.start(g), match.end(g))
+
+    def _munge_to_sequence(self, other, method):
+        if isinstance(other, Sequence):
+            if type(other) != type(self):
+                raise TypeError("Cannot use %s and %s together with `%s`" %
+                                (self.__class__.__name__,
+                                 other.__class__.__name__, method))
+            else:
+                return other
+        return Sequence(other)

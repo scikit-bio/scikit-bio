@@ -23,7 +23,12 @@ from skbio import (
 with hooks():
     from itertools import zip_longest
 
+_sequence_kinds = frozenset([str, Sequence,
+                             lambda s: np.fromstring(s, dtype='|S1'),
+                             lambda s: np.fromstring(s, dtype=np.uint8)])
+
 class SequenceSubclass(Sequence):
+    """Used for testing purposes."""
     pass
 
 class SequenceTests(TestCase):
@@ -541,41 +546,19 @@ class SequenceTests(TestCase):
         self.assertEqual(len(Sequence("a")), 1)
         self.assertEqual(len(Sequence("abcdef")), 6)
 
-    def test_contains_simple_str(self):
+    def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(',24' in seq)
-        self.assertTrue('*' in seq)
-        self.assertTrue('' in seq)
+        tested = 0
+        for c in _sequence_kinds:
+            tested += 1
+            self.assertTrue(',24' in seq)
+            self.assertTrue('*' in seq)
+            self.assertTrue('' in seq)
 
-        self.assertFalse("$" in seq)
-        self.assertFalse("AGT" in seq)
+            self.assertFalse("$" in seq)
+            self.assertFalse("AGT" in seq)
 
-    def test_contains_sequence(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(Sequence(',24') in seq)
-        self.assertTrue(Sequence('*') in seq)
-        self.assertTrue(Sequence('') in seq)
-
-        self.assertFalse(Sequence("$") in seq)
-        self.assertFalse(Sequence("AGT") in seq)
-
-    def test_contains_numpy_uint(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(np.fromstring(',24', dtype=np.uint8) in seq)
-        self.assertTrue(np.fromstring('*', dtype=np.uint8) in seq)
-        self.assertTrue(np.fromstring('', dtype=np.uint8) in seq)
-
-        self.assertFalse(np.fromstring('$', dtype=np.uint8) in seq)
-        self.assertFalse(np.fromstring('AGT', dtype=np.uint8) in seq)
-
-    def test_contains_numpy_s1(self):
-        seq = Sequence("#@ACGT,24.13**02")
-        self.assertTrue(np.fromstring(',24', dtype="|S1") in seq)
-        self.assertTrue(np.fromstring('*', dtype="|S1") in seq)
-        self.assertTrue(np.fromstring('', dtype="|S1") in seq)
-
-        self.assertFalse(np.fromstring('$', dtype="|S1") in seq)
-        self.assertFalse(np.fromstring('AGT', dtype="|S1") in seq)
+        self.assertEqual(tested, 4)
 
     def test_contains_sequence_subclass(self):
         with self.assertRaises(TypeError):
@@ -975,7 +958,7 @@ class SequenceTests(TestCase):
 
         seq = Sequence("1234567899876555")
         tested = 0
-        for c in [str, Sequence, construct_char_array, construct_uint8_array]:
+        for c in _sequence_kinds:
             tested += 1
             self.assertEqual(seq.count(c('4')), 1)
             self.assertEqual(seq.count(c('8')), 2)
@@ -998,24 +981,24 @@ class SequenceTests(TestCase):
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
 
-#    def test_degap(self):
-#        # use equals method to ensure that id, description, and filtered
-#        # quality are correctly propagated to the resulting sequence
-#
-#        # no filtering, has quality
-#        self.assertTrue(self.b1.degap().equals(self.b1))
-#
-#        # no filtering, doesn't have quality
-#        self.assertTrue(self.b2.degap().equals(self.b2))
-#
-#        # everything is filtered, has quality
-#        self.assertTrue(self.b7.degap().equals(
-#            Sequence('', quality=[])))
-#
-#        # some filtering, has quality
-#        self.assertTrue(self.b8.degap().equals(
-#            Sequence('HELLO', id='hello', description='gapped hello',
-#                               quality=[0, 1, 8, 9, 10])))
+    def test_matches(self):
+        pass
+
+    def test_mismatches(self):
+        pass
+
+    def test_distance(self):
+        tested = 0
+        for c in _sequence_kinds:
+            tested += 1
+            seq1 = Sequence("abcdef")
+            seq2 = c("12bcef")
+
+            self.assertIsInstance(seq1.distance(seq1), float)
+            self.assertEqual(seq1.distance(seq2), 2.0/3.0)
+
+        self.assertEqual(tested, 4)
+
 
     def test_distance_arbitrary_function(self):
         def metric(x, y):
@@ -1049,29 +1032,6 @@ class SequenceTests(TestCase):
         with self.assertRaises(TypeError):
             seq1.distance(seq2)
 
-    def test_distance_on_string(self):
-        seq1 = Sequence("abcdef")
-        seq2 = "12bcef"
-
-        self.assertIsInstance(seq1.distance(seq1), float)
-        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
-
-    def test_distance_on_char_array(self):
-        seq1 = Sequence("abcdef")
-        seq2 = np.fromstring("12bcef", dtype='|S1')
-
-        self.assertIsInstance(seq1.distance(seq1), float)
-        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
-        self.assertEqual(seq1.distance(SequenceSubclass("12bcef").sequence),
-                         2.0/3.0)
-
-    def test_distance_on_uint8_array(self):
-        seq1 = Sequence("abcdef")
-        seq2 = np.fromstring("12bcef", dtype=np.uint8)
-
-        self.assertIsInstance(seq1.distance(seq1), float)
-        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
-
     def test_mismatch_frequency(self):
         # relative = False (default)
         self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
@@ -1100,12 +1060,6 @@ class SequenceTests(TestCase):
         self.assertEqual(self.b1.index('A'), 1)
         self.assertEqual(self.b1.index('AC'), 4)
         self.assertRaises(ValueError, self.b1.index, 'x')
-
-    # def test_has_gaps(self):
-    #     self.assertFalse(self.b1.has_gaps())
-    #     self.assertFalse(self.b2.has_gaps())
-    #     self.assertTrue(self.b7.has_gaps())
-    #     self.assertTrue(self.b8.has_gaps())
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')
