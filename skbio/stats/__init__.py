@@ -42,8 +42,8 @@ Functions
 
 from skbio.util import TestRunner
 
-from ._subsample import subsample_counts, isubsample
+# from ._subsample import subsample_counts, isubsample
 
-__all__ = ['subsample_counts', 'isubsample']
+# __all__ = ['subsample_counts', 'isubsample']
 
 test = TestRunner(__file__).test
