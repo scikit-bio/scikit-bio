@@ -483,8 +483,8 @@ class PowerAnalysisTest(TestCase):
                                                          order=['N', 'Y'],
                                                          strict_match=True)
         for k, v in viewitems(known_pairs):
-            np.assertTrue(k in test_pairs)
-            np.assertEqual(v, test_pairs[k])
+            self.assertTrue(k in test_pairs)
+            self.assertEqual(v, test_pairs[k])
         for idx in xrange(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
@@ -501,8 +501,8 @@ class PowerAnalysisTest(TestCase):
                                                          order=['N', 'Y'],
                                                          strict_match=False)
         for k, v in viewitems(known_pairs):
-            np.assertTrue(k in test_pairs)
-            np.assertEqual(v, test_pairs[k])
+            self.assertTrue(k in test_pairs)
+            self.assertEqual(v, test_pairs[k])
         for idx in xrange(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
