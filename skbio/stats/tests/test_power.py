@@ -484,7 +484,7 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(known_pairs.keys(), test_pairs.keys())
         self.assertEqual(sorted(known_pairs.values()),
                          sorted(test_pairs.values()))
-        for idx in xrange(len(test_index)):
+        for idx in range(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
     def test__identify_sample_groups_not_strict(self):
@@ -502,7 +502,7 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(known_pairs.keys(), test_pairs.keys())
         self.assertEqual(sorted(known_pairs.values()),
                          sorted(test_pairs.values()))
-        for idx in xrange(len(test_index)):
+        for idx in range(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
     def test__draw_paired_samples(self):
