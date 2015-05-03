@@ -817,7 +817,7 @@ def _calculate_power(p_values, alpha=0.05):
 
 
 def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
-    num_iter=100):
+                           num_iter=100):
     r"""Compares two distribution arrays iteratively
 
     Parameters
@@ -1137,7 +1137,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
 
 
 def _calculate_power_curve(test, samples, sample_counts, ratio=None,
-    mode='ind', num_iter=1000, alpha=0.05):
+                           mode='ind', num_iter=1000, alpha=0.05):
     r"""Generates an empirical power curve for the samples.
 
     Parameters
