@@ -1118,7 +1118,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
         return [np.array([]) for o in meta_pairs['no']]
 
     # Identifies the absloute positions of the control group being drawn
-    abs_pos = np.random.choice(index[0], num_samps, replace=False)
+    abs_pos = np.random.choice(index[0], int(num_samps), replace=False)
 
     # Gets the set and relative position in the set of the samples
     set_pos = index[1][abs_pos.astype(int)]

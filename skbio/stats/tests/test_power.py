@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils import viewitems
+
 from unittest import TestCase, main
 
 import numpy as np
@@ -480,7 +482,9 @@ class PowerAnalysisTest(TestCase):
                                                          ['SEX', 'AGE'],
                                                          order=['N', 'Y'],
                                                          strict_match=True)
-        self.assertEqual(known_pairs, test_pairs)
+        for k, v in viewitems(known_pairs):
+            np.assertTrue(k in test_pairs)
+            np.assertEqual(v, test_pairs[k])
         for idx in xrange(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
@@ -496,7 +500,9 @@ class PowerAnalysisTest(TestCase):
                                                          ['SEX', 'ABX'],
                                                          order=['N', 'Y'],
                                                          strict_match=False)
-        self.assertEqual(known_pairs, test_pairs)
+        for k, v in viewitems(known_pairs):
+            np.assertTrue(k in test_pairs)
+            np.assertEqual(v, test_pairs[k])
         for idx in xrange(len(test_index)):
             npt.assert_array_equal(known_index[idx], test_index[idx])
 
