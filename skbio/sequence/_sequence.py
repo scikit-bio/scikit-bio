@@ -1317,20 +1317,25 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        regex : SRE_Pattern
-            A compiled regular expression (e.g., from re.compile) with
-            finditer method
-        retrieve_group_0 : bool, optional
-            Defaults to ``False``. If ``True``, group(0) will be included in
-            each list of tuples, which represents the shortest possible
-            substring of the full sequence that contains all the other groups
+        regex : str, SRE_Pattern
+            A string to be compiled into a regular expression, or a pre-
+            compiled regular expression (e.g., from re.compile) with
+            finditer method.
 
         Returns
         -------
         generator
-            yields lists of 3-tuples. Each 3-tuple represents a group from the
-            matched regular expression, and contains the start of the hit, the
-            end of the hit, and the substring that was hit
+            Yields lists of 3-tuples. Each 3-tuple represents a slice from
+            ``self`` (i.e., ``(start, end, step)``) where the regular
+            expression matched.
+
+        Example
+        -------
+        >>> from skbio import Sequence
+        >>> s = Sequence('AATATACCGGTTATAA')
+        >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
+        slice(2, 6, None) TATA
+        slice(11, 16, None) TATAA
 
         .. shownumpydoc
         """
