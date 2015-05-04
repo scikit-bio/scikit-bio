@@ -1259,10 +1259,25 @@ class SequenceTests(TestCase):
             seq1.match_frequency(seq2)
 
     def test_index(self):
-        self.assertEqual(self.b1.index('G'), 0)
-        self.assertEqual(self.b1.index('A'), 1)
-        self.assertEqual(self.b1.index('AC'), 4)
-        self.assertRaises(ValueError, self.b1.index, 'x')
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            seq = Sequence("ABCDEFG@@ABCDFOO")
+            self.assertEqual(seq.index(c("A")), 0)
+            self.assertEqual(seq.index(c("@")), 7)
+            self.assertEqual(seq.index(c("@@")), 7)
+
+            with self.assertRaises(ValueError):
+                seq.index("A", begin=1, end=5)
+
+        self.assertEqual(tested, 4)
+
+    def test_index_on_subclass(self):
+        with self.assertRaises(TypeError):
+            Sequence("ABCDEFG").index(SequenceSubclass("A"))
+        
+        self.assertEqual(
+            SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')

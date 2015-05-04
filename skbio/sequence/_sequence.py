@@ -1087,7 +1087,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.matches(other).sum())
 
-    def index(self, subsequence):
+    def index(self, subsequence, begin=None, end=None):
         """Return the position where subsequence first occurs
 
         Returns
@@ -1106,8 +1106,10 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         try:
             if isinstance(subsequence, string_types):
-                return self._string.index(subsequence)
-            return self._string.index(Sequence(subsequence)._string)
+                return self._string.index(subsequence, begin, end)
+            return self._string.index(
+                self._munge_to_sequence(subsequence, "index")._string, begin,
+                end)
         except ValueError:
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))
