@@ -45,32 +45,32 @@ Exceptions
 
 Examples
 --------
->>> from skbio.sequence import DNASequence, RNASequence
+>>> from skbio.sequence import DNA, RNA
 
 New sequences are created with optional id and description fields.
 
->>> d1 = DNASequence('ACC--G-GGTA..')
->>> d1 = DNASequence('ACC--G-GGTA..',id="seq1")
->>> d1 = DNASequence('ACC--G-GGTA..',id="seq1",description="GFP")
+>>> d1 = DNA('ACC--G-GGTA..')
+>>> d1 = DNA('ACC--G-GGTA..',id="seq1")
+>>> d1 = DNA('ACC--G-GGTA..',id="seq1",description="GFP")
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
 
 >>> d2 = d1.degap()
 >>> d1
-<DNASequence: ACC--G-GGT... (length: 13)>
+DNA('ACC--G-GGTA..', length=13, id='seq1', description='GFP')
 >>> d2
-<DNASequence: ACCGGGTA (length: 8)>
+DNA('ACCGGGTA', length=8, id='seq1', description='GFP')
 >>> d3 = d2.reverse_complement()
 >>> d3
-<DNASequence: TACCCGGT (length: 8)>
+DNA('ACCGGGTA', length=8, id='seq1', description='GFP')
 
 It's also straight-forward to compute distances between sequences (optionally
 using user-defined distance metrics, default is Hamming distance) for use in
 sequence clustering, phylogenetic reconstruction, etc.
 
->>> d4 = DNASequence('GACCCGCT')
->>> d5 = DNASequence('GACCCCCT')
+>>> d4 = DNA('GACCCGCT')
+>>> d5 = DNA('GACCCCCT')
 >>> d3.distance(d4)
 0.25
 >>> d3.distance(d5)
@@ -78,13 +78,13 @@ sequence clustering, phylogenetic reconstruction, etc.
 
 Class-level methods contain information about the molecule types.
 
->>> DNASequence.iupac_degeneracies['B']
+>>> DNA.iupac_degeneracies['B']
 set(['C', 'T', 'G'])
 
->>> RNASequence.iupac_degeneracies['B']
+>>> RNA.iupac_degeneracies['B']
 set(['C', 'U', 'G'])
 
->>> DNASequence.is_gap('-')
+>>> DNA.is_gap('-')
 True
 
 Creating and using a ``GeneticCode`` object
@@ -130,7 +130,7 @@ Retrieving the anticodons of the object
 
 NucleotideSequences can be translated using a ``GeneticCode`` object.
 
->>> d6 = DNASequence('ATGTCTAAATGA')
+>>> d6 = DNA('ATGTCTAAATGA')
 >>> from skbio.sequence import genetic_code
 >>> gc = genetic_code(11)
 >>> gc.translate(d6)
