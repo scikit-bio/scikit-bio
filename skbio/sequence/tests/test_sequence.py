@@ -31,27 +31,9 @@ class SequenceSubclass(Sequence):
 
 class SequenceTests(TestCase):
     def setUp(self):
-        # DONT DELETE THIS!! JUST REMOVE THIS COMMENT
         self.sequence_kinds = frozenset([
             str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
-        # BELOW THIS CAN BE REMOVED
-        self.b1 = Sequence('GATTACA', quality=range(7))
-        self.b2 = Sequence(
-            'ACCGGTACC', id="test-seq-2",
-            description="A test sequence")
-        self.b3 = Sequence(
-            'GREG', id="test-seq-3", description="A protein sequence")
-        self.b4 = Sequence(
-            'PRTEIN', id="test-seq-4")
-        self.b5 = Sequence(
-            'LLPRTEIN', description="some description")
-        self.b6 = Sequence('ACGTACGTACGT')
-        self.b7 = Sequence('..--..', quality=range(6))
-        self.b8 = Sequence('HE..--..LLO', id='hello',
-                           description='gapped hello',
-                           quality=range(11))
-
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
@@ -675,8 +657,8 @@ class SequenceTests(TestCase):
 
     def test_hash(self):
         with self.assertRaises(TypeError):
-            hash(self.b1)
-        self.assertNotIsInstance(self.b1, Hashable)
+            hash(Sequence("ABCDEFG"))
+        self.assertNotIsInstance(Sequence("ABCDEFG"), Hashable)
 
     def test_iter_has_quality(self):
         tested = False
@@ -1233,13 +1215,13 @@ class SequenceTests(TestCase):
         seq = Sequence('GATTACA', quality=range(7))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(0))
+            list(seq.kmers(0))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(-42))
+            list(seq.kmers(-42))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(8))
+            list(seq.kmers(8))
 
     def test_kmers_different_sequences(self):
         seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
