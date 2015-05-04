@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
 from six import string_types
 
-from re import compile as re_compile
+import re
+from types import GeneratorType
 from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
 
@@ -548,7 +549,8 @@ class SequenceTests(TestCase):
         def generator():
             yield slice(0, 4)
             yield slice(200, 400)
-            yield slice(None, -4, -1)
+            yield -1
+            yield slice(-2, -4, -1)
             yield 9
 
         eseq = Sequence("0123fed9", id='id7', description='dsc7',
@@ -711,179 +713,6 @@ class SequenceTests(TestCase):
             tested = True
             self.assertEqual(s, Sequence(str(9 - i), id='a', description='b'))
         self.assertTrue(tested)
-
-    def _compare_kmers_results(self, observed, expected):
-        for obs, exp in zip_longest(observed, expected, fillvalue=None):
-            # use equals to compare quality, id, description, sequence, and
-            # type
-            self.assertTrue(obs.equals(exp))
-
-    def test_kmers_overlap_true(self):
-        expected = [
-            Sequence('G', quality=[0]),
-            Sequence('A', quality=[1]),
-            Sequence('T', quality=[2]),
-            Sequence('T', quality=[3]),
-            Sequence('A', quality=[4]),
-            Sequence('C', quality=[5]),
-            Sequence('A', quality=[6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(1, overlap=True), expected)
-
-        expected = [
-            Sequence('GA', quality=[0, 1]),
-            Sequence('AT', quality=[1, 2]),
-            Sequence('TT', quality=[2, 3]),
-            Sequence('TA', quality=[3, 4]),
-            Sequence('AC', quality=[4, 5]),
-            Sequence('CA', quality=[5, 6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(2, overlap=True), expected)
-
-        expected = [
-            Sequence('GAT', quality=[0, 1, 2]),
-            Sequence('ATT', quality=[1, 2, 3]),
-            Sequence('TTA', quality=[2, 3, 4]),
-            Sequence('TAC', quality=[3, 4, 5]),
-            Sequence('ACA', quality=[4, 5, 6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(3, overlap=True), expected)
-
-        expected = [
-            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(7, overlap=True), expected)
-
-        self.assertEqual(list(self.b1.kmers(8, overlap=True)), [])
-
-    def test_kmers_overlap_false(self):
-        expected = [
-            Sequence('G', quality=[0]),
-            Sequence('A', quality=[1]),
-            Sequence('T', quality=[2]),
-            Sequence('T', quality=[3]),
-            Sequence('A', quality=[4]),
-            Sequence('C', quality=[5]),
-            Sequence('A', quality=[6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(1, overlap=False), expected)
-
-        expected = [
-            Sequence('GA', quality=[0, 1]),
-            Sequence('TT', quality=[2, 3]),
-            Sequence('AC', quality=[4, 5])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(2, overlap=False), expected)
-
-        expected = [
-            Sequence('GAT', quality=[0, 1, 2]),
-            Sequence('TAC', quality=[3, 4, 5])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(3, overlap=False), expected)
-
-        expected = [
-            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(7, overlap=False), expected)
-
-        self.assertEqual(list(self.b1.kmers(8, overlap=False)), [])
-
-    def test_kmers_invalid_k(self):
-        with self.assertRaises(ValueError):
-            list(self.b1.kmers(0))
-
-        with self.assertRaises(ValueError):
-            list(self.b1.kmers(-42))
-
-    def test_kmers_different_sequences(self):
-        expected = [
-            Sequence('HE.', quality=[0, 1, 2], id='hello',
-                     description='gapped hello'),
-            Sequence('.--', quality=[3, 4, 5], id='hello',
-                     description='gapped hello'),
-            Sequence('..L', quality=[6, 7, 8], id='hello',
-                     description='gapped hello')
-        ]
-        self._compare_kmers_results(
-            self.b8.kmers(3, overlap=False), expected)
-
-    def test_kmer_frequencies(self):
-        # overlap = True
-        expected = Counter('GATTACA')
-        self.assertEqual(self.b1.kmer_frequencies(1, overlap=True),
-                         expected)
-        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
-        self.assertEqual(self.b1.kmer_frequencies(3, overlap=True),
-                         expected)
-
-        # overlap = False
-        expected = Counter(['GAT', 'TAC'])
-        self.assertEqual(self.b1.kmer_frequencies(3, overlap=False),
-                         expected)
-        expected = Counter(['GATTACA'])
-        self.assertEqual(self.b1.kmer_frequencies(7, overlap=False),
-                         expected)
-
-    def test_kmer_frequencies_relative(self):
-        # overlap = True
-        expected = defaultdict(float)
-        expected['A'] = 3/7.
-        expected['C'] = 1/7.
-        expected['G'] = 1/7.
-        expected['T'] = 2/7.
-        self.assertEqual(self.b1.kmer_frequencies(1, overlap=True,
-                                                  relative=True),
-                         expected)
-        expected = defaultdict(float)
-        expected['GAT'] = 1/5.
-        expected['ATT'] = 1/5.
-        expected['TTA'] = 1/5.
-        expected['TAC'] = 1/5.
-        expected['ACA'] = 1/5.
-        self.assertEqual(self.b1.kmer_frequencies(3, overlap=True,
-                                                  relative=True),
-                         expected)
-
-        # overlap = False
-        expected = defaultdict(float)
-        expected['GAT'] = 1/2.
-        expected['TAC'] = 1/2.
-        self.assertEqual(self.b1.kmer_frequencies(3, overlap=False,
-                                                  relative=True),
-                         expected)
-        expected = defaultdict(float)
-        expected['GATTACA'] = 1.0
-        self.assertEqual(self.b1.kmer_frequencies(7, overlap=False,
-                                                  relative=True),
-                         expected)
-
-    def test_kmer_frequencies_floating_point_precision(self):
-        # Test that a sequence having no variation in k-words yields a
-        # frequency of exactly 1.0. Note that it is important to use
-        # self.assertEqual here instead of self.assertAlmostEqual because we
-        # want to test for exactly 1.0. A previous implementation of
-        # Sequence.kmer_frequencies(relative=True) added (1 / num_words) for
-        # each occurrence of a k-word to compute the frequencies (see
-        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
-        # this yielded a frequency slightly less than 1.0 due to roundoff
-        # error. The test case here uses a sequence with 10 characters that are
-        # all identical and computes k-word frequencies with k=1. This test
-        # case exposes the roundoff error present in the previous
-        # implementation because there are 10 k-words (which are all
-        # identical), so 1/10 added 10 times yields a number slightly less than
-        # 1.0. This occurs because 1/10 cannot be represented exactly as a
-        # floating point number.
-        seq = Sequence('AAAAAAAAAA')
-        self.assertEqual(seq.kmer_frequencies(1, relative=True),
-                         defaultdict(float, {'A': 1.0}))
 
     def test_repr(self):
         seq_simple = Sequence("ACGT")
@@ -1103,42 +932,6 @@ class SequenceTests(TestCase):
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
 
-    def test_matches(self):
-        tested = 0
-        for constructor in self.sequence_kinds:
-            tested += 1
-            seq1 = Sequence("AACCEEGG")
-            seq2 = constructor("ABCDEFGH")
-            expected = np.array([True, False] * 4)
-            npt.assert_equal(seq1.matches(seq2), expected)
-
-        self.assertEqual(tested, 4)
-
-    def test_matches_on_subclass(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = SequenceSubclass("ABCDEFGH")
-
-        with self.assertRaises(TypeError):
-            seq1.matches(seq2)
-
-    def test_mismatches(self):
-        tested = 0
-        for constructor in self.sequence_kinds:
-            tested += 1
-            seq1 = Sequence("AACCEEGG")
-            seq2 = constructor("ABCDEFGH")
-            expected = np.array([False, True] * 4)
-            npt.assert_equal(seq1.mismatches(seq2), expected)
-
-        self.assertEqual(tested, 4)
-
-    def test_mismatches_on_subclass(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = SequenceSubclass("ABCDEFGH")
-
-        with self.assertRaises(TypeError):
-            seq1.mismatches(seq2)
-
     def test_distance(self):
         tested = 0
         for constructor in self.sequence_kinds:
@@ -1150,7 +943,6 @@ class SequenceTests(TestCase):
             self.assertEqual(seq1.distance(seq2), 2.0/3.0)
 
         self.assertEqual(tested, 4)
-
 
     def test_distance_arbitrary_function(self):
         def metric(x, y):
@@ -1184,45 +976,334 @@ class SequenceTests(TestCase):
         with self.assertRaises(TypeError):
             seq1.distance(seq2)
 
+    def test_matches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([True, False] * 4)
+            npt.assert_equal(seq1.matches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_matches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.matches(seq2)
+
+    def test_matches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.matches(seq2)
+
+    def test_mismatches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([False, True] * 4)
+            npt.assert_equal(seq1.mismatches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_mismatches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
+
+    def test_mismatches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.mismatches(seq2)
+
     def test_mismatch_frequency(self):
-        # relative = False (default)
-        self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
-        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC')), 1)
-        # relative = True
-        self.assertEqual(self.b1.mismatch_frequency(self.b1, relative=True),
-                         0., 5)
-        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC'),
-                                                    relative=True),
-                         1. / 7., 5)
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1)), int)
+        self.assertEqual(seq1.mismatch_frequency(seq1), 0)
+        self.assertEqual(seq1.mismatch_frequency(seq2), 4)
+        self.assertEqual(seq1.mismatch_frequency(seq3), 8)
+
+    def test_mismatch_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.mismatch_frequency(seq1, relative=True), 0.0)
+        self.assertEqual(seq1.mismatch_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.mismatch_frequency(seq3, relative=True), 1.0)
+
+    def test_mismatch_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.mismatch_frequency(seq2)
+
+    def test_mismatch_frequence_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatch_frequency(seq2)
 
     def test_match_frequency(self):
-        # relative = False (default)
-        self.assertAlmostEqual(self.b1.match_frequency(self.b1), 7)
-        self.assertAlmostEqual(
-            self.b1.match_frequency(Sequence('GATTACC')), 6)
-        # relative = True
-        self.assertAlmostEqual(self.b1.match_frequency(self.b1, relative=True),
-                               1., 5)
-        self.assertAlmostEqual(self.b1.match_frequency(Sequence('GATTACC'),
-                                                       relative=True),
-                               6. / 7., 5)
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1)), int)
+        self.assertEqual(seq1.match_frequency(seq1), 8)
+        self.assertEqual(seq1.match_frequency(seq2), 4)
+        self.assertEqual(seq1.match_frequency(seq3), 0)
+
+    def test_match_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.match_frequency(seq1, relative=True), 1.0)
+        self.assertEqual(seq1.match_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.match_frequency(seq3, relative=True), 0.0)
+
+    def test_match_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.match_frequency(seq2)
+
+    def test_match_frequency_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.match_frequency(seq2)
 
     def test_index(self):
-        self.assertEqual(self.b1.index('G'), 0)
-        self.assertEqual(self.b1.index('A'), 1)
-        self.assertEqual(self.b1.index('AC'), 4)
-        self.assertRaises(ValueError, self.b1.index, 'x')
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            seq = Sequence("ABCDEFG@@ABCDFOO")
+            self.assertEqual(seq.index(c("A")), 0)
+            self.assertEqual(seq.index(c("@")), 7)
+            self.assertEqual(seq.index(c("@@")), 7)
 
-    def test_regex_iter(self):
-        pat = re_compile('(T+A)(CA)')
+            with self.assertRaises(ValueError):
+                seq.index("A", begin=1, end=5)
 
-        obs = list(self.b1.regex_iter(pat))
+        self.assertEqual(tested, 4)
+
+    def test_index_on_subclass(self):
+        with self.assertRaises(TypeError):
+            Sequence("ABCDEFG").index(SequenceSubclass("A"))
+
+        self.assertEqual(
+            SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
+
+    def _compare_kmers_results(self, observed, expected):
+        for obs, exp in zip_longest(observed, expected, fillvalue=None):
+            self.assertEqual(obs, exp)
+
+    def test_kmers(self):
+        seq = Sequence('GATTACA', quality=range(7))
+
+        expected = [
+            Sequence('G', quality=[0]),
+            Sequence('A', quality=[1]),
+            Sequence('T', quality=[2]),
+            Sequence('T', quality=[3]),
+            Sequence('A', quality=[4]),
+            Sequence('C', quality=[5]),
+            Sequence('A', quality=[6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(1, overlap=False), expected)
+
+        expected = [
+            Sequence('GA', quality=[0, 1]),
+            Sequence('TT', quality=[2, 3]),
+            Sequence('AC', quality=[4, 5])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(2, overlap=False), expected)
+
+        expected = [
+            Sequence('GAT', quality=[0, 1, 2]),
+            Sequence('TAC', quality=[3, 4, 5])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(3, overlap=False), expected)
+
+        expected = [
+            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(7, overlap=False), expected)
+
+
+        self.assertIs(type(seq.kmers(1)), GeneratorType)
+
+    def test_kmers_with_overlap(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        expected = [
+            Sequence('G', quality=[0]),
+            Sequence('A', quality=[1]),
+            Sequence('T', quality=[2]),
+            Sequence('T', quality=[3]),
+            Sequence('A', quality=[4]),
+            Sequence('C', quality=[5]),
+            Sequence('A', quality=[6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(1, overlap=True), expected)
+
+        expected = [
+            Sequence('GA', quality=[0, 1]),
+            Sequence('AT', quality=[1, 2]),
+            Sequence('TT', quality=[2, 3]),
+            Sequence('TA', quality=[3, 4]),
+            Sequence('AC', quality=[4, 5]),
+            Sequence('CA', quality=[5, 6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(2, overlap=True), expected)
+
+        expected = [
+            Sequence('GAT', quality=[0, 1, 2]),
+            Sequence('ATT', quality=[1, 2, 3]),
+            Sequence('TTA', quality=[2, 3, 4]),
+            Sequence('TAC', quality=[3, 4, 5]),
+            Sequence('ACA', quality=[4, 5, 6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(3, overlap=True), expected)
+
+        expected = [
+            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(7, overlap=True), expected)
+
+    def test_kmers_invalid_k(self):
+        seq = Sequence('GATTACA', quality=range(7))
+
+        with self.assertRaises(ValueError):
+            list(self.b1.kmers(0))
+
+        with self.assertRaises(ValueError):
+            list(self.b1.kmers(-42))
+
+        with self.assertRaises(ValueError):
+            list(self.b1.kmers(8))
+
+    def test_kmers_different_sequences(self):
+        seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
+                       quality=range(11))
+        expected = [
+            Sequence('HE.', quality=[0, 1, 2], id='hello',
+                     description='gapped hello'),
+            Sequence('.--', quality=[3, 4, 5], id='hello',
+                     description='gapped hello'),
+            Sequence('..L', quality=[6, 7, 8], id='hello',
+                     description='gapped hello')
+        ]
+        self._compare_kmers_results(seq.kmers(3, overlap=False), expected)
+
+    def test_kmer_frequencies(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        # overlap = True
+        expected = Counter('GATTACA')
+        self.assertEqual(seq.kmer_frequencies(1, overlap=True), expected)
+        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+        self.assertEqual(seq.kmer_frequencies(3, overlap=True), expected)
+
+        # overlap = False
+        expected = Counter(['GAT', 'TAC'])
+        self.assertEqual(seq.kmer_frequencies(3, overlap=False), expected)
+        expected = Counter(['GATTACA'])
+        self.assertEqual(seq.kmer_frequencies(7, overlap=False), expected)
+
+    def test_kmer_frequencies_relative(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        # overlap = True
+        expected = defaultdict(float)
+        expected['A'] = 3/7.
+        expected['C'] = 1/7.
+        expected['G'] = 1/7.
+        expected['T'] = 2/7.
+        self.assertEqual(seq.kmer_frequencies(1, overlap=True, relative=True),
+                         expected)
+        expected = defaultdict(float)
+        expected['GAT'] = 1/5.
+        expected['ATT'] = 1/5.
+        expected['TTA'] = 1/5.
+        expected['TAC'] = 1/5.
+        expected['ACA'] = 1/5.
+        self.assertEqual(seq.kmer_frequencies(3, overlap=True, relative=True),
+                         expected)
+
+        # overlap = False
+        expected = defaultdict(float)
+        expected['GAT'] = 1/2.
+        expected['TAC'] = 1/2.
+        self.assertEqual(seq.kmer_frequencies(3, overlap=False, relative=True),
+                         expected)
+        expected = defaultdict(float)
+        expected['GATTACA'] = 1.0
+        self.assertEqual(seq.kmer_frequencies(7, overlap=False, relative=True),
+                         expected)
+
+    def test_kmer_frequencies_floating_point_precision(self):
+        # Test that a sequence having no variation in k-words yields a
+        # frequency of exactly 1.0. Note that it is important to use
+        # self.assertEqual here instead of self.assertAlmostEqual because we
+        # want to test for exactly 1.0. A previous implementation of
+        # Sequence.kmer_frequencies(relative=True) added (1 / num_words) for
+        # each occurrence of a k-word to compute the frequencies (see
+        # https://github.com/biocore/scikit-bio/issues/801). In certain cases,
+        # this yielded a frequency slightly less than 1.0 due to roundoff
+        # error. The test case here uses a sequence with 10 characters that are
+        # all identical and computes k-word frequencies with k=1. This test
+        # case exposes the roundoff error present in the previous
+        # implementation because there are 10 k-words (which are all
+        # identical), so 1/10 added 10 times yields a number slightly less than
+        # 1.0. This occurs because 1/10 cannot be represented exactly as a
+        # floating point number.
+        seq = Sequence('AAAAAAAAAA')
+        self.assertEqual(seq.kmer_frequencies(1, relative=True),
+                         defaultdict(float, {'A': 1.0}))
+
+    def test_slices_from_regex(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        pat = re.compile('(T+A)(CA)')
+
+        obs = list(seq.slices_from_regex(pat))
         exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
-        obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [slice(2, 7), slice(2, 5), slice(5, 7)]
-        self.assertEqual(obs, exp)
+        self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
+
+    def test_slices_from_regex_no_groups(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        pat = re.compile('(FOO)')
+        self.assertEqual(list(seq.slices_from_regex(pat)), [])
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ from skbio.util._misc import reprnator
 with hooks():
     from itertools import zip_longest
 
+
 class Sequence(collections.Sequence, SkbioObject):
     """Base class for biological sequences.
 
@@ -255,9 +256,8 @@ class Sequence(collections.Sequence, SkbioObject):
     def __eq__(self, other):
         """The equality operator.
 
-        Biological sequences are equal if their sequence is the same and they
-        are the same type. Identifier, description, and quality scores
-        **are ignored**.
+        Biological sequences are equal if their sequence, id, description, and
+        quality scores are the same and they are the same type.
 
         Parameters
         ----------
@@ -276,11 +276,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        See ``Sequence.equals`` for more fine-grained control of
-        equality testing.
+        See ``Sequence.equals`` for more fine-grained control of equality
+        testing.
 
         This method is equivalent to
-        ``self.equals(other, ignore=['id', 'description', 'quality'])``.
+        ``self.equals(other)``.
 
         Examples
         --------
@@ -293,13 +293,13 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u == t
         False
 
-        Note that even though the quality scores do not match between ``u`` and
-        ``v``, they are considered equal:
+        Note that because the quality scores do not match between ``u`` and
+        ``v``, they are considered not equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
         ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
         >>> u == v
-        True
+        False
 
         .. shownumpydoc
 
@@ -340,23 +340,23 @@ class Sequence(collections.Sequence, SkbioObject):
         Obtain a single character from the biological sequence:
 
         >>> s[1]
-        Sequence('G')[0:1]
+        Sequence('G', length=1)
 
         Obtain a slice:
 
         >>> s[7:]
-        Sequence('AAGGA')[0:5]
+        Sequence('AAGGA', length=5)
 
         Obtain characters at the following indices:
 
         >>> s[[3, 4, 7, 0, 3]]
-        Sequence('CGAGC')[0:5]
+        Sequence('CGAGC', length=5)
 
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
         >>> s[[True, False, True, 'a' is 'a', False]]
-        Sequence('GUC')[0:3]
+        Sequence('GUC', length=3)
 
         .. shownumpydoc
 
@@ -382,10 +382,10 @@ class Sequence(collections.Sequence, SkbioObject):
 
         if (isinstance(indexable, np.ndarray) and
             indexable.dtype == bool and
-            len(indexable) != len(self)):
+                len(indexable) != len(self)):
             raise IndexError("An boolean vector index must be the same length"
-                            " as the sequence (%d, not %d)." % (len(self),
-                                                                len(indexable)))
+                             " as the sequence (%d, not %d)." %
+                             (len(self), len(indexable)))
 
         seq = self._bytes[indexable]
         if self._has_quality():
@@ -460,9 +460,9 @@ class Sequence(collections.Sequence, SkbioObject):
     def __ne__(self, other):
         """The inequality operator.
 
-        Biological sequences are not equal if their sequence is different or
-        they are not the same type. Identifier, description, and quality scores
-        **are ignored**.
+        By default, biological sequences are not equal if their sequence,
+        id, description, or quality scores differ or they are not the same
+        type.
 
         Parameters
         ----------
@@ -493,6 +493,9 @@ class Sequence(collections.Sequence, SkbioObject):
         False
         >>> u = Sequence('GGUCGUGACCGA')
         >>> u != t
+        True
+        >>> v = Sequence('GGUCGUGACCGA', id='v')
+        >>> u != v
         True
 
         .. shownumpydoc
@@ -598,21 +601,31 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>>  s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
         >>> str(s)
         'GGUCGUAAAGGA'
+
+        .. shownumpydoc
+
         """
         return str(self._string)
 
     @property
     def sequence(self):
-        """String containing underlying biological sequence characters.
-
-        A string representing the characters of the biological sequence.
+        """Array containing underlying biological sequence characters.
 
         Notes
         -----
         This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.sequence
+        array(['G', 'G', 'U', 'C', 'G', 'U', 'A', 'A', 'A', 'G', 'G', 'A'],
+              dtype='|S1')
+
+        .. shownumpydoc
 
         """
         return self._bytes.view('|S1')
@@ -627,6 +640,14 @@ class Sequence(collections.Sequence, SkbioObject):
         -----
         This property is not writeable.
 
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.id
+        'seq1'
+
+        .. shownumpydoc
+
         """
         return self._id
 
@@ -639,6 +660,14 @@ class Sequence(collections.Sequence, SkbioObject):
         Notes
         -----
         This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.description
+        'some seq'
+
+        .. shownumpydoc
 
         """
         return self._description
@@ -656,6 +685,13 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable. A copy of the array is *not* returned.
         The array is read-only (i.e., its ``WRITEABLE`` flag is set to
         ``False``).
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        >>> s.quality
+        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
 
         """
         return self._quality
@@ -709,7 +745,7 @@ class Sequence(collections.Sequence, SkbioObject):
         This method is the preferred way of creating new instances from an
         existing biological sequence, instead of calling
         ``self.__class__(...)``, as the latter can be error-prone (e.g.,
-        forgetting to propagate attributes to the new instance).
+        it's easy to forget to propagate attributes to the new instance).
 
         Examples
         --------
@@ -723,12 +759,12 @@ class Sequence(collections.Sequence, SkbioObject):
         Create a copy of ``seq``, keeping the same underlying sequence of
         characters and quality scores, while updating ID and description:
 
-        >>> new_seq = seq.copy(id='new-id', description='new description')
+        >>> new_seq = seq.to(id='new-id', description='new description')
 
         Note that the copied biological sequence's underlying sequence and
         quality scores are the same as ``seq``:
 
-        >>> new_seq.sequence
+        >>> str(new_seq)
         'AACCGGTT'
         >>> new_seq.quality
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
@@ -863,13 +899,22 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        subsequence : str
+        subsequence : str, Sequence
             The subsequence to count occurences of.
+        start : int, optional
+            The position at which to start counting (inclusive).
+        end : int, optional
+            The position at which to stop counting (exclusive).
 
         Returns
         -------
         int
             The number of occurrences of substring in the `Sequence`.
+
+        Raises
+        ------
+        ValueError
+            If `subsequence` is of length 0.
 
         Examples
         --------
@@ -880,7 +925,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if len(subsequence) == 0:
-            raise ValueError("count is not defined for empty sequences.")
+            raise ValueError("count is not defined for empty subsequences.")
 
         if isinstance(subsequence, string_types):
             return self._string.count(subsequence, start, end)
@@ -896,7 +941,7 @@ class Sequence(collections.Sequence, SkbioObject):
         ----------
         other : `Sequence`
             The `Sequence` to compute the distance to.
-        distance_fn : function, optional
+        metric : function, optional
             Function used to compute the distance between `self` and `other`.
             If ``None`` (the default), `scipy.spatial.distance.hamming` will be
             used.
@@ -909,7 +954,16 @@ class Sequence(collections.Sequence, SkbioObject):
         Raises
         ------
         skbio.sequence.SequenceError
-            If ``len(self) != len(other)``
+            If ``len(self) != len(other)`` when ``metric == None`` (i.e.,
+            metic is ``scipy.spatial.distance.hamming``). This is only checked
+            when using this metric, as equal length is not a requirement
+            for all sequence distance metrics. In general, the metric itself
+            should test and give an informative error message, but the message
+            from ``scipy.spatial.distance.hamming`` is cryptic (as of this
+            writing), and it's the default metric, so we explicitly do this
+            check here. This metric-specific check will be removed from this
+            method when the sequence.stats module is created (track progress on
+            this [here](https://github.com/biocore/scikit-bio/issues/913)).
 
         See Also
         --------
@@ -945,6 +999,33 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
+        """Returns positions that match with other
+
+        Parameters
+        ----------
+        other : `Sequence`
+            The `Sequence` to compare to.
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` at position `i` indicates a match
+            between the sequences at their positions `i`.
+
+        Raises
+        ------
+        ValueError
+            If ``len(self) != len(other)``.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('GAUU')
+        >>> s.matches(t)
+        array([ True, False,  True, False], dtype=bool)
+
+        """
         other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
             raise ValueError("Match and mismatch vectors can only be "
@@ -952,17 +1033,45 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes == other._bytes
 
     def mismatches(self, other):
+        """Returns positions that do not match with other
+
+        Parameters
+        ----------
+        other : `Sequence`
+            The `Sequence` to compare to.
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` at position `i` indicates a mismatch
+            between the sequences at their positions `i`.
+
+        Raises
+        ------
+        ValueError
+            If ``len(self) != len(other)``.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('GAUU')
+        >>> s.mismatches(t)
+        array([False,  True, False,  True], dtype=bool)
+
+        """
         return np.invert(self.matches(other))
 
     def mismatch_frequency(self, other, relative=False):
-        """Return number of positions that differ relative to `other`
+        """Return count of positions that differ relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
         relative : ``bool``
-            If ``True``, return the fraction of mismatches.
+            If ``True``, return the fraction of mismatches instead of the
+            count.
 
         Returns
         -------
@@ -980,7 +1089,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         distance
         match_frequency
-        scipy.spatial.distance.hamming
+        mismatches
 
         Examples
         --------
@@ -994,19 +1103,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.mismatches(other).mean()
+            return float(self.mismatches(other).mean())
         else:
-            return self.mismatches(other).sum()
+            return int(self.mismatches(other).sum())
 
     def match_frequency(self, other, relative=False):
-        """Return number of positions that are the same relative to `other`
+        """Return count of positions that are the same relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
         relative : `bool`
-            If ``True``, return the fraction of matches.
+            If ``True``, return the fraction of matches instead of the count.
 
         Returns
         -------
@@ -1038,18 +1147,31 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.matches(other).mean()
+            return float(self.matches(other).mean())
         else:
-            return self.matches(other).sum()
+            return int(self.matches(other).sum())
 
-    def index(self, subsequence):
+    def index(self, subsequence, begin=None, end=None):
         """Return the position where subsequence first occurs
+
+        Parameters
+        ----------
+        subsequence : str, Sequence
+            The sequence to search for in `self.`
+        start : int, optional
+            The position at which to start searching (inclusive).
+        end : int, optional
+            The position at which to stop searching (exclusive).
 
         Returns
         -------
         int
-            The position where `subsequence` first occurs in the
-            `Sequence`.
+            The position where `subsequence` first occurs in `self`.
+
+        Raises
+        ------
+        ValueError
+            If `subsequence` is not present in `self`.
 
         Examples
         --------
@@ -1061,51 +1183,52 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         try:
             if isinstance(subsequence, string_types):
-                return self._string.index(subsequence)
-            return self._string.index(Sequence(subsequence)._string)
+                return self._string.index(subsequence, begin, end)
+            return self._string.index(
+                self._munge_to_sequence(subsequence, "index")._string, begin,
+                end)
         except ValueError:
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))
 
     def kmers(self, k, overlap=True):
-        """Get the list of words of length k
+        """Generator of words of length k
 
         Parameters
         ----------
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlap or not
-            overlap.
+            Defines whether the k-words should be overlapping or not
+            overlapping.
 
         Returns
         -------
         iterator of Sequences
-            Iterator of words of length `k` contained in the
-            Sequence.
+            Iterator of words of length `k` contained in the Sequence.
 
         Raises
         ------
         ValueError
-            If k < 1.
+            If ``k < 1`` or `k` is longer than the sequence.
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> [str(kw) for kw in s.k_words(4, overlap=False)]
+        >>> [str(kw) for kw in s.kmers(4, overlap=False)]
         ['ACAC', 'GACG']
-        >>> [str(kw) for kw in s.k_words(3, overlap=True)]
+        >>> [str(kw) for kw in s.kmers(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
+        if k > len(self):
+            raise ValueError("k cannot be greater than the length of"
+                             " the sequence (%d)." % len(self))
 
-        if overlap:
-            step = 1
-        else:
-            step = k
+        step = 1 if overlap else k
 
         for i in range(0, len(self) - k + 1, step):
             yield self[i:i+k]
@@ -1118,21 +1241,34 @@ class Sequence(collections.Sequence, SkbioObject):
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlap or not
-            overlap.
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        relative : bool
+            If ``True``, return the fractional abundance of each kmer instead
+            of its count.
+
 
         Returns
         -------
-        collections.Counter
-            The counts of words of length `k` contained in the
-            Sequence.
+        collections.Counter, defaultdict
+            The frequencies of words of length `k` contained in the
+            Sequence. Will be a ``Counter`` if ``relative == False``, and a
+            ``defaultdict`` if ``relative == True``.
+
+        Raises
+        ------
+        ValueError
+            If ``k < 1`` or `k` is longer than the sequence.
+
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
-        >>> s = Sequence('ACACAT')
-        >>> s.k_word_counts(3, overlap=True)
-        Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
+        >>> s = Sequence('ACACATTTATTA')
+        >>> s.kmer_frequencies(3, overlap=False)
+        Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
+        >>> s.kmer_frequencies(3, relative=True, overlap=False)
+        defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
         """
         kmers = self.kmers(k, overlap=overlap)
@@ -1151,7 +1287,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def regex_iter(self, regex, retrieve_group_0=False):
+    def slices_from_regex(self, regex):
         """Find patterns specified by regular expression
 
         Parameters
@@ -1171,10 +1307,10 @@ class Sequence(collections.Sequence, SkbioObject):
             matched regular expression, and contains the start of the hit, the
             end of the hit, and the substring that was hit
         """
-        start = 0 if retrieve_group_0 else 1
-
         for match in regex.finditer(self._string):
-            for g in range(start, len(match.groups())+1):
+            # We start at 1 because we don't want the group that contains all
+            # other groups.
+            for g in range(1, len(match.groups())+1):
                 yield slice(match.start(g), match.end(g))
 
     def _munge_to_sequence(self, other, method):
