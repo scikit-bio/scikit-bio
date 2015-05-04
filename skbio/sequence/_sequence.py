@@ -913,6 +913,10 @@ class Sequence(collections.Sequence, SkbioObject):
         ----------
         subsequence : str, Sequence
             The subsequence to count occurences of.
+        start : int, optional
+            The position at which to start counting (inclusive).
+        end : int, optional
+            The position at which to stop counting (exclusive).
 
         Returns
         -------
@@ -1063,7 +1067,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
-        >>> t = Sequence('GAUC')
+        >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
         array([False,  True, False,  True], dtype=bool)
 
@@ -1071,14 +1075,15 @@ class Sequence(collections.Sequence, SkbioObject):
         return np.invert(self.matches(other))
 
     def mismatch_frequency(self, other, relative=False):
-        """Return number of positions that differ relative to `other`
+        """Return count of positions that differ relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
         relative : ``bool``
-            If ``True``, return the fraction of mismatches.
+            If ``True``, return the fraction of mismatches instead of the
+            count.
 
         Returns
         -------
@@ -1096,7 +1101,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         distance
         match_frequency
-        scipy.spatial.distance.hamming
+        mismatches
 
         Examples
         --------
@@ -1115,14 +1120,14 @@ class Sequence(collections.Sequence, SkbioObject):
             return int(self.mismatches(other).sum())
 
     def match_frequency(self, other, relative=False):
-        """Return number of positions that are the same relative to `other`
+        """Return count of positions that are the same relative to `other`
 
         Parameters
         ----------
         other : `Sequence`
             The `Sequence` to compare against.
         relative : `bool`
-            If ``True``, return the fraction of matches.
+            If ``True``, return the fraction of matches instead of the count.
 
         Returns
         -------
@@ -1161,11 +1166,24 @@ class Sequence(collections.Sequence, SkbioObject):
     def index(self, subsequence, begin=None, end=None):
         """Return the position where subsequence first occurs
 
+        Parameters
+        ----------
+        subsequence : str, Sequence
+            The sequence to search for in `self.`
+        start : int, optional
+            The position at which to start searching (inclusive).
+        end : int, optional
+            The position at which to stop searching (exclusive).
+
         Returns
         -------
         int
-            The position where `subsequence` first occurs in the
-            `Sequence`.
+            The position where `subsequence` first occurs in `self`.
+
+        Raises
+        ------
+        ValueError
+            If `subsequence` is not present in `self`.
 
         Examples
         --------
@@ -1186,26 +1204,25 @@ class Sequence(collections.Sequence, SkbioObject):
                 "%r is not present in %r." % (subsequence, self))
 
     def kmers(self, k, overlap=True):
-        """Get the list of words of length k
+        """Generator of words of length k
 
         Parameters
         ----------
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlap or not
-            overlap.
+            Defines whether the k-words should be overlapping or not
+            overlapping.
 
         Returns
         -------
         iterator of Sequences
-            Iterator of words of length `k` contained in the
-            Sequence.
+            Iterator of words of length `k` contained in the Sequence.
 
         Raises
         ------
         ValueError
-            If k < 1.
+            If ``k < 1`` or `k` is longer than the sequence.
 
         Examples
         --------
@@ -1236,21 +1253,34 @@ class Sequence(collections.Sequence, SkbioObject):
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlap or not
-            overlap.
+            Defines whether the k-words should be overlapping or not
+            overlapping.
+        relative : bool
+            If ``True``, return the fractional abundance of each kmer instead
+            of its count.
+
 
         Returns
         -------
-        collections.Counter
-            The counts of words of length `k` contained in the
-            Sequence.
+        collections.Counter, defaultdict
+            The frequencies of words of length `k` contained in the
+            Sequence. Will be a ``Counter`` if ``relative == False``, and a
+            ``defaultdict`` if ``relative == True``.
+
+        Raises
+        ------
+        ValueError
+            If ``k < 1`` or `k` is longer than the sequence.
+
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
-        >>> s = Sequence('ACACAT')
-        >>> s.kmer_frequencies(3, overlap=True)
-        Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
+        >>> s = Sequence('ACACATTTATTA')
+        >>> s.kmer_frequencies(3, overlap=False)
+        Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
+        >>> s.kmer_frequencies(3, relative=True, overlap=False)
+        defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
         """
         kmers = self.kmers(k, overlap=overlap)
