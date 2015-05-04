@@ -1109,9 +1109,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.mismatches(other).mean()
+            return float(self.mismatches(other).mean())
         else:
-            return self.mismatches(other).sum()
+            return int(self.mismatches(other).sum())
 
     def match_frequency(self, other, relative=False):
         """Return number of positions that are the same relative to `other`
@@ -1153,11 +1153,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.matches(other).mean()
+            return float(self.matches(other).mean())
         else:
-            return self.matches(other).sum()
+            return int(self.matches(other).sum())
 
-    def index(self, subsequence):
+    def index(self, subsequence, begin=None, end=None):
         """Return the position where subsequence first occurs
 
         Returns
@@ -1176,8 +1176,10 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         try:
             if isinstance(subsequence, string_types):
-                return self._string.index(subsequence)
-            return self._string.index(Sequence(subsequence)._string)
+                return self._string.index(subsequence, begin, end)
+            return self._string.index(
+                self._munge_to_sequence(subsequence, "index")._string, begin,
+                end)
         except ValueError:
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))

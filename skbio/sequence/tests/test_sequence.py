@@ -1094,57 +1094,6 @@ class SequenceTests(TestCase):
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
 
-    def test_matches(self):
-        tested = 0
-        for constructor in self.sequence_kinds:
-            tested += 1
-            seq1 = Sequence("AACCEEGG")
-            seq2 = constructor("ABCDEFGH")
-            expected = np.array([True, False] * 4)
-            npt.assert_equal(seq1.matches(seq2), expected)
-
-        self.assertEqual(tested, 4)
-
-    def test_matches_on_subclass(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = SequenceSubclass("ABCDEFGH")
-
-        with self.assertRaises(TypeError):
-            seq1.matches(seq2)
-
-    def test_matches_unequal_length(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = Sequence("TOOLONGTOCOMPARE")
-
-        with self.assertRaises(ValueError):
-            seq1.matches(seq2)
-
-
-    def test_mismatches(self):
-        tested = 0
-        for constructor in self.sequence_kinds:
-            tested += 1
-            seq1 = Sequence("AACCEEGG")
-            seq2 = constructor("ABCDEFGH")
-            expected = np.array([False, True] * 4)
-            npt.assert_equal(seq1.mismatches(seq2), expected)
-
-        self.assertEqual(tested, 4)
-
-    def test_mismatches_on_subclass(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = SequenceSubclass("ABCDEFGH")
-
-        with self.assertRaises(TypeError):
-            seq1.mismatches(seq2)
-
-    def test_mismatches_unequal_length(self):
-        seq1 = Sequence("AACCEEGG")
-        seq2 = Sequence("TOOLONGTOCOMPARE")
-
-        with self.assertRaises(ValueError):
-            seq1.mismatches(seq2)
-
     def test_distance(self):
         tested = 0
         for constructor in self.sequence_kinds:
@@ -1156,7 +1105,6 @@ class SequenceTests(TestCase):
             self.assertEqual(seq1.distance(seq2), 2.0/3.0)
 
         self.assertEqual(tested, 4)
-
 
     def test_distance_arbitrary_function(self):
         def metric(x, y):
@@ -1190,34 +1138,146 @@ class SequenceTests(TestCase):
         with self.assertRaises(TypeError):
             seq1.distance(seq2)
 
+    def test_matches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([True, False] * 4)
+            npt.assert_equal(seq1.matches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_matches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.matches(seq2)
+
+    def test_matches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.matches(seq2)
+
+    def test_mismatches(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = Sequence("AACCEEGG")
+            seq2 = constructor("ABCDEFGH")
+            expected = np.array([False, True] * 4)
+            npt.assert_equal(seq1.mismatches(seq2), expected)
+
+        self.assertEqual(tested, 4)
+
+    def test_mismatches_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
+
+    def test_mismatches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.mismatches(seq2)
+
     def test_mismatch_frequency(self):
-        # relative = False (default)
-        self.assertEqual(self.b1.mismatch_frequency(self.b1), 0)
-        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC')), 1)
-        # relative = True
-        self.assertEqual(self.b1.mismatch_frequency(self.b1, relative=True),
-                         0., 5)
-        self.assertEqual(self.b1.mismatch_frequency(Sequence('GATTACC'),
-                                                    relative=True),
-                         1. / 7., 5)
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1)), int)
+        self.assertEqual(seq1.mismatch_frequency(seq1), 0)
+        self.assertEqual(seq1.mismatch_frequency(seq2), 4)
+        self.assertEqual(seq1.mismatch_frequency(seq3), 8)
+
+    def test_mismatch_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.mismatch_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.mismatch_frequency(seq1, relative=True), 0.0)
+        self.assertEqual(seq1.mismatch_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.mismatch_frequency(seq3, relative=True), 1.0)
+
+    def test_mismatch_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.mismatch_frequency(seq2)
+
+    def test_mismatch_frequence_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.mismatch_frequency(seq2)
 
     def test_match_frequency(self):
-        # relative = False (default)
-        self.assertAlmostEqual(self.b1.match_frequency(self.b1), 7)
-        self.assertAlmostEqual(
-            self.b1.match_frequency(Sequence('GATTACC')), 6)
-        # relative = True
-        self.assertAlmostEqual(self.b1.match_frequency(self.b1, relative=True),
-                               1., 5)
-        self.assertAlmostEqual(self.b1.match_frequency(Sequence('GATTACC'),
-                                                       relative=True),
-                               6. / 7., 5)
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1)), int)
+        self.assertEqual(seq1.match_frequency(seq1), 8)
+        self.assertEqual(seq1.match_frequency(seq2), 4)
+        self.assertEqual(seq1.match_frequency(seq3), 0)
+
+    def test_match_frequency_relative(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("ABCDEFGH")
+        seq3 = Sequence("TTTTTTTT")
+
+        self.assertIs(type(seq1.match_frequency(seq1, relative=True)),
+                      float)
+        self.assertEqual(seq1.match_frequency(seq1, relative=True), 1.0)
+        self.assertEqual(seq1.match_frequency(seq2, relative=True), 0.5)
+        self.assertEqual(seq1.match_frequency(seq3, relative=True), 0.0)
+
+    def test_match_frequency_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.match_frequency(seq2)
+
+    def test_match_frequency_on_subclass(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = SequenceSubclass("ABCDEFGH")
+
+        with self.assertRaises(TypeError):
+            seq1.match_frequency(seq2)
 
     def test_index(self):
-        self.assertEqual(self.b1.index('G'), 0)
-        self.assertEqual(self.b1.index('A'), 1)
-        self.assertEqual(self.b1.index('AC'), 4)
-        self.assertRaises(ValueError, self.b1.index, 'x')
+        tested = 0
+        for c in self.sequence_kinds:
+            tested += 1
+            seq = Sequence("ABCDEFG@@ABCDFOO")
+            self.assertEqual(seq.index(c("A")), 0)
+            self.assertEqual(seq.index(c("@")), 7)
+            self.assertEqual(seq.index(c("@@")), 7)
+
+            with self.assertRaises(ValueError):
+                seq.index("A", begin=1, end=5)
+
+        self.assertEqual(tested, 4)
+
+    def test_index_on_subclass(self):
+        with self.assertRaises(TypeError):
+            Sequence("ABCDEFG").index(SequenceSubclass("A"))
+        
+        self.assertEqual(
+            SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
 
     def test_regex_iter(self):
         pat = re_compile('(T+A)(CA)')
