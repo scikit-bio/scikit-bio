@@ -1006,9 +1006,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.mismatches(other).mean()
+            return float(self.mismatches(other).mean())
         else:
-            return self.mismatches(other).sum()
+            return int(self.mismatches(other).sum())
 
     def match_frequency(self, other, relative=False):
         """Return number of positions that are the same relative to `other`
@@ -1050,9 +1050,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if relative:
-            return self.matches(other).mean()
+            return float(self.matches(other).mean())
         else:
-            return self.matches(other).sum()
+            return int(self.matches(other).sum())
 
     def index(self, subsequence):
         """Return the position where subsequence first occurs
