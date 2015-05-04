@@ -887,7 +887,7 @@ class Sequence(collections.Sequence, SkbioObject):
             return False
 
         if ('description' not in ignore and
-            self.description != other.description):
+                self.description != other.description):
             return False
 
         # Use array_equal instead of (a == b).all() because of this issue:

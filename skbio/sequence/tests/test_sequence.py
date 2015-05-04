@@ -17,17 +17,17 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-from scipy.spatial.distance import euclidean
 
-from skbio import (
-    Sequence, DNA, RNA)
+from skbio import Sequence
 
 with hooks():
     from itertools import zip_longest
 
+
 class SequenceSubclass(Sequence):
     """Used for testing purposes."""
     pass
+
 
 class SequenceTests(TestCase):
     def setUp(self):
@@ -714,7 +714,7 @@ class SequenceTests(TestCase):
                          ("Sequence('ASDKJH ... @#(*HJ', length=120, id='This"
                           " is a long id', \n         description='desc', "
                           "quality=[1, 2, 3, 4, 5, 6, ..., 7, 8, 9, 0, 1, 2])")
-                          )
+                         )
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
@@ -761,7 +761,7 @@ class SequenceTests(TestCase):
                        quality=range(11))
 
         to = seq._to(id='new id', quality=range(20, 25),
-                    sequence='ACGTA', description='new desc')
+                     sequence='ACGTA', description='new desc')
         self.assertFalse(seq is to)
         self.assertFalse(seq.equals(to))
 
@@ -824,9 +824,9 @@ class SequenceTests(TestCase):
 
     def test_equals_sequences_with_metadata_compare_equal(self):
         seq1 = Sequence('ACGT', id='foo', description='abc',
-                     quality=[1, 2, 3, 4])
+                        quality=[1, 2, 3, 4])
         seq2 = Sequence('ACGT', id='foo', description='abc',
-                     quality=[1, 2, 3, 4])
+                        quality=[1, 2, 3, 4])
         self.assertTrue(seq1.equals(seq2))
 
         # order shouldn't matter
@@ -1166,7 +1166,6 @@ class SequenceTests(TestCase):
         ]
         self._compare_kmers_results(
             seq.kmers(7, overlap=False), expected)
-
 
         self.assertIs(type(seq.kmers(1)), GeneratorType)
 
