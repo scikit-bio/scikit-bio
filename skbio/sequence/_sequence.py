@@ -693,6 +693,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.quality
         array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
 
+        .. shownumpydoc
+
         """
         return self._quality
 
@@ -784,6 +786,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> seq.description
         'biological sequence'
 
+        .. shownumpydoc
+
         """
         defaults = {
             'sequence': self._bytes,
@@ -868,6 +872,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u.equals(v, ignore=['quality', 'id'])
         True
 
+        .. shownumpydoc
+
         """
         if ignore is None:
             ignore = {}
@@ -922,6 +928,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('GGUC')
         >>> s.count('G')
         2
+
+        .. shownumpydoc
 
         """
         if len(subsequence) == 0:
@@ -983,6 +991,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.distance(t, dumb_dist)
         0.42
 
+        .. shownumpydoc
+
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
@@ -1025,6 +1035,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.matches(t)
         array([ True, False,  True, False], dtype=bool)
 
+        .. shownumpydoc
+
         """
         other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
@@ -1058,6 +1070,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
         array([False,  True, False,  True], dtype=bool)
+
+        .. shownumpydoc
 
         """
         return np.invert(self.matches(other))
@@ -1100,6 +1114,8 @@ class Sequence(collections.Sequence, SkbioObject):
         1
         >>> s.mismatch_frequency(t, relative=True)
         0.25
+
+        .. shownumpydoc
 
         """
         if relative:
@@ -1145,6 +1161,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.match_frequency(t, relative=True)
         0.75
 
+        .. shownumpydoc
+
         """
         if relative:
             return float(self.matches(other).mean())
@@ -1179,6 +1197,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
+
+        .. shownumpydoc
 
         """
         try:
@@ -1220,6 +1240,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ['ACAC', 'GACG']
         >>> [str(kw) for kw in s.kmers(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
+
+        .. shownumpydoc
 
         """
         if k < 1:
@@ -1270,6 +1292,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.kmer_frequencies(3, relative=True, overlap=False)
         defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
+        .. shownumpydoc
+
         """
         kmers = self.kmers(k, overlap=overlap)
         freqs = collections.Counter((str(seq) for seq in kmers))
@@ -1306,6 +1330,8 @@ class Sequence(collections.Sequence, SkbioObject):
             yields lists of 3-tuples. Each 3-tuple represents a group from the
             matched regular expression, and contains the start of the hit, the
             end of the hit, and the substring that was hit
+
+        .. shownumpydoc
         """
         for match in regex.finditer(self._string):
             # We start at 1 because we don't want the group that contains all
