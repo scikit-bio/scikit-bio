@@ -376,7 +376,7 @@ class Sequence(collections.Sequence, SkbioObject):
                     qual = np.concatenate(list(self._slices_from_iter(
                         self.quality, indexable)))
 
-                return self.to(sequence=seq, quality=qual)
+                return self._to(sequence=seq, quality=qual)
         elif isinstance(indexable, string_types) or \
                 isinstance(indexable, bool):
             raise IndexError("Cannot index with that type: %r" % indexable)
@@ -392,7 +392,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self._has_quality():
             qual = self.quality[indexable]
 
-        return self.to(sequence=seq, quality=qual)
+        return self._to(sequence=seq, quality=qual)
 
     def _slices_from_iter(self, array, indexables):
         for i in indexables:
@@ -436,7 +436,7 @@ class Sequence(collections.Sequence, SkbioObject):
             qual = []
 
         for c, q in zip_longest(self._string, qual, fillvalue=None):
-            yield self.to(sequence=c, quality=q)
+            yield self._to(sequence=c, quality=q)
 
     def __len__(self):
         """The len operator.
@@ -694,6 +694,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.quality
         array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
 
+        .. shownumpydoc
+
         """
         return self._quality
 
@@ -713,7 +715,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.quality is not None
 
-    def to(self, **kwargs):
+    def _to(self, **kwargs):
         """Return a copy of the current biological sequence.
 
         Returns a copy of the current biological sequence, optionally with
@@ -760,7 +762,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Create a copy of ``seq``, keeping the same underlying sequence of
         characters and quality scores, while updating ID and description:
 
-        >>> new_seq = seq.to(id='new-id', description='new description')
+        >>> new_seq = seq._to(id='new-id', description='new description')
 
         Note that the copied biological sequence's underlying sequence and
         quality scores are the same as ``seq``:
@@ -784,6 +786,8 @@ class Sequence(collections.Sequence, SkbioObject):
         'id1'
         >>> seq.description
         'biological sequence'
+
+        .. shownumpydoc
 
         """
         defaults = {
@@ -869,6 +873,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u.equals(v, ignore=['quality', 'id'])
         True
 
+        .. shownumpydoc
+
         """
         if ignore is None:
             ignore = {}
@@ -923,6 +929,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('GGUC')
         >>> s.count('G')
         2
+
+        .. shownumpydoc
 
         """
         if len(subsequence) == 0:
@@ -984,6 +992,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.distance(t, dumb_dist)
         0.42
 
+        .. shownumpydoc
+
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
@@ -1026,6 +1036,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.matches(t)
         array([ True, False,  True, False], dtype=bool)
 
+        .. shownumpydoc
+
         """
         other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
@@ -1059,6 +1071,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
         array([False,  True, False,  True], dtype=bool)
+
+        .. shownumpydoc
 
         """
         return np.invert(self.matches(other))
@@ -1101,6 +1115,8 @@ class Sequence(collections.Sequence, SkbioObject):
         1
         >>> s.mismatch_frequency(t, relative=True)
         0.25
+
+        .. shownumpydoc
 
         """
         if relative:
@@ -1146,6 +1162,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.match_frequency(t, relative=True)
         0.75
 
+        .. shownumpydoc
+
         """
         if relative:
             return float(self.matches(other).mean())
@@ -1180,6 +1198,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
+
+        .. shownumpydoc
 
         """
         try:
@@ -1221,6 +1241,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ['ACAC', 'GACG']
         >>> [str(kw) for kw in s.kmers(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
+
+        .. shownumpydoc
 
         """
         if k < 1:
@@ -1271,6 +1293,8 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.kmer_frequencies(3, relative=True, overlap=False)
         defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
+        .. shownumpydoc
+
         """
         kmers = self.kmers(k, overlap=overlap)
         freqs = collections.Counter((str(seq) for seq in kmers))
@@ -1293,20 +1317,28 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        regex : SRE_Pattern
-            A compiled regular expression (e.g., from re.compile) with
-            finditer method
-        retrieve_group_0 : bool, optional
-            Defaults to ``False``. If ``True``, group(0) will be included in
-            each list of tuples, which represents the shortest possible
-            substring of the full sequence that contains all the other groups
+        regex : str, SRE_Pattern
+            A string to be compiled into a regular expression, or a pre-
+            compiled regular expression (e.g., from re.compile) with
+            finditer method.
 
         Returns
         -------
         generator
-            yields lists of 3-tuples. Each 3-tuple represents a group from the
-            matched regular expression, and contains the start of the hit, the
-            end of the hit, and the substring that was hit
+            Yields lists of 3-tuples. Each 3-tuple represents a slice from
+            ``self`` (i.e., ``(start, end, step)``) where the regular
+            expression matched.
+
+        Example
+        -------
+        >>> from skbio import Sequence
+        >>> s = Sequence('AATATACCGGTTATAA')
+        >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
+        slice(2, 6, None) TATA
+        slice(11, 16, None) TATAA
+
+        .. shownumpydoc
+
         """
         if isinstance(regex, string_types):
             regex = re.compile(regex)
