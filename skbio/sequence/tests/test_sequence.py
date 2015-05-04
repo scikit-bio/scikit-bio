@@ -1328,6 +1328,16 @@ class SequenceTests(TestCase):
 
         self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
 
+    def test_slices_from_regex_string_as_input(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        pat = '(T+A)(CA)'
+
+        obs = list(seq.slices_from_regex(pat))
+        exp = [slice(2, 5), slice(5, 7)]
+        self.assertEqual(obs, exp)
+
+        self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
+
     def test_slices_from_regex_no_groups(self):
         seq = Sequence('GATTACA', quality=range(7))
         pat = re.compile('(FOO)')

@@ -12,6 +12,7 @@ from future.utils import viewitems
 from future.standard_library import hooks
 from six import string_types
 
+import re
 import collections
 import numbers
 from contextlib import contextmanager
@@ -1307,6 +1308,9 @@ class Sequence(collections.Sequence, SkbioObject):
             matched regular expression, and contains the start of the hit, the
             end of the hit, and the substring that was hit
         """
+        if isinstance(regex, string_types):
+            regex = re.compile(regex)
+
         for match in regex.finditer(self._string):
             # We start at 1 because we don't want the group that contains all
             # other groups.

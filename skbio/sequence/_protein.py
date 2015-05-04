@@ -39,7 +39,7 @@ class Protein(IUPACSequence):
             Non-degenerate IUPAC protein characters.
 
         """
-        return set("ACDEFGHIKLMNPQRSTVWY")
+        return set("ACDEFGHIKLMNPQRSTVWY*")
 
     @classproperty
     @overrides(IUPACSequence)
