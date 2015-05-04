@@ -24,7 +24,7 @@ class ProteinTests(TestCase):
     def test_alphabet(self):
         exp = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N',
-            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', '-', '.'
+            'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', '-', '.', '*'
         }
 
         self.assertEqual(self.p1.alphabet, exp)
@@ -34,7 +34,7 @@ class ProteinTests(TestCase):
         self.assertEqual(self.p1.gap_chars, set('-.'))
 
     def test_nondegenerate_chars(self):
-        exp = set("ACDEFGHIKLMNPQRSTVWY")
+        exp = set("ACDEFGHIKLMNPQRSTVWY*")
         self.assertEqual(self.p1.nondegenerate_chars, exp)
         self.assertEqual(Protein.nondegenerate_chars, exp)
 
