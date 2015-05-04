@@ -621,9 +621,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.sequence
-        array(['G', 'G', 'U', 'C', 'G', 'U', 'A', 'A', 'A', 'G', 'G', 'A'],
+        >>> s = Sequence('AACGA', id='seq1', description='some seq')
+        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
+        array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
 
         .. shownumpydoc
