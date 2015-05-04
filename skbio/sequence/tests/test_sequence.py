@@ -554,7 +554,8 @@ class SequenceTests(TestCase):
         def generator():
             yield slice(0, 4)
             yield slice(200, 400)
-            yield slice(None, -4, -1)
+            yield -1
+            yield slice(-2, -4, -1)
             yield 9
 
         eseq = Sequence("0123fed9", id='id7', description='dsc7',
@@ -1111,6 +1112,14 @@ class SequenceTests(TestCase):
         with self.assertRaises(TypeError):
             seq1.matches(seq2)
 
+    def test_matches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
+            seq1.matches(seq2)
+
+
     def test_mismatches(self):
         tested = 0
         for constructor in self.sequence_kinds:
@@ -1127,6 +1136,13 @@ class SequenceTests(TestCase):
         seq2 = SequenceSubclass("ABCDEFGH")
 
         with self.assertRaises(TypeError):
+            seq1.mismatches(seq2)
+
+    def test_mismatches_unequal_length(self):
+        seq1 = Sequence("AACCEEGG")
+        seq2 = Sequence("TOOLONGTOCOMPARE")
+
+        with self.assertRaises(ValueError):
             seq1.mismatches(seq2)
 
     def test_distance(self):
