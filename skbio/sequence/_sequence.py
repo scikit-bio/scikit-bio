@@ -598,21 +598,31 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>>  s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
         >>> str(s)
         'GGUCGUAAAGGA'
+
+        .. shownumpydoc
+
         """
         return str(self._string)
 
     @property
     def sequence(self):
-        """String containing underlying biological sequence characters.
-
-        A string representing the characters of the biological sequence.
+        """Array containing underlying biological sequence characters.
 
         Notes
         -----
         This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.sequence
+        array(['G', 'G', 'U', 'C', 'G', 'U', 'A', 'A', 'A', 'G', 'G', 'A'],
+              dtype='|S1')
+
+        .. shownumpydoc
 
         """
         return self._bytes.view('|S1')
@@ -627,6 +637,14 @@ class Sequence(collections.Sequence, SkbioObject):
         -----
         This property is not writeable.
 
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.id
+        'seq1'
+
+        .. shownumpydoc
+
         """
         return self._id
 
@@ -639,6 +657,14 @@ class Sequence(collections.Sequence, SkbioObject):
         Notes
         -----
         This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.description
+        'some seq'
+
+        .. shownumpydoc
 
         """
         return self._description
@@ -656,6 +682,13 @@ class Sequence(collections.Sequence, SkbioObject):
         This property is not writeable. A copy of the array is *not* returned.
         The array is read-only (i.e., its ``WRITEABLE`` flag is set to
         ``False``).
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        >>> s.quality
+        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
 
         """
         return self._quality
@@ -709,7 +742,7 @@ class Sequence(collections.Sequence, SkbioObject):
         This method is the preferred way of creating new instances from an
         existing biological sequence, instead of calling
         ``self.__class__(...)``, as the latter can be error-prone (e.g.,
-        forgetting to propagate attributes to the new instance).
+        it's easy to forget to propagate attributes to the new instance).
 
         Examples
         --------
@@ -723,12 +756,12 @@ class Sequence(collections.Sequence, SkbioObject):
         Create a copy of ``seq``, keeping the same underlying sequence of
         characters and quality scores, while updating ID and description:
 
-        >>> new_seq = seq.copy(id='new-id', description='new description')
+        >>> new_seq = seq.to(id='new-id', description='new description')
 
         Note that the copied biological sequence's underlying sequence and
         quality scores are the same as ``seq``:
 
-        >>> new_seq.sequence
+        >>> str(new_seq)
         'AACCGGTT'
         >>> new_seq.quality
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
