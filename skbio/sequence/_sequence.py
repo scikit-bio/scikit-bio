@@ -1338,6 +1338,7 @@ class Sequence(collections.Sequence, SkbioObject):
         slice(11, 16, None) TATAA
 
         .. shownumpydoc
+
         """
         if isinstance(regex, string_types):
             regex = re.compile(regex)
