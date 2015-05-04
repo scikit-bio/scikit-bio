@@ -132,16 +132,16 @@ class Sequence(collections.Sequence, SkbioObject):
             return self.__chars[0]
 
     def _set_id(self, id_):
-        if isinstance(id_, string_types):
+        if isinstance(id_, str):
             self._id = id_
         else:
-            raise TypeError("Sequence ID %r must be a string type." % (id_,))
+            raise TypeError("Sequence ID %r must be of type `str`." % (id_,))
 
     def _set_description(self, description):
-        if isinstance(description, string_types):
+        if isinstance(description, str):
             self._description = description
         else:
-            raise TypeError("Sequence description %r must be a string type." %
+            raise TypeError("Sequence description %r must be of type `str`." %
                             (description,))
 
     def _set_sequence(self, sequence):
@@ -761,7 +761,7 @@ class Sequence(collections.Sequence, SkbioObject):
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
 
-    def equals(self, other, ignore=None, descriptive=False):
+    def equals(self, other, ignore=None):
         """Compare two biological sequences for equality.
 
         By default, biological sequences are equal if their sequence,
@@ -836,36 +836,24 @@ class Sequence(collections.Sequence, SkbioObject):
         if ignore is None:
             ignore = {}
 
-        def raiser(feature, attr):
-            if descriptive:
-                raise AssertionError(
-                    "%r is not equal to %r because of feature %r (%r != %r)" %
-                    (self, other, feature,
-                     getattr(self, attr), getattr(other, attr)))
-
         # Checks are ordered from least to most expensive.
         if 'type' not in ignore and self.__class__ != other.__class__:
-            raiser('type', '__class__')
             return False
 
         if 'id' not in ignore and self.id != other.id:
-            raiser('id', 'id')
             return False
 
-        if 'description' not in ignore and \
-                self.description != other.description:
-            raiser('description', 'description')
+        if ('description' not in ignore and
+            self.description != other.description):
             return False
 
         # Use array_equal instead of (a == b).all() because of this issue:
         #     http://stackoverflow.com/a/10582030
         if 'quality' not in ignore and not np.array_equal(self.quality,
                                                           other.quality):
-            raiser('quality', 'quality')
             return False
 
         if 'sequence' not in ignore and self._string != other._string:
-            raiser('sequence', 'sequence')
             return False
 
         return True

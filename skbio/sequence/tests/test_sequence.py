@@ -194,46 +194,40 @@ class SequenceTests(TestCase):
             bytes[1] = 42
 
     def test_init_empty_id(self):
-        for i in (b'', u''):
-            seq = Sequence('', id=i)
+        seq = Sequence('', id='')
 
-            self.assertIsInstance(seq.id, string_types)
-            self.assertEqual(seq.id, '')
+        self.assertIsInstance(seq.id, string_types)
+        self.assertEqual(seq.id, '')
 
     def test_init_single_character_id(self):
-        for i in (b'z', u'z'):
-            seq = Sequence('', id=i)
+        seq = Sequence('', id='z')
 
-            self.assertIsInstance(seq.id, string_types)
-            self.assertEqual(seq.id, 'z')
+        self.assertIsInstance(seq.id, string_types)
+        self.assertEqual(seq.id, 'z')
 
     def test_init_multiple_character_id(self):
-        for i in (b'\nabc\tdef  G123', u'\nabc\tdef  G123'):
-            seq = Sequence('', id=i)
+        seq = Sequence('', id='\nabc\tdef  G123')
 
-            self.assertIsInstance(seq.id, string_types)
-            self.assertEqual(seq.id, '\nabc\tdef  G123')
+        self.assertIsInstance(seq.id, string_types)
+        self.assertEqual(seq.id, '\nabc\tdef  G123')
 
     def test_init_empty_description(self):
-        for i in (b'', u''):
-            seq = Sequence('', description=i)
+        seq = Sequence('', description='')
 
-            self.assertIsInstance(seq.description, string_types)
-            self.assertEqual(seq.description, '')
+        self.assertIsInstance(seq.description, string_types)
+        self.assertEqual(seq.description, '')
 
     def test_init_single_character_description(self):
-        for i in (b'z', u'z'):
-            seq = Sequence('', description=i)
+        seq = Sequence('', description='z')
 
-            self.assertIsInstance(seq.description, string_types)
-            self.assertEqual(seq.description, 'z')
+        self.assertIsInstance(seq.description, string_types)
+        self.assertEqual(seq.description, 'z')
 
     def test_init_multiple_character_description(self):
-        for i in (b'\nabc\tdef  G123', u'\nabc\tdef  G123'):
-            seq = Sequence('', description=i)
+        seq = Sequence('', description='\nabc\tdef  G123')
 
-            self.assertIsInstance(seq.description, string_types)
-            self.assertEqual(seq.description, '\nabc\tdef  G123')
+        self.assertIsInstance(seq.description, string_types)
+        self.assertEqual(seq.description, '\nabc\tdef  G123')
 
     def test_init_empty_quality(self):
         for q in ([], (), np.array([])):
@@ -983,83 +977,99 @@ class SequenceTests(TestCase):
 #        with self.assertRaises(SequenceError):
 #            a.to(validate=True)
 
-    def test_equals_true(self):
-        # sequences match, all other attributes are not provided
+    def test_equals_sequences_without_metadata_compare_equal(self):
+        self.assertTrue(Sequence('').equals(Sequence('')))
+        self.assertTrue(Sequence('z').equals(Sequence('z')))
         self.assertTrue(
             Sequence('ACGT').equals(Sequence('ACGT')))
 
-        # all attributes are provided and match
-        a = Sequence('ACGT', id='foo', description='abc',
+    def test_equals_sequences_with_metadata_compare_equal(self):
+        seq1 = Sequence('ACGT', id='foo', description='abc',
                      quality=[1, 2, 3, 4])
-        b = Sequence('ACGT', id='foo', description='abc',
+        seq2 = Sequence('ACGT', id='foo', description='abc',
                      quality=[1, 2, 3, 4])
-        self.assertTrue(a.equals(b))
+        self.assertTrue(seq1.equals(seq2))
 
-        # ignore type
-        a = Sequence('ACGT')
-        b = DNA('ACGT')
-        self.assertTrue(a.equals(b, ignore=['type']))
+        # order shouldn't matter
+        self.assertTrue(seq2.equals(seq1))
 
-        # ignore id
-        a = Sequence('ACGT', id='foo')
-        b = Sequence('ACGT', id='bar')
-        self.assertTrue(a.equals(b, ignore=['id']))
+    def test_equals_sequences_from_different_sources_compare_equal(self):
+        # sequences that have the same data but are constructed from different
+        # types of data should compare equal
+        seq1 = Sequence('ACGT', id='foo', description='abc',
+                        quality=(1, 2, 3, 4))
+        seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
+                        id='foo', description='abc',
+                        quality=np.array([1, 2, 3, 4]))
+        self.assertTrue(seq1.equals(seq2))
 
-        # ignore description
-        a = Sequence('ACGT', description='foo')
-        b = Sequence('ACGT', description='bar')
-        self.assertTrue(a.equals(b, ignore=['description']))
+    def test_equals_ignore_type(self):
+        seq1 = Sequence('ACGT')
+        seq2 = DNA('ACGT')
+        self.assertTrue(seq1.equals(seq2, ignore=['type']))
 
-        # ignore quality
-        a = Sequence('ACGT', quality=[1, 2, 3, 4])
-        b = Sequence('ACGT', quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['quality']))
+    def test_equals_ignore_id(self):
+        seq1 = Sequence('ACGT', id='foo')
+        seq2 = Sequence('ACGT', id='bar')
+        self.assertTrue(seq1.equals(seq2, ignore=['id']))
 
-        # ignore sequence
-        a = Sequence('ACGA')
-        b = Sequence('ACGT')
-        self.assertTrue(a.equals(b, ignore=['sequence']))
+    def test_equals_ignore_description(self):
+        seq1 = Sequence('ACGT', description='foo')
+        seq2 = Sequence('ACGT', description='bar')
+        self.assertTrue(seq1.equals(seq2, ignore=['description']))
 
-        # ignore everything
-        a = Sequence('ACGA', id='foo', description='abc',
-                     quality=[1, 2, 3, 4])
-        b = DNA('ACGT', id='bar', description='def',
-                quality=[5, 6, 7, 8])
-        self.assertTrue(a.equals(b, ignore=['quality', 'description', 'id',
+    def test_equals_ignore_quality(self):
+        seq1 = Sequence('ACGT', quality=[1, 2, 3, 4])
+        seq2 = Sequence('ACGT', quality=[5, 6, 7, 8])
+        self.assertTrue(seq1.equals(seq2, ignore=['quality']))
+
+    def test_equals_ignore_sequence(self):
+        seq1 = Sequence('ACGA')
+        seq2 = Sequence('ACGT')
+        self.assertTrue(seq1.equals(seq2, ignore=['sequence']))
+
+    def test_equals_ignore_everything(self):
+        seq1 = Sequence('ACGA', id='foo', description='abc',
+                        quality=[1, 2, 3, 4])
+        seq2 = DNA('ACGT', id='bar', description='def',
+                   quality=[5, 6, 7, 8])
+        self.assertTrue(seq1.equals(seq2,
+                                    ignore=['quality', 'description', 'id',
                                             'sequence', 'type']))
 
-    def test_equals_false(self):
-        # type mismatch
-        a = Sequence('ACGT', id='foo', description='abc',
-                     quality=[1, 2, 3, 4])
-        b = DNA('ACGT', id='bar', description='def',
-                quality=[5, 6, 7, 8])
-        self.assertFalse(a.equals(b, ignore=['quality', 'description', 'id']))
+    def test_equals_type_mismatch(self):
+        seq1 = Sequence('ACGT', id='foo', description='abc',
+                        quality=[1, 2, 3, 4])
+        seq2 = DNA('ACGT', id='bar', description='def',
+                   quality=[5, 6, 7, 8])
+        self.assertFalse(seq1.equals(seq2,
+                                     ignore=['quality', 'description', 'id']))
 
-        # id mismatch
-        a = Sequence('ACGT', id='foo')
-        b = Sequence('ACGT', id='bar')
-        self.assertFalse(a.equals(b))
+    def test_equals_id_mismatch(self):
+        seq1 = Sequence('ACGT', id='foo')
+        seq2 = Sequence('ACGT', id='bar')
+        self.assertFalse(seq1.equals(seq2))
 
-        # description mismatch
-        a = Sequence('ACGT', description='foo')
-        b = Sequence('ACGT', description='bar')
-        self.assertFalse(a.equals(b))
+    def test_equals_description_mismatch(self):
+        seq1 = Sequence('ACGT', description='foo')
+        seq2 = Sequence('ACGT', description='bar')
+        self.assertFalse(seq1.equals(seq2))
 
-        # quality mismatch (both provided)
-        a = Sequence('ACGT', quality=[1, 2, 3, 4])
-        b = Sequence('ACGT', quality=[1, 2, 3, 5])
-        self.assertFalse(a.equals(b))
+    def test_equals_quality_mismatch(self):
+        # both provided
+        seq1 = Sequence('ACGT', quality=[1, 2, 3, 4])
+        seq2 = Sequence('ACGT', quality=[1, 2, 3, 5])
+        self.assertFalse(seq1.equals(seq2))
 
-        # quality mismatch (one provided)
-        a = Sequence('ACGT', quality=[1, 2, 3, 4])
-        b = Sequence('ACGT')
-        self.assertFalse(a.equals(b))
+        # one provided
+        seq1 = Sequence('ACGT', quality=[1, 2, 3, 4])
+        seq2 = Sequence('ACGT')
+        self.assertFalse(seq1.equals(seq2))
 
-        # sequence mismatch
-        a = Sequence('ACGT')
-        b = Sequence('TGCA')
-        self.assertFalse(a.equals(b))
+    def test_equals_sequence_mismatch(self):
+        seq1 = Sequence('ACGT')
+        seq2 = Sequence('TGCA')
+        self.assertFalse(seq1.equals(seq2))
 
     def test_count(self):
         def construct_char_array(s):
