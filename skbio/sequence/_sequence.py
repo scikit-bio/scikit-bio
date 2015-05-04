@@ -376,7 +376,7 @@ class Sequence(collections.Sequence, SkbioObject):
                     qual = np.concatenate(list(self._slices_from_iter(
                         self.quality, indexable)))
 
-                return self.to(sequence=seq, quality=qual)
+                return self._to(sequence=seq, quality=qual)
         elif isinstance(indexable, string_types) or \
                 isinstance(indexable, bool):
             raise IndexError("Cannot index with that type: %r" % indexable)
@@ -392,7 +392,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self._has_quality():
             qual = self.quality[indexable]
 
-        return self.to(sequence=seq, quality=qual)
+        return self._to(sequence=seq, quality=qual)
 
     def _slices_from_iter(self, array, indexables):
         for i in indexables:
@@ -436,7 +436,7 @@ class Sequence(collections.Sequence, SkbioObject):
             qual = []
 
         for c, q in zip_longest(self._string, qual, fillvalue=None):
-            yield self.to(sequence=c, quality=q)
+            yield self._to(sequence=c, quality=q)
 
     def __len__(self):
         """The len operator.
@@ -715,7 +715,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.quality is not None
 
-    def to(self, **kwargs):
+    def _to(self, **kwargs):
         """Return a copy of the current biological sequence.
 
         Returns a copy of the current biological sequence, optionally with
@@ -762,7 +762,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Create a copy of ``seq``, keeping the same underlying sequence of
         characters and quality scores, while updating ID and description:
 
-        >>> new_seq = seq.to(id='new-id', description='new description')
+        >>> new_seq = seq._to(id='new-id', description='new description')
 
         Note that the copied biological sequence's underlying sequence and
         quality scores are the same as ``seq``:

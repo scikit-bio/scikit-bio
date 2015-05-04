@@ -744,67 +744,95 @@ class SequenceTests(TestCase):
     def test_to_default_behavior(self):
         # minimal sequence, sequence with all optional attributes present, and
         # a subclass of Sequence
-        for seq in self.b6, self.b8, RNA('ACGU', id='rna seq'):
-            to = seq.to()
+        for seq in (Sequence('ACGT'),
+                    Sequence('ACGT', id='foo', description='bar',
+                             quality=range(4)),
+                    SequenceSubclass('ACGU', id='rna seq')):
+            to = seq._to()
             self.assertTrue(seq.equals(to))
             self.assertFalse(seq is to)
 
     def test_to_update_single_attribute(self):
-        to = self.b8.to(id='new id')
-        self.assertFalse(self.b8 is to)
+        seq = Sequence('HE..--..LLO', id='hello',
+                       description='gapped hello',
+                       quality=range(11))
+
+        to = seq._to(id='new id')
+        self.assertFalse(seq is to)
 
         # they don't compare equal when we compare all attributes...
-        self.assertFalse(self.b8.equals(to))
+        self.assertFalse(seq.equals(to))
 
         # ...but they *do* compare equal when we ignore id, as that was the
         # only attribute that changed
-        self.assertTrue(self.b8.equals(to, ignore=['id']))
+        self.assertTrue(seq.equals(to, ignore=['id']))
 
-        # id should be what we specified in the to call...
+        # id should be what we specified in the _to call...
         self.assertEqual(to.id, 'new id')
 
-        # ..and shouldn't have changed on the original sequence
-        self.assertEqual(self.b8.id, 'hello')
+        # ...and shouldn't have changed on the original sequence
+        self.assertEqual(seq.id, 'hello')
 
     def test_to_update_multiple_attributes(self):
-        to = self.b8.to(id='new id', quality=range(20, 25),
-                        sequence='ACGTA', description='new desc')
-        self.assertFalse(self.b8 is to)
-        self.assertFalse(self.b8.equals(to))
+        seq = Sequence('HE..--..LLO', id='hello',
+                       description='gapped hello',
+                       quality=range(11))
 
-        # attributes should be what we specified in the to call...
+        to = seq._to(id='new id', quality=range(20, 25),
+                    sequence='ACGTA', description='new desc')
+        self.assertFalse(seq is to)
+        self.assertFalse(seq.equals(to))
+
+        # attributes should be what we specified in the _to call...
         self.assertEqual(to.id, 'new id')
         npt.assert_array_equal(to.quality, np.array([20, 21, 22, 23, 24]))
         npt.assert_array_equal(to.sequence, np.array('ACGTA', dtype='c'))
         self.assertEqual(to.description, 'new desc')
 
-        # ..and shouldn't have changed on the original sequence
-        self.assertEqual(self.b8.id, 'hello')
-        npt.assert_array_equal(self.b8.quality, range(11))
-        npt.assert_array_equal(self.b8.sequence, np.array('HE..--..LLO',
-                                                          dtype='c'))
-        self.assertEqual(self.b8.description, 'gapped hello')
+        # ...and shouldn't have changed on the original sequence
+        self.assertEqual(seq.id, 'hello')
+        npt.assert_array_equal(seq.quality, range(11))
+        npt.assert_array_equal(seq.sequence, np.array('HE..--..LLO',
+                                                      dtype='c'))
+        self.assertEqual(seq.description, 'gapped hello')
 
     def test_to_invalid_kwargs(self):
+        seq = Sequence('ACCGGTACC', id="test-seq",
+                       description="A test sequence")
+
         with self.assertRaises(TypeError):
-            self.b2.to(id='bar', unrecognized_kwarg='baz')
+            seq._to(id='bar', unrecognized_kwarg='baz')
 
     def test_to_extra_non_attribute_kwargs(self):
         # test that we can pass through additional kwargs to the constructor
         # that aren't related to biological sequence attributes (i.e., they
         # aren't state that has to be copied)
+        class SequenceSubclassWithNewSignature(Sequence):
+            def __init__(self, sequence, id='', description='', quality=None,
+                         foo=False):
+                super(SequenceSubclassWithNewSignature, self).__init__(
+                    sequence, id=id, description=description, quality=quality)
+                self.foo = foo
 
-        a = DNA('ACTG', description='foo')
+        seq = SequenceSubclassWithNewSignature('ACTG', description='foo')
 
-        # should be able to `to` it b/c validate defaults to False
-        b = a.to()
-        self.assertTrue(a.equals(b))
-        self.assertFalse(a is b)
+        # _to() without specifying `foo`
+        to = seq._to()
+        self.assertTrue(seq.equals(to))
+        self.assertFalse(seq is to)
+        self.assertFalse(seq.foo)
 
-        # specifying validate should raise an error when the copy is
-        # instantiated
-#        with self.assertRaises(SequenceError):
-#            a.to(validate=True)
+        # `foo` should default to False
+        self.assertFalse(to.foo)
+
+        # _to() with `foo` specified
+        to = seq._to(foo=True)
+        self.assertTrue(seq.equals(to))
+        self.assertFalse(seq is to)
+        self.assertFalse(seq.foo)
+
+        # `foo` should now be True
+        self.assertTrue(to.foo)
 
     def test_equals_sequences_without_metadata_compare_equal(self):
         self.assertTrue(Sequence('').equals(Sequence('')))
@@ -834,7 +862,7 @@ class SequenceTests(TestCase):
 
     def test_equals_ignore_type(self):
         seq1 = Sequence('ACGT')
-        seq2 = DNA('ACGT')
+        seq2 = SequenceSubclass('ACGT')
         self.assertTrue(seq1.equals(seq2, ignore=['type']))
 
     def test_equals_ignore_id(self):
@@ -860,8 +888,8 @@ class SequenceTests(TestCase):
     def test_equals_ignore_everything(self):
         seq1 = Sequence('ACGA', id='foo', description='abc',
                         quality=[1, 2, 3, 4])
-        seq2 = DNA('ACGT', id='bar', description='def',
-                   quality=[5, 6, 7, 8])
+        seq2 = SequenceSubclass('ACGT', id='bar', description='def',
+                                quality=[5, 6, 7, 8])
         self.assertTrue(seq1.equals(seq2,
                                     ignore=['quality', 'description', 'id',
                                             'sequence', 'type']))
@@ -869,8 +897,8 @@ class SequenceTests(TestCase):
     def test_equals_type_mismatch(self):
         seq1 = Sequence('ACGT', id='foo', description='abc',
                         quality=[1, 2, 3, 4])
-        seq2 = DNA('ACGT', id='bar', description='def',
-                   quality=[5, 6, 7, 8])
+        seq2 = SequenceSubclass('ACGT', id='bar', description='def',
+                                quality=[5, 6, 7, 8])
         self.assertFalse(seq1.equals(seq2,
                                      ignore=['quality', 'description', 'id']))
 
