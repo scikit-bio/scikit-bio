@@ -255,9 +255,8 @@ class Sequence(collections.Sequence, SkbioObject):
     def __eq__(self, other):
         """The equality operator.
 
-        Biological sequences are equal if their sequence is the same and they
-        are the same type. Identifier, description, and quality scores
-        **are ignored**.
+        Biological sequences are equal if their sequence, id, description, and
+        quality scores are the same and they are the same type.
 
         Parameters
         ----------
@@ -276,11 +275,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        See ``Sequence.equals`` for more fine-grained control of
-        equality testing.
+        See ``Sequence.equals`` for more fine-grained control of equality
+        testing.
 
         This method is equivalent to
-        ``self.equals(other, ignore=['id', 'description', 'quality'])``.
+        ``self.equals(other)``.
 
         Examples
         --------
@@ -293,13 +292,13 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u == t
         False
 
-        Note that even though the quality scores do not match between ``u`` and
-        ``v``, they are considered equal:
+        Note that because the quality scores do not match between ``u`` and
+        ``v``, they are considered not equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
         ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
         >>> u == v
-        True
+        False
 
         .. shownumpydoc
 
@@ -340,23 +339,23 @@ class Sequence(collections.Sequence, SkbioObject):
         Obtain a single character from the biological sequence:
 
         >>> s[1]
-        Sequence('G')[0:1]
+        Sequence('G', length=1)
 
         Obtain a slice:
 
         >>> s[7:]
-        Sequence('AAGGA')[0:5]
+        Sequence('AAGGA', length=5)
 
         Obtain characters at the following indices:
 
         >>> s[[3, 4, 7, 0, 3]]
-        Sequence('CGAGC')[0:5]
+        Sequence('CGAGC', length=5)
 
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
         >>> s[[True, False, True, 'a' is 'a', False]]
-        Sequence('GUC')[0:3]
+        Sequence('GUC', length=3)
 
         .. shownumpydoc
 
@@ -460,9 +459,9 @@ class Sequence(collections.Sequence, SkbioObject):
     def __ne__(self, other):
         """The inequality operator.
 
-        Biological sequences are not equal if their sequence is different or
-        they are not the same type. Identifier, description, and quality scores
-        **are ignored**.
+        By default, biological sequences are not equal if their sequence,
+        id, description, or quality scores differ or they are not the same
+        type.
 
         Parameters
         ----------
@@ -493,6 +492,9 @@ class Sequence(collections.Sequence, SkbioObject):
         False
         >>> u = Sequence('GGUCGUGACCGA')
         >>> u != t
+        True
+        >>> v = Sequence('GGUCGUGACCGA', id='v')
+        >>> u != v
         True
 
         .. shownumpydoc
@@ -908,13 +910,18 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Parameters
         ----------
-        subsequence : str
+        subsequence : str, Sequence
             The subsequence to count occurences of.
 
         Returns
         -------
         int
             The number of occurrences of substring in the `Sequence`.
+
+        Raises
+        ------
+        ValueError
+            If `subsequence` is of length 0.
 
         Examples
         --------
@@ -925,7 +932,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if len(subsequence) == 0:
-            raise ValueError("count is not defined for empty sequences.")
+            raise ValueError("count is not defined for empty subsequences.")
 
         if isinstance(subsequence, string_types):
             return self._string.count(subsequence, start, end)
@@ -941,7 +948,7 @@ class Sequence(collections.Sequence, SkbioObject):
         ----------
         other : `Sequence`
             The `Sequence` to compute the distance to.
-        distance_fn : function, optional
+        metric : function, optional
             Function used to compute the distance between `self` and `other`.
             If ``None`` (the default), `scipy.spatial.distance.hamming` will be
             used.
@@ -954,7 +961,16 @@ class Sequence(collections.Sequence, SkbioObject):
         Raises
         ------
         skbio.sequence.SequenceError
-            If ``len(self) != len(other)``
+            If ``len(self) != len(other)`` when ``metric == None`` (i.e.,
+            metic is ``scipy.spatial.distance.hamming``). This is only checked
+            when using this metric, as equal length is not a requirement
+            for all sequence distance metrics. In general, the metric itself
+            should test and give an informative error message, but the message
+            from ``scipy.spatial.distance.hamming`` is cryptic (as of this
+            writing), and it's the default metric, so we explicitly do this
+            check here. This metric-specific check will be removed from this
+            method when the sequence.stats module is created (track progress on
+            this [here](https://github.com/biocore/scikit-bio/issues/913)).
 
         See Also
         --------
@@ -990,6 +1006,33 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
+        """Returns positions that match with other
+
+        Parameters
+        ----------
+        other : `Sequence`
+            The `Sequence` to compare to.
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` at position `i` indicates a match
+            between the sequences at their positions `i`.
+
+        Raises
+        ------
+        ValueError
+            If ``len(self) != len(other)``.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('GAUU')
+        >>> s.matches(t)
+        array([ True, False,  True, False], dtype=bool)
+
+        """
         other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
             raise ValueError("Match and mismatch vectors can only be "
@@ -997,6 +1040,33 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes == other._bytes
 
     def mismatches(self, other):
+        """Returns positions that do not match with other
+
+        Parameters
+        ----------
+        other : `Sequence`
+            The `Sequence` to compare to.
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` at position `i` indicates a mismatch
+            between the sequences at their positions `i`.
+
+        Raises
+        ------
+        ValueError
+            If ``len(self) != len(other)``.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('GAUC')
+        >>> s.mismatches(t)
+        array([False,  True, False,  True], dtype=bool)
+
+        """
         return np.invert(self.matches(other))
 
     def mismatch_frequency(self, other, relative=False):
@@ -1140,9 +1210,9 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> [str(kw) for kw in s.k_words(4, overlap=False)]
+        >>> [str(kw) for kw in s.kmers(4, overlap=False)]
         ['ACAC', 'GACG']
-        >>> [str(kw) for kw in s.k_words(3, overlap=True)]
+        >>> [str(kw) for kw in s.kmers(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
 
         """
@@ -1178,7 +1248,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACAT')
-        >>> s.k_word_counts(3, overlap=True)
+        >>> s.kmer_frequencies(3, overlap=True)
         Counter({'ACA': 2, 'CAC': 1, 'CAT': 1})
 
         """
