@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 from future.standard_library import hooks
 from six import string_types
 
-from re import compile as re_compile
+import re
+from types import GeneratorType
 from collections import Counter, defaultdict, Hashable
 from unittest import TestCase, main
 
@@ -1110,7 +1111,7 @@ class SequenceTests(TestCase):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
             self.assertEqual(obs, exp)
 
-    def test_kmers_overlap_false(self):
+    def test_kmers(self):
         seq = Sequence('GATTACA', quality=range(7))
 
         expected = [
@@ -1145,6 +1146,9 @@ class SequenceTests(TestCase):
         ]
         self._compare_kmers_results(
             seq.kmers(7, overlap=False), expected)
+
+
+        self.assertIs(type(seq.kmers(1)), GeneratorType)
 
     def test_kmers_with_overlap(self):
         seq = Sequence('GATTACA', quality=range(7))
@@ -1276,16 +1280,20 @@ class SequenceTests(TestCase):
         self.assertEqual(seq.kmer_frequencies(1, relative=True),
                          defaultdict(float, {'A': 1.0}))
 
-    def test_regex_iter(self):
-        pat = re_compile('(T+A)(CA)')
+    def test_slices_from_regex(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        pat = re.compile('(T+A)(CA)')
 
-        obs = list(self.b1.regex_iter(pat))
+        obs = list(seq.slices_from_regex(pat))
         exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
-        obs = list(self.b1.regex_iter(pat, retrieve_group_0=True))
-        exp = [slice(2, 7), slice(2, 5), slice(5, 7)]
-        self.assertEqual(obs, exp)
+        self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
+
+    def test_slices_from_regex_no_groups(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        pat = re.compile('(FOO)')
+        self.assertEqual(list(seq.slices_from_regex(pat)), [])
 
 
 if __name__ == "__main__":

@@ -254,7 +254,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         pat = re.compile(pat_str)
 
-        for hits in self.regex_iter(pat):
+        for hits in self.slices_from_regex(pat):
             if allow_gaps:
                 degapped = hits[2]
                 for gap_char in self.gap_chars:

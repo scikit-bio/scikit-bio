@@ -25,6 +25,7 @@ from skbio.util._misc import reprnator
 with hooks():
     from itertools import zip_longest
 
+
 class Sequence(collections.Sequence, SkbioObject):
     """Base class for biological sequences.
 
@@ -381,10 +382,10 @@ class Sequence(collections.Sequence, SkbioObject):
 
         if (isinstance(indexable, np.ndarray) and
             indexable.dtype == bool and
-            len(indexable) != len(self)):
+                len(indexable) != len(self)):
             raise IndexError("An boolean vector index must be the same length"
-                            " as the sequence (%d, not %d)." % (len(self),
-                                                                len(indexable)))
+                             " as the sequence (%d, not %d)." %
+                             (len(self), len(indexable)))
 
         seq = self._bytes[indexable]
         if self._has_quality():
@@ -1268,7 +1269,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def regex_iter(self, regex, retrieve_group_0=False):
+    def slices_from_regex(self, regex):
         """Find patterns specified by regular expression
 
         Parameters
@@ -1288,10 +1289,10 @@ class Sequence(collections.Sequence, SkbioObject):
             matched regular expression, and contains the start of the hit, the
             end of the hit, and the substring that was hit
         """
-        start = 0 if retrieve_group_0 else 1
-
         for match in regex.finditer(self._string):
-            for g in range(start, len(match.groups())+1):
+            # We start at 1 because we don't want the group that contains all
+            # other groups.
+            for g in range(1, len(match.groups())+1):
                 yield slice(match.start(g), match.end(g))
 
     def _munge_to_sequence(self, other, method):
