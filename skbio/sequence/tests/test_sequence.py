@@ -721,11 +721,11 @@ class SequenceTests(TestCase):
 
     def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
-            # use equals to compare quality, id, description, sequence, and
-            # type
-            self.assertTrue(obs.equals(exp))
+            self.assertEqual(obs, exp)
 
-    def test_kmers_overlap_true(self):
+    def test_kmers_overlap_false(self):
+        seq = Sequence('GATTACA', quality=range(7))
+
         expected = [
             Sequence('G', quality=[0]),
             Sequence('A', quality=[1]),
@@ -736,7 +736,42 @@ class SequenceTests(TestCase):
             Sequence('A', quality=[6])
         ]
         self._compare_kmers_results(
-            self.b1.kmers(1, overlap=True), expected)
+            seq.kmers(1, overlap=False), expected)
+
+        expected = [
+            Sequence('GA', quality=[0, 1]),
+            Sequence('TT', quality=[2, 3]),
+            Sequence('AC', quality=[4, 5])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(2, overlap=False), expected)
+
+        expected = [
+            Sequence('GAT', quality=[0, 1, 2]),
+            Sequence('TAC', quality=[3, 4, 5])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(3, overlap=False), expected)
+
+        expected = [
+            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(7, overlap=False), expected)
+
+    def test_kmers_with_overlap(self):
+        seq = Sequence('GATTACA', quality=range(7))
+        expected = [
+            Sequence('G', quality=[0]),
+            Sequence('A', quality=[1]),
+            Sequence('T', quality=[2]),
+            Sequence('T', quality=[3]),
+            Sequence('A', quality=[4]),
+            Sequence('C', quality=[5]),
+            Sequence('A', quality=[6])
+        ]
+        self._compare_kmers_results(
+            seq.kmers(1, overlap=True), expected)
 
         expected = [
             Sequence('GA', quality=[0, 1]),
@@ -747,7 +782,7 @@ class SequenceTests(TestCase):
             Sequence('CA', quality=[5, 6])
         ]
         self._compare_kmers_results(
-            self.b1.kmers(2, overlap=True), expected)
+            seq.kmers(2, overlap=True), expected)
 
         expected = [
             Sequence('GAT', quality=[0, 1, 2]),
@@ -757,60 +792,29 @@ class SequenceTests(TestCase):
             Sequence('ACA', quality=[4, 5, 6])
         ]
         self._compare_kmers_results(
-            self.b1.kmers(3, overlap=True), expected)
+            seq.kmers(3, overlap=True), expected)
 
         expected = [
             Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
         self._compare_kmers_results(
-            self.b1.kmers(7, overlap=True), expected)
-
-        self.assertEqual(list(self.b1.kmers(8, overlap=True)), [])
-
-    def test_kmers_overlap_false(self):
-        expected = [
-            Sequence('G', quality=[0]),
-            Sequence('A', quality=[1]),
-            Sequence('T', quality=[2]),
-            Sequence('T', quality=[3]),
-            Sequence('A', quality=[4]),
-            Sequence('C', quality=[5]),
-            Sequence('A', quality=[6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(1, overlap=False), expected)
-
-        expected = [
-            Sequence('GA', quality=[0, 1]),
-            Sequence('TT', quality=[2, 3]),
-            Sequence('AC', quality=[4, 5])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(2, overlap=False), expected)
-
-        expected = [
-            Sequence('GAT', quality=[0, 1, 2]),
-            Sequence('TAC', quality=[3, 4, 5])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(3, overlap=False), expected)
-
-        expected = [
-            Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
-        ]
-        self._compare_kmers_results(
-            self.b1.kmers(7, overlap=False), expected)
-
-        self.assertEqual(list(self.b1.kmers(8, overlap=False)), [])
+            seq.kmers(7, overlap=True), expected)
 
     def test_kmers_invalid_k(self):
+        seq = Sequence('GATTACA', quality=range(7))
+
         with self.assertRaises(ValueError):
             list(self.b1.kmers(0))
 
         with self.assertRaises(ValueError):
             list(self.b1.kmers(-42))
 
+        with self.assertRaises(ValueError):
+            list(self.b1.kmers(8))
+
     def test_kmers_different_sequences(self):
+        seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
+                       quality=range(11))
         expected = [
             Sequence('HE.', quality=[0, 1, 2], id='hello',
                      description='gapped hello'),
@@ -819,8 +823,7 @@ class SequenceTests(TestCase):
             Sequence('..L', quality=[6, 7, 8], id='hello',
                      description='gapped hello')
         ]
-        self._compare_kmers_results(
-            self.b8.kmers(3, overlap=False), expected)
+        self._compare_kmers_results(seq.kmers(3, overlap=False), expected)
 
     def test_kmer_frequencies(self):
         # overlap = True
@@ -1275,7 +1278,7 @@ class SequenceTests(TestCase):
     def test_index_on_subclass(self):
         with self.assertRaises(TypeError):
             Sequence("ABCDEFG").index(SequenceSubclass("A"))
-        
+
         self.assertEqual(
             SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
 

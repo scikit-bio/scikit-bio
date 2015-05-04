@@ -1148,11 +1148,11 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
+        if k > len(self):
+            raise ValueError("k cannot be greater than the length of"
+                             " the sequence (%d)." % len(self))
 
-        if overlap:
-            step = 1
-        else:
-            step = k
+        step = 1 if overlap else k
 
         for i in range(0, len(self) - k + 1, step):
             yield self[i:i+k]
