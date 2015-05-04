@@ -675,8 +675,8 @@ class SequenceTests(TestCase):
 
     def test_hash(self):
         with self.assertRaises(TypeError):
-            hash(self.b1)
-        self.assertNotIsInstance(self.b1, Hashable)
+            hash(Sequence("ABCDEFG"))
+        self.assertNotIsInstance(Sequence("ABCDEFG"), Hashable)
 
     def test_iter_has_quality(self):
         tested = False
@@ -1205,13 +1205,13 @@ class SequenceTests(TestCase):
         seq = Sequence('GATTACA', quality=range(7))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(0))
+            list(seq.kmers(0))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(-42))
+            list(seq.kmers(-42))
 
         with self.assertRaises(ValueError):
-            list(self.b1.kmers(8))
+            list(seq.kmers(8))
 
     def test_kmers_different_sequences(self):
         seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
