@@ -39,9 +39,12 @@ class MiniRegistry(dict):
 
     def interpolate(self, obj, name):
         f = getattr(obj, name).__func__
+        # Deep magic happens here. I *think* the closure is interpereted in a
+        # new context for each subclass making the whole thing work.
         f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
                           argdefs=f.func_defaults, closure=f.func_closure)
-
+        # Conveniently the original docstring is on f2, not the new ones if
+        # inheritence is happening.
         t = f2.__doc__.split("\n\n")
         t.insert(2, self.formatted_listing())
         f2.__doc__ = "\n\n".join(t)

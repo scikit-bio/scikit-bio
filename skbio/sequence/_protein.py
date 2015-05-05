@@ -59,10 +59,6 @@ class Protein(IUPACSequence):
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
 
-    @property
-    def _motifs(self):
-        return _motifs
-
 _motifs = parent_motifs.copy()
 
 # Leave this at the bottom

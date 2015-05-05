@@ -148,10 +148,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         else:
             return other.reverse_complement()._string == self._string
 
-    @property
-    def _motifs(self):
-        return _motifs
-
 _motifs = parent_motifs.copy()
 
 def _find_runs(sequence, chars_to_find, min_length, allow_gaps):

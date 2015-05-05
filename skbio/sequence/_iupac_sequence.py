@@ -306,15 +306,11 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             and the subsequence that composes the feature
 
         """
-        if motif_type not in self._motifs:
+        if motif_type not in _motifs:
             raise ValueError("Not a known motif (%r) for this sequence (%s)." %
                              (motif_type, self.__class__.__name__))
 
-        return self._motifs[motif_type](self, min_length, allow_gaps)
-
-    @property
-    def _motifs(self):
-        return _motifs
+        return _motifs[motif_type](self, min_length, allow_gaps)
 
 _motifs = MiniRegistry()
 
