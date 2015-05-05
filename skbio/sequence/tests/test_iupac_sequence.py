@@ -194,6 +194,39 @@ class TestIUPACSequence(TestCase):
         self.assertTrue(ExampleIUPACSequence("C").has_nondegenerates())
         self.assertTrue(ExampleIUPACSequence(".XYZ-ABC").has_nondegenerates())
 
+    def test_degap(self):
+        kw = {
+            'id': 'some_id',
+            'description': 'some description',
+        }
+
+        self.assertEquals(ExampleIUPACSequence("", quality=[], **kw).degap(),
+                          ExampleIUPACSequence("", quality=[], **kw))
+
+        self.assertEquals(ExampleIUPACSequence("ABCXYZ", quality=np.arange(6),
+                                               **kw).degap(),
+                          ExampleIUPACSequence("ABCXYZ", quality=np.arange(6),
+                                               **kw))
+
+        self.assertEquals(ExampleIUPACSequence("ABC-XYZ", quality=np.arange(7),
+                                               **kw).degap(),
+                          ExampleIUPACSequence("ABCXYZ",
+                                               quality=[0, 1, 2, 4, 5, 6],
+                                               **kw))
+
+        self.assertEquals(ExampleIUPACSequence(".-ABC-XYZ.",
+                                               quality=np.arange(10), **kw
+                                              ).degap(),
+                          ExampleIUPACSequence("ABCXYZ",
+                                               quality=[2, 3, 4, 6, 7, 8],
+                                               **kw))
+
+        self.assertEquals(ExampleIUPACSequence("---.-.-.-.-.",
+                                               quality=np.arange(12), **kw
+                                              ).degap(),
+                          ExampleIUPACSequence("", quality=[], **kw))
+
+
 
 if __name__ == "__main__":
     main()
