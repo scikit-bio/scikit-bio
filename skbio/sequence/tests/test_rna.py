@@ -108,31 +108,31 @@ class RNATests(TestCase):
         self.assertTrue(
             self.b4.is_reverse_complement(RNA('NVHDBMRSWYK')))
 
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+    def test_expand_degenerates_no_degens(self):
+        self.assertEqual(list(self.b1.expand_degenerates()), [self.b1])
 
-    def test_nondegenerates_all_degens(self):
+    def test_expand_degenerates_all_degens(self):
         # Same chars.
         exp = [RNA('CC'), RNA('CG'), RNA('GC'),
                RNA('GG')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(RNA('SS').nondegenerates(), key=str)
+        obs = sorted(RNA('SS').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Different chars.
         exp = [RNA('AC'), RNA('AG'), RNA('GC'),
                RNA('GG')]
-        obs = sorted(RNA('RS').nondegenerates(), key=str)
+        obs = sorted(RNA('RS').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Odd number of chars.
-        obs = list(RNA('NNN').nondegenerates())
+        obs = list(RNA('NNN').expand_degenerates())
         self.assertEqual(len(obs), 4**3)
 
-    def test_nondegenerates_mixed_degens(self):
+    def test_expand_degenerates_mixed_degens(self):
         exp = [RNA('AGC'), RNA('AGU'), RNA('GGC'),
                RNA('GGU')]
-        obs = sorted(RNA('RGY').nondegenerates(), key=str)
+        obs = sorted(RNA('RGY').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
 
