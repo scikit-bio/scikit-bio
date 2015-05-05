@@ -15,6 +15,7 @@ from itertools import product
 import numpy as np
 
 from skbio.util import classproperty, overrides
+from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
@@ -305,12 +306,13 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             and the subsequence that composes the feature
 
         """
-        if motif_type not in self._motifs:
+        if motif_type not in _motifs:
             raise ValueError("Not a known motif (%r) for this sequence (%s)." %
                              (motif_type, self.__class__.__name__))
 
-        return self._motifs[motif_type](self, min_length, allow_gaps)
+        return _motifs[motif_type](self, min_length, allow_gaps)
 
-    @property
-    def _motifs(self):
-        return {}
+_motifs = MiniRegistry()
+
+# Leave this at the bottom
+_motifs.interpolate(IUPACSequence, "find_motifs")

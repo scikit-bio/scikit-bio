@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
-from ._iupac_sequence import IUPACSequence
+from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
 class Protein(IUPACSequence):
@@ -59,11 +59,7 @@ class Protein(IUPACSequence):
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
 
-    @property
-    def _motifs(self):
-        return _motifs
-
-_motifs = MiniRegistry()
+_motifs = parent_motifs.copy()
 
 # Leave this at the bottom
 _motifs.interpolate(Protein, "find_motifs")

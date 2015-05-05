@@ -26,14 +26,25 @@ class MiniRegistry(dict):
             return func
         return decorator
 
+    def copy(self):
+        return self.__class__(super(MiniRegistry, self).copy())
+
     def formatted_listing(self):
-        return "\n".join(["\t - %r" % name for name in self])
+        if len(self) == 0:
+            return "\tNone"
+        else:
+            return "\n".join(["\t%r\n\t  %s" %
+                             (name, self[name].__doc__.split("\n")[0])
+                              for name in self])
 
     def interpolate(self, obj, name):
         f = getattr(obj, name).__func__
+        # Deep magic happens here. I *think* the closure is interpereted in a
+        # new context for each subclass making the whole thing work.
         f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
                           argdefs=f.func_defaults, closure=f.func_closure)
-
+        # Conveniently the original docstring is on f2, not the new ones if
+        # inheritence is happening.
         t = f2.__doc__.split("\n\n")
         t.insert(2, self.formatted_listing())
         f2.__doc__ = "\n\n".join(t)
