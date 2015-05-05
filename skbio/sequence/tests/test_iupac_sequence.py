@@ -16,9 +16,6 @@ import numpy.testing as npt
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import classproperty
 
-class IUPACSequenceSubclassNoImplementation(IUPACSequence):
-    pass
-
 class ExampleIUPACSequence(IUPACSequence):
 
     @classproperty
@@ -31,6 +28,9 @@ class ExampleIUPACSequence(IUPACSequence):
 class TestIUPACSequence(TestCase):
 
     def test_instantiation_with_no_implementation(self):
+        class IUPACSequenceSubclassNoImplementation(IUPACSequence):
+            pass
+
         with self.assertRaises(TypeError) as cm:
             t = IUPACSequenceSubclassNoImplementation()
 
@@ -160,6 +160,39 @@ class TestIUPACSequence(TestCase):
 
         self.assertTrue(ExampleIUPACSequence("Z").has_degenerates())
         self.assertTrue(ExampleIUPACSequence("ABC.XYZ-").has_degenerates())
+
+    def test_nondegenerates(self):
+        self.assertIs(type(ExampleIUPACSequence("").nondegenerates()),
+                      np.ndarray)
+        self.assertIs(ExampleIUPACSequence("").nondegenerates().dtype,
+                      np.dtype('bool'))
+
+        npt.assert_equal(ExampleIUPACSequence("XYZYZ-.XY.").nondegenerates(),
+                         np.zeros(10).astype(bool))
+
+        npt.assert_equal(ExampleIUPACSequence("ABABA").nondegenerates(),
+                         np.ones(5).astype(bool))
+
+        npt.assert_equal(ExampleIUPACSequence("XA.B-AZCXA").nondegenerates(),
+                         np.array([0, 1] * 5, dtype=bool))
+
+        npt.assert_equal(ExampleIUPACSequence("XXAZZB.-C").nondegenerates(),
+                         np.array([0, 0, 1] * 3, dtype=bool))
+
+        npt.assert_equal(ExampleIUPACSequence("YB.-AC").nondegenerates(),
+                         np.array([0, 1, 0, 0, 1, 1], dtype=bool))
+
+    def test_has_nondegenerates(self):
+        self.assertIs(type(ExampleIUPACSequence("").has_nondegenerates()),
+                      bool)
+        self.assertIs(type(ExampleIUPACSequence("A").has_nondegenerates()),
+                      bool)
+
+        self.assertFalse(ExampleIUPACSequence("").has_nondegenerates())
+        self.assertFalse(ExampleIUPACSequence("X-.YZ").has_nondegenerates())
+
+        self.assertTrue(ExampleIUPACSequence("C").has_nondegenerates())
+        self.assertTrue(ExampleIUPACSequence(".XYZ-ABC").has_nondegenerates())
 
 
 if __name__ == "__main__":
