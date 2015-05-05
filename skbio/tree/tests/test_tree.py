@@ -691,7 +691,6 @@ class TreeTests(TestCase):
         t4.bifurcate(insert_length=0)
         self.assertEqual(str(t4), '(((c,(a,b):0),d),(e,f));\n')
 
-
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
         # test for first tree: contains singleton outgroup
