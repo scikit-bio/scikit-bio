@@ -49,6 +49,28 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertIn("degenerate_map", str(cm.exception))
         self.assertIn("complement_map", str(cm.exception))
 
+    def test_complement_map(self):
+        expected = {
+            'A': 'C', 'C': 'A',
+            'B': 'B',
+            'X': 'Y', 'Y': 'X',
+            'Z': 'Z',
+            '.': '.',
+            '-': '-'
+        }
+
+        self.assertEqual(ExampleNucleotideSequence.complement_map, expected)
+
+        ExampleNucleotideSequence.complement_map['W'] = 'X'
+        ExampleNucleotideSequence.complement_map['X'] = 'W'
+        self.assertEqual(ExampleNucleotideSequence.complement_map, expected)
+
+        self.assertEqual(ExampleNucleotideSequence('').complement_map, expected)
+
+        with self.assertRaises(AttributeError):
+            ExampleNucleotideSequence('').complement_map = {'W': 'X'}
+
+
 # class NucelotideSequenceTests(TestCase):
 #
 #    def setUp(self):
@@ -73,10 +95,6 @@ class TestNucelotideSequence(unittest.TestCase):
 #    def test_gap_chars(self):
 #        self.assertEqual(self.b1.gap_chars, set('-.'))
 #
-#    def test_complement_map(self):
-#        exp = {}
-#        self.assertEqual(self.b1.complement_map, exp)
-#        self.assertEqual(NucleotideSequence.complement_map, exp)
 #
 #    def test_nondegenerate_chars(self):
 #        exp = set("ACGTUacgtu")
