@@ -11,11 +11,14 @@ from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
 from six import StringIO
 
+import operator
 from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import entropy
 
+from skbio.alignment._text import add_letter
 from skbio._base import SkbioObject
 from skbio.sequence import BiologicalSequence
 from skbio.stats.distance import DistanceMatrix
@@ -1404,6 +1407,84 @@ class Alignment(SequenceCollection):
             return 0
         else:
             return len(self._data[0])
+
+    def weblogo(self, reverse=False):
+        """Plots alignment as a weblogo.
+
+        Parameters
+        ----------
+        reverse: bool, optional
+            If ``True``, letters on plot are ordered with the largest letters
+            on the bottom, and the smallest on the top.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the weblogo of the passed alignment.
+
+        Examples
+        --------
+        ..plot::
+
+            Define an alignment of DNA sequences with original ids (the names
+            of the ids will not change the weblogo, however Alignment requires
+            original ids):
+
+            >>> from skbio import Alignment, DNA
+            >>> a1 = Alignment([DNA('ATT-GG-G', id='seq1'),
+            ...                 DNA('ACGTT--G', id='seq2'),
+            ...                 DNA('CTCTG--G', id='seq3'),
+            ...                 DNA('GCT--T-G', id='seq4')])
+
+            Plot the alignment as a weblogo:
+
+            >>> fig = a1.weblogo()
+
+        """
+        # catches an empty alignment so the user won't get an empty graph
+        if self.sequence_count() == 0:
+            raise AlignmentError("You have passed an empty Alignment.")
+
+        # acquires amount of each nucleotide at a given point
+        pos_freq = self.position_frequencies()
+
+        # sets up graph with x and y ticks and labels
+        fig, ax = plt.subplots()
+        fig.set_size_inches([(len(pos_freq)*1.3), 6])
+        ax.set_xticks(np.array([i+0.35 for i in range(len(pos_freq))]))
+        ax.set_xlim(right=len(pos_freq))
+        ax.set_xticklabels(range(1, self.sequence_length()+1, 1))
+        ax.set_ylim(top=1.0, bottom=0.0)
+        ax.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+        ax.set_yticklabels(['0.0', '', '', '', '1.0'])
+
+        # runs through every sequence and graphs it
+        for i in range(len(pos_freq)):
+            # checks for accepted gap characters
+            for gap in BiologicalSequence.gap_alphabet():
+                if gap in pos_freq[i]:
+                    # instead of drawing an empty box for gaps, we delete gap
+                    # positions
+                    del pos_freq[i][gap]
+            self._draw_position(ax, i, pos_freq[i], reverse)
+
+        return fig
+
+    def _draw_position(self, ax, position, freqs, reverse):
+        sorted_freqs = sorted(freqs.items(), key=operator.itemgetter(1),
+                              reverse=reverse)
+        dx = 0.7
+        x = position
+        y = 0
+        for letter, dy in sorted_freqs:
+            try:
+                add_letter(ax, letter, x, y, dx, dy)
+            except KeyError as e:
+                raise AlignmentError("Character %r cannot currently be drawn "
+                                     "in ``Alignment.weblogo``. Support for "
+                                     "more characters will be added in the "
+                                     "future." % e.args[0])
+            y += dy
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise

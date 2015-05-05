@@ -16,6 +16,7 @@ except ImportError:  # python3 system
     from io import StringIO
 import tempfile
 
+import matplotlib as mpl
 import numpy as np
 from scipy.spatial.distance import hamming
 
@@ -752,6 +753,42 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a1.sequence_length(), 13)
         self.assertEqual(self.a2.sequence_length(), 5)
         self.assertEqual(self.empty.sequence_length(), 0)
+
+    def test_weblogo_error(self):
+        a1 = Alignment([DNA('ATTGK', id='seq1'),
+                        DNA('ACGTT', id='seq2'),
+                        DNA('CTCTG', id='seq3')])
+        with self.assertRaises(AlignmentError):
+            a1.weblogo()
+        a2 = Alignment([])
+        with self.assertRaises(AlignmentError):
+            a2.weblogo()
+
+    def test_weblogo_reverse(self):
+        # Just for coverage, because there is no way to pull out the characters
+        # to test if reverse is working.
+        a1 = Alignment([DNA('ATCGTT', id='seq1')])
+        fig = Alignment.weblogo(a1, reverse=True)
+        self.check_weblogo_figure_sanity(fig, ['1', '2', '3', '4', '5', '6'])
+
+    def test_weblogo_mixed_gap_chars_and_single_seq(self):
+        a1 = Alignment([DNA('A-T.C', id='seq1')])
+        fig = Alignment.weblogo(a1)
+        self.check_weblogo_figure_sanity(fig, ['1', '2', '3', '4', '5'])
+
+    def check_weblogo_figure_sanity(self, fig, xticks):
+        self.assertIsInstance(fig, mpl.figure.Figure)
+        axes = fig.get_axes()
+        ax = axes[0]
+        x = []
+        for tick in ax.get_xticklabels():
+            x.append(tick.get_text())
+        self.assertEqual(x, xticks)
+        y = []
+        for tick in ax.get_yticklabels():
+            y.append(tick.get_text())
+        self.assertEqual(y[0], '0.0')
+        self.assertEqual(y[-1], '1.0')
 
     def test_validate_lengths(self):
         self.assertTrue(self.a1._validate_lengths())

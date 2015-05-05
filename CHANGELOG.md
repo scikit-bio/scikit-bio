@@ -5,6 +5,7 @@
 ### Features
 * Added `skbio.stats.composition` for analyzing data made up of proportions
 * Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
+* Added ``weblogo`` method to ``skbio.Alignment`` for plotting a weblogo (also known as a sequence logo). ([#805](https://github.com/biocore/scikit-bio/issues/805))
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)

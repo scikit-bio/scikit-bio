@@ -120,7 +120,8 @@ Caporaso (`@gregcaporaso <https://github.com/gregcaporaso>`__), Jai
 Ram Rideout (`@ElBrogrammer <https://github.com/ElBrogrammer>`__),
 Cathy Lozupone (`@clozupone <https://github.com/clozupone>`__), Mike Robeson
 (`@mikerobeson <https://github.com/mikerobeson>`__), Marcin Cieslik,
-Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
+Peter Maxwell, Jeremy Widmann (`@widmannj <https://github.com/widmannj>`__),
+Zongzhi Liu, Michael Dwan, Logan Knecht
 (`@loganknecht <https://github.com/loganknecht>`__), Andrew Cochran,
 Jose Carlos Clemente (`@cleme <https://github.com/cleme>`__), Damien
 Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (`@wdwvt1
