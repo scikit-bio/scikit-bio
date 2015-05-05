@@ -14,6 +14,7 @@ from abc import ABCMeta, abstractproperty
 
 from skbio.sequence import SequenceError
 from skbio.util import classproperty
+from skbio.util._misc import MiniRegistry
 from ._iupac_sequence import IUPACSequence
 
 
@@ -152,56 +153,29 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         return self.complement(reverse=True)
     rc = reverse_complement
 
-    def find_features(self, feature_type, min_length=1, allow_gaps=False):
-        """Search the sequence for features
+    @property
+    def _motifs(self):
+        return _motifs
 
-        Parameters
-        ----------
-        feature_type : {'purine_run', 'pyrimidine_run'}
-            The type of feature to find
-        min_length : int, optional
-            Defaults to 1. Only features at least as long as this will be
-            returned
-        allow_gaps : bool, optional
-            Defaults to ``False``. If ``True``, then gaps will not be
-            considered to disrupt a feature
+_motifs = MiniRegistry()
 
-        Returns
-        -------
-        generator
-            Yields tuples of the start of the feature, the end of the feature,
-            and the subsequence that composes the feature
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('G-AT.T')
-        >>> list(s.find_features('purine_run'))
-        [slice(0, 1, None), slice(2, 3, None)]
-        >>> list(s.find_features('purine_run', 2))
-        []
-        >>> list(s.find_features('purine_run', 2, allow_gaps=True))
-        [slice(0, 3, None)]
-        >>> list(s.find_features('pyrimidine_run', 2, allow_gaps=True))
-        [slice(3, 6, None)]
-
-        """
-        gaps = re.escape(''.join(self.gap_chars))
-        acceptable = gaps if allow_gaps else ''
-
-        if feature_type == 'purine_run':
-            pat_str = '([AGag%s]{%d,})' % (acceptable, min_length)
-        elif feature_type == 'pyrimidine_run':
-            pat_str = '([CTUctu%s]{%d,})' % (acceptable, min_length)
+def _find_runs(sequence, chars_to_find, min_length, allow_gaps):
+    acceptable = re.escape(''.join(sequence.gap_chars)) if allow_gaps else ''
+    pat = '([%s%s]{%d,})' % (chars_to_find, acceptable, min_length)
+    for index in sequence.slices_from_regex(pat):
+        if allow_gaps:
+            if len(sequence) - sequence[index].gaps().sum() >= min_length:
+                yield index
         else:
-            raise ValueError("Unknown feature type: %s" % feature_type)
+            yield index
 
-        pat = re.compile(pat_str)
+@_motifs("purine-run")
+def _motif_purine_run(sequence, min_length, allow_gaps):
+    return _find_runs(sequence, "AG", min_length, allow_gaps)
 
-        for hits in self.slices_from_regex(pat):
-            if allow_gaps:
-                degapped = self[hits].degap()
-                if len(degapped) >= min_length:
-                    yield hits
-            else:
-                yield hits
+@_motifs("pyrimidine-run")
+def _motif_pyrimidine_run(sequence, min_length, allow_gaps):
+    return _find_runs(sequence, "CTU", min_length, allow_gaps)
+
+# Leave this at the bottom
+_motifs.interpolate(NucleotideSequence, "find_motifs")

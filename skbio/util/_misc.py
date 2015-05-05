@@ -14,10 +14,31 @@ from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from warnings import warn
+from types import FunctionType
 
 with hooks():
     from itertools import zip_longest
 
+class MiniRegistry(dict):
+    def __call__(self, name):
+        def decorator(func):
+            self[name] = func
+            return func
+        return decorator
+
+    def formatted_listing(self):
+        return "\n".join(["\t - %r" % name for name in self])
+
+    def interpolate(self, obj, name):
+        f = getattr(obj, name).__func__
+        f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
+                          argdefs=f.func_defaults, closure=f.func_closure)
+
+        t = f2.__doc__.split("\n\n")
+        t.insert(2, self.formatted_listing())
+        f2.__doc__ = "\n\n".join(t)
+
+        setattr(obj, name, f2)
 
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.

@@ -281,3 +281,36 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         result = product(*expansions)
         return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
+
+    def find_motifs(self, motif_type, min_length=1, allow_gaps=False):
+        """Search the sequence for motifs
+
+        Options for `motif_type`:
+
+        Parameters
+        ----------
+        motif_type : str
+            The type of motif to find.
+        min_length : int, optional
+            Defaults to 1. Only motifs at least as long as this will be
+            returned.
+        allow_gaps : bool, optional
+            Defaults to ``False``. If ``True``, then gaps will not be
+            considered to disrupt a motif.
+
+        Returns
+        -------
+        generator
+            Yields tuples of the start of the feature, the end of the feature,
+            and the subsequence that composes the feature
+
+        """
+        if motif_type not in self._motifs:
+            raise ValueError("Not a known motif (%r) for this sequence (%s)." %
+                             (motif_type, self.__class__.__name__))
+
+        return self._motifs[motif_type](self, min_length, allow_gaps)
+
+    @property
+    def _motifs(self):
+        return {}
