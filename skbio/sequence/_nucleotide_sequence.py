@@ -80,18 +80,10 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         same as `self`.
 
         """
-        result = []
+        # TODO rewrite method for optimized performance
         complement_map = self.complement_map
         seq_iterator = reversed(self) if reverse else self
-        for base in seq_iterator:
-            # TODO fix me!
-            base = str(base)
-            try:
-                result.append(complement_map[base])
-            except KeyError:
-                raise SequenceError(
-                    "Don't know how to complement base %s. Is it in "
-                    "%s.complement_map?" % (base, self.__class__.__name__))
+        result = [complement_map[str(base)] for base in seq_iterator]
 
         quality = self.quality
         if self._has_quality() and reverse:

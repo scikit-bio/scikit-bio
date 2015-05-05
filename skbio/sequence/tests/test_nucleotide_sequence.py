@@ -65,10 +65,61 @@ class TestNucelotideSequence(unittest.TestCase):
         ExampleNucleotideSequence.complement_map['X'] = 'W'
         self.assertEqual(ExampleNucleotideSequence.complement_map, expected)
 
-        self.assertEqual(ExampleNucleotideSequence('').complement_map, expected)
+        self.assertEqual(ExampleNucleotideSequence('').complement_map,
+                         expected)
 
         with self.assertRaises(AttributeError):
             ExampleNucleotideSequence('').complement_map = {'W': 'X'}
+
+    def test_complement_without_reverse_empty(self):
+        # without optional attributes
+        comp = ExampleNucleotideSequence('').complement()
+        self.assertEqual(comp, ExampleNucleotideSequence(''))
+
+        # with optional attributes
+        comp = ExampleNucleotideSequence('', id='foo', description='bar',
+                                         quality=[]).complement()
+        self.assertEqual(
+            comp,
+            ExampleNucleotideSequence('', id='foo', description='bar',
+                                      quality=[]))
+
+    def test_complement_without_reverse_non_empty(self):
+        comp = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement()
+        self.assertEqual(comp, ExampleNucleotideSequence('CBAYXZ.-BBZ'))
+
+        comp = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).complement()
+        self.assertEqual(
+            comp,
+            ExampleNucleotideSequence('CBAYXZ.-BBZ', id='foo',
+                                      description='bar', quality=range(11)))
+
+    def test_complement_with_reverse_empty(self):
+        rc = ExampleNucleotideSequence('').complement(reverse=True)
+        self.assertEqual(rc, ExampleNucleotideSequence(''))
+
+        rc = ExampleNucleotideSequence('', id='foo', description='bar',
+                                       quality=[]).complement(reverse=True)
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('', id='foo', description='bar',
+                                      quality=[]))
+
+    def test_complement_with_reverse_non_empty(self):
+        rc = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement(reverse=True)
+        self.assertEqual(rc, ExampleNucleotideSequence('ZBB-.ZXYABC'))
+
+        rc = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).complement(reverse=True)
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                      description='bar',
+                                      quality=list(range(11))[::-1]))
+
 
 
 # class NucelotideSequenceTests(TestCase):
@@ -80,63 +131,6 @@ class TestNucelotideSequence(unittest.TestCase):
 #            'ACCGGUACC', id="test-seq-2",
 #            description="A test sequence")
 #        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-#
-#    def test_alphabet(self):
-#        exp = {
-#            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-#            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-#            'r', 'u', 't', 'w', 'v', 'y'
-#        }
-#
-#        # Test calling from an instance and purely static context.
-#        self.assertEqual(self.b1.alphabet, exp)
-#        self.assertEqual(NucleotideSequence.alphabet, exp)
-#
-#    def test_gap_chars(self):
-#        self.assertEqual(self.b1.gap_chars, set('-.'))
-#
-#
-#    def test_nondegenerate_chars(self):
-#        exp = set("ACGTUacgtu")
-#        self.assertEqual(self.b1.nondegenerate_chars, exp)
-#        self.assertEqual(NucleotideSequence.nondegenerate_chars, exp)
-#
-#    def test_degenerate_map(self):
-#        exp = {
-#            # upper
-#            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
-#            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
-#            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
-#            'S': set(['C', 'G']), 'R': set(['A', 'G']),
-#            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
-#            'Y': set(['C', 'U', 'T']),
-#            # lower
-#            'b': set(['c', 'u', 't', 'g']), 'd': set(['a', 'u', 't', 'g']),
-#            'h': set(['a', 'c', 'u', 't']), 'k': set(['u', 't', 'g']),
-#            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 't', 'g']),
-#            's': set(['c', 'g']), 'r': set(['a', 'g']),
-#            'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
-#            'y': set(['c', 'u', 't'])
-#        }
-#        self.assertEqual(self.b1.degenerate_map, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
-#
-#        # Test that we can modify a copy of the mapping without altering the
-#        # canonical representation.
-#        degen = NucleotideSequence.degenerate_map
-#        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
-#        self.assertNotEqual(degen, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
-#
-#    def test_degenerate_chars(self):
-#        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-#                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-#        self.assertEqual(self.b1.degenerate_chars, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_chars, exp)
-#
-#    def test_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.complement)
 #
 #    def test_reverse_complement(self):
 #        self.assertRaises(SequenceError,
