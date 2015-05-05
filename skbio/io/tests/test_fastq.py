@@ -50,6 +50,7 @@ class TestSniffer(unittest.TestCase):
         self.positives = [get_data_path(e) for e in [
             'fastq_multi_seq_sanger',
             'fastq_single_seq_illumina1.3',
+            'fastq_single_seq_illumina1.3_gzip',
             'fastq_wrapping_as_illumina_no_description',
             'fastq_wrapping_as_sanger_no_description',
             'fastq_wrapping_original_sanger_no_description',
@@ -125,6 +126,14 @@ class TestReaders(unittest.TestCase):
              []),
 
             (get_data_path('fastq_single_seq_illumina1.3'), [
+                {'variant': 'illumina1.3'},
+                {'phred_offset': 64},
+                {'variant': 'illumina1.3', 'constructor': ProteinSequence},
+            ], [
+                ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
+            ]),
+
+            (get_data_path('fastq_single_seq_illumina1.3_gzip'), [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3', 'constructor': ProteinSequence},

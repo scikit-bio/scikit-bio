@@ -28,12 +28,15 @@ Functions
 
 from future.builtins import bytes, str
 from six import BytesIO
+
+from contextlib import contextmanager
+from io import TextIOWrapper
+from gzip import open as gzip_open, GzipFile
+from tempfile import gettempdir
+
 import requests
 from cachecontrol import CacheControl
 from cachecontrol.caches import FileCache
-
-from contextlib import contextmanager
-from tempfile import gettempdir
 
 
 def _is_string_or_bytes(s):
@@ -42,7 +45,17 @@ def _is_string_or_bytes(s):
     return isinstance(s, str) or isinstance(s, bytes)
 
 
-def _get_filehandle(filepath_or, *args, **kwargs):
+def _is_gzip(fp):
+    """Checks the first two bytes of the file for the gzip magic number
+    If the first two bytes of the file are 1f 8b (the "magic number" of a
+    gzip file), return True; otherwise, return false.
+    """
+    with open(fp, 'rb') as file_:
+        is_gzip = file_.read(2) == b'\x1f\x8b'
+    return is_gzip
+
+
+def get_filehandle(filepath_or, *args, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
     """
@@ -56,11 +69,46 @@ def _get_filehandle(filepath_or, *args, **kwargs):
             req.raise_for_status()
 
             fh, own_fh = BytesIO(req.content), True
+        elif _is_gzip(filepath_or):
+            # Extract mode from args or kwargs.
+            if 'mode' in kwargs:
+                mode = kwargs.pop('mode')
+            elif len(args) > 0:
+                mode, args = args[0], args[1:]
+            else:
+                mode = None
+
+            # Replace unsupported U flag in args or kwargs.
+            if mode is None or mode in {'U', 'rU'}:
+                mode = 'rt'
+
+            fh = gzip_open(filepath_or, *args, mode=mode, **kwargs)
+            own_fh = True
         else:
             fh, own_fh = open(filepath_or, *args, **kwargs), True
     else:
         fh, own_fh = filepath_or, False
     return fh, own_fh
+
+
+def get_filemode(fh):
+    if _is_gzip(fh.name):
+        if isinstance(fh, TextIOWrapper):
+            # Text gzip case in Python 3.x.
+            mode = fh.buffer.fileobj.mode
+            mode = mode.replace('b', 't')
+        elif isinstance(fh, GzipFile):
+            # Binary/text gzip case in Python 2.x.
+            mode = fh.fileobj.mode
+            if mode == 'rtb':
+                mode = 'rt'
+        else:
+            # Binary gzip case in Python 3.x.
+            mode = fh.fileobj.mode
+    else:
+        mode = fh.mode
+
+    return mode
 
 
 @contextmanager
@@ -70,23 +118,27 @@ def open_file(filepath_or, *args, **kwargs):
 
     It is useful when implementing a function that can accept both
     strings and file-like objects (like numpy.loadtxt, etc), with the
-    additional benefit that it can load data from an HTTP/HTTPS URL.
+    additional benefit that it can load data from an HTTP/HTTPS URL
+    and open gzip-compressed files transparently.
 
     Parameters
     ----------
     filepath_or : str/bytes/unicode string or file-like
-        If ``filpath_or`` is a file path to be opened the ``open`` function is
-        used and a filehandle is returned. If ``filepath_or`` is a string that
-        refers to an HTTP or HTTPS URL, a GET request is created and a BytesIO
-        object is returned with the contents of the URL. Else, if a file-like
-        object is passed, the object is returned untouched.
+        If ``filepath_or`` is a file path to be opened the ``open`` function
+        is used and a filehandle is returned. If ``filepath_or`` is a file path
+        that refers to a gzip-compressed file, ``gzip.open`` is used instead.
+        If ``filepath_or`` is a string that refers to an HTTP or HTTPS URL, a
+        GET request is created and a BytesIO object is returned with the
+        contents of the URL. Else, if a file-like object is passed, the object
+        is returned untouched.
 
     Other parameters
     ----------------
     args, kwargs : tuple, dict
         When `filepath_or` is a string, any extra arguments are passed
-        on to the ``open`` builtin. If `filepath_or` is a URL, then only kwargs
-        are passed into `requests.get`.
+        on to the ``open`` builtin or to ``gzip.open`` if `file_path_or`
+        refers to a gzip-compressed file. If `filepath_or` is a URL, then
+        only kwargs are passed into `requests.get`.
 
     Notes
     -----
@@ -109,9 +161,10 @@ def open_file(filepath_or, *args, **kwargs):
     See Also
     --------
     requests.get
+    gzip.open
 
     """
-    fh, own_fh = _get_filehandle(filepath_or, *args, **kwargs)
+    fh, own_fh = get_filehandle(filepath_or, *args, **kwargs)
     try:
         yield fh
     finally:
@@ -121,7 +174,7 @@ def open_file(filepath_or, *args, **kwargs):
 
 @contextmanager
 def open_files(fp_list, *args, **kwargs):
-    fhs, owns = zip(*[_get_filehandle(f, *args, **kwargs) for f in fp_list])
+    fhs, owns = zip(*[get_filehandle(f, *args, **kwargs) for f in fp_list])
     try:
         yield fhs
     finally:
