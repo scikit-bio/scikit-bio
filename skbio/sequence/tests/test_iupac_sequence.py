@@ -16,23 +16,25 @@ import numpy.testing as npt
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import classproperty
 
-class ExampleIUPACSequence(IUPACSequence):
 
+class ExampleIUPACSequence(IUPACSequence):
     @classproperty
     def degenerate_map(self):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
+
     @classproperty
     def nondegenerate_chars(self):
+
         return set("ABC")
 
-class TestIUPACSequence(TestCase):
 
+class TestIUPACSequence(TestCase):
     def test_instantiation_with_no_implementation(self):
         class IUPACSequenceSubclassNoImplementation(IUPACSequence):
             pass
 
         with self.assertRaises(TypeError) as cm:
-            t = IUPACSequenceSubclassNoImplementation()
+            IUPACSequenceSubclassNoImplementation()
 
         self.assertIn("abstract class", str(cm.exception))
         self.assertIn("nondegenerate_chars", str(cm.exception))
@@ -216,16 +218,15 @@ class TestIUPACSequence(TestCase):
 
         self.assertEquals(ExampleIUPACSequence(".-ABC-XYZ.",
                                                quality=np.arange(10), **kw
-                                              ).degap(),
+                                               ).degap(),
                           ExampleIUPACSequence("ABCXYZ",
                                                quality=[2, 3, 4, 6, 7, 8],
                                                **kw))
 
         self.assertEquals(ExampleIUPACSequence("---.-.-.-.-.",
                                                quality=np.arange(12), **kw
-                                              ).degap(),
+                                               ).degap(),
                           ExampleIUPACSequence("", quality=[], **kw))
-
 
 
 if __name__ == "__main__":

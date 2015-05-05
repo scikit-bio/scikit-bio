@@ -108,31 +108,31 @@ class DNATests(TestCase):
         self.assertTrue(
             self.b4.is_reverse_complement(DNA('NVHDBMRSWYK')))
 
-    def test_nondegenerates_no_degens(self):
-        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
+    def test_expand_degenerates_no_degens(self):
+        self.assertEqual(list(self.b1.expand_degenerates()), [self.b1])
 
-    def test_nondegenerates_all_degens(self):
+    def test_expand_degenerates_all_degens(self):
         # Same chars.
         exp = [DNA('CC'), DNA('CG'), DNA('GC'),
                DNA('GG')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(DNA('SS').nondegenerates(), key=str)
+        obs = sorted(DNA('SS').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Different chars.
         exp = [DNA('AC'), DNA('AG'), DNA('GC'),
                DNA('GG')]
-        obs = sorted(DNA('RS').nondegenerates(), key=str)
+        obs = sorted(DNA('RS').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
         # Odd number of chars.
-        obs = list(DNA('NNN').nondegenerates())
+        obs = list(DNA('NNN').expand_degenerates())
         self.assertEqual(len(obs), 4**3)
 
-    def test_nondegenerates_mixed_degens(self):
+    def test_expand_degenerates_mixed_degens(self):
         exp = [DNA('AGC'), DNA('AGT'), DNA('GGC'),
                DNA('GGT')]
-        obs = sorted(DNA('RGY').nondegenerates(), key=str)
+        obs = sorted(DNA('RGY').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
 

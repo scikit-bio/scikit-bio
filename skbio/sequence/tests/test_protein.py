@@ -52,10 +52,10 @@ class ProteinTests(TestCase):
         self.assertEqual(self.p1.degenerate_chars, exp)
         self.assertEqual(Protein.degenerate_chars, exp)
 
-    def test_nondegenerates(self):
+    def test_expand_degenerates(self):
         exp = [Protein('AD'), Protein('AN')]
         # Sort based on sequence string, as order is not guaranteed.
-        obs = sorted(Protein('AB').nondegenerates(), key=str)
+        obs = sorted(Protein('AB').expand_degenerates(), key=str)
         self.assertEqual(obs, exp)
 
 

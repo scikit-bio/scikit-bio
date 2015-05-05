@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
 import re
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractproperty
 
 from skbio.sequence import SequenceError
 from skbio.util import classproperty
@@ -230,16 +230,16 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import NucleotideSequence
-        >>> s = NucleotideSequence('G-AT.T')
+        >>> from skbio import DNA
+        >>> s = DNA('G-AT.T')
         >>> list(s.find_features('purine_run'))
-        [(0, 1, 'G'), (2, 3, 'A')]
+        [slice(0, 1, None), slice(2, 3, None)]
         >>> list(s.find_features('purine_run', 2))
         []
         >>> list(s.find_features('purine_run', 2, allow_gaps=True))
-        [(0, 3, 'G-A')]
+        [slice(0, 3, None)]
         >>> list(s.find_features('pyrimidine_run', 2, allow_gaps=True))
-        [(3, 6, 'T.T')]
+        [slice(3, 6, None)]
 
         """
         gaps = re.escape(''.join(self.gap_chars))
@@ -256,9 +256,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         for hits in self.slices_from_regex(pat):
             if allow_gaps:
-                degapped = hits[2]
-                for gap_char in self.gap_chars:
-                    degapped = degapped.replace(gap_char, '')
+                degapped = self[hits].degap()
                 if len(degapped) >= min_length:
                     yield hits
             else:

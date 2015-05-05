@@ -9,12 +9,11 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractproperty
 from itertools import product
 
 import numpy as np
 
-from skbio.sequence import SequenceError
 from skbio.util import classproperty, overrides
 from ._sequence import Sequence
 
@@ -164,6 +163,42 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     def gaps(self):
         return np.in1d(self._bytes, self._gap_codes)
 
+    def has_gaps(self):
+        """Return True if char(s) in `gap_chars` are present
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurences of any character
+            in `self.gap_chars` in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_gaps()
+        False
+        >>> t = DNA('A.CAC--GACGTT')
+        >>> t.has_gaps()
+        True
+
+        """
+        # TODO use count, there aren't that many gap chars
+        return bool(self.gaps().any())
+
+    def degenerates(self):
+        return np.in1d(self._bytes, self._degenerate_codes)
+
+    def has_degenerates(self):
+        # TODO use bincount!
+        return bool(self.degenerates().any())
+
+    def nondegenerates(self):
+        return np.in1d(self._bytes, self._nondegenerate_codes)
+
+    def has_nondegenerates(self):
+        return bool(self.nondegenerates().any())
+
     def degap(self):
         """Return a new sequence with gap characters removed.
 
@@ -185,54 +220,14 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC-C--ACGTT-C.', quality=range(16))
+        >>> from skbio import DNA
+        >>> s = DNA('GGTC-C--ATT-C.', quality=range(14))
         >>> t = s.degap()
         >>> t
-        <Sequence: GGUCCACGTT... (length: 11)>
-        >>> print(t)
-        GGUCCACGTTC
-        >>> t.quality
-        array([ 0,  1,  2,  3,  5,  8,  9, 10, 11, 12, 14])
+        DNA('GGTCCATTC', length=9, quality=[0, 1, 2, 3, 5, 8, 9, 10, 12])
 
         """
         return self[np.invert(self.gaps())]
-
-    def has_gaps(self):
-        """Return True if char(s) in `gap_chars` are present
-
-        Returns
-        -------
-        bool
-            Indicates whether there are one or more occurences of any character
-            in `self.gap_chars` in the `Sequence`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('ACACGACGTT')
-        >>> s.has_gaps()
-        False
-        >>> t = Sequence('A.CAC--GACGTT')
-        >>> t.has_gaps()
-        True
-
-        """
-        # TODO use count, there aren't that many gap chars
-        return bool(self.gaps().any())
-
-    def degenerates(self):
-        return np.in1d(self._bytes, self._degenerate_codes)
-
-    def has_degenerates(self):
-        # TODO use bincount!
-        return bool(self.degenerates().any())
-
-    def nondegenerates(self):
-        return np.in1d(self._bytes, self._nondegenerate_codes)
-
-    def has_nondegenerates(self):
-        return bool(self.nondegenerates().any())
 
     def expand_degenerates(self):
         """Yield all nondegenerate versions of the sequence.
@@ -260,17 +255,16 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Examples
         --------
-        >>> from skbio.sequence import NucleotideSequence
-        >>> seq = NucleotideSequence('TRG')
-        >>> seq_generator = seq.nondegenerates()
+        >>> from skbio import DNA
+        >>> seq = DNA('TRG')
+        >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str): print(s)
         TAG
         TGG
 
         """
         degen_chars = self.degenerate_map
-        nonexpansion_chars = self.nondegenerate_chars.union(
-            self.gap_chars)
+        nonexpansion_chars = self.nondegenerate_chars.union(self.gap_chars)
 
         expansions = []
         for char in self:
@@ -278,15 +272,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             if char in nonexpansion_chars:
                 expansions.append(char)
             else:
-                # Use a try/except instead of explicitly checking for set
-                # membership on the assumption that an exception is rarely
-                # thrown.
-                try:
-                    expansions.append(degen_chars[char])
-                except KeyError:
-                    raise SequenceError(
-                        "Sequence contains an invalid character: %s" % char)
+                expansions.append(degen_chars[char])
 
         result = product(*expansions)
-        return (self.to(sequence=''.join(nondegen_seq)) for nondegen_seq in
+        return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
