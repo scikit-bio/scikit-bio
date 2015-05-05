@@ -324,8 +324,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
                                         mode=draw_mode)
             power[id1, id2, :] = _calculate_power(ps, alpha_pwr)
 
-    if num_p == 1:
-        power = power[:, :, 0]
+    power = power.squeeze()
 
     return power, sample_counts
 
@@ -510,8 +509,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
                 ps[:, id3] = test(subs)
             power[id1, id2, :] = _calculate_power(ps, alpha_pwr)
 
-    if num_p == 1:
-        power = power[:, :, 0]
+    power = power.squeeze()
 
     return power, sample_counts
 
@@ -673,7 +671,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Draws a list of samples varied by `cat` and matched for `control_cats`
-    """ """
+
     This function is designed to provide controlled samples, based on a
     metadata category. For example, one could control for age, sex, education
     level, and diet type while measuring exercise frequency.
@@ -1080,7 +1078,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
             index2.append(np.zeros(loc_vec.shape) + i1)
             i1 = i1 + 1
             i2 = i2 + len(loc_vec)
-        except:
+        except(KeyError):
             index1.append(np.array([]))
             index2.append(np.array([]))
 
@@ -1098,7 +1096,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     ----------
     meta_pairs : dict
         Describes the categories matched for metadata. The
-        `control_cat`-grouped samples are numbered, correspoinding to the
+        `control_cat`-grouped samples are numbered, corresponding to the
         second list in `index`. The group is keyed to the list of sample arrays
         with the same length of `order`.
     index : list
@@ -1110,7 +1108,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     Returns
     -------
     ids : list
-        A set of randomnly selected ids groups from each group.
+        A set of randomly selected ids groups from each group.
     """
 
     # Handles an empty paired vector

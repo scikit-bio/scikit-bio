@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from six import StringIO, BytesIO
+from requests import HTTPError
 
 import unittest
 import tempfile
@@ -118,6 +119,37 @@ class TestFilePathsOpening(unittest.TestCase):
         f = BytesIO(b"File contents")
         with open_files([f]) as fhs:
             self.assertTrue(fhs[0] is f)
+
+    def test_remote_failing_fna(self):
+        with self.assertRaises(HTTPError) as e:
+            with open_files(['http://google.com/foo-seqs.fna']) as fhs:
+                for f in fhs:
+                    f.read()
+        self.assertEquals(str(e.exception), '404 Client Error: Not Found')
+
+    def test_remote_fna(self):
+        url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
+               '00&retmode=text&tool=skbio&db=nucleotide&id=459567&rettype=fas'
+               'ta&retstart=0&email=foo@bar.com')
+        with open_files([url]) as fhs:
+            for f in fhs:
+                self.assertEqual(f.read(), FASTA)
+
+    def test_remote_fna_kwargs(self):
+        url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
+               '00&retmode=text&tool=skbio&db=nucleotide&id=459567&rettype=fas'
+               'ta&retstart=0&email=foo@bar.com')
+        with open_files([url], stream=True) as fhs:
+            for f in fhs:
+                self.assertEqual(f.read(), FASTA)
+
+FASTA = (b'>gi|459567|dbj|D28543.1|HPCNS5PC Hepatitis C virus gene for NS5 pr'
+         b'otein, partial cds, isolate: B4/92\nGAGCACGACATCTACCAATGTTGCCAACTG'
+         b'AACCCAGAGGCCAAGAAAGCCATAACATCCTTGACAGAGA\nGGCTTTACCTTGGTGGTCCCATGT'
+         b'TTAACTCGCGAGGTCAGCTCTGCGGGACACGCAGATGCCGGGCGAG\nCGGGGTTCTTCCAACCAG'
+         b'CATGGGCAATACCCTCACATGTTACCTGAAAGCACAGGCAGCTTGCCGTGCA\nGCAGGCCTCACC'
+         b'AATTCTGACATGTTGGTTTGCGGAGATGATTTGGTAGTCATCACTGAGAGTGCCGGAG\nTC\n\n')
+
 
 if __name__ == '__main__':
     unittest.main()

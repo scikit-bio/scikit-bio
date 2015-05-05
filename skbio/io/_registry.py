@@ -491,8 +491,9 @@ def sniff(fp, cls=None, mode='U'):
     Parameters
     ----------
     fp : filepath or filehandle
-        The provided file to guess the format of. Filepaths are automatically
-        closed; filehandles are the responsibility of the caller.
+        The provided file to guess the format of. Filepaths and HTTP/HTTPS URLs
+        are automatically closed; filehandles are the responsibility of the
+        caller.
     cls : type, optional
         A provided class that restricts the search for the format. Only formats
         which have a registered reader or writer for the given `cls` will be
@@ -514,6 +515,7 @@ def sniff(fp, cls=None, mode='U'):
     See Also
     --------
     skbio.io.register_sniffer
+    skbio.io.util.open_file
 
     """
     possibles = []
@@ -545,11 +547,11 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
     Parameters
     ----------
     fp : filepath or filehandle
-        The location to read the given `format` `into`. Filepaths are
-        automatically closed when read; filehandles are the responsibility
-        of the caller. In the case of a generator, a filepath will be closed
-        when ``StopIteration`` is raised; filehandles are still the
-        responsibility of the caller.
+        The location to read the given `format` `into`. Filepaths or HTTP/HTTPS
+        URLs are automatically closed when read; filehandles are the
+        responsibility of the caller. In the case of a generator, a filepath
+        will be closed when ``StopIteration`` is raised; filehandles are still
+        the responsibility of the caller.
     format : str, optional
         The format must be a format name with a reader for the given
         `into` class. If a `format` is not provided or is None, all
@@ -593,6 +595,7 @@ def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
     --------
     skbio.io.register_reader
     skbio.io.register_sniffer
+    skbio.io.util.open_files
 
     """
     if format is None and into is None:

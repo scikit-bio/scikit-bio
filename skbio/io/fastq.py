@@ -256,6 +256,9 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
 
 import re
+
+import numpy as np
+
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
@@ -482,7 +485,7 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
     qual_len = 0
     for chunk in _line_generator(fh):
         if chunk.startswith('@') and qual_len == seq_len:
-            return phred_scores, chunk
+            return np.hstack(phred_scores), chunk
         else:
             qual_len += len(chunk)
 
@@ -492,14 +495,14 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset):
                     "characters. Extra quality score characters: %r" %
                     chunk[-(qual_len - seq_len):])
 
-            phred_scores.extend(
+            phred_scores.append(
                 _decode_qual_to_phred(chunk, variant=variant,
                                       phred_offset=phred_offset))
 
     if qual_len != seq_len:
         raise FASTQFormatError(
             "Found incomplete/truncated FASTQ record at end of file.")
-    return phred_scores, None
+    return np.hstack(phred_scores), None
 
 
 def _sequences_to_fastq(obj, fh, variant, phred_offset,

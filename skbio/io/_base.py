@@ -12,6 +12,8 @@ from future.builtins import range
 import re
 import warnings
 
+import numpy as np
+
 from skbio.util import cardinal_to_ordinal
 
 _whitespace_regex = re.compile(r'\s')
@@ -41,16 +43,13 @@ def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
          "scikit-bio. Please see the following scikit-bio issue to "
          "track progress on this:\n\t"
          "https://github.com/biocore/scikit-bio/issues/719"])
+    qual = np.fromstring(qual_str, dtype=np.uint8) - phred_offset
 
-    phred = []
-    for c in qual_str:
-        score = ord(c) - phred_offset
-        if phred_range[0] <= score <= phred_range[1]:
-            phred.append(score)
-        else:
-            raise ValueError("Decoded Phred score %d is out of range [%d, %d]."
-                             % (score, phred_range[0], phred_range[1]))
-    return phred
+    if np.any((qual > phred_range[1]) | (qual < phred_range[0])):
+        raise ValueError("Decoded Phred score is out of range [%d, %d]."
+                         % (phred_range[0], phred_range[1]))
+
+    return qual
 
 
 def _encode_phred_to_qual(phred, variant=None, phred_offset=None):
