@@ -621,9 +621,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.sequence
-        array(['G', 'G', 'U', 'C', 'G', 'U', 'A', 'A', 'A', 'G', 'G', 'A'],
+        >>> s = Sequence('AACGA', id='seq1', description='some seq')
+        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
+        array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
 
         .. shownumpydoc
@@ -887,7 +887,7 @@ class Sequence(collections.Sequence, SkbioObject):
             return False
 
         if ('description' not in ignore and
-            self.description != other.description):
+                self.description != other.description):
             return False
 
         # Use array_equal instead of (a == b).all() because of this issue:
