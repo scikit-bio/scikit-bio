@@ -124,7 +124,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         if self._has_quality() and reverse:
             quality = self.quality[::-1]
 
-        return self.to(sequence=''.join(result), quality=quality)
+        return self._to(sequence=''.join(result), quality=quality)
 
     def complement(self):
         """Return the complement of the `NucleotideSequence`

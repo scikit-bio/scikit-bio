@@ -63,7 +63,7 @@ DNA('ACC--G-GGTA..', length=13, id='seq1', description='GFP')
 DNA('ACCGGGTA', length=8, id='seq1', description='GFP')
 >>> d3 = d2.reverse_complement()
 >>> d3
-DNA('ACCGGGTA', length=8, id='seq1', description='GFP')
+DNA('TACCCGGT', length=8, id='seq1', description='GFP')
 
 It's also straight-forward to compute distances between sequences (optionally
 using user-defined distance metrics, default is Hamming distance) for use in
@@ -78,14 +78,11 @@ sequence clustering, phylogenetic reconstruction, etc.
 
 Class-level methods contain information about the molecule types.
 
->>> DNA.iupac_degeneracies['B']
+>>> DNA.degenerate_map['B']
 set(['C', 'T', 'G'])
 
->>> RNA.iupac_degeneracies['B']
+>>> RNA.degenerate_map['B']
 set(['C', 'U', 'G'])
-
->>> DNA.is_gap('-')
-True
 
 Creating and using a ``GeneticCode`` object
 
@@ -134,7 +131,7 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 >>> from skbio.sequence import genetic_code
 >>> gc = genetic_code(11)
 >>> gc.translate(d6)
-<Protein: MSK* (length: 4)>
+Protein('MSK*', length=4)
 
 """
 
