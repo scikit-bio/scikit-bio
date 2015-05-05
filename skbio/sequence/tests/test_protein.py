@@ -8,12 +8,12 @@
 
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase, main
+import unittest
 
 from skbio import Protein
 
 
-class ProteinTests(TestCase):
+class TestProtein(unittest.TestCase):
     def test_nondegenerate_chars(self):
         exp = set("ACDEFGHIKLMNPQRSTVWY*")
         self.assertEqual(Protein("").nondegenerate_chars, exp)
@@ -30,4 +30,4 @@ class ProteinTests(TestCase):
 
 
 if __name__ == "__main__":
-    main()
+    unittest.main()

@@ -142,6 +142,8 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
+        # TODO support other "sequence" types
+
         # avoid computing the reverse complement if possible
         if len(self) != len(other):
             return False
