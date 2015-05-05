@@ -383,7 +383,7 @@ class GeneticCode(SkbioObject):
 
 
         """
-        rc_nucleotide_sequence = nucleotide_sequence.rc()
+        rc_nucleotide_sequence = nucleotide_sequence.reverse_complement()
         results = []
         for start in range(3):
             translation = self.translate(nucleotide_sequence, start)
