@@ -54,79 +54,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         """
         pass
 
-    @abstractproperty
-    @classproperty
-    def nondegenerate_chars(cls):
-        """Return the non-degenerate IUPAC nucleotide characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC nucleotide characters.
-
-        """
-        pass
-
-    @abstractproperty
-    @classproperty
-    def degenerate_map(cls):
-        """Return the mapping of degenerate to non-degenerate characters.
-
-        Returns
-        -------
-        dict of sets
-            Mapping of IUPAC degenerate nucleotide character to the set of
-            non-degenerate IUPAC nucleotide characters it represents.
-
-        """
-        pass
-
-    def _complement(self, reverse=False):
-        """Returns `NucleotideSequence` that is (reverse) complement of `self`.
-
-        Parameters
-        ----------
-        reverse : bool, optional
-            If ``True``, reverse `self` before complementing.
-
-        Returns
-        -------
-        NucelotideSequence
-            The (reverse) complement of `self`. Specific type will be the same
-            as ``type(self)``.
-
-        Raises
-        ------
-        skbio.sequence.SequenceError
-            If a character is present in the `NucleotideSequence` that is not
-            in the complement map.
-
-        Notes
-        -----
-        This private method centralizes the logic for `complement` and
-        `reverse_complement`.
-
-        """
-        result = []
-        complement_map = self.complement_map
-        seq_iterator = reversed(self) if reverse else self
-        for base in seq_iterator:
-            # TODO fix me!
-            base = str(base)
-            try:
-                result.append(complement_map[base])
-            except KeyError:
-                raise SequenceError(
-                    "Don't know how to complement base %s. Is it in "
-                    "%s.complement_map?" % (base, self.__class__.__name__))
-
-        quality = self.quality
-        if self._has_quality() and reverse:
-            quality = self.quality[::-1]
-
-        return self._to(sequence=''.join(result), quality=quality)
-
-    def complement(self):
+    def complement(self, reverse=False):
         """Return the complement of the `NucleotideSequence`
 
         Returns
@@ -152,7 +80,24 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         same as `self`.
 
         """
-        return self._complement()
+        result = []
+        complement_map = self.complement_map
+        seq_iterator = reversed(self) if reverse else self
+        for base in seq_iterator:
+            # TODO fix me!
+            base = str(base)
+            try:
+                result.append(complement_map[base])
+            except KeyError:
+                raise SequenceError(
+                    "Don't know how to complement base %s. Is it in "
+                    "%s.complement_map?" % (base, self.__class__.__name__))
+
+        quality = self.quality
+        if self._has_quality() and reverse:
+            quality = self.quality[::-1]
+
+        return self._to(sequence=''.join(result), quality=quality)
 
     def is_reverse_complement(self, other):
         """Return True if `other` is the reverse complement of `self`
@@ -174,8 +119,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
-        return self.equals(other.reverse_complement(),
-                           ignore=['id', 'description', 'quality'])
+        return other.reverse_complement()._string == self._string
 
     def reverse_complement(self):
         """Return the reverse complement of the `NucleotideSequence`
@@ -205,7 +149,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         the resulting biological sequence.
 
         """
-        return self._complement(reverse=True)
+        return self.complement(reverse=True)
     rc = reverse_complement
 
     def find_features(self, feature_type, min_length=1, allow_gaps=False):
