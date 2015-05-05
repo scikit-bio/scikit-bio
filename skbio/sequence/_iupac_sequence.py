@@ -15,6 +15,7 @@ from itertools import product
 import numpy as np
 
 from skbio.util import classproperty, overrides
+from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
@@ -313,4 +314,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @property
     def _motifs(self):
-        return {}
+        return _motifs
+
+_motifs = MiniRegistry()
+
+# Leave this at the bottom
+_motifs.interpolate(IUPACSequence, "find_motifs")

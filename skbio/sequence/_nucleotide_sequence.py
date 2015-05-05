@@ -15,7 +15,7 @@ from abc import ABCMeta, abstractproperty
 from skbio.sequence import SequenceError
 from skbio.util import classproperty
 from skbio.util._misc import MiniRegistry
-from ._iupac_sequence import IUPACSequence
+from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
@@ -152,7 +152,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     def _motifs(self):
         return _motifs
 
-_motifs = MiniRegistry()
+_motifs = parent_motifs.copy()
 
 def _find_runs(sequence, chars_to_find, min_length, allow_gaps):
     acceptable = re.escape(''.join(sequence.gap_chars)) if allow_gaps else ''
@@ -166,10 +166,12 @@ def _find_runs(sequence, chars_to_find, min_length, allow_gaps):
 
 @_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, allow_gaps):
+    """Purine run docstring"""
     return _find_runs(sequence, "AG", min_length, allow_gaps)
 
 @_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, allow_gaps):
+    """Pyrimidine run docstring"""
     return _find_runs(sequence, "CTU", min_length, allow_gaps)
 
 # Leave this at the bottom

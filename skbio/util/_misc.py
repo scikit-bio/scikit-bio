@@ -26,8 +26,16 @@ class MiniRegistry(dict):
             return func
         return decorator
 
+    def copy(self):
+        return self.__class__(super(MiniRegistry, self).copy())
+
     def formatted_listing(self):
-        return "\n".join(["\t - %r" % name for name in self])
+        if len(self) == 0:
+            return "\tNone"
+        else:
+            return "\n".join(["\t%r\n\t  %s" %
+                             (name, self[name].__doc__.split("\n")[0])
+                              for name in self])
 
     def interpolate(self, obj, name):
         f = getattr(obj, name).__func__
