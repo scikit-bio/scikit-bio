@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from operator import or_
 from copy import deepcopy
 from itertools import combinations
@@ -23,6 +24,7 @@ from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
+from skbio.util import RepresentationWarning
 
 
 def distance_from_r(m1, m2):
@@ -2430,10 +2432,14 @@ class TreeNode(SkbioObject):
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
                 if child.length is None:
-                    raise NoLengthError("Node with name '%s' doesn't have a "
-                                        "length." % child.name)
+                    warnings.warn("Node with name '%s' doesn't have a "
+                                  "length." % child.name,
+                                  RepresentationWarning)
 
-                distances[child.__start:child.__stop] += child.length
+                    distances[child.__start:child.__stop] += 0
+
+                else:
+                    distances[child.__start:child.__stop] += child.length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)
