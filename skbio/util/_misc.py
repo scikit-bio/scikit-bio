@@ -38,13 +38,18 @@ class MiniRegistry(dict):
                               for name in self])
 
     def interpolate(self, obj, name):
-        f = getattr(obj, name).__func__
+        # Py2/3 compatible way of calling getattr(obj, name).__func__
+        f = getattr(obj, name).__get__(None, type(None))
         # Deep magic happens here. I *think* the closure is interpereted in a
         # new context for each subclass making the whole thing work.
-        f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
-                          argdefs=f.func_defaults, closure=f.func_closure)
+        if hasattr(f, 'func_code'):
+            f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
+                              argdefs=f.func_defaults, closure=f.func_closure)
+        else:
+            f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                              argdefs=f.__defaults__, closure=f.__closure__)
         # Conveniently the original docstring is on f2, not the new ones if
-        # inheritence is happening.
+        # inheritence is happening. I have no idea why.
         t = f2.__doc__.split("\n\n")
         t.insert(2, self.formatted_listing())
         f2.__doc__ = "\n\n".join(t)
