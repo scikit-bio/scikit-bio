@@ -28,14 +28,15 @@ Functions
 
 from future.builtins import bytes, str
 from six import BytesIO
+
+from contextlib import contextmanager
+from io import TextIOWrapper
+from gzip import open as gzip_open, GzipFile
+from tempfile import gettempdir
+
 import requests
 from cachecontrol import CacheControl
 from cachecontrol.caches import FileCache
-
-from contextlib import contextmanager
-from tempfile import gettempdir
-from io import TextIOWrapper
-from gzip import open as gzip_open, GzipFile
 
 
 def _is_string_or_bytes(s):
