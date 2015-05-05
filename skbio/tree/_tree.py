@@ -2649,7 +2649,7 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
-    def bifurcate(self, remove_singles=True):
+    def bifurcate(self, insert_length=None, remove_singles=True):
         r""" Restructures tree into a bifurcating tree
 
         All nodes that have more than 2 children will
@@ -2691,6 +2691,7 @@ class TreeNode(SkbioObject):
                 while len(stack) > 2:
                     ind = stack.pop()
                     intermediate = TreeNode()
+                    intermediate.length = insert_length
                     curnode.children = [ind, intermediate]
                     intermediate.children = stack
                     intermediate.parent = curnode
