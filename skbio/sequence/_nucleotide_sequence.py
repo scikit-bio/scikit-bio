@@ -150,7 +150,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         """
         return self.complement(reverse=True)
-    rc = reverse_complement
 
     def find_features(self, feature_type, min_length=1, allow_gaps=False):
         """Search the sequence for features

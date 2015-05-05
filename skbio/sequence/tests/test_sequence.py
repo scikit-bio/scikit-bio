@@ -29,7 +29,7 @@ class SequenceSubclass(Sequence):
     pass
 
 
-class SequenceTests(TestCase):
+class TestSequence(TestCase):
     def setUp(self):
         self.sequence_kinds = frozenset([
             str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
