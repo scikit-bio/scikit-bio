@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+from types import GeneratorType
 
 import numpy as np
 import numpy.testing as npt
@@ -228,6 +229,32 @@ class TestIUPACSequence(TestCase):
                                                ).degap(),
                           ExampleIUPACSequence("", quality=[], **kw))
 
+    def test_expand_degenerates_no_degens(self):
+        seq = ExampleIUPACSequence("ABCABCABC")
+        self.assertEqual(list(seq.expand_degenerates()), [seq])
+
+    def test_expand_degenerates_all_degens(self):
+        exp = [ExampleIUPACSequence('ABA'), ExampleIUPACSequence('ABC'),
+               ExampleIUPACSequence('ACA'), ExampleIUPACSequence('ACC'),
+               ExampleIUPACSequence('BBA'), ExampleIUPACSequence('BBC'),
+               ExampleIUPACSequence('BCA'), ExampleIUPACSequence('BCC')]
+        # Sort based on sequence string, as order is not guaranteed.
+        obs = sorted(ExampleIUPACSequence('XYZ').expand_degenerates(), key=str)
+        self.assertEqual(obs, exp)
+
+    def test_expand_degenerates_with_metadata(self):
+        kw = {
+            "quality": np.arange(3),
+            "id": "some_id",
+            "description": "some description"
+        }
+        exp = [ExampleIUPACSequence('ABA', **kw),
+               ExampleIUPACSequence('ABC', **kw),
+               ExampleIUPACSequence('BBA', **kw),
+               ExampleIUPACSequence('BBC', **kw)]
+        obs = sorted(ExampleIUPACSequence('XBZ', **kw).expand_degenerates(),
+                     key=str)
+        self.assertEqual(obs, exp)
 
 if __name__ == "__main__":
     main()
