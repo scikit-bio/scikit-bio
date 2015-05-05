@@ -8,11 +8,173 @@
 
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase, main
+import unittest
+
+from skbio.sequence._nucleotide_sequence import NucleotideSequence
+from skbio.util import classproperty
 
 
-class TestNucelotideSequence(TestCase):
-    pass
+class ExampleNucleotideSequence(NucleotideSequence):
+    @classproperty
+    def degenerate_map(cls):
+        return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
+
+    @classproperty
+    def nondegenerate_chars(cls):
+        return set("ABC")
+
+    @classproperty
+    def complement_map(cls):
+        comp_map = {
+            'A': 'C', 'C': 'A',
+            'B': 'B',
+            'X': 'Y', 'Y': 'X',
+            'Z': 'Z'
+        }
+
+        comp_map.update({c: c for c in cls.gap_chars})
+        return comp_map
+
+
+class TestNucelotideSequence(unittest.TestCase):
+    def test_instantiation_with_no_implementation(self):
+        class NucleotideSequenceSubclassNoImplementation(NucleotideSequence):
+            pass
+
+        with self.assertRaises(TypeError) as cm:
+            NucleotideSequenceSubclassNoImplementation()
+
+        self.assertIn("abstract class", str(cm.exception))
+        self.assertIn("nondegenerate_chars", str(cm.exception))
+        self.assertIn("degenerate_map", str(cm.exception))
+        self.assertIn("complement_map", str(cm.exception))
+
+    def test_complement_map(self):
+        expected = {
+            'A': 'C', 'C': 'A',
+            'B': 'B',
+            'X': 'Y', 'Y': 'X',
+            'Z': 'Z',
+            '.': '.',
+            '-': '-'
+        }
+
+        self.assertEqual(ExampleNucleotideSequence.complement_map, expected)
+
+        ExampleNucleotideSequence.complement_map['W'] = 'X'
+        ExampleNucleotideSequence.complement_map['X'] = 'W'
+        self.assertEqual(ExampleNucleotideSequence.complement_map, expected)
+
+        self.assertEqual(ExampleNucleotideSequence('').complement_map,
+                         expected)
+
+        with self.assertRaises(AttributeError):
+            ExampleNucleotideSequence('').complement_map = {'W': 'X'}
+
+    def test_complement_without_reverse_empty(self):
+        # without optional attributes
+        comp = ExampleNucleotideSequence('').complement()
+        self.assertEqual(comp, ExampleNucleotideSequence(''))
+
+        # with optional attributes
+        comp = ExampleNucleotideSequence('', id='foo', description='bar',
+                                         quality=[]).complement()
+        self.assertEqual(
+            comp,
+            ExampleNucleotideSequence('', id='foo', description='bar',
+                                      quality=[]))
+
+    def test_complement_without_reverse_non_empty(self):
+        comp = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement()
+        self.assertEqual(comp, ExampleNucleotideSequence('CBAYXZ.-BBZ'))
+
+        comp = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).complement()
+        self.assertEqual(
+            comp,
+            ExampleNucleotideSequence('CBAYXZ.-BBZ', id='foo',
+                                      description='bar', quality=range(11)))
+
+    def test_complement_with_reverse_empty(self):
+        rc = ExampleNucleotideSequence('').complement(reverse=True)
+        self.assertEqual(rc, ExampleNucleotideSequence(''))
+
+        rc = ExampleNucleotideSequence('', id='foo', description='bar',
+                                       quality=[]).complement(reverse=True)
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('', id='foo', description='bar',
+                                      quality=[]))
+
+    def test_complement_with_reverse_non_empty(self):
+        rc = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement(reverse=True)
+        self.assertEqual(rc, ExampleNucleotideSequence('ZBB-.ZXYABC'))
+
+        rc = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).complement(reverse=True)
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                      description='bar',
+                                      quality=list(range(11))[::-1]))
+
+    def test_reverse_complement(self):
+        # light tests because this just calls
+        # NucleotideSequence.complement(reverse=True), which is tested more
+        # extensively
+        rc = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).reverse_complement()
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                      description='bar',
+                                      quality=list(range(11))[::-1]))
+
+    def test_is_reverse_complement_empty(self):
+        seq1 = ExampleNucleotideSequence('')
+        self.assertTrue(seq1.is_reverse_complement(seq1))
+
+        # optional attributes are ignored, only the sequence is compared
+        seq2 = ExampleNucleotideSequence('', id='foo', description='bar',
+                                         quality=[])
+        self.assertTrue(seq2.is_reverse_complement(seq2))
+        self.assertTrue(seq1.is_reverse_complement(seq2))
+        self.assertTrue(seq2.is_reverse_complement(seq1))
+
+    def test_is_reverse_complement_reverse_complements(self):
+        seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
+        seq2 = ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                         description='bar', quality=range(11))
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertTrue(seq1.is_reverse_complement(seq2))
+        self.assertTrue(seq2.is_reverse_complement(seq1))
+
+    def test_is_reverse_complement_non_reverse_complements(self):
+        # same length
+        seq1 = ExampleNucleotideSequence('AABC')
+        seq2 = ExampleNucleotideSequence('ABCX')
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertFalse(seq1.is_reverse_complement(seq2))
+        self.assertFalse(seq2.is_reverse_complement(seq1))
+
+        # different length
+        seq1 = ExampleNucleotideSequence('AABC')
+        seq2 = ExampleNucleotideSequence('ABCXZ')
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertFalse(seq1.is_reverse_complement(seq2))
+        self.assertFalse(seq2.is_reverse_complement(seq1))
 
 # class NucelotideSequenceTests(TestCase):
 #
@@ -23,75 +185,6 @@ class TestNucelotideSequence(TestCase):
 #            'ACCGGUACC', id="test-seq-2",
 #            description="A test sequence")
 #        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-#
-#    def test_alphabet(self):
-#        exp = {
-#            'A', 'C', 'B', 'D', 'G', 'H', 'K', 'M', 'N', 'S', 'R', 'U', 'T',
-#            'W', 'V', 'Y', 'a', 'c', 'b', 'd', 'g', 'h', 'k', 'm', 'n', 's',
-#            'r', 'u', 't', 'w', 'v', 'y'
-#        }
-#
-#        # Test calling from an instance and purely static context.
-#        self.assertEqual(self.b1.alphabet, exp)
-#        self.assertEqual(NucleotideSequence.alphabet, exp)
-#
-#    def test_gap_chars(self):
-#        self.assertEqual(self.b1.gap_chars, set('-.'))
-#
-#    def test_complement_map(self):
-#        exp = {}
-#        self.assertEqual(self.b1.complement_map, exp)
-#        self.assertEqual(NucleotideSequence.complement_map, exp)
-#
-#    def test_nondegenerate_chars(self):
-#        exp = set("ACGTUacgtu")
-#        self.assertEqual(self.b1.nondegenerate_chars, exp)
-#        self.assertEqual(NucleotideSequence.nondegenerate_chars, exp)
-#
-#    def test_degenerate_map(self):
-#        exp = {
-#            # upper
-#            'B': set(['C', 'U', 'T', 'G']), 'D': set(['A', 'U', 'T', 'G']),
-#            'H': set(['A', 'C', 'U', 'T']), 'K': set(['U', 'T', 'G']),
-#            'M': set(['A', 'C']), 'N': set(['A', 'C', 'U', 'T', 'G']),
-#            'S': set(['C', 'G']), 'R': set(['A', 'G']),
-#            'W': set(['A', 'U', 'T']), 'V': set(['A', 'C', 'G']),
-#            'Y': set(['C', 'U', 'T']),
-#            # lower
-#            'b': set(['c', 'u', 't', 'g']), 'd': set(['a', 'u', 't', 'g']),
-#            'h': set(['a', 'c', 'u', 't']), 'k': set(['u', 't', 'g']),
-#            'm': set(['a', 'c']), 'n': set(['a', 'c', 'u', 't', 'g']),
-#            's': set(['c', 'g']), 'r': set(['a', 'g']),
-#            'w': set(['a', 'u', 't']), 'v': set(['a', 'c', 'g']),
-#            'y': set(['c', 'u', 't'])
-#        }
-#        self.assertEqual(self.b1.degenerate_map, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
-#
-#        # Test that we can modify a copy of the mapping without altering the
-#        # canonical representation.
-#        degen = NucleotideSequence.degenerate_map
-#        degen.update({'V': set("BRO"), 'Z': set("ZORRO")})
-#        self.assertNotEqual(degen, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_map, exp)
-#
-#    def test_degenerate_chars(self):
-#        exp = set(['B', 'D', 'H', 'K', 'M', 'N', 'S', 'R', 'W', 'V', 'Y',
-#                   'b', 'd', 'h', 'k', 'm', 'n', 's', 'r', 'w', 'v', 'y'])
-#        self.assertEqual(self.b1.degenerate_chars, exp)
-#        self.assertEqual(NucleotideSequence.degenerate_chars, exp)
-#
-#    def test_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.complement)
-#
-#    def test_reverse_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.reverse_complement)
-#
-#    def test_is_reverse_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.is_reverse_complement, self.b1)
 #
 #    def test_nondegenerates_invalid(self):
 #        with self.assertRaises(SequenceError):
@@ -205,4 +298,4 @@ class TestNucelotideSequence(TestCase):
 
 
 if __name__ == "__main__":
-    main()
+    unittest.main()

@@ -81,46 +81,16 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         same as `self`.
 
         """
-        result = []
+        # TODO rewrite method for optimized performance
         complement_map = self.complement_map
         seq_iterator = reversed(self) if reverse else self
-        for base in seq_iterator:
-            # TODO fix me!
-            base = str(base)
-            try:
-                result.append(complement_map[base])
-            except KeyError:
-                raise SequenceError(
-                    "Don't know how to complement base %s. Is it in "
-                    "%s.complement_map?" % (base, self.__class__.__name__))
+        result = [complement_map[str(base)] for base in seq_iterator]
 
         quality = self.quality
         if self._has_quality() and reverse:
             quality = self.quality[::-1]
 
         return self._to(sequence=''.join(result), quality=quality)
-
-    def is_reverse_complement(self, other):
-        """Return True if `other` is the reverse complement of `self`
-
-        Returns
-        -------
-        bool
-            `True` if `other` is the reverse complement of `self` and `False`
-            otherwise.
-
-        Raises
-        ------
-        skbio.sequence.SequenceError
-            If a character is present in `other` that is not in the
-            `self.complement_map`.
-
-        See Also
-        --------
-        reverse_complement
-
-        """
-        return other.reverse_complement()._string == self._string
 
     def reverse_complement(self):
         """Return the reverse complement of the `NucleotideSequence`
@@ -151,7 +121,32 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         """
         return self.complement(reverse=True)
-    rc = reverse_complement
+
+    def is_reverse_complement(self, other):
+        """Return True if `other` is the reverse complement of `self`
+
+        Returns
+        -------
+        bool
+            `True` if `other` is the reverse complement of `self` and `False`
+            otherwise.
+
+        Raises
+        ------
+        skbio.sequence.SequenceError
+            If a character is present in `other` that is not in the
+            `self.complement_map`.
+
+        See Also
+        --------
+        reverse_complement
+
+        """
+        # avoid computing the reverse complement if possible
+        if len(self) != len(other):
+            return False
+        else:
+            return other.reverse_complement()._string == self._string
 
     @property
     def _motifs(self):
