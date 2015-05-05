@@ -8,11 +8,46 @@
 
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase, main
+import unittest
+
+from skbio.sequence._nucleotide_sequence import NucleotideSequence
+from skbio.util import classproperty
 
 
-class TestNucelotideSequence(TestCase):
-    pass
+class ExampleNucleotideSequence(NucleotideSequence):
+    @classproperty
+    def degenerate_map(cls):
+        return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
+
+    @classproperty
+    def nondegenerate_chars(cls):
+        return set("ABC")
+
+    @classproperty
+    def complement_map(cls):
+        comp_map = {
+            'A': 'C', 'C': 'A',
+            'B': 'B',
+            'X': 'Y', 'Y': 'X',
+            'Z': 'Z'
+        }
+
+        comp_map.update({c: c for c in cls.gap_chars})
+        return comp_map
+
+
+class TestNucelotideSequence(unittest.TestCase):
+    def test_instantiation_with_no_implementation(self):
+        class NucleotideSequenceSubclassNoImplementation(NucleotideSequence):
+            pass
+
+        with self.assertRaises(TypeError) as cm:
+            NucleotideSequenceSubclassNoImplementation()
+
+        self.assertIn("abstract class", str(cm.exception))
+        self.assertIn("nondegenerate_chars", str(cm.exception))
+        self.assertIn("degenerate_map", str(cm.exception))
+        self.assertIn("complement_map", str(cm.exception))
 
 # class NucelotideSequenceTests(TestCase):
 #
@@ -205,4 +240,4 @@ class TestNucelotideSequence(TestCase):
 
 
 if __name__ == "__main__":
-    main()
+    unittest.main()

@@ -20,11 +20,11 @@ from skbio.util import classproperty
 
 class ExampleIUPACSequence(IUPACSequence):
     @classproperty
-    def degenerate_map(self):
+    def degenerate_map(cls):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
 
     @classproperty
-    def nondegenerate_chars(self):
+    def nondegenerate_chars(cls):
         return set("ABC")
 
 
