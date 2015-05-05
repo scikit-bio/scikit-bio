@@ -120,6 +120,18 @@ class TestNucelotideSequence(unittest.TestCase):
                                       description='bar',
                                       quality=list(range(11))[::-1]))
 
+    def test_reverse_complement(self):
+        # light tests because this just calls
+        # NucleotideSequence.complement(reverse=True), which is tested more
+        # extensively
+        rc = ExampleNucleotideSequence(
+            'ABCXYZ.-BBZ', id='foo', description='bar',
+            quality=range(11)).reverse_complement()
+        self.assertEqual(
+            rc,
+            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                      description='bar',
+                                      quality=list(range(11))[::-1]))
 
 
 # class NucelotideSequenceTests(TestCase):
@@ -131,11 +143,7 @@ class TestNucelotideSequence(unittest.TestCase):
 #            'ACCGGUACC', id="test-seq-2",
 #            description="A test sequence")
 #        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-#
-#    def test_reverse_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.reverse_complement)
-#
+##
 #    def test_is_reverse_complement(self):
 #        self.assertRaises(SequenceError,
 #                          self.b1.is_reverse_complement, self.b1)

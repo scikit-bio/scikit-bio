@@ -91,28 +91,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         return self._to(sequence=''.join(result), quality=quality)
 
-    def is_reverse_complement(self, other):
-        """Return True if `other` is the reverse complement of `self`
-
-        Returns
-        -------
-        bool
-            `True` if `other` is the reverse complement of `self` and `False`
-            otherwise.
-
-        Raises
-        ------
-        skbio.sequence.SequenceError
-            If a character is present in `other` that is not in the
-            `self.complement_map`.
-
-        See Also
-        --------
-        reverse_complement
-
-        """
-        return other.reverse_complement()._string == self._string
-
     def reverse_complement(self):
         """Return the reverse complement of the `NucleotideSequence`
 
@@ -142,6 +120,28 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         """
         return self.complement(reverse=True)
+
+    def is_reverse_complement(self, other):
+        """Return True if `other` is the reverse complement of `self`
+
+        Returns
+        -------
+        bool
+            `True` if `other` is the reverse complement of `self` and `False`
+            otherwise.
+
+        Raises
+        ------
+        skbio.sequence.SequenceError
+            If a character is present in `other` that is not in the
+            `self.complement_map`.
+
+        See Also
+        --------
+        reverse_complement
+
+        """
+        return other.reverse_complement()._string == self._string
 
     def find_features(self, feature_type, min_length=1, allow_gaps=False):
         """Search the sequence for features
