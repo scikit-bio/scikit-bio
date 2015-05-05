@@ -141,7 +141,11 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
-        return other.reverse_complement()._string == self._string
+        # avoid computing the reverse complement if possible
+        if len(self) != len(other):
+            return False
+        else:
+            return other.reverse_complement()._string == self._string
 
     def find_features(self, feature_type, min_length=1, allow_gaps=False):
         """Search the sequence for features

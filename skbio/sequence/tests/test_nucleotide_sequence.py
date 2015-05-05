@@ -133,6 +133,48 @@ class TestNucelotideSequence(unittest.TestCase):
                                       description='bar',
                                       quality=list(range(11))[::-1]))
 
+    def test_is_reverse_complement_empty(self):
+        seq1 = ExampleNucleotideSequence('')
+        self.assertTrue(seq1.is_reverse_complement(seq1))
+
+        # optional attributes are ignored, only the sequence is compared
+        seq2 = ExampleNucleotideSequence('', id='foo', description='bar',
+                                         quality=[])
+        self.assertTrue(seq2.is_reverse_complement(seq2))
+        self.assertTrue(seq1.is_reverse_complement(seq2))
+        self.assertTrue(seq2.is_reverse_complement(seq1))
+
+    def test_is_reverse_complement_reverse_complements(self):
+        seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
+        seq2 = ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
+                                         description='bar', quality=range(11))
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertTrue(seq1.is_reverse_complement(seq2))
+        self.assertTrue(seq2.is_reverse_complement(seq1))
+
+    def test_is_reverse_complement_non_reverse_complements(self):
+        # same length
+        seq1 = ExampleNucleotideSequence('AABC')
+        seq2 = ExampleNucleotideSequence('ABCX')
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertFalse(seq1.is_reverse_complement(seq2))
+        self.assertFalse(seq2.is_reverse_complement(seq1))
+
+        # different length
+        seq1 = ExampleNucleotideSequence('AABC')
+        seq2 = ExampleNucleotideSequence('ABCXZ')
+
+        self.assertFalse(seq1.is_reverse_complement(seq1))
+        self.assertFalse(seq2.is_reverse_complement(seq2))
+
+        self.assertFalse(seq1.is_reverse_complement(seq2))
+        self.assertFalse(seq2.is_reverse_complement(seq1))
 
 # class NucelotideSequenceTests(TestCase):
 #
@@ -143,10 +185,6 @@ class TestNucelotideSequence(unittest.TestCase):
 #            'ACCGGUACC', id="test-seq-2",
 #            description="A test sequence")
 #        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-##
-#    def test_is_reverse_complement(self):
-#        self.assertRaises(SequenceError,
-#                          self.b1.is_reverse_complement, self.b1)
 #
 #    def test_nondegenerates_invalid(self):
 #        with self.assertRaises(SequenceError):
