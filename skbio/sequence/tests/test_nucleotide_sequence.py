@@ -186,47 +186,6 @@ class TestNucelotideSequence(unittest.TestCase):
 #            description="A test sequence")
 #        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
 #
-#    def test_nondegenerates_invalid(self):
-#        with self.assertRaises(SequenceError):
-#            list(NucleotideSequence('AZA').nondegenerates())
-#
-#    def test_nondegenerates_empty(self):
-#        self.assertEqual(list(self.empty.nondegenerates()), [self.empty])
-#
-#    def test_nondegenerates_no_degens(self):
-#        self.assertEqual(list(self.b1.nondegenerates()), [self.b1])
-#
-#    def test_nondegenerates_all_degens(self):
-#        # Same chars.
-#        exp = [NucleotideSequence('CC'), NucleotideSequence('CG'),
-#               NucleotideSequence('GC'), NucleotideSequence('GG')]
-#        # Sort based on sequence string, as order is not guaranteed.
-#        obs = sorted(NucleotideSequence('SS').nondegenerates(), key=str)
-#        self.assertEqual(obs, exp)
-#
-#        # Different chars.
-#        exp = [NucleotideSequence('AC'), NucleotideSequence('AG'),
-#               NucleotideSequence('GC'), NucleotideSequence('GG')]
-#        obs = sorted(NucleotideSequence('RS').nondegenerates(), key=str)
-#        self.assertEqual(obs, exp)
-#
-#        # Odd number of chars.
-#        obs = list(NucleotideSequence('NNN').nondegenerates())
-#        self.assertEqual(len(obs), 5**3)
-#
-#    def test_nondegenerates_mixed_degens(self):
-#        exp = [NucleotideSequence('AGC'), NucleotideSequence('AGT'),
-#               NucleotideSequence('AGU'), NucleotideSequence('GGC'),
-#               NucleotideSequence('GGT'), NucleotideSequence('GGU')]
-#        obs = sorted(NucleotideSequence('RGY').nondegenerates(), key=str)
-#        self.assertEqual(obs, exp)
-#
-#    def test_nondegenerates_gap_mixed_case(self):
-#        exp = [NucleotideSequence('-A.a'), NucleotideSequence('-A.c'),
-#               NucleotideSequence('-C.a'), NucleotideSequence('-C.c')]
-#        obs = sorted(NucleotideSequence('-M.m').nondegenerates(), key=str)
-#        self.assertEqual(obs, exp)
-#
 #    def test_find_features(self):
 #        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
 #        obs = list(self.b1.find_features('purine_run'))
@@ -273,29 +232,6 @@ class TestNucelotideSequence(unittest.TestCase):
 #        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
 #        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
 #        self.assertEqual(obs, exp)
-#
-#    def test_nondegenerates_propagate_optional_properties(self):
-#        seq = NucleotideSequence('RS', id='foo', description='bar',
-#                                 quality=[42, 999])
-#
-#        exp = [
-#            NucleotideSequence('AC', id='foo', description='bar',
-#                               quality=[42, 999]),
-#            NucleotideSequence('AG', id='foo', description='bar',
-#                               quality=[42, 999]),
-#            NucleotideSequence('GC', id='foo', description='bar',
-#                               quality=[42, 999]),
-#            NucleotideSequence('GG', id='foo', description='bar',
-#                               quality=[42, 999])
-#        ]
-#
-#        obs = sorted(seq.nondegenerates(), key=str)
-#
-#        for o, e in zip(obs, exp):
-#            # use equals method to ensure that id, description, and quality
-#            # are correctly propagated to the resulting sequence
-#            self.assertTrue(o.equals(e))
-
 
 if __name__ == "__main__":
     unittest.main()
