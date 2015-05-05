@@ -62,8 +62,13 @@ A FASTA file contains one or more biological sequences. The sequences are
 stored sequentially, with a *record* for each sequence (also referred to as a
 *FASTA record*). Each *record* consists of a single-line *header* (sometimes
 referred to as a *defline*, *label*, *description*, or *comment*) followed by
-the sequence data, optionally split over multiple lines. Blank or
-whitespace-only lines are not allowed anywhere in the FASTA file.
+the sequence data, optionally split over multiple lines.
+
+.. note:: Blank or whitespace-only lines are only allowed at the beginning of
+   the file, between FASTA records, or at the end of the file. If there are
+   more than 5 blank lines at the beginning of the file, the sniffer will
+   issue a warning. A blank or whitespace-only line after the header line,
+   within the sequence, or within quality scores is an error.
 
 .. note:: scikit-bio does not currently support legacy FASTA format (i.e.,
    headers/comments denoted with a semicolon). The format supported by
@@ -546,7 +551,8 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, FileSentinel)
 from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _parse_fasta_like_header,
-                            _format_fasta_like_records)
+                            _format_fasta_like_records, _line_generator,
+                            _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -557,6 +563,10 @@ with hooks():
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
+
+    if _too_many_blanks(fh, 5):
+        return False, {}
+
     # Strategy:
     #   Read up to 10 FASTA records. If at least one record is read (i.e. the
     #   file isn't empty) and no errors are thrown during reading, assume the
@@ -775,30 +785,36 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     the caller to construct the correct in-memory object to hold the data.
 
     """
-    line = next(fh)
+
+    # Skip any blank or whitespace-only lines at beginning of file
+    seq_header = next(_line_generator(fh, skip_blanks=True))
+
     # header check inlined here and below for performance
-    if line.startswith('>'):
-        id_, desc = _parse_fasta_like_header(line)
+    if seq_header.startswith('>'):
+        id_, desc = _parse_fasta_like_header(seq_header)
     else:
         raise FASTAFormatError(
             "Found line without a header in %s-formatted file:\n%s" %
-            (format_label, line))
+            (format_label, seq_header))
 
     data_chunks = []
-    for line in fh:
+    prev = seq_header
+    for line in _line_generator(fh):
         if line.startswith('>'):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
         else:
-            line = line.strip()
             if line:
+                # ensure no blank lines within a single record
+                if not prev:
+                    raise FASTAFormatError(
+                        "Found blank or whitespace-only line within %s "
+                        "record"
+                        % format_label)
                 data_chunks.append(line)
-            else:
-                raise FASTAFormatError(
-                    "Found blank or whitespace-only line in %s-formatted "
-                    "file." % format_label)
+        prev = line
     # yield last record in file
     yield data_parser(data_chunks), id_, desc
 
