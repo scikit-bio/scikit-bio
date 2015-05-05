@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
 import re
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 from skbio.sequence import SequenceError
 from skbio.util import classproperty
@@ -34,7 +34,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
     """
 
-    @abstractmethod
+    @abstractproperty
     @classproperty
     def complement_map(cls):
         """Return the mapping of characters to their complements.
@@ -54,7 +54,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     @classproperty
     def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC nucleotide characters.
@@ -67,7 +67,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     @classproperty
     def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.

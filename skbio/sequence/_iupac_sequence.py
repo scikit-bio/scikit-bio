@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from itertools import product
 
 import numpy as np
@@ -24,6 +24,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     _ascii_lowercase_boundary = 90
     __validation_mask = None
     __degenerate_codes = None
+    __nondegenerate_codes = None
     __gap_codes = None
 
     @classproperty
@@ -42,6 +43,13 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             degens = cls.degenerate_chars
             cls.__degenerate_codes = np.asarray([ord(d) for d in degens])
         return cls.__degenerate_codes
+
+    @classproperty
+    def _nondegenerate_codes(cls):
+        if cls.__nondegenerate_codes is None:
+            nondegens = cls.nondegenerate_chars
+            cls.__nondegenerate_codes = np.asarray([ord(d) for d in nondegens])
+        return cls.__nondegenerate_codes
 
     @classproperty
     def _gap_codes(cls):
@@ -86,7 +94,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return set(cls.degenerate_map)
 
-    @abstractmethod
+    @abstractproperty
     @classproperty
     def nondegenerate_chars(cls):
         """Return the non-degenerate IUPAC characters.
@@ -99,7 +107,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     @classproperty
     def degenerate_map(cls):
         """Return the mapping of degenerate to non-degenerate characters.
@@ -211,16 +219,22 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use count, there aren't that many gap chars
-        return self.gaps().any()
+        return bool(self.gaps().any())
 
     def degenerates(self):
         return np.in1d(self._bytes, self._degenerate_codes)
 
     def has_degenerates(self):
         # TODO use bincount!
-        return self.degenerates().any()
+        return bool(self.degenerates().any())
 
     def nondegenerates(self):
+        return np.in1d(self._bytes, self._nondegenerate_codes)
+
+    def has_nondegenerates(self):
+        return bool(self.nondegenerates().any())
+
+    def expand_degenerates(self):
         """Yield all nondegenerate versions of the sequence.
 
         Returns
