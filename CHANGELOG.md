@@ -7,6 +7,9 @@
 * Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
 * Added support for ``skbio.io.util.open_file`` and ``skbio.io.util.open_files`` to pull files from HTTP and HTTPS URLs. This behavior propagates to the I/O registry.
 
+### Performance Enhancements
+* The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.
+
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
 * Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
