@@ -20,7 +20,6 @@ class IUPACSequenceSubclassNoImplementation(IUPACSequence):
     pass
 
 class ExampleIUPACSequence(IUPACSequence):
-
     @classproperty
     def degenerate_map(self):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
@@ -29,7 +28,6 @@ class ExampleIUPACSequence(IUPACSequence):
         return set("ABC")
 
 class TestIUPACSequence(TestCase):
-
     def test_instantiation_with_no_implementation(self):
         with self.assertRaises(TypeError) as cm:
             t = IUPACSequenceSubclassNoImplementation()
@@ -37,6 +35,113 @@ class TestIUPACSequence(TestCase):
         self.assertIn("abstract class", str(cm.exception))
         self.assertIn("nondegenerate_chars", str(cm.exception))
         self.assertIn("degenerate_map", str(cm.exception))
+
+    def test_init_default_parameters(self):
+        seq = ExampleIUPACSequence('.-ABCXYZ')
+
+        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        self.assertEqual(seq.id, "")
+        self.assertEqual(seq.description, "")
+        self.assertIsNone(seq.quality)
+
+    def test_init_nondefault_parameters(self):
+        seq = ExampleIUPACSequence('.-ABCXYZ', id='foo', description='bar baz',
+                                   quality=range(8))
+
+        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        self.assertEqual(seq.id, 'foo')
+        self.assertEqual(seq.description, 'bar baz')
+        npt.assert_equal(seq.quality, np.array(range(8), dtype='int'))
+
+    def test_init_valid_empty_sequence(self):
+        # just make sure we can instantiate an empty sequence regardless of
+        # `validate` and `case_insensitive` parameters. more extensive tests
+        # are performed in Sequence base class unit tests
+        for validate in (True, False):
+            for case_insensitive in (True, False):
+                seq = ExampleIUPACSequence('', validate=validate,
+                                           case_insensitive=case_insensitive)
+                self.assertEqual(seq, ExampleIUPACSequence(''))
+
+    def test_init_valid_single_character_sequence(self):
+        for validate in (True, False):
+            for case_insensitive in (True, False):
+                seq = ExampleIUPACSequence('C', validate=validate,
+                                           case_insensitive=case_insensitive)
+                self.assertEqual(seq, ExampleIUPACSequence('C'))
+
+    def test_init_valid_multiple_character_sequence(self):
+        for validate in (True, False):
+            for case_insensitive in (True, False):
+                seq = ExampleIUPACSequence('BAACB.XYY-AZ', validate=validate,
+                                           case_insensitive=case_insensitive)
+                self.assertEqual(seq, ExampleIUPACSequence('BAACB.XYY-AZ'))
+
+    def test_init_validate_parameter_single_character(self):
+        seq = 'w'
+
+        with self.assertRaisesRegexp(ValueError, "character.*'w'"):
+            ExampleIUPACSequence(seq)
+
+        # test that we can instantiate an invalid sequence. we don't guarantee
+        # anything working beyond instantiation
+        ExampleIUPACSequence(seq, validate=False)
+
+    def test_init_validate_parameter_multiple_characters(self):
+        # mix of valid and invalid characters with repeats and lowercased
+        # alphabet characters
+        seq = 'CBCBBbawCbbwBXYZ-.x'
+
+        with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'w', 'x'\]"):
+           ExampleIUPACSequence(seq)
+
+        ExampleIUPACSequence(seq, validate=False)
+
+    def test_init_case_insensitive_lowercase(self):
+        s = 'cbcbbbazcbbzbxyz-.x'
+
+        with self.assertRaisesRegexp(ValueError,
+                                     "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
+           ExampleIUPACSequence(s)
+
+        seq = ExampleIUPACSequence(s, case_insensitive=True)
+        self.assertEqual(seq, ExampleIUPACSequence('CBCBBBAZCBBZBXYZ-.X'))
+
+    def test_init_case_insensitive_mixed_case(self):
+        s = 'CBCBBbazCbbzBXYZ-.x'
+
+        with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'x', 'z'\]"):
+           ExampleIUPACSequence(s)
+
+        seq = ExampleIUPACSequence(s, case_insensitive=True)
+        self.assertEqual(seq, ExampleIUPACSequence('CBCBBBAZCBBZBXYZ-.X'))
+
+    def test_init_case_insensitive_no_validation(self):
+        s = 'car'
+
+        with self.assertRaisesRegexp(ValueError, "\['a', 'c', 'r'\]"):
+           ExampleIUPACSequence(s)
+
+        with self.assertRaisesRegexp(ValueError, "character.*'R'"):
+            ExampleIUPACSequence(s, case_insensitive=True)
+
+        ExampleIUPACSequence(s, case_insensitive=True, validate=False)
+
+    def test_init_case_insensitive_byte_ownership(self):
+        bytes = np.array([97, 98, 97], dtype=np.uint8)
+
+        with self.assertRaisesRegexp(ValueError, "\['a', 'b'\]"):
+            ExampleIUPACSequence(bytes)
+
+        seq = ExampleIUPACSequence(bytes, case_insensitive=True)
+        self.assertEqual(seq, ExampleIUPACSequence('ABA'))
+
+        # should not share the same memory
+        self.assertIsNot(seq._bytes, bytes)
+
+        # we should have copied `bytes` before modifying in place to convert to
+        # upper. make sure `bytes` hasn't been mutated
+        npt.assert_equal(bytes, np.array([97, 98, 97], dtype=np.uint8))
 
     def test_degenerate_chars(self):
         expected = set("XYZ")

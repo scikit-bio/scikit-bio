@@ -124,7 +124,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=True, case_insensitive=False):
-        super(IUPACSequence, self).__init__(sequence, id, description, quality)
+        super(IUPACSequence, self).__init__(
+            sequence, id=id, description=description, quality=quality)
+
         if case_insensitive:
             self._convert_to_uppercase()
 
@@ -153,9 +155,11 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         if np.any(invalid_characters):
             bad = list(np.where(
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
-            raise ValueError("Invalid character%s in sequence: %r" %
-                             ('s' if len(bad) > 1 else '',
-                              bad if len(bad) > 1 else bad[0]))
+            raise ValueError(
+                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
+                "%r" % ('s' if len(bad) > 1 else '',
+                        bad if len(bad) > 1 else bad[0],
+                        list(self.alphabet)))
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):
