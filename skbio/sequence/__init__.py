@@ -133,6 +133,8 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 >>> gc.translate(d6)
 Protein('MSK*', length=4)
 
+
+.. shownumpydoc
 """
 
 # ----------------------------------------------------------------------------
