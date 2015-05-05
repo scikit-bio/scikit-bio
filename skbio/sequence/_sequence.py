@@ -1357,4 +1357,8 @@ class Sequence(collections.Sequence, SkbioObject):
                                  other.__class__.__name__, method))
             else:
                 return other
+
+        # We don't use self.__class__ or self._constructor here because we want
+        # to construct the most general type of Sequence object in order to
+        # avoid validation errors.
         return Sequence(other)
