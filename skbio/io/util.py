@@ -118,23 +118,27 @@ def open_file(filepath_or, *args, **kwargs):
 
     It is useful when implementing a function that can accept both
     strings and file-like objects (like numpy.loadtxt, etc), with the
-    additional benefit that it can load data from an HTTP/HTTPS URL.
+    additional benefit that it can load data from an HTTP/HTTPS URL
+    and open gzip-compressed files transparently.
 
     Parameters
     ----------
     filepath_or : str/bytes/unicode string or file-like
-        If ``filpath_or`` is a file path to be opened the ``open`` function is
-        used and a filehandle is returned. If ``filepath_or`` is a string that
-        refers to an HTTP or HTTPS URL, a GET request is created and a BytesIO
-        object is returned with the contents of the URL. Else, if a file-like
-        object is passed, the object is returned untouched.
+        If ``filepath_or`` is a file path to be opened the ``open`` function
+        is used and a filehandle is returned. If ``filepath_or`` is a file path
+        that refers to a gzip-compressed file, ``gzip.open`` is used instead.
+        If ``filepath_or`` is a string that refers to an HTTP or HTTPS URL, a
+        GET request is created and a BytesIO object is returned with the
+        contents of the URL. Else, if a file-like object is passed, the object
+        is returned untouched.
 
     Other parameters
     ----------------
     args, kwargs : tuple, dict
         When `filepath_or` is a string, any extra arguments are passed
-        on to the ``open`` builtin. If `filepath_or` is a URL, then only kwargs
-        are passed into `requests.get`.
+        on to the ``open`` builtin or to ``gzip.open`` if `file_path_or`
+        refers to a gzip-compressed file. If `filepath_or` is a URL, then
+        only kwargs are passed into `requests.get`.
 
     Notes
     -----
@@ -157,6 +161,7 @@ def open_file(filepath_or, *args, **kwargs):
     See Also
     --------
     requests.get
+    gzip.open
 
     """
     fh, own_fh = get_filehandle(filepath_or, *args, **kwargs)
