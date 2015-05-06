@@ -18,7 +18,7 @@ An example of a FASTA-formatted file containing two DNA sequences::
     CATCGATCGATCGATGCATGCATGCATG
 
 The QUAL file format is an additional format related to FASTA. A FASTA file is
-sometimes accompanied by a QUAL file, particuarly when the fasta file contains
+sometimes accompanied by a QUAL file, particuarly when the FASTA file contains
 sequences generated on a high-throughput sequencing instrument. QUAL files
 store a Phred quality score (nonnegative integer) for each base in a sequence
 stored in FASTA format (see [4]_ for more details). scikit-bio supports reading
@@ -65,10 +65,12 @@ referred to as a *defline*, *label*, *description*, or *comment*) followed by
 the sequence data, optionally split over multiple lines.
 
 .. note:: Blank or whitespace-only lines are only allowed at the beginning of
-   the file, between FASTA records, or at the end of the file. If there are
-   more than 5 blank lines at the beginning of the file, the sniffer will
-   issue a warning. A blank or whitespace-only line after the header line,
-   within the sequence, or within quality scores is an error.
+   the file, between FASTA records, or at the end of the file. A blank or
+   whitespace-only line after the header line, within the sequence (for FASTA
+   files), or within quality scores (for QUAL files) will raise an error.
+
+   scikit-bio will ignore leading and trailing whitespace characters on each
+   line while reading.
 
 .. note:: scikit-bio does not currently support legacy FASTA format (i.e.,
    headers/comments denoted with a semicolon). The format supported by
@@ -91,7 +93,7 @@ in scikit-bio's objects if they are not present in the header.
 A sequence ID consists of a single *word*: all characters after the greater-
 than symbol and before the first whitespace character (if any) are taken as the
 sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
-itself. A single standardized ID format is similarly not enforced by FASTA
+itself. A single standardized ID format is similarly not enforced by the FASTA
 format, though it is often common to use a unique library accession number for
 a sequence ID (e.g., NCBI's FASTA defline format [5]_).
 
@@ -131,10 +133,8 @@ the standard IUPAC lexicon (single-letter codes).
    more details on how scikit-bio interprets sequence data in its in-memory
    objects.
 
-   scikit-bio will remove leading and trailing whitespace from each line of
-   sequence data before joining the sequence chunks into a single sequence.
    Whitespace characters are **not** removed from the middle of the sequence
-   chunks. Likewise, other invalid IUPAC characters are **not** removed from
+   data. Likewise, other invalid IUPAC characters are **not** removed from
    the sequence data as it is read. Thus, it is possible to create an invalid
    in-memory sequence object (see warning below).
 
@@ -563,20 +563,20 @@ with hooks():
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
-
-    if _too_many_blanks(fh, 5):
-        return False, {}
-
     # Strategy:
-    #   Read up to 10 FASTA records. If at least one record is read (i.e. the
-    #   file isn't empty) and no errors are thrown during reading, assume the
-    #   file is in FASTA format. Next, try to parse the file as QUAL, which has
-    #   stricter requirements. If this succeeds, do *not* identify the file as
-    #   FASTA since we don't want to sniff QUAL files as FASTA (technically
+    #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
+    #   file. Read up to 10 FASTA records. If at least one record is read (i.e.
+    #   the file isn't empty) and no errors are thrown during reading, assume
+    #   the file is in FASTA format. Next, try to parse the file as QUAL, which
+    #   has stricter requirements. If this succeeds, do *not* identify the file
+    #   as FASTA since we don't want to sniff QUAL files as FASTA (technically
     #   they can be read as FASTA since the sequences aren't validated but it
     #   probably isn't what the user wanted). Also, if we add QUAL as its own
     #   file format in the future, we wouldn't want the FASTA and QUAL sniffers
     #   to both identify a QUAL file.
+    if _too_many_blanks(fh, 5):
+        return False, {}
+
     num_records = 10
     try:
         not_empty = False
@@ -785,7 +785,6 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     the caller to construct the correct in-memory object to hold the data.
 
     """
-
     # Skip any blank or whitespace-only lines at beginning of file
     seq_header = next(_line_generator(fh, skip_blanks=True))
 
@@ -794,12 +793,12 @@ def _parse_fasta_raw(fh, data_parser, format_label):
         id_, desc = _parse_fasta_like_header(seq_header)
     else:
         raise FASTAFormatError(
-            "Found line without a header in %s-formatted file:\n%s" %
-            (format_label, seq_header))
+            "Found non-header line when attempting to read the 1st %s record:"
+            "\n%s" % (format_label, seq_header))
 
     data_chunks = []
     prev = seq_header
-    for line in _line_generator(fh):
+    for line in _line_generator(fh, skip_blanks=False):
         if line.startswith('>'):
             # new header, so yield current record and reset state
             yield data_parser(data_chunks), id_, desc
@@ -811,8 +810,7 @@ def _parse_fasta_raw(fh, data_parser, format_label):
                 if not prev:
                     raise FASTAFormatError(
                         "Found blank or whitespace-only line within %s "
-                        "record"
-                        % format_label)
+                        "record." % format_label)
                 data_chunks.append(line)
         prev = line
     # yield last record in file

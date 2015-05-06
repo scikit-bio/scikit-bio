@@ -239,10 +239,10 @@ class ReaderTests(TestCase):
                                                e[1], e[2], e[3]), [
             # fasta and qual missing header
             ('fasta_invalid_missing_header', {}, FASTAFormatError,
-             'without a header.*FASTA'),
+             'non-header.*1st FASTA'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_missing_header')},
-             FASTAFormatError, 'without a header.*QUAL'),
+             FASTAFormatError, 'non-header.*1st QUAL'),
 
             # fasta and qual with blank line within sequence
             ('fasta_invalid_blank_line_within_sequence', {}, FASTAFormatError,
@@ -310,10 +310,10 @@ class ReaderTests(TestCase):
 
             # fasta and qual in legacy format (;)
             ('fasta_invalid_legacy_format', {}, FASTAFormatError,
-             'without a header.*FASTA'),
+             'non-header.*1st FASTA'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_legacy_format')},
-             FASTAFormatError, 'without a header.*QUAL'),
+             FASTAFormatError, 'non-header.*1st QUAL'),
 
             # qual file with an extra record
             ('fasta_3_seqs_defaults',
