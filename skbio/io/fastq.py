@@ -78,8 +78,12 @@ provided in the publication's supplementary data.
    exactly the same way as FASTA headers (:mod:`skbio.io.fasta`).
 
    Whitespace is not allowed in sequence data or quality scores. Leading and
-   trailing whitespace is not stripped from sequence data or quality scores,
-   resulting in an error being raised if found.
+   trailing whitespace is stripped from the file. Blank or whitespace-only
+   lines are only permitted at the beginning of the file, between FASTQ
+   records, or at the end of the file. A blank or whitespace-only line after
+   the header line, within the sequence, or within quality scores is an
+   error. If more than 5 blank or whitespace-only lines are at the beginning
+   of the file, the sniffer will issue a warning.
 
    scikit-bio will write FASTQ files in a normalized format, with each record
    section on a single line. Thus, each record will be composed of *exactly*
@@ -263,7 +267,8 @@ from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTQFormatError)
 from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
-                            _format_fasta_like_records)
+                            _format_fasta_like_records, _line_generator,
+                            _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import (BiologicalSequence, NucleotideSequence,
                             DNASequence, RNASequence, ProteinSequence)
@@ -273,6 +278,10 @@ _whitespace_regex = re.compile(r'\s')
 
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
+
+    if _too_many_blanks(fh, 5):
+        return False, {}
+
     # Strategy:
     #   Read up to 10 records. If at least one record is read (i.e. the file
     #   isn't empty) and the quality scores are in printable ASCII range,
@@ -289,7 +298,9 @@ def _fastq_sniffer(fh):
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
-    seq_header = next(_line_generator(fh))
+    # SKip any blank or whitespace-only lines at beginning of file
+    seq_header = next(_line_generator(fh, skip_blanks=True))
+
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
             "Expected sequence (@) header line at start of file: %r"
@@ -297,16 +308,19 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
 
     while seq_header is not None:
         id_, desc = _parse_fasta_like_header(seq_header)
-        seq, qual_header = _parse_sequence_data(fh)
+        seq, qual_header = _parse_sequence_data(fh, seq_header)
 
         if qual_header != '+' and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
                 "Sequence (@) and quality (+) header lines do not match: "
                 "%r != %r" % (seq_header[1:], qual_header[1:]))
 
-        phred_scores, seq_header = _parse_quality_scores(fh, len(seq), variant,
-                                                         phred_offset)
-        yield constructor(seq, id=id_, description=desc, quality=phred_scores)
+        phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
+                                                         variant,
+                                                         phred_offset,
+                                                         qual_header)
+        yield constructor(seq, id=id_, description=desc,
+                          quality=phred_scores)
 
 
 @register_reader('fastq', BiologicalSequence)
@@ -450,18 +464,18 @@ def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-def _line_generator(fh):
-    for line in fh:
-        line = line.rstrip('\n')
-        if not line:
-            raise FASTQFormatError("Found blank line in FASTQ-formatted file.")
-        yield line
+def _blank_error(unique_text):
+    error_string = ("Found blank or whitespace-only line {} in "
+                    "FASTQ file").format(unique_text)
+    raise FASTQFormatError(error_string)
 
 
-def _parse_sequence_data(fh):
+def _parse_sequence_data(fh, prev):
     seq_chunks = []
     for chunk in _line_generator(fh):
         if chunk.startswith('+'):
+            if not prev:
+                _blank_error("before '+'")
             if not seq_chunks:
                 raise FASTQFormatError(
                     "Found FASTQ record without sequence data.")
@@ -471,33 +485,40 @@ def _parse_sequence_data(fh):
                 "Found FASTQ record that is missing a quality (+) header line "
                 "after sequence data.")
         else:
+            if not prev:
+                _blank_error("after header or within sequence")
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
                     "Found whitespace in sequence data: %r" % chunk)
             seq_chunks.append(chunk)
+        prev = chunk
 
     raise FASTQFormatError(
         "Found incomplete/truncated FASTQ record at end of file.")
 
 
-def _parse_quality_scores(fh, seq_len, variant, phred_offset):
+def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
     phred_scores = []
     qual_len = 0
     for chunk in _line_generator(fh):
-        if chunk.startswith('@') and qual_len == seq_len:
-            return np.hstack(phred_scores), chunk
-        else:
-            qual_len += len(chunk)
+        if chunk:
+            if chunk.startswith('@') and qual_len == seq_len:
+                return np.hstack(phred_scores), chunk
+            else:
+                if not prev:
+                    _blank_error("after '+' or within quality scores")
+                qual_len += len(chunk)
 
-            if qual_len > seq_len:
-                raise FASTQFormatError(
-                    "Found more quality score characters than sequence "
-                    "characters. Extra quality score characters: %r" %
-                    chunk[-(qual_len - seq_len):])
+                if qual_len > seq_len:
+                    raise FASTQFormatError(
+                        "Found more quality score characters than sequence "
+                        "characters. Extra quality score characters: %r" %
+                        chunk[-(qual_len - seq_len):])
 
-            phred_scores.append(
-                _decode_qual_to_phred(chunk, variant=variant,
-                                      phred_offset=phred_offset))
+                phred_scores.append(
+                    _decode_qual_to_phred(chunk, variant=variant,
+                                          phred_offset=phred_offset))
+        prev = chunk
 
     if qual_len != seq_len:
         raise FASTQFormatError(
