@@ -1324,6 +1324,25 @@ class TestSequence(TestCase):
         pat = re.compile('(FOO)')
         self.assertEqual(list(seq.slices_from_regex(pat)), [])
 
+    def test_slice_from_regex_exclude_no_difference(self):
+        seq = Sequence('..ABCDEFG..')
+        pat = "([A-Z]+)"
+        exp = [slice(2, 9)]
+        self.assertEqual(list(seq.slices_from_regex(pat)), exp)
+
+        obs = seq.slices_from_regex(pat,
+            exclude=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1], dtype=bool))
+        self.assertEqual(list(obs), exp)
+
+    def test_slice_from_regex_exclude(self):
+
+        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex("(A+)",
+            exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+                              0, 1, 1, 0, 1], dtype=bool))
+
+        self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
+                                     slice(19, 20)])
+
 
 if __name__ == "__main__":
     main()

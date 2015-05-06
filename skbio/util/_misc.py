@@ -21,27 +21,30 @@ with hooks():
 
 class MiniRegistry(dict):
     def __call__(self, name):
+        """Act as a decorator to register functions with self"""
         def decorator(func):
             self[name] = func
             return func
         return decorator
 
     def copy(self):
+        """Useful for inheritance"""
         return self.__class__(super(MiniRegistry, self).copy())
 
     def formatted_listing(self):
+        """Produce an RST list with descriptions."""
         if len(self) == 0:
             return "\tNone"
         else:
             return "\n".join(["\t%r\n\t  %s" %
                              (name, self[name].__doc__.split("\n")[0])
-                              for name in self])
+                              for name in sorted(self)])
 
     def interpolate(self, obj, name):
+        """Inject the formatted listing in the second blank line of `name`."""
         # Py2/3 compatible way of calling getattr(obj, name).__func__
         f = getattr(obj, name).__get__(None, type(None))
-        # Deep magic happens here. I *think* the closure is interpereted in a
-        # new context for each subclass making the whole thing work.
+
         if hasattr(f, 'func_code'):
             f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
                               argdefs=f.func_defaults, closure=f.func_closure)

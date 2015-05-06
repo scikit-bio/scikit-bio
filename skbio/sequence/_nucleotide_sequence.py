@@ -150,27 +150,23 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         else:
             return other.reverse_complement()._string == self._string
 
+    @property
+    def _motifs(self):
+        return _motifs
+
 _motifs = parent_motifs.copy()
 
-def _find_runs(sequence, chars_to_find, min_length, allow_gaps):
-    acceptable = re.escape(''.join(sequence.gap_chars)) if allow_gaps else ''
-    pat = '([%s%s]{%d,})' % (chars_to_find, acceptable, min_length)
-    for index in sequence.slices_from_regex(pat):
-        if allow_gaps:
-            if len(sequence) - sequence[index].gaps().sum() >= min_length:
-                yield index
-        else:
-            yield index
-
 @_motifs("purine-run")
-def _motif_purine_run(sequence, min_length, allow_gaps):
+def _motif_purine_run(sequence, min_length, exclude):
     """Purine run docstring"""
-    return _find_runs(sequence, "AG", min_length, allow_gaps)
+    return sequence.slices_from_regex("([AGR]{%d,})" % min_length,
+                                      exclude=exclude)
 
 @_motifs("pyrimidine-run")
-def _motif_pyrimidine_run(sequence, min_length, allow_gaps):
+def _motif_pyrimidine_run(sequence, min_length, exclude):
     """Pyrimidine run docstring"""
-    return _find_runs(sequence, "CTU", min_length, allow_gaps)
+    return sequence.slices_from_regex("([CTUY]{%d,})" % min_length,
+                                      exclude=exclude)
 
 # Leave this at the bottom
 _motifs.interpolate(NucleotideSequence, "find_motifs")

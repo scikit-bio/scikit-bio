@@ -1312,7 +1312,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def slices_from_regex(self, regex):
+    def slices_from_regex(self, regex, exclude=None):
         """Find patterns specified by regular expression
 
         Parameters
@@ -1343,11 +1343,20 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(regex, string_types):
             regex = re.compile(regex)
 
-        for match in regex.finditer(self._string):
+        if exclude is None:
+            lookup = np.arange(len(self))
+            string = self._string
+        else:
+            include = np.invert(exclude)
+            lookup = np.where(include)[0]
+            string = self[include]._string
+
+        for match in regex.finditer(string):
             # We start at 1 because we don't want the group that contains all
             # other groups.
             for g in range(1, len(match.groups())+1):
-                yield slice(match.start(g), match.end(g))
+                yield slice(lookup[match.start(g)], 
+                            lookup[match.end(g) - 1] + 1)
 
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):

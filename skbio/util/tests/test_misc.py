@@ -19,7 +19,116 @@ from uuid import uuid4
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
                         create_dir, find_duplicates, flatten,
                         is_casava_v180_or_later)
-from skbio.util._misc import _handle_error_codes
+from skbio.util._misc import _handle_error_codes, MiniRegistry
+
+class TestMiniRegistry(TestCase):
+    def setUp(self):
+        self.registry = MiniRegistry()
+
+    def test_decoration(self):
+        self.assertNotIn("name1", self.registry)
+        self.assertNotIn("name2", self.registry)
+        self.n1_called = False
+        self.n2_called = False
+
+
+        @self.registry("name1")
+        def some_registration1():
+            self.n1_called = True
+
+        @self.registry("name2")
+        def some_registration2():
+            self.n2_called = True
+
+        self.assertIn("name1", self.registry)
+        self.assertEqual(some_registration1, self.registry["name1"])
+        self.assertIn("name2", self.registry)
+        self.assertEqual(some_registration2, self.registry["name2"])
+
+        self.registry["name1"]()
+        self.assertTrue(self.n1_called)
+        self.registry["name2"]()
+        self.assertTrue(self.n2_called)
+
+    def test_copy(self):
+        @self.registry("name")
+        def some_registration():
+            pass
+
+        new = self.registry.copy()
+        self.assertIsNot(new, self.registry)
+
+        @new("other")
+        def other_registration():
+            pass
+
+        self.assertIn("name", self.registry)
+        self.assertNotIn("other", self.registry)
+
+        self.assertIn("other", new)
+        self.assertIn("name", new)
+
+    def test_everything(self):
+        class SomethingToInterpolate(object):
+            def interpolate_me():
+                """First line
+
+                Some description of things, also this:
+
+                Other things are happening now.
+                """
+
+            def dont_interpolate_me():
+                """First line
+
+                Some description of things, also this:
+
+                Other things are happening now.
+                """
+
+        class Subclass(SomethingToInterpolate):
+            pass
+
+        @self.registry("a")
+        def a():
+            """x"""
+
+        @self.registry("b")
+        def b():
+            """y"""
+
+        @self.registry("c")
+        def c():
+            """z"""
+
+        subclass_registry = self.registry.copy()
+
+        @subclass_registry("o")
+        def o():
+            """p"""
+
+        self.registry.interpolate(SomethingToInterpolate, "interpolate_me")
+        subclass_registry.interpolate(Subclass, "interpolate_me")
+
+        self.assertEqual(SomethingToInterpolate.interpolate_me.__doc__,
+                         "First line\n\n                Some description of th"
+                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
+                         "'\n\t  z\n\n                Other things are happeni"
+                         "ng now.\n                ")
+        self.assertEqual(SomethingToInterpolate.dont_interpolate_me.__doc__,
+                         "First line\n\n                Some description of th"
+                         "ings, also this:\n\n                Other things are"
+                         " happening now.\n                ")
+        self.assertEqual(Subclass.interpolate_me.__doc__,
+                         "First line\n\n                Some description of th"
+                         "ings, also this:\n\n\t'a'\n\t  x\n\t'b'\n\t  y\n\t'c"
+                         "'\n\t  z\n\t'o'\n\t  p\n\n                Other thin"
+                         "gs are happening now.\n                ")
+        self.assertEqual(Subclass.dont_interpolate_me.__doc__,
+                         "First line\n\n                Some description of th"
+                         "ings, also this:\n\n                Other things are"
+                         " happening now.\n                ")
+
 
 
 class MiscTests(TestCase):
