@@ -304,7 +304,7 @@ class GeneticCodeTests(TestCase):
                 self.seq = seq
                 self.rev = rev
 
-            def rc(self):
+            def reverse_complement(self):
                 return self.rev
 
         test_rna = fake_rna('AUGCUAACAUAAA', 'UUUAUGUUAGCAU')

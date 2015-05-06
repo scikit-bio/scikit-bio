@@ -10,6 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
+import numpy as np
+
 from skbio.sequence._nucleotide_sequence import NucleotideSequence
 from skbio.util import classproperty
 
@@ -36,7 +38,18 @@ class ExampleNucleotideSequence(NucleotideSequence):
         return comp_map
 
 
+class ExampleNucleotideSequenceSubclass(ExampleNucleotideSequence):
+    pass
+
+
 class TestNucelotideSequence(unittest.TestCase):
+    def setUp(self):
+        self.sequence_kinds = frozenset([
+            str,
+            ExampleNucleotideSequence,
+            lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+
     def test_instantiation_with_no_implementation(self):
         class NucleotideSequenceSubclassNoImplementation(NucleotideSequence):
             pass
@@ -133,6 +146,17 @@ class TestNucelotideSequence(unittest.TestCase):
                                       description='bar',
                                       quality=list(range(11))[::-1]))
 
+    def test_is_reverse_complement_varied_types(self):
+        tested = 0
+        for constructor in self.sequence_kinds:
+            tested += 1
+            seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
+            seq2 = constructor('ZBB-.ZXYABC')
+
+            self.assertTrue(seq1.is_reverse_complement(seq2))
+
+        self.assertEqual(tested, 4)
+
     def test_is_reverse_complement_empty(self):
         seq1 = ExampleNucleotideSequence('')
         self.assertTrue(seq1.is_reverse_complement(seq1))
@@ -144,7 +168,7 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertTrue(seq1.is_reverse_complement(seq2))
         self.assertTrue(seq2.is_reverse_complement(seq1))
 
-    def test_is_reverse_complement_reverse_complements(self):
+    def test_is_reverse_complement_metadata_ignored(self):
         seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
         seq2 = ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
                                          description='bar', quality=range(11))
@@ -175,6 +199,13 @@ class TestNucelotideSequence(unittest.TestCase):
 
         self.assertFalse(seq1.is_reverse_complement(seq2))
         self.assertFalse(seq2.is_reverse_complement(seq1))
+
+    def test_is_reverse_complement_type_mismatch(self):
+        seq1 = ExampleNucleotideSequence('ABC')
+        seq2 = ExampleNucleotideSequenceSubclass('ABC')
+
+        with self.assertRaises(TypeError):
+            seq1.is_reverse_complement(seq2)
 
 # class NucelotideSequenceTests(TestCase):
 #

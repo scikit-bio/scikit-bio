@@ -142,13 +142,17 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         reverse_complement
 
         """
-        # TODO support other "sequence" types
+        other = self._munge_to_sequence(other, 'is_reverse_complement')
 
         # avoid computing the reverse complement if possible
         if len(self) != len(other):
             return False
         else:
-            return other.reverse_complement()._string == self._string
+            # we reverse complement ourselves because `other` is a `Sequence`
+            # object at this point and we only care about comparing the
+            # underlying sequence data
+            return self.reverse_complement()._string == other._string
+
 
     @property
     def _motifs(self):
