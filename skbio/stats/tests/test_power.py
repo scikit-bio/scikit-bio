@@ -474,8 +474,7 @@ class PowerAnalysisTest(TestCase):
                        3: [['GW'], ['CB']],
                        4: [['PP'], ['MH']],
                        5: [['WM'], ['NR']]}
-        known_index = [np.array([0, 1, 2, 3, 4, 5]),
-                       np.array([0, 1, 2, 3, 4, 5])]
+        known_index = np.array([0, 1, 2, 3, 4, 5])
         test_pairs, test_index = _identify_sample_groups(self.meta,
                                                          'INT',
                                                          ['SEX', 'AGE'],
@@ -484,16 +483,14 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(known_pairs.keys(), test_pairs.keys())
         self.assertEqual(sorted(known_pairs.values()),
                          sorted(test_pairs.values()))
-        for idx in range(len(test_index)):
-            npt.assert_array_equal(known_index[idx], test_index[idx])
+        npt.assert_array_equal(known_index, test_index)
 
     def test__identify_sample_groups_not_strict(self):
         # Defines the know values
         known_pairs = {0: [['PP'], ['CD', 'NR']],
                        1: [['MM', 'WM'], ['MH']],
                        2: [['GW'], ['CB']]}
-        known_index = [np.array([0, 1, 2]),
-                       np.array([0, 1, 2])]
+        known_index = np.array([0, 1, 2])
         test_pairs, test_index = _identify_sample_groups(self.meta,
                                                          'INT',
                                                          ['SEX', 'ABX'],
@@ -502,14 +499,12 @@ class PowerAnalysisTest(TestCase):
         self.assertEqual(known_pairs.keys(), test_pairs.keys())
         self.assertEqual(sorted(known_pairs.values()),
                          sorted(test_pairs.values()))
-        for idx in range(len(test_index)):
-            npt.assert_array_equal(known_index[idx], test_index[idx])
+        npt.assert_array_equal(known_index, test_index)
 
     def test__draw_paired_samples(self):
         meta_pairs = {0: [['GW', 'SR', 'TS'], ['CB', 'LF', 'PC']],
                       1: [['MM', 'PP', 'WM'], ['CD', 'MH', 'NR']]}
-        index = [np.array([0, 1, 2, 3, 4, 5]),
-                 np.array([0, 0, 0, 1, 1, 1])]
+        index = np.array([0, 0, 0, 1, 1, 1])
         num_samps = 3
         known_sets = [{'GW', 'SR', 'TS', 'MM', 'PP', 'WM'},
                       {'CB', 'LF', 'PC', 'CD', 'MH', 'NR'}]

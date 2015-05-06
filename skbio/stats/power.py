@@ -486,7 +486,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     meta_pairs, index = _identify_sample_groups(meta, cat, control_cats, order,
                                                 strict_match)
     min_obs = min([_get_min_size(meta, cat, control_cats, order, strict_match),
-                   len(index[0])*0.9])
+                  np.floor(len(index)*0.9)])
     sub_ids = _draw_paired_samples(meta_pairs, index, min_obs)
 
     ratio, num_p, sample_counts = \
@@ -769,7 +769,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
     if strict_match:
         all_cats = copy.deepcopy(control_cats)
         all_cats.append(cat)
-        meta[all_cats]
+        meta = meta[all_cats].dropna()
 
     return meta.groupby(cat).count().loc[order, control_cats[0]].min()
 
@@ -1057,32 +1057,37 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
 
     # Sets up variables to be filled
     meta_pairs = {}
-    index1 = []
-    index2 = []
+    index = []
     i1 = 0
-    i2 = 0
 
     # Groups the data by the control groups
     ctrl_groups = meta.groupby(control_cats).groups
     # Identifies the samples that satisfy the control pairs
     for (g, ids) in viewitems(ctrl_groups):
+        # If strict_match, Skips over data that has nans
         if not _check_nans(g, switch=True) and strict_match:
             continue
-        try:
-            m_ids = meta.loc[ids].groupby(cat).groups
-            id_vecs = [m_ids[o] for o in order]
+        # Draws the samples that are matched for control cats
+        m_ids = meta.loc[ids].groupby(cat).groups
+        # Checks if samples from the cat groups are respresented in those
+        # Samples
+        ids_vec = id_vecs = [m_ids[o] for o in order if o in
+                             m_ids]
+        # If all groups are represented, the index and results are retained
+        if len(ids_vec) == len(order):
             min_vec = np.array([len(v) for v in id_vecs])
             loc_vec = np.arange(0, min_vec.min())
             meta_pairs[i1] = id_vecs
-            index1.append((loc_vec + i2))
-            index2.append(np.zeros(loc_vec.shape) + i1)
+            index.append(np.zeros(loc_vec.shape) + i1)
             i1 = i1 + 1
-            i2 = i2 + len(loc_vec)
-        except(KeyError):
-            index1.append(np.array([]))
-            index2.append(np.array([]))
+        # If the groups are not represented, an empty array gets passed
+        else:
+            index.append(np.array([]))
 
-    index = [np.hstack(index1), np.hstack(index2)]
+    # Converts index to a 1d array
+    index = np.hstack(index)
+
+    # If index is empty, sets up meta_paris with a no key.
     if meta_pairs == {}:
         meta_pairs['no'] = order
 
@@ -1116,10 +1121,8 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
         return [np.array([]) for o in meta_pairs['no']]
 
     # Identifies the absloute positions of the control group being drawn
-    abs_pos = np.random.choice(index[0], int(num_samps), replace=False)
-
-    # Gets the set and relative position in the set of the samples
-    set_pos = index[1][abs_pos.astype(int)]
+    set_pos = np.random.choice(index, int(num_samps),
+                               replace=False).astype(int)
 
     subs = []
 
