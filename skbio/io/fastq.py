@@ -71,23 +71,26 @@ sections:
 
 For the complete FASTQ format specification, see [1]_. scikit-bio's FASTQ
 implementation follows the format specification described in this excellent
-publication, including validating the implementation against the FASTQ examples
-provided in the publication's supplementary data.
+publication, including validating the implementation against the FASTQ example
+files provided in the publication's supplementary data.
 
 .. note:: IDs and descriptions will be parsed from sequence header lines in
    exactly the same way as FASTA headers (:mod:`skbio.io.fasta`).
 
-   Whitespace is not allowed in sequence data or quality scores. Leading and
-   trailing whitespace is stripped from the file. Blank or whitespace-only
-   lines are only permitted at the beginning of the file, between FASTQ
-   records, or at the end of the file. A blank or whitespace-only line after
-   the header line, within the sequence, or within quality scores is an
-   error. If more than 5 blank or whitespace-only lines are at the beginning
-   of the file, the sniffer will issue a warning.
+.. note:: Blank or whitespace-only lines are only allowed at the beginning of
+   the file, between FASTQ records, or at the end of the file. A blank or
+   whitespace-only line after the header line, within the sequence, or within
+   quality scores will raise an error.
 
-   scikit-bio will write FASTQ files in a normalized format, with each record
-   section on a single line. Thus, each record will be composed of *exactly*
-   four lines. The quality header line won't have the sequence ID and
+   scikit-bio will ignore leading and trailing whitespace characters on each
+   line while reading.
+
+   Whitespace characters are not allowed within sequence data or quality
+   scores.
+
+.. note:: scikit-bio will write FASTQ files in a normalized format, with each
+   record section on a single line. Thus, each record will be composed of
+   *exactly* four lines. The quality header line won't have the sequence ID and
    description repeated.
 
 Quality Score Variants
@@ -278,14 +281,14 @@ _whitespace_regex = re.compile(r'\s')
 
 @register_sniffer('fastq')
 def _fastq_sniffer(fh):
-
+    # Strategy:
+    #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
+    #   file. Read up to 10 records. If at least one record is read (i.e. the
+    #   file isn't empty) and the quality scores are in printable ASCII range,
+    #   assume the file is FASTQ.
     if _too_many_blanks(fh, 5):
         return False, {}
 
-    # Strategy:
-    #   Read up to 10 records. If at least one record is read (i.e. the file
-    #   isn't empty) and the quality scores are in printable ASCII range,
-    #   assume the file is FASTQ.
     try:
         not_empty = False
         for _ in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
@@ -298,7 +301,7 @@ def _fastq_sniffer(fh):
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=BiologicalSequence):
-    # SKip any blank or whitespace-only lines at beginning of file
+    # Skip any blank or whitespace-only lines at beginning of file
     seq_header = next(_line_generator(fh, skip_blanks=True))
 
     if not seq_header.startswith('@'):
@@ -472,7 +475,7 @@ def _blank_error(unique_text):
 
 def _parse_sequence_data(fh, prev):
     seq_chunks = []
-    for chunk in _line_generator(fh):
+    for chunk in _line_generator(fh, skip_blanks=False):
         if chunk.startswith('+'):
             if not prev:
                 _blank_error("before '+'")
@@ -500,7 +503,7 @@ def _parse_sequence_data(fh, prev):
 def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
     phred_scores = []
     qual_len = 0
-    for chunk in _line_generator(fh):
+    for chunk in _line_generator(fh, skip_blanks=False):
         if chunk:
             if chunk.startswith('@') and qual_len == seq_len:
                 return np.hstack(phred_scores), chunk

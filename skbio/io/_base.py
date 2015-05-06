@@ -196,7 +196,7 @@ def _line_generator(fh, skip_blanks=False):
 def _too_many_blanks(fh, max_blanks):
     count = 0
     too_many = False
-    for line in _line_generator(fh):
+    for line in _line_generator(fh, skip_blanks=False):
         if line:
             break
         else:
