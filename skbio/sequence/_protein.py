@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
-from skbio.util._misc import MiniRegistry
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
@@ -63,7 +62,9 @@ class Protein(IUPACSequence):
     def _motifs(self):
         return _motifs
 
+
 _motifs = parent_motifs.copy()
+
 
 @_motifs("N-glycosylation")
 def _motif_nitro_glycosylation(sequence, min_length, exclude):

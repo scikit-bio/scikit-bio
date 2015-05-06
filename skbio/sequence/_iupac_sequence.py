@@ -105,7 +105,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             Non-degenerate IUPAC characters.
 
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @abstractproperty
     @classproperty
@@ -119,7 +119,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             non-degenerate IUPAC characters it represents.
 
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @overrides(Sequence)
     def __init__(self, sequence, id="", description="", quality=None,
@@ -158,7 +158,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             raise ValueError(
                 "Invalid character%s in sequence: %r. Valid IUPAC characters: "
                 "%r" % ('s' if len(bad) > 1 else '',
-                        bad if len(bad) > 1 else bad[0],
+                        [str(b.tostring().decode("ascii")) for b in bad] if
+                        len(bad) > 1 else bad[0],
                         list(self.alphabet)))
 
     @overrides(Sequence)

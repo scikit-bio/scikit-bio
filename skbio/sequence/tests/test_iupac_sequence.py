@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
-from types import GeneratorType
 
 import numpy as np
 import numpy.testing as npt
@@ -27,6 +26,7 @@ class ExampleIUPACSequence(IUPACSequence):
     def nondegenerate_chars(cls):
         return set("ABC")
 
+
 class ExampleMotifsTester(ExampleIUPACSequence):
     @property
     def _motifs(self):
@@ -35,6 +35,7 @@ class ExampleMotifsTester(ExampleIUPACSequence):
             "name1": lambda x, _, __: str(x),
             "name2": lambda x, _, __: len(x)
         }
+
 
 class TestIUPACSequence(TestCase):
     def test_instantiation_with_no_implementation(self):
@@ -105,7 +106,7 @@ class TestIUPACSequence(TestCase):
         seq = 'CBCBBbawCbbwBXYZ-.x'
 
         with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'w', 'x'\]"):
-           ExampleIUPACSequence(seq)
+            ExampleIUPACSequence(seq)
 
         ExampleIUPACSequence(seq, validate=False)
 
@@ -114,7 +115,7 @@ class TestIUPACSequence(TestCase):
 
         with self.assertRaisesRegexp(ValueError,
                                      "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
-           ExampleIUPACSequence(s)
+            ExampleIUPACSequence(s)
 
         seq = ExampleIUPACSequence(s, case_insensitive=True)
         self.assertEqual(seq, ExampleIUPACSequence('CBCBBBAZCBBZBXYZ-.X'))
@@ -123,7 +124,7 @@ class TestIUPACSequence(TestCase):
         s = 'CBCBBbazCbbzBXYZ-.x'
 
         with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'x', 'z'\]"):
-           ExampleIUPACSequence(s)
+            ExampleIUPACSequence(s)
 
         seq = ExampleIUPACSequence(s, case_insensitive=True)
         self.assertEqual(seq, ExampleIUPACSequence('CBCBBBAZCBBZBXYZ-.X'))
@@ -132,7 +133,7 @@ class TestIUPACSequence(TestCase):
         s = 'car'
 
         with self.assertRaisesRegexp(ValueError, "\['a', 'c', 'r'\]"):
-           ExampleIUPACSequence(s)
+            ExampleIUPACSequence(s)
 
         with self.assertRaisesRegexp(ValueError, "character.*'R'"):
             ExampleIUPACSequence(s, case_insensitive=True)
