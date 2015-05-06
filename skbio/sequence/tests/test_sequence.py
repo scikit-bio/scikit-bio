@@ -1335,7 +1335,6 @@ class TestSequence(TestCase):
         self.assertEqual(list(obs), exp)
 
     def test_slice_from_regex_exclude(self):
-
         obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex("(A+)",
             exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
                               0, 1, 1, 0, 1], dtype=bool))

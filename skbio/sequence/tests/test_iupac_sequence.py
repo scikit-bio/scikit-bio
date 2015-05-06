@@ -27,6 +27,14 @@ class ExampleIUPACSequence(IUPACSequence):
     def nondegenerate_chars(cls):
         return set("ABC")
 
+class ExampleMotifsTester(ExampleIUPACSequence):
+    @property
+    def _motifs(self):
+        # These aren't really motifs, just a way to excercise the code paths
+        return {
+            "name1": lambda x, _, __: str(x),
+            "name2": lambda x, _, __: len(x)
+        }
 
 class TestIUPACSequence(TestCase):
     def test_instantiation_with_no_implementation(self):
@@ -361,6 +369,22 @@ class TestIUPACSequence(TestCase):
         obs = sorted(ExampleIUPACSequence('XBZ', **kw).expand_degenerates(),
                      key=str)
         self.assertEqual(obs, exp)
+
+    def test_find_motifs_no_motif(self):
+        seq = ExampleMotifsTester("ABCABCABC")
+        with self.assertRaises(ValueError) as cm:
+            seq.find_motifs("doesn't-exist")
+        self.assertIn("doesn't-exist", str(cm.exception))
+
+        seq = ExampleIUPACSequence("ABCABCABC")
+        with self.assertRaises(ValueError) as cm:
+            seq.find_motifs("doesn't-exist")
+        self.assertIn("doesn't-exist", str(cm.exception))
+
+    def test_find_motifs(self):
+        seq = ExampleMotifsTester("ABC")
+        self.assertEqual(seq.find_motifs("name1"), "ABC")
+        self.assertEqual(seq.find_motifs("name2"), 3)
 
 if __name__ == "__main__":
     main()

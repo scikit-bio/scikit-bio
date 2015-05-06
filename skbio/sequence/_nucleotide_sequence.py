@@ -53,7 +53,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Thanks, nature...
 
         """
-        pass
+        pass # pragma: no cover
 
     def complement(self, reverse=False):
         """Return the complement of the `NucleotideSequence`
