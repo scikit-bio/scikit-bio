@@ -9,12 +9,9 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-import re
 from abc import ABCMeta, abstractproperty
 
-from skbio.sequence import SequenceError
 from skbio.util import classproperty
-from skbio.util._misc import MiniRegistry
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
@@ -57,7 +54,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         .. shownumpydoc
 
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     def complement(self, reverse=False):
         """Return the complement of the `NucleotideSequence`
@@ -169,18 +166,20 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
             # underlying sequence data
             return self.reverse_complement()._string == other._string
 
-
     @property
     def _motifs(self):
         return _motifs
 
+
 _motifs = parent_motifs.copy()
+
 
 @_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, exclude):
     """Purine run docstring"""
     return sequence.slices_from_regex("([AGR]{%d,})" % min_length,
                                       exclude=exclude)
+
 
 @_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, exclude):

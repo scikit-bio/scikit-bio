@@ -282,7 +282,7 @@ class TestSequence(TestCase):
             Sequence(Foo())
 
         # out of ASCII range
-        with self.assertRaises(UnicodeEncodeError):
+        with self.assertRaises((UnicodeEncodeError, ValueError)):
             Sequence(u'abc\u1F30')
 
     def test_init_invalid_id(self):
@@ -1330,14 +1330,15 @@ class TestSequence(TestCase):
         exp = [slice(2, 9)]
         self.assertEqual(list(seq.slices_from_regex(pat)), exp)
 
-        obs = seq.slices_from_regex(pat,
-            exclude=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1], dtype=bool))
+        obs = seq.slices_from_regex(
+            pat, exclude=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                                  dtype=bool))
         self.assertEqual(list(obs), exp)
 
     def test_slice_from_regex_exclude(self):
-        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex("(A+)",
-            exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-                              0, 1, 1, 0, 1], dtype=bool))
+        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
+            "(A+)", exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
+                                      1, 0, 0, 1, 1, 0, 1], dtype=bool))
 
         self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
                                      slice(19, 20)])
