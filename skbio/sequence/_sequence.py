@@ -1336,18 +1336,18 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import DNA
         >>> s = DNA('AATATACCGGTTATAA')
         >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
-        (slice(2, 6, None), DNA('TATA', length=4))
-        (slice(11, 16, None), DNA('TATAA', length=5))
+        slice(2, 6, None) TATA
+        slice(11, 16, None) TATAA
 
         # Gaps can interupt the identification of meaninful patterns
         >>> s = DNA('AATA--TACCGGTTATA-A')
         >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
-        (slice(13, 17, None), DNA('TATA', length=4))
+        slice(13, 17, None) TATA
 
         # Pass a boolean vector indictating where the gaps are to ignore them.
         >>> for e in s.slices_from_regex('(TATA+)', s.gaps()): print (e, s[e])
-        (slice(2, 8, None), DNA('TA--TA', length=6))
-        (slice(13, 19, None), DNA('TATA-A', length=6))
+        slice(2, 8, None) TA--TA
+        slice(13, 19, None) TATA-A
 
         .. shownumpydoc
 
