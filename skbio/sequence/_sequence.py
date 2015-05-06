@@ -1321,6 +1321,8 @@ class Sequence(collections.Sequence, SkbioObject):
             A string to be compiled into a regular expression, or a pre-
             compiled regular expression (e.g., from re.compile) with
             finditer method.
+        exclude : array of bool
+            A boolean vector indicating positions to ignore when matching.
 
         Returns
         -------
@@ -1331,11 +1333,21 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Example
         -------
-        >>> from skbio import Sequence
-        >>> s = Sequence('AATATACCGGTTATAA')
+        >>> from skbio import DNA
+        >>> s = DNA('AATATACCGGTTATAA')
         >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
         slice(2, 6, None) TATA
         slice(11, 16, None) TATAA
+
+        # Gaps can interupt the identification of meaninful patterns
+        >>> s = DNA('AATA--TACCGGTTATA-A')
+        >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
+        slice(13, 17, None) TATA
+
+        # Pass a boolean vector indictating where the gaps are to ignore them.
+        >>> for e in s.slices_from_regex('(TATA+)', s.gaps()): print (e, s[e])
+        slice(2, 8, None) TA--TA
+        slice(13, 19, None) TATA-A
 
         .. shownumpydoc
 
@@ -1355,7 +1367,7 @@ class Sequence(collections.Sequence, SkbioObject):
             # We start at 1 because we don't want the group that contains all
             # other groups.
             for g in range(1, len(match.groups())+1):
-                yield slice(lookup[match.start(g)], 
+                yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
 
     def _munge_to_sequence(self, other, method):
