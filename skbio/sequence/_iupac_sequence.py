@@ -60,24 +60,28 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @classproperty
     def alphabet(cls):
-        """Return the set of characters allowed in an `IUPACSequence`.
+        """Return the allowed characters.
 
         Returns
         -------
         set
-            Characters that are allowed in a valid `IUPACSequence`.
+            Characters that are allowed in a valid sequence.
+
+        .. shownumpydoc
 
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
     @classproperty
     def gap_chars(cls):
-        """Return the set of characters defined as gaps.
+        """Return the characters defined as gaps.
 
         Returns
         -------
         set
             Characters defined as gaps.
+
+        .. shownumpydoc
 
         """
         return set('-.')
@@ -90,6 +94,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         -------
         set
             Degenerate IUPAC characters.
+
+        .. shownumpydoc
 
         """
         return set(cls.degenerate_map)
@@ -104,6 +110,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         set
             Non-degenerate IUPAC characters.
 
+        .. shownumpydoc
+
         """
         pass  # pragma: no cover
 
@@ -117,6 +125,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         dict of sets
             Mapping of IUPAC degenerate character to the set of
             non-degenerate IUPAC characters it represents.
+
+        .. shownumpydoc
 
         """
         pass  # pragma: no cover
@@ -167,10 +177,28 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return self.__class__(validate=False, case_insensitive=False, **kwargs)
 
     def gaps(self):
+        """Return vector indicating positions containing gaps
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` indicates a gap character is present
+            at that position in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('AC-G-')
+        >>> s.gaps()
+        array([False, False,  True, False,  True], dtype=bool)
+
+        .. shownumpydoc
+
+        """
         return np.in1d(self._bytes, self._gap_codes)
 
     def has_gaps(self):
-        """Return True if char(s) in `gap_chars` are present
+        """Return True if sequence contains one or more gap characters
 
         Returns
         -------
@@ -188,21 +216,101 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> t.has_gaps()
         True
 
+        .. shownumpydoc
+
         """
         # TODO use count, there aren't that many gap chars
         return bool(self.gaps().any())
 
     def degenerates(self):
+        """Return vector indicating positions containing a degenerate character
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` indicates a degenerate character is
+            present at that position in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('ACWGN')
+        >>> s.degenerates()
+        array([False, False,  True, False,  True], dtype=bool)
+
+        .. shownumpydoc
+
+        """
         return np.in1d(self._bytes, self._degenerate_codes)
 
     def has_degenerates(self):
+        """Return True if sequence contains one or more degenerate characters
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurences of any character
+            in `self.degenerate_chars` in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('ACAC-GACGTT')
+        >>> s.has_degenerates()
+        False
+        >>> t = DNA('ANCACWWGACGTT')
+        >>> t.has_degenerates()
+        True
+
+        .. shownumpydoc
+
+        """
         # TODO use bincount!
         return bool(self.degenerates().any())
 
     def nondegenerates(self):
+        """Return vector indicating positions containing a non-degenerate char
+
+        Returns
+        -------
+        np.ndarray of bool
+            Boolean vector where `True` indicates a non-degenerate character is
+            present at that position in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('ACWGN')
+        >>> s.nondegenerates()
+        array([ True,  True, False,  True, False], dtype=bool)
+
+        .. shownumpydoc
+
+        """
         return np.in1d(self._bytes, self._nondegenerate_codes)
 
     def has_nondegenerates(self):
+        """Return True if sequence contains one or more non-degenerate chars
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurences of any character
+            in `self.nondegenerate_chars` in the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> s = DNA('NWNNNNNN')
+        >>> s.has_nondegenerates()
+        False
+        >>> t = DNA('ANCACWWGACGTT')
+        >>> t.has_nondegenerates()
+        True
+
+        .. shownumpydoc
+
+        """
         return bool(self.nondegenerates().any())
 
     def degap(self):
@@ -231,6 +339,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> t = s.degap()
         >>> t
         DNA('GGTCCATTC', length=9, quality=[0, 1, 2, 3, 5, 8, 9, 10, 12])
+
+        .. shownumpydoc
 
         """
         return self[np.invert(self.gaps())]
@@ -268,6 +378,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         TAG
         TGG
 
+        .. shownumpydoc
+
         """
         degen_chars = self.degenerate_map
         nonexpansion_chars = self.nondegenerate_chars.union(self.gap_chars)
@@ -296,15 +408,40 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         min_length : int, optional
             Defaults to 1. Only motifs at least as long as this will be
             returned.
-        allow_gaps : bool, optional
-            Defaults to ``False``. If ``True``, then gaps will not be
-            considered to disrupt a motif.
+        exclude : array of bool
+            A boolean vector indicating positions to ignore when matching.
 
         Returns
         -------
         generator
             Yields tuples of the start of the feature, the end of the feature,
             and the subsequence that composes the feature
+
+        Raises
+        ------
+        ValueError
+            If specifying an unknown motif type.
+
+        Example
+        -------
+        >>> from skbio import DNA
+        >>> s = DNA('ACGGGGAGGCGGAG')
+        >>> for e in s.find_motifs('purine-run', min_length=2): print(e, s[e])
+        slice(2, 9, None) GGGGAGG
+        slice(10, 14, None) GGAG
+
+        # Gap characters can disrupt motifs
+        >>> s = DNA('GG-GG')
+        >>> for e in s.find_motifs('purine-run'): print(e)
+        slice(0, 2, None)
+        slice(3, 5, None)
+
+        # Gaps can be ignored by passing the gap vector to excludes:
+        >>> s = DNA('GG-GG')
+        >>> for e in s.find_motifs('purine-run', exclude=s.gaps()): print(e)
+        slice(0, 5, None)
+
+        .. shownumpydoc
 
         """
         if motif_type not in self._motifs:
