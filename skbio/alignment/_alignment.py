@@ -569,7 +569,20 @@ class SequenceCollection(SkbioObject):
 
         new_seqs = []
         for new_id, seq in zip(new_ids, self):
-            new_seqs.append(seq.copy(id=new_id))
+            # HACK: Sequence objects are currently immutable. We used to have a
+            # Sequence.copy/to method that created a new Sequence object,
+            # optionally with attribute(s) set to new values. Here we want to
+            # retain all state in the Sequence object and only update the ID.
+            # There is a private method `_to` that accomplishes this for us.
+            # This method used to be public and is fully tested and documented.
+            # In the future, Sequence objects will have a `copy` method and
+            # their attributes will be reassignable. When that happens, this
+            # code can be updated to something like:
+            #
+            #     new_seq = seq.copy()
+            #     new_seq.id = new_id
+            #     new_seqs.append(new_seq)
+            new_seqs.append(seq._to(id=new_id))
 
         return self.__class__(new_seqs), new_to_old_ids
 
@@ -634,24 +647,6 @@ class SequenceCollection(SkbioObject):
         for seq in self:
             yield seq.id, seq
 
-    def lower(self):
-        """Converts all sequences to lowercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where
-            `skbio.sequence.Sequence.lower()` has been called
-            on each sequence.
-
-        See Also
-        --------
-        skbio.sequence.Sequence.lower
-        upper
-
-        """
-        return self.__class__([seq.lower() for seq in self])
-
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
 
@@ -668,7 +663,7 @@ class SequenceCollection(SkbioObject):
         """
         return len(self._data)
 
-    def k_word_frequencies(self, k, overlapping=True):
+    def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return k-word frequencies for sequences in ``SequenceCollection``.
 
         Parameters
@@ -697,19 +692,20 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AT', id="seq2"),
         ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
-        >>> for freqs in s1.k_word_frequencies(1):
+        >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
         defaultdict(<type 'float'>, {'A': 1.0})
         defaultdict(<type 'float'>, {'A': 0.5, 'T': 0.5})
         defaultdict(<type 'float'>, {'T': 1.0})
-        >>> for freqs in s1.k_word_frequencies(2):
+        >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
         defaultdict(<type 'float'>, {})
         defaultdict(<type 'float'>, {'AT': 1.0})
         defaultdict(<type 'float'>, {'TT': 1.0})
 
         """
-        return [s.k_word_frequencies(k, overlapping) for s in self]
+        return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
+                for s in self]
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
@@ -725,23 +721,6 @@ class SequenceCollection(SkbioObject):
 
         """
         return [len(seq) for seq in self]
-
-    def upper(self):
-        """Converts all sequences to uppercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where `Sequence.upper()`
-            has been called on each sequence.
-
-        See Also
-        --------
-        Sequence.upper
-        lower
-
-        """
-        return self.__class__([seq.upper() for seq in self])
 
     def _validate_character_set(self):
         """Return ``True`` if all sequences are valid, ``False`` otherwise
@@ -1284,7 +1263,7 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_entropies
-        k_word_frequencies
+        kmer_frequencies
 
         Examples
         --------
