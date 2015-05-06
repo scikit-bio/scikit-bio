@@ -1088,7 +1088,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     index = np.hstack(index)
 
     # If index is empty, sets up meta_paris with a no key.
-    if meta_pairs == {}:
+    if not meta_pairs:
         meta_pairs['no'] = order
 
     return meta_pairs, index
