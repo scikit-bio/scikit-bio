@@ -39,6 +39,31 @@ class TestRNA(unittest.TestCase):
         self.assertEqual(RNA('').complement_map, exp)
         self.assertEqual(RNA.complement_map, exp)
 
+    def test_motif_purine_run(self):
+        seq = RNA("")
+        self.assertEqual(list(seq.find_motifs("purine-run")), [])
+
+        seq = RNA("AARC--UCRG")
+        self.assertEqual(list(seq.find_motifs("purine-run")),
+                         [slice(0, 3), slice(8, 10)])
+
+        seq = RNA("AA-RC--UCR-G")
+        self.assertEqual(list(seq.find_motifs("purine-run", min_length=3,
+                                              exclude=seq.gaps())),
+                         [slice(0, 4)])
+
+    def test_motif_pyrimidine_run(self):
+        seq = RNA("")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run")), [])
+
+        seq = RNA("AARC--UCRG")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run")),
+                         [slice(3, 4), slice(6, 8)])
+
+        seq = RNA("AA-RC--UCR-G")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run", min_length=3,
+                                              exclude=seq.gaps())),
+                         [slice(4, 9)])
 
 if __name__ == "__main__":
     unittest.main()

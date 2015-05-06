@@ -28,6 +28,19 @@ class TestProtein(unittest.TestCase):
         self.assertEqual(Protein("").degenerate_map, exp)
         self.assertEqual(Protein.degenerate_map, exp)
 
+    def test_motif_n_glycosylation(self):
+        seq = Protein("ACDFFACGNPSL")
+        self.assertEqual(list(seq.find_motifs("N-glycosylation")), [])
+
+        seq = Protein("ACDFNFTACGNPSL")
+        self.assertEqual(list(seq.find_motifs("N-glycosylation")),
+                         [slice(4, 8)])
+
+        seq = Protein("AC-DFN-FTACGNPSL")
+        self.assertEqual(list(seq.find_motifs("N-glycosylation",
+                                              exclude=seq.gaps())),
+                         [slice(5, 10)])
+
 
 if __name__ == "__main__":
     unittest.main()

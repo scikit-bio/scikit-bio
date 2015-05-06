@@ -39,6 +39,32 @@ class TestDNA(unittest.TestCase):
         self.assertEqual(DNA('').complement_map, exp)
         self.assertEqual(DNA.complement_map, exp)
 
+    def test_motif_purine_run(self):
+        seq = DNA("")
+        self.assertEqual(list(seq.find_motifs("purine-run")), [])
+
+        seq = DNA("AARC--TCRG")
+        self.assertEqual(list(seq.find_motifs("purine-run")),
+                         [slice(0, 3), slice(8, 10)])
+
+        seq = DNA("AA-RC--TCR-G")
+        self.assertEqual(list(seq.find_motifs("purine-run", min_length=3,
+                                              exclude=seq.gaps())),
+                         [slice(0, 4)])
+
+    def test_motif_pyrimidine_run(self):
+        seq = DNA("")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run")), [])
+
+        seq = DNA("AARC--TCRA")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run")),
+                         [slice(3, 4), slice(6, 8)])
+
+        seq = DNA("AA-RC--TCR-A")
+        self.assertEqual(list(seq.find_motifs("pyrimidine-run", min_length=3,
+                                              exclude=seq.gaps())),
+                         [slice(4, 9)])
+
 
 if __name__ == "__main__":
     unittest.main()
