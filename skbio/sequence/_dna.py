@@ -35,12 +35,14 @@ class DNA(NucleotideSequence):
     def complement_map(cls):
         """Return the mapping of characters to their complements.
 
-        The complement of a gap character is itself.
-
         Returns
         -------
         dict
             Mapping of characters to their complements.
+
+        Notes
+        -----
+        The complement of a gap character is itself.
 
         """
         comp_map = {
