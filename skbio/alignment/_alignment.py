@@ -63,18 +63,15 @@ class SequenceCollection(SkbioObject):
     default_write_format = 'fasta'
 
     def __init__(self, seqs):
+        # TODO: find a good way to support generic Sequence objects in
+        # SequenceCollection and Alignment. The issue is that some methods
+        # assume that a sequence has knowledge of gap characters and a
+        # standard alphabet, which aren't present on Sequence. For now, if
+        # these methods are called by a user they'll get an error (likely
+        # an AttributeError).
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
-            # TODO: find a way to support generic Sequence objects in
-            # SequenceCollection and Alignment. The issue is that some methods
-            # assume that a sequence has knowledge of gap characters and a
-            # standard alphabet, which aren't present on Sequence.
-            if not isinstance(seq, IUPACSequence):
-                raise TypeError(
-                    "Unsupported type: %s. SequenceCollection only supports "
-                    "IUPACSequence subclasses." % type(seq).__name__)
-
             id = seq.id
             if id in self:
                 raise SequenceCollectionError(
