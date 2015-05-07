@@ -28,7 +28,7 @@ with hooks():
 
 
 class Sequence(collections.Sequence, SkbioObject):
-    """Base class for biological sequences.
+    """Store biological sequence data and optional associated metadata.
 
     Parameters
     ----------
