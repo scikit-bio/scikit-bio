@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
-from skbio.sequence import Sequence, IUPACSequence
+from skbio.sequence import Sequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -651,8 +651,9 @@ class SequenceCollection(SkbioObject):
         Examples
         --------
         >>> from skbio import SequenceCollection, DNA
-        >>> sequences = [DNA('AT', id="seq1"),
-        ...              DNA('TTTT', id="seq2")]
+        >>> sequences = [DNA('A', id="seq1"),
+        ...              DNA('AT', id="seq2"),
+        ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
         >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
@@ -661,9 +662,9 @@ class SequenceCollection(SkbioObject):
         Counter({'T': 4})
         >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
-        Counter({})
-        Counter({'AT': 1.0})
-        Counter({'TT': 1.0})
+        Counter()
+        Counter({'AT': 1})
+        Counter({'TT': 3})
 
         """
         return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
@@ -1387,7 +1388,7 @@ class StockholmAlignment(Alignment):
 
         # STOCKHOLM 1.0
         seq1         ACC--G-GGGU
-        seq2         TCC--G-GGGA
+        seq2         UCC--G-GGGA
         #=GC SS_cons (((.....)))
         //
 
@@ -1395,14 +1396,14 @@ class StockholmAlignment(Alignment):
     >>> from skbio.alignment import StockholmAlignment
     >>> from StringIO import StringIO
     >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
-    ...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
+    ...                   "seq1     ACC--G-GGGU\\nseq2     UCC--G-GGGA\\n"
     ...                   "#=GC SS_cons (((.....)))\\n//")
     >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
     >>> sto = next(sto_records)
     >>> print(sto)
     # STOCKHOLM 1.0
     seq1          ACC--G-GGGU
-    seq2          TCC--G-GGGA
+    seq2          UCC--G-GGGA
     #=GC SS_cons  (((.....)))
     //
     >>> sto.gc
@@ -1414,7 +1415,7 @@ class StockholmAlignment(Alignment):
     >>> from skbio.sequence import RNA
     >>> from skbio.alignment import StockholmAlignment
     >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-    ...     RNA("TCC--G-GGGA", id="seq2")]
+    ...         RNA("UCC--G-GGGA", id="seq2")]
     >>> gf = {
     ... "RT": ["TITLE1",  "TITLE2"],
     ... "RA": ["Auth1;", "Auth2;"],
@@ -1434,7 +1435,7 @@ class StockholmAlignment(Alignment):
     #=GF RA Auth2;
     #=GF RL Cell
     seq1          ACC--G-GGGU
-    seq2          TCC--G-GGGA
+    seq2          UCC--G-GGGA
     //
     """
     def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None):

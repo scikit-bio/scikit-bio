@@ -498,8 +498,8 @@ class Sequence(collections.Sequence, SkbioObject):
                     # fall through to ndarray slicing below
                     indexable = np.asarray(indexable)
                 else:
-                    seq = np.concatenate(list(self._slices_from_iter(self._bytes,
-                                                                     indexable)))
+                    seq = np.concatenate(
+                        list(self._slices_from_iter(self._bytes, indexable)))
                     if self._has_quality():
                         qual = np.concatenate(list(self._slices_from_iter(
                             self.quality, indexable)))

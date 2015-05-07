@@ -21,6 +21,7 @@ from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
                         is_casava_v180_or_later)
 from skbio.util._misc import _handle_error_codes, MiniRegistry
 
+
 class TestMiniRegistry(TestCase):
     def setUp(self):
         self.registry = MiniRegistry()
@@ -30,7 +31,6 @@ class TestMiniRegistry(TestCase):
         self.assertNotIn("name2", self.registry)
         self.n1_called = False
         self.n2_called = False
-
 
         @self.registry("name1")
         def some_registration1():
@@ -128,7 +128,6 @@ class TestMiniRegistry(TestCase):
                          "First line\n\n                Some description of th"
                          "ings, also this:\n\n                Other things are"
                          " happening now.\n                ")
-
 
 
 class MiscTests(TestCase):

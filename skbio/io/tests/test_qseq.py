@@ -11,9 +11,9 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
 import unittest
-from skbio import (SequenceCollection, Sequence,
-                   DNA, RNA, Protein)
+from functools import partial
 
+from skbio import SequenceCollection, Sequence, DNA, RNA, Protein
 from skbio import read
 from skbio.util import get_data_path
 from skbio.io import QSeqFormatError
@@ -61,9 +61,9 @@ class TestQSeqBase(unittest.TestCase):
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 1},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 2},
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 3,
-                 'constructor': Protein},
+                 'constructor': partial(Protein, validate=False)},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 4,
-                 'constructor': DNA},
+                 'constructor': partial(DNA, validate=False)},
             ], [
                 ('illumina_1:3:34:-30:30#0/1', 'ACG....ACGTAC', [
                     50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8]),
@@ -247,8 +247,7 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
 
 class TestQSeqToSequences(TestQSeqBase):
     def test_invalid_files(self):
-        for constructor in [Sequence,
-                            DNA, RNA, Protein]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for invalid, kwargs, errors, etype in self.invalid_files:
                 with self.assertRaises(etype) as cm:
                     for kwarg in kwargs:
@@ -260,8 +259,9 @@ class TestQSeqToSequences(TestQSeqBase):
                     self.assertIn(e, str(cm.exception))
 
     def test_valid_files(self):
-        for constructor in [Sequence,
-                            DNA, RNA, Protein]:
+        for constructor in [partial(Sequence), partial(DNA, validate=False),
+                            partial(RNA, validate=False),
+                            partial(Protein, validate=False)]:
             for valid, kwargs, components in self.valid_files:
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'constructor', 'filter')
@@ -270,8 +270,8 @@ class TestQSeqToSequences(TestQSeqBase):
                     c = components[seq_num - 1]
                     expected = constructor(c[1], id=c[0], quality=c[2])
 
-                    observed = read(valid, into=constructor, format='qseq',
-                                    verify=False, **kwarg)
+                    observed = read(valid, into=constructor.func,
+                                    format='qseq', verify=False, **kwarg)
                     self.assertTrue(observed.equals(expected))
 
 

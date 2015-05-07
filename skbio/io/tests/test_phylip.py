@@ -32,8 +32,8 @@ class AlignmentWriterTests(TestCase):
             RNA('.-ACGU'),
             RNA('UGCA-.', id='a'),
             RNA('.ACGU-', id='bb'),
-            RNA('ugca-.', id='1'),
-            RNA('AaAaAa', id='abcdefghij'),
+            RNA('ugca-.', id='1', validate=False),
+            RNA('AaAaAa', id='abcdefghij', validate=False),
             RNA('GGGGGG', id='ab def42ij')])
 
         # sequences with 20 chars = exactly two chunks of size 10
