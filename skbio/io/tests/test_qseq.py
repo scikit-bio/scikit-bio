@@ -270,8 +270,8 @@ class TestQSeqToSequences(TestQSeqBase):
                     c = components[seq_num - 1]
                     expected = constructor(c[1], id=c[0], quality=c[2])
 
-                    observed = read(valid, into=constructor.func, format='qseq',
-                                    verify=False, **kwarg)
+                    observed = read(valid, into=constructor.func,
+                                    format='qseq', verify=False, **kwarg)
                     self.assertTrue(observed.equals(expected))
 
 

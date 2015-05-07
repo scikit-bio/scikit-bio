@@ -7,10 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import string_types as base_string
 
 import os
-import unittest
 
 import numpy.testing as npt
 

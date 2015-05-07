@@ -13,6 +13,7 @@ class TestingUtilError(Exception):
     """Raised when an exception is needed to test exception handling."""
     pass
 
+
 class OverrideError(AssertionError):
     """Raised when a property does not exist in the parent class."""
     pass

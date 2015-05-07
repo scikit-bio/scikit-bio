@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
-from skbio.sequence import Sequence, IUPACSequence
+from skbio.sequence import Sequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,

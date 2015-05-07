@@ -462,7 +462,7 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = SequenceCollection([
                     DNA(c[2], id=c[0], description=c[1],
-                                       quality=c[3]) for c in components])
+                        quality=c[3]) for c in components])
 
                 fh = StringIO()
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
@@ -479,7 +479,7 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = Alignment([
                     Protein(c[2], id=c[0], description=c[1],
-                                    quality=c[3]) for c in components])
+                            quality=c[3]) for c in components])
 
                 fh = StringIO()
                 _alignment_to_fastq(obj, fh, **kwargs)
@@ -494,7 +494,7 @@ class TestWriters(unittest.TestCase):
     def test_generator_to_fastq_no_qual(self):
         def gen():
             yield Sequence('ACGT', id='foo', description='bar',
-                                     quality=range(4))
+                           quality=range(4))
             yield Sequence('ACG', id='foo', description='bar')
 
         with self.assertRaisesRegexp(ValueError, '2nd.*quality scores'):

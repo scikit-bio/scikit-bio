@@ -182,7 +182,8 @@ def _qseq_to_dna_sequence(fh, seq_num=1,
                           variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(DNA, validate=False)), seq_num)
+                             constructor=partial(DNA, validate=False)),
+                             seq_num)
 
 
 @register_reader('qseq', RNA)
@@ -191,7 +192,8 @@ def _qseq_to_rna_sequence(fh, seq_num=1,
                           variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(RNA, validate=False)), seq_num)
+                             constructor=partial(RNA, validate=False)),
+                             seq_num)
 
 
 @register_reader('qseq', Protein)
@@ -200,7 +202,8 @@ def _qseq_to_protein_sequence(fh, seq_num=1,
                               variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(Protein, validate=False)), seq_num)
+                             constructor=partial(Protein, validate=False)),
+                             seq_num)
 
 
 def _record_parser(line):
