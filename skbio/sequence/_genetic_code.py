@@ -225,15 +225,11 @@ class GeneticCode(SkbioObject):
 
     def __str__(self):
         """Returns code_sequence that constructs the GeneticCode
-
-        .. shownumpydoc
         """
         return self.code_sequence
 
     def __repr__(self):
         """Returns reconstructable representation of the GeneticCode
-
-        .. shownumpydoc
         """
         return 'GeneticCode(%s)' % str(self)
 
@@ -241,8 +237,6 @@ class GeneticCode(SkbioObject):
         """ Allows two GeneticCode objects to be compared to each other.
 
         Two GeneticCode objects are equal if they have equal code_sequences.
-
-        .. shownumpydoc
         """
         if not isinstance(other, GeneticCode):
             return False
@@ -256,8 +250,6 @@ class GeneticCode(SkbioObject):
         """Returns amino acid corresponding to codon, or codons for an aa.
 
         Returns [] for empty list of codons, 'X' for unknown amino acid.
-
-        .. shownumpydoc
         """
         item = str(item)
         if len(item) == 1:  # amino acid
