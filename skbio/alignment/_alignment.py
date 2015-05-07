@@ -62,7 +62,7 @@ class SequenceCollection(SkbioObject):
     """
     default_write_format = 'fasta'
 
-    def __init__(self, seqs, validate=False):
+    def __init__(self, seqs):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
@@ -73,14 +73,6 @@ class SequenceCollection(SkbioObject):
                     "id '%s' is present multiple times." % id)
             else:
                 self._id_to_index[seq.id] = i
-
-        # This is bad because we're making a second pass through the sequence
-        # collection to validate. We'll want to avoid this, but it's tricky
-        # because different subclasses will want to define their own is_valid
-        # methods.
-        if validate and not self.is_valid():
-            raise SequenceCollectionError(
-                "%s failed to validate." % self.__class__.__name__)
 
     def __contains__(self, id):
         r"""The in operator.
@@ -569,7 +561,20 @@ class SequenceCollection(SkbioObject):
 
         new_seqs = []
         for new_id, seq in zip(new_ids, self):
-            new_seqs.append(seq.copy(id=new_id))
+            # HACK: Sequence objects are currently immutable. We used to have a
+            # Sequence.copy/to method that created a new Sequence object,
+            # optionally with attribute(s) set to new values. Here we want to
+            # retain all state in the Sequence object and only update the ID.
+            # There is a private method `_to` that accomplishes this for us.
+            # This method used to be public and is fully tested and documented.
+            # In the future, Sequence objects will have a `copy` method and
+            # their attributes will be reassignable. When that happens, this
+            # code can be updated to something like:
+            #
+            #     new_seq = seq.copy()
+            #     new_seq.id = new_id
+            #     new_seqs.append(new_seq)
+            new_seqs.append(seq._to(id=new_id))
 
         return self.__class__(new_seqs), new_to_old_ids
 
@@ -585,41 +590,6 @@ class SequenceCollection(SkbioObject):
         """
         return self.sequence_count() == 0
 
-    def is_valid(self):
-        """Return True if the SequenceCollection is valid
-
-        Returns
-        -------
-        bool
-            ``True`` if `self` is valid, and ``False`` otherwise.
-
-        Notes
-        -----
-        Validity is defined as having no sequences containing characters
-        outside of their valid character sets.
-
-        See Also
-        --------
-        skbio.alignment.Sequence.is_valid
-
-        Examples
-        --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        True
-        >>> sequences = [RNA('ACCGT', id="seq1"),
-        ...              RNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        False
-
-        """
-        return self._validate_character_set()
-
     def iteritems(self):
         """Generator of id, sequence tuples
 
@@ -633,24 +603,6 @@ class SequenceCollection(SkbioObject):
         """
         for seq in self:
             yield seq.id, seq
-
-    def lower(self):
-        """Converts all sequences to lowercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where
-            `skbio.sequence.Sequence.lower()` has been called
-            on each sequence.
-
-        See Also
-        --------
-        skbio.sequence.Sequence.lower
-        upper
-
-        """
-        return self.__class__([seq.lower() for seq in self])
 
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
@@ -668,7 +620,7 @@ class SequenceCollection(SkbioObject):
         """
         return len(self._data)
 
-    def k_word_frequencies(self, k, overlapping=True):
+    def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return k-word frequencies for sequences in ``SequenceCollection``.
 
         Parameters
@@ -697,19 +649,20 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AT', id="seq2"),
         ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
-        >>> for freqs in s1.k_word_frequencies(1):
+        >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
         defaultdict(<type 'float'>, {'A': 1.0})
         defaultdict(<type 'float'>, {'A': 0.5, 'T': 0.5})
         defaultdict(<type 'float'>, {'T': 1.0})
-        >>> for freqs in s1.k_word_frequencies(2):
+        >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
         defaultdict(<type 'float'>, {})
         defaultdict(<type 'float'>, {'AT': 1.0})
         defaultdict(<type 'float'>, {'TT': 1.0})
 
         """
-        return [s.k_word_frequencies(k, overlapping) for s in self]
+        return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
+                for s in self]
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
@@ -725,31 +678,6 @@ class SequenceCollection(SkbioObject):
 
         """
         return [len(seq) for seq in self]
-
-    def upper(self):
-        """Converts all sequences to uppercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where `Sequence.upper()`
-            has been called on each sequence.
-
-        See Also
-        --------
-        Sequence.upper
-        lower
-
-        """
-        return self.__class__([seq.upper() for seq in self])
-
-    def _validate_character_set(self):
-        """Return ``True`` if all sequences are valid, ``False`` otherwise
-        """
-        for seq in self:
-            if not seq.is_valid():
-                return False
-        return True
 
 
 class Alignment(SequenceCollection):
@@ -810,9 +738,8 @@ class Alignment(SequenceCollection):
 
     """
 
-    def __init__(self, seqs, validate=False, score=None,
-                 start_end_positions=None):
-        super(Alignment, self).__init__(seqs, validate)
+    def __init__(self, seqs, score=None, start_end_positions=None):
+        super(Alignment, self).__init__(seqs)
 
         if not self._validate_lengths():
             raise AlignmentError("All sequences need to be of equal length.")
@@ -1284,7 +1211,7 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_entropies
-        k_word_frequencies
+        kmer_frequencies
 
         Examples
         --------
@@ -1505,13 +1432,12 @@ class StockholmAlignment(Alignment):
     seq2          TCC--G-GGGA
     //
     """
-    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
-                 validate=False):
+    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None):
         self.gf = gf if gf else {}
         self.gs = gs if gs else {}
         self.gr = gr if gr else {}
         self.gc = gc if gc else {}
-        super(StockholmAlignment, self).__init__(seqs, validate)
+        super(StockholmAlignment, self).__init__(seqs)
 
     def __str__(self):
         """Parses StockholmAlignment into a string with stockholm format

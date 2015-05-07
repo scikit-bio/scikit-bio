@@ -131,6 +131,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         pass  # pragma: no cover
 
+    @property
+    def _motifs(self):
+            return _motifs
+
     @overrides(Sequence)
     def __init__(self, sequence, id="", description="", quality=None,
                  validate=True, case_insensitive=False):
@@ -171,10 +175,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         [str(b.tostring().decode("ascii")) for b in bad] if
                         len(bad) > 1 else bad[0],
                         list(self.alphabet)))
-
-    @overrides(Sequence)
-    def _constructor(self, **kwargs):
-        return self.__class__(validate=False, case_insensitive=False, **kwargs)
 
     def gaps(self):
         """Return vector indicating positions containing gaps
@@ -450,9 +450,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         return self._motifs[motif_type](self, min_length, exclude)
 
-    @property
-    def _motifs(self):
-        return _motifs
+    @overrides(Sequence)
+    def _constructor(self, **kwargs):
+        return self.__class__(validate=False, case_insensitive=False, **kwargs)
+
 
 _motifs = MiniRegistry()
 

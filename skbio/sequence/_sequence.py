@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
 from future.standard_library import hooks
-from six import string_types
+from six import string_types, text_type
 
 import re
 import collections
@@ -91,6 +91,98 @@ class Sequence(collections.Sequence, SkbioObject):
     default_write_format = 'fasta'
     __hash__ = None  # TODO revisit hashability when all properties are present
 
+    @property
+    def sequence(self):
+        """Array containing underlying biological sequence characters.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('AACGA', id='seq1', description='some seq')
+        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
+        array(['A', 'A', 'C', 'G', 'A'],
+              dtype='|S1')
+
+        .. shownumpydoc
+
+        """
+        return self._bytes.view('|S1')
+
+    @property
+    def id(self):
+        """ID of the biological sequence.
+
+        A string representing the identifier (ID) of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.id
+        'seq1'
+
+        .. shownumpydoc
+
+        """
+        return self._id
+
+    @property
+    def description(self):
+        """Description of the biological sequence.
+
+        A string representing the description of the biological sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
+        >>> s.description
+        'some seq'
+
+        .. shownumpydoc
+
+        """
+        return self._description
+
+    @property
+    def quality(self):
+        """Quality scores of the characters in the biological sequence.
+
+        A 1-D ``numpy.ndarray`` of nonnegative integers representing Phred
+        quality scores for each character in the biological sequence, or
+        ``None`` if quality scores are not present.
+
+        Notes
+        -----
+        This property is not writeable. A copy of the array is *not* returned.
+        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
+        ``False``).
+
+        Examples
+        --------
+        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        >>> s.quality
+        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
+
+        .. shownumpydoc
+
+        """
+        return self._quality
+
+    @property
+    def _string(self):
+        return self._bytes.tostring()
+
     def __init__(self, sequence, id="", description="", quality=None):
         """4 types to rule them all: char vector, byte vector, Sequence, or
         string_types"""
@@ -108,20 +200,6 @@ class Sequence(collections.Sequence, SkbioObject):
         self._set_description(description)
         self._set_sequence(sequence)
         self._set_quality(quality)
-
-    @contextmanager
-    def _byte_ownership(self):
-        if not self._owns_bytes:
-            self._bytes = self._bytes.copy()
-            self._owns_bytes = True
-
-        self._bytes.flags.writeable = True
-        yield
-        self._bytes.flags.writeable = False
-
-    @property
-    def _string(self):
-        return self._bytes.tostring()
 
     def _set_id(self, id_):
         if isinstance(id_, str):
@@ -162,12 +240,21 @@ class Sequence(collections.Sequence, SkbioObject):
                 self._owns_bytes = False
             sequence = potential_copy
         else:
-            # TODO: You know what
-            sequence_ = np.fromstring(sequence, dtype=np.uint8)
-            if hasattr(sequence, '__len__') and \
-                    len(sequence_) != len(sequence):
-                raise ValueError("")
-            sequence = sequence_
+            # Python 3 will not raise a UnicodeEncodeError so we force it by
+            # encoding it as ascii
+            if isinstance(sequence, text_type):
+                sequence = sequence.encode("ascii")
+            s = np.fromstring(sequence, dtype=np.uint8)
+            # There are two possibilities (to our knowledge) at this point:
+            # Either the sequence we were given was something string-like,
+            # (else it would not have made it past fromstring), or it was a
+            # numpy scalar, and so our length must be 1.
+            if isinstance(sequence, np.generic) and len(s) != 1:
+                raise TypeError("Can cannot create a sequence with %r" %
+                                type(sequence).__name__)
+
+            sequence = s
+
             self._owns_bytes = True
 
         sequence.flags.writeable = False
@@ -297,6 +384,52 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.equals(other)
 
+    def __ne__(self, other):
+        """The inequality operator.
+
+        By default, biological sequences are not equal if their sequence,
+        id, description, or quality scores differ or they are not the same
+        type.
+
+        Parameters
+        ----------
+        other : `Sequence`
+            The sequence to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether `self` and `other` are not equal.
+
+        See Also
+        --------
+        __eq__
+        equals
+
+        Notes
+        -----
+        See ``Sequence.equals`` for more fine-grained control of
+        equality testing.
+
+        Examples
+        --------
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUCGUGAAGGA')
+        >>> t = Sequence('GGUCGUGAAGGA')
+        >>> s != t
+        False
+        >>> u = Sequence('GGUCGUGACCGA')
+        >>> u != t
+        True
+        >>> v = Sequence('GGUCGUGACCGA', id='v')
+        >>> u != v
+        True
+
+        .. shownumpydoc
+
+        """
+        return not (self == other)
+
     def __getitem__(self, indexable):
         """The indexing operator.
 
@@ -399,6 +532,26 @@ class Sequence(collections.Sequence, SkbioObject):
 
             yield array[i]
 
+    def __len__(self):
+        """The len operator.
+
+        Returns
+        -------
+        int
+            The length of the `Sequence`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('GGUC')
+        >>> len(s)
+        4
+
+        .. shownumpydoc
+
+        """
+        return self._bytes.size
+
     def __iter__(self):
         """The iter operator.
 
@@ -428,71 +581,48 @@ class Sequence(collections.Sequence, SkbioObject):
         for c, q in zip_longest(self.sequence, qual, fillvalue=None):
             yield self._to(sequence=c, quality=q)
 
-    def __len__(self):
-        """The len operator.
+    def __reversed__(self):
+        """The reversed operator.
 
         Returns
         -------
-        int
-            The length of the `Sequence`.
+        iterator
+            Reverse position iterator for the `Sequence`.
 
         Examples
         --------
         >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
-        >>> len(s)
-        4
+        >>> for c in reversed(s): print(c)
+        C
+        U
+        G
+        G
 
         .. shownumpydoc
 
         """
-        return self._bytes.size
+        return iter(self[::-1])
 
-    def __ne__(self, other):
-        """The inequality operator.
-
-        By default, biological sequences are not equal if their sequence,
-        id, description, or quality scores differ or they are not the same
-        type.
-
-        Parameters
-        ----------
-        other : `Sequence`
-            The sequence to test for inequality against.
+    def __str__(self):
+        """ The str method.
 
         Returns
         -------
-        bool
-            Indicates whether `self` and `other` are not equal.
-
-        See Also
-        --------
-        __eq__
-        equals
-
-        Notes
-        -----
-        See ``Sequence.equals`` for more fine-grained control of
-        equality testing.
+        str
+            Sequence as a str. This will contain the sequence only, no metadata
+            (e.g., `id`, `desctiption`, or `quality`) will be included.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> t = Sequence('GGUCGUGAAGGA')
-        >>> s != t
-        False
-        >>> u = Sequence('GGUCGUGACCGA')
-        >>> u != t
-        True
-        >>> v = Sequence('GGUCGUGACCGA', id='v')
-        >>> u != v
-        True
+        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> str(s)
+        'GGUCGUAAAGGA'
 
         .. shownumpydoc
 
         """
-        return not (self == other)
+        return str(self._string.decode("ascii"))
 
     def __repr__(self):
         """The repr method.
@@ -557,240 +687,6 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(l) > 13:
             return "[%s, ..., %s]" % (repr(l[:6])[1:-1], repr(l[-6:])[1:-1])
         return "%r" % l
-
-    def __reversed__(self):
-        """The reversed operator.
-
-        Returns
-        -------
-        iterator
-            Reverse position iterator for the `Sequence`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC')
-        >>> for c in reversed(s): print(c)
-        C
-        U
-        G
-        G
-
-        .. shownumpydoc
-
-        """
-        return iter(self[::-1])
-
-    def __str__(self):
-        """ The str method.
-
-        Returns
-        -------
-        str
-            Sequence as a str. This will contain the sequence only, no metadata
-            (e.g., `id`, `desctiption`, or `quality`) will be included.
-
-        Examples
-        --------
-        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
-        >>> str(s)
-        'GGUCGUAAAGGA'
-
-        .. shownumpydoc
-
-        """
-        return str(self._string.decode("ascii"))
-
-    @property
-    def sequence(self):
-        """Array containing underlying biological sequence characters.
-
-        Notes
-        -----
-        This property is not writeable.
-
-        Examples
-        --------
-        >>> s = Sequence('AACGA', id='seq1', description='some seq')
-        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
-        array(['A', 'A', 'C', 'G', 'A'],
-              dtype='|S1')
-
-        .. shownumpydoc
-
-        """
-        return self._bytes.view('|S1')
-
-    @property
-    def id(self):
-        """ID of the biological sequence.
-
-        A string representing the identifier (ID) of the biological sequence.
-
-        Notes
-        -----
-        This property is not writeable.
-
-        Examples
-        --------
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.id
-        'seq1'
-
-        .. shownumpydoc
-
-        """
-        return self._id
-
-    @property
-    def description(self):
-        """Description of the biological sequence.
-
-        A string representing the description of the biological sequence.
-
-        Notes
-        -----
-        This property is not writeable.
-
-        Examples
-        --------
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.description
-        'some seq'
-
-        .. shownumpydoc
-
-        """
-        return self._description
-
-    @property
-    def quality(self):
-        """Quality scores of the characters in the biological sequence.
-
-        A 1-D ``numpy.ndarray`` of nonnegative integers representing Phred
-        quality scores for each character in the biological sequence, or
-        ``None`` if quality scores are not present.
-
-        Notes
-        -----
-        This property is not writeable. A copy of the array is *not* returned.
-        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
-        ``False``).
-
-        Examples
-        --------
-        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
-        >>> s.quality
-        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
-
-        .. shownumpydoc
-
-        """
-        return self._quality
-
-    def _has_quality(self):
-        """Return bool indicating presence of quality scores in the sequence.
-
-        Returns
-        -------
-        bool
-            ``True`` if the biological sequence has quality scores, ``False``
-            otherwise.
-
-        See Also
-        --------
-        quality
-
-        """
-        return self.quality is not None
-
-    def _to(self, **kwargs):
-        """Return a copy of the current biological sequence.
-
-        Returns a copy of the current biological sequence, optionally with
-        updated attributes specified as keyword arguments.
-
-        Parameters
-        ----------
-        kwargs : dict, optional
-            Keyword arguments passed to the ``Sequence`` (or
-            subclass) constructor. The returned copy will have its attributes
-            updated based on the values in `kwargs`. If an attribute is
-            missing, the copy will keep the same attribute as the current
-            biological sequence. Valid attribute names are `'sequence'`,
-            `'id'`, `'description'`, and `'quality'`. Default behavior is to
-            return a copy of the current biological sequence without changing
-            any attributes.
-
-        Returns
-        -------
-        Sequence
-            Copy of the current biological sequence, optionally with updated
-            attributes based on `kwargs`. Will be the same type as the current
-            biological sequence (`self`).
-
-        Notes
-        -----
-        This is a shallow copy, but since biological sequences are immutable,
-        it is conceptually the same as a deep copy.
-
-        This method is the preferred way of creating new instances from an
-        existing biological sequence, instead of calling
-        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
-        it's easy to forget to propagate attributes to the new instance).
-
-        Examples
-        --------
-        Create a biological sequence:
-
-        >>> from skbio import Sequence
-        >>> seq = Sequence('AACCGGTT', id='id1',
-        ...                          description='biological sequence',
-        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
-
-        Create a copy of ``seq``, keeping the same underlying sequence of
-        characters and quality scores, while updating ID and description:
-
-        >>> new_seq = seq._to(id='new-id', description='new description')
-
-        Note that the copied biological sequence's underlying sequence and
-        quality scores are the same as ``seq``:
-
-        >>> str(new_seq)
-        'AACCGGTT'
-        >>> new_seq.quality
-        array([ 4,  2, 22, 23,  1,  1,  1,  9])
-
-        The ID and description have been updated:
-
-        >>> new_seq.id
-        'new-id'
-        >>> new_seq.description
-        'new description'
-
-        The original biological sequence's ID and description have not been
-        changed:
-
-        >>> seq.id
-        'id1'
-        >>> seq.description
-        'biological sequence'
-
-        .. shownumpydoc
-
-        """
-        defaults = {
-            'sequence': self._bytes,
-            'id': self.id,
-            'description': self.description,
-            'quality': self.quality
-        }
-        defaults.update(kwargs)
-        return self._constructor(**defaults)
-
-    def _constructor(self, **kwargs):
-        return self.__class__(**kwargs)
 
     def equals(self, other, ignore=None):
         """Compare two biological sequences for equality.
@@ -929,6 +825,46 @@ class Sequence(collections.Sequence, SkbioObject):
         subsequence = self._munge_to_sequence(subsequence, "count")
 
         return self._string.count(subsequence._string, start, end)
+
+    def index(self, subsequence, begin=None, end=None):
+        """Return the position where subsequence first occurs
+
+        Parameters
+        ----------
+        subsequence : str, Sequence
+            The sequence to search for in `self.`
+        start : int, optional
+            The position at which to start searching (inclusive).
+        end : int, optional
+            The position at which to stop searching (exclusive).
+
+        Returns
+        -------
+        int
+            The position where `subsequence` first occurs in `self`.
+
+        Raises
+        ------
+        ValueError
+            If `subsequence` is not present in `self`.
+
+        Examples
+        --------
+        >>> from skbio.sequence import Sequence
+        >>> s = Sequence('ACACGACGTT-')
+        >>> s.index('ACG')
+        2
+
+        .. shownumpydoc
+
+        """
+        try:
+            return self._string.index(
+                self._munge_to_sequence(subsequence, "index")._string, begin,
+                end)
+        except ValueError:
+            raise ValueError(
+                "%r is not present in %r." % (subsequence, self))
 
     def distance(self, other, metric=None):
         """Returns the distance to other
@@ -1157,46 +1093,6 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.matches(other).sum())
 
-    def index(self, subsequence, begin=None, end=None):
-        """Return the position where subsequence first occurs
-
-        Parameters
-        ----------
-        subsequence : str, Sequence
-            The sequence to search for in `self.`
-        start : int, optional
-            The position at which to start searching (inclusive).
-        end : int, optional
-            The position at which to stop searching (exclusive).
-
-        Returns
-        -------
-        int
-            The position where `subsequence` first occurs in `self`.
-
-        Raises
-        ------
-        ValueError
-            If `subsequence` is not present in `self`.
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('ACACGACGTT-')
-        >>> s.index('ACG')
-        2
-
-        .. shownumpydoc
-
-        """
-        try:
-            return self._string.index(
-                self._munge_to_sequence(subsequence, "index")._string, begin,
-                end)
-        except ValueError:
-            raise ValueError(
-                "%r is not present in %r." % (subsequence, self))
-
     def kmers(self, k, overlap=True):
         """Generator of words of length k
 
@@ -1355,6 +1251,109 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
 
+    def _has_quality(self):
+        """Return bool indicating presence of quality scores in the sequence.
+
+        Returns
+        -------
+        bool
+            ``True`` if the biological sequence has quality scores, ``False``
+            otherwise.
+
+        See Also
+        --------
+        quality
+
+        """
+        return self.quality is not None
+
+    def _to(self, **kwargs):
+        """Return a copy of the current biological sequence.
+
+        Returns a copy of the current biological sequence, optionally with
+        updated attributes specified as keyword arguments.
+
+        Parameters
+        ----------
+        kwargs : dict, optional
+            Keyword arguments passed to the ``Sequence`` (or
+            subclass) constructor. The returned copy will have its attributes
+            updated based on the values in `kwargs`. If an attribute is
+            missing, the copy will keep the same attribute as the current
+            biological sequence. Valid attribute names are `'sequence'`,
+            `'id'`, `'description'`, and `'quality'`. Default behavior is to
+            return a copy of the current biological sequence without changing
+            any attributes.
+
+        Returns
+        -------
+        Sequence
+            Copy of the current biological sequence, optionally with updated
+            attributes based on `kwargs`. Will be the same type as the current
+            biological sequence (`self`).
+
+        Notes
+        -----
+        This is a shallow copy, but since biological sequences are immutable,
+        it is conceptually the same as a deep copy.
+
+        This method is the preferred way of creating new instances from an
+        existing biological sequence, instead of calling
+        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
+        it's easy to forget to propagate attributes to the new instance).
+
+        Examples
+        --------
+        Create a biological sequence:
+
+        >>> from skbio import Sequence
+        >>> seq = Sequence('AACCGGTT', id='id1',
+        ...                          description='biological sequence',
+        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
+
+        Create a copy of ``seq``, keeping the same underlying sequence of
+        characters and quality scores, while updating ID and description:
+
+        >>> new_seq = seq._to(id='new-id', description='new description')
+
+        Note that the copied biological sequence's underlying sequence and
+        quality scores are the same as ``seq``:
+
+        >>> str(new_seq)
+        'AACCGGTT'
+        >>> new_seq.quality
+        array([ 4,  2, 22, 23,  1,  1,  1,  9])
+
+        The ID and description have been updated:
+
+        >>> new_seq.id
+        'new-id'
+        >>> new_seq.description
+        'new description'
+
+        The original biological sequence's ID and description have not been
+        changed:
+
+        >>> seq.id
+        'id1'
+        >>> seq.description
+        'biological sequence'
+
+        .. shownumpydoc
+
+        """
+        defaults = {
+            'sequence': self._bytes,
+            'id': self.id,
+            'description': self.description,
+            'quality': self.quality
+        }
+        defaults.update(kwargs)
+        return self._constructor(**defaults)
+
+    def _constructor(self, **kwargs):
+        return self.__class__(**kwargs)
+
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):
             if type(other) != type(self):
@@ -1368,3 +1367,13 @@ class Sequence(collections.Sequence, SkbioObject):
         # to construct the most general type of Sequence object in order to
         # avoid validation errors.
         return Sequence(other)
+
+    @contextmanager
+    def _byte_ownership(self):
+        if not self._owns_bytes:
+            self._bytes = self._bytes.copy()
+            self._owns_bytes = True
+
+        self._bytes.flags.writeable = True
+        yield
+        self._bytes.flags.writeable = False

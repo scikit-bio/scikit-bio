@@ -30,17 +30,11 @@ class SequenceCollectionTests(TestCase):
         self.d1 = DNA('GATTACA', id="d1")
         self.d2 = DNA('TTG', id="d2")
         self.d3 = DNA('GTATACA', id="d3")
-        self.d1_lower = DNA('gattaca', id="d1")
-        self.d2_lower = DNA('ttg', id="d2")
-        self.d3_lower = DNA('gtataca', id="d3")
         self.r1 = RNA('GAUUACA', id="r1")
         self.r2 = RNA('UUG', id="r2")
         self.r3 = RNA('U-----UGCC--', id="r3")
 
-        self.i1 = DNA('GATXACA', id="i1")
-
         self.seqs1 = [self.d1, self.d2]
-        self.seqs1_lower = [self.d1_lower, self.d2_lower]
         self.seqs2 = [self.r1, self.r2, self.r3]
         self.seqs3 = self.seqs1 + self.seqs2
         self.seqs4 = [self.d1, self.d3]
@@ -51,13 +45,10 @@ class SequenceCollectionTests(TestCase):
         self.seqs3_t = self.seqs1_t + self.seqs2_t
 
         self.s1 = SequenceCollection(self.seqs1)
-        self.s1_lower = SequenceCollection(self.seqs1_lower)
         self.s2 = SequenceCollection(self.seqs2)
         self.s3 = SequenceCollection(self.seqs3)
         self.s4 = SequenceCollection(self.seqs4)
         self.empty = SequenceCollection([])
-
-        self.invalid_s1 = SequenceCollection([self.i1])
 
     def test_init(self):
         SequenceCollection(self.seqs1)
@@ -69,13 +60,6 @@ class SequenceCollectionTests(TestCase):
         # sequences with overlapping ids
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
-
-    def test_init_validate(self):
-        SequenceCollection(self.seqs1, validate=True)
-        SequenceCollection(self.seqs1, validate=True)
-        # can't validate self.seqs2 as a DNA
-        self.assertRaises(SequenceCollectionError, SequenceCollection,
-                          self.invalid_s1, validate=True)
 
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
@@ -166,7 +150,13 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(count, len(self.seqs1))
         self.assertRaises(StopIteration, lambda: next(s1_iter))
 
-    def test_k_word_frequencies(self):
+    def test_kmer_frequencies(self):
+        expected1 = Counter({'GAT': 1, 'TAC': 1})
+        expected2 = Counter({'TTG': 1})
+        self.assertEqual(
+            self.s1.kmer_frequencies(k=3, overlap=False, relative=False),
+            [expected1, expected2])
+
         expected1 = defaultdict(float)
         expected1['A'] = 3 / 7.
         expected1['C'] = 1 / 7.
@@ -175,7 +165,7 @@ class SequenceCollectionTests(TestCase):
         expected2 = defaultdict(float)
         expected2['G'] = 1 / 3.
         expected2['T'] = 2 / 3.
-        self.assertEqual(self.s1.k_word_frequencies(k=1),
+        self.assertEqual(self.s1.kmer_frequencies(k=1, relative=True),
                          [expected1, expected2])
 
         expected1 = defaultdict(float)
@@ -183,16 +173,17 @@ class SequenceCollectionTests(TestCase):
         expected1['TAC'] = 1 / 2.
         expected2 = defaultdict(float)
         expected2['TTG'] = 1 / 1.
-        self.assertEqual(self.s1.k_word_frequencies(k=3, overlapping=False),
-                         [expected1, expected2])
+        self.assertEqual(
+            self.s1.kmer_frequencies(k=3, overlap=False, relative=True),
+            [expected1, expected2])
 
-        self.assertEqual(self.empty.k_word_frequencies(k=1), [])
+        self.assertEqual(self.empty.kmer_frequencies(k=1, relative=True), [])
 
         # Test to ensure floating point precision bug isn't present. See the
-        # tests for Sequence.k_word_frequencies for more details.
+        # tests for Sequence.kmer_frequencies for more details.
         sc = SequenceCollection([RNA('C' * 10, id='s1'),
                                  RNA('G' * 10, id='s2')])
-        self.assertEqual(sc.k_word_frequencies(1),
+        self.assertEqual(sc.kmer_frequencies(1, relative=True),
                          [defaultdict(float, {'C': 1.0}),
                           defaultdict(float, {'G': 1.0})])
 
@@ -402,20 +393,9 @@ class SequenceCollectionTests(TestCase):
 
         self.assertTrue(self.empty.is_empty())
 
-    def test_is_valid(self):
-        self.assertTrue(self.s1.is_valid())
-        self.assertTrue(self.s2.is_valid())
-        self.assertTrue(self.s3.is_valid())
-        self.assertTrue(self.empty.is_valid())
-
-        self.assertFalse(self.invalid_s1.is_valid())
-
     def test_iteritems(self):
         self.assertEqual(list(self.s1.iteritems()),
                          [(s.id, s) for s in self.s1])
-
-    def test_lower(self):
-        self.assertEqual(self.s1.lower(), self.s1_lower)
 
     def test_sequence_count(self):
         self.assertEqual(self.s1.sequence_count(), 2)
@@ -428,9 +408,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s2.sequence_lengths(), [7, 3, 12])
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
         self.assertEqual(self.empty.sequence_lengths(), [])
-
-    def test_upper(self):
-        self.assertEqual(self.s1_lower.upper(), self.s1)
 
 
 class AlignmentTests(TestCase):
@@ -738,11 +715,11 @@ class AlignmentTests(TestCase):
         np.testing.assert_almost_equal(self.empty.position_entropies(base=2),
                                        [])
 
-    def test_k_word_frequencies(self):
+    def test_kmer_frequencies(self):
         expected = [defaultdict(float, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
                     defaultdict(float, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
                                         'U': 2 / 5})]
-        actual = self.a2.k_word_frequencies(k=1)
+        actual = self.a2.kmer_frequencies(k=1)
         for a, e in zip(actual, expected):
             self.assertEqual(sorted(a), sorted(e), 5)
             np.testing.assert_almost_equal(sorted(a.values()),
