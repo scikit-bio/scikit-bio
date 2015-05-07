@@ -34,8 +34,6 @@ class SequenceCollectionTests(TestCase):
         self.r2 = RNA('UUG', id="r2")
         self.r3 = RNA('U-----UGCC--', id="r3")
 
-        # self.i1 = DNA('GATXACA', id="i1")
-
         self.seqs1 = [self.d1, self.d2]
         self.seqs2 = [self.r1, self.r2, self.r3]
         self.seqs3 = self.seqs1 + self.seqs2
@@ -52,8 +50,6 @@ class SequenceCollectionTests(TestCase):
         self.s4 = SequenceCollection(self.seqs4)
         self.empty = SequenceCollection([])
 
-        # self.invalid_s1 = SequenceCollection([self.i1])
-
     def test_init(self):
         SequenceCollection(self.seqs1)
         SequenceCollection(self.seqs2)
@@ -64,13 +60,6 @@ class SequenceCollectionTests(TestCase):
         # sequences with overlapping ids
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
-
-    def test_init_validate(self):
-        SequenceCollection(self.seqs1, validate=True)
-        SequenceCollection(self.seqs1, validate=True)
-        # can't validate self.seqs2 as a DNA
-        self.assertRaises(SequenceCollectionError, SequenceCollection,
-                          self.invalid_s1, validate=True)
 
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
@@ -403,14 +392,6 @@ class SequenceCollectionTests(TestCase):
         self.assertFalse(self.s3.is_empty())
 
         self.assertTrue(self.empty.is_empty())
-
-    def test_is_valid(self):
-        self.assertTrue(self.s1.is_valid())
-        self.assertTrue(self.s2.is_valid())
-        self.assertTrue(self.s3.is_valid())
-        self.assertTrue(self.empty.is_valid())
-
-        self.assertFalse(self.invalid_s1.is_valid())
 
     def test_iteritems(self):
         self.assertEqual(list(self.s1.iteritems()),

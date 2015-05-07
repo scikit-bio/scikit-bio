@@ -62,7 +62,7 @@ class SequenceCollection(SkbioObject):
     """
     default_write_format = 'fasta'
 
-    def __init__(self, seqs, validate=False):
+    def __init__(self, seqs):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
@@ -73,14 +73,6 @@ class SequenceCollection(SkbioObject):
                     "id '%s' is present multiple times." % id)
             else:
                 self._id_to_index[seq.id] = i
-
-        # This is bad because we're making a second pass through the sequence
-        # collection to validate. We'll want to avoid this, but it's tricky
-        # because different subclasses will want to define their own is_valid
-        # methods.
-        if validate and not self.is_valid():
-            raise SequenceCollectionError(
-                "%s failed to validate." % self.__class__.__name__)
 
     def __contains__(self, id):
         r"""The in operator.
@@ -598,41 +590,6 @@ class SequenceCollection(SkbioObject):
         """
         return self.sequence_count() == 0
 
-    def is_valid(self):
-        """Return True if the SequenceCollection is valid
-
-        Returns
-        -------
-        bool
-            ``True`` if `self` is valid, and ``False`` otherwise.
-
-        Notes
-        -----
-        Validity is defined as having no sequences containing characters
-        outside of their valid character sets.
-
-        See Also
-        --------
-        skbio.alignment.Sequence.is_valid
-
-        Examples
-        --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        True
-        >>> sequences = [RNA('ACCGT', id="seq1"),
-        ...              RNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        False
-
-        """
-        return self._validate_character_set()
-
     def iteritems(self):
         """Generator of id, sequence tuples
 
@@ -722,14 +679,6 @@ class SequenceCollection(SkbioObject):
         """
         return [len(seq) for seq in self]
 
-    def _validate_character_set(self):
-        """Return ``True`` if all sequences are valid, ``False`` otherwise
-        """
-        for seq in self:
-            if not seq.is_valid():
-                return False
-        return True
-
 
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
@@ -789,9 +738,8 @@ class Alignment(SequenceCollection):
 
     """
 
-    def __init__(self, seqs, validate=False, score=None,
-                 start_end_positions=None):
-        super(Alignment, self).__init__(seqs, validate)
+    def __init__(self, seqs, score=None, start_end_positions=None):
+        super(Alignment, self).__init__(seqs)
 
         if not self._validate_lengths():
             raise AlignmentError("All sequences need to be of equal length.")
@@ -1484,13 +1432,12 @@ class StockholmAlignment(Alignment):
     seq2          TCC--G-GGGA
     //
     """
-    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
-                 validate=False):
+    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None):
         self.gf = gf if gf else {}
         self.gs = gs if gs else {}
         self.gr = gr if gr else {}
         self.gc = gc if gc else {}
-        super(StockholmAlignment, self).__init__(seqs, validate)
+        super(StockholmAlignment, self).__init__(seqs)
 
     def __str__(self):
         """Parses StockholmAlignment into a string with stockholm format
