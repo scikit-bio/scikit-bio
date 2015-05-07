@@ -11,6 +11,7 @@ from future.builtins import map, range, zip
 from six import StringIO
 
 from unittest import TestCase, main
+from functools import partial
 
 from skbio import (Sequence, DNA, RNA, Protein,
                    Protein, SequenceCollection, Alignment)
@@ -49,11 +50,9 @@ class SnifferTests(TestCase):
             'fasta_single_rna_seq_non_defaults',
             'fasta_description_newline_replacement_multi_char',
             'fasta_prot_seqs_odd_labels',
-            'fasta_single_nuc_seq_defaults',
             'fasta_single_seq',
             'fasta_id_whitespace_replacement_empty_str',
             'fasta_sequence_collection_different_type',
-            'fasta_single_nuc_seq_non_defaults',
             'fasta_id_whitespace_replacement_multi_char',
             'fasta_single_bio_seq_defaults',
             'fasta_single_prot_seq_defaults',
@@ -114,7 +113,6 @@ class SnifferTests(TestCase):
             'qual_sequence_collection_different_type',
             'qual_single_bio_seq_non_defaults',
             'qual_single_dna_seq_non_defaults',
-            'qual_single_nuc_seq_non_defaults',
             'qual_single_prot_seq_non_defaults',
             'qual_single_rna_seq_non_defaults',
             'qual_single_seq',
@@ -168,7 +166,6 @@ class ReaderTests(TestCase):
              Sequence('A', id='_____seq__2_', quality=[42]),
              Sequence(
                 'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0]),
-             Sequence('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777]),
              Sequence(
                 'ACGTTGCAccGG',
                 quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0]),
@@ -208,10 +205,10 @@ class ReaderTests(TestCase):
         # exactly, only that they need to match exactly after parsing (e.g.,
         # after stripping leading/trailing whitespace from descriptions)
         self.odd_labels_different_type = (
-            [Protein('DEFQfp', quality=[0, 0, 1, 5, 44, 0]),
+            [Protein('DEFQfp', quality=[0, 0, 1, 5, 44, 0], validate=False),
              Protein(
                  'SKBI', description='skbio', quality=[1, 2, 33, 123456789])],
-            {'constructor': Protein},
+            {'constructor': partial(Protein, validate=False)},
             list(map(get_data_path, ['fasta_prot_seqs_odd_labels'])),
             list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
         )
@@ -225,7 +222,7 @@ class ReaderTests(TestCase):
                  quality=[10, 9, 10]),
              RNA('AUG', id='rnaseq-2', description='rnaseq desc 2',
                  quality=[9, 99, 999])],
-            {'constructor': RNA},
+            {'constructor': partial(RNA, validate=False)},
             list(map(get_data_path,
                      ['fasta_sequence_collection_different_type'])),
             list(map(get_data_path,
@@ -346,8 +343,9 @@ class ReaderTests(TestCase):
             # sequence and quality score length mismatch between fasta and qual
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
-             SequenceError,
-             'Number of Phred quality scores \(3\).*\(4\)'),
+             ValueError,
+             'Number of quality scores \(3\) must match the number of characters'
+             ' in the sequence \(4\)\.'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
@@ -364,8 +362,8 @@ class ReaderTests(TestCase):
             # invalid qual scores (negative integer)
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_qual_scores_negative')},
-             SequenceError,
-             'Phred quality scores.*greater than or equal to zero'),
+             ValueError,
+             'Quality scores must be greater than or equal to zero\.'),
 
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
@@ -395,7 +393,7 @@ class ReaderTests(TestCase):
         for exp, kwargs, fasta_fps, qual_fps in test_cases:
             for fasta_fp in fasta_fps:
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
-
+                print(fasta_fp)
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
                     self.assertTrue(o.equals(e, ignore=['quality']))
@@ -420,11 +418,11 @@ class ReaderTests(TestCase):
     def test_fasta_to_any_sequence(self):
         for constructor, reader_fn in ((Sequence,
                                         _fasta_to_biological_sequence),
-                                       (DNA,
+                                       (partial(DNA, validate=False),
                                         _fasta_to_dna_sequence),
-                                       (RNA,
+                                       (partial(RNA, validate=False),
                                         _fasta_to_rna_sequence),
-                                       (Protein,
+                                       (partial(Protein, validate=False),
                                         _fasta_to_protein_sequence)):
 
             # empty file
@@ -480,7 +478,8 @@ class ReaderTests(TestCase):
                     self.assertTrue(obs.equals(exp))
 
                 # get middle
-                exp = constructor('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
+                exp = constructor('ACGTTGCAccGG',
+                    quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0])
 
                 obs = reader_fn(fasta_fp, seq_num=4)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
@@ -495,11 +494,11 @@ class ReaderTests(TestCase):
                     description='detailed description \t\twith  new  lines',
                     quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
 
-                obs = reader_fn(fasta_fp, seq_num=7)
+                obs = reader_fn(fasta_fp, seq_num=6)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
 
                 for qual_fp in qual_fps:
-                    obs = reader_fn(fasta_fp, seq_num=7, qual=qual_fp)
+                    obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
                     self.assertTrue(obs.equals(exp))
 
                 # seq_num too large
@@ -536,7 +535,7 @@ class ReaderTests(TestCase):
                     # SequenceCollection has an equals method (part of #656).
                     # We need this method to include IDs and description in the
                     # comparison (not part of SequenceCollection.__eq__).
-                    self.assertEqual(obs, exp)
+                    self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
                         self.assertTrue(o.equals(e, ignore=['quality']))
 
@@ -564,12 +563,13 @@ class WriterTests(TestCase):
             'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0])
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
-            quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0])
+            quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0],
+            validate=False)
         self.rna_seq = RNA('ACGUU', quality=[10, 9, 8, 7, 6])
         self.prot_seq = Protein(
             'pQqqqPPQQQ', id='proteinseq',
             description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n',
-            quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
+            quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43], validate=False)
 
         seqs = [
             RNA('UUUU', id='s\te\tq\t1', description='desc\n1',
@@ -578,7 +578,8 @@ class WriterTests(TestCase):
                 'CATC', id='s\te\tq\t2', description='desc\n2',
                 quality=[1, 11, 111, 11112]),
             Protein('sits', id='s\te\tq\t3', description='desc\n3',
-                    quality=[12345, 678909, 999999, 4242424242])
+                    quality=[12345, 678909, 999999, 4242424242],
+                    validate=False)
         ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
@@ -610,8 +611,7 @@ class WriterTests(TestCase):
         # sequence data vs. quality scores
         def multi_seq_gen():
             for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
-                        self.nuc_seq, self.dna_seq, self.rna_seq,
-                        self.prot_seq):
+                        self.dna_seq, self.rna_seq, self.prot_seq):
                 yield seq
 
         # can be serialized if no qual file is provided, else it should raise
@@ -703,7 +703,6 @@ class WriterTests(TestCase):
 
             with open(fp, 'U') as fh:
                 exp = fh.read()
-
             self.assertEqual(obs, exp)
 
     def test_generator_to_fasta_mixed_qual_scores(self):

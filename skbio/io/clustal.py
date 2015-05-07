@@ -69,7 +69,7 @@ We can use the following code to read a clustal file:
 ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
 >>> for dna in read(clustal_f, format="clustal", into=Alignment):
 ...     print(dna.id)
-...     print(dna.sequence)
+...     print(str(dna))
 abc
 GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
 def
@@ -251,7 +251,7 @@ def _alignment_to_clustal(obj, fh):
 
     """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.id, s.sequence) for s in obj])
+    names, seqs = zip(*[(s.id, str(s)) for s in obj])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n\n')

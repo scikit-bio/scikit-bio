@@ -56,10 +56,6 @@ class SequenceCollectionTests(TestCase):
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
 
-        # unsupported type
-        with self.assertRaises(TypeError):
-            SequenceCollection([DNA('ACGT'), Sequence('abc')])
-
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
         self.assertTrue('r2' in self.s2)
