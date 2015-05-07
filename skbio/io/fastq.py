@@ -211,8 +211,9 @@ as a ``DNA``:
 
 >>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> DNA.read(fh, variant='sanger', seq_num=2)
-<DNA: TATGTATATA... (length: 35)>
+>>> DNA.read(fh, variant='sanger', seq_num=2) # doctest: +NORMALIZE_WHITESPACE
+DNA('TATGTA ... TACATA', length=35, id='seq2', description='description 2',
+    quality=[60, 42, 57, 58, 47, 56, ..., 51, 6, 6, 33, 33, 33])
 
 To write our ``SequenceCollection`` to a FASTQ file with quality scores encoded
 using the ``illumina1.3`` variant:
@@ -261,6 +262,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
 
 import re
+from functools import partial
 
 import numpy as np
 
@@ -337,7 +339,7 @@ def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
 def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=DNA),
+                            constructor=partial(DNA, validate=False)),
         seq_num)
 
 
@@ -345,7 +347,7 @@ def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
 def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=RNA),
+                            constructor=partial(RNA, validate=False)),
         seq_num)
 
 
@@ -353,7 +355,7 @@ def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
 def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=Protein),
+                            constructor=partial(Protein, validate=False)),
         seq_num)
 
 

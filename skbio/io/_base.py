@@ -178,12 +178,12 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         else:
             header = id_
 
-        if require_qual and not seq.has_quality():
+        if require_qual and not seq.quality is not None:
             raise ValueError(
                 "Cannot write %s sequence because it does not have quality "
                 "scores associated with it." % cardinal_to_ordinal(idx + 1))
 
-        yield header, seq.sequence, seq.quality
+        yield header, str(seq), seq.quality
 
 
 def _line_generator(fh, skip_blanks=False):
