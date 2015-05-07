@@ -158,9 +158,9 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s1[0]
-        <DNASequence: ACCGT (length: 5)>
+        DNA('ACCGT', length=5, id='seq1')
         >>> s1["seq1"]
-        <DNASequence: ACCGT (length: 5)>
+        DNA('ACCGT', length=5, id='seq1')
 
         .. shownumpydoc
 
@@ -654,20 +654,19 @@ class SequenceCollection(SkbioObject):
         Examples
         --------
         >>> from skbio import SequenceCollection, DNA
-        >>> sequences = [DNA('A', id="seq1"),
-        ...              DNA('AT', id="seq2"),
-        ...              DNA('TTTT', id="seq3")]
+        >>> sequences = [DNA('AT', id="seq1"),
+        ...              DNA('TTTT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
-        defaultdict(<type 'float'>, {'A': 1.0})
-        defaultdict(<type 'float'>, {'A': 0.5, 'T': 0.5})
-        defaultdict(<type 'float'>, {'T': 1.0})
+        Counter({'A': 1})
+        Counter({'A': 1, 'T': 1})
+        Counter({'T': 4})
         >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
-        defaultdict(<type 'float'>, {})
-        defaultdict(<type 'float'>, {'AT': 1.0})
-        defaultdict(<type 'float'>, {'TT': 1.0})
+        Counter({})
+        Counter({'AT': 1.0})
+        Counter({'TT': 1.0})
 
         """
         return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
@@ -1008,13 +1007,13 @@ class Alignment(SequenceCollection):
         >>> a1 = Alignment(sequences)
         >>> for position in a1.iter_positions():
         ...     print(position)
-        [<DNASequence: A (length: 1)>, <DNASequence: A (length: 1)>]
-        [<DNASequence: C (length: 1)>, <DNASequence: A (length: 1)>]
-        [<DNASequence: C (length: 1)>, <DNASequence: C (length: 1)>]
-        [<DNASequence: G (length: 1)>, <DNASequence: C (length: 1)>]
-        [<DNASequence: T (length: 1)>, <DNASequence: G (length: 1)>]
-        [<DNASequence: - (length: 1)>, <DNASequence: G (length: 1)>]
-        [<DNASequence: - (length: 1)>, <DNASequence: T (length: 1)>]
+        [DNA('A', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
+        [DNA('C', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
+        [DNA('C', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
+        [DNA('G', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
+        [DNA('T', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
+        [DNA('-', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
+        [DNA('-', length=1, id='seq1'), DNA('T', length=1, id='seq2')]
 
         >>> for position in a1.iter_positions(constructor=str):
         ...     print(position)
@@ -1063,7 +1062,7 @@ class Alignment(SequenceCollection):
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a1.majority_consensus()
-        <DNASequence: AT-C (length: 4)>
+        DNA('AT-C', length=4)
 
         """
         if self.is_empty():
