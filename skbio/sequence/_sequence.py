@@ -1125,7 +1125,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Raises
         ------
         ValueError
-            If ``k < 1`` or `k` is longer than the sequence.
+            If ``k < 1``.
 
         Examples
         --------
@@ -1141,9 +1141,6 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         if k < 1:
             raise ValueError("k must be greater than 0.")
-        if k > len(self):
-            raise ValueError("k cannot be greater than the length of"
-                             " the sequence (%d)." % len(self))
 
         step = 1 if overlap else k
 

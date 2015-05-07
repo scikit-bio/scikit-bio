@@ -1236,6 +1236,10 @@ class TestSequence(TestCase):
         self._compare_kmers_results(
             seq.kmers(7, overlap=False), expected)
 
+        expected = []
+        self._compare_kmers_results(
+            seq.kmers(8, overlap=False), expected)
+
         self.assertIs(type(seq.kmers(1)), GeneratorType)
 
     def test_kmers_with_overlap(self):
@@ -1279,6 +1283,12 @@ class TestSequence(TestCase):
         self._compare_kmers_results(
             seq.kmers(7, overlap=True), expected)
 
+        expected = []
+        self._compare_kmers_results(
+            seq.kmers(8, overlap=True), expected)
+
+        self.assertIs(type(seq.kmers(1)), GeneratorType)
+
     def test_kmers_invalid_k(self):
         seq = Sequence('GATTACA', quality=range(7))
 
@@ -1287,9 +1297,6 @@ class TestSequence(TestCase):
 
         with self.assertRaises(ValueError):
             list(seq.kmers(-42))
-
-        with self.assertRaises(ValueError):
-            list(seq.kmers(8))
 
     def test_kmers_different_sequences(self):
         seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
@@ -1311,12 +1318,16 @@ class TestSequence(TestCase):
         self.assertEqual(seq.kmer_frequencies(1, overlap=True), expected)
         expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
         self.assertEqual(seq.kmer_frequencies(3, overlap=True), expected)
+        expected = Counter([])
+        self.assertEqual(seq.kmer_frequencies(8, overlap=True), expected)
 
         # overlap = False
         expected = Counter(['GAT', 'TAC'])
         self.assertEqual(seq.kmer_frequencies(3, overlap=False), expected)
         expected = Counter(['GATTACA'])
         self.assertEqual(seq.kmer_frequencies(7, overlap=False), expected)
+        expected = Counter([])
+        self.assertEqual(seq.kmer_frequencies(8, overlap=False), expected)
 
     def test_kmer_frequencies_relative(self):
         seq = Sequence('GATTACA', quality=range(7))
@@ -1336,6 +1347,9 @@ class TestSequence(TestCase):
         expected['ACA'] = 1/5.
         self.assertEqual(seq.kmer_frequencies(3, overlap=True, relative=True),
                          expected)
+        expected = defaultdict(float)
+        self.assertEqual(seq.kmer_frequencies(8, overlap=True, relative=True),
+                         expected)
 
         # overlap = False
         expected = defaultdict(float)
@@ -1346,6 +1360,9 @@ class TestSequence(TestCase):
         expected = defaultdict(float)
         expected['GATTACA'] = 1.0
         self.assertEqual(seq.kmer_frequencies(7, overlap=False, relative=True),
+                         expected)
+        expected = defaultdict(float)
+        self.assertEqual(seq.kmer_frequencies(8, overlap=False, relative=True),
                          expected)
 
     def test_kmer_frequencies_floating_point_precision(self):
