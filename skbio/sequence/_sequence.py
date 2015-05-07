@@ -32,7 +32,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '|S1')
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
         Characters representing the biological sequence itself.
     id : str, optional
         The sequence identifier (e.g., an accession number).

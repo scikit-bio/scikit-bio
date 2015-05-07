@@ -9,9 +9,9 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta
 
-from skbio.util import classproperty
+from skbio.util import classproperty, abstractproperty
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
@@ -57,7 +57,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         .. shownumpydoc
 
         """
-        pass  # pragma: no cover
+        return set()  # pragma: no cover
 
     def complement(self, reverse=False):
         """Return the complement of the `NucleotideSequence`

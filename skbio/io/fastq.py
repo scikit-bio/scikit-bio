@@ -36,19 +36,19 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects  |
+|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.DNA`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.RNA`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.Protein`                          |
+|Yes   |Yes   |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
