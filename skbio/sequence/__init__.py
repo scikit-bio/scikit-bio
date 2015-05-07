@@ -1,16 +1,20 @@
 r"""
-Biological sequences (:mod:`skbio.sequence`)
-============================================
+Sequences (:mod:`skbio.sequence`)
+=================================
 
 .. currentmodule:: skbio.sequence
 
-This module provides functionality for working with biological sequences,
-including generic sequences, nucelotide sequences, DNA sequences, and RNA
-sequences. Class methods and attributes are also available to obtain valid
-character sets, complement maps for different sequence types, and for
-obtaining degenerate character definitions. Additionaly this module defines the
-``GeneticCode`` class, which represents an immutable object that translates RNA
-or DNA strings to amino acid sequences.
+This module provides classes for storing and working with biological sequences,
+including generic sequences which have no restrictions on which characters
+can be included, and sequences based on IUPAC-defined sets of allowed
+allowed characters (with degenerate characters), including ``DNA``, ``RNA`` and
+``Protein`` sequences. Common opertations are defined as class methods, for
+example computing the reverse complement of a DNA sequence, or searching for
+zinc-finger motifs in Protein sequences. Class attributes are available to
+obtain valid character sets, complement maps for different sequence types, and
+for obtaining degenerate character definitions. Additionaly this module defines
+the ``GeneticCode`` class, which represents an immutable object that translates
+DNA or RNA sequences into Protein sequences.
 
 Classes
 -------
@@ -49,34 +53,81 @@ Examples
 --------
 >>> from skbio.sequence import DNA, RNA
 
-New sequences are created with optional id and description fields.
+New sequences are created with optional id, description, and quality fields.
 
->>> d1 = DNA('ACC--G-GGTA..')
->>> d1 = DNA('ACC--G-GGTA..',id="seq1")
->>> d1 = DNA('ACC--G-GGTA..',id="seq1",description="GFP")
+>>> d = DNA('ACCGGGTA')
+>>> d = DNA('ACCGGGTA', id="my-sequence", description="GFP",
+...          quality=[22, 25, 22, 18, 23, 25, 25, 25])
+>>> d = DNA('ACCGGTA', id="my-sequence")
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
 
+>>> d1 = DNA('.ACC--GGG-TA...', id='my-sequence')
 >>> d2 = d1.degap()
->>> d1
-DNA('ACC--G-GGTA..', length=13, id='seq1', description='GFP')
 >>> d2
-DNA('ACCGGGTA', length=8, id='seq1', description='GFP')
+DNA('ACCGGGTA', length=8, id='my-sequence')
 >>> d3 = d2.reverse_complement()
 >>> d3
-DNA('TACCCGGT', length=8, id='seq1', description='GFP')
+DNA('TACCCGGT', length=8, id='my-sequence')
 
 It's also straight-forward to compute distances between sequences (optionally
-using user-defined distance metrics, default is Hamming distance) for use in
+using user-defined distance metrics, the default is Hamming distance which
+requires that the sequences being compared are the same length) for use in
 sequence clustering, phylogenetic reconstruction, etc.
 
->>> d4 = DNA('GACCCGCT')
->>> d5 = DNA('GACCCCCT')
->>> d3.distance(d4)
-0.25
->>> d3.distance(d5)
-0.375
+>>> r1 = RNA('GACCCGCUUU')
+>>> r2 = RNA('GCCCCCCUUU')
+>>> r1.distance(r2)
+0.2
+
+Similarly, you can calculate the percent (dis)similarity between a pair of
+aligned sequences.
+
+>>> r3 = RNA('ACCGUUAGUC')
+>>> r4 = RNA('ACGGGU--UC')
+>>> r3.match_frequency(r4, relative=True)
+0.6
+>>> r3.mismatch_frequency(r4, relative=True)
+0.4
+
+Sequences can be searched for known motif types. This returns the slices that
+describe the matches.
+
+>>> r5 = RNA('AGG-GGACUGAA')
+>>> for e in r5.find_motifs('purine-run', min_length=2): print(e)
+slice(0, 3, None)
+slice(4, 7, None)
+slice(9, 12, None)
+
+Those slices can be used to slice out the relevant subsequences.
+
+>>> for e in r5.find_motifs('purine-run', min_length=2): print(r5[e])
+AGG
+GGA
+GAA
+
+And gaps or other features can be ignored while searching, as these may disrupt
+otherwise meaningful motifs.
+
+>>> for e in r5.find_motifs('purine-run', min_length=2, exclude=r5.gaps()):
+...     print(r5[e])
+AGG-GGA
+GAA
+
+And removing gaps from the resulting motif matches is easily achieved, as the
+sliced matches themselves are sequences of the same type as the input.
+
+>>> for e in r5.find_motifs('purine-run', min_length=2, exclude=r5.gaps()):
+...     print(repr(r5[e].degap()))
+RNA('AGGGGA', length=6)
+RNA('GAA', length=3)
+
+Sequences can similarly be searched for arbitrary patterns using regular
+expressions.
+
+>>> for e in r5.slices_from_regex('(G+AC[UT])'): print(e)
+slice(4, 9, None)
 
 Class-level methods contain information about the molecule types.
 
