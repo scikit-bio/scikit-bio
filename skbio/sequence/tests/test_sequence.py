@@ -35,6 +35,19 @@ class TestSequence(TestCase):
             str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
 
+        def empty_generator():
+            raise StopIteration()
+            yield
+
+        self.getitem_empty_indices = [
+            [],
+            (),
+            {},
+            empty_generator(),
+            # ndarray of implicit float dtype
+            np.array([]),
+            np.array([], dtype=int)]
+
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
 
@@ -580,6 +593,58 @@ class TestSequence(TestCase):
 
         eseq = Sequence("0123fed9", id='id10', description='dsc10')
         self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+
+    def test_getitem_with_empty_indices_empty_seq_has_qual(self):
+        s = ""
+        length = len(s)
+        seq = Sequence(s, id='id9', description="dsc9",
+                       quality=np.arange(length))
+
+        eseq = Sequence('', id='id9', description='dsc9', quality=[])
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
+
+    def test_getitem_with_empty_indices_empty_seq_no_qual(self):
+        s = ""
+        seq = Sequence(s, id='id10', description="dsc10")
+
+        eseq = Sequence('', id='id10', description='dsc10')
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
+
+    def test_getitem_with_empty_indices_non_empty_seq_has_qual(self):
+        s = "0123456789abcdef"
+        length = len(s)
+        seq = Sequence(s, id='id9', description="dsc9",
+                       quality=np.arange(length))
+
+        eseq = Sequence('', id='id9', description='dsc9', quality=[])
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
+
+    def test_getitem_with_empty_indices_non_empty_seq_no_qual(self):
+        s = "0123456789abcdef"
+        seq = Sequence(s, id='id10', description="dsc10")
+
+        eseq = Sequence('', id='id10', description='dsc10')
+
+        tested = 0
+        for index in self.getitem_empty_indices:
+            tested += 1
+            self.assertEqual(seq[index], eseq)
+        self.assertEqual(tested, 6)
 
     def test_getitem_with_boolean_vector_has_qual(self):
         s = "0123456789abcdef"

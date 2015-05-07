@@ -491,24 +491,26 @@ class Sequence(collections.Sequence, SkbioObject):
              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
-            if indexable.size == 0:
-                # numpy will create an array of float dtype, which we can't use
-                # as an index.
-                # TODO add tests
-                indexable = indexable.astype(int)
 
             if indexable.dtype == object:
                 indexable = list(indexable_)  # TODO: Don't blow out memory
-                seq = np.concatenate(list(self._slices_from_iter(self._bytes,
-                                                                 indexable)))
-                if self._has_quality():
-                    qual = np.concatenate(list(self._slices_from_iter(
-                        self.quality, indexable)))
 
-                return self._to(sequence=seq, quality=qual)
+                if len(indexable) == 0:
+                    # indexing with an empty list, so convert to ndarray and
+                    # fall through to ndarray slicing below
+                    indexable = np.asarray(indexable)
+                else:
+                    seq = np.concatenate(list(self._slices_from_iter(self._bytes,
+                                                                     indexable)))
+                    if self._has_quality():
+                        qual = np.concatenate(list(self._slices_from_iter(
+                            self.quality, indexable)))
+
+                    return self._to(sequence=seq, quality=qual)
         elif isinstance(indexable, string_types) or \
                 isinstance(indexable, bool):
-            raise IndexError("Cannot index with that type: %r" % indexable)
+            raise IndexError("Cannot index with %s type: %r" %
+                             (type(indexable).__name__, indexable))
 
         if (isinstance(indexable, np.ndarray) and
             indexable.dtype == bool and
@@ -516,6 +518,11 @@ class Sequence(collections.Sequence, SkbioObject):
             raise IndexError("An boolean vector index must be the same length"
                              " as the sequence (%d, not %d)." %
                              (len(self), len(indexable)))
+
+        if isinstance(indexable, np.ndarray) and indexable.size == 0:
+            # convert an empty ndarray to a supported dtype for slicing a numpy
+            # array
+            indexable = indexable.astype(int)
 
         seq = self._bytes[indexable]
         if self._has_quality():
