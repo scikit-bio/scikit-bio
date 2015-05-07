@@ -19,6 +19,8 @@ Classes
    :toctree: generated/
 
    Sequence
+   IUPACSequence
+   NucleotideSequence
    DNA
    RNA
    Protein
@@ -150,6 +152,8 @@ from skbio.util import TestRunner
 from ._exception import (SequenceError, GeneticCodeError,
                          GeneticCodeInitError, InvalidCodonError)
 from ._sequence import Sequence
+from ._iupac_sequence import IUPACSequence
+from ._nucleotide_sequence import NucleotideSequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
@@ -157,6 +161,7 @@ from ._genetic_code import GeneticCode, genetic_code
 
 __all__ = ['SequenceError', 'GeneticCodeError',
            'GeneticCodeInitError', 'InvalidCodonError', 'Sequence',
+           'IUPACSequence', 'NucleotideSequence',
            'Protein', 'DNA', 'RNA', 'GeneticCode',
            'genetic_code']
 

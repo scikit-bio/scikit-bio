@@ -61,6 +61,10 @@ class SequenceCollectionTests(TestCase):
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
 
+        # unsupported type
+        with self.assertRaises(TypeError):
+            SequenceCollection([DNA('ACGT'), Sequence('abc')])
+
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
         self.assertTrue('r2' in self.s2)
@@ -559,15 +563,6 @@ class AlignmentTests(TestCase):
         seqs = [self.d1, self.d2, self.d3]
         Alignment(seqs)
 
-    def test_init_validate(self):
-        Alignment(self.seqs1, validate=True)
-
-        # invalid DNA character
-        invalid_seqs1 = [self.d1, self.d2, self.d3,
-                         DNA('.-ACC-GTXGC--', id="i1")]
-        self.assertRaises(SequenceCollectionError, Alignment,
-                          invalid_seqs1, validate=True)
-
     def test_iter_positions(self):
         actual = list(self.a2.iter_positions())
         expected = [[RNA(j) for j in i] for i in
@@ -719,7 +714,7 @@ class AlignmentTests(TestCase):
         expected = [defaultdict(float, {'U': 3 / 5, 'A': 1 / 5, '-': 1 / 5}),
                     defaultdict(float, {'A': 1 / 5, 'C': 1 / 5, 'G': 1 / 5,
                                         'U': 2 / 5})]
-        actual = self.a2.kmer_frequencies(k=1)
+        actual = self.a2.kmer_frequencies(k=1, relative=True)
         for a, e in zip(actual, expected):
             self.assertEqual(sorted(a), sorted(e), 5)
             np.testing.assert_almost_equal(sorted(a.values()),

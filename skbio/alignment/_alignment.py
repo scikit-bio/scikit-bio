@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
-from skbio.sequence import Sequence
+from skbio.sequence import Sequence, IUPACSequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -66,6 +66,15 @@ class SequenceCollection(SkbioObject):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
+            # TODO: find a way to support generic Sequence objects in
+            # SequenceCollection and Alignment. The issue is that some methods
+            # assume that a sequence has knowledge of gap characters and a
+            # standard alphabet, which aren't present on Sequence.
+            if not isinstance(seq, IUPACSequence):
+                raise TypeError(
+                    "Unsupported type: %s. SequenceCollection only supports "
+                    "IUPACSequence subclasses." % type(seq).__name__)
+
             id = seq.id
             if id in self:
                 raise SequenceCollectionError(
@@ -1109,11 +1118,11 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         position_frequencies = self.position_frequencies()
-        gap_alphabet = self[0].gap_alphabet
+        gap_chars = self[0].gap_chars
 
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
-            gap_frequency = sum([f[c] for c in gap_alphabet])
+            gap_frequency = sum([f[c] for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)

@@ -491,6 +491,12 @@ class Sequence(collections.Sequence, SkbioObject):
              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
+            if indexable.size == 0:
+                # numpy will create an array of float dtype, which we can't use
+                # as an index.
+                # TODO add tests
+                indexable = indexable.astype(int)
+
             if indexable.dtype == object:
                 indexable = list(indexable_)  # TODO: Don't blow out memory
                 seq = np.concatenate(list(self._slices_from_iter(self._bytes,
