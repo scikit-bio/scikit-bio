@@ -89,13 +89,13 @@ Data Structure Examples
 >>> from skbio.sequence import RNA
 >>> from skbio.alignment import StockholmAlignment
 >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-...         RNA("TCC--G-GGGA", id="seq2")]
+...         RNA("UCC--G-GGGA", id="seq2")]
 >>> gc = {'SS_cons': '(((.....)))'}
 >>> sto = StockholmAlignment(seqs, gc=gc)
 >>> print(sto)
 # STOCKHOLM 1.0
 seq1          ACC--G-GGGU
-seq2          TCC--G-GGGA
+seq2          UCC--G-GGGA
 #=GC SS_cons  (((.....)))
 //
 >>> sto.gc
