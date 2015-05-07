@@ -15,7 +15,7 @@ from future.builtins import range, zip
 from six import string_types
 
 from skbio.alignment import Alignment
-from skbio.sequence import Sequence
+from skbio.sequence import Sequence, IUPACSequence
 from skbio.util import EfficiencyWarning
 
 # This is temporary: blosum50 does not exist in skbio yet as per
@@ -707,9 +707,9 @@ def _init_matrices_nw_no_terminal_gap_penalty(
 def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
                                 gap_substitution_score):
     substitution_score = 0
+    gap_chars = IUPACSequence.gap_chars
     for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
-        if Sequence.is_gap(aln1_char) or\
-           Sequence.is_gap(aln2_char):
+        if aln1_char in gap_chars or aln2_char in gap_chars:
                 substitution_score += gap_substitution_score
         else:
             try:
