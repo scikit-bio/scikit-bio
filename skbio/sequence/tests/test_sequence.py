@@ -276,13 +276,17 @@ class TestSequence(TestCase):
             Sequence(42)
         with self.assertRaisesRegexp(TypeError, 'float'):
             Sequence(4.2)
+        with self.assertRaisesRegexp(TypeError, 'int64'):
+            Sequence(np.int_(50))
+        with self.assertRaisesRegexp(TypeError, 'float64'):
+            Sequence(np.float_(50))
         with self.assertRaisesRegexp(TypeError, 'Foo'):
             class Foo(object):
                 pass
             Sequence(Foo())
 
         # out of ASCII range
-        with self.assertRaises((UnicodeEncodeError, ValueError)):
+        with self.assertRaises(UnicodeEncodeError):
             Sequence(u'abc\u1F30')
 
     def test_init_invalid_id(self):

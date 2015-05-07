@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
 from future.standard_library import hooks
-from six import string_types
+from six import string_types, text_type
 
 import re
 import collections
@@ -162,12 +162,21 @@ class Sequence(collections.Sequence, SkbioObject):
                 self._owns_bytes = False
             sequence = potential_copy
         else:
-            # TODO: You know what
-            sequence_ = np.fromstring(sequence, dtype=np.uint8)
-            if hasattr(sequence, '__len__') and \
-                    len(sequence_) != len(sequence):
-                raise ValueError("")
-            sequence = sequence_
+            # Python 3 will not raise a UnicodeEncodeError so we force it by
+            # encoding it as ascii
+            if isinstance(sequence, text_type):
+                sequence = sequence.encode("ascii")
+            s = np.fromstring(sequence, dtype=np.uint8)
+            # There are two possibilities (to our knowledge) at this point:
+            # Either the sequence we were given was something string-like,
+            # (else it would not have made it past fromstring), or it was a
+            # numpy scalar, and so our length must be 1.
+            if isinstance(sequence, np.generic) and len(s) != 1:
+                raise TypeError("Can cannot create a sequence with %r" %
+                                type(sequence).__name__)
+
+            sequence = s
+
             self._owns_bytes = True
 
         sequence.flags.writeable = False
