@@ -12,7 +12,7 @@ import unittest
 
 import numpy as np
 
-from skbio.sequence._nucleotide_sequence import NucleotideSequence
+from skbio.sequence import NucleotideSequence
 from skbio.util import classproperty
 
 
