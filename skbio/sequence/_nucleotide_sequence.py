@@ -33,6 +33,9 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     .. shownumpydoc
 
     """
+    @property
+    def _motifs(self):
+        return _motifs
 
     @abstractproperty
     @classproperty
@@ -165,10 +168,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
             # object at this point and we only care about comparing the
             # underlying sequence data
             return self.reverse_complement()._string == other._string
-
-    @property
-    def _motifs(self):
-        return _motifs
 
 
 _motifs = parent_motifs.copy()

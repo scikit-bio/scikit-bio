@@ -28,6 +28,10 @@ class Protein(IUPACSequence):
 
     """
 
+    @property
+    def _motifs(self):
+        return _motifs
+
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
@@ -57,10 +61,6 @@ class Protein(IUPACSequence):
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
-
-    @property
-    def _motifs(self):
-        return _motifs
 
 
 _motifs = parent_motifs.copy()
