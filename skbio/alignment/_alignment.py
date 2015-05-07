@@ -1153,7 +1153,7 @@ class Alignment(SequenceCollection):
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
-        """Return collections.Counter object for positions in Alignment
+        """Return counts of characters at each position in the alignment
 
         Returns
         -------
@@ -1231,10 +1231,10 @@ class Alignment(SequenceCollection):
         Parameters
         ----------
         base : float, optional
-            log base for entropy calculation. If not passed, default will be e
+            Log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
         nan_on_non_standard_chars : bool, optional
-            if True, the entropy at positions containing characters outside of
+            If True, the entropy at positions containing characters outside of
             the first sequence's `iupac_standard_characters` will be `np.nan`.
             This is useful, and the default behavior, as it's not clear how a
             gap or degenerate character should contribute to a positional
