@@ -39,11 +39,6 @@ class SequenceCollectionTests(TestCase):
         self.seqs3 = self.seqs1 + self.seqs2
         self.seqs4 = [self.d1, self.d3]
 
-        self.seqs1_t = [('d1', 'GATTACA'), ('d2', 'TTG')]
-        self.seqs2_t = [('r1', 'GAUUACA'), ('r2', 'UUG'),
-                        ('r3', 'U-----UGCC--')]
-        self.seqs3_t = self.seqs1_t + self.seqs2_t
-
         self.s1 = SequenceCollection(self.seqs1)
         self.s2 = SequenceCollection(self.seqs2)
         self.s3 = SequenceCollection(self.seqs3)
@@ -427,10 +422,6 @@ class AlignmentTests(TestCase):
         self.seqs1 = [self.d1, self.d2, self.d3]
         self.seqs2 = [self.r1, self.r2]
 
-        self.seqs1_t = [('d1', '..ACC-GTTGG..'), ('d2', 'TTACCGGT-GGCC'),
-                        ('d3', '.-ACC-GTTGC--')]
-        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
-
         self.a1 = Alignment(self.seqs1)
         self.a2 = Alignment(self.seqs2)
         self.a3 = Alignment(self.seqs2, score=42.0,
@@ -565,9 +556,13 @@ class AlignmentTests(TestCase):
 
     def test_iter_positions(self):
         actual = list(self.a2.iter_positions())
-        expected = [[RNA(j) for j in i] for i in
-                    ['UA', 'UC', 'AG', 'UU', '-U']]
-        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
+        expected = [
+            [RNA('U', id='r1'), RNA('A', id='r2')],
+            [RNA('U', id='r1'), RNA('C', id='r2')],
+            [RNA('A', id='r1'), RNA('G', id='r2')],
+            [RNA('U', id='r1'), RNA('U', id='r2')],
+            [RNA('-', id='r1'), RNA('U', id='r2')]
+        ]
         self.assertEqual(actual, expected)
 
         actual = list(self.a2.iter_positions(constructor=str))
@@ -576,7 +571,6 @@ class AlignmentTests(TestCase):
                     list('AG'),
                     list('UU'),
                     list('-U')]
-        self.seqs2_t = [('r1', 'UUAU-'), ('r2', 'ACGUU')]
         self.assertEqual(actual, expected)
 
     def test_majority_consensus(self):

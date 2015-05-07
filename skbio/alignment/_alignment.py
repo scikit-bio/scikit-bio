@@ -1074,8 +1074,8 @@ class Alignment(SequenceCollection):
         # Counter.most_common returns an ordered list of the n most common
         # (sequence, count) items in Counter. Here we set n=1, and take only
         # the character, not the count.
-        return seq_constructor(c.most_common(1)[0][0]
-                               for c in self.position_counters())
+        return seq_constructor(''.join(c.most_common(1)[0][0]
+                               for c in self.position_counters()))
 
     def omit_gap_positions(self, maximum_gap_frequency):
         """Returns Alignment with positions filtered based on gap frequency
@@ -1165,11 +1165,11 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return self.__class__([])
 
-        base_frequencies = self.k_word_frequencies(k=1)
-        gap_alphabet = self[0].gap_alphabet
+        base_frequencies = self.kmer_frequencies(k=1, relative=True)
+        gap_chars = self[0].gap_chars
         seqs_to_keep = []
         for seq, f in zip(self, base_frequencies):
-            gap_frequency = sum([f[c] for c in gap_alphabet])
+            gap_frequency = sum([f[c] for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.id)
         return self.subalignment(seqs_to_keep=seqs_to_keep)
@@ -1301,7 +1301,7 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return result
 
-        iupac_standard_characters = self[0].iupac_standard_characters
+        iupac_standard_characters = self[0].nondegenerate_chars
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
                     len(viewkeys(f) - iupac_standard_characters) > 0):
