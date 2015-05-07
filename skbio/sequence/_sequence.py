@@ -563,68 +563,71 @@ class Sequence(collections.Sequence, SkbioObject):
             yield self._to(sequence=c, quality=q)
 
     def __reversed__(self):
-        """The reversed operator.
+        """Iterate over positions in the biological sequence.
 
         Returns
         -------
         iterator
-            Reverse position iterator for the `Sequence`.
+            Reverse position iterator for the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
-        >>> for c in reversed(s): print(c)
-        C
-        U
-        G
-        G
-
-        .. shownumpydoc
+        >>> for c in reversed(s):
+        ...     c
+        Sequence('C', length=1)
+        Sequence('U', length=1)
+        Sequence('G', length=1)
+        Sequence('G', length=1)
 
         """
         return iter(self[::-1])
 
     def __str__(self):
-        """ The str method.
+        """Return biological sequence characters as a string.
 
         Returns
         -------
         str
-            Sequence as a str. This will contain the sequence only, no metadata
-            (e.g., `id`, `desctiption`, or `quality`) will be included.
+            Sequence characters as a string. No metadata (e.g., ID,
+            desctiption, or quality scores) will be included.
+
+        See Also
+        --------
+        sequence
 
         Examples
         --------
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
         >>> str(s)
         'GGUCGUAAAGGA'
-
-        .. shownumpydoc
 
         """
         return str(self._string.decode("ascii"))
 
     def __repr__(self):
-        """The repr method.
+        """Return a string representation of the biological sequence object.
 
         Returns
         -------
         str
-            Returns a string representation of the object.
+            String representation of the biological sequence object.
 
         Notes
         -----
         String representation contains the class name, the first seven
         characters of the sequence, followed by ellipses, followed by the last
-        seven characters of the sequence (or the full sequence no ellipses,
-        if the sequence is less than 21 characters long), followed by the
-        sequence length. If any of `id`, `decription`, or `quality` are not
-        `None`, those will be printed after the sequence length.
+        seven characters of the sequence (or the full sequence without
+        ellipses, if the sequence is less than 21 characters long), followed by
+        the sequence length. If ID, description, or quality are present, they
+        will be included after the sequence length (and truncated in a similar
+        manner if they are too long).
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> repr(s)
         "Sequence('GGUCGUGAAGGA', length=12)"
@@ -637,8 +640,6 @@ class Sequence(collections.Sequence, SkbioObject):
         Sequence('GGUCGU ... AAAGGA', length=22)
         >>> Sequence('ACGT', id='seq1')
         Sequence('ACGT', length=4, id='seq1')
-
-        .. shownumpydoc
 
         """
         start = self.__class__.__name__ + "("
@@ -670,17 +671,17 @@ class Sequence(collections.Sequence, SkbioObject):
         return "%r" % l
 
     def equals(self, other, ignore=None):
-        """Compare two biological sequences for equality.
+        """Determine if the biological sequence is equal to another.
 
-        By default, biological sequences are equal if their sequence,
-        identifier, description, and quality scores are the same and they are
-        the same type.
+        By default, biological sequences are equal if they are *exactly* the
+        same type and their sequence characters, ID, description, and quality
+        scores are the same.
 
         Parameters
         ----------
         other : Sequence
-            The sequence to test for equality against.
-        ignore : iterable of str, optional
+            Sequence to test for equality against.
+        ignore : iterable (str), optional
             List of features to ignore in the equality test. By default, all
             features must be the same for two biological sequences to be
             considered equal. Features that can be ignored are ``'type'``,
@@ -689,12 +690,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         bool
-            Indicates whether `self` and `other` are equal.
-
-        See Also
-        --------
-        __eq__
-        __ne__
+            Indicates whether the biological sequence is equal to `other`.
 
         Examples
         --------
@@ -740,8 +736,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u.equals(v, ignore=['quality', 'id'])
         True
 
-        .. shownumpydoc
-
         """
         if ignore is None:
             ignore = {}
@@ -769,12 +763,12 @@ class Sequence(collections.Sequence, SkbioObject):
         return True
 
     def count(self, subsequence, start=None, end=None):
-        """Returns the number of occurences of subsequence.
+        """Count occurrences of a subsequence in the biological sequence.
 
         Parameters
         ----------
-        subsequence : str, Sequence
-            The subsequence to count occurences of.
+        subsequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Subsequence to count occurrences of.
         start : int, optional
             The position at which to start counting (inclusive).
         end : int, optional
@@ -783,37 +777,42 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         int
-            The number of occurrences of substring in the `Sequence`.
+            Number of occurrences of `subsequence` in the biological sequence.
 
         Raises
         ------
         ValueError
             If `subsequence` is of length 0.
+        TypeError
+            If `subsequence` is a ``Sequence`` object with a different type
+            than the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC')
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUCG')
         >>> s.count('G')
-        2
-
-        .. shownumpydoc
+        3
+        >>> s.count('GG')
+        1
+        >>> s.count('T')
+        0
 
         """
         if len(subsequence) == 0:
-            raise ValueError("count is not defined for empty subsequences.")
+            raise ValueError("`count` is not defined for empty subsequences.")
 
         subsequence = self._munge_to_sequence(subsequence, "count")
 
         return self._string.count(subsequence._string, start, end)
 
-    def index(self, subsequence, begin=None, end=None):
-        """Return the position where subsequence first occurs
+    def index(self, subsequence, start=None, end=None):
+        """Find position where subsequence first occurs in the sequence.
 
         Parameters
         ----------
-        subsequence : str, Sequence
-            The sequence to search for in `self.`
+        subsequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Subsequence to search for in the biological sequence.
         start : int, optional
             The position at which to start searching (inclusive).
         end : int, optional
@@ -822,26 +821,28 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         int
-            The position where `subsequence` first occurs in `self`.
+            Position where `subsequence` first occurs in the biological
+            sequence.
 
         Raises
         ------
         ValueError
-            If `subsequence` is not present in `self`.
+            If `subsequence` is not present in the biological sequence.
+        TypeError
+            If `subsequence` is a ``Sequence`` object with a different type
+            than the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
 
-        .. shownumpydoc
-
         """
         try:
             return self._string.index(
-                self._munge_to_sequence(subsequence, "index")._string, begin,
+                self._munge_to_sequence(subsequence, "index")._string, start,
                 end)
         except ValueError:
             raise ValueError(
