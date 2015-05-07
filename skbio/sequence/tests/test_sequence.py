@@ -276,6 +276,10 @@ class TestSequence(TestCase):
             Sequence(42)
         with self.assertRaisesRegexp(TypeError, 'float'):
             Sequence(4.2)
+        with self.assertRaisesRegexp(TypeError, 'int64'):
+            Sequence(np.int_(50))
+        with self.assertRaisesRegexp(TypeError, 'float64'):
+            Sequence(np.float_(50))
         with self.assertRaisesRegexp(TypeError, 'Foo'):
             class Foo(object):
                 pass
@@ -1330,14 +1334,15 @@ class TestSequence(TestCase):
         exp = [slice(2, 9)]
         self.assertEqual(list(seq.slices_from_regex(pat)), exp)
 
-        obs = seq.slices_from_regex(pat,
-            exclude=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1], dtype=bool))
+        obs = seq.slices_from_regex(
+            pat, exclude=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                                  dtype=bool))
         self.assertEqual(list(obs), exp)
 
     def test_slice_from_regex_exclude(self):
-        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex("(A+)",
-            exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-                              0, 1, 1, 0, 1], dtype=bool))
+        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
+            "(A+)", exclude=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
+                                      1, 0, 0, 1, 1, 0, 1], dtype=bool))
 
         self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
                                      slice(19, 20)])

@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
 from future.standard_library import hooks
-from six import string_types
+from six import string_types, text_type
 
 import re
 import collections
@@ -118,20 +118,10 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
-        self._refresh_chars()
-
-    def _refresh_chars(self):
-        if self._bytes.size == 0:
-            self.__chars = self._bytes.view('|S1')
-        else:
-            self.__chars = self._bytes.view('|S%d' % self._bytes.size)
 
     @property
     def _string(self):
-        if self.__chars.size == 0:
-            return ''
-        else:
-            return self.__chars[0]
+        return self._bytes.tostring()
 
     def _set_id(self, id_):
         if isinstance(id_, str):
@@ -172,13 +162,26 @@ class Sequence(collections.Sequence, SkbioObject):
                 self._owns_bytes = False
             sequence = potential_copy
         else:
-            sequence = np.fromstring(sequence, dtype=np.uint8)
+            # Python 3 will not raise a UnicodeEncodeError so we force it by
+            # encoding it as ascii
+            if isinstance(sequence, text_type):
+                sequence = sequence.encode("ascii")
+            s = np.fromstring(sequence, dtype=np.uint8)
+            # There are two possibilities (to our knowledge) at this point:
+            # Either the sequence we were given was something string-like,
+            # (else it would not have made it past fromstring), or it was a
+            # numpy scalar, and so our length must be 1.
+            if isinstance(sequence, np.generic) and len(s) != 1:
+                raise TypeError("Can cannot create a sequence with %r" %
+                                type(sequence).__name__)
+
+            sequence = s
+
             self._owns_bytes = True
 
         sequence.flags.writeable = False
 
         self._bytes = sequence
-        self._refresh_chars()
 
     def _set_quality(self, quality):
         if quality is not None:
@@ -247,11 +250,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        if isinstance(other, string_types):
-            return other in self._string
-
         other = self._munge_to_sequence(other, "in")
-
         return other._string in self._string
 
     def __eq__(self, other):
@@ -435,7 +434,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             qual = []
 
-        for c, q in zip_longest(self._string, qual, fillvalue=None):
+        for c, q in zip_longest(self.sequence, qual, fillvalue=None):
             yield self._to(sequence=c, quality=q)
 
     def __len__(self):
@@ -609,7 +608,7 @@ class Sequence(collections.Sequence, SkbioObject):
         .. shownumpydoc
 
         """
-        return str(self._string)
+        return str(self._string.decode("ascii"))
 
     @property
     def sequence(self):
@@ -936,9 +935,6 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(subsequence) == 0:
             raise ValueError("count is not defined for empty subsequences.")
 
-        if isinstance(subsequence, string_types):
-            return self._string.count(subsequence, start, end)
-
         subsequence = self._munge_to_sequence(subsequence, "count")
 
         return self._string.count(subsequence._string, start, end)
@@ -1203,8 +1199,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         try:
-            if isinstance(subsequence, string_types):
-                return self._string.index(subsequence, begin, end)
             return self._string.index(
                 self._munge_to_sequence(subsequence, "index")._string, begin,
                 end)
@@ -1357,11 +1351,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
         if exclude is None:
             lookup = np.arange(len(self))
-            string = self._string
+            string = str(self)
         else:
             include = np.invert(exclude)
             lookup = np.where(include)[0]
-            string = self[include]._string
+            string = str(self[include])
 
         for match in regex.finditer(string):
             # We start at 1 because we don't want the group that contains all
