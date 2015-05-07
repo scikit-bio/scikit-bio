@@ -7,7 +7,15 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
+import abc
+
 from ._exception import OverrideError
+
+
+class abstractproperty(abc.abstractproperty):
+    def __iter__(self):
+        raise StopIteration()
 
 
 # Adapted from http://stackoverflow.com/a/8313042/579416

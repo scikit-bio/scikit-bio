@@ -15,17 +15,17 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |No    |generator of :mod:`skbio.sequence.Sequence` objects  |
+|Yes   |No    |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
 |Yes   |No    |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.Sequence`                       |
+|Yes   |No    |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.DNA`                              |
+|Yes   |No    |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.RNA`                              |
+|Yes   |No    |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.Protein`                          |
+|Yes   |No    |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 
 Format Specification

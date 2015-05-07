@@ -31,19 +31,19 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects  |
+|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.DNA`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.RNA`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.Protein`                          |
+|Yes   |Yes   |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 
 .. note:: All readers and writers support an optional QUAL file via the
@@ -204,13 +204,12 @@ reading contains protein sequences, you would pass
    type is not provided to the reader.
 
 Sequence Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``seq_num`` parameter can be used with the ``Sequence``,
- ``DNA``, ``RNA``, and
-``Protein`` FASTA readers. ``seq_num`` specifies which sequence to read
-from the FASTA file (and optional QUAL file), and defaults to 1 (i.e., such
-that the first sequence is read). For example, to read the 50th sequence from a
-FASTA file, you would pass ``seq_num=50`` to the reader call.
+``DNA``, ``RNA``, and ``Protein`` FASTA readers. ``seq_num`` specifies which
+sequence to read from the FASTA file (and optional QUAL file), and defaults to
+1 (i.e., such that the first sequence is read). For example, to read the 50th
+sequence from a FASTA file, you would pass ``seq_num=50`` to the reader call.
 
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
