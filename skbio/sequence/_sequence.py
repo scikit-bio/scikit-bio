@@ -30,21 +30,26 @@ with hooks():
 class Sequence(collections.Sequence, SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
+    ``Sequence`` objects do not enforce an alphabet and are thus the most
+    generic objects for storing biological sequence data. Subclasses ``DNA``,
+    ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ and provide
+    operations specific to each respective molecule type.
+
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
         Characters representing the biological sequence itself.
     id : str, optional
-        The sequence identifier (e.g., an accession number).
+        Sequence identifier (e.g., an accession number).
     description : str, optional
-        A description or comment about the sequence (e.g., "green
-        fluorescent protein").
+        Description or comment about the sequence (e.g., "green fluorescent
+        protein").
     quality : 1D array_like (int), optional
         Phred quality scores stored as nonnegative integers, one per sequence
         character. If provided, must be the same length as the biological
-        sequence. Can be a 1-D ``numpy.ndarray`` of integers, or a structure
-        that can be converted to this representation using ``numpy.asarray``. A
-        copy will *not* be made if `quality` is already a 1-D ``numpy.ndarray``
+        sequence. Can be a 1D ``np.ndarray`` of integers or a structure that
+        can be converted into this representation using ``np.asarray``. A copy
+        will *not* be made if `quality` is already a 1D ``np.ndarray``
         with an ``int`` ``dtype``. The array will be made read-only (i.e., its
         ``WRITEABLE`` flag will be set to ``False``).
 
@@ -55,30 +60,15 @@ class Sequence(collections.Sequence, SkbioObject):
     description
     quality
 
-    Raises
-    ------
-    skbio.sequence.SequenceError
-        If `quality` is not the correct shape.
-
     See Also
     --------
-    NucleotideSequence
     DNA
     RNA
+    Protein
 
     Notes
     -----
-    `Sequence` objects are immutable. Where applicable, methods
-    return a new object of the same class.
-    Subclasses are typically defined by methods relevant to only a specific
-    type of biological sequence, and by containing characters only contained in
-    the IUPAC standard character set [1]_ for that molecule type.
-
-    Examples
-    --------
-    >>> from skbio.sequence import Sequence
-    >>> s = Sequence('GGUCGUGAAGGA')
-    >>> t = Sequence('GGUCCUGAAGGU')
+    ``Sequence`` objects are immutable.
 
     References
     ----------
@@ -86,6 +76,14 @@ class Sequence(collections.Sequence, SkbioObject):
        sequences: recommendations 1984.
        Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
        A Cornish-Bowden
+
+    Examples
+    --------
+    >>> from skbio import Sequence
+    >>> s = Sequence('GGUCGUGAAGGA')
+    >>> t = Sequence('GGUCCUGAAGGU')
+    >>> s == t
+    False
 
     """
     default_write_format = 'fasta'
@@ -101,21 +99,18 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from skbio import Sequence
         >>> s = Sequence('AACGA', id='seq1', description='some seq')
         >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
         array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
-
-        .. shownumpydoc
 
         """
         return self._bytes.view('|S1')
 
     @property
     def id(self):
-        """ID of the biological sequence.
-
-        A string representing the identifier (ID) of the biological sequence.
+        """Biological sequence identifier.
 
         Notes
         -----
@@ -123,20 +118,17 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
         >>> s.id
         'seq1'
-
-        .. shownumpydoc
 
         """
         return self._id
 
     @property
     def description(self):
-        """Description of the biological sequence.
-
-        A string representing the description of the biological sequence.
+        """Biological sequence description.
 
         Notes
         -----
@@ -144,21 +136,20 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
         >>> s.description
         'some seq'
-
-        .. shownumpydoc
 
         """
         return self._description
 
     @property
     def quality(self):
-        """Quality scores of the characters in the biological sequence.
+        """Quality scores corresponding to biological sequence characters.
 
-        A 1-D ``numpy.ndarray`` of nonnegative integers representing Phred
-        quality scores for each character in the biological sequence, or
+        A 1D ``np.ndarray`` of nonnegative integers representing a Phred
+        quality score for each character in the biological sequence, or
         ``None`` if quality scores are not present.
 
         Notes
@@ -169,12 +160,11 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
         >>> s.quality
-        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  55,  42,  42])
-
-        .. shownumpydoc
+        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,   0,  42,  42])
 
         """
         return self._quality
@@ -243,6 +233,7 @@ class Sequence(collections.Sequence, SkbioObject):
             if isinstance(sequence, text_type):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)
+
             # There are two possibilities (to our knowledge) at this point:
             # Either the sequence we were given was something string-like,
             # (else it would not have made it past fromstring), or it was a
@@ -252,11 +243,9 @@ class Sequence(collections.Sequence, SkbioObject):
                                 type(sequence).__name__)
 
             sequence = s
-
             self._owns_bytes = True
 
         sequence.flags.writeable = False
-
         self._bytes = sequence
 
     def _set_quality(self, quality):
@@ -295,72 +284,69 @@ class Sequence(collections.Sequence, SkbioObject):
 
         self._quality = quality
 
-    def __contains__(self, other):
-        """The in operator.
+    def __contains__(self, subsequence):
+        """Determine if a subsequence is contained in the biological sequence.
 
         Parameters
         ----------
-        other : str, Sequence, numpy.ndarray
+        subsequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
             The putative subsequence.
 
         Returns
         -------
         bool
-            Indicates whether `other` is contained in `self`.
+            Indicates whether `subsequence` is contained in the biological
+            sequence.
 
         Raises
         ------
         TypeError
-            If `other` is a `Sequence`, but a different `Sequence` type than
-            `self`, or if `other` is not a supported type.
+            If `subsequence` is a ``Sequence`` object with a different type
+            than the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
         >>> 'CCC' in s
         False
 
-        .. shownumpydoc
-
         """
-        other = self._munge_to_sequence(other, "in")
-        return other._string in self._string
+        subsequence = self._munge_to_sequence(subsequence, "in")
+        return subsequence._string in self._string
 
     def __eq__(self, other):
-        """The equality operator.
+        """Determine if the biological sequence is equal to another.
 
-        Biological sequences are equal if their sequence, id, description, and
-        quality scores are the same and they are the same type.
+        Biological sequences are equal if they are *exactly* the same type and
+        their sequence characters, ID, description, and quality scores are the
+        same.
 
         Parameters
         ----------
-        other : `Sequence`
-            The sequence to test for equality against.
+        other : Sequence
+            Sequence to test for equality against.
 
         Returns
         -------
         bool
-            Indicates whether `self` and `other` are equal.
+            Indicates whether the biological sequence is equal to `other`.
 
         See Also
         --------
-        __ne__
         equals
 
         Notes
         -----
-        See ``Sequence.equals`` for more fine-grained control of equality
-        testing.
+        See ``Sequence.equals`` for more control over equality testing.
 
-        This method is equivalent to
-        ``self.equals(other)``.
+        This method is equivalent to ``self.equals(other)``.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> t = Sequence('GGUCGUGAAGGA')
         >>> s == t
@@ -370,48 +356,44 @@ class Sequence(collections.Sequence, SkbioObject):
         False
 
         Note that because the quality scores do not match between ``u`` and
-        ``v``, they are considered not equal:
+        ``v``, they are not considered equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
         >>> u == v
         False
-
-        .. shownumpydoc
 
         """
         return self.equals(other)
 
     def __ne__(self, other):
-        """The inequality operator.
+        """Determine if the biological sequence is not equal to another.
 
-        By default, biological sequences are not equal if their sequence,
-        id, description, or quality scores differ or they are not the same
-        type.
+        Biological sequences are not equal if they are not *exactly* the same
+        type, or their sequence characters, ID, description, or quality scores
+        differ.
 
         Parameters
         ----------
-        other : `Sequence`
-            The sequence to test for inequality against.
+        other : Sequence
+            Sequence to test for inequality against.
 
         Returns
         -------
         bool
-            Indicates whether `self` and `other` are not equal.
+            Indicates whether the biological sequence is not equal to `other`.
 
         See Also
         --------
-        __eq__
         equals
 
         Notes
         -----
-        See ``Sequence.equals`` for more fine-grained control of
-        equality testing.
+        See ``Sequence.equals`` for more control over equality testing.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> t = Sequence('GGUCGUGAAGGA')
         >>> s != t
@@ -423,40 +405,33 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u != v
         True
 
-        .. shownumpydoc
-
         """
         return not (self == other)
 
     def __getitem__(self, indexable):
-        """The indexing operator.
+        """Slice the biological sequence.
 
         Parameters
         ----------
-        indexable : int, slice, sequence of ints, or sequence of bools
-            The position(s) to return from the `Sequence`. If `indexable` is
-            a sequence of ints, these are assumed to be indices in the sequence
-            to keep. If `indexable` is a sequence of bools, these are assumed
-            to be the positions in the sequence to keep.
+        indexable : int, slice, iterable (int and slice), 1D array_like (bool)
+            The position(s) to return from the biological sequence. If
+            `indexable` is an iterable of integers, these are assumed to be
+            indices in the sequence to keep. If `indexable` is a 1D
+            ``array_like`` of booleans, these are assumed to be the positions
+            in the sequence to keep.
 
         Returns
         -------
         Sequence
-            New biological sequence containing the character(s) at position(s)
-            `indexable` in the current `Sequence`. If quality scores are
-            present, the quality score at position(s) `indexable` will be
-            included in the returned sequence. ID and description are also
+            New biological sequence containing the position(s) specified by
+            `indexable` in the current biological sequence. If quality scores
+            are present, they will be sliced in the same manner and included in
+            the returned biological sequence. ID and description are also
             included.
-
-        Raises
-        ------
-        IndexError
-            If `indexable` is not a supported type, or if `indexable` is a
-            sequence that is not equal in length to `self`.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
 
         Obtain a single character from the biological sequence:
@@ -479,8 +454,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('GGUCG')
         >>> s[[True, False, True, 'a' is 'a', False]]
         Sequence('GUC', length=3)
-
-        .. shownumpydoc
 
         """
         qual = None
@@ -544,44 +517,41 @@ class Sequence(collections.Sequence, SkbioObject):
             yield array[i]
 
     def __len__(self):
-        """The len operator.
+        """Return the number of characters in the biological sequence.
 
         Returns
         -------
         int
-            The length of the `Sequence`.
+            The length of the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> len(s)
         4
-
-        .. shownumpydoc
 
         """
         return self._bytes.size
 
     def __iter__(self):
-        """The iter operator.
+        """Iterate over positions in the biological sequence.
 
         Returns
         -------
         iterator
-            Position iterator for the `Sequence`.
+            Position iterator for the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
-        >>> for c in s: print(c)
-        G
-        G
-        U
-        C
-
-        .. shownumpydoc
+        >>> for c in s:
+        ...     c
+        Sequence('G', length=1)
+        Sequence('G', length=1)
+        Sequence('U', length=1)
+        Sequence('C', length=1)
 
         """
         if self._has_quality():
