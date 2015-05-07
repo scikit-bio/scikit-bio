@@ -512,8 +512,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-")],
-                    [Sequence("ACGT")], 1, 0, 0)
+        expected = ([Sequence("ACG-", id='0')],
+                    [Sequence("ACGT", id='1')], 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
@@ -532,8 +532,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-"), Sequence("ACG-")],
-                    [Sequence("ACGT"), Sequence("ACGT")],
+        expected = ([Sequence("ACG-", id='s1'), Sequence("ACG-", id='s2')],
+                    [Sequence("ACGT", id='s3'), Sequence("ACGT", id='s4')],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', 's1'), DNA('ACG', 's2')]),
@@ -542,8 +542,8 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([Sequence("ACG")],
-                    [Sequence("ACG")], 6, 0, 0)
+        expected = ([Sequence("ACG", id='0')],
+                    [Sequence("ACG", id='1')], 6, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
@@ -556,8 +556,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
-        expected = ([Sequence("G")],
-                    [Sequence("G")], 6, 2, 2)
+        expected = ([Sequence("G", id='0')],
+                    [Sequence("G", id='1')], 6, 2, 2)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
