@@ -30,8 +30,8 @@ class SequenceCollection(SkbioObject):
     Parameters
     ----------
     seqs : list of `skbio.Sequence` objects
-        The `skbio.Sequence` objects to load into
-        a new `SequenceCollection` object.
+        The `skbio.Sequence` objects to load into a new `SequenceCollection`
+        object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
@@ -86,13 +86,13 @@ class SequenceCollection(SkbioObject):
         Parameters
         ----------
         id : str
-            The id to look up in the `SequenceCollection`.
+            The `skbio.Sequence.id` to look up in the `SequenceCollection`.
 
         Returns
         -------
         bool
-            Indicates whether `id` corresponds to a sequence id
-            in the `SequenceCollection`.
+            Returns `True` if `id` is the `skbio.Sequence.id` of a sequence in
+            the `SequenceCollection`.
 
         """
         return id in self._id_to_index
@@ -114,7 +114,7 @@ class SequenceCollection(SkbioObject):
         -----
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
-        `skbio` objects, in order, are equal.
+        `skbio.Sequence` objects, in order, are equal.
 
         """
         if self.__class__ != other.__class__:
@@ -133,15 +133,14 @@ class SequenceCollection(SkbioObject):
         Parameters
         ----------
         index : int, str
-            The position or sequence id of the
-            `skbio` to return from the
-            `SequenceCollection`.
+            The position or sequence id of the `skbio.Sequence` to return from
+            the `SequenceCollection`.
 
         Returns
         -------
-        `skbio`
-            The `skbio` at the specified
-            index in the `SequenceCollection`.
+        skbio.Sequence
+            The `skbio.Sequence` at the specified index in the
+            `SequenceCollection`.
 
         Examples
         --------
@@ -167,10 +166,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio` iterator for the
-            `SequenceCollection`.
-
-        .. shownumpydoc
+            `skbio.Sequence` iterator for the `SequenceCollection`.
 
         """
         return iter(self._data)
@@ -182,8 +178,6 @@ class SequenceCollection(SkbioObject):
         -------
         int
             The number of sequences in the `SequenceCollection`.
-
-        .. shownumpydoc
 
         """
         return self.sequence_count()
@@ -204,8 +198,6 @@ class SequenceCollection(SkbioObject):
         -----
         See `SequenceCollection.__eq__` for a description of what it means for
         a pair of `SequenceCollection` objects to be equal.
-
-        .. shownumpydoc
 
         """
         return not self.__eq__(other)
@@ -234,8 +226,6 @@ class SequenceCollection(SkbioObject):
         >>> print(repr(s1))
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
-        .. shownumpydoc
-
         """
         cn = self.__class__.__name__
         count, center, spread = self.distribution_stats()
@@ -248,10 +238,8 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio` iterator for the
-            `SequenceCollection` in reverse order.
-
-        .. shownumpydoc
+            `skbio.Sequence` iterator for the `SequenceCollection` in reverse
+            order.
 
         """
         return reversed(self._data)
@@ -263,8 +251,6 @@ class SequenceCollection(SkbioObject):
         -------
         str
             Fasta-formatted string of all sequences in the object.
-
-        .. shownumpydoc
 
         """
         fh = StringIO()
@@ -280,20 +266,13 @@ class SequenceCollection(SkbioObject):
         ----------
         distance_fn : function
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as
-            `skbio` objects) and return a
-            single integer or float value.
+            This must take two sequences as input (as `skbio.Sequence` objects)
+            and return a single integer or float value.
 
         Returns
         -------
         skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
-
-        Raises
-        ------
-        skbio.util.exception.SequenceError
-            If ``len(self) != len(other)`` and ``distance_fn`` ==
-            ``scipy.spatial.distance.hamming``.
 
         See Also
         --------
@@ -335,10 +314,10 @@ class SequenceCollection(SkbioObject):
         Parameters
         ----------
         center_f : function
-            Should take a list-like object and return a single value
+            Should take an array_like object and return a single value
             representing the center of the distribution.
         spread_f : function
-            Should take a list-like object and return a single value
+            Should take an array_like object and return a single value
             representing the spread of the distribution.
 
         Returns
@@ -377,9 +356,8 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         SequenceCollection
-            A new `SequenceCollection` where
-            `skbio.degap` has been called on
-            each sequence.
+            A new `SequenceCollection` where `skbio.Sequence.degap` has been
+            called on each sequence.
 
         Examples
         --------
@@ -405,8 +383,8 @@ class SequenceCollection(SkbioObject):
 
         Returns
         -------
-        skbio
-            The `skbio` with `id`.
+        skbio.Sequence
+            The `skbio.Sequence` with `id`.
 
         Raises
         ------
@@ -432,8 +410,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         list
-            The ordered list of ids for the
-            `skbio` objects in the
+            The ordered list of ids for the `skbio.Sequence` objects in the
             `SequenceCollection`.
 
         Examples
@@ -449,26 +426,28 @@ class SequenceCollection(SkbioObject):
         """
         return [seq.id for seq in self]
 
-    def update_ids(self, ids=None, fn=None, prefix=""):
+    def update_ids(self, ids=None, func=None, prefix=""):
         """Update sequence IDs on the sequence collection.
 
         IDs can be updated by providing a sequence of new IDs (`ids`) or a
-        function that maps current IDs to new IDs (`fn`).
+        function that maps current IDs to new IDs (`func`).
 
-        Default behavior (if `ids` and `fn` are not provided) is to create new
-        IDs that are unique postive integers (starting at 1) cast as strings,
-        optionally preceded by `prefix`. For example, ``('1', '2', '3', ...)``.
+        Default behavior (if `ids` and `func` are not provided) is to create
+        new IDs that are unique postive integers (starting at 1) cast as
+        strings, optionally preceded by `prefix`. For example, ``('1', '2',
+        '3', ...)``.
 
         Parameters
         ----------
         ids : sequence of str, optional
             New IDs to update on the sequence collection.
-        fn : function, optional
+        func : function, optional
             Function accepting a sequence of current IDs and returning a
             sequence of new IDs to update on the sequence collection.
         prefix : str, optional
-            If `ids` and `fn` are both ``None``, `prefix` is prepended to each
-            new integer-based ID (see description of default behavior above).
+            If `ids` and `func` are both ``None``, `prefix` is prepended to
+            each new integer-based ID (see description of default behavior
+            above).
 
         Returns
         -------
@@ -481,8 +460,8 @@ class SequenceCollection(SkbioObject):
         Raises
         ------
         SequenceCollectionError
-            If both `ids` and `fn` are provided, `prefix` is provided with
-            either `ids` or `fn`, or the number of new IDs does not match the
+            If both `ids` and `func` are provided, `prefix` is provided with
+            either `ids` or `func`, or the number of new IDs does not match the
             number of sequences in the sequence collection.
 
         Notes
@@ -520,7 +499,7 @@ class SequenceCollection(SkbioObject):
 
         >>> def id_mapper(ids):
         ...     return [id_ + '-new' for id_ in ids]
-        >>> s3, new_to_old_ids = s1.update_ids(fn=id_mapper)
+        >>> s3, new_to_old_ids = s1.update_ids(func=id_mapper)
         >>> s3.ids()
         ['abc-new', 'def-new']
 
@@ -531,26 +510,26 @@ class SequenceCollection(SkbioObject):
         ['ghi', 'jkl']
 
         """
-        if ids is not None and fn is not None:
-            raise SequenceCollectionError("ids and fn cannot both be "
+        if ids is not None and func is not None:
+            raise SequenceCollectionError("ids and func cannot both be "
                                           "provided.")
-        if (ids is not None and prefix) or (fn is not None and prefix):
+        if (ids is not None and prefix) or (func is not None and prefix):
             raise SequenceCollectionError("prefix cannot be provided if ids "
-                                          "or fn is provided.")
+                                          "or func is provided.")
 
         if ids is not None:
-            def fn(_):
+            def func(_):
                 return ids
 
-        elif fn is None:
-            def fn(_):
+        elif func is None:
+            def func(_):
                 new_ids = []
                 for i in range(1, len(self) + 1):
                     new_ids.append("%s%d" % (prefix, i))
                 return new_ids
 
         old_ids = self.ids()
-        new_ids = fn(old_ids)
+        new_ids = func(old_ids)
 
         if len(new_ids) != len(old_ids):
             raise SequenceCollectionError(
@@ -596,9 +575,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         generator of tuples
-            Each tuple contains ordered
-            (`skbio.id`,
-            `skbio`) pairs.
+            Each tuple contains ordered (`skbio.id`, `skbio.Sequence`) pairs.
 
         """
         for seq in self:
@@ -617,6 +594,16 @@ class SequenceCollection(SkbioObject):
         sequence_lengths
         Alignment.sequence_length
 
+        Examples
+        --------
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
+        >>> sequences = [DNA('A--CCGT.', id="seq1"),
+        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print(s1.sequence_count())
+        2
+
         """
         return len(self._data)
 
@@ -634,7 +621,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         list
-            List of ``collections.defaultdict`` objects, one for each sequence
+            List of ``collections.Counter`` objects, one for each sequence
             in the ``SequenceCollection``, representing the frequency of each
             k-word in each sequence of the ``SequenceCollection``.
 
@@ -676,6 +663,16 @@ class SequenceCollection(SkbioObject):
         --------
         sequence_count
 
+        Examples
+        --------
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
+        >>> sequences = [DNA('ACCGT', id="seq1"),
+        ...              DNA('AACCGGT', id="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print(s1.sequence_lengths())
+        [5, 7]
+
         """
         return [len(seq) for seq in self]
 
@@ -683,15 +680,13 @@ class SequenceCollection(SkbioObject):
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
 
-    The ``Alignment`` class adds convenience methods to the
-    ``SequenceCollection`` class to make it easy to work with alignments of
-    biological sequences.
+    The ``Alignment`` class adds methods to the ``SequenceCollection`` class
+    that are useful for working with aligned biological sequences.
 
     Parameters
     ----------
-    seqs : list of `skbio` objects
-        The `skbio` objects to load into
-        a new `Alignment` object.
+    seqs : list of `skbio.Sequence` objects
+        The `skbio.Sequence` objects to load into a new `Alignment` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
@@ -703,7 +698,7 @@ class Alignment(SequenceCollection):
         if applicable (usually only if the alignment was just constructed using
         a local alignment algorithm). Note that these should be indexes into
         the unaligned sequences, though the `Alignment` object itself doesn't
-        know about these.
+        know about these unless it is degapped.
 
     Raises
     ------
@@ -755,26 +750,18 @@ class Alignment(SequenceCollection):
         ----------
         distance_fn : function, optional
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as
-            `skbio` objects) and return a
-            single integer or float value. Defaults to
-            `scipy.spatial.distance.hamming`.
+            This must take two sequences as input (as `skbio.Sequence` objects)
+            and return a single integer or float value. Defaults to the default
+            distance function used by `skbio.Sequence.distance`.
 
         Returns
         -------
         skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
-        Raises
-        ------
-        skbio.util.exception.SequenceError
-            If ``len(self) != len(other)`` and ``distance_fn`` ==
-            ``scipy.spatial.distance.hamming``.
-
         See Also
         --------
-        skbio.DistanceMatrix
-        scipy.spatial.distance.hamming
+        skbio.Sequence.distance
 
         Examples
         --------
@@ -975,10 +962,10 @@ class Alignment(SequenceCollection):
         constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `skbio` in the `Alignment` object, but
-            you can pass a `skbio` class here to
-            ensure that they are all of consistent type, or ``str`` to have
-            them returned as strings.
+            `skbio.Sequence` in the `Alignment` object, but
+            you can pass a `skbio.Sequence` class here to ensure that they are
+            all of consistent type, or ``str`` to have them returned as
+            strings.
 
         Returns
         -------
@@ -1034,10 +1021,10 @@ class Alignment(SequenceCollection):
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence. The sequence will not have
-            its ID, description, or quality set; only the consensus sequence
-            will be set. The type of biological sequence that is returned will
-            be the same type as the first sequence in the alignment, or
-            ``Sequence`` if the alignment is empty.
+            its ID, description, or quality set; only the sequence will be set.
+            The type of biological sequence that is returned will be the same
+            type as the first sequence in the alignment, or ``Sequence`` if the
+            alignment is empty.
 
         Notes
         -----
