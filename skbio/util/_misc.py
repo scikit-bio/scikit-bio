@@ -19,6 +19,7 @@ from types import FunctionType
 with hooks():
     from itertools import zip_longest
 
+
 class MiniRegistry(dict):
     def __call__(self, name):
         """Act as a decorator to register functions with self"""
@@ -58,6 +59,7 @@ class MiniRegistry(dict):
         f2.__doc__ = "\n\n".join(t)
 
         setattr(obj, name, f2)
+
 
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.

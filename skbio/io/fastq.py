@@ -404,7 +404,6 @@ def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-
 @register_writer('fastq', DNA)
 def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',

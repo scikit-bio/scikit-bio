@@ -32,14 +32,14 @@ class Sequence(collections.Sequence, SkbioObject):
 
     Parameters
     ----------
-    sequence : python collections.Sequence (e.g., str, list or tuple)
-        The biological sequence.
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '|S1')
+        Characters representing the biological sequence itself.
     id : str, optional
-        The sequence id (e.g., an accession number).
+        The sequence identifier (e.g., an accession number).
     description : str, optional
         A description or comment about the sequence (e.g., "green
         fluorescent protein").
-    quality : 1-D array_like, int, optional
+    quality : 1D array_like (int), optional
         Phred quality scores stored as nonnegative integers, one per sequence
         character. If provided, must be the same length as the biological
         sequence. Can be a 1-D ``numpy.ndarray`` of integers, or a structure
@@ -184,8 +184,6 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.tostring()
 
     def __init__(self, sequence, id="", description="", quality=None):
-        """4 types to rule them all: char vector, byte vector, Sequence, or
-        string_types"""
         if isinstance(sequence, Sequence):
             if id == "":
                 id = sequence.id
@@ -500,8 +498,8 @@ class Sequence(collections.Sequence, SkbioObject):
                     # fall through to ndarray slicing below
                     indexable = np.asarray(indexable)
                 else:
-                    seq = np.concatenate(list(self._slices_from_iter(self._bytes,
-                                                                     indexable)))
+                    seq = np.concatenate(
+                        list(self._slices_from_iter(self._bytes, indexable)))
                     if self._has_quality():
                         qual = np.concatenate(list(self._slices_from_iter(
                             self.quality, indexable)))

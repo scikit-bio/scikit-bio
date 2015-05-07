@@ -274,11 +274,11 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
     def setUp(self):
         def generator():
             yield Sequence('ACGT', id='', description='',
-                                     quality=range(4))
+                           quality=range(4))
             yield RNA('GAU', id='  foo \t\t bar ', description='')
             yield DNA('TAG', id='', description='foo\n\n bar\n')
             yield Sequence('A', id='foo', description='bar baz',
-                                     quality=[42])
+                           quality=[42])
         self.gen = generator()
 
     def test_no_replacement(self):

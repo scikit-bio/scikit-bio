@@ -13,9 +13,7 @@ from six import StringIO
 from unittest import TestCase, main
 from functools import partial
 
-from skbio import (Sequence, DNA, RNA, Protein,
-                   Protein, SequenceCollection, Alignment)
-from skbio.sequence import SequenceError
+from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
@@ -344,8 +342,8 @@ class ReaderTests(TestCase):
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
              ValueError,
-             'Number of quality scores \(3\) must match the number of characters'
-             ' in the sequence \(4\)\.'),
+             'Number of quality scores \(3\) must match the number of characte'
+             'rs in the sequence \(4\)\.'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
@@ -479,7 +477,8 @@ class ReaderTests(TestCase):
 
                 # get middle
                 exp = constructor('ACGTTGCAccGG',
-                    quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0])
+                                  quality=[55, 10, 0, 999, 1, 1, 8, 775, 40,
+                                           10, 10, 0])
 
                 obs = reader_fn(fasta_fp, seq_num=4)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
@@ -758,7 +757,7 @@ class WriterTests(TestCase):
         test_data = (
             (_biological_sequence_to_fasta,
              Sequence('ACGT', id=id_, description=desc,
-                                quality=range(1, 5)),
+                      quality=range(1, 5)),
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
               'qual_single_bio_seq_non_defaults')),
