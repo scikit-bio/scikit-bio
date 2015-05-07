@@ -164,7 +164,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
         ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
         >>> s.quality
-        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,  0,  42,  42])
+        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,   0,  42,  42])
 
         """
         return self._quality
@@ -517,44 +517,41 @@ class Sequence(collections.Sequence, SkbioObject):
             yield array[i]
 
     def __len__(self):
-        """The len operator.
+        """Return the number of characters in the biological sequence.
 
         Returns
         -------
         int
-            The length of the `Sequence`.
+            The length of the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> len(s)
         4
-
-        .. shownumpydoc
 
         """
         return self._bytes.size
 
     def __iter__(self):
-        """The iter operator.
+        """Iterate over positions in the biological sequence.
 
         Returns
         -------
         iterator
-            Position iterator for the `Sequence`.
+            Position iterator for the biological sequence.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
-        >>> for c in s: print(c)
-        G
-        G
-        U
-        C
-
-        .. shownumpydoc
+        >>> for c in s:
+        ...     c
+        Sequence('G', length=1)
+        Sequence('G', length=1)
+        Sequence('U', length=1)
+        Sequence('C', length=1)
 
         """
         if self._has_quality():
