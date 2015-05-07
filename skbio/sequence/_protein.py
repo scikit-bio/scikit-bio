@@ -68,7 +68,7 @@ _motifs = parent_motifs.copy()
 
 @_motifs("N-glycosylation")
 def _motif_nitro_glycosylation(sequence, min_length, exclude):
-    """Explanation of N-glycosylation"""
+    """Identifies N-glycosylation runs"""
     return sequence.slices_from_regex("(N[^PX][ST][^PX])", exclude=exclude)
 
 # Leave this at the bottom

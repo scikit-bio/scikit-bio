@@ -175,14 +175,14 @@ _motifs = parent_motifs.copy()
 
 @_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, exclude):
-    """Purine run docstring"""
+    """Identifies purine runs"""
     return sequence.slices_from_regex("([AGR]{%d,})" % min_length,
                                       exclude=exclude)
 
 
 @_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, exclude):
-    """Pyrimidine run docstring"""
+    """Identifies pyrimidine runs"""
     return sequence.slices_from_regex("([CTUY]{%d,})" % min_length,
                                       exclude=exclude)
 
