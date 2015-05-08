@@ -941,6 +941,10 @@ class Sequence(collections.Sequence, SkbioObject):
             If `other` is a ``Sequence`` object with a different type than the
             biological sequence.
 
+        See Also
+        --------
+        mismatches
+
         Examples
         --------
         >>> from skbio import Sequence
@@ -978,6 +982,10 @@ class Sequence(collections.Sequence, SkbioObject):
             If `other` is a ``Sequence`` object with a different type than the
             biological sequence.
 
+        See Also
+        --------
+        matches
+
         Examples
         --------
         >>> from skbio import Sequence
@@ -989,82 +997,42 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return np.invert(self.matches(other))
 
-    def mismatch_frequency(self, other, relative=False):
-        """Return count of positions that differ relative to `other`
-
-        Parameters
-        ----------
-        other : `Sequence`
-            The `Sequence` to compare against.
-        relative : ``bool``
-            If ``True``, return the fraction of mismatches instead of the
-            count.
-
-        Returns
-        -------
-        int, float
-            The number of positions that differ between `self` and `other`.
-            This will be an ``int`` if ``relative == False``, and a ``float``
-            if ``relative == True``.
-
-        Raises
-        ------
-        skbio.sequence.SequenceError
-            If ``len(self) != len(other)``.
-
-        See Also
-        --------
-        distance
-        match_frequency
-        mismatches
-
-        Examples
-        --------
-        >>> from skbio.sequence import Sequence
-        >>> s = Sequence('GGUC')
-        >>> t = Sequence('AGUC')
-        >>> s.mismatch_frequency(t)
-        1
-        >>> s.mismatch_frequency(t, relative=True)
-        0.25
-
-        """
-        if relative:
-            return float(self.mismatches(other).mean())
-        else:
-            return int(self.mismatches(other).sum())
-
     def match_frequency(self, other, relative=False):
-        """Return count of positions that are the same relative to `other`
+        """Return count of positions that are the same between two sequences.
 
         Parameters
         ----------
-        other : `Sequence`
-            The `Sequence` to compare against.
-        relative : `bool`
-            If ``True``, return the fraction of matches instead of the count.
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compare to.
+        relative : bool, optional
+            If ``True``, return the relative frequency of matches instead of
+            the count.
 
         Returns
         -------
-        int, float
-            The number of positions that are the same between `self` and
-            `other`. This will be an ``int`` if ``relative == False``, and a
-            ``float`` if ``relative == True``.
+        int or float
+            Number of positions that are the same between the sequences. This
+            will be an ``int`` if `relative` is ``False`` and a ``float``
+            if `relative` is ``True``.
 
         Raises
         ------
-        skbio.sequence.SequenceError
-            If ``len(self) != len(other)``.
+        ValueError
+            If the sequences are not the same length.
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            biological sequence.
 
         See Also
         --------
-        distance
         mismatch_frequency
-        scipy.spatial.distance.hamming
+        matches
+        mismatches
+        distance
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.match_frequency(t)
@@ -1078,35 +1046,94 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.matches(other).sum())
 
+    def mismatch_frequency(self, other, relative=False):
+        """Return count of positions that differ between two sequences.
+
+        Parameters
+        ----------
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compare to.
+        relative : bool, optional
+            If ``True``, return the relative frequency of mismatches instead of
+            the count.
+
+        Returns
+        -------
+        int or float
+            Number of positions that differ between the sequences. This will be
+            an ``int`` if `relative` is ``False`` and a ``float``
+            if `relative` is ``True``.
+
+        Raises
+        ------
+        ValueError
+            If the sequences are not the same length.
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            biological sequence.
+
+        See Also
+        --------
+        match_frequency
+        matches
+        mismatches
+        distance
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('GGUC')
+        >>> t = Sequence('AGUC')
+        >>> s.mismatch_frequency(t)
+        1
+        >>> s.mismatch_frequency(t, relative=True)
+        0.25
+
+        """
+        if relative:
+            return float(self.mismatches(other).mean())
+        else:
+            return int(self.mismatches(other).sum())
+
     def kmers(self, k, overlap=True):
-        """Generator of words of length k
+        """Generate words of length `k` from the biological sequence.
 
         Parameters
         ----------
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlapping or not
-            overlapping.
+            Defines whether the kmers should be overlapping or not.
 
         Returns
         -------
-        iterator of Sequences
-            Iterator of words of length `k` contained in the Sequence.
+        iterator
+            Iterator of words of length `k` contained in the biological
+            sequence.
 
         Raises
         ------
         ValueError
-            If ``k < 1``.
+            If `k` is less than 1.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> [str(kw) for kw in s.kmers(4, overlap=False)]
-        ['ACAC', 'GACG']
-        >>> [str(kw) for kw in s.kmers(3, overlap=True)]
-        ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
+        >>> for kmer in s.kmers(4, overlap=False):
+        ...     kmer
+        Sequence('ACAC', length=4)
+        Sequence('GACG', length=4)
+        >>> for kmer in s.kmers(3, overlap=True):
+        ...     kmer
+        Sequence('ACA', length=3)
+        Sequence('CAC', length=3)
+        Sequence('ACG', length=3)
+        Sequence('CGA', length=3)
+        Sequence('GAC', length=3)
+        Sequence('ACG', length=3)
+        Sequence('CGT', length=3)
+        Sequence('GTT', length=3)
 
         """
         if k < 1:
@@ -1118,36 +1145,34 @@ class Sequence(collections.Sequence, SkbioObject):
             yield self[i:i+k]
 
     def kmer_frequencies(self, k, overlap=True, relative=False):
-        """Get the counts of words of length k
+        """Return counts of words of length `k` from the biological sequence.
 
         Parameters
         ----------
         k : int
             The word length.
         overlap : bool, optional
-            Defines whether the k-words should be overlapping or not
-            overlapping.
-        relative : bool
-            If ``True``, return the fractional abundance of each kmer instead
-            of its count.
-
+            Defines whether the kmers should be overlapping or not.
+        relative : bool, optional
+            If ``True``, return the relative frequency of each kmer instead of
+            its count.
 
         Returns
         -------
-        collections.Counter, defaultdict
-            The frequencies of words of length `k` contained in the
-            Sequence. Will be a ``Counter`` if ``relative == False``, and a
-            ``defaultdict`` if ``relative == True``.
+        collections.Counter or collections.defaultdict
+            Frequencies of words of length `k` contained in the biological
+            sequence. This will be a ``collections.Counter`` if `relative` is
+            ``False`` and a ``collections.defaultdict`` if `relative` is
+            ``True``.
 
         Raises
         ------
         ValueError
-            If ``k < 1`` or `k` is longer than the sequence.
-
+            If `k` is less than 1.
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> s.kmer_frequencies(3, overlap=False)
         Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
@@ -1172,41 +1197,34 @@ class Sequence(collections.Sequence, SkbioObject):
         return freqs
 
     def slices_from_regex(self, regex, exclude=None):
-        """Find patterns specified by regular expression
+        """Generate slices for patterns matched by a regular expression.
 
         Parameters
         ----------
-        regex : str, SRE_Pattern
-            A string to be compiled into a regular expression, or a pre-
-            compiled regular expression (e.g., from re.compile) with
-            finditer method.
-        exclude : array of bool
-            A boolean vector indicating positions to ignore when matching.
+        regex : str or regular expression object
+            String to be compiled into a regular expression, or a pre-
+            compiled regular expression object (e.g., from calling
+            ``re.compile``).
+        exclude : 1D array_like (bool), optional
+            Boolean vector indicating positions to ignore when matching.
 
         Returns
         -------
         generator
-            Yields lists of 3-tuples. Each 3-tuple represents a slice from
-            ``self`` (i.e., ``(start, end, step)``) where the regular
-            expression matched.
+            Yields slices where the regular expression matched.
 
-        Example
-        -------
-        >>> from skbio import DNA
-        >>> s = DNA('AATATACCGGTTATAA')
-        >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
-        slice(2, 6, None) TATA
-        slice(11, 16, None) TATAA
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('AATATACCGGTTATAA')
 
-        # Gaps can interupt the identification of meaninful patterns
-        >>> s = DNA('AATA--TACCGGTTATA-A')
-        >>> for e in s.slices_from_regex('(TATA+)'): print (e, s[e])
-        slice(13, 17, None) TATA
-
-        # Pass a boolean vector indictating where the gaps are to ignore them.
-        >>> for e in s.slices_from_regex('(TATA+)', s.gaps()): print (e, s[e])
-        slice(2, 8, None) TA--TA
-        slice(13, 19, None) TATA-A
+        >>> for match in s.slices_from_regex('(TATA+)'):
+        ...     match
+        ...     s[match]
+        slice(2, 6, None)
+        Sequence('TATA', length=4)
+        slice(11, 16, None)
+        Sequence('TATAA', length=5)
 
         """
         if isinstance(regex, string_types):
