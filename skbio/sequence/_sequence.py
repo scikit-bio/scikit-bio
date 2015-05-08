@@ -53,11 +53,6 @@ class Sequence(collections.Sequence, SkbioObject):
         with an ``int`` ``dtype``. The array will be made read-only (i.e., its
         ``WRITEABLE`` flag will be set to ``False``).
 
-    Raises
-    ------
-    skbio.sequence.SequenceError
-        If `quality` is not the correct shape.
-
     Attributes
     ----------
     id
@@ -1217,7 +1212,6 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AATATACCGGTTATAA')
-
         >>> for match in s.slices_from_regex('(TATA+)'):
         ...     match
         ...     s[match]
