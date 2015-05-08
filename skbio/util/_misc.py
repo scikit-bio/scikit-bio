@@ -7,12 +7,58 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.standard_library import hooks
 
 import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from warnings import warn
+from types import FunctionType
+
+with hooks():
+    from itertools import zip_longest
+
+
+class MiniRegistry(dict):
+    def __call__(self, name):
+        """Act as a decorator to register functions with self"""
+        def decorator(func):
+            self[name] = func
+            return func
+        return decorator
+
+    def copy(self):
+        """Useful for inheritance"""
+        return self.__class__(super(MiniRegistry, self).copy())
+
+    def formatted_listing(self):
+        """Produce an RST list with descriptions."""
+        if len(self) == 0:
+            return "\tNone"
+        else:
+            return "\n".join(["\t%r\n\t  %s" %
+                             (name, self[name].__doc__.split("\n")[0])
+                              for name in sorted(self)])
+
+    def interpolate(self, obj, name):
+        """Inject the formatted listing in the second blank line of `name`."""
+        # Py2/3 compatible way of calling getattr(obj, name).__func__
+        f = getattr(obj, name).__get__(None, type(None))
+
+        if hasattr(f, 'func_code'):
+            f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
+                              argdefs=f.func_defaults, closure=f.func_closure)
+        else:
+            f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                              argdefs=f.__defaults__, closure=f.__closure__)
+        # Conveniently the original docstring is on f2, not the new ones if
+        # inheritence is happening. I have no idea why.
+        t = f2.__doc__.split("\n\n")
+        t.insert(2, self.formatted_listing())
+        f2.__doc__ = "\n\n".join(t)
+
+        setattr(obj, name, f2)
 
 
 def cardinal_to_ordinal(n):
@@ -308,6 +354,57 @@ def flatten(items):
         except TypeError:
             result.append(i)
     return result
+
+
+def reprnator(start, tokens, end, separator=', '):
+    """You have no instance, no methods, no properties, you are but a repr.
+
+    Format components in PEP8 line-break style.
+
+    Parameters
+    ----------
+    start : str
+        A string to preprend to the result. New lines will be offset by the
+        width of `start`.
+    tokens : iterable (str)
+        An iterable of tokens to place between `start` and `end`. Tokens will
+        be put on a new line if they would exceed 79 characters on their
+        current line.
+    end : str
+        A string to append to the result.
+    seperator : str, optional
+        The seperator to place between each token. Default is `", "`.
+
+    Returns
+    -------
+    str
+        Tokens formatted in a PEP8 line-break style.
+
+    """
+    offset = len(start)
+    indent = '\n%s' % (' ' * offset)
+    remaining = 79 - offset
+
+    repr_ = [start]
+
+    for token, sep in zip_longest(tokens, [separator] * (len(tokens) - 1),
+                                  fillvalue=''):
+        token_len = len(token)
+        sep_len = len(sep)
+
+        if remaining - token_len - sep_len >= 0:
+            repr_.append(token + sep)
+            remaining -= token_len + sep_len
+        else:
+            repr_.append('%s%s' % (indent, token + sep))
+            remaining = 79 - offset - token_len - sep_len
+
+    if remaining - len(end) >= 0:
+        repr_.append(end)
+    else:
+        repr_.append('%s%s' % (indent, end))
+
+    return ''.join(repr_)
 
 
 def _get_create_dir_error_codes():

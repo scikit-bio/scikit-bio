@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 
 from skbio._base import SkbioObject
-from skbio.sequence import BiologicalSequence
+from skbio.sequence import Sequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -29,30 +29,30 @@ class SequenceCollection(SkbioObject):
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load into
-        a new `SequenceCollection` object.
+    seqs : list of `skbio.Sequence` objects
+        The `skbio.Sequence` objects to load into a new `SequenceCollection`
+        object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
 
     Raises
     ------
-    skbio.alignment.SequenceCollectionError
+    skbio.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
 
     See Also
     --------
-    skbio.sequence.BiologicalSequence
-    skbio.sequence.NucleotideSequence
-    skbio.sequence.DNASequence
-    skbio.sequence.RNASequence
+    skbio
+    skbio.DNA
+    skbio.RNA
+    skbio.Protein
     Alignment
 
     Examples
     --------
-    >>> from skbio.alignment import SequenceCollection
-    >>> from skbio.sequence import DNA
+    >>> from skbio import SequenceCollection
+    >>> from skbio import DNA
     >>> sequences = [DNA('ACCGT', id="seq1"),
     ...              DNA('AACCGGT', id="seq2")]
     >>> s1 = SequenceCollection(sequences)
@@ -62,7 +62,13 @@ class SequenceCollection(SkbioObject):
     """
     default_write_format = 'fasta'
 
-    def __init__(self, seqs, validate=False):
+    def __init__(self, seqs):
+        # TODO: find a good way to support generic Sequence objects in
+        # SequenceCollection and Alignment. The issue is that some methods
+        # assume that a sequence has knowledge of gap characters and a
+        # standard alphabet, which aren't present on Sequence. For now, if
+        # these methods are called by a user they'll get an error (likely
+        # an AttributeError).
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
@@ -74,29 +80,19 @@ class SequenceCollection(SkbioObject):
             else:
                 self._id_to_index[seq.id] = i
 
-        # This is bad because we're making a second pass through the sequence
-        # collection to validate. We'll want to avoid this, but it's tricky
-        # because different subclasses will want to define their own is_valid
-        # methods.
-        if validate and not self.is_valid():
-            raise SequenceCollectionError(
-                "%s failed to validate." % self.__class__.__name__)
-
     def __contains__(self, id):
         r"""The in operator.
 
         Parameters
         ----------
         id : str
-            The id to look up in the `SequenceCollection`.
+            The `skbio.Sequence.id` to look up in the `SequenceCollection`.
 
         Returns
         -------
         bool
-            Indicates whether `id` corresponds to a sequence id
-            in the `SequenceCollection`.
-
-        .. shownumpydoc
+            Returns `True` if `id` is the `skbio.Sequence.id` of a sequence in
+            the `SequenceCollection`.
 
         """
         return id in self._id_to_index
@@ -118,9 +114,7 @@ class SequenceCollection(SkbioObject):
         -----
         `SequenceCollection` objects are equal if they are the same type,
         contain the same number of sequences, and if each of the
-        `skbio.sequence.BiologicalSequence` objects, in order, are equal.
-
-        .. shownumpydoc
+        `skbio.Sequence` objects, in order, are equal.
 
         """
         if self.__class__ != other.__class__:
@@ -139,29 +133,26 @@ class SequenceCollection(SkbioObject):
         Parameters
         ----------
         index : int, str
-            The position or sequence id of the
-            `skbio.sequence.BiologicalSequence` to return from the
-            `SequenceCollection`.
+            The position or sequence id of the `skbio.Sequence` to return from
+            the `SequenceCollection`.
 
         Returns
         -------
-        `skbio.sequence.BiologicalSequence`
-            The `skbio.sequence.BiologicalSequence` at the specified
-            index in the `SequenceCollection`.
+        skbio.Sequence
+            The `skbio.Sequence` at the specified index in the
+            `SequenceCollection`.
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> s1[0]
-        <DNASequence: ACCGT (length: 5)>
+        DNA('ACCGT', length=5, id='seq1')
         >>> s1["seq1"]
-        <DNASequence: ACCGT (length: 5)>
-
-        .. shownumpydoc
+        DNA('ACCGT', length=5, id='seq1')
 
         """
         if isinstance(index, str):
@@ -175,10 +166,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio.sequence.BiologicalSequence` iterator for the
-            `SequenceCollection`.
-
-        .. shownumpydoc
+            `skbio.Sequence` iterator for the `SequenceCollection`.
 
         """
         return iter(self._data)
@@ -190,8 +178,6 @@ class SequenceCollection(SkbioObject):
         -------
         int
             The number of sequences in the `SequenceCollection`.
-
-        .. shownumpydoc
 
         """
         return self.sequence_count()
@@ -213,8 +199,6 @@ class SequenceCollection(SkbioObject):
         See `SequenceCollection.__eq__` for a description of what it means for
         a pair of `SequenceCollection` objects to be equal.
 
-        .. shownumpydoc
-
         """
         return not self.__eq__(other)
 
@@ -234,15 +218,13 @@ class SequenceCollection(SkbioObject):
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
         >>> print(repr(s1))
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
-
-        .. shownumpydoc
 
         """
         cn = self.__class__.__name__
@@ -256,10 +238,8 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         iterator
-            `skbio.sequence.BiologicalSequence` iterator for the
-            `SequenceCollection` in reverse order.
-
-        .. shownumpydoc
+            `skbio.Sequence` iterator for the `SequenceCollection` in reverse
+            order.
 
         """
         return reversed(self._data)
@@ -271,8 +251,6 @@ class SequenceCollection(SkbioObject):
         -------
         str
             Fasta-formatted string of all sequences in the object.
-
-        .. shownumpydoc
 
         """
         fh = StringIO()
@@ -288,20 +266,13 @@ class SequenceCollection(SkbioObject):
         ----------
         distance_fn : function
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as
-            `skbio.sequence.BiologicalSequence` objects) and return a
-            single integer or float value.
+            This must take two sequences as input (as `skbio.Sequence` objects)
+            and return a single integer or float value.
 
         Returns
         -------
         skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
-
-        Raises
-        ------
-        skbio.util.exception.BiologicalSequenceError
-            If ``len(self) != len(other)`` and ``distance_fn`` ==
-            ``scipy.spatial.distance.hamming``.
 
         See Also
         --------
@@ -311,8 +282,8 @@ class SequenceCollection(SkbioObject):
         Examples
         --------
         >>> from scipy.spatial.distance import hamming
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> seqs = [DNA("ACCGGGTT", id="s1"),
         ...         DNA("ACTTGGTT", id="s2"),
         ...         DNA("ACTAGGTT", id="s3")]
@@ -343,10 +314,10 @@ class SequenceCollection(SkbioObject):
         Parameters
         ----------
         center_f : function
-            Should take a list-like object and return a single value
+            Should take an array_like object and return a single value
             representing the center of the distribution.
         spread_f : function
-            Should take a list-like object and return a single value
+            Should take an array_like object and return a single value
             representing the spread of the distribution.
 
         Returns
@@ -362,8 +333,8 @@ class SequenceCollection(SkbioObject):
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('ACCGT', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -385,14 +356,13 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         SequenceCollection
-            A new `SequenceCollection` where
-            `skbio.sequence.BiologicalSequence.degap` has been called on
-            each sequence.
+            A new `SequenceCollection` where `skbio.Sequence.degap` has been
+            called on each sequence.
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -413,8 +383,8 @@ class SequenceCollection(SkbioObject):
 
         Returns
         -------
-        skbio.sequence.BiologicalSequence
-            The `skbio.sequence.BiologicalSequence` with `id`.
+        skbio.Sequence
+            The `skbio.Sequence` with `id`.
 
         Raises
         ------
@@ -423,8 +393,8 @@ class SequenceCollection(SkbioObject):
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -435,19 +405,18 @@ class SequenceCollection(SkbioObject):
         return self[self._id_to_index[id]]
 
     def ids(self):
-        """Returns the `BiologicalSequence` ids
+        """Returns the `Sequence` ids
 
         Returns
         -------
         list
-            The ordered list of ids for the
-            `skbio.sequence.BiologicalSequence` objects in the
+            The ordered list of ids for the `skbio.Sequence` objects in the
             `SequenceCollection`.
 
         Examples
         --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
         >>> sequences = [DNA('A--CCGT.', id="seq1"),
         ...              DNA('.AACCG-GT.', id="seq2")]
         >>> s1 = SequenceCollection(sequences)
@@ -457,26 +426,28 @@ class SequenceCollection(SkbioObject):
         """
         return [seq.id for seq in self]
 
-    def update_ids(self, ids=None, fn=None, prefix=""):
+    def update_ids(self, ids=None, func=None, prefix=""):
         """Update sequence IDs on the sequence collection.
 
         IDs can be updated by providing a sequence of new IDs (`ids`) or a
-        function that maps current IDs to new IDs (`fn`).
+        function that maps current IDs to new IDs (`func`).
 
-        Default behavior (if `ids` and `fn` are not provided) is to create new
-        IDs that are unique postive integers (starting at 1) cast as strings,
-        optionally preceded by `prefix`. For example, ``('1', '2', '3', ...)``.
+        Default behavior (if `ids` and `func` are not provided) is to create
+        new IDs that are unique postive integers (starting at 1) cast as
+        strings, optionally preceded by `prefix`. For example, ``('1', '2',
+        '3', ...)``.
 
         Parameters
         ----------
         ids : sequence of str, optional
             New IDs to update on the sequence collection.
-        fn : function, optional
+        func : function, optional
             Function accepting a sequence of current IDs and returning a
             sequence of new IDs to update on the sequence collection.
         prefix : str, optional
-            If `ids` and `fn` are both ``None``, `prefix` is prepended to each
-            new integer-based ID (see description of default behavior above).
+            If `ids` and `func` are both ``None``, `prefix` is prepended to
+            each new integer-based ID (see description of default behavior
+            above).
 
         Returns
         -------
@@ -489,8 +460,8 @@ class SequenceCollection(SkbioObject):
         Raises
         ------
         SequenceCollectionError
-            If both `ids` and `fn` are provided, `prefix` is provided with
-            either `ids` or `fn`, or the number of new IDs does not match the
+            If both `ids` and `func` are provided, `prefix` is provided with
+            either `ids` or `func`, or the number of new IDs does not match the
             number of sequences in the sequence collection.
 
         Notes
@@ -528,7 +499,7 @@ class SequenceCollection(SkbioObject):
 
         >>> def id_mapper(ids):
         ...     return [id_ + '-new' for id_ in ids]
-        >>> s3, new_to_old_ids = s1.update_ids(fn=id_mapper)
+        >>> s3, new_to_old_ids = s1.update_ids(func=id_mapper)
         >>> s3.ids()
         ['abc-new', 'def-new']
 
@@ -539,26 +510,26 @@ class SequenceCollection(SkbioObject):
         ['ghi', 'jkl']
 
         """
-        if ids is not None and fn is not None:
-            raise SequenceCollectionError("ids and fn cannot both be "
+        if ids is not None and func is not None:
+            raise SequenceCollectionError("ids and func cannot both be "
                                           "provided.")
-        if (ids is not None and prefix) or (fn is not None and prefix):
+        if (ids is not None and prefix) or (func is not None and prefix):
             raise SequenceCollectionError("prefix cannot be provided if ids "
-                                          "or fn is provided.")
+                                          "or func is provided.")
 
         if ids is not None:
-            def fn(_):
+            def func(_):
                 return ids
 
-        elif fn is None:
-            def fn(_):
+        elif func is None:
+            def func(_):
                 new_ids = []
                 for i in range(1, len(self) + 1):
                     new_ids.append("%s%d" % (prefix, i))
                 return new_ids
 
         old_ids = self.ids()
-        new_ids = fn(old_ids)
+        new_ids = func(old_ids)
 
         if len(new_ids) != len(old_ids):
             raise SequenceCollectionError(
@@ -569,7 +540,20 @@ class SequenceCollection(SkbioObject):
 
         new_seqs = []
         for new_id, seq in zip(new_ids, self):
-            new_seqs.append(seq.copy(id=new_id))
+            # HACK: Sequence objects are currently immutable. We used to have a
+            # Sequence.copy/to method that created a new Sequence object,
+            # optionally with attribute(s) set to new values. Here we want to
+            # retain all state in the Sequence object and only update the ID.
+            # There is a private method `_to` that accomplishes this for us.
+            # This method used to be public and is fully tested and documented.
+            # In the future, Sequence objects will have a `copy` method and
+            # their attributes will be reassignable. When that happens, this
+            # code can be updated to something like:
+            #
+            #     new_seq = seq.copy()
+            #     new_seq.id = new_id
+            #     new_seqs.append(new_seq)
+            new_seqs.append(seq._to(id=new_id))
 
         return self.__class__(new_seqs), new_to_old_ids
 
@@ -585,72 +569,18 @@ class SequenceCollection(SkbioObject):
         """
         return self.sequence_count() == 0
 
-    def is_valid(self):
-        """Return True if the SequenceCollection is valid
-
-        Returns
-        -------
-        bool
-            ``True`` if `self` is valid, and ``False`` otherwise.
-
-        Notes
-        -----
-        Validity is defined as having no sequences containing characters
-        outside of their valid character sets.
-
-        See Also
-        --------
-        skbio.alignment.BiologicalSequence.is_valid
-
-        Examples
-        --------
-        >>> from skbio.alignment import SequenceCollection
-        >>> from skbio.sequence import DNA, RNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        True
-        >>> sequences = [RNA('ACCGT', id="seq1"),
-        ...              RNA('AACCGGT', id="seq2")]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1.is_valid())
-        False
-
-        """
-        return self._validate_character_set()
-
     def iteritems(self):
         """Generator of id, sequence tuples
 
         Returns
         -------
         generator of tuples
-            Each tuple contains ordered
-            (`skbio.sequence.BiologicalSequence.id`,
-            `skbio.sequence.BiologicalSequence`) pairs.
+            Each tuple contains ordered (`skbio.Sequence.id`, `skbio.Sequence`)
+            pairs.
 
         """
         for seq in self:
             yield seq.id, seq
-
-    def lower(self):
-        """Converts all sequences to lowercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where
-            `skbio.sequence.BiologicalSequence.lower()` has been called
-            on each sequence.
-
-        See Also
-        --------
-        skbio.sequence.BiologicalSequence.lower
-        upper
-
-        """
-        return self.__class__([seq.lower() for seq in self])
 
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
@@ -665,10 +595,20 @@ class SequenceCollection(SkbioObject):
         sequence_lengths
         Alignment.sequence_length
 
+        Examples
+        --------
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
+        >>> sequences = [DNA('A--CCGT.', id="seq1"),
+        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print(s1.sequence_count())
+        2
+
         """
         return len(self._data)
 
-    def k_word_frequencies(self, k, overlapping=True):
+    def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return k-word frequencies for sequences in ``SequenceCollection``.
 
         Parameters
@@ -682,7 +622,7 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         list
-            List of ``collections.defaultdict`` objects, one for each sequence
+            List of ``collections.Counter`` objects, one for each sequence
             in the ``SequenceCollection``, representing the frequency of each
             k-word in each sequence of the ``SequenceCollection``.
 
@@ -697,19 +637,20 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AT', id="seq2"),
         ...              DNA('TTTT', id="seq3")]
         >>> s1 = SequenceCollection(sequences)
-        >>> for freqs in s1.k_word_frequencies(1):
+        >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
-        defaultdict(<type 'float'>, {'A': 1.0})
-        defaultdict(<type 'float'>, {'A': 0.5, 'T': 0.5})
-        defaultdict(<type 'float'>, {'T': 1.0})
-        >>> for freqs in s1.k_word_frequencies(2):
+        Counter({'A': 1})
+        Counter({'A': 1, 'T': 1})
+        Counter({'T': 4})
+        >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
-        defaultdict(<type 'float'>, {})
-        defaultdict(<type 'float'>, {'AT': 1.0})
-        defaultdict(<type 'float'>, {'TT': 1.0})
+        Counter()
+        Counter({'AT': 1})
+        Counter({'TT': 3})
 
         """
-        return [s.k_word_frequencies(k, overlapping) for s in self]
+        return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
+                for s in self]
 
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
@@ -723,47 +664,30 @@ class SequenceCollection(SkbioObject):
         --------
         sequence_count
 
+        Examples
+        --------
+        >>> from skbio import SequenceCollection
+        >>> from skbio import DNA
+        >>> sequences = [DNA('ACCGT', id="seq1"),
+        ...              DNA('AACCGGT', id="seq2")]
+        >>> s1 = SequenceCollection(sequences)
+        >>> print(s1.sequence_lengths())
+        [5, 7]
+
         """
         return [len(seq) for seq in self]
-
-    def upper(self):
-        """Converts all sequences to uppercase
-
-        Returns
-        -------
-        SequenceCollection
-            New `SequenceCollection` object where `BiologicalSequence.upper()`
-            has been called on each sequence.
-
-        See Also
-        --------
-        BiologicalSequence.upper
-        lower
-
-        """
-        return self.__class__([seq.upper() for seq in self])
-
-    def _validate_character_set(self):
-        """Return ``True`` if all sequences are valid, ``False`` otherwise
-        """
-        for seq in self:
-            if not seq.is_valid():
-                return False
-        return True
 
 
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
 
-    The ``Alignment`` class adds convenience methods to the
-    ``SequenceCollection`` class to make it easy to work with alignments of
-    biological sequences.
+    The ``Alignment`` class adds methods to the ``SequenceCollection`` class
+    that are useful for working with aligned biological sequences.
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load into
-        a new `Alignment` object.
+    seqs : list of `skbio.Sequence` objects
+        The `skbio.Sequence` objects to load into a new `Alignment` object.
     validate : bool, optional
         If True, runs the `is_valid` method after construction and raises
         `SequenceCollectionError` if ``is_valid == False``.
@@ -775,13 +699,13 @@ class Alignment(SequenceCollection):
         if applicable (usually only if the alignment was just constructed using
         a local alignment algorithm). Note that these should be indexes into
         the unaligned sequences, though the `Alignment` object itself doesn't
-        know about these.
+        know about these unless it is degapped.
 
     Raises
     ------
-    skbio.alignment.SequenceCollectionError
+    skbio.SequenceCollectionError
         If ``validate == True`` and ``is_valid == False``.
-    skbio.alignment.AlignmentError
+    skbio.AlignmentError
         If not all the sequences have the same length.
 
     Notes
@@ -792,16 +716,16 @@ class Alignment(SequenceCollection):
 
     See Also
     --------
-    skbio.sequence.BiologicalSequence
-    skbio.sequence.NucleotideSequence
-    skbio.sequence.DNASequence
-    skbio.sequence.RNASequence
+    skbio
+    skbio.DNA
+    skbio.RNA
+    skbio.Protein
     SequenceCollection
 
     Examples
     --------
-    >>> from skbio.alignment import Alignment
-    >>> from skbio.sequence import DNA
+    >>> from skbio import Alignment
+    >>> from skbio import DNA
     >>> sequences = [DNA('A--CCGT', id="seq1"),
     ...              DNA('AACCGGT', id="seq2")]
     >>> a1 = Alignment(sequences)
@@ -810,9 +734,8 @@ class Alignment(SequenceCollection):
 
     """
 
-    def __init__(self, seqs, validate=False, score=None,
-                 start_end_positions=None):
-        super(Alignment, self).__init__(seqs, validate)
+    def __init__(self, seqs, score=None, start_end_positions=None):
+        super(Alignment, self).__init__(seqs)
 
         if not self._validate_lengths():
             raise AlignmentError("All sequences need to be of equal length.")
@@ -828,31 +751,23 @@ class Alignment(SequenceCollection):
         ----------
         distance_fn : function, optional
             Function for computing the distance between a pair of sequences.
-            This must take two sequences as input (as
-            `skbio.sequence.BiologicalSequence` objects) and return a
-            single integer or float value. Defaults to
-            `scipy.spatial.distance.hamming`.
+            This must take two sequences as input (as `skbio.Sequence` objects)
+            and return a single integer or float value. Defaults to the default
+            distance function used by `skbio.Sequence.distance`.
 
         Returns
         -------
         skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
-        Raises
-        ------
-        skbio.util.exception.BiologicalSequenceError
-            If ``len(self) != len(other)`` and ``distance_fn`` ==
-            ``scipy.spatial.distance.hamming``.
-
         See Also
         --------
-        skbio.DistanceMatrix
-        scipy.spatial.distance.hamming
+        skbio.Sequence.distance
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> seqs = [DNA("A-CCGGG", id="s1"),
         ...         DNA("ATCC--G", id="s2"),
         ...         DNA("ATCCGGA", id="s3")]
@@ -944,8 +859,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> seqs = [DNA("A-CCGGG", id="s1"),
         ...         DNA("ATCC--G", id="s2"),
         ...         DNA("ATCCGGA", id="s3")]
@@ -1048,10 +963,10 @@ class Alignment(SequenceCollection):
         constructor : type, optional
             Constructor function for creating the positional values. By
             default, these will be the same type as corresponding
-            `skbio.sequence.BiologicalSequence` in the `Alignment` object, but
-            you can pass a `skbio.sequence.BiologicalSequence` class here to
-            ensure that they are all of consistent type, or ``str`` to have
-            them returned as strings.
+            `skbio.Sequence` in the `Alignment` object, but
+            you can pass a `skbio.Sequence` class here to ensure that they are
+            all of consistent type, or ``str`` to have them returned as
+            strings.
 
         Returns
         -------
@@ -1065,20 +980,20 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('ACCGT--', id="seq1"),
         ...              DNA('AACCGGT', id="seq2")]
         >>> a1 = Alignment(sequences)
         >>> for position in a1.iter_positions():
         ...     print(position)
-        [<DNASequence: A (length: 1)>, <DNASequence: A (length: 1)>]
-        [<DNASequence: C (length: 1)>, <DNASequence: A (length: 1)>]
-        [<DNASequence: C (length: 1)>, <DNASequence: C (length: 1)>]
-        [<DNASequence: G (length: 1)>, <DNASequence: C (length: 1)>]
-        [<DNASequence: T (length: 1)>, <DNASequence: G (length: 1)>]
-        [<DNASequence: - (length: 1)>, <DNASequence: G (length: 1)>]
-        [<DNASequence: - (length: 1)>, <DNASequence: T (length: 1)>]
+        [DNA('A', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
+        [DNA('C', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
+        [DNA('C', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
+        [DNA('G', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
+        [DNA('T', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
+        [DNA('-', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
+        [DNA('-', length=1, id='seq1'), DNA('T', length=1, id='seq2')]
 
         >>> for position in a1.iter_positions(constructor=str):
         ...     print(position)
@@ -1103,14 +1018,14 @@ class Alignment(SequenceCollection):
 
         Returns
         -------
-        skbio.sequence.BiologicalSequence
+        skbio.Sequence
             The consensus sequence of the `Alignment`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence. The sequence will not have
-            its ID, description, or quality set; only the consensus sequence
-            will be set. The type of biological sequence that is returned will
-            be the same type as the first sequence in the alignment, or
-            ``BiologicalSequence`` if the alignment is empty.
+            its ID, description, or quality set; only the sequence will be set.
+            The type of biological sequence that is returned will be the same
+            type as the first sequence in the alignment, or ``Sequence`` if the
+            alignment is empty.
 
         Notes
         -----
@@ -1120,26 +1035,26 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
         >>> a1 = Alignment(sequences)
         >>> a1.majority_consensus()
-        <DNASequence: AT-C (length: 4)>
+        DNA('AT-C', length=4)
 
         """
         if self.is_empty():
-            seq_constructor = BiologicalSequence
+            seq_constructor = Sequence
         else:
             seq_constructor = self[0].__class__
 
         # Counter.most_common returns an ordered list of the n most common
         # (sequence, count) items in Counter. Here we set n=1, and take only
         # the character, not the count.
-        return seq_constructor(c.most_common(1)[0][0]
-                               for c in self.position_counters())
+        return seq_constructor(''.join(c.most_common(1)[0][0]
+                               for c in self.position_counters()))
 
     def omit_gap_positions(self, maximum_gap_frequency):
         """Returns Alignment with positions filtered based on gap frequency
@@ -1160,8 +1075,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1182,11 +1097,11 @@ class Alignment(SequenceCollection):
             return self.__class__([])
 
         position_frequencies = self.position_frequencies()
-        gap_alphabet = self[0].gap_alphabet()
+        gap_chars = self[0].gap_chars
 
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
-            gap_frequency = sum([f[c] for c in gap_alphabet])
+            gap_frequency = sum([f[c] for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
@@ -1210,8 +1125,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1229,17 +1144,17 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return self.__class__([])
 
-        base_frequencies = self.k_word_frequencies(k=1)
-        gap_alphabet = self[0].gap_alphabet()
+        base_frequencies = self.kmer_frequencies(k=1, relative=True)
+        gap_chars = self[0].gap_chars
         seqs_to_keep = []
         for seq, f in zip(self, base_frequencies):
-            gap_frequency = sum([f[c] for c in gap_alphabet])
+            gap_frequency = sum([f[c] for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.id)
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
-        """Return collections.Counter object for positions in Alignment
+        """Return counts of characters at each position in the alignment
 
         Returns
         -------
@@ -1254,8 +1169,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1284,12 +1199,12 @@ class Alignment(SequenceCollection):
         --------
         position_counters
         position_entropies
-        k_word_frequencies
+        kmer_frequencies
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1317,10 +1232,10 @@ class Alignment(SequenceCollection):
         Parameters
         ----------
         base : float, optional
-            log base for entropy calculation. If not passed, default will be e
+            Log base for entropy calculation. If not passed, default will be e
             (i.e., natural log will be computed).
         nan_on_non_standard_chars : bool, optional
-            if True, the entropy at positions containing characters outside of
+            If True, the entropy at positions containing characters outside of
             the first sequence's `iupac_standard_characters` will be `np.nan`.
             This is useful, and the default behavior, as it's not clear how a
             gap or degenerate character should contribute to a positional
@@ -1349,8 +1264,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AA--', id="seq1"),
         ...              DNA('AC-C', id="seq2"),
         ...              DNA('AT-C', id="seq3"),
@@ -1365,7 +1280,7 @@ class Alignment(SequenceCollection):
         if self.is_empty():
             return result
 
-        iupac_standard_characters = self[0].iupac_standard_characters()
+        iupac_standard_characters = self[0].nondegenerate_chars
         for f in self.position_frequencies():
             if (nan_on_non_standard_chars and
                     len(viewkeys(f) - iupac_standard_characters) > 0):
@@ -1389,8 +1304,8 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio.alignment import Alignment
-        >>> from skbio.sequence import DNA
+        >>> from skbio import Alignment
+        >>> from skbio import DNA
         >>> sequences = [DNA('AC--', id="seq1"),
         ...              DNA('AT-C', id="seq2"),
         ...              DNA('TT-C', id="seq3")]
@@ -1420,8 +1335,8 @@ class StockholmAlignment(Alignment):
 
     Parameters
     ----------
-    seqs : list of `skbio.sequence.BiologicalSequence` objects
-        The `skbio.sequence.BiologicalSequence` objects to load.
+    seqs : list of `skbio.Sequence` objects
+        The `skbio.Sequence` objects to load.
     gf : dict, optional
         GF info in the format {feature: info}
     gs : dict of dicts, optional
@@ -1455,22 +1370,22 @@ class StockholmAlignment(Alignment):
 
         # STOCKHOLM 1.0
         seq1         ACC--G-GGGU
-        seq2         TCC--G-GGGA
+        seq2         UCC--G-GGGA
         #=GC SS_cons (((.....)))
         //
 
-    >>> from skbio.sequence import RNA
+    >>> from skbio import RNA
     >>> from skbio.alignment import StockholmAlignment
     >>> from StringIO import StringIO
     >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
-    ...                   "seq1     ACC--G-GGGU\\nseq2     TCC--G-GGGA\\n"
+    ...                   "seq1     ACC--G-GGGU\\nseq2     UCC--G-GGGA\\n"
     ...                   "#=GC SS_cons (((.....)))\\n//")
     >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
     >>> sto = next(sto_records)
     >>> print(sto)
     # STOCKHOLM 1.0
     seq1          ACC--G-GGGU
-    seq2          TCC--G-GGGA
+    seq2          UCC--G-GGGA
     #=GC SS_cons  (((.....)))
     //
     >>> sto.gc
@@ -1479,10 +1394,10 @@ class StockholmAlignment(Alignment):
     We can also write out information by instantiating the StockholmAlignment
     object and then printing it.
 
-    >>> from skbio.sequence import RNA
+    >>> from skbio import RNA
     >>> from skbio.alignment import StockholmAlignment
     >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-    ...     RNA("TCC--G-GGGA", id="seq2")]
+    ...         RNA("UCC--G-GGGA", id="seq2")]
     >>> gf = {
     ... "RT": ["TITLE1",  "TITLE2"],
     ... "RA": ["Auth1;", "Auth2;"],
@@ -1502,16 +1417,15 @@ class StockholmAlignment(Alignment):
     #=GF RA Auth2;
     #=GF RL Cell
     seq1          ACC--G-GGGU
-    seq2          TCC--G-GGGA
+    seq2          UCC--G-GGGA
     //
     """
-    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None,
-                 validate=False):
+    def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None):
         self.gf = gf if gf else {}
         self.gs = gs if gs else {}
         self.gr = gr if gr else {}
         self.gc = gc if gc else {}
-        super(StockholmAlignment, self).__init__(seqs, validate)
+        super(StockholmAlignment, self).__init__(seqs)
 
     def __str__(self):
         """Parses StockholmAlignment into a string with stockholm format
@@ -1761,9 +1675,9 @@ class StockholmAlignment(Alignment):
         infile : open file object
             An open stockholm file.
 
-        seq_constructor : BiologicalSequence object
-            The biologicalsequence object that corresponds to what the
-            stockholm file holds. See skbio.sequence
+        seq_constructor : Sequence object
+            The Sequence object that corresponds to what the
+            stockholm file holds. See skbio
 
         strict : bool (optional)
             Turns on strict parsing of GR and GC lines to ensure one char per
@@ -1775,7 +1689,7 @@ class StockholmAlignment(Alignment):
 
         Raises
         ------
-        skbio.alignment.StockholmParseError
+        skbio.StockholmParseError
             If any lines are found that don't conform to stockholm format
         """
         # make sure first line is corect

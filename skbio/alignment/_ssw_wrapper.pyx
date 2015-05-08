@@ -10,7 +10,7 @@ from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
 from skbio.alignment import Alignment
-from skbio.sequence import ProteinSequence, NucleotideSequence
+from skbio.sequence import Protein, Sequence
 
 cdef extern from "_lib/ssw.h":
 
@@ -521,7 +521,7 @@ cdef class StripedSmithWaterman:
     Notes
     -----
     This is a wrapper for the SSW package [1]_.
-    
+
     `mask_length` has to be >= 15, otherwise the suboptimal alignment
     information will NOT be returned.
 
@@ -532,7 +532,7 @@ cdef class StripedSmithWaterman:
     nucleotide sequences.
 
     A substitution matrix must be provided when working with protein sequences.
-    
+
     References
     ----------
     .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
@@ -728,16 +728,18 @@ cdef class StripedSmithWaterman:
         return py_list_matrix
 
 
-def local_pairwise_align_ssw(sequence1, sequence2,
+def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
                              **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
     Parameters
     ----------
-    sequence1 : str or BiologicalSequence
+    sequence1 : str or Sequence
         The first unaligned sequence
-    sequence2 : str or BiologicalSequence
+    sequence2 : str or Sequence
         The second unaligned sequence
+    constructor : Sequence subclass
+        A constructor to use if `protein` is not True.
 
     Returns
     -------
@@ -755,14 +757,14 @@ def local_pairwise_align_ssw(sequence1, sequence2,
     `zero_index`
 
     If an alignment does not meet a provided filter, `None` will be returned.
-    
+
     References
     ----------
     .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
        Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
        Applications". PLOS ONE (2013). Web. 11 July 2014.
        http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
-     
+
     See Also
     --------
     skbio.alignment.StripedSmithWaterman
@@ -773,7 +775,7 @@ def local_pairwise_align_ssw(sequence1, sequence2,
     kwargs['suppress_sequences'] = False
     kwargs['zero_index'] = True
 
-    if isinstance(sequence1, ProteinSequence):
+    if isinstance(sequence1, Protein):
         kwargs['protein'] = True
 
     query = StripedSmithWaterman(str(sequence1), **kwargs)
@@ -791,13 +793,13 @@ def local_pairwise_align_ssw(sequence1, sequence2,
         ]
     if kwargs.get('protein', False):
         seqs = [
-            ProteinSequence(alignment.aligned_query_sequence, id='query'),
-            ProteinSequence(alignment.aligned_target_sequence, id='target')
+            Protein(alignment.aligned_query_sequence, id='query'),
+            Protein(alignment.aligned_target_sequence, id='target')
         ]
     else:
         seqs = [
-            NucleotideSequence(alignment.aligned_query_sequence, id='query'),
-            NucleotideSequence(alignment.aligned_target_sequence, id='target')
+            constructor(alignment.aligned_query_sequence, id='query'),
+            constructor(alignment.aligned_target_sequence, id='target')
         ]
 
     return Alignment(seqs, score=alignment.optimal_alignment_score,

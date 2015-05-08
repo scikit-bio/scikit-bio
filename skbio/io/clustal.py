@@ -69,7 +69,7 @@ We can use the following code to read a clustal file:
 ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
 >>> for dna in read(clustal_f, format="clustal", into=Alignment):
 ...     print(dna.id)
-...     print(dna.sequence)
+...     print(str(dna))
 abc
 GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
 def
@@ -116,7 +116,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       ClustalFormatError)
-from skbio.sequence import BiologicalSequence
+from skbio.sequence import Sequence
 from skbio.alignment import Alignment
 
 
@@ -245,13 +245,13 @@ def _alignment_to_clustal(obj, fh):
     Parameters
     ----------
     obj: Alignment object
-        An alignment object containing a set of BiologicalSequence objects
+        An alignment object containing a set of Sequence objects
     fh: open file handle object
         An open file handle object containing Clustal sequences.
 
     """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.id, s.sequence) for s in obj])
+    names, seqs = zip(*[(s.id, str(s)) for s in obj])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n\n')
@@ -320,5 +320,5 @@ def _clustal_to_alignment(fh, strict=True):
         raise ClustalFormatError("Sequences not aligned properly")
     alns = []
     for key in labels:
-        alns.append(BiologicalSequence(id=key, sequence=''.join(data[key])))
+        alns.append(Sequence(id=key, sequence=''.join(data[key])))
     return Alignment(alns)

@@ -15,19 +15,17 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |No    |generator of :mod:`skbio.sequence.BiologicalSequence` objects  |
+|Yes   |No    |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
 |Yes   |No    |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.BiologicalSequence`                       |
+|Yes   |No    |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.NucleotideSequence`                       |
+|Yes   |No    |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.DNASequence`                              |
+|Yes   |No    |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.RNASequence`                              |
-+------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.sequence.ProteinSequence`                          |
+|Yes   |No    |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -120,12 +118,12 @@ References
 from __future__ import absolute_import, division, print_function
 
 from future.builtins import zip, range
+from functools import partial
 
 from skbio.io import register_reader, register_sniffer, QSeqFormatError
 from skbio.io._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.alignment import SequenceCollection
-from skbio.sequence import (BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence)
+from skbio.sequence import Sequence, DNA, RNA, Protein
 
 _default_phred_offset = None
 _default_variant = None
@@ -145,7 +143,7 @@ def _qseq_sniffer(fh):
 
 
 @register_reader('qseq')
-def _qseq_to_generator(fh, constructor=BiologicalSequence, filter=_will_filter,
+def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
                        phred_offset=_default_phred_offset,
                        variant=_default_variant):
     for line in fh:
@@ -159,7 +157,7 @@ def _qseq_to_generator(fh, constructor=BiologicalSequence, filter=_will_filter,
 
 
 @register_reader('qseq', SequenceCollection)
-def _qseq_to_sequence_collection(fh, constructor=BiologicalSequence,
+def _qseq_to_sequence_collection(fh, constructor=Sequence,
                                  filter=_will_filter,
                                  phred_offset=_default_phred_offset,
                                  variant=_default_variant):
@@ -168,49 +166,43 @@ def _qseq_to_sequence_collection(fh, constructor=BiologicalSequence,
         variant=variant)))
 
 
-@register_reader('qseq', BiologicalSequence)
+@register_reader('qseq', Sequence)
 def _qseq_to_biological_sequence(fh, seq_num=1,
                                  phred_offset=_default_phred_offset,
                                  variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=BiologicalSequence), seq_num)
+                             constructor=Sequence), seq_num)
 
 
-@register_reader('qseq', NucleotideSequence)
-def _qseq_to_nucleotide_sequence(fh, seq_num=1,
-                                 phred_offset=_default_phred_offset,
-                                 variant=_default_variant):
-    return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
-                             phred_offset=phred_offset, variant=variant,
-                             constructor=NucleotideSequence), seq_num)
-
-
-@register_reader('qseq', DNASequence)
+@register_reader('qseq', DNA)
 def _qseq_to_dna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
                           variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=DNASequence), seq_num)
+                             constructor=partial(DNA, validate=False)),
+                             seq_num)
 
 
-@register_reader('qseq', RNASequence)
+@register_reader('qseq', RNA)
 def _qseq_to_rna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
                           variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=RNASequence), seq_num)
+                             constructor=partial(RNA, validate=False)),
+                             seq_num)
 
 
-@register_reader('qseq', ProteinSequence)
+@register_reader('qseq', Protein)
 def _qseq_to_protein_sequence(fh, seq_num=1,
                               phred_offset=_default_phred_offset,
                               variant=_default_variant):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=ProteinSequence), seq_num)
+                             constructor=partial(Protein, validate=False)),
+                             seq_num)
 
 
 def _record_parser(line):

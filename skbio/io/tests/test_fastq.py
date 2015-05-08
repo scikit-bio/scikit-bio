@@ -12,9 +12,9 @@ from six import StringIO
 
 import unittest
 import warnings
+from functools import partial
 
-from skbio import (read, write, BiologicalSequence, NucleotideSequence,
-                   DNASequence, RNASequence, ProteinSequence,
+from skbio import (read, write, Sequence, DNA, RNA, Protein,
                    SequenceCollection, Alignment)
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (
@@ -143,13 +143,15 @@ class TestReaders(unittest.TestCase):
               get_data_path('whitespace_only')],
              [{},
               {'variant': 'illumina1.8'},
-              {'phred_offset': 33, 'constructor': DNASequence}],
+              {'phred_offset': 33,
+               'constructor': partial(DNA, validate=False)}],
              []),
 
             ([get_data_path('fastq_single_seq_illumina1.3')], [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
-                {'variant': 'illumina1.3', 'constructor': ProteinSequence},
+                {'variant': 'illumina1.3',
+                 'constructor': partial(Protein, validate=False)},
             ], [
                 ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
             ]),
@@ -166,7 +168,8 @@ class TestReaders(unittest.TestCase):
               get_data_path('fastq_multi_whitespace_stripping')], [
                 {'variant': 'sanger'},
                 {'phred_offset': 33, 'seq_num': 2},
-                {'variant': 'sanger', 'constructor': RNASequence,
+                {'variant': 'sanger',
+                 'constructor': partial(RNA, validate=False),
                  'seq_num': 3},
             ], [
                 ('foo', 'bar baz', 'AACCGG',
@@ -291,7 +294,7 @@ class TestReaders(unittest.TestCase):
             for valid in valid_files:
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    constructor = kwarg.get('constructor', Sequence)
                     expected = [constructor(c[2], id=c[0], description=c[1],
                                 quality=c[3]) for c in components]
 
@@ -333,8 +336,9 @@ class TestReaders(unittest.TestCase):
                 variant='solexa'))
 
     def test_fastq_to_sequence(self):
-        for constructor in [BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence]:
+        for constructor in [partial(Sequence), partial(DNA, validate=False),
+                            partial(RNA, validate=False),
+                            partial(Protein, validate=False)]:
             for valid_files, kwargs, components in self.valid_configurations:
                 for valid in valid_files:
                     # skip empty file case since we cannot read a specific
@@ -350,7 +354,7 @@ class TestReaders(unittest.TestCase):
                         expected = constructor(c[2], id=c[0],
                                                description=c[1], quality=c[3])
 
-                        observed = read(valid, into=constructor,
+                        observed = read(valid, into=constructor.func,
                                         format='fastq', verify=False, **kwarg)
                         self.assertTrue(observed.equals(expected))
 
@@ -359,7 +363,7 @@ class TestReaders(unittest.TestCase):
             for valid in valid_files:
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    constructor = kwarg.get('constructor', Sequence)
                     expected = SequenceCollection(
                         [constructor(c[2], id=c[0], description=c[1],
                                      quality=c[3])
@@ -376,7 +380,7 @@ class TestReaders(unittest.TestCase):
             for valid in valid_files:
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', BiologicalSequence)
+                    constructor = kwarg.get('constructor', Sequence)
                     expected = Alignment(
                         [constructor(c[2], id=c[0], description=c[1],
                                      quality=c[3])
@@ -419,7 +423,7 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 def gen():
                     for c in components:
-                        yield BiologicalSequence(
+                        yield Sequence(
                             c[2], id=c[0], description=c[1], quality=c[3])
 
                 fh = StringIO()
@@ -433,8 +437,9 @@ class TestWriters(unittest.TestCase):
                 self.assertEqual(observed, expected)
 
     def test_sequence_to_fastq_kwargs_passed(self):
-        for constructor in [BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence]:
+        for constructor in [Sequence, partial(DNA, validate=False),
+                            partial(RNA, validate=False),
+                            partial(Protein, validate=False)]:
             for components, kwargs_expected_fp in self.valid_files:
                 for kwargs, expected_fp in kwargs_expected_fp:
                     fh = StringIO()
@@ -455,8 +460,8 @@ class TestWriters(unittest.TestCase):
         for components, kwargs_expected_fp in self.valid_files:
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = SequenceCollection([
-                    NucleotideSequence(c[2], id=c[0], description=c[1],
-                                       quality=c[3]) for c in components])
+                    DNA(c[2], id=c[0], description=c[1],
+                        quality=c[3]) for c in components])
 
                 fh = StringIO()
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
@@ -472,8 +477,8 @@ class TestWriters(unittest.TestCase):
         for components, kwargs_expected_fp in self.valid_files:
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = Alignment([
-                    ProteinSequence(c[2], id=c[0], description=c[1],
-                                    quality=c[3]) for c in components])
+                    Protein(c[2], id=c[0], description=c[1],
+                            quality=c[3]) for c in components])
 
                 fh = StringIO()
                 _alignment_to_fastq(obj, fh, **kwargs)
@@ -487,9 +492,9 @@ class TestWriters(unittest.TestCase):
 
     def test_generator_to_fastq_no_qual(self):
         def gen():
-            yield BiologicalSequence('ACGT', id='foo', description='bar',
-                                     quality=range(4))
-            yield BiologicalSequence('ACG', id='foo', description='bar')
+            yield Sequence('ACGT', id='foo', description='bar',
+                           quality=range(4))
+            yield Sequence('ACG', id='foo', description='bar')
 
         with self.assertRaisesRegexp(ValueError, '2nd.*quality scores'):
             _generator_to_fastq(gen(), StringIO(), variant='illumina1.8')
