@@ -153,7 +153,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         Returns
         -------
         dict (set)
-            Mapping of each IUPAC degenerate character to the set of
+            Mapping of each degenerate IUPAC character to the set of
             non-degenerate IUPAC characters it represents.
 
         """
