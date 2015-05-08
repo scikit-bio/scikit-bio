@@ -854,55 +854,55 @@ class Sequence(collections.Sequence, SkbioObject):
                 "%r is not present in %r." % (subsequence, self))
 
     def distance(self, other, metric=None):
-        """Returns the distance to other
+        """Compute the distance to another sequence.
 
         Parameters
         ----------
-        other : `Sequence`
-            The `Sequence` to compute the distance to.
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compute the distance to.
         metric : function, optional
-            Function used to compute the distance between `self` and `other`.
-            If ``None`` (the default), `scipy.spatial.distance.hamming` will be
-            used.
+            Function used to compute the distance between the biological
+            sequence and `other`. If ``None`` (the default),
+            ``scipy.spatial.distance.hamming`` will be used.
 
         Returns
         -------
         float
-            The distance between `self` and `other`.
+            Distance between the biological sequence and `other`.
 
         Raises
         ------
-        skbio.sequence.SequenceError
-            If ``len(self) != len(other)`` when ``metric == None`` (i.e.,
-            metic is ``scipy.spatial.distance.hamming``). This is only checked
-            when using this metric, as equal length is not a requirement
-            for all sequence distance metrics. In general, the metric itself
-            should test and give an informative error message, but the message
-            from ``scipy.spatial.distance.hamming`` is cryptic (as of this
-            writing), and it's the default metric, so we explicitly do this
-            check here. This metric-specific check will be removed from this
-            method when the sequence.stats module is created (track progress on
-            this [here](https://github.com/biocore/scikit-bio/issues/913)).
+        ValueError
+            If the sequences are not the same length when `metric` is ``None``
+            (i.e., `metric` is ``scipy.spatial.distance.hamming``). This is
+            only checked when using this metric, as equal length is not a
+            requirement of all sequence distance metrics. In general, the
+            metric itself should test and give an informative error message,
+            but the message from ``scipy.spatial.distance.hamming`` is somewhat
+            cryptic (as of this writing), and it's the default metric, so we
+            explicitly do this check here. This metric-specific check will be
+            removed from this method when the ``skbio.sequence.stats`` module
+            is created (track progress on issue #913).
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            biological sequence.
 
         See Also
         --------
         fraction_diff
         fraction_same
-        skbio.DistanceMatrix
         scipy.spatial.distance.hamming
 
         Examples
         --------
-        >>> from skbio.sequence import Sequence
+        >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.distance(t)
         0.25
-        >>> def dumb_dist(s1, s2): return 0.42
-        >>> s.distance(t, dumb_dist)
+        >>> def custom_dist(s1, s2): return 0.42
+        >>> s.distance(t, custom_dist)
         0.42
-
-        .. shownumpydoc
 
         """
         # TODO refactor this method to accept a name (string) of the distance
@@ -920,7 +920,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
-        """Returns positions that match with other
+        """Return positions that match with another sequence.
 
         Parameters
         ----------
