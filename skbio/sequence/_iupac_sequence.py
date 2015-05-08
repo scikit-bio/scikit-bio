@@ -9,12 +9,12 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractproperty
 from itertools import product
 
 import numpy as np
 
-from skbio.util import classproperty, overrides, abstractproperty
+from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
