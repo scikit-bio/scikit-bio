@@ -67,8 +67,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         `NucleotideSequence.complement_map` will therefore be the empty dict.
         Thanks, nature...
 
-        .. shownumpydoc
-
         """
         return set()  # pragma: no cover
 
