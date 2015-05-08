@@ -47,7 +47,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     @abstractproperty
     @classproperty
     def complement_map(cls):
-        """Return mapping of characters to their complements.
+        """Return mapping of nucleotide characters to their complements.
 
         Returns
         -------
