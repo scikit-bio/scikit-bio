@@ -99,7 +99,7 @@ slice(0, 3, None)
 slice(4, 7, None)
 slice(9, 12, None)
 
-Those slices can be used to slice out the relevant subsequences.
+Those slices can be used to extract the relevant subsequences.
 
 >>> for e in r5.find_motifs('purine-run', min_length=2): print(r5[e])
 AGG
@@ -114,8 +114,9 @@ otherwise meaningful motifs.
 AGG-GGA
 GAA
 
-And removing gaps from the resulting motif matches is easily achieved, as the
-sliced matches themselves are sequences of the same type as the input.
+In the above example, removing gaps from the resulting motif matches is easily
+achieved, as the sliced matches themselves are sequences of the same type as
+the input.
 
 >>> for e in r5.find_motifs('purine-run', min_length=2, exclude=r5.gaps()):
 ...     print(repr(r5[e].degap()))

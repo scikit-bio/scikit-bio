@@ -32,8 +32,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
     ``Sequence`` objects do not enforce an alphabet and are thus the most
     generic objects for storing biological sequence data. Subclasses ``DNA``,
-    ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ and provide
-    operations specific to each respective molecule type.
+    ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ for, and
+    provide operations specific to, each respective molecule type.
 
     Parameters
     ----------
@@ -203,7 +203,7 @@ class Sequence(collections.Sequence, SkbioObject):
                             (description,))
 
     def _set_sequence(self, sequence):
-        """Munge the sequence data into a numpy array."""
+        """Munge the sequence data into a numpy array of dtype uint8."""
         is_ndarray = isinstance(sequence, np.ndarray)
         if is_ndarray:
             if np.issubdtype(sequence.dtype, np.uint8):
@@ -797,6 +797,8 @@ class Sequence(collections.Sequence, SkbioObject):
         1
         >>> s.count('T')
         0
+        >>> s.count('G', 2, 5)
+        1
 
         """
         if len(subsequence) == 0:
