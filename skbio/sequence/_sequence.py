@@ -920,23 +920,26 @@ class Sequence(collections.Sequence, SkbioObject):
         return float(metric(self.sequence, other.sequence))
 
     def matches(self, other):
-        """Return positions that match with another sequence.
+        """Find positions that match with another sequence.
 
         Parameters
         ----------
-        other : `Sequence`
-            The `Sequence` to compare to.
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compare to.
 
         Returns
         -------
-        np.ndarray of bool
-            Boolean vector where `True` at position `i` indicates a match
-            between the sequences at their positions `i`.
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` at position ``i`` indicates a match
+            between the sequences at their positions ``i``.
 
         Raises
         ------
         ValueError
-            If ``len(self) != len(other)``.
+            If the sequences are not the same length.
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            biological sequence.
 
         Examples
         --------
@@ -946,8 +949,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.matches(t)
         array([ True, False,  True, False], dtype=bool)
 
-        .. shownumpydoc
-
         """
         other = self._munge_to_sequence(other, 'matches/mismatches')
         if len(self) != len(other):
@@ -956,23 +957,26 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes == other._bytes
 
     def mismatches(self, other):
-        """Returns positions that do not match with other
+        """Find positions that do not match with another sequence.
 
         Parameters
         ----------
-        other : `Sequence`
-            The `Sequence` to compare to.
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compare to.
 
         Returns
         -------
-        np.ndarray of bool
-            Boolean vector where `True` at position `i` indicates a mismatch
-            between the sequences at their positions `i`.
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` at position ``i`` indicates a
+            mismatch between the sequences at their positions ``i``.
 
         Raises
         ------
         ValueError
-            If ``len(self) != len(other)``.
+            If the sequences are not the same length.
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            biological sequence.
 
         Examples
         --------
@@ -981,8 +985,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
         array([False,  True, False,  True], dtype=bool)
-
-        .. shownumpydoc
 
         """
         return np.invert(self.matches(other))
@@ -1025,8 +1027,6 @@ class Sequence(collections.Sequence, SkbioObject):
         1
         >>> s.mismatch_frequency(t, relative=True)
         0.25
-
-        .. shownumpydoc
 
         """
         if relative:
@@ -1072,8 +1072,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s.match_frequency(t, relative=True)
         0.75
 
-        .. shownumpydoc
-
         """
         if relative:
             return float(self.matches(other).mean())
@@ -1109,8 +1107,6 @@ class Sequence(collections.Sequence, SkbioObject):
         ['ACAC', 'GACG']
         >>> [str(kw) for kw in s.kmers(3, overlap=True)]
         ['ACA', 'CAC', 'ACG', 'CGA', 'GAC', 'ACG', 'CGT', 'GTT']
-
-        .. shownumpydoc
 
         """
         if k < 1:
@@ -1157,8 +1153,6 @@ class Sequence(collections.Sequence, SkbioObject):
         Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
         >>> s.kmer_frequencies(3, relative=True, overlap=False)
         defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
-
-        .. shownumpydoc
 
         """
         kmers = self.kmers(k, overlap=overlap)
@@ -1213,8 +1207,6 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> for e in s.slices_from_regex('(TATA+)', s.gaps()): print (e, s[e])
         slice(2, 8, None) TA--TA
         slice(13, 19, None) TATA-A
-
-        .. shownumpydoc
 
         """
         if isinstance(regex, string_types):
@@ -1322,8 +1314,6 @@ class Sequence(collections.Sequence, SkbioObject):
         'id1'
         >>> seq.description
         'biological sequence'
-
-        .. shownumpydoc
 
         """
         defaults = {
