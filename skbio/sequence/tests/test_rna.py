@@ -49,7 +49,7 @@ class TestRNA(unittest.TestCase):
 
         seq = RNA("AA-RC--UCR-G")
         self.assertEqual(list(seq.find_motifs("purine-run", min_length=3,
-                                              exclude=seq.gaps())),
+                                              ignore=seq.gaps())),
                          [slice(0, 4)])
 
     def test_motif_pyrimidine_run(self):
@@ -62,7 +62,7 @@ class TestRNA(unittest.TestCase):
 
         seq = RNA("AA-RC--UCR-G")
         self.assertEqual(list(seq.find_motifs("pyrimidine-run", min_length=3,
-                                              exclude=seq.gaps())),
+                                              ignore=seq.gaps())),
                          [slice(4, 9)])
 
 if __name__ == "__main__":

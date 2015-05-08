@@ -184,17 +184,17 @@ _motifs = parent_motifs.copy()
 
 
 @_motifs("purine-run")
-def _motif_purine_run(sequence, min_length, exclude):
+def _motif_purine_run(sequence, min_length, ignore):
     """Identifies purine runs"""
     return sequence.slices_from_regex("([AGR]{%d,})" % min_length,
-                                      exclude=exclude)
+                                      ignore=ignore)
 
 
 @_motifs("pyrimidine-run")
-def _motif_pyrimidine_run(sequence, min_length, exclude):
+def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
     return sequence.slices_from_regex("([CTUY]{%d,})" % min_length,
-                                      exclude=exclude)
+                                      ignore=ignore)
 
 # Leave this at the bottom
 _motifs.interpolate(NucleotideSequence, "find_motifs")

@@ -434,7 +434,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
 
-    def find_motifs(self, motif_type, min_length=1, exclude=None):
+    def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.
 
         Options for `motif_type`:
@@ -445,7 +445,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             Type of motif to find.
         min_length : int, optional
             Only motifs at least as long as `min_length` will be returned.
-        exclude : 1D array_like (bool), optional
+        ignore : 1D array_like (bool), optional
             Boolean vector indicating positions to ignore when matching.
 
         Returns
@@ -479,10 +479,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         slice(0, 2, None)
         slice(3, 5, None)
 
-        Gaps can be ignored by passing the gap boolean vector to `exclude`:
+        Gaps can be ignored by passing the gap boolean vector to `ignore`:
 
         >>> s = DNA('GG-GG')
-        >>> for motif_slice in s.find_motifs('purine-run', exclude=s.gaps()):
+        >>> for motif_slice in s.find_motifs('purine-run', ignore=s.gaps()):
         ...     motif_slice
         slice(0, 5, None)
 
@@ -491,7 +491,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             raise ValueError("Not a known motif (%r) for this sequence (%s)." %
                              (motif_type, self.__class__.__name__))
 
-        return self._motifs[motif_type](self, min_length, exclude)
+        return self._motifs[motif_type](self, min_length, ignore)
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):

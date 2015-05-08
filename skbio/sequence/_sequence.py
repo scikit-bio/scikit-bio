@@ -1193,7 +1193,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def slices_from_regex(self, regex, exclude=None):
+    def slices_from_regex(self, regex, ignore=None):
         """Generate slices for patterns matched by a regular expression.
 
         Parameters
@@ -1202,7 +1202,7 @@ class Sequence(collections.Sequence, SkbioObject):
             String to be compiled into a regular expression, or a pre-
             compiled regular expression object (e.g., from calling
             ``re.compile``).
-        exclude : 1D array_like (bool), optional
+        ignore : 1D array_like (bool), optional
             Boolean vector indicating positions to ignore when matching.
 
         Returns
@@ -1226,11 +1226,11 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(regex, string_types):
             regex = re.compile(regex)
 
-        if exclude is None:
+        if ignore is None:
             lookup = np.arange(len(self))
             string = str(self)
         else:
-            include = np.invert(exclude)
+            include = np.invert(ignore)
             lookup = np.where(include)[0]
             string = str(self[include])
 
