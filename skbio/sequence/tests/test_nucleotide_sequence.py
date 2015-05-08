@@ -207,62 +207,6 @@ class TestNucelotideSequence(unittest.TestCase):
         with self.assertRaises(TypeError):
             seq1.is_reverse_complement(seq2)
 
-# class NucelotideSequenceTests(TestCase):
-#
-#    def setUp(self):
-#        self.empty = NucleotideSequence('')
-#        self.b1 = NucleotideSequence('GATTACA')
-#        self.b2 = NucleotideSequence(
-#            'ACCGGUACC', id="test-seq-2",
-#            description="A test sequence")
-#        self.b3 = NucleotideSequence('G-AT-TG.AT.T')
-#
-#    def test_find_features(self):
-#        exp = [(0, 2, 'GA'), (4, 5, 'A'), (6, 7, 'A')]
-#        obs = list(self.b1.find_features('purine_run'))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(2, 4, 'TT'), (5, 6, 'C')]
-#        obs = list(self.b1.find_features('pyrimidine_run'))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(0, 1, 'A'), (3, 5, 'GG'), (6, 7, 'A')]
-#        obs = list(self.b2.find_features('purine_run'))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(1, 3, 'CC'), (5, 6, 'U'), (7, 9, 'CC')]
-#        obs = list(self.b2.find_features('pyrimidine_run'))
-#        self.assertEqual(obs, exp)
-#
-#    def test_find_features_min_length(self):
-#        exp = [(0, 2, 'GA')]
-#        obs = list(self.b1.find_features('purine_run', 2))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(2, 4, 'TT')]
-#        obs = list(self.b1.find_features('pyrimidine_run', 2))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(3, 5, 'GG')]
-#        obs = list(self.b2.find_features('purine_run', 2))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(1, 3, 'CC'), (7, 9, 'CC')]
-#        obs = list(self.b2.find_features('pyrimidine_run', 2))
-#        self.assertEqual(obs, exp)
-#
-#    def test_find_features_no_feature_type(self):
-#        with self.assertRaises(ValueError):
-#            list(self.b1.find_features('nonexistent_feature_type'))
-#
-#    def test_find_features_allow_gaps(self):
-#        exp = [(0, 3, 'G-A'), (6, 9, 'G.A')]
-#        obs = list(self.b3.find_features('purine_run', 2, True))
-#        self.assertEqual(obs, exp)
-#
-#        exp = [(3, 6, 'T-T'), (9, 12, 'T.T')]
-#        obs = list(self.b3.find_features('pyrimidine_run', 2, True))
-#        self.assertEqual(obs, exp)
 
 if __name__ == "__main__":
     unittest.main()

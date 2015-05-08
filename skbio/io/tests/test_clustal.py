@@ -227,8 +227,6 @@ UGCUGCAUCA---------------- 33
             testfile.close()
             testfile = open(fname, 'r')
             result_after = _clustal_to_alignment(testfile)
-            print(result_before)
-            print(result_after)
             self.assertEquals(result_before, result_after)
         os.remove(fname)
 
