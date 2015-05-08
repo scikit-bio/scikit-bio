@@ -575,7 +575,8 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         generator of tuples
-            Each tuple contains ordered (`skbio.id`, `skbio.Sequence`) pairs.
+            Each tuple contains ordered (`skbio.Sequence.id`, `skbio.Sequence`)
+            pairs.
 
         """
         for seq in self:

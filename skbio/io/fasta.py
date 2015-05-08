@@ -550,8 +550,7 @@ from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
-from skbio.sequence import (Sequence,
-                            DNA, RNA, Protein)
+from skbio.sequence import Sequence, DNA, RNA, Protein
 
 with hooks():
     from itertools import zip_longest

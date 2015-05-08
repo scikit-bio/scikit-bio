@@ -123,8 +123,7 @@ from functools import partial
 from skbio.io import register_reader, register_sniffer, QSeqFormatError
 from skbio.io._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.alignment import SequenceCollection
-from skbio.sequence import (Sequence,
-                            DNA, RNA, Protein)
+from skbio.sequence import Sequence, DNA, RNA, Protein
 
 _default_phred_offset = None
 _default_variant = None

@@ -10,7 +10,7 @@ from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
 from skbio.alignment import Alignment
-from skbio.sequence import Protein, DNA
+from skbio.sequence import Protein, Sequence
 
 cdef extern from "_lib/ssw.h":
 
@@ -728,16 +728,18 @@ cdef class StripedSmithWaterman:
         return py_list_matrix
 
 
-def local_pairwise_align_ssw(sequence1, sequence2,
+def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
                              **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
 
     Parameters
     ----------
-    sequence1 : str or BiologicalSequence
+    sequence1 : str or Sequence
         The first unaligned sequence
-    sequence2 : str or BiologicalSequence
+    sequence2 : str or Sequence
         The second unaligned sequence
+    constructor : Sequence subclass
+        A constructor to use if `protein` is not True.
 
     Returns
     -------
@@ -796,9 +798,8 @@ def local_pairwise_align_ssw(sequence1, sequence2,
         ]
     else:
         seqs = [
-            # TODO FIX THIS!
-            DNA(alignment.aligned_query_sequence, id='query'),
-            DNA(alignment.aligned_target_sequence, id='target')
+            constructor(alignment.aligned_query_sequence, id='query'),
+            constructor(alignment.aligned_target_sequence, id='target')
         ]
 
     return Alignment(seqs, score=alignment.optimal_alignment_score,

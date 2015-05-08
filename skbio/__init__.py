@@ -21,9 +21,8 @@ from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 
 
-__all__ = ['Sequence', 'DNA',
-           'RNA', 'Protein',
-           'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
+__all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'DistanceMatrix',
+           'local_pairwise_align_ssw', 'SequenceCollection',
            'Alignment', 'TreeNode', 'nj', 'read', 'write']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"

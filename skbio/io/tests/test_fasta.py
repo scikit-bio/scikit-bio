@@ -17,11 +17,10 @@ from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
-    _fasta_to_dna_sequence,
-    _fasta_to_rna_sequence, _fasta_to_protein_sequence,
+    _fasta_to_dna_sequence, _fasta_to_rna_sequence, _fasta_to_protein_sequence,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
-    _biological_sequence_to_fasta,
-    _dna_sequence_to_fasta, _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _biological_sequence_to_fasta, _dna_sequence_to_fasta,
+    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
     _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
@@ -391,7 +390,6 @@ class ReaderTests(TestCase):
         for exp, kwargs, fasta_fps, qual_fps in test_cases:
             for fasta_fp in fasta_fps:
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
-                print(fasta_fp)
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
                     self.assertTrue(o.equals(e, ignore=['quality']))

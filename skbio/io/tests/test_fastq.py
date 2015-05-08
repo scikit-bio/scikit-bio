@@ -14,8 +14,7 @@ import unittest
 import warnings
 from functools import partial
 
-from skbio import (read, write, Sequence,
-                   DNA, RNA, Protein,
+from skbio import (read, write, Sequence, DNA, RNA, Protein,
                    SequenceCollection, Alignment)
 from skbio.io import FASTQFormatError
 from skbio.io.fastq import (

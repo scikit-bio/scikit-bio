@@ -357,7 +357,30 @@ def flatten(items):
 
 
 def reprnator(start, tokens, end, separator=', '):
-    """Live your dreams"""
+    """You have no instance, no methods, no properties, you are but a repr.
+
+    Format components in PEP8 line-break style.
+
+    Parameters
+    ----------
+    start : str
+        A string to preprend to the result. New lines will be offset by the
+        width of `start`.
+    tokens : iterable (str)
+        An iterable of tokens to place between `start` and `end`. Tokens will
+        be put on a new line if they would exceed 79 characters on their
+        current line.
+    end : str
+        A string to append to the result.
+    seperator : str, optional
+        The seperator to place between each token. Default is `", "`.
+
+    Returns
+    -------
+    str
+        Tokens formatted in a PEP8 line-break style.
+
+    """
     offset = len(start)
     indent = '\n%s' % (' ' * offset)
     remaining = 79 - offset

@@ -19,7 +19,7 @@ from uuid import uuid4
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
                         create_dir, find_duplicates, flatten,
                         is_casava_v180_or_later)
-from skbio.util._misc import _handle_error_codes, MiniRegistry
+from skbio.util._misc import _handle_error_codes, MiniRegistry, reprnator
 
 
 class TestMiniRegistry(TestCase):
@@ -230,6 +230,40 @@ class CardinalToOrdinalTests(TestCase):
     def test_invalid_n(self):
         with self.assertRaisesRegexp(ValueError, '-1'):
             cardinal_to_ordinal(-1)
+
+class TestReprnator(TestCase):
+    def test_no_tokens(self):
+        self.assertEqual(reprnator("$START$", [], "#END#"), "$START$#END#")
+
+    def test_one_line(self):
+        self.assertEqual(reprnator("$START$", ["bill"], "#END#"),
+                        "$START$bill#END#")
+
+        self.assertEqual(reprnator("$START$", ["bill", "bob"], "#END#"),
+                        "$START$bill, bob#END#")
+
+    def test_overflow(self):
+        tokens = [
+            "ABCDEF",
+            "HIGJKL",
+            "MNOPQR",
+            "STUVWX",
+            "YZ",
+        ]
+        self.assertEqual(reprnator("$START$", tokens * 4, "#END#"),
+                        '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, HI'
+                        'GJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, MN'
+                        'OPQR, STUVWX, YZ, ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ'
+                        '\n       #END#')
+
+        self.assertEqual(reprnator("$START$", tokens * 3, "#END#"),
+                         '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, H'
+                         'IGJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, '
+                         'MNOPQR, STUVWX, YZ#END#')
+
+    def test_seperator(self):
+        self.assertEqual(reprnator("", list("abc"), "", separator='|'),
+                         "a|b|c")
 
 
 class TestFindDuplicates(TestCase):
