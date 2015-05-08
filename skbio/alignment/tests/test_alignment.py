@@ -290,7 +290,7 @@ class SequenceCollectionTests(TestCase):
         self._assert_sequence_collections_equal(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
-    def test_update_ids_fn_parameter(self):
+    def test_update_ids_func_parameter(self):
         def append_42(ids):
             return [id_ + '-42' for id_ in ids]
 
@@ -301,12 +301,12 @@ class SequenceCollectionTests(TestCase):
             RNA('U-----UGCC--', id="r3-42")
         ])
         exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
-        obs_sc, obs_id_map = self.s2.update_ids(fn=append_42)
+        obs_sc, obs_id_map = self.s2.update_ids(func=append_42)
         self._assert_sequence_collections_equal(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
-        obs_sc, obs_id_map = self.empty.update_ids(fn=append_42)
+        obs_sc, obs_id_map = self.empty.update_ids(func=append_42)
         self._assert_sequence_collections_equal(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
@@ -359,27 +359,27 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(obs_id_map, exp_id_map)
 
     def test_update_ids_invalid_parameter_combos(self):
-        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and fn'):
-            self.s1.update_ids(fn=lambda e: e, ids=['foo', 'bar'])
+        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and func'):
+            self.s1.update_ids(func=lambda e: e, ids=['foo', 'bar'])
 
         with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
             self.s1.update_ids(ids=['foo', 'bar'], prefix='abc')
 
         with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
-            self.s1.update_ids(fn=lambda e: e, prefix='abc')
+            self.s1.update_ids(func=lambda e: e, prefix='abc')
 
     def test_update_ids_invalid_ids(self):
         # incorrect number of new ids
         with self.assertRaisesRegexp(SequenceCollectionError, '3 != 2'):
             self.s1.update_ids(ids=['foo', 'bar', 'baz'])
         with self.assertRaisesRegexp(SequenceCollectionError, '4 != 2'):
-            self.s1.update_ids(fn=lambda e: ['foo', 'bar', 'baz', 'abc'])
+            self.s1.update_ids(func=lambda e: ['foo', 'bar', 'baz', 'abc'])
 
         # duplicates
         with self.assertRaisesRegexp(SequenceCollectionError, 'foo'):
             self.s2.update_ids(ids=['foo', 'bar', 'foo'])
         with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
-            self.s2.update_ids(fn=lambda e: ['foo', 'bar', 'bar'])
+            self.s2.update_ids(func=lambda e: ['foo', 'bar', 'bar'])
 
     def test_is_empty(self):
         self.assertFalse(self.s1.is_empty())
