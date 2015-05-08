@@ -14,12 +14,53 @@ from itertools import product
 
 import numpy as np
 
-from skbio.util import classproperty, overrides, abstractproperty
+from skbio.util import classproperty, overrides, abstractproperty, sphinx_hack
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
+    """Store biological sequence data and optional associated metadata.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    nondegenerate_chars
+    gap_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
+
+    Raises
+    ------
+    skbio.sequence.SequenceError
+        If `quality` is not the correct shape.
+
+    See Also
+    --------
+    NucleotideSequence
+    DNA
+    RNA
+
+    Notes
+    -----
+    `Sequence` objects are immutable. Where applicable, methods
+    return a new object of the same class.
+    Subclasses are typically defined by methods relevant to only a specific
+    type of biological sequence, and by containing characters only contained in
+    the IUPAC standard character set for that molecule type.
+
+    Examples
+    --------
+    >>> from skbio.sequence import Sequence
+    >>> s = Sequence('GGUCGUGAAGGA')
+    >>> t = Sequence('GGUCCUGAAGGU')
+
+    """
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
     __validation_mask = None
@@ -58,6 +99,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             cls.__gap_codes = np.asarray([ord(g) for g in gaps])
         return cls.__gap_codes
 
+    #@sphinx_hack
     @classproperty
     def alphabet(cls):
         """Return the allowed characters.
@@ -72,6 +114,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
+    #@sphinx_hack
     @classproperty
     def gap_chars(cls):
         """Return the characters defined as gaps.
@@ -86,6 +129,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return set('-.')
 
+    #@sphinx_hack
     @classproperty
     def degenerate_chars(cls):
         """Return the degenerate IUPAC characters.

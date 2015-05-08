@@ -48,17 +48,23 @@ class Sequence(collections.Sequence, SkbioObject):
         with an ``int`` ``dtype``. The array will be made read-only (i.e., its
         ``WRITEABLE`` flag will be set to ``False``).
 
-    Attributes
-    ----------
-    sequence
-    id
-    description
-    quality
-
     Raises
     ------
     skbio.sequence.SequenceError
         If `quality` is not the correct shape.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    nondegenerate_chars
+    gap_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
 
     See Also
     --------

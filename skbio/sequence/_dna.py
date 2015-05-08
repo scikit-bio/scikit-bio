@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides
+from skbio.util import classproperty, overrides, abstractproperty, sphinx_hack
 from ._nucleotide_sequence import NucleotideSequence
 from ._iupac_sequence import IUPACSequence
 
@@ -18,6 +18,19 @@ class DNA(NucleotideSequence):
 
     A `DNA` is a `NucelotideSequence` that is restricted to only
     containing characters used in IUPAC DNA lexicon.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    nondegenerate_chars
+    gap_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
 
     See Also
     --------
@@ -30,6 +43,7 @@ class DNA(NucleotideSequence):
 
     """
 
+    #@sphinx_hack
     @classproperty
     @overrides(NucleotideSequence)
     def complement_map(cls):
@@ -54,6 +68,7 @@ class DNA(NucleotideSequence):
         comp_map.update({c: c for c in cls.gap_chars})
         return comp_map
 
+    #@sphinx_hack
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
@@ -67,6 +82,7 @@ class DNA(NucleotideSequence):
         """
         return set("ACGT")
 
+    #@sphinx_hack
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
