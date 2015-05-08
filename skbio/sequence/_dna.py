@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides, abstractproperty
+from skbio.util import classproperty, overrides
 from ._nucleotide_sequence import NucleotideSequence
 from ._iupac_sequence import IUPACSequence
 

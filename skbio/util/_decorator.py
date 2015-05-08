@@ -63,6 +63,3 @@ class classproperty(property):
 
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")
-
-    def __call__(self, owner):
-        return self.fget.__get__(None, owner)()

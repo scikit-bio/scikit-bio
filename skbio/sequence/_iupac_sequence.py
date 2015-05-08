@@ -107,8 +107,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         set
             Characters that are allowed in a valid sequence.
 
-        .. shownumpydoc
-
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
@@ -121,8 +119,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         set
             Characters defined as gaps.
 
-        .. shownumpydoc
-
         """
         return set('-.')
 
@@ -134,8 +130,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         -------
         set
             Degenerate IUPAC characters.
-
-        .. shownumpydoc
 
         """
         return set(cls.degenerate_map)
@@ -150,8 +144,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         set
             Non-degenerate IUPAC characters.
 
-        .. shownumpydoc
-
         """
         return set()  # pragma: no cover
 
@@ -165,8 +157,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         dict of sets
             Mapping of IUPAC degenerate character to the set of
             non-degenerate IUPAC characters it represents.
-
-        .. shownumpydoc
 
         """
         return set()  # pragma: no cover
