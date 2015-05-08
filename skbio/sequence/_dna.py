@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides
+from skbio.util import classproperty, overrides, abstractproperty
 from ._nucleotide_sequence import NucleotideSequence
 from ._iupac_sequence import IUPACSequence
 
@@ -18,6 +18,19 @@ class DNA(NucleotideSequence):
 
     A `DNA` is a `NucelotideSequence` that is restricted to only
     containing characters used in IUPAC DNA lexicon.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    nondegenerate_chars
+    gap_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
 
     See Also
     --------

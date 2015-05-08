@@ -22,6 +22,19 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     that are only applicable for nucleotide sequences, and containing only
     characters used in the IUPAC DNA or RNA lexicon.
 
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    nondegenerate_chars
+    gap_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
+
     See Also
     --------
     Sequence
