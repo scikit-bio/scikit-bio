@@ -102,9 +102,9 @@ _motifs = parent_motifs.copy()
 
 
 @_motifs("N-glycosylation")
-def _motif_nitro_glycosylation(sequence, min_length, exclude):
+def _motif_nitro_glycosylation(sequence, min_length, ignore):
     """Identifies N-glycosylation runs"""
-    return sequence.slices_from_regex("(N[^PX][ST][^PX])", exclude=exclude)
+    return sequence.slices_from_regex("(N[^PX][ST][^PX])", ignore=ignore)
 
 # Leave this at the bottom
 _motifs.interpolate(Protein, "find_motifs")

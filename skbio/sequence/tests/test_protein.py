@@ -38,7 +38,7 @@ class TestProtein(unittest.TestCase):
 
         seq = Protein("AC-DFN-FTACGNPSL")
         self.assertEqual(list(seq.find_motifs("N-glycosylation",
-                                              exclude=seq.gaps())),
+                                              ignore=seq.gaps())),
                          [slice(5, 10)])
 
 

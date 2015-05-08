@@ -110,7 +110,7 @@ GAA
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
->>> for e in r5.find_motifs('purine-run', min_length=2, exclude=r5.gaps()):
+>>> for e in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     print(r5[e])
 AGG-GGA
 GAA
@@ -119,7 +119,7 @@ In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
 the input.
 
->>> for e in r5.find_motifs('purine-run', min_length=2, exclude=r5.gaps()):
+>>> for e in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     print(repr(r5[e].degap()))
 RNA('AGGGGA', length=6)
 RNA('GAA', length=3)
