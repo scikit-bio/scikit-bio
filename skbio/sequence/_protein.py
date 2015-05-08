@@ -13,18 +13,70 @@ from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
 class Protein(IUPACSequence):
-    """Base class for protein sequences.
+    """Store protein sequence data and optional associated metadata.
 
-    A `Protein` is a `Sequence` containing only characters
-    used in the IUPAC protein lexicon.
+    Only characters in the IUPAC protein character set [1]_ are supported.
 
-    See Also
+    Parameters
+    ----------
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+        Characters representing the protein sequence itself.
+    id : str, optional
+        Sequence identifier (e.g., an accession number).
+    description : str, optional
+        Description or comment about the sequence (e.g., "green fluorescent
+        protein").
+    quality : 1D array_like (int), optional
+        Phred quality scores stored as nonnegative integers, one per sequence
+        character. If provided, must be the same length as the protein
+        sequence. Can be a 1D ``np.ndarray`` of integers or a structure that
+        can be converted into this representation using ``np.asarray``. A copy
+        will *not* be made if `quality` is already a 1D ``np.ndarray`` with an
+        ``int`` ``dtype``. The array will be made read-only (i.e., its
+        ``WRITEABLE`` flag will be set to ``False``).
+    validate : bool, optional
+        If ``True``, validation will be performed to ensure that all sequence
+        characters are in the IUPAC protein character set. If ``False``,
+        validation will not be performed. Turning off validation will improve
+        runtime performance. If invalid characters are present, however, there
+        is **no guarantee that operations performed on the resulting object
+        will work or behave as expected.** Only turn off validation if you are
+        certain that the sequence characters are valid.
+    case_insenstive : bool, optional
+        If ``True``, lowercase sequence characters will be converted to
+        uppercase characters in order to be valid IUPAC protein characters.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    gap_chars
+    nondegenerate_chars
+    degenerate_chars
+    degenerate_map
+
+    References
+    ----------
+    .. [1] Nomenclature for incompletely specified bases in nucleic acid
+       sequences: recommendations 1984.
+       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+       A Cornish-Bowden
+
+    Examples
     --------
-    Sequence
+    >>> from skbio import Protein
+    >>> s = Protein('PAW')
+    >>> s
+    Protein('PAW', length=3)
 
-    Notes
-    -----
-    All uppercase and lowercase IUPAC protein characters are supported.
+    Convert lowercase characters to uppercase:
+
+    >>> s = Protein('paW', case_insensitive=True)
+    >>> s
+    Protein('PAW', length=3)
 
     """
 
@@ -35,7 +87,7 @@ class Protein(IUPACSequence):
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        """Return the non-degenerate IUPAC protein characters.
+        """Return non-degenerate IUPAC protein characters.
 
         Returns
         -------
@@ -48,12 +100,12 @@ class Protein(IUPACSequence):
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
-        """Return the mapping of degenerate to non-degenerate characters.
+        """Return mapping of degenerate to non-degenerate protein characters.
 
         Returns
         -------
-        dict of sets
-            Mapping of IUPAC degenerate protein character to the set of
+        dict (set)
+            Mapping of each degenerate IUPAC protein character to the set of
             non-degenerate IUPAC protein characters it represents.
 
         """

@@ -62,7 +62,7 @@ class RNA(NucleotideSequence):
 
     See Also
     --------
-    RNA
+    DNA
 
     References
     ----------
