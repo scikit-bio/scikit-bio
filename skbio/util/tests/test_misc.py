@@ -231,16 +231,17 @@ class CardinalToOrdinalTests(TestCase):
         with self.assertRaisesRegexp(ValueError, '-1'):
             cardinal_to_ordinal(-1)
 
+
 class TestReprnator(TestCase):
     def test_no_tokens(self):
         self.assertEqual(reprnator("$START$", [], "#END#"), "$START$#END#")
 
     def test_one_line(self):
         self.assertEqual(reprnator("$START$", ["bill"], "#END#"),
-                        "$START$bill#END#")
+                         "$START$bill#END#")
 
         self.assertEqual(reprnator("$START$", ["bill", "bob"], "#END#"),
-                        "$START$bill, bob#END#")
+                         "$START$bill, bob#END#")
 
     def test_overflow(self):
         tokens = [
@@ -251,10 +252,10 @@ class TestReprnator(TestCase):
             "YZ",
         ]
         self.assertEqual(reprnator("$START$", tokens * 4, "#END#"),
-                        '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, HI'
-                        'GJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, MN'
-                        'OPQR, STUVWX, YZ, ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ'
-                        '\n       #END#')
+                         '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, H'
+                         'IGJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, '
+                         'MNOPQR, STUVWX, YZ, ABCDEF, HIGJKL, MNOPQR, STUVWX, '
+                         'YZ\n       #END#')
 
         self.assertEqual(reprnator("$START$", tokens * 3, "#END#"),
                          '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, H'

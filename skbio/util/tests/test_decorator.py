@@ -9,7 +9,47 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
-from skbio.util import classproperty
+from skbio.util import classproperty, overrides
+from skbio.util._exception import OverrideError
+
+
+class TestOverrides(unittest.TestCase):
+    def test_raises_when_missing(self):
+        class A(object):
+            pass
+
+        with self.assertRaises(OverrideError):
+            class B(A):
+                @overrides(A)
+                def test(self):
+                    pass
+
+    def test_doc_inherited(self):
+        class A(object):
+            def test(self):
+                """Docstring"""
+                pass
+
+        class B(A):
+            @overrides(A)
+            def test(self):
+                pass
+
+        self.assertEqual(B.test.__doc__, "Docstring")
+
+    def test_doc_not_inherited(self):
+        class A(object):
+            def test(self):
+                """Docstring"""
+                pass
+
+        class B(A):
+            @overrides(A)
+            def test(self):
+                """Different"""
+                pass
+
+        self.assertEqual(B.test.__doc__, "Different")
 
 
 class TestClassProperty(unittest.TestCase):

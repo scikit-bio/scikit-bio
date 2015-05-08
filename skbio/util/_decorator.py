@@ -16,8 +16,9 @@ def overrides(interface_class):
     """Decorator for class-level members.
 
     Used to indicate that a member is being overridden from a specific parent
-    class. When chaining decorators, this should be first as it is
-    nondestructive.
+    class. If the member does not have a docstring, it will pull one from the
+    parent class. When chaining decorators, this should be first as it is
+    relatively nondestructive.
 
     Parameters
     ----------
@@ -40,6 +41,8 @@ def overrides(interface_class):
         if method.__name__ not in dir(interface_class):
             raise OverrideError("%r is not present in parent class: %r." %
                                 (method.__name__, interface_class.__name__))
+        if method.__doc__ is None:
+            method.__doc__ = getattr(interface_class, method.__name__).__doc__
         return method
     return overrider
 
