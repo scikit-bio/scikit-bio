@@ -8,18 +8,34 @@
 
 from __future__ import absolute_import, division, print_function
 
-import abc
-
 from ._exception import OverrideError
-
-
-class abstractproperty(abc.abstractproperty):
-    def __iter__(self):
-        return iter("")
 
 
 # Adapted from http://stackoverflow.com/a/8313042/579416
 def overrides(interface_class):
+    """Decorator for class-level members.
+
+    Used to indicate that a member is being overridden from a specific parent
+    class. When chaining decorators, this should be first as it is
+    nondestructive.
+
+    Parameters
+    ----------
+    interface_class : class
+        The class which has a member overridden by the decorated member.
+
+    Returns
+    -------
+    function
+        The function is not changed or replaced.
+
+    Raises
+    ------
+    OverrideError
+        If the `interface_class` does not possess a member of the same name
+        as the decorated member.
+
+    """
     def overrider(method):
         if method.__name__ not in dir(interface_class):
             raise OverrideError("%r is not present in parent class: %r." %

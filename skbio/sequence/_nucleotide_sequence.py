@@ -9,9 +9,9 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractproperty
 
-from skbio.util import classproperty, abstractproperty
+from skbio.util import classproperty
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
