@@ -200,7 +200,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     Returns
     -------
     power : array
-        The power calculated for each subsample at each count. The array is has
+        The power calculated for each subsample at each count. The array has
         `num_runs` rows, a length with the same number of elements as
         `sample_counts` and a depth equal to the number of p values returned by
         `test`. If `test` returns a float, the returned array will be
@@ -228,33 +228,30 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     Examples
     --------
     Let's say we wanted to look at the relationship between the presence of a
-    specific bacteria and the probability of a pre or post menopausal woman
-    experiencing a health outcome. Healthy women were enrolled in the study
-    either before or after menopause, and followed for five years. They
-    submitted fecal samples at regular intervals during that period, and were
-    assessed for a particular irreversible health outcome over that period.
+    specific bacteria, *Gardnerella vaginalis* in the vaginal community, and
+    the probability of a pre or post menopausal woman experiencing a urinary
+    tract infection (UTI). Healthy women were enrolled in the study either
+    before or after menopause, and followed for eight weeks. Participants
+    submitted fecal samples at the beginning of the study, and were then
+    followed for clinical symptoms of a UTI. A confirmed UTI was an endpoint
+    in the study.
 
-    16S sequencing and available literature suggest a set of candidate taxa
-    may be associated with the health outcome. Assume there are 100 samples
-    (50 premenopausal samples and 50 postmenopausal samples) where the taxa
-    of interest was identified by 16S sequencing and the taxonomic abundance
-    was confirmed in a certain fraction of samples at a minimum level.
+    Using available literature and 16S sequencing, a set of candidate taxa were
+    identified as correlated with UTIs, including *G. vaginalis*. In the 100
+    women (50 premenopausal and 50 postmenopausal samples) who had UTIs, the
+    presence or absence of *G. vaginalis* was confirmed with quantitative PCR.
 
-    We can simulate the probability that a woman positive for this taxa
-    experiences the health outcome using a binomial distribution.
+    We can model the probability that detectable *G. vaginalis* was found in
+    these samples using a binomial model. (*Note that this is a simulation.*)
 
     >>> import numpy as np
     >>> np.random.seed(25)
-    >>> pre_rate = np.random.binomial(1, 0.75, size=(50,))
-    >>> pre_rate
-    array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
-           0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0,
-           1, 1, 1, 1])
-    >>> pos_rate = np.random.binomial(1, 0.25, size=(50,))
-    >>> pos_rate
-    array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0,
-           0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0,
-           0, 1, 0, 0])
+    >>> pre_rate = np.random.binomial(1, 0.85, size=(50,))
+    >>> pre_rate.sum()
+    45
+    >>> pos_rate = np.random.binomial(1, 0.40, size=(50,))
+    >>> pos_rate.sum()
+    21
 
     Let's set up a test function, so we can test the probability of
     finding a difference in frequency between the two groups. We'll use
@@ -267,35 +264,88 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
 
     Let's make sure that our two distributions are different.
 
-    >>> round(test([pre_rate, pos_rate]), 5)
-    9e-05
+    >>> round(test([pre_rate, pos_rate]), 3)
+    0.003
 
     Since there are an even number of samples, and we don't have enough
     information to try controlling the data, we'll use
     `skbio.stats.power.subsample_power` to compare the two groups. If we had
-    metadata about other risk factors, like a family history, BMI, tobacco use,
-    we might want to use `skbio.stats.power.subsample_paired_power`.
+    metadata about other risk factors, like a reproductive history, BMI,
+    tobacco use, we might want to use
+    `skbio.stats.power.subsample_paired_power`.
     We'll also use "ind" `draw_mode`, since there is no linkage between the
     two groups of samples.
 
     >>> from skbio.stats.power import subsample_power
     >>> pwr_est, counts = subsample_power(test=test,
     ...                                   samples=[pre_rate, pos_rate],
+    ...                                   num_iter=100,
+    ...                                   num_runs=5,
     ...                                   counts_interval=5)
     >>> counts
     array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])
-    >>> nanmean(pwr_est, 0)
-    array([ 0.178 ,  0.3354,  0.658 ,  0.8992,  0.9818,  0.9984,  1.    ,
-            1.    ,  1.    ])
+    >>> nanmean(pwr_est, 0) # doctest: +NORMALIZE_WHITESPACE
+    array([ 0.056,  0.074,  0.226,  0.46 ,  0.61 ,  0.806,  0.952,  1.   ,
+            1.   ])
+    >>> counts[nanmean(pwr_est, 0) > 0.8].min()
+    30
 
-    So, we can estimate that we will see a significant difference between
-    the two groups (:math:`\alpha \leq 0.05`) at least 80% of the time if we
-    use 20 observations per group.
+    So, we can estimate that we will see a significant difference in the
+    presence of *G. vaginalis* in the stool of pre and post women with UTIs if
+    we have at least 30 samples per group.
 
     If we wanted to test the relationship of a second candidate taxa which is
     more rare in the population, but may have a similar effect, based on
-    available literature, we might also start by trying to identify 20
+    available literature, we might also start by trying to identify 30
     samples per group where the second candidate taxa is present.
+
+    Suppose, now, that we want to test that a secondary metabolite seen only in
+    the presence of *G vaginalis* to see if it is also correlated with UTIs. We
+    can model the abundance of the metabolite as a normal distribution.
+
+    >>> met_pos = (np.random.randn(pre_rate.sum() + pos_rate.sum()) * 2000 +
+    ...     2500)
+    >>> met_pos[met_pos < 0] = 0
+    >>> met_neg = met_neg = (np.random.randn(100 - (pre_rate.sum() +
+    ...     pos_rate.sum())) * 2000 + 500)
+    >>> met_neg[met_neg < 0] = 0
+
+    Let's compare the populations with a kruskal-wallis test. Physically, there
+    cannot be a negative concentration of a chemical, so we've set the lower
+    bound at 0. This means that we can no longer assume our distribution is
+    normal.
+
+    >>> from scipy.stats import kruskal
+    >>> def metabolite_test(x):
+    ...     return kruskal(x[0], x[1])[1]
+    >>> round(metabolite_test([met_pos, met_neg]), 3)
+    0.005
+
+    When we go to perform the statistical test on all the data, you might
+    notice that there are twice as many samples from women with *G. vaginalis*
+    than those without. It might make sense to account for this difference when
+    we're testing power. So, we're going to set the `ratio` parameter, which
+    lets us draw twice as many samples from women with *G. vaginalis*.
+
+    >>> pwr_est2, counts2 = subsample_power(test=metabolite_test,
+    ...                                     samples=[met_pos, met_neg],
+    ...                                     counts_interval=5,
+    ...                                     num_iter=100,
+    ...                                     num_runs=5,
+    ...                                     ratio=[2, 1])
+    >>> counts2
+    array([  5.,  10.,  15.,  20.,  25.,  30.])
+    >>> nanmean(pwr_est2, 0)
+    array([ 0.14 ,  0.272,  0.426,  0.646,  0.824,  0.996])
+    >>> counts2[nanmean(pwr_est2, 0) > 0.8].min()
+    25.0
+
+    When we consider the number of samples per group needed in the power
+    analysis, we need to look at the ratio. The analysis says that we need 25
+    samples in the smallest group, in this case, the group of women without
+    *G. vaginalis* and 50 samples from women with *G. vaginalis* to see a
+    significant difference in the abundance of our secondary metabolite at 80%
+    power.
 
     """
 
@@ -379,7 +429,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     Returns
     -------
     power : array
-        The power calculated for each subsample at each count. The array is has
+        The power calculated for each subsample at each count. The array is
         `num_runs` rows, a length with the same number of elements as
         `sample_counts` and a depth equal to the number of p values returned by
         `test`. If `test` returns a float, the returned array will be
@@ -482,7 +532,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
         order = sorted(meta.groupby(cat).groups.keys())
     order = np.array(order)
 
-    # Checks for the number of sampling pairs avaliable
+    # Checks for the number of sampling pairs available
     meta_pairs, index = _identify_sample_groups(meta, cat, control_cats, order,
                                                 strict_match)
     min_obs = min([_get_min_size(meta, cat, control_cats, order, strict_match),
@@ -661,11 +711,11 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
                                    num_iter=num_iter,
                                    alpha=alpha,
                                    mode=mode)
-    # Calculates two summary statitics
+    # Calculates two summary statistics
     power_mean = power.mean(0)
     power_bound = confidence_bound(power, alpha=alpha[0], axis=0)
 
-    # Calculates summary statitics
+    # Calculates summary statistics
     return power_mean, power_bound
 
 
@@ -733,10 +783,10 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     >>> from skbio.stats.power import paired_subsamples
     >>> ids = paired_subsamples(meta, 'HOUSING', ['SEX', 'AGE', 'ABX'])
     >>> np.hstack(ids) #doctest: +ELLIPSIS
-    array(['BB', 'TS', 'CB']...
+    array(['BB', 'TS', 'CB']...)
 
     So, for this set of data, we can match TS, CB, and BB based on their age,
-    sex, and antibiotic use. SW cannot be matched in either group becuase
+    sex, and antibiotic use. SW cannot be matched in either group because
     `strict_match` was true, and there is missing AGE data for this sample.
 
     """
@@ -789,7 +839,7 @@ def _check_nans(x, switch=False):
 
 
 def _calculate_power(p_values, alpha=0.05):
-    r"""Calculates statical power empirically
+    r"""Calculates statistical power empirically
 
     Parameters
     ----------
@@ -802,7 +852,7 @@ def _calculate_power(p_values, alpha=0.05):
     Returns
     -------
     power : float
-        The emperical power, or the fraction of observed p values below the
+        The empirical power, or the fraction of observed p values below the
         critical value.
 
     """
@@ -991,9 +1041,7 @@ def _check_subsample_power_inputs(test, samples, draw_mode='ind', ratio=None,
 
     ratio_counts = np.array([id_counts[i] / ratio[i]
                              for i in range(num_groups)])
-    min_pos = (ratio_counts == ratio_counts.min())
-    count_pos = np.arange(0, num_groups)[min_pos][0]
-    largest = ratio_counts[count_pos] * ratio[count_pos]
+    largest = ratio_counts.min()
 
     # Determines the number of p values returned by the test
     p_return = test(samples)
@@ -1044,7 +1092,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     -------
     meta_pairs : dict
         Describes the categories matched for metadata. The
-        `control_cat`-grouped samples are numbered, correspoinding to the
+        `control_cat`-grouped samples are numbered, corresponding to the
         second list in `index`. The group is keyed to the list of sample arrays
         with the same length of `order`.
     index : list
@@ -1069,7 +1117,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
             continue
         # Draws the samples that are matched for control cats
         m_ids = meta.loc[ids].groupby(cat).groups
-        # Checks if samples from the cat groups are respresented in those
+        # Checks if samples from the cat groups are represented in those
         # Samples
         ids_vec = id_vecs = [m_ids[o] for o in order if o in
                              m_ids]
@@ -1120,7 +1168,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     if 'no' in meta_pairs:
         return [np.array([]) for o in meta_pairs['no']]
 
-    # Identifies the absloute positions of the control group being drawn
+    # Identifies the absolute positions of the control group being drawn
     set_pos = np.random.choice(index, int(num_samps),
                                replace=False).astype(int)
 
@@ -1144,7 +1192,7 @@ def _calculate_power_curve(test, samples, sample_counts, ratio=None,
     Parameters
     ----------
     test : function
-        The statistical test which accepts an list of arrays of values and
+        The statistical test which accepts a list of arrays of values and
         returns a p value.
     samples : array_like
         `samples` can be a list of lists or an array where each sublist or row
