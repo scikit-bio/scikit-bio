@@ -14,26 +14,87 @@ from ._iupac_sequence import IUPACSequence
 
 
 class RNA(NucleotideSequence):
-    """Base class for RNA sequences.
+    """Store RNA sequence data and optional associated metadata.
 
-    An `RNA` is a `NucelotideSequence` that is restricted to only
-    containing characters used in the IUPAC RNA lexicon.
+    Only characters in the IUPAC RNA character set [1]_ are supported.
 
-    Notes
-    -----
-    All uppercase and lowercase IUPAC RNA characters are supported.
+    Parameters
+    ----------
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+        Characters representing the RNA sequence itself.
+    id : str, optional
+        Sequence identifier (e.g., an accession number).
+    description : str, optional
+        Description or comment about the sequence (e.g., "green fluorescent
+        protein").
+    quality : 1D array_like (int), optional
+        Phred quality scores stored as nonnegative integers, one per sequence
+        character. If provided, must be the same length as the RNA sequence.
+        Can be a 1D ``np.ndarray`` of integers or a structure that can be
+        converted into this representation using ``np.asarray``. A copy will
+        *not* be made if `quality` is already a 1D ``np.ndarray`` with an
+        ``int`` ``dtype``. The array will be made read-only (i.e., its
+        ``WRITEABLE`` flag will be set to ``False``).
+    validate : bool, optional
+        If ``True``, validation will be performed to ensure that all sequence
+        characters are in the IUPAC RNA character set. If ``False``, validation
+        will not be performed. Turning off validation will improve runtime
+        performance. If invalid characters are present, however, there is
+        **no guarantee that operations performed on the resulting object will
+        work or behave as expected.** Only turn off validation if you are
+        certain that the sequence characters are valid.
+    case_insenstive : bool, optional
+        If ``True``, lowercase sequence characters will be converted to
+        uppercase characters in order to be valid IUPAC RNA characters.
+
+    Attributes
+    ----------
+    id
+    description
+    sequence
+    quality
+    alphabet
+    gap_chars
+    nondegenerate_chars
+    degenerate_chars
+    degenerate_map
+    complement_map
+
+    See Also
+    --------
+    RNA
+
+    References
+    ----------
+    .. [1] Nomenclature for incompletely specified bases in nucleic acid
+       sequences: recommendations 1984.
+       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+       A Cornish-Bowden
+
+    Examples
+    --------
+    >>> from skbio import RNA
+    >>> s = RNA('ACCGAAU')
+    >>> s
+    RNA('ACCGAAU', length=7)
+
+    Convert lowercase characters to uppercase:
+
+    >>> s = RNA('AcCGaaU', case_insensitive=True)
+    >>> s
+    RNA('ACCGAAU', length=7)
 
     """
 
     @classproperty
     @overrides(NucleotideSequence)
     def complement_map(cls):
-        """Return the mapping of characters to their complements.
+        """Return mapping of RNA characters to their complements.
 
         Returns
         -------
         dict
-            Mapping of characters to their complements.
+            Mapping of each character to its complement.
 
         Notes
         -----
@@ -52,7 +113,7 @@ class RNA(NucleotideSequence):
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        """Return the non-degenerate IUPAC RNA characters.
+        """Return non-degenerate IUPAC RNA characters.
 
         Returns
         -------
@@ -65,12 +126,12 @@ class RNA(NucleotideSequence):
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
-        """Return the mapping of degenerate to non-degenerate characters.
+        """Return mapping of degenerate to non-degenerate RNA characters.
 
         Returns
         -------
-        dict of sets
-            Mapping of IUPAC degenerate RNA character to the set of
+        dict (set)
+            Mapping of each degenerate IUPAC RNA character to the set of
             non-degenerate IUPAC RNA characters it represents.
 
         """
