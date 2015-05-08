@@ -19,11 +19,6 @@ class abstractproperty(abc.abstractproperty):
         return iter("")
 
 
-class sphinx_hack(property):
-    def __iter__(self):
-        return iter("")
-
-
 # Adapted from http://stackoverflow.com/a/8313042/579416
 def overrides(interface_class):
     def overrider(method):

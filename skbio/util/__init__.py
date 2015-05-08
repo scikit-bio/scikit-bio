@@ -27,7 +27,6 @@ Decorators
 
     classproperty
     abstractproperty
-    sphinx_hack
 
 Miscellaneous functionality
 ---------------------------
@@ -81,7 +80,6 @@ from ._testing import get_data_path, TestRunner
 __all__ = ['EfficiencyWarning', 'TestingUtilError', 'classproperty',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', 'overrides',  'abstractproperty',
-           'phinx_hack']
+           'get_data_path', 'TestRunner', 'overrides',  'abstractproperty']
 
 test = TestRunner(__file__).test

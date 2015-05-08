@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides, abstractproperty, sphinx_hack
+from skbio.util import classproperty, overrides, abstractproperty
 from ._nucleotide_sequence import NucleotideSequence
 from ._iupac_sequence import IUPACSequence
 
@@ -43,7 +43,6 @@ class DNA(NucleotideSequence):
 
     """
 
-    #@sphinx_hack
     @classproperty
     @overrides(NucleotideSequence)
     def complement_map(cls):
@@ -68,7 +67,6 @@ class DNA(NucleotideSequence):
         comp_map.update({c: c for c in cls.gap_chars})
         return comp_map
 
-    #@sphinx_hack
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
@@ -82,7 +80,6 @@ class DNA(NucleotideSequence):
         """
         return set("ACGT")
 
-    #@sphinx_hack
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):

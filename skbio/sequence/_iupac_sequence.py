@@ -14,7 +14,7 @@ from itertools import product
 
 import numpy as np
 
-from skbio.util import classproperty, overrides, abstractproperty, sphinx_hack
+from skbio.util import classproperty, overrides, abstractproperty
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -33,7 +33,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     gap_chars
     degenerate_chars
     degenerate_map
-    complement_map
 
     Raises
     ------
@@ -99,7 +98,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             cls.__gap_codes = np.asarray([ord(g) for g in gaps])
         return cls.__gap_codes
 
-    #@sphinx_hack
     @classproperty
     def alphabet(cls):
         """Return the allowed characters.
@@ -114,7 +112,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
-    #@sphinx_hack
     @classproperty
     def gap_chars(cls):
         """Return the characters defined as gaps.
@@ -129,7 +126,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return set('-.')
 
-    #@sphinx_hack
     @classproperty
     def degenerate_chars(cls):
         """Return the degenerate IUPAC characters.

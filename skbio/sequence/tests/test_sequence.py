@@ -1185,7 +1185,7 @@ class TestSequence(TestCase):
             self.assertEqual(seq.index(c("@@")), 7)
 
             with self.assertRaises(ValueError):
-                seq.index("A", begin=1, end=5)
+                seq.index("A", start=1, end=5)
 
         self.assertEqual(tested, 4)
 
