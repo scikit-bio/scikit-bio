@@ -5,17 +5,16 @@ Sequences (:mod:`skbio.sequence`)
 .. currentmodule:: skbio.sequence
 
 This module provides classes for storing and working with biological sequences,
-including generic sequences which have no restrictions on which characters
-can be included, and sequences based on IUPAC-defined sets of
-allowed characters (including degenerate characters), including ``DNA``,
-``RNA`` and
-``Protein`` sequences. Common operations are defined as methods, for
-example computing the reverse complement of a DNA sequence, or searching for
-N-glycosylation motifs in ``Protein`` sequences. Class attributes are available to
-obtain valid character sets, complement maps for different sequence types, and
-for obtaining degenerate character definitions. Additionally this module defines
-the ``GeneticCode`` class, which represents an immutable object that translates
-DNA or RNA sequences into protein sequences.
+including generic sequences which have no restrictions on which characters can
+be included, and sequences based on IUPAC-defined sets of allowed characters
+(including degenerate characters), including ``DNA``, ``RNA`` and ``Protein``
+sequences. Common operations are defined as methods, for example computing the
+reverse complement of a DNA sequence, or searching for N-glycosylation motifs
+in ``Protein`` sequences. Class attributes are available to obtain valid
+character sets, complement maps for different sequence types, and for obtaining
+degenerate character definitions. Additionally this module defines the
+``GeneticCode`` class, which represents an immutable object that translates DNA
+or RNA sequences into protein sequences.
 
 Classes
 -------
