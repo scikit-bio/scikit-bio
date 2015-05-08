@@ -617,9 +617,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        String representation contains the class name, the first seven
-        characters of the sequence, followed by ellipses, followed by the last
-        seven characters of the sequence (or the full sequence without
+        String representation contains the class name, the first six characters
+        of the sequence, followed by ellipses, followed by the last six
+        characters of the sequence (or the full sequence without
         ellipses, if the sequence is less than 21 characters long), followed by
         the sequence length. If ID, description, or quality are present, they
         will be included after the sequence length (and truncated in a similar

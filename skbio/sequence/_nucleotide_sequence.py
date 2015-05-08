@@ -16,11 +16,9 @@ from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
 class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
-    """Base class for nucleotide sequences.
+    """Abstract base class for storing an IUPAC nucleotide sequence.
 
-    A `NucleotideSequence` is a `Sequence` with additional methods
-    that are only applicable for nucleotide sequences, and containing only
-    characters used in the IUPAC DNA or RNA lexicon.
+    This is an abstract base class (ABC) that cannot be instantiated.
 
     Attributes
     ----------
@@ -29,23 +27,19 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     sequence
     quality
     alphabet
-    nondegenerate_chars
     gap_chars
+    nondegenerate_chars
     degenerate_chars
     degenerate_map
     complement_map
 
     See Also
     --------
-    Sequence
-
-    Notes
-    -----
-    All uppercase and lowercase IUPAC DNA/RNA characters are supported.
-
-    .. shownumpydoc
+    DNA
+    RNA
 
     """
+
     @property
     def _motifs(self):
         return _motifs
@@ -53,54 +47,51 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     @abstractproperty
     @classproperty
     def complement_map(cls):
-        """Return the mapping of characters to their complements.
+        """Return mapping of characters to their complements.
 
         Returns
         -------
         dict
-            Mapping of characters to their complements.
+            Mapping of each character to its complement.
 
         Notes
         -----
-        Complements cannot be defined for a generic `NucleotideSequence`
-        because the complement of 'A' is ambiguous.
-        `NucleotideSequence.complement_map` will therefore be the empty dict.
-        Thanks, nature...
+        Complements cannot be defined for a generic nucleotide sequence because
+        the complement of ``A`` is ambiguous. Thanks, nature...
 
         """
         return set()  # pragma: no cover
 
     def complement(self, reverse=False):
-        """Return the complement of the `NucleotideSequence`
+        """Return the complement of the nucleotide sequence.
 
         Parameters
         ----------
         reverse : bool, optional
-            If `True`, returns the reverse complement, and will reverse the
-            quality scores (if they exist).
+            If ``True``, return the reverse complement. If quality scores are
+            present, they will be reversed.
 
         Returns
         -------
-        NucelotideSequence
-            The complement of `self`. Specific type will be the same as
-            ``type(self)``. The type, id, description, and quality scores of
-            the result will be the same as `self`.
+        NucleotideSequence
+            The (reverse) complement of the nucleotide sequence. The type, ID,
+            description, and quality scores of the result will be the same as
+            the nucleotide sequence. If `reverse` is ``True``, quality scores
+            will be reversed if they are present.
 
         See Also
         --------
         reverse_complement
         complement_map
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio import DNA
         >>> DNA('TTCATT', id='s', quality=range(6)).complement()
         DNA('AAGTAA', length=6, id='s', quality=[0, 1, 2, 3, 4, 5])
 
         >>> DNA('TTCATT', id='s', quality=range(6)).complement(reverse=True)
         DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
-
-        .. shownumpydoc
 
         """
         # TODO rewrite method for optimized performance
@@ -115,49 +106,59 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         return self._to(sequence=''.join(result), quality=quality)
 
     def reverse_complement(self):
-        """Return the reverse complement of the `NucleotideSequence`
+        """Return the reverse complement of the nucleotide sequence.
 
         Returns
         -------
-        NucelotideSequence
-            The reverse complement of `self`. Specific type will be the same as
-            ``type(self)``. The type, id, description, and quality scores of
-            the result will be the same as `self`. If quality scores are
-            present, they will be reversed and included in the resulting
-            biological sequence.
+        NucleotideSequence
+            The reverse complement of the nucleotide sequence. The type, ID,
+            and description of the result will be the same as the nucleotide
+            sequence. If quality scores are present, they will be reversed.
 
         See Also
         --------
         complement
-        complement_map
         is_reverse_complement
 
-        Example
-        -------
+        Notes
+        -----
+        This method is equivalent to ``self.complement(reverse=True)``.
+
+        Examples
+        --------
         >>> from skbio import DNA
         >>> DNA('TTCATT', id='s', quality=range(6)).reverse_complement()
         DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
-
-        .. shownumpydoc
 
         """
         return self.complement(reverse=True)
 
     def is_reverse_complement(self, other):
-        """Return True if `other` is the reverse complement of `self`
+        """Determine if a sequence is the reverse complement of this sequence.
+
+        Parameters
+        ----------
+        other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+            Sequence to compare to.
 
         Returns
         -------
         bool
-            `True` if `other` is the reverse complement of `self` and `False`
-            otherwise.
+            ``True`` if `other` is the reverse complement of the nucleotide
+            sequence.
+
+        Raises
+        ------
+        TypeError
+            If `other` is a ``Sequence`` object with a different type than the
+            nucleotide sequence.
 
         See Also
         --------
         reverse_complement
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio import DNA
         >>> DNA('TTCATT').is_reverse_complement('AATGAA')
         True
@@ -165,8 +166,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         False
         >>> DNA('ACGT').is_reverse_complement('ACGT')
         True
-
-        .. shownumpydoc
 
         """
         other = self._munge_to_sequence(other, 'is_reverse_complement')
