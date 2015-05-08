@@ -81,9 +81,13 @@ class Sequence(collections.Sequence, SkbioObject):
     --------
     >>> from skbio import Sequence
     >>> s = Sequence('GGUCGUGAAGGA')
-    >>> t = Sequence('GGUCCUGAAGGU')
-    >>> s == t
-    False
+    >>> s
+    Sequence('GGUCGUGAAGGA', length=12)
+    >>> t = Sequence('CAT', id='seq-id', description='seq desc',
+    ...              quality=[42, 42, 1])
+    >>> t # doctest: +NORMALIZE_WHITESPACE
+    Sequence('CAT', length=3, id='seq-id', description='seq desc',
+             quality=[42, 42, 1])
 
     """
     default_write_format = 'fasta'
@@ -720,9 +724,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Define a biological sequence with the same sequence of characters as
         ``u``, but with different identifier and quality scores:
+
         >>> v = Sequence('GGUCGUGACCGA', id='abc',
-        ...                        quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55,
-        ...                                 42, 42])
+        ...               quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
 
         By default, the two sequences are *not* considered equal because their
         identifiers and quality scores do not match:

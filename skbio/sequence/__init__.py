@@ -6,15 +6,16 @@ Sequences (:mod:`skbio.sequence`)
 
 This module provides classes for storing and working with biological sequences,
 including generic sequences which have no restrictions on which characters
-can be included, and sequences based on IUPAC-defined sets of allowed
-allowed characters (with degenerate characters), including ``DNA``, ``RNA`` and
-``Protein`` sequences. Common opertations are defined as class methods, for
+can be included, and sequences based on IUPAC-defined sets of
+allowed characters (including degenerate characters), including ``DNA``,
+``RNA`` and
+``Protein`` sequences. Common operations are defined as methods, for
 example computing the reverse complement of a DNA sequence, or searching for
-zinc-finger motifs in Protein sequences. Class attributes are available to
+N-glycosylation motifs in ``Protein`` sequences. Class attributes are available to
 obtain valid character sets, complement maps for different sequence types, and
-for obtaining degenerate character definitions. Additionaly this module defines
+for obtaining degenerate character definitions. Additionally this module defines
 the ``GeneticCode`` class, which represents an immutable object that translates
-DNA or RNA sequences into Protein sequences.
+DNA or RNA sequences into protein sequences.
 
 Classes
 -------
@@ -50,7 +51,7 @@ Exceptions
 
 Examples
 --------
->>> from skbio.sequence import DNA, RNA
+>>> from skbio import DNA, RNA
 
 New sequences are created with optional id, description, and quality fields.
 
@@ -178,7 +179,7 @@ Retrieving the anticodons of the object
  'W': ['CCA'],
  'Y': ['ATA', 'GTA']}
 
-NucleotideSequences can be translated using a ``GeneticCode`` object.
+Nucleotide sequences can be translated using a ``GeneticCode`` object.
 
 >>> d6 = DNA('ATGTCTAAATGA')
 >>> from skbio.sequence import genetic_code
@@ -186,8 +187,6 @@ NucleotideSequences can be translated using a ``GeneticCode`` object.
 >>> gc.translate(d6)
 Protein('MSK*', length=4)
 
-
-.. shownumpydoc
 """
 
 # ----------------------------------------------------------------------------
