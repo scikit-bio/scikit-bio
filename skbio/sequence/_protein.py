@@ -87,28 +87,11 @@ class Protein(IUPACSequence):
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        """Return non-degenerate IUPAC protein characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC protein characters.
-
-        """
         return set("ACDEFGHIKLMNPQRSTVWY*")
 
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
-        """Return mapping of degenerate to non-degenerate protein characters.
-
-        Returns
-        -------
-        dict (set)
-            Mapping of each degenerate IUPAC protein character to the set of
-            non-degenerate IUPAC protein characters it represents.
-
-        """
         return {
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")

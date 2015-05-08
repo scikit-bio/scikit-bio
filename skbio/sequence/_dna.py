@@ -89,18 +89,6 @@ class DNA(NucleotideSequence):
     @classproperty
     @overrides(NucleotideSequence)
     def complement_map(cls):
-        """Return mapping of DNA characters to their complements.
-
-        Returns
-        -------
-        dict
-            Mapping of each character to its complement.
-
-        Notes
-        -----
-        The complement of a gap character is itself.
-
-        """
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
             'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
@@ -113,28 +101,11 @@ class DNA(NucleotideSequence):
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        """Return non-degenerate IUPAC DNA characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC DNA characters.
-
-        """
         return set("ACGT")
 
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
-        """Return mapping of degenerate to non-degenerate DNA characters.
-
-        Returns
-        -------
-        dict (set)
-            Mapping of each degenerate IUPAC DNA character to the set of
-            non-degenerate IUPAC DNA characters it represents.
-
-        """
         return {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),

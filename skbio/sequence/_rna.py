@@ -89,18 +89,6 @@ class RNA(NucleotideSequence):
     @classproperty
     @overrides(NucleotideSequence)
     def complement_map(cls):
-        """Return mapping of RNA characters to their complements.
-
-        Returns
-        -------
-        dict
-            Mapping of each character to its complement.
-
-        Notes
-        -----
-        The complement of a gap character is itself.
-
-        """
         comp_map = {
             'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
             'S': 'S', 'W': 'W', 'K': 'M', 'M': 'K', 'B': 'V', 'D': 'H',
@@ -113,28 +101,11 @@ class RNA(NucleotideSequence):
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        """Return non-degenerate IUPAC RNA characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate IUPAC RNA characters.
-
-        """
         return set("ACGU")
 
     @classproperty
     @overrides(IUPACSequence)
     def degenerate_map(cls):
-        """Return mapping of degenerate to non-degenerate RNA characters.
-
-        Returns
-        -------
-        dict (set)
-            Mapping of each degenerate IUPAC RNA character to the set of
-            non-degenerate IUPAC RNA characters it represents.
-
-        """
         return {
             "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
