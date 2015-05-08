@@ -42,7 +42,8 @@ class DNA(NucleotideSequence):
         performance. If invalid characters are present, however, there is
         **no guarantee that operations performed on the resulting object will
         work or behave as expected.** Only turn off validation if you are
-        certain that the sequence characters are valid.
+        certain that the sequence characters are valid. To store sequence data
+        that is not IUPAC-compliant, use ``Sequence``.
     case_insenstive : bool, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters in order to be valid IUPAC DNA characters.

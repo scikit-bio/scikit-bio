@@ -89,7 +89,6 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         >>> from skbio import DNA
         >>> DNA('TTCATT', id='s', quality=range(6)).complement()
         DNA('AAGTAA', length=6, id='s', quality=[0, 1, 2, 3, 4, 5])
-
         >>> DNA('TTCATT', id='s', quality=range(6)).complement(reverse=True)
         DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
 
