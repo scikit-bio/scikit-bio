@@ -70,7 +70,7 @@ DNA('ACCGGGTA', length=8, id='my-sequence')
 >>> d3
 DNA('TACCCGGT', length=8, id='my-sequence')
 
-It's also straight-forward to compute distances between sequences (optionally
+It's also straightforward to compute distances between sequences (optionally
 using user-defined distance metrics, the default is Hamming distance which
 requires that the sequences being compared are the same length) for use in
 sequence clustering, phylogenetic reconstruction, etc.
@@ -94,39 +94,42 @@ Sequences can be searched for known motif types. This returns the slices that
 describe the matches.
 
 >>> r5 = RNA('AGG-GGACUGAA')
->>> for e in r5.find_motifs('purine-run', min_length=2): print(e)
+>>> for motif in r5.find_motifs('purine-run', min_length=2):
+...     motif
 slice(0, 3, None)
 slice(4, 7, None)
 slice(9, 12, None)
 
 Those slices can be used to extract the relevant subsequences.
 
->>> for e in r5.find_motifs('purine-run', min_length=2): print(r5[e])
-AGG
-GGA
-GAA
+>>> for motif in r5.find_motifs('purine-run', min_length=2):
+...     r5[motif]
+RNA('AGG', length=3)
+RNA('GGA', length=3)
+RNA('GAA', length=3)
 
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
->>> for e in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
-...     print(r5[e])
-AGG-GGA
-GAA
+>>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
+...     r5[motif]
+RNA('AGG-GGA', length=7)
+RNA('GAA', length=3)
 
 In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
 the input.
 
->>> for e in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
-...     print(repr(r5[e].degap()))
+>>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
+...     r5[motif].degap()
 RNA('AGGGGA', length=6)
 RNA('GAA', length=3)
 
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
 
->>> for e in r5.slices_from_regex('(G+AC[UT])'): print(e)
+>>> for match in r5.slices_from_regex('(G+AC[UT])'):
+...     match
 slice(4, 9, None)
 
 Class-level methods contain information about the molecule types.
@@ -137,7 +140,7 @@ set(['C', 'T', 'G'])
 >>> RNA.degenerate_map['B']
 set(['C', 'U', 'G'])
 
-Creating and using a ``GeneticCode`` object
+Creating and using a ``GeneticCode`` object:
 
 >>> from skbio.sequence import genetic_code
 >>> from pprint import pprint
