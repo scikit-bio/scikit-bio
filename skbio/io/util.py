@@ -31,7 +31,7 @@ from six import BytesIO
 
 from contextlib import contextmanager
 from io import TextIOWrapper
-from gzip import open as gzip_open, GzipFile
+from gzip import GzipFile
 from tempfile import gettempdir
 
 import requests
@@ -45,22 +45,44 @@ def _is_string_or_bytes(s):
     return isinstance(s, str) or isinstance(s, bytes)
 
 
-def _is_gzip(fp):
+def _is_gzip(filepath_or):
     """Checks the first two bytes of the file for the gzip magic number
     If the first two bytes of the file are 1f 8b (the "magic number" of a
     gzip file), return True; otherwise, return false.
     """
-    with open(fp, 'rb') as file_:
-        is_gzip = file_.read(2) == b'\x1f\x8b'
+    magic_number = b'\x1f\x8b'
+
+    if hasattr(filepath_or, 'name'):
+        filepath_or = filepath_or.name
+
+    if _is_string_or_bytes(filepath_or):
+        with open(filepath_or, 'rb') as file_:
+            is_gzip = file_.read(2) == magic_number
+    elif isinstance(filepath_or, BytesIO):
+        start_pos = filepath_or.tell()
+
+        filepath_or.seek(0)
+        is_gzip = filepath_or.read(2) == magic_number
+
+        filepath_or.seek(start_pos)
+    else:
+        raise ValueError('Unsupported type {}'.format(type(filepath_or)))
+
     return is_gzip
 
 
-def get_filehandle(filepath_or, *args, **kwargs):
+def get_filehandle(filepath_or, mode='r', binary=False,
+                   gzip=None, *args, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
     """
+    assert mode in {'r', 'w'}
+
     if _is_string_or_bytes(filepath_or):
         if requests.compat.urlparse(filepath_or).scheme in {'http', 'https'}:
+            if mode == 'w':
+                raise ValueError('Writing not supported for URLs')
+
             sess = CacheControl(requests.Session(),
                                 cache=FileCache(gettempdir()))
             req = sess.get(filepath_or, **kwargs)
@@ -68,24 +90,17 @@ def get_filehandle(filepath_or, *args, **kwargs):
             # if the response is not 200, an exception will be raised
             req.raise_for_status()
 
-            fh, own_fh = BytesIO(req.content), True
-        elif _is_gzip(filepath_or):
-            # Extract mode from args or kwargs.
-            if 'mode' in kwargs:
-                mode = kwargs.pop('mode')
-            elif len(args) > 0:
-                mode, args = args[0], args[1:]
-            else:
-                mode = None
-
-            # Replace unsupported U flag in args or kwargs.
-            if mode is None or mode in {'U', 'rU'}:
-                mode = 'rt'
-
-            fh = gzip_open(filepath_or, *args, mode=mode, **kwargs)
-            own_fh = True
+            fh = BytesIO(req.content)
         else:
-            fh, own_fh = open(filepath_or, *args, **kwargs), True
+            fh = open(filepath_or, mode + 'b', *args, **kwargs)
+
+        if gzip or (gzip is None and _is_gzip(fh)):
+            fh = GzipFile(fileobj=fh)
+
+        if not binary:
+            fh = TextIOWrapper(fh)
+
+        own_fh = True
     else:
         fh, own_fh = filepath_or, False
     return fh, own_fh
