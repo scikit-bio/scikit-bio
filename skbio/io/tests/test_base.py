@@ -12,8 +12,9 @@ from future.builtins import range, zip
 import unittest
 
 import numpy.testing as npt
+import numpy as np
 
-from skbio import BiologicalSequence, DNASequence, RNASequence
+from skbio import Sequence, DNA, RNA
 from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
                             _encode_phred_to_qual, _get_nth_sequence,
                             _parse_fasta_like_header,
@@ -74,18 +75,18 @@ class PhredDecoderTests(unittest.TestCase):
         self.assertIn("'illumina'", str(cm.exception))
 
     def test_empty_qual_str(self):
-        self.assertEqual(_decode_qual_to_phred('', variant='sanger'), [])
+        npt.assert_equal(_decode_qual_to_phred('', variant='sanger'),
+                         np.array([], dtype=np.uint8))
 
     def test_sanger_variant(self):
         # test entire range of possible ascii chars for sanger
         all_sanger_ascii = ('!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOP'
                             'QRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~')
         obs = _decode_qual_to_phred(all_sanger_ascii, variant='sanger')
-        self.assertEqual(obs, list(range(94)))
+        npt.assert_equal(obs, np.arange(94))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred('a b', variant='sanger')
-        self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 93]', str(cm.exception))
 
     def test_illumina13_variant(self):
@@ -94,11 +95,10 @@ class PhredDecoderTests(unittest.TestCase):
                                 'lmnopqrstuvwxyz{|}~')
         obs = _decode_qual_to_phred(all_illumina13_ascii,
                                     variant='illumina1.3')
-        self.assertEqual(obs, list(range(63)))
+        npt.assert_equal(obs, np.arange(63))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred('a!b', variant='illumina1.3')
-        self.assertIn('-31', str(cm.exception))
         self.assertIn('[0, 62]', str(cm.exception))
 
     def test_illumina18_variant(self):
@@ -107,33 +107,29 @@ class PhredDecoderTests(unittest.TestCase):
                                 'MNOPQRSTUVWXYZ[\\]^_')
         obs = _decode_qual_to_phred(all_illumina18_ascii,
                                     variant='illumina1.8')
-        self.assertEqual(obs, list(range(63)))
+        npt.assert_equal(obs, np.arange(63))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred('AaB', variant='illumina1.8')
-        self.assertIn('64', str(cm.exception))
         self.assertIn('[0, 62]', str(cm.exception))
 
     def test_custom_phred_offset(self):
         ascii_chars = '*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\'
         obs = _decode_qual_to_phred(ascii_chars, phred_offset=42)
-        self.assertEqual(obs, list(range(51)))
+        npt.assert_equal(obs, np.arange(51))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred(ascii_chars, phred_offset=43)
-        self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 83]', str(cm.exception))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred(ascii_chars, phred_offset=0)
         self.assertIn('`phred_offset`', str(cm.exception))
-        self.assertIn('0', str(cm.exception))
         self.assertIn('printable', str(cm.exception))
 
         with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred(ascii_chars, phred_offset=127)
         self.assertIn('`phred_offset`', str(cm.exception))
-        self.assertIn('127', str(cm.exception))
         self.assertIn('printable', str(cm.exception))
 
 
@@ -277,12 +273,12 @@ class TestParseFASTALikeHeader(unittest.TestCase):
 class TestFormatFASTALikeRecords(unittest.TestCase):
     def setUp(self):
         def generator():
-            yield BiologicalSequence('ACGT', id='', description='',
-                                     quality=range(4))
-            yield RNASequence('GAU', id='  foo \t\t bar ', description='')
-            yield DNASequence('TAG', id='', description='foo\n\n bar\n')
-            yield BiologicalSequence('A', id='foo', description='bar baz',
-                                     quality=[42])
+            yield Sequence('ACGT', id='', description='',
+                           quality=range(4))
+            yield RNA('GAU', id='  foo \t\t bar ', description='')
+            yield DNA('TAG', id='', description='foo\n\n bar\n')
+            yield Sequence('A', id='foo', description='bar baz',
+                           quality=[42])
         self.gen = generator()
 
     def test_no_replacement(self):
@@ -334,8 +330,8 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_empty_sequence(self):
         def blank_seq_gen():
-            for seq in (DNASequence('A'), BiologicalSequence(''),
-                        RNASequence('GG')):
+            for seq in (DNA('A'), Sequence(''),
+                        RNA('GG')):
                 yield seq
 
         with self.assertRaisesRegexp(ValueError, '2nd.*empty'):
@@ -344,9 +340,9 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_missing_quality_scores(self):
         def missing_qual_gen():
-            for seq in (RNASequence('A', quality=[42]),
-                        BiologicalSequence('AG'),
-                        DNASequence('GG', quality=[41, 40])):
+            for seq in (RNA('A', quality=[42]),
+                        Sequence('AG'),
+                        DNA('GG', quality=[41, 40])):
                 yield seq
 
         with self.assertRaisesRegexp(ValueError,

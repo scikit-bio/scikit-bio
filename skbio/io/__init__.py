@@ -24,6 +24,7 @@ Reading and writing files (I/O) can be a complicated task:
   object to multiple files.
 * Instead of reading a file into an object, you might want to stream the file
   using a generator (e.g., if the file cannot be fully loaded into memory).
+* The file you are working with might be hosted in hosted in a remote server.
 
 To address these issues (and others), scikit-bio provides a simple, powerful
 interface for dealing with I/O. We accomplish this by using a single I/O

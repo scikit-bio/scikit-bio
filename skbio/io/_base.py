@@ -12,6 +12,8 @@ from future.builtins import range
 import re
 import warnings
 
+import numpy as np
+
 from skbio.util import cardinal_to_ordinal
 
 _whitespace_regex = re.compile(r'\s')
@@ -41,16 +43,13 @@ def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
          "scikit-bio. Please see the following scikit-bio issue to "
          "track progress on this:\n\t"
          "https://github.com/biocore/scikit-bio/issues/719"])
+    qual = np.fromstring(qual_str, dtype=np.uint8) - phred_offset
 
-    phred = []
-    for c in qual_str:
-        score = ord(c) - phred_offset
-        if phred_range[0] <= score <= phred_range[1]:
-            phred.append(score)
-        else:
-            raise ValueError("Decoded Phred score %d is out of range [%d, %d]."
-                             % (score, phred_range[0], phred_range[1]))
-    return phred
+    if np.any((qual > phred_range[1]) | (qual < phred_range[0])):
+        raise ValueError("Decoded Phred score is out of range [%d, %d]."
+                         % (phred_range[0], phred_range[1]))
+
+    return qual
 
 
 def _encode_phred_to_qual(phred, variant=None, phred_offset=None):
@@ -179,9 +178,31 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         else:
             header = id_
 
-        if require_qual and not seq.has_quality():
+        if require_qual and seq.quality is None:
             raise ValueError(
                 "Cannot write %s sequence because it does not have quality "
                 "scores associated with it." % cardinal_to_ordinal(idx + 1))
 
-        yield header, seq.sequence, seq.quality
+        yield header, str(seq), seq.quality
+
+
+def _line_generator(fh, skip_blanks=False):
+    for line in fh:
+        line = line.strip()
+        if line or not skip_blanks:
+            yield line
+
+
+def _too_many_blanks(fh, max_blanks):
+    count = 0
+    too_many = False
+    for line in _line_generator(fh, skip_blanks=False):
+        if line:
+            break
+        else:
+            count += 1
+            if count > max_blanks:
+                too_many = True
+                break
+    fh.seek(0)
+    return too_many

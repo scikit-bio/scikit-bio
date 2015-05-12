@@ -9,11 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 
-class BiologicalSequenceError(Exception):
-    """General error for biological sequence validation failures."""
-    pass
-
-
 class GeneticCodeError(Exception):
     """Base class exception used by the GeneticCode class"""
     pass

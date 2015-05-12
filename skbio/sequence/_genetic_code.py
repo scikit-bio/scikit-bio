@@ -225,15 +225,11 @@ class GeneticCode(SkbioObject):
 
     def __str__(self):
         """Returns code_sequence that constructs the GeneticCode
-
-        .. shownumpydoc
         """
         return self.code_sequence
 
     def __repr__(self):
         """Returns reconstructable representation of the GeneticCode
-
-        .. shownumpydoc
         """
         return 'GeneticCode(%s)' % str(self)
 
@@ -241,8 +237,6 @@ class GeneticCode(SkbioObject):
         """ Allows two GeneticCode objects to be compared to each other.
 
         Two GeneticCode objects are equal if they have equal code_sequences.
-
-        .. shownumpydoc
         """
         if not isinstance(other, GeneticCode):
             return False
@@ -256,8 +250,6 @@ class GeneticCode(SkbioObject):
         """Returns amino acid corresponding to codon, or codons for an aa.
 
         Returns [] for empty list of codons, 'X' for unknown amino acid.
-
-        .. shownumpydoc
         """
         item = str(item)
         if len(item) == 1:  # amino acid
@@ -301,7 +293,7 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        <ProteinSequence: CMTF (length: 4)>
+        Protein('CMTF', length=4)
 
         """
         if len(nucleotide_sequence) == 0:
@@ -374,15 +366,16 @@ class GeneticCode(SkbioObject):
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
         >>> for e in results: e
-        <ProteinSequence: MLT* (length: 4)>
-        <ProteinSequence: C*HK (length: 4)>
-        <ProteinSequence: ANI (length: 3)>
-        <ProteinSequence: FMLA (length: 4)>
-        <ProteinSequence: LC*H (length: 4)>
-        <ProteinSequence: YVS (length: 3)>
+        Protein('MLT*', length=4)
+        Protein('C*HK', length=4)
+        Protein('ANI', length=3)
+        Protein('FMLA', length=4)
+        Protein('LC*H', length=4)
+        Protein('YVS', length=3)
+
 
         """
-        rc_nucleotide_sequence = nucleotide_sequence.rc()
+        rc_nucleotide_sequence = nucleotide_sequence.reverse_complement()
         results = []
         for start in range(3):
             translation = self.translate(nucleotide_sequence, start)

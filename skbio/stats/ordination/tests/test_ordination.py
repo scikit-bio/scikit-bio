@@ -394,16 +394,16 @@ class TestRDAResults(object):
     # results in L&L.
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
-        Y = np.loadtxt(get_data_path('example2_Y'))
-        X = np.loadtxt(get_data_path('example2_X'))
-        self.ordination = RDA(Y, X,
-                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-                              ['Species0', 'Species1', 'Species2', 'Species3',
-                               'Species4', 'Species5'])
+        self.Y = np.loadtxt(get_data_path('example2_Y'))
+        self.X = np.loadtxt(get_data_path('example2_X'))
 
     def test_scaling1(self):
-        scores = self.ordination.scores(1)
+
+        scores = RDA(self.Y, self.X,
+                     ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                      ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5'], scaling=1)
 
         # Load data as computed with vegan 2.0-8
         vegan_species = np.loadtxt(get_data_path(
@@ -415,7 +415,11 @@ class TestRDAResults(object):
         npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
 
     def test_scaling2(self):
-        scores = self.ordination.scores(2)
+        scores = RDA(self.Y, self.X,
+                     ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
+                      ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5'], scaling=2)
 
         # Load data as computed with vegan 2.0-8
         vegan_species = np.loadtxt(get_data_path(
