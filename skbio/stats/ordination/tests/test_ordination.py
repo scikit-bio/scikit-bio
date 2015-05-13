@@ -23,7 +23,7 @@ from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import (
-    CA, RDA, CCA, PCoA, OrdinationResults, corr, mean_and_std,
+    CA, RDA, cca, PCoA, OrdinationResults, corr, mean_and_std,
     assert_ordination_results_equal)
 from skbio.util import get_data_path
 
@@ -436,16 +436,21 @@ class TestCCAErrors(object):
     def test_shape(self):
         X, Y = self.X, self.Y
         with npt.assert_raises(ValueError):
-            CCA(Y, X[:-1], None, None)
+            cca(Y, X[:-1], None, None, 1)
 
     def test_Y_values(self):
         X, Y = self.X, self.Y
         Y[0, 0] = -1
         with npt.assert_raises(ValueError):
-            CCA(Y, X, None, None)
+            cca(Y, X, None, None, 1)
         Y[0] = 0
         with npt.assert_raises(ValueError):
-            CCA(Y, X, None, None)
+            cca(Y, X, None, None, 1)
+
+    def test_scaling(self):
+        X, Y = self.X, self.Y
+        with npt.assert_raises(NotImplementedError):
+            cca(Y, X[:, :-1], None, None, 3)
 
 
 class TestCCAResults(object):
@@ -453,38 +458,37 @@ class TestCCAResults(object):
         """Data from table 11.3 in Legendre & Legendre 1998
         (p. 590). Loaded results as computed with vegan 2.0-8 and
         compared with table 11.5 if also there."""
-        Y = np.loadtxt(get_data_path('example3_Y'))
-        X = np.loadtxt(get_data_path('example3_X'))
-        self.ordination = CCA(Y, X[:, :-1],
-                              ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                               'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-                              ['Species0', 'Species1', 'Species2', 'Species3',
-                               'Species4', 'Species5', 'Species6', 'Species7',
-                               'Species8'])
+        self.Y = np.loadtxt(get_data_path('example3_Y'))
+        self.X = np.loadtxt(get_data_path('example3_X'))[:, :-1]
+        self.site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                         'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
+        self.species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                            'Species4', 'Species5', 'Species6', 'Species7',
+                            'Species8']
 
     def test_scaling1_species(self):
-        scores = self.ordination.scores(1)
+        scores = cca(self.Y, self.X, self.site_ids, self.species_ids, 1)
 
         vegan_species = np.loadtxt(get_data_path(
             'example3_species_scaling1_from_vegan'))
         npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
 
     def test_scaling1_site(self):
-        scores = self.ordination.scores(1)
+        scores = cca(self.Y, self.X, self.site_ids, self.species_ids, 1)
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling1_from_vegan'))
         npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
 
     def test_scaling2_species(self):
-        scores = self.ordination.scores(2)
+        scores = cca(self.Y, self.X, self.site_ids, self.species_ids, 2)
 
         vegan_species = np.loadtxt(get_data_path(
             'example3_species_scaling2_from_vegan'))
         npt.assert_almost_equal(scores.species, vegan_species, decimal=5)
 
     def test_scaling2_site(self):
-        scores = self.ordination.scores(2)
+        scores = cca(self.Y, self.X, self.site_ids, self.species_ids, 2)
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling2_from_vegan'))
