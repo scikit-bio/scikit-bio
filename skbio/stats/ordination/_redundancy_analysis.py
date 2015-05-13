@@ -12,7 +12,7 @@ import numpy as np
 
 from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
-
+import pandas as pd
 
 def RDA(Y, X, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
@@ -79,11 +79,6 @@ def RDA(Y, X, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = np.asarray(Y, dtype=np.float64)
-    X = np.asarray(X, dtype=np.float64)
-    return _rda(Y, X, scale_Y, scaling)
-
-def _rda(Y, X, scale_Y, scaling):
     n, p = Y.shape
     n_, m = X.shape
     if n != n_:
@@ -93,6 +88,11 @@ def _rda(Y, X, scale_Y, scaling):
         # Mmm actually vegan is able to do this case, too
         raise ValueError(
             "Explanatory variables cannot have less rows than columns.")
+
+    sample_ids = Y.index
+    feature_ids = Y.columns
+    Y = np.asarray(Y, dtype=np.float64)
+    X = np.asarray(X, dtype=np.float64)
 
     # Centre response variables (they must be dimensionally
     # homogeneous)
@@ -165,9 +165,9 @@ def _rda(Y, X, scale_Y, scaling):
 
     eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
 
-    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling)
+    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, feature_ids)
 
-def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling):
+def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, feature_ids):
     """Compute sample, feature and biplot scores for different scalings.
     """
     if scaling not in {1, 2}:
@@ -183,6 +183,8 @@ def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling):
         scaling_factor = eigvals / const
     feature_scores = np.hstack((U, U_res)) * scaling_factor
     sample_scores = np.hstack((F, F_res)) / scaling_factor
+    feature_scores = pd.DataFrame(feature_scores, index=feature_ids)
+    sample_scores = pd.DataFrame(sample_scores, index=sample_ids)
     # TODO not yet used/displayed
     sample_constraints = np.hstack((Z, F_res)) / scaling_factor
     # Vegan seems to compute them as corr(X[:, :rank_X],
