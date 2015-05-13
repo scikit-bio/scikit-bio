@@ -113,10 +113,9 @@ from ._correspondence_analysis import CA
 from ._redundancy_analysis import RDA
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import PCoA
-from ._utils import (mean_and_std, scale, svd_rank, corr,
-                     assert_ordination_results_equal)
+from ._utils import mean_and_std, scale, svd_rank, corr
 
 __all__ = ['CA', 'RDA', 'cca', 'PCoA', 'mean_and_std', 'scale', 'svd_rank',
-           'corr', 'assert_ordination_results_equal']
+           'corr']
 
 test = TestRunner(__file__).test
