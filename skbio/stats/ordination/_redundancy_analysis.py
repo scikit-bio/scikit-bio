@@ -27,11 +27,11 @@ def RDA(Y, X, scale_Y=False, scaling=1):
 
     Parameters
     ----------
-    X : pandas.DataFrame
+    X : pd.DataFrame
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
-    Y : pandas.DataFrame
+    Y : pd.DataFrame
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
