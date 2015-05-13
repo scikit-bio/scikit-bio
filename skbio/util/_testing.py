@@ -11,6 +11,8 @@ import inspect
 from nose import core
 from nose.tools import nottest
 from future.utils import PY3
+import numpy.testing as npt
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 
 @nottest
@@ -94,3 +96,60 @@ def get_data_path(fn, subfolder='data'):
     path = os.path.dirname(os.path.abspath(callers_filename))
     data_path = os.path.join(path, subfolder, fn)
     return data_path
+
+
+def assert_ordination_results_equal(left, right, ignore_method_name=False):
+    """Assert that ordination results objects are equal.
+
+    This is a helper function intended to be used in unit tests that need to
+    compare ``OrdinationResults`` objects.
+
+    For numeric attributes (e.g., eigvals, site, etc.),
+    ``numpy.testing.assert_almost_equal`` is used. Otherwise,
+    ``numpy.testing.assert_equal`` is used for comparisons. An assertion is
+    in place to ensure the two objects are exactly the same type.
+
+    Parameters
+    ----------
+    left, right : OrdinationResults
+        Ordination results to be compared for equality.
+
+    Raises
+    ------
+    AssertionError
+        If the two objects are not equal.
+
+    """
+    npt.assert_equal(type(left) is type(right), True)
+
+    if not ignore_method_name:
+        npt.assert_equal(left.short_method_name, right.short_method_name)
+        npt.assert_equal(left.long_method_name, right.long_method_name)
+
+    # eigvals should always be present
+    assert_series_equal(left.eigvals, right.eigvals)
+
+    # samples should always be present
+    assert_frame_equal(left.samples, right.samples)
+
+    # assert_frame_equal doesn't like None...
+    def _assert_optional_frame_equal(left, right):
+        if left is None or right is None:
+            npt.assert_equal(left, right)
+        else:
+            assert_frame_equal(left, right)
+
+    _assert_optional_frame_equal(left.features, right.features)
+    _assert_optional_frame_equal(left.biplot_scores, right.biplot_scores)
+    _assert_optional_frame_equal(left.sample_constraints,
+                                 right.sample_constraints)
+
+    # assert_series_equal doesn't like None...
+    def _assert_optional_series_equal(left, right):
+        if left is None or right is None:
+            npt.assert_equal(left, right)
+        else:
+            assert_series_equal(left, right)
+
+    _assert_optional_series_equal(left.proportion_explained,
+                                  right.proportion_explained)
