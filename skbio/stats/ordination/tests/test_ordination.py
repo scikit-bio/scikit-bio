@@ -15,10 +15,8 @@ import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.ordination import (
-    CA, RDA, CCA, PCoA, corr, mean_and_std,
-    assert_ordination_results_equal)
-from skbio.util import get_data_path
+from skbio.stats.ordination import CA, RDA, CCA, PCoA, corr, mean_and_std
+from skbio.util import get_data_path, assert_ordination_results_equal
 
 
 def normalize_signs(arr1, arr2):
