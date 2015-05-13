@@ -91,8 +91,8 @@ def RDA(Y, X, scale_Y=False, scaling=1):
 
     sample_ids = Y.index
     feature_ids = Y.columns
-    Y = np.asarray(Y, dtype=np.float64)
-    X = np.asarray(X, dtype=np.float64)
+    Y = Y.as_matrix()
+    X = X.as_matrix()
 
     # Centre response variables (they must be dimensionally
     # homogeneous)
