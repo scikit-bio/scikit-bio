@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import Ordination, OrdinationResults
+from skbio import OrdinationResults
+from ._base import Ordination
 from ._utils import corr, svd_rank, scale
 
 
