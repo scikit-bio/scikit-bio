@@ -18,7 +18,6 @@ Classes
    CA
    RDA
    CCA
-   OrdinationResults
 
 
 Functions
@@ -114,11 +113,10 @@ from ._correspondence_analysis import CA
 from ._redundancy_analysis import RDA
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import PCoA
-from ._base import OrdinationResults
 from ._utils import (mean_and_std, scale, svd_rank, corr,
                      assert_ordination_results_equal)
 
-__all__ = ['CA', 'RDA', 'cca', 'PCoA', 'OrdinationResults', 'mean_and_std',
-           'scale', 'svd_rank', 'corr', 'assert_ordination_results_equal']
+__all__ = ['CA', 'RDA', 'cca', 'PCoA', 'mean_and_std', 'scale', 'svd_rank',
+           'corr', 'assert_ordination_results_equal']
 
 test = TestRunner(__file__).test
