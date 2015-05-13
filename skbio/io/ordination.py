@@ -191,7 +191,7 @@ from future.builtins import zip
 
 import numpy as np
 
-from skbio.stats.ordination import OrdinationResults
+from skbio._base import OrdinationResults
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       OrdinationFormatError)
 
