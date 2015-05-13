@@ -7,10 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from six import binary_type, text_type
 
 import unittest
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
+from IPython.core.display import Image, SVG
+from nose.tools import assert_is_instance, assert_raises_regexp, assert_true
 
 from skbio import OrdinationResults
 from skbio._base import SkbioObject
@@ -38,12 +44,10 @@ class TestOrdinationResults(unittest.TestCase):
         features_ids = ['Species1', 'Species2', 'Species3']
         sample_ids = ['Site1', 'Site2', 'Site3']
 
-
-        samples_df = pd.DataFrame(samples, index=sample_ids, 
+        samples_df = pd.DataFrame(samples, index=sample_ids,
                                   columns=['CA1', 'CA2'])
-        features_df = pd.DataFrame(features, index=features_ids, 
+        features_df = pd.DataFrame(features, index=features_ids,
                                    columns=['CA1', 'CA2'])
-        
 
         self.ordination_results = OrdinationResults(
             'CA', 'Correspondance Analysis', eigvals=eigvals,
@@ -70,8 +74,8 @@ class TestOrdinationResults(unittest.TestCase):
         samples_df = pd.DataFrame(samples, ['A', 'B', 'C', 'D'],
                                   ['PC1', 'PC2', 'PC3'])
 
-        self.min_ord_results = OrdinationResults('PCoA',
-            'Principal Coordinate Analysis', eigvals, samples_df)
+        self.min_ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', eigvals, samples_df)
 
     def test_str(self):
         exp = ("Ordination results:\n"
@@ -159,8 +163,8 @@ class TestOrdinationResults(unittest.TestCase):
     def test_validate_plot_axes_valid_input(self):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
-        self.min_ord_results._validate_plot_axes(self.min_ord_results.site.T,
-                                                 (1, 2, 0))
+        samples = self.min_ord_results.samples.values.T
+        self.min_ord_results._validate_plot_axes(samples, (1, 2, 0))
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
@@ -168,7 +172,7 @@ class TestOrdinationResults(unittest.TestCase):
             self.min_ord_results._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
 
-        coord_matrix = self.min_ord_results.site.T
+        coord_matrix = self.min_ord_results.samples.values.T
 
         # wrong number of axes
         with assert_raises_regexp(ValueError, 'exactly three.*found 0'):

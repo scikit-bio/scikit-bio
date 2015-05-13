@@ -116,12 +116,12 @@ class OrdinationResults(SkbioObject):
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        lines.append(self._format_attribute(self.features,
-                                            'Feature IDs',
-                                            lambda e: _pprint_strs(e.index.tolist())))
-        lines.append(self._format_attribute(self.samples,
-                                            'Sample IDs',
-                                            lambda e: _pprint_strs(e.index.tolist())))
+        lines.append(self._format_attribute(
+            self.features, 'Feature IDs',
+            lambda e: _pprint_strs(e.index.tolist())))
+        lines.append(self._format_attribute(
+            self.samples, 'Sample IDs',
+            lambda e: _pprint_strs(e.index.tolist())))
 
         return '\n'.join(lines)
 
