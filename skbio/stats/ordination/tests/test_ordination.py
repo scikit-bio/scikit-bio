@@ -423,8 +423,19 @@ class TestRDAResults(object):
 class TestCCAErrors(object):
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
-        self.Y = np.loadtxt(get_data_path('example3_Y'))
-        self.X = np.loadtxt(get_data_path('example3_X'))
+        self.Y = pd.DataFrame(
+            np.loadtxt(get_data_path('example3_Y')),
+            columns=['Feature0', 'Feature1', 'Feature2', 'Feature3',
+                     'Feature4', 'Feature5', 'Feature6', 'Feature7',
+                     'Feature8'],
+            index=['Sample0', 'Sample1', 'Sample2', 'Sample3', 'Sample4',
+                   'Sample5', 'Sample6', 'Sample7', 'Sample8', 'Sample9'])
+        self.X = pd.DataFrame(
+            np.loadtxt(get_data_path('example3_X')),
+            columns=['Constraint0', 'Constraint1',
+                     'Constraint2', 'Constraint3'],
+            index=['Sample0', 'Sample1', 'Sample2', 'Sample3', 'Sample4',
+                   'Sample5', 'Sample6', 'Sample7', 'Sample8', 'Sample9'])
 
     def test_shape(self):
         X, Y = self.X, self.Y

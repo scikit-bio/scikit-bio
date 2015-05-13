@@ -51,10 +51,7 @@ def cca(y, x, scaling=1):
     Returns
     -------
     OrdinationResults
-        Object that stores the computed eigenvalues, the
-        proportion explained by each of them (per unit),
-        transformed coordinates for species and sites, biplot
-        scores, site constraints, etc.
+        Object that stores the cca results.
 
     Raises
     ------
@@ -104,8 +101,8 @@ def cca(y, x, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = np.asarray(y, dtype=np.float64)
-    X = np.asarray(x, dtype=np.float64)
+    Y = y.as_matrix()
+    X = x.as_matrix()
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
@@ -215,11 +212,15 @@ def cca(y, x, scaling=1):
         site_constraints = np.hstack((Z_scaling2, V_hat_res))
 
     biplot_scores = corr(X_weighted, u)
-    return OrdinationResults(eigvals=eigvals,
-                             proportion_explained=eigvals / eigvals.sum(),
-                             species=species_scores,
-                             site=site_scores,
-                             biplot=biplot_scores,
-                             site_constraints=site_constraints,
-                             site_ids=site_ids,
-                             species_ids=species_ids)
+
+    eigvals = pd.Series(eigenvalues, index=[])
+    samples = pd.DataFrame(site_scores, columns=[], index=[])
+    features = pd.DataFrame(species_scores, columns=[], index=[])
+    biplot_scores = pd.DataFrame(biplot_scores, columns=[], index=[])
+    sample_constraints = pd.DataFrame(site_constraints, columns=[], index[])
+
+    return OrdinationResults(
+        "CCA", "Canonical Correspondence Analysis", eigvals, samples,
+        features=feature, biplot_scores=biplot_scores,
+        sample_constraints=sample_constraints,
+        proportion_explained=eigvals / eigvals.sum())
