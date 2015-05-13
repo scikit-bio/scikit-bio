@@ -11,6 +11,8 @@ from future.utils import with_metaclass
 
 from abc import ABCMeta, abstractproperty
 
+import numpy as np
+
 from skbio.util import classproperty
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
@@ -39,6 +41,18 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     RNA
 
     """
+    __complement_lookup = None
+
+    @classproperty
+    def _complement_lookup(cls):
+        if cls.__complement_lookup is not None:
+            return cls.__complement_lookup
+
+        lookup = np.zeros(256, dtype=np.uint8)
+        for key, value in cls.complement_map.items():
+            lookup[ord(key)] = ord(value)
+        cls.__complement_lookup = lookup
+        return lookup
 
     @property
     def _motifs(self):
@@ -93,16 +107,14 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
 
         """
-        # TODO rewrite method for optimized performance
-        complement_map = self.complement_map
-        seq_iterator = reversed(self) if reverse else self
-        result = [complement_map[str(base)] for base in seq_iterator]
-
+        result = self._complement_lookup[self._bytes]
         quality = self.quality
-        if self._has_quality() and reverse:
-            quality = self.quality[::-1]
+        if reverse:
+            result = result[::-1]
+            if self._has_quality():
+                quality = self.quality[::-1]
 
-        return self._to(sequence=''.join(result), quality=quality)
+        return self._to(sequence=result, quality=quality)
 
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.

@@ -7,8 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.standard_library import hooks
 from six import string_types
+from six.moves import zip_longest
 
 import re
 from types import GeneratorType
@@ -19,9 +19,6 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import Sequence
-
-with hooks():
-    from itertools import zip_longest
 
 
 class SequenceSubclass(Sequence):
