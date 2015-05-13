@@ -674,23 +674,6 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.levelorder()]
         self.assertEqual(obs, exp)
 
-    def test_bifurcate(self):
-        t1 = TreeNode.read(StringIO(u'(((a,b),c),(d,e));'))
-        t2 = TreeNode.read(StringIO(u'((((((a,b),(c,d)),(e,f))J)Q)K);'))
-        t3 = TreeNode.read(StringIO(u'(((a,b,c),(d)),(e,f));'))
-        t4 = TreeNode.read(StringIO(u'(((a,b,c),(d)),(e,f));'))
-
-        t1.bifurcate()
-        t2.bifurcate()
-        t3.bifurcate()
-
-        self.assertEqual(str(t1), '(((a,b),c),(d,e));\n')
-        self.assertEqual(str(t2), '((((a,b),(c,d)),(e,f))Q);\n')
-        self.assertEqual(str(t3), '(((c,(a,b)),d),(e,f));\n')
-
-        t4.bifurcate(insert_length=0)
-        self.assertEqual(str(t4), '(((c,(a,b):0),d),(e,f));\n')
-
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
         # test for first tree: contains singleton outgroup

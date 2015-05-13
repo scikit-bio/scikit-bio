@@ -11,12 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from skbio import OrdinationResults
-from ._base import Ordination
 from ._utils import corr, svd_rank, scale
 
 
-
-def RDA(self, Y, X, site_ids, species_ids, scale_Y=False, scaling=1):
+def RDA(Y, X, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
@@ -29,24 +27,22 @@ def RDA(self, Y, X, site_ids, species_ids, scale_Y=False, scaling=1):
 
     Parameters
     ----------
-    Y : array_like
-        :math:`n \times p` response matrix. Its columns need be
-        dimensionally homogeneous (or you can set `scale_Y=True`).
-    X : array_like
+    X : pandas.DataFrame
+        :math:`n \times p` response matrix, where :math:`n` is the number
+        of samples and :math:`p` is the number of features. Its columns
+        need be dimensionally homogeneous (or you can set `scale_Y=True`).
+    Y : pandas.DataFrame
         :math:`n \times m, n \geq m` matrix of explanatory
-        variables. Its columns need not be standardized, but doing so
-        turns regression coefficients into standard regression
-        coefficients.
+        variables, where :math:`n` is the number of samples and
+        :math:`m` is the number of metadata variables. Its columns
+        need not be standardized, but doing so turns regression
+        coefficients into standard regression coefficients.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
-    site_ids : array_like
-        Array of ids for the sites (rows)
-    species_ids : array_like
-        Array of ids for the speciess (columns)
     scaling : int
         Scaling type 1 produces a distance biplot. It focuses on
-        the ordination of rows (sites) because their transformed
+        the ordination of rows (samples) because their transformed
         distances approximate their original euclidean
         distances. Especially interesting when most explanatory
         variables are binary.
@@ -60,6 +56,13 @@ def RDA(self, Y, X, site_ids, species_ids, scale_Y=False, scaling=1):
         See more details about distance and correlation biplots in
         [1]_, \S 9.1.4.
 
+    Returns
+    -------
+    OrdinationResults
+        Object that stores the computed eigenvalues, the
+        proportion explained by each of them (per unit),
+        transformed coordinates for feature and samples, biplot
+        scores, sample constraints, etc.
 
     Notes
     -----
@@ -76,14 +79,13 @@ def RDA(self, Y, X, site_ids, species_ids, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-
     Y = np.asarray(Y, dtype=np.float64)
     X = np.asarray(X, dtype=np.float64)
-    return _rda(scale_Y)
+    return _rda(Y, X, scale_Y, scaling)
 
-def _rda(self, scale_Y, scaling):
-    n, p = self.Y.shape
-    n_, m = self.X.shape
+def _rda(Y, X, scale_Y, scaling):
+    n, p = Y.shape
+    n_, m = X.shape
     if n != n_:
         raise ValueError(
             "Both data matrices must have the same number of rows.")
@@ -142,10 +144,10 @@ def _rda(self, scale_Y, scaling):
     U = vt[:rank].T  # U as in Fig. 11.2
 
     # Ordination in the space of response variables. Its columns are
-    # site scores. (Eq. 11.12)
+    # sample scores. (Eq. 11.12)
     F = Y.dot(U)
     # Ordination in the space of explanatory variables. Its columns
-    # are fitted site scores. (Eq. 11.13)
+    # are fitted sample scores. (Eq. 11.13)
     Z = Y_hat.dot(U)
 
     # Canonical coefficients (formula 11.14)
@@ -163,48 +165,10 @@ def _rda(self, scale_Y, scaling):
 
     eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
 
-    return _scores(U, U_res, F, F_res, Z, u, eigenvalues, scaling)
+    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling)
 
-def _scores(self, U, U_res, F, F_res, Z, u, eigenvalues, scaling):
-    """Compute site, species and biplot scores for different scalings.
-
-    Parameters
-    ----------
-    scaling : int
-
-        Scaling type 1 produces a distance biplot. It focuses on
-        the ordination of rows (sites) because their transformed
-        distances approximate their original euclidean
-        distances. Especially interesting when most explanatory
-        variables are binary.
-
-        Scaling type 2 produces a correlation biplot. It focuses
-        on the relationships among explained variables (`Y`). It
-        is interpreted like scaling type 1, but taking into
-        account that distances between objects don't approximate
-        their euclidean distances.
-
-        See more details about distance and correlation biplots in
-        [1]_, \S 9.1.4.
-
-    Returns
-    -------
-    OrdinationResults
-        Object that stores the computed eigenvalues, the
-        proportion explained by each of them (per unit),
-        transformed coordinates for species and sites, biplot
-        scores, site constraints, etc.
-
-    See Also
-    --------
-    OrdinationResults
-
-    References
-    ----------
-
-    .. [1] Legendre P. and Legendre L. 1998. Numerical
-       Ecology. Elsevier, Amsterdam.
-
+def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling):
+    """Compute sample, feature and biplot scores for different scalings.
     """
     if scaling not in {1, 2}:
         raise NotImplementedError("Only scalings 1, 2 available for RDA.")
@@ -217,26 +181,25 @@ def _scores(self, U, U_res, F, F_res, Z, u, eigenvalues, scaling):
         scaling_factor = const
     elif scaling == 2:
         scaling_factor = eigvals / const
-    species_scores = np.hstack((U, U_res)) * scaling_factor
-    site_scores = np.hstack((F, F_res)) / scaling_factor
+    feature_scores = np.hstack((U, U_res)) * scaling_factor
+    sample_scores = np.hstack((F, F_res)) / scaling_factor
     # TODO not yet used/displayed
-    site_constraints = np.hstack((Z, F_res)) / scaling_factor
-    # vegan seems to compute them as corr(X[:, :rank_X],
+    sample_constraints = np.hstack((Z, F_res)) / scaling_factor
+    # Vegan seems to compute them as corr(X[:, :rank_X],
     # u) but I don't think that's a good idea. In fact, if
     # you take the example shown in Figure 11.3 in L&L 1998 you
     # can see that there's an arrow for each of the 4
     # environmental variables (depth, coral, sand, other) even if
     # other = not(coral or sand)
     biplot_scores = corr(X, u)
-    # The "Correlations of environmental variables with site
+    # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
     # corr(X, F))
-    return OrdinationResults(eigvals=eigvals,
+    return OrdinationResults('RDA', 'Redundancy Analysis',
+                             eigvals=eigvals,
                              proportion_explained=eigvals / eigvals.sum(),
-                             species=species_scores,
-                             site=site_scores,
-                             biplot=biplot_scores,
-                             site_constraints=site_constraints,
-                             site_ids=site_ids,
-                             species_ids=species_ids)
+                             features=feature_scores,
+                             samples=sample_scores,
+                             biplot_scores=biplot_scores,
+                             sample_constraints=sample_constraints)

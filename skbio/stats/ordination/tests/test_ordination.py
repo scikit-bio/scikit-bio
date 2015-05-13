@@ -19,7 +19,7 @@ from skbio.stats.ordination import (
     CA, RDA, CCA, PCoA, corr, mean_and_std,
     assert_ordination_results_equal)
 from skbio.util import get_data_path
-
+import pandas as pd
 
 def normalize_signs(arr1, arr2):
     """Change column signs so that "column" and "-column" compare equal.
@@ -387,41 +387,39 @@ class TestRDAResults(object):
     # results in L&L.
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
-        self.Y = np.loadtxt(get_data_path('example2_Y'))
-        self.X = np.loadtxt(get_data_path('example2_X'))
+        sample_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
+        features_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5']
 
+        self.Y = pd.DataFrame(np.loadtxt(get_data_path('example2_Y')),
+                              index=sample_ids,columns=features_ids)
+        self.X = pd.DataFrame(np.loadtxt(get_data_path('example2_X')),
+                              index=sample_ids)
     def test_scaling1(self):
 
-        scores = RDA(self.Y, self.X,
-                     ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-                      ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5'], scaling=1)
+        scores = RDA(self.Y, self.X, scaling=1)
 
         # Load data as computed with vegan 2.0-8
-        vegan_species = np.loadtxt(get_data_path(
+        vegan_features = np.loadtxt(get_data_path(
             'example2_species_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+        npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
 
-        vegan_site = np.loadtxt(get_data_path(
+        vegan_samples = np.loadtxt(get_data_path(
             'example2_site_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
+        npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
 
     def test_scaling2(self):
-        scores = RDA(self.Y, self.X,
-                     ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-                      ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5'], scaling=2)
+        scores = RDA(self.Y, self.X, scaling=2)
 
         # Load data as computed with vegan 2.0-8
-        vegan_species = np.loadtxt(get_data_path(
+        vegan_features = np.loadtxt(get_data_path(
             'example2_species_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+        npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
 
-        vegan_site = np.loadtxt(get_data_path(
+        vegan_samples = np.loadtxt(get_data_path(
             'example2_site_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.site, vegan_site, decimal=6)
+        npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
 
 
 class TestCCAErrors(object):
