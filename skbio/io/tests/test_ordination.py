@@ -112,12 +112,14 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
         species = pd.DataFrame(np.loadtxt(
             get_data_path('ordination_exp_Ordination_CCA_species')),
             index=species_ids, columns=axes_ids)
-        site = pd.DataFrame(np.loadtxt(get_data_path('ordination_exp_Ordination_CCA_site')),
-                            index=site_ids, columns=axes_ids)
-        biplot = pd.DataFrame([[-0.169746767979, 0.63069090084, 0.760769036049],
-                               [-0.994016563505, 0.0609533148724, -0.0449369418179],
-                               [0.184352565909, -0.974867543612, 0.0309865007541]],
-                              columns=axes_ids[:3])
+        site = pd.DataFrame(
+            np.loadtxt(get_data_path('ordination_exp_Ordination_CCA_site')),
+            index=site_ids, columns=axes_ids)
+        biplot = pd.DataFrame(
+            [[-0.169746767979, 0.63069090084, 0.760769036049],
+             [-0.994016563505, 0.0609533148724, -0.0449369418179],
+             [0.184352565909, -0.974867543612, 0.0309865007541]],
+            columns=axes_ids[:3])
         site_constraints = pd.DataFrame(np.loadtxt(
             get_data_path('ordination_exp_Ordination_CCA_site_constraints')),
             index=site_ids, columns=axes_ids)
@@ -138,14 +140,16 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
                              0.208988681078, 0.19169895326, 0.16054234528,
                              0.15017695712, 0.122457748167, 0.0], axes_ids)
         species = None
-        site = pd.DataFrame(np.loadtxt(get_data_path('ordination_exp_Ordination_PCoA_site')),
+        site = pd.DataFrame(
+            np.loadtxt(get_data_path('ordination_exp_Ordination_PCoA_site')),
             index=site_ids, columns=axes_ids)
         biplot = None
         site_constraints = None
         prop_explained = pd.Series([0.267573832777, 0.15704469605,
-                                   0.139911863774, 0.109140272454,
-                                   0.100111048503, 0.0838401161912,
-                                   0.0784269939011, 0.0639511763509, 0.0], axes_ids)
+                                    0.139911863774, 0.109140272454,
+                                    0.100111048503, 0.0838401161912,
+                                    0.0784269939011, 0.0639511763509, 0.0],
+                                   axes_ids)
         pcoa_scores = OrdinationResults('PCoA',
                                         'Principal Coordinate Analysis',
                                         eigvals=eigvals, features=species,
@@ -163,25 +167,26 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
                             6.13995623072, 1.68070536498, 0.57735026919,
                             0.275983624351], axes_ids)
         species = pd.DataFrame(np.loadtxt(
-            get_data_path('ordination_exp_Ordination_RDA_species')), index=species_ids,
-            columns=axes_ids)
-        site = pd.DataFrame(np.loadtxt(get_data_path('ordination_exp_Ordination_RDA_site')),
+            get_data_path('ordination_exp_Ordination_RDA_species')),
+            index=species_ids, columns=axes_ids)
+        site = pd.DataFrame(
+            np.loadtxt(get_data_path('ordination_exp_Ordination_RDA_site')),
             index=site_ids, columns=axes_ids)
-        biplot = pd.DataFrame([[0.422650019179, -0.559142585857, -0.713250678211],
-                           [0.988495963777, 0.150787422017, -0.0117848614073],
-                           [-0.556516618887, 0.817599992718, 0.147714267459],
-                           [-0.404079676685, -0.9058434809, -0.127150316558]],
-                           columns=axes_ids[:3])
+        biplot = pd.DataFrame(
+            [[0.422650019179, -0.559142585857, -0.713250678211],
+             [0.988495963777, 0.150787422017, -0.0117848614073],
+             [-0.556516618887, 0.817599992718, 0.147714267459],
+             [-0.404079676685, -0.9058434809, -0.127150316558]],
+            columns=axes_ids[:3])
         site_constraints = pd.DataFrame(np.loadtxt(
             get_data_path('ordination_exp_Ordination_RDA_site_constraints')),
             index=site_ids, columns=axes_ids)
         prop_explained = None
-        rda_scores = OrdinationResults('RDA',
-                                        'Redundancy Analysis',
-                                        eigvals=eigvals, features=species,
-                                        samples=site, biplot_scores=biplot,
-                                        sample_constraints=site_constraints,
-                                        proportion_explained=prop_explained)
+        rda_scores = OrdinationResults(
+            'RDA', 'Redundancy Analysis', eigvals=eigvals, features=species,
+            samples=site, biplot_scores=biplot,
+            sample_constraints=site_constraints,
+            proportion_explained=prop_explained)
 
         self.ordination_results_objs = [ca_scores, cca_scores, pcoa_scores,
                                         rda_scores]
@@ -189,7 +194,8 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
     def test_read_valid_files(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
                 obs = _ordination_to_ordination_results(fp)
-                assert_ordination_results_equal(obs, obj, ignore_method_names=True,
+                assert_ordination_results_equal(
+                    obs, obj, ignore_method_names=True,
                     ignore_axis_labels=True, ignore_biplot_scores_labels=True)
 
     def test_read_invalid_files(self):

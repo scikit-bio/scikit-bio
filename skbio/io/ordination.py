@@ -253,9 +253,11 @@ def _ordination_to_ordination_results(fh):
                 "Site constraints ids and site ids must be equal: %s != %s" %
                 (cons.index, site.index))
 
-    return OrdinationResults(short_method_name='', long_method_name='',
-        eigvals=eigvals, features=species, samples=site, biplot_scores=biplot,
+    return OrdinationResults(
+        short_method_name='', long_method_name='', eigvals=eigvals,
+        features=species, samples=site, biplot_scores=biplot,
         sample_constraints=cons, proportion_explained=prop_expl)
+
 
 def _parse_header(fh, header_id, num_dimensions):
     line = next(fh, None)
@@ -308,7 +310,8 @@ def _parse_vector_section(fh, header_id):
             raise OrdinationFormatError(
                 "Reached end of file while looking for line containing values "
                 "for %s section." % header_id)
-        vals = pd.Series(np.asarray(line.strip().split('\t'), dtype=np.float64))
+        vals = pd.Series(np.asarray(line.strip().split('\t'),
+                                    dtype=np.float64))
         if len(vals) != num_vals:
             raise OrdinationFormatError(
                 "Expected %d values in %s section, but found %d." %
