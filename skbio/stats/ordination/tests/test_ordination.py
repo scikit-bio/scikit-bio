@@ -14,9 +14,11 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from skbio import DistanceMatrix
-from skbio.stats.ordination import CA, RDA, CCA, PCoA, corr, mean_and_std
-from skbio.util import get_data_path
+from skbio import OrdinationResults
+from skbio.stats.distance import DistanceMatrix, DissimilarityMatrixError
+from skbio.stats.ordination import (
+    CA, RDA, CCA, pcoa, corr, mean_and_std, e_matrix, f_matrix)
+from skbio.util import get_data_path, assert_ordination_results_equal
 
 
 def normalize_signs(arr1, arr2):
@@ -442,7 +444,7 @@ class TestPCoAResults(object):
 
     def test_negative_eigenvalue_warning(self):
         """This data has some small negative eigenvalues."""
-        npt.assert_warns(RuntimeWarning, PCoA, self.dist_matrix)
+        npt.assert_warns(RuntimeWarning, pcoa, self.dist_matrix)
 
     def test_values(self):
         """Adapted from cogent's `test_principal_coordinate_analysis`:
@@ -451,8 +453,7 @@ class TestPCoAResults(object):
         right"."""
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=RuntimeWarning)
-            ordination = PCoA(self.dist_matrix)
-        scores = ordination.scores()
+            scores = pcoa(self.dist_matrix)
 
         exp_eigvals = np.array([0.73599103, 0.26260032, 0.14926222, 0.06990457,
                                 0.02956972, 0.01931184, 0., 0., 0., 0., 0., 0.,
@@ -475,11 +476,10 @@ class TestPCoAResultsExtensive(object):
         matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
         self.ids = [str(i) for i in range(matrix.shape[0])]
         dist_matrix = DistanceMatrix(matrix, self.ids)
-        self.ordination = PCoA(dist_matrix)
+        self.scores = pcoa(dist_matrix)
 
     def test_values(self):
-        results = self.ordination.scores()
-
+        results = self.scores
         npt.assert_equal(len(results.eigvals), len(results.site[0]))
 
         expected = np.array([[-0.028597, 0.22903853, 0.07055272,
@@ -510,13 +510,13 @@ class TestPCoAResultsExtensive(object):
 class TestPCoAEigenResults(object):
     def setup(self):
         dist_matrix = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
-        self.ordination = PCoA(dist_matrix)
+        self.scores = pcoa(dist_matrix)
 
         self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
                     'PC.355', 'PC.607', 'PC.634']
 
     def test_values(self):
-        results = self.ordination.scores()
+        results = self.scores
 
         npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
 
@@ -541,14 +541,14 @@ class TestPCoAPrivateMethods(object):
         self.matrix = np.arange(1, 7).reshape(2, 3)
         self.matrix2 = np.arange(1, 10).reshape(3, 3)
 
-    def test_E_matrix(self):
-        E = PCoA._E_matrix(self.matrix)
+    def test_e_matrix(self):
+        E = e_matrix(self.matrix)
         expected_E = np.array([[-0.5,  -2.,  -4.5],
                                [-8., -12.5, -18.]])
         npt.assert_almost_equal(E, expected_E)
 
-    def test_F_matrix(self):
-        F = PCoA._F_matrix(self.matrix2)
+    def test_f_matrix(self):
+        F = f_matrix(self.matrix2)
         expected_F = np.zeros((3, 3))
         # Note that `test_make_F_matrix` in cogent is wrong
         npt.assert_almost_equal(F, expected_F)
@@ -556,8 +556,8 @@ class TestPCoAPrivateMethods(object):
 
 class TestPCoAErrors(object):
     def test_input(self):
-        with npt.assert_raises(TypeError):
-            PCoA([[1, 2], [3, 4]])
+        with npt.assert_raises(DissimilarityMatrixError):
+            pcoa([[1, 2], [3, 4]])
 
 
 if __name__ == '__main__':
