@@ -14,7 +14,7 @@ from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
 import pandas as pd
 
-def RDA(Y, X, scale_Y=False, scaling=1):
+def rda(Y, X, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
@@ -91,8 +91,8 @@ def RDA(Y, X, scale_Y=False, scaling=1):
 
     sample_ids = Y.index
     feature_ids = Y.columns
-    Y = Y.as_matrix()
-    X = X.as_matrix()
+    Y = Y.values
+    X = X.values
 
     # Centre response variables (they must be dimensionally
     # homogeneous)
@@ -175,32 +175,41 @@ def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, fe
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
-    eigvals = eigenvalues
-    const = np.sum(eigvals**2)**0.25
+    pc_ids = ['RDA%d'%(i+1) for i in range(len(eigenvalues))]
+    eigvals = pd.Series(eigenvalues, index=pc_ids)
+    const = np.sum(eigenvalues**2)**0.25
     if scaling == 1:
         scaling_factor = const
     elif scaling == 2:
-        scaling_factor = eigvals / const
+        scaling_factor = eigenvalues / const
     feature_scores = np.hstack((U, U_res)) * scaling_factor
     sample_scores = np.hstack((F, F_res)) / scaling_factor
-    feature_scores = pd.DataFrame(feature_scores, index=feature_ids)
-    sample_scores = pd.DataFrame(sample_scores, index=sample_ids)
+
+    feature_scores = pd.DataFrame(feature_scores,
+                                  index=feature_ids,
+                                  columns=pc_ids)
+    sample_scores = pd.DataFrame(sample_scores,
+                                 index=sample_ids,
+                                 columns=pc_ids)
     # TODO not yet used/displayed
-    sample_constraints = np.hstack((Z, F_res)) / scaling_factor
+    sample_constraints = pd.DataFrame(np.hstack((Z, F_res)) / scaling_factor,
+                                      index=sample_ids,
+                                      columns=pc_ids)
     # Vegan seems to compute them as corr(X[:, :rank_X],
     # u) but I don't think that's a good idea. In fact, if
     # you take the example shown in Figure 11.3 in L&L 1998 you
     # can see that there's an arrow for each of the 4
     # environmental variables (depth, coral, sand, other) even if
     # other = not(coral or sand)
-    biplot_scores = corr(X, u)
+    biplot_scores = pd.DataFrame(corr(X, u))
     # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
     # corr(X, F))
+    p_explained = pd.Series(eigenvalues / eigenvalues.sum(), index=pc_ids)
     return OrdinationResults('RDA', 'Redundancy Analysis',
                              eigvals=eigvals,
-                             proportion_explained=eigvals / eigvals.sum(),
+                             proportion_explained=p_explained,
                              features=feature_scores,
                              samples=sample_scores,
                              biplot_scores=biplot_scores,

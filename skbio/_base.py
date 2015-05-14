@@ -50,8 +50,8 @@ class OrdinationResults(SkbioObject):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : 1D np.ndarray (float)
-        The resulting eigenvalues.
+    eigvals : pd.Series
+        The resulting eigenvalues.  The index corresponds to the ordination axis labels
     samples : pd.DataFrame
         The position of the samples in the ordination space, row-indexed by the
         sample id.
@@ -62,8 +62,9 @@ class OrdinationResults(SkbioObject):
         Correlation coefficients of the samples with respect to the features.
     sample_constraints : pd.DataFrame
         A basis for the constrained ordination space. <- JORGE REVISE THIS
-    proportion_explained : 1D np.ndarray (float)
+    proportion_explained : pd.Series
         Proportion explained by each of the dimensions in the ordination space.
+        The index corresponds to the ordination axis labels
     png
     svg
 
