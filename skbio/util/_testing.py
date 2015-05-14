@@ -12,7 +12,7 @@ from nose import core
 from nose.tools import nottest
 from future.utils import PY3
 import numpy.testing as npt
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal, assert_index_equal
 
 
 @nottest
@@ -98,7 +98,9 @@ def get_data_path(fn, subfolder='data'):
     return data_path
 
 
-def assert_ordination_results_equal(left, right, ignore_method_name=False):
+def assert_ordination_results_equal(left, right, ignore_method_names=False,
+                                    ignore_axis_labels=False,
+                                    ignore_biplot_scores_labels=False):
     """Assert that ordination results objects are equal.
 
     This is a helper function intended to be used in unit tests that need to
@@ -113,6 +115,12 @@ def assert_ordination_results_equal(left, right, ignore_method_name=False):
     ----------
     left, right : OrdinationResults
         Ordination results to be compared for equality.
+    ignore_method_names : bool, optional
+        Ignore differences in `short_method_name` and `long_method_name`.
+    ignore_axis_labels : bool, optional
+        Ignore differences in axis labels (i.e., column labels).
+    ignore_biplot_scores_labels : bool, optional
+        Ignore differences in `biplot_scores` row and column labels.
 
     Raises
     ------
@@ -122,34 +130,40 @@ def assert_ordination_results_equal(left, right, ignore_method_name=False):
     """
     npt.assert_equal(type(left) is type(right), True)
 
-    if not ignore_method_name:
+    if not ignore_method_names:
         npt.assert_equal(left.short_method_name, right.short_method_name)
         npt.assert_equal(left.long_method_name, right.long_method_name)
 
-    # eigvals should always be present
-    assert_series_equal(left.eigvals, right.eigvals)
+    _assert_frame_equal(left.samples, right.samples, ignore_columns=ignore_axis_labels)
+    _assert_frame_equal(left.features, right.features, ignore_columns=ignore_axis_labels)
+    _assert_frame_equal(left.biplot_scores, right.biplot_scores, ignore_biplot_scores_labels, ignore_biplot_scores_labels)
+    _assert_frame_equal(left.sample_constraints, right.sample_constraints, ignore_columns=ignore_axis_labels)
 
-    # samples should always be present
-    assert_frame_equal(left.samples, right.samples)
+    _assert_series_equal(left.eigvals, right.eigvals, ignore_axis_labels)
+    _assert_series_equal(left.proportion_explained, right.proportion_explained, ignore_axis_labels)
 
-    # assert_frame_equal doesn't like None...
-    def _assert_optional_frame_equal(left, right):
-        if left is None or right is None:
-            npt.assert_equal(left, right)
-        else:
-            assert_frame_equal(left, right)
 
-    _assert_optional_frame_equal(left.features, right.features)
-    _assert_optional_frame_equal(left.biplot_scores, right.biplot_scores)
-    _assert_optional_frame_equal(left.sample_constraints,
-                                 right.sample_constraints)
-
+def _assert_series_equal(left_s, right_s, ignore_index=False):
     # assert_series_equal doesn't like None...
-    def _assert_optional_series_equal(left, right):
-        if left is None or right is None:
-            npt.assert_equal(left, right)
+    if left_s is None or right_s is None:
+        npt.assert_equal(left_s, right_s)
+    else:
+        if ignore_index:
+            npt.assert_almost_equal(left_s.values, right_s.values)
         else:
-            assert_series_equal(left, right)
+            assert_series_equal(left_s, right_s)
 
-    _assert_optional_series_equal(left.proportion_explained,
-                                  right.proportion_explained)
+
+def _assert_frame_equal(left_df, right_df, ignore_index=False, ignore_columns=False):
+    # assert_frame_equal doesn't like None...
+    if left_df is None or right_df is None:
+        npt.assert_equal(left_df, right_df)
+    else:
+        if ignore_index or ignore_columns:
+            npt.assert_almost_equal(left_df.values, right_df.values)
+            if not ignore_index:
+                assert_index_equal(left_df.index, right_df.index)
+            if not ignore_columns:
+                assert_index_equal(left_df.columns, right_df.columns)
+        else:
+            assert_frame_equal(left_df, right_df)
