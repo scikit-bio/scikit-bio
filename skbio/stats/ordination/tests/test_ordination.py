@@ -14,10 +14,8 @@ import numpy as np
 import numpy.testing as npt
 from scipy.spatial.distance import pdist
 
-from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.ordination import (
-    CA, RDA, CCA, PCoA, corr, mean_and_std,
-    assert_ordination_results_equal)
+from skbio import DistanceMatrix
+from skbio.stats.ordination import CA, RDA, CCA, PCoA, corr, mean_and_std
 from skbio.util import get_data_path
 import pandas as pd
 
@@ -261,56 +259,6 @@ class TestUtils(object):
     def test_corr_shape_mismatch(self):
         with npt.assert_raises(ValueError):
             corr(self.x, self.y)
-
-    def test_assert_ordination_results_equal(self):
-        minimal1 = OrdinationResults([1, 2])
-
-        # a minimal set of results should be equal to itself
-        assert_ordination_results_equal(minimal1, minimal1)
-
-        # type mismatch
-        with npt.assert_raises(AssertionError):
-            assert_ordination_results_equal(minimal1, 'foo')
-
-        # numeric values should be checked that they're almost equal
-        almost_minimal1 = OrdinationResults([1.0000001, 1.9999999])
-        assert_ordination_results_equal(minimal1, almost_minimal1)
-
-        # species_ids missing in one, present in the other
-        almost_minimal1.species_ids = ['abc', 'def']
-        with npt.assert_raises(AssertionError):
-            assert_ordination_results_equal(minimal1, almost_minimal1)
-        almost_minimal1.species_ids = None
-
-        # site_ids missing in one, present in the other
-        almost_minimal1.site_ids = ['abc', 'def']
-        with npt.assert_raises(AssertionError):
-            assert_ordination_results_equal(minimal1, almost_minimal1)
-        almost_minimal1.site_ids = None
-
-        # test each of the optional numeric attributes
-        for attr in ('species', 'site', 'biplot', 'site_constraints',
-                     'proportion_explained'):
-            # missing optional numeric attribute in one, present in the other
-            setattr(almost_minimal1, attr, [[1, 2], [3, 4]])
-            with npt.assert_raises(AssertionError):
-                assert_ordination_results_equal(minimal1, almost_minimal1)
-            setattr(almost_minimal1, attr, None)
-
-            # optional numeric attributes present in both, but not almost equal
-            setattr(minimal1, attr, [[1, 2], [3, 4]])
-            setattr(almost_minimal1, attr, [[1, 2], [3.00002, 4]])
-            with npt.assert_raises(AssertionError):
-                assert_ordination_results_equal(minimal1, almost_minimal1)
-            setattr(minimal1, attr, None)
-            setattr(almost_minimal1, attr, None)
-
-            # optional numeric attributes present in both, and almost equal
-            setattr(minimal1, attr, [[1, 2], [3, 4]])
-            setattr(almost_minimal1, attr, [[1, 2], [3.00000002, 4]])
-            assert_ordination_results_equal(minimal1, almost_minimal1)
-            setattr(minimal1, attr, None)
-            setattr(almost_minimal1, attr, None)
 
 
 class TestCAResults(object):
