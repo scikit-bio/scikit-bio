@@ -48,7 +48,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         if cls.__complement_lookup is not None:
             return cls.__complement_lookup
 
-        lookup = np.zeros(256, dtype=np.uint8)
+        lookup = np.zeros(cls._number_of_extended_ascii_codes, dtype=np.uint8)
         for key, value in cls.complement_map.items():
             lookup[ord(key)] = ord(value)
         cls.__complement_lookup = lookup
