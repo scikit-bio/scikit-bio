@@ -60,7 +60,7 @@ def _is_gzip(filepath_or):
         with open(filepath_or, 'rb') as file_:
             is_gzip = file_.read(2) == magic_number
     else:
-        with reopen_file(filepath_or) as file_:
+        with reopen_file(filepath_or, binary=True, gzip=False) as file_:
             is_gzip = file_.read(2) == magic_number
 
     return is_gzip
@@ -256,4 +256,4 @@ def _fileobj_filename(fileobj):
     elif hasattr(fileobj, 'buffer'):
         return _fileobj_filename(fileobj.buffer)
     else:
-        raise None
+        return None
