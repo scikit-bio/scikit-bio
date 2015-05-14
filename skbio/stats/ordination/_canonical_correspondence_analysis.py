@@ -9,9 +9,9 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import pandas as pd
 
 from skbio import OrdinationResults
-from ._base import Ordination
 from ._utils import corr, svd_rank, scale
 
 
@@ -203,24 +203,24 @@ def cca(y, x, scaling=1):
 
     eigvals = eigenvalues
     if scaling == 1:
-        species_scores = np.hstack((V, V_res))
-        site_scores = np.hstack((F, F_res))
-        site_constraints = np.hstack((Z_scaling1, F_res))
+        features_scores = np.hstack((V, V_res))
+        sample_scores = np.hstack((F, F_res))
+        sample_constraints = np.hstack((Z_scaling1, F_res))
     elif scaling == 2:
-        species_scores = np.hstack((F_hat, F_hat_res))
-        site_scores = np.hstack((V_hat, V_hat_res))
-        site_constraints = np.hstack((Z_scaling2, V_hat_res))
+        features_scores = np.hstack((F_hat, F_hat_res))
+        sample_scores = np.hstack((V_hat, V_hat_res))
+        sample_constraints = np.hstack((Z_scaling2, V_hat_res))
 
     biplot_scores = corr(X_weighted, u)
 
     eigvals = pd.Series(eigenvalues, index=[])
-    samples = pd.DataFrame(site_scores, columns=[], index=[])
-    features = pd.DataFrame(species_scores, columns=[], index=[])
+    samples = pd.DataFrame(sample_scores, columns=[], index=[])
+    features = pd.DataFrame(features_scores, columns=[], index=[])
     biplot_scores = pd.DataFrame(biplot_scores, columns=[], index=[])
-    sample_constraints = pd.DataFrame(site_constraints, columns=[], index[])
+    sample_constraints = pd.DataFrame(sample_constraints, columns=[], index=[])
 
     return OrdinationResults(
         "CCA", "Canonical Correspondence Analysis", eigvals, samples,
-        features=feature, biplot_scores=biplot_scores,
+        features=features, biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
         proportion_explained=eigvals / eigvals.sum())
