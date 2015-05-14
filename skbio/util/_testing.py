@@ -107,11 +107,6 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
     This is a helper function intended to be used in unit tests that need to
     compare ``OrdinationResults`` objects.
 
-    For numeric attributes (e.g., eigvals, site, etc.),
-    ``numpy.testing.assert_almost_equal`` is used. Otherwise,
-    ``numpy.testing.assert_equal`` is used for comparisons. An assertion is
-    in place to ensure the two objects are exactly the same type.
-
     Parameters
     ----------
     left, right : OrdinationResults
