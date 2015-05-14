@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 import types
-import copy
 import traceback
 import inspect
 
@@ -19,7 +18,7 @@ from future.builtins import zip
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import open_file, open_files, get_filehandle, get_filemode
+from .util import open_files, reopen_file
 
 _formats = {}
 _sniffers = {}
@@ -41,7 +40,7 @@ def _override_kwargs(kw, fmt_kw, warn_user):
     return fmt_kw
 
 
-def register_sniffer(format):
+def register_sniffer(format, binary=False, gzip=None):
     """Return a decorator for a sniffer function.
 
     A decorator factory for sniffer functions. Sniffers may only be registered
@@ -90,29 +89,13 @@ def register_sniffer(format):
     """
     def decorator(sniffer):
         if format in _sniffers:
-            raise DuplicateRegistrationError(msg="'%s' already has a sniffer."
-                                             % format)
+            raise DuplicateRegistrationError(
+                msg="'%s' already has a sniffer." % format)
 
-        def wrapped_sniffer(fp, mode='U', **kwargs):
-            with open_file(fp, mode) as fh:
-                # The reason we do a copy is because we need the sniffer to not
-                # mutate the orginal file while guessing the format. The
-                # naive solution would be to seek to 0 at the end, but that
-                # would break an explicit offset provided by the user. Instead
-                # we create a shallow copy which works out of the box for
-                # file-like object, but does not work for real files. Instead
-                # the name attribute is reused in open for a new filehandle.
-                # Using seek and tell is not viable because in real files tell
-                # reflects the position of the read-ahead buffer and not the
-                # true offset of the iterator.
-                if hasattr(fh, 'name'):
-                    mode = get_filemode(fh)
-                    cfh, _ = get_filehandle(fh.name, mode)
-                else:
-                    cfh = copy.copy(fh)
-                    cfh.seek(0)
+        def wrapped_sniffer(fp, mode='r', binary=binary, gzip=gzip, **kwargs):
+            with reopen_file(fp, binary=binary, gzip=gzip) as fh:
                 try:
-                    return sniffer(cfh, **kwargs)
+                    return sniffer(fh, **kwargs)
                 except Exception:
                     warn("'%s' has encountered a problem.\n"
                          "Please send the following to our issue tracker at\n"
@@ -120,8 +103,6 @@ def register_sniffer(format):
                          "%s" % (sniffer.__name__, traceback.format_exc()),
                          FormatIdentificationWarning)
                     return False, {}
-                finally:
-                    cfh.close()
 
         wrapped_sniffer.__doc__ = sniffer.__doc__
         wrapped_sniffer.__name__ = sniffer.__name__
@@ -131,7 +112,7 @@ def register_sniffer(format):
     return decorator
 
 
-def register_reader(format, cls=None):
+def register_reader(format, cls=None, binary=False, gzip=None):
     """Return a decorator for a reader function.
 
     A decorator factory for reader functions.
@@ -196,7 +177,8 @@ def register_reader(format, cls=None):
         # We wrap the reader so that basic file handling can be managed
         # externally from the business logic.
         if cls is None:
-            def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, mode='r', binary=binary, gzip=gzip,
+                               mutate_fh=False, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
@@ -207,7 +189,10 @@ def register_reader(format, cls=None):
                     else:
                         kwargs[file_arg] = None
 
-                with open_files(files, mode) as fhs:
+                # Do we want binary argument to come from the user
+                # (wrapped_reader) or from the reader (register_reader)?
+                with open_files(files, mode=mode,
+                                binary=binary, gzip=gzip) as fhs:
                     try:
                         for key, fh in zip(file_keys, fhs[1:]):
                             kwargs[key] = fh
@@ -234,7 +219,8 @@ def register_reader(format, cls=None):
         else:
             # When an object is instantiated we don't need to worry about the
             # original position at every step, only at the end.
-            def wrapped_reader(fp, mode='U', mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, mode='r', binary=binary, gzip=gzip,
+                               mutate_fh=False, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
@@ -245,7 +231,8 @@ def register_reader(format, cls=None):
                     else:
                         kwargs[file_arg] = None
 
-                with open_files(files, mode) as fhs:
+                with open_files(files, mode=mode,
+                                binary=binary, gzip=gzip) as fhs:
                     for key, fh in zip(file_keys, fhs[1:]):
                         kwargs[key] = fh
                     return reader(fhs[0], **kwargs)
@@ -258,7 +245,7 @@ def register_reader(format, cls=None):
     return decorator
 
 
-def register_writer(format, cls=None):
+def register_writer(format, cls=None, binary=False, gzip=None):
     """Return a decorator for a writer function.
 
     A decorator factory for writer functions.
@@ -325,7 +312,8 @@ def register_writer(format, cls=None):
 
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
-        def wrapped_writer(obj, fp, mode='w', **kwargs):
+        def wrapped_writer(obj, fp, mode='w', binary=binary,
+                           gzip=gzip, **kwargs):
             file_keys = []
             files = [fp]
             for file_arg in file_args:
@@ -336,7 +324,8 @@ def register_writer(format, cls=None):
                 else:
                     kwargs[file_arg] = None
 
-            with open_files(files, mode) as fhs:
+            with open_files(files, mode=mode,
+                            binary=binary, gzip=gzip) as fhs:
                 for key, fh in zip(file_keys, fhs[1:]):
                     kwargs[key] = fh
                 writer(obj, fhs[0], **kwargs)
@@ -486,7 +475,7 @@ def _rw_getter(name, fmt, cls):
     return None
 
 
-def sniff(fp, cls=None, mode='U'):
+def sniff(fp, cls=None, mode='r'):
     """Attempt to guess the format of a file and return format str and kwargs.
 
     Parameters
@@ -539,7 +528,7 @@ def sniff(fp, cls=None, mode='U'):
     return possibles[0], kwargs
 
 
-def read(fp, format=None, into=None, verify=True, mode='U', **kwargs):
+def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
     """Read a supported skbio file format into an instance or a generator.
 
     This function is able to reference and execute all *registered* read
