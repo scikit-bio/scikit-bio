@@ -9,8 +9,8 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
-from future.standard_library import hooks
 from six import string_types, text_type
+from six.moves import zip_longest
 
 import re
 import collections
@@ -22,9 +22,6 @@ from scipy.spatial.distance import hamming
 
 from skbio._base import SkbioObject
 from skbio.util._misc import reprnator
-
-with hooks():
-    from itertools import zip_longest
 
 
 class Sequence(collections.Sequence, SkbioObject):
