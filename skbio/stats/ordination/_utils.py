@@ -221,3 +221,23 @@ def _assert_optional_numeric_attr_equal(left, right):
         npt.assert_equal(left, right)
     else:
         npt.assert_almost_equal(left, right)
+
+
+def e_matrix(distance_matrix):
+    """Compute E matrix from a distance matrix.
+
+    Squares and divides by -2 the input elementwise. Eq. 9.20 in
+    Legendre & Legendre 1998."""
+    return distance_matrix * distance_matrix / -2
+
+
+def f_matrix(E_matrix):
+    """Compute F matrix from E matrix.
+
+    Centring step: for each element, the mean of the corresponding
+    row and column are substracted, and the mean of the whole
+    matrix is added. Eq. 9.21 in Legendre & Legendre 1998."""
+    row_means = E_matrix.mean(axis=1, keepdims=True)
+    col_means = E_matrix.mean(axis=0, keepdims=True)
+    matrix_mean = E_matrix.mean()
+    return E_matrix - row_means - col_means + matrix_mean
