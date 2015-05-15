@@ -213,11 +213,17 @@ def cca(y, x, scaling=1):
 
     biplot_scores = corr(X_weighted, u)
 
-    eigvals = pd.Series(eigenvalues, index=[])
-    samples = pd.DataFrame(sample_scores, columns=[], index=[])
-    features = pd.DataFrame(features_scores, columns=[], index=[])
-    biplot_scores = pd.DataFrame(biplot_scores, columns=[], index=[])
-    sample_constraints = pd.DataFrame(sample_constraints, columns=[], index=[])
+    pc_ids = ['CCA%d'%(i+1) for i in range(len(eigenvalues))]
+    sample_ids = y.index
+    feature_ids = y.columns
+    eigvals = pd.Series(eigenvalues, index=pc_ids)
+    samples = pd.DataFrame(sample_scores,
+                           columns=pc_ids, index=sample_ids)
+    features = pd.DataFrame(features_scores,
+                            columns=pc_ids, index=feature_ids)
+    biplot_scores = pd.DataFrame(biplot_scores)
+    sample_constraints = pd.DataFrame(sample_constraints,
+                                      index=sample_ids, columns=pc_ids)
 
     return OrdinationResults(
         "CCA", "Canonical Correspondence Analysis", eigvals, samples,

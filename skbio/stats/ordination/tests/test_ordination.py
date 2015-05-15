@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-import warning
+import warnings
 
 import numpy as np
 import numpy.testing as npt
@@ -302,7 +302,8 @@ class TestRDAResults(object):
 
         npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
         npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
-        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True)
+        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True,
+                                        decimal=6)
 
     def test_scaling2(self):
         scores = rda(self.Y, self.X, scaling=2)
@@ -385,7 +386,8 @@ class TestRDAResults(object):
             )
         npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
         npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
-        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True)
+        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True,
+                                        decimal=6)
 
 class TestCCAErrors(object):
     def setup(self):
@@ -438,28 +440,28 @@ class TestCCAResults(object):
 
         vegan_species = np.loadtxt(get_data_path(
             'example3_species_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.species, vegan_species, decimal=6)
+        npt.assert_almost_equal(scores.features, vegan_species, decimal=6)
 
     def test_scaling1_site(self):
         scores = cca(self.Y, self.X, 1)
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
+        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
 
     def test_scaling2_species(self):
         scores = cca(self.Y, self.X, 2)
 
         vegan_species = np.loadtxt(get_data_path(
             'example3_species_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.species, vegan_species, decimal=5)
+        npt.assert_almost_equal(scores.features, vegan_species, decimal=5)
 
     def test_scaling2_site(self):
         scores = cca(self.Y, self.X, 2)
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
+        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
 
 
 class TestPCoAPrivateMethods(object):
