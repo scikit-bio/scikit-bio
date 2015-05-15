@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import unittest
 
 import pandas as pd
 import numpy as np
@@ -19,81 +20,84 @@ from skbio.util import get_data_path, assert_ordination_results_equal
 from skbio.util._testing import _normalize_signs
 
 
-def test_get_data_path():
-    fn = 'parrot'
-    path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(path, 'data', fn)
-    data_path_2 = get_data_path(fn)
-    npt.assert_string_equal(data_path_2, data_path)
+class TestGetDataPath(unittest.TestCase):
+    def test_get_data_path(self):
+        fn = 'parrot'
+        path = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(path, 'data', fn)
+        data_path_2 = get_data_path(fn)
+        self.assertEqual(data_path_2, data_path)
 
+class TestAssertOrdinationResultsEqual(unittest.TestCase):
+    def test_assert_ordination_results_equal(self):
+        minimal1 = OrdinationResults('foo', 'bar', pd.Series([1.0, 2.0]),
+                                     pd.DataFrame([[1, 2, 3], [4, 5, 6]]))
 
-def test_assert_ordination_results_equal():
-    minimal1 = OrdinationResults('foo', 'bar', pd.Series([1.0, 2.0]),
-                                 pd.DataFrame([[1, 2, 3], [4, 5, 6]]))
+        # a minimal set of results should be equal to itself
+        assert_ordination_results_equal(minimal1, minimal1)
 
-    # a minimal set of results should be equal to itself
-    assert_ordination_results_equal(minimal1, minimal1)
+        # type mismatch
+        with npt.assert_raises(AssertionError):
+            assert_ordination_results_equal(minimal1, 'foo')
 
-    # type mismatch
-    with npt.assert_raises(AssertionError):
-        assert_ordination_results_equal(minimal1, 'foo')
+        # numeric values should be checked that they're almost equal
+        almost_minimal1 = OrdinationResults(
+            'foo', 'bar',
+            pd.Series([1.0000001, 1.9999999]),
+            pd.DataFrame([[1, 2, 3], [4, 5, 6]]))
+        assert_ordination_results_equal(minimal1, almost_minimal1)
 
-    # numeric values should be checked that they're almost equal
-    almost_minimal1 = OrdinationResults(
-        'foo', 'bar',
-        pd.Series([1.0000001, 1.9999999]),
-        pd.DataFrame([[1, 2, 3], [4, 5, 6]]))
-    assert_ordination_results_equal(minimal1, almost_minimal1)
+        # test each of the optional numeric attributes
+        for attr in ('features', 'samples', 'biplot_scores',
+                     'sample_constraints'):
+            # missing optional numeric attribute in one, present in the other
+            setattr(almost_minimal1, attr, pd.DataFrame([[1, 2], [3, 4]]))
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(almost_minimal1, attr, None)
 
-    # test each of the optional numeric attributes
-    for attr in ('features', 'samples', 'biplot_scores', 'sample_constraints'):
+            # optional numeric attributes present in both, but not almost equal
+            setattr(minimal1, attr, pd.DataFrame([[1, 2], [3, 4]]))
+            setattr(almost_minimal1, attr, pd.DataFrame([[1, 2],
+                                                         [3.00002, 4]]))
+            with npt.assert_raises(AssertionError):
+                assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
+
+            # optional numeric attributes present in both, and almost equal
+            setattr(minimal1, attr, pd.DataFrame([[1.0, 2.0], [3.0, 4.0]]))
+            setattr(almost_minimal1, attr,
+                    pd.DataFrame([[1.0, 2.0], [3.00000002, 4]]))
+            assert_ordination_results_equal(minimal1, almost_minimal1)
+            setattr(minimal1, attr, None)
+            setattr(almost_minimal1, attr, None)
+
         # missing optional numeric attribute in one, present in the other
-        setattr(almost_minimal1, attr, pd.DataFrame([[1, 2], [3, 4]]))
+        almost_minimal1.proportion_explained = pd.Series([1, 2, 3])
         with npt.assert_raises(AssertionError):
             assert_ordination_results_equal(minimal1, almost_minimal1)
-        setattr(almost_minimal1, attr, None)
+        almost_minimal1.proportion_explained = None
 
         # optional numeric attributes present in both, but not almost equal
-        setattr(minimal1, attr, pd.DataFrame([[1, 2], [3, 4]]))
-        setattr(almost_minimal1, attr, pd.DataFrame([[1, 2], [3.00002, 4]]))
+        minimal1.proportion_explained = pd.Series([1, 2, 3])
+        almost_minimal1.proportion_explained = pd.Series([1, 2, 3.00002])
         with npt.assert_raises(AssertionError):
             assert_ordination_results_equal(minimal1, almost_minimal1)
-        setattr(minimal1, attr, None)
-        setattr(almost_minimal1, attr, None)
+        almost_minimal1.proportion_explained = None
+        almost_minimal1.proportion_explained = None
 
         # optional numeric attributes present in both, and almost equal
-        setattr(minimal1, attr, pd.DataFrame([[1.0, 2.0], [3.0, 4.0]]))
-        setattr(almost_minimal1, attr,
-                pd.DataFrame([[1.0, 2.0], [3.00000002, 4]]))
+        minimal1.proportion_explained = pd.Series([1, 2, 3])
+        almost_minimal1.proportion_explained = pd.Series([1, 2, 3.00000002])
         assert_ordination_results_equal(minimal1, almost_minimal1)
-        setattr(minimal1, attr, None)
-        setattr(almost_minimal1, attr, None)
-
-    # missing optional numeric attribute in one, present in the other
-    almost_minimal1.proportion_explained = pd.Series([1, 2, 3])
-    with npt.assert_raises(AssertionError):
-        assert_ordination_results_equal(minimal1, almost_minimal1)
-    almost_minimal1.proportion_explained = None
-
-    # optional numeric attributes present in both, but not almost equal
-    minimal1.proportion_explained = pd.Series([1, 2, 3])
-    almost_minimal1.proportion_explained = pd.Series([1, 2, 3.00002])
-    with npt.assert_raises(AssertionError):
-        assert_ordination_results_equal(minimal1, almost_minimal1)
-    almost_minimal1.proportion_explained = None
-    almost_minimal1.proportion_explained = None
-
-    # optional numeric attributes present in both, and almost equal
-    minimal1.proportion_explained = pd.Series([1, 2, 3])
-    almost_minimal1.proportion_explained = pd.Series([1, 2, 3.00000002])
-    assert_ordination_results_equal(minimal1, almost_minimal1)
-    almost_minimal1.proportion_explained = None
-    almost_minimal1.proportion_explained = None
+        almost_minimal1.proportion_explained = None
+        almost_minimal1.proportion_explained = None
 
 
-class TestNormalizeSigns(object):
+class TestNormalizeSigns(unittest.TestCase):
     def test_shapes_and_nonarray_input(self):
-        with npt.assert_raises(ValueError):
+        with self.assertRaises(ValueError):
             _normalize_signs([[1, 2], [3, 5]], [[1, 2]])
 
     def test_works_when_different(self):
@@ -103,7 +107,7 @@ class TestNormalizeSigns(object):
                       [2, 2]])
         b = np.array([[-1, -1],
                       [2, 2]])
-        with npt.assert_raises(AssertionError):
+        with self.assertRaises(AssertionError):
             npt.assert_equal(*_normalize_signs(a, b))
 
     def test_easy_different(self):
@@ -163,5 +167,4 @@ class TestNormalizeSigns(object):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule()
+    unittest.main()
