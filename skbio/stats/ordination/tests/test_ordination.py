@@ -21,75 +21,6 @@ from skbio.stats.ordination import (
 from skbio.util import get_data_path, assert_ordination_results_equal
 
 
-def normalize_signs(arr1, arr2):
-    """Change column signs so that "column" and "-column" compare equal.
-
-    This is needed because results of eigenproblmes can have signs
-    flipped, but they're still right.
-
-    Notes
-    =====
-
-    This function tries hard to make sure that, if you find "column"
-    and "-column" almost equal, calling a function like np.allclose to
-    compare them after calling `normalize_signs` succeeds.
-
-    To do so, it distinguishes two cases for every column:
-
-    - It can be all almost equal to 0 (this includes a column of
-      zeros).
-    - Otherwise, it has a value that isn't close to 0.
-
-    In the first case, no sign needs to be flipped. I.e., for
-    |epsilon| small, np.allclose(-epsilon, 0) is true if and only if
-    np.allclose(epsilon, 0) is.
-
-    In the second case, the function finds the number in the column
-    whose absolute value is largest. Then, it compares its sign with
-    the number found in the same index, but in the other array, and
-    flips the sign of the column as needed.
-    """
-    # Let's convert everyting to floating point numbers (it's
-    # reasonable to assume that eigenvectors will already be floating
-    # point numbers). This is necessary because np.array(1) /
-    # np.array(0) != np.array(1.) / np.array(0.)
-    arr1 = np.asarray(arr1, dtype=np.float64)
-    arr2 = np.asarray(arr2, dtype=np.float64)
-
-    if arr1.shape != arr2.shape:
-        raise ValueError(
-            "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
-                                                                   arr2.shape)
-            )
-
-    # To avoid issues around zero, we'll compare signs of the values
-    # with highest absolute value
-    max_idx = np.abs(arr1).argmax(axis=0)
-    max_arr1 = arr1[max_idx, range(arr1.shape[1])]
-    max_arr2 = arr2[max_idx, range(arr2.shape[1])]
-
-    sign_arr1 = np.sign(max_arr1)
-    sign_arr2 = np.sign(max_arr2)
-
-    # Store current warnings, and ignore division by zero (like 1. /
-    # 0.) and invalid operations (like 0. / 0.)
-    wrn = np.seterr(invalid='ignore', divide='ignore')
-    differences = sign_arr1 / sign_arr2
-    # The values in `differences` can be:
-    #    1 -> equal signs
-    #   -1 -> diff signs
-    #   Or nan (0/0), inf (nonzero/0), 0 (0/nonzero)
-    np.seterr(**wrn)
-
-    # Now let's deal with cases where `differences != \pm 1`
-    special_cases = (~np.isfinite(differences)) | (differences == 0)
-    # In any of these cases, the sign of the column doesn't matter, so
-    # let's just keep it
-    differences[special_cases] = 1
-
-    return arr1 * differences, arr2
-
-
 def chi_square_distance(data_table, between_rows=True):
     """Computes the chi-square distance between two rows or columns of input.
 
@@ -139,77 +70,6 @@ def chi_square_distance(data_table, between_rows=True):
     scaled_F = F / (row_sums * np.sqrt(column_sums))
 
     return pdist(scaled_F, 'euclidean')
-
-
-class TestNormalizeSigns(object):
-    def test_shapes_and_nonarray_input(self):
-        with npt.assert_raises(ValueError):
-            normalize_signs([[1, 2], [3, 5]], [[1, 2]])
-
-    def test_works_when_different(self):
-        """Taking abs value of everything would lead to false
-        positives."""
-        a = np.array([[1, -1],
-                      [2, 2]])
-        b = np.array([[-1, -1],
-                      [2, 2]])
-        with npt.assert_raises(AssertionError):
-            npt.assert_equal(*normalize_signs(a, b))
-
-    def test_easy_different(self):
-        a = np.array([[1, 2],
-                      [3, -1]])
-        b = np.array([[-1, 2],
-                      [-3, -1]])
-        npt.assert_equal(*normalize_signs(a, b))
-
-    def test_easy_already_equal(self):
-        a = np.array([[1, -2],
-                      [3, 1]])
-        b = a.copy()
-        npt.assert_equal(*normalize_signs(a, b))
-
-    def test_zeros(self):
-        a = np.array([[0, 3],
-                      [0, -1]])
-        b = np.array([[0, -3],
-                      [0, 1]])
-        npt.assert_equal(*normalize_signs(a, b))
-
-    def test_hard(self):
-        a = np.array([[0, 1],
-                      [1, 2]])
-        b = np.array([[0, 1],
-                      [-1, 2]])
-        npt.assert_equal(*normalize_signs(a, b))
-
-    def test_harder(self):
-        """We don't want a value that might be negative due to
-        floating point inaccuracies to make a call to allclose in the
-        result to be off."""
-        a = np.array([[-1e-15, 1],
-                      [5, 2]])
-        b = np.array([[1e-15, 1],
-                      [5, 2]])
-        # Clearly a and b would refer to the same "column
-        # eigenvectors" but a slopppy implementation of
-        # normalize_signs could change the sign of column 0 and make a
-        # comparison fail
-        npt.assert_almost_equal(*normalize_signs(a, b))
-
-    def test_column_zeros(self):
-        a = np.array([[0, 1],
-                      [0, 2]])
-        b = np.array([[0, -1],
-                      [0, -2]])
-        npt.assert_equal(*normalize_signs(a, b))
-
-    def test_column_almost_zero(self):
-        a = np.array([[1e-15, 3],
-                      [-2e-14, -6]])
-        b = np.array([[0, 3],
-                      [-1e-15, -6]])
-        npt.assert_almost_equal(*normalize_signs(a, b))
 
 
 class TestChiSquareDistance(object):
@@ -434,108 +294,6 @@ class TestCCAResults(object):
         npt.assert_almost_equal(scores.site, vegan_site, decimal=4)
 
 
-class TestPCoAResults(object):
-    def setup(self):
-        """Sample data set from page 111 of W.J Krzanowski. Principles
-        of multivariate analysis, 2000, Oxford University Press."""
-        matrix = np.loadtxt(get_data_path('PCoA_sample_data'))
-        dist_matrix = DistanceMatrix(matrix, map(str, range(matrix.shape[0])))
-        self.dist_matrix = dist_matrix
-
-    def test_negative_eigenvalue_warning(self):
-        """This data has some small negative eigenvalues."""
-        npt.assert_warns(RuntimeWarning, pcoa, self.dist_matrix)
-
-    def test_values(self):
-        """Adapted from cogent's `test_principal_coordinate_analysis`:
-        "I took the example in the book (see intro info), and did the
-        principal coordinates analysis, plotted the data and it looked
-        right"."""
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=RuntimeWarning)
-            scores = pcoa(self.dist_matrix)
-
-        exp_eigvals = np.array([0.73599103, 0.26260032, 0.14926222, 0.06990457,
-                                0.02956972, 0.01931184, 0., 0., 0., 0., 0., 0.,
-                                0., 0.])
-        exp_site = np.loadtxt(get_data_path('exp_PCoAzeros_site'))
-        exp_prop_expl = np.array([0.58105792, 0.20732046, 0.1178411,
-                                  0.05518899, 0.02334502, 0.01524651, 0., 0.,
-                                  0., 0., 0., 0., 0., 0.])
-        exp_site_ids = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                        '10', '11', '12', '13']
-        # Note the absolute value because column can have signs swapped
-        npt.assert_almost_equal(scores.eigvals, exp_eigvals)
-        npt.assert_almost_equal(np.abs(scores.site), exp_site)
-        npt.assert_almost_equal(scores.proportion_explained, exp_prop_expl)
-        npt.assert_equal(scores.site_ids, exp_site_ids)
-
-
-class TestPCoAResultsExtensive(object):
-    def setup(self):
-        matrix = np.loadtxt(get_data_path('PCoA_sample_data_2'))
-        self.ids = [str(i) for i in range(matrix.shape[0])]
-        dist_matrix = DistanceMatrix(matrix, self.ids)
-        self.scores = pcoa(dist_matrix)
-
-    def test_values(self):
-        results = self.scores
-        npt.assert_equal(len(results.eigvals), len(results.site[0]))
-
-        expected = np.array([[-0.028597, 0.22903853, 0.07055272,
-                              0.26163576, 0.28398669, 0.0],
-                             [0.37494056, 0.22334055, -0.20892914,
-                              0.05057395, -0.18710366, 0.0],
-                             [-0.33517593, -0.23855979, -0.3099887,
-                              0.11521787, -0.05021553, 0.0],
-                             [0.25412394, -0.4123464, 0.23343642,
-                              0.06403168, -0.00482608, 0.0],
-                             [-0.28256844, 0.18606911, 0.28875631,
-                              -0.06455635, -0.21141632, 0.0],
-                             [0.01727687, 0.012458, -0.07382761,
-                              -0.42690292, 0.1695749, 0.0]])
-        npt.assert_almost_equal(*normalize_signs(expected, results.site))
-
-        expected = np.array([0.3984635, 0.36405689, 0.28804535, 0.27479983,
-                            0.19165361, 0.0])
-        npt.assert_almost_equal(results.eigvals, expected)
-
-        expected = np.array([0.2626621381, 0.2399817314, 0.1898758748,
-                             0.1811445992, 0.1263356565, 0.0])
-        npt.assert_almost_equal(results.proportion_explained, expected)
-
-        npt.assert_equal(results.site_ids, self.ids)
-
-
-class TestPCoAEigenResults(object):
-    def setup(self):
-        dist_matrix = DistanceMatrix.read(get_data_path('PCoA_sample_data_3'))
-        self.scores = pcoa(dist_matrix)
-
-        self.ids = ['PC.636', 'PC.635', 'PC.356', 'PC.481', 'PC.354', 'PC.593',
-                    'PC.355', 'PC.607', 'PC.634']
-
-    def test_values(self):
-        results = self.scores
-
-        npt.assert_almost_equal(len(results.eigvals), len(results.site[0]))
-
-        expected = np.loadtxt(get_data_path('exp_PCoAEigenResults_site'))
-        npt.assert_almost_equal(*normalize_signs(expected, results.site))
-
-        expected = np.array([0.51236726, 0.30071909, 0.26791207, 0.20898868,
-                             0.19169895, 0.16054235,  0.15017696,  0.12245775,
-                             0.0])
-        npt.assert_almost_equal(results.eigvals, expected)
-
-        expected = np.array([0.2675738328, 0.157044696, 0.1399118638,
-                             0.1091402725, 0.1001110485, 0.0838401162,
-                             0.0784269939, 0.0639511764, 0.0])
-        npt.assert_almost_equal(results.proportion_explained, expected)
-
-        npt.assert_equal(results.site_ids, self.ids)
-
-
 class TestPCoAPrivateMethods(object):
     def setup(self):
         self.matrix = np.arange(1, 7).reshape(2, 3)
@@ -552,12 +310,6 @@ class TestPCoAPrivateMethods(object):
         expected_F = np.zeros((3, 3))
         # Note that `test_make_F_matrix` in cogent is wrong
         npt.assert_almost_equal(F, expected_F)
-
-
-class TestPCoAErrors(object):
-    def test_input(self):
-        with npt.assert_raises(DissimilarityMatrixError):
-            pcoa([[1, 2], [3, 4]])
 
 
 if __name__ == '__main__':

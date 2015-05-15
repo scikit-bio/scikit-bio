@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 
+import pandas as pd
 import numpy as np
 
 from skbio import OrdinationResults
@@ -114,15 +115,18 @@ def pcoa(distance_matrix):
     # number of coordinates. In order to solve this issue, we return the
     # coordinates that have a negative eigenvalue as 0
     num_positive = (eigvals >= 0).sum()
-    eigvecs = eigvecs
     eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
-    eigvals = eigvals
     eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
     coordinates = eigvecs * np.sqrt(eigvals)
-
     proportion_explained = eigvals / eigvals.sum()
 
-    return OrdinationResults(eigvals=eigvals, site=coordinates,
-                             proportion_explained=proportion_explained,
-                             site_ids=distance_matrix.ids)
+    axis_labels = ['PC%d' % i for i in range(1, eigvals.size + 1)]
+    return OrdinationResults(
+        short_method_name='PCoA',
+        long_method_name='Principal Coordinate Analysis',
+        eigvals=pd.Series(eigvals, index=axis_labels),
+        samples=pd.DataFrame(coordinates, index=distance_matrix.ids,
+                             columns=axis_labels),
+        proportion_explained=pd.Series(proportion_explained,
+                                       index=axis_labels))
