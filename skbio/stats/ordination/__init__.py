@@ -8,17 +8,6 @@ This module contains several ordination methods, including Principal
 Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
 Canonical Correspondence Analysis.
 
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   pcoa
-   ca
-   RDA
-   CCA
-
 
 Functions
 ---------
@@ -26,6 +15,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   ca
+   pcoa
+   cca
+   rda
    mean_and_std
    corr
    scale
