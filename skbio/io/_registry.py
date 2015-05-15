@@ -475,7 +475,7 @@ def _rw_getter(name, fmt, cls):
     return None
 
 
-def sniff(fp, cls=None, mode='r'):
+def sniff(fp, cls=None, mode='r', gzip=None):
     """Attempt to guess the format of a file and return format str and kwargs.
 
     Parameters
@@ -514,7 +514,7 @@ def sniff(fp, cls=None, mode='r'):
                 fmt not in _formats or cls not in _formats[fmt]):
             continue
         format_sniffer = _sniffers[fmt]
-        is_format, fmt_kwargs = format_sniffer(fp, mode=mode)
+        is_format, fmt_kwargs = format_sniffer(fp, mode=mode, gzip=gzip)
         if is_format:
             possibles.append(fmt)
             kwargs = fmt_kwargs
@@ -528,7 +528,8 @@ def sniff(fp, cls=None, mode='r'):
     return possibles[0], kwargs
 
 
-def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
+def read(fp, format=None, into=None, verify=True,
+         mode='r', gzip=None, **kwargs):
     """Read a supported skbio file format into an instance or a generator.
 
     This function is able to reference and execute all *registered* read
@@ -611,10 +612,10 @@ def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
                                       "found." % (format, into.__name__
                                                   if into is not None
                                                   else 'generator'))
-    return reader(fp, mode=mode, **kwargs)
+    return reader(fp, mode=mode, gzip=gzip, **kwargs)
 
 
-def write(obj, format, into, mode='w', **kwargs):
+def write(obj, format, into, mode='w', gzip=None, **kwargs):
     """Write a supported skbio file format from an instance or a generator.
 
     This function is able to reference and execute all *registered* write
@@ -658,7 +659,7 @@ def write(obj, format, into, mode='w', **kwargs):
                                                   'generator' if cls is None
                                                   else str(cls)))
 
-    writer(obj, into, mode=mode, **kwargs)
+    writer(obj, into, mode=mode, gzip=gzip, **kwargs)
 
 
 # This is meant to be a handy indicator to the user that they have done
