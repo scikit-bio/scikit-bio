@@ -67,7 +67,7 @@ def _is_gzip(filepath_or):
 
 
 def _get_filehandle(filepath_or, mode='r', binary=False, gzip=None,
-                    compresslevel=None, encoding=None, **kwargs):
+                    compresslevel=9, encoding=None, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
     """
@@ -108,7 +108,7 @@ def _get_filehandle(filepath_or, mode='r', binary=False, gzip=None,
 
 @contextmanager
 def open_file(filepath_or, mode='r', binary=False, gzip=None,
-              compresslevel=None, encoding=None, **kwargs):
+              compresslevel=9, encoding=None, **kwargs):
     """Context manager, like ``open``, but lets file handles and file like
     objects pass untouched.
 
@@ -172,7 +172,7 @@ def open_file(filepath_or, mode='r', binary=False, gzip=None,
 
 @contextmanager
 def open_files(fp_list, mode='r', binary=True, gzip=None,
-               compresslevel=None, encoding=None, **kwargs):
+               compresslevel=9, encoding=None, **kwargs):
     fhs, owns = zip(*[_get_filehandle(
             f, mode=mode, binary=binary, gzip=gzip,
             compresslevel=compresslevel, encoding=encoding, **kwargs)
