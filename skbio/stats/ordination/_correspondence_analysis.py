@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 
 from skbio import OrdinationResults
-from ._base import Ordination
 from ._utils import svd_rank
 
 
@@ -95,7 +94,7 @@ def ca(X, scaling=1):
 
     """
 
-    if scaling not in {1, 2}: # move this to the top of the function ....
+    if scaling not in {1, 2}:
         raise NotImplementedError(
             "Scaling {0} not implemented.".format(scaling))
 

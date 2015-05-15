@@ -114,4 +114,3 @@ __all__ = ['ca', 'RDA', 'CCA', 'pcoa',
 
 
 test = TestRunner(__file__).test
-
