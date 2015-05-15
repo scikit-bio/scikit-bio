@@ -77,12 +77,10 @@ observed at different sites.
 ...               [5, 10, 0, 0, 2, 4, 0, 1, 3]])
 >>> Y = pd.DataFrame(Y, sites, species)
 
-We can now create a CCA object to perform canonical correspondence
-analysis. Matrix `X` contains a continuous variable (depth) and a
-categorical one (substrate type) encoded using a one-hot encoding. We
-explicitly need to avoid perfect collinearity, so we'll drop one of
-the substrate types (the last column of `X`). We also expect to
-increase pandas integration to ease analyses.
+We can now perform canonical correspondence analysis. Matrix `X` contains a
+continuous variable (depth) and a categorical one (substrate type) encoded
+using a one-hot encoding. We explicitly need to avoid perfect collinearity, so
+we'll drop one of the substrate types (the last column of `X`).
 
 >>> from skbio.stats.ordination import cca
 >>> ordination_result = cca(Y, X, scaling=2)
