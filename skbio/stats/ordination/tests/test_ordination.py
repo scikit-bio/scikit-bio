@@ -135,12 +135,12 @@ class TestCAResults(object):
 
         eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 460 L&L 1998
-        features = pd.DataFrame(np.array([[0.40887, -0.06955], # F_hat
+        features = pd.DataFrame(np.array([[0.40887, -0.06955],  # F_hat
                                           [-0.11539, 0.29977],
                                           [-0.30997, -0.18739]]),
                                 ['Species1', 'Species2', 'Species3'],
                                 ['CA1', 'CA2'])
-        samples = pd.DataFrame(np.array([[-0.84896, -0.88276], # V_hat
+        samples = pd.DataFrame(np.array([[-0.84896, -0.88276],  # V_hat
                                          [-0.22046, 1.34482],
                                          [1.66697, -0.47032]]),
                                ['Site1', 'Site2', 'Site3'],
@@ -151,18 +151,18 @@ class TestCAResults(object):
 
         scores = ca(self.contingency, 2)
 
-        assert_ordination_results_equal(exp, scores,
+        assert_ordination_results_equal(exp, scores, decimal=5,
                                         ignore_directionality=True)
 
     def test_scaling1(self):
         eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 458
-        features = pd.DataFrame(np.array([[1.31871, -0.34374], # V
+        features = pd.DataFrame(np.array([[1.31871, -0.34374],  # V
                                           [-0.37215, 1.48150],
                                           [-0.99972, -0.92612]]),
                                 ['Species1', 'Species2', 'Species3'],
                                 ['CA1', 'CA2'])
-        samples = pd.DataFrame(np.array([[-0.26322, -0.17862], # F
+        samples = pd.DataFrame(np.array([[-0.26322, -0.17862],  # F
                                          [-0.06835, 0.27211],
                                          [0.51685, -0.09517]]),
                                ['Site1', 'Site2', 'Site3'],
@@ -172,7 +172,7 @@ class TestCAResults(object):
                                 samples=samples)
         scores = ca(self.contingency, 1)
 
-        assert_ordination_results_equal(exp, scores,
+        assert_ordination_results_equal(exp, scores, decimal=5,
                                         ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):
@@ -189,7 +189,7 @@ class TestCAResults(object):
         equal to euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies, between_rows=False)
-        transformed_species = ca(self.contingency, 2).samples.values
+        transformed_species = ca(self.contingency, 2).features.values
         euclidean_distances = pdist(transformed_species, 'euclidean')
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 

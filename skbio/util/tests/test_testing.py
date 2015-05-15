@@ -86,8 +86,7 @@ def test_assert_ordination_results_equal():
     # optional numeric attributes present in both, and almost equal
     minimal1.proportion_explained = pd.Series([1, 2, 3])
     almost_minimal1.proportion_explained = pd.Series([1, 2, 3.00000002])
-    with npt.assert_raises(AssertionError):
-        assert_ordination_results_equal(minimal1, almost_minimal1)
+    assert_ordination_results_equal(minimal1, almost_minimal1)
     almost_minimal1.proportion_explained = None
     almost_minimal1.proportion_explained = None
 

@@ -107,7 +107,8 @@ def get_data_path(fn, subfolder='data'):
 def assert_ordination_results_equal(left, right, ignore_method_names=False,
                                     ignore_axis_labels=False,
                                     ignore_biplot_scores_labels=False,
-                                    ignore_directionality=False):
+                                    ignore_directionality=False,
+                                    decimal=7):
     """Assert that ordination results objects are equal.
 
     This is a helper function intended to be used in unit tests that need to
@@ -141,34 +142,46 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
 
     _assert_frame_equal(left.samples, right.samples,
                         ignore_columns=ignore_axis_labels,
-                        ignore_directionality=ignore_directionality)
+                        ignore_directionality=ignore_directionality,
+                        decimal=decimal)
+
     _assert_frame_equal(left.features, right.features,
                         ignore_columns=ignore_axis_labels,
-                        ignore_directionality=ignore_directionality)
+                        ignore_directionality=ignore_directionality,
+                        decimal=decimal)
+
     _assert_frame_equal(left.biplot_scores, right.biplot_scores,
                         ignore_biplot_scores_labels,
-                        ignore_biplot_scores_labels)
+                        ignore_biplot_scores_labels,
+                        decimal=decimal)
+
     _assert_frame_equal(left.sample_constraints, right.sample_constraints,
-                        ignore_columns=ignore_axis_labels)
+                        ignore_columns=ignore_axis_labels,
+                        decimal=decimal)
 
-    _assert_series_equal(left.eigvals, right.eigvals, ignore_axis_labels)
+
+    _assert_series_equal(left.eigvals, right.eigvals, ignore_axis_labels,
+                         decimal=decimal)
+
     _assert_series_equal(left.proportion_explained, right.proportion_explained,
-                         ignore_axis_labels)
+                         ignore_axis_labels,
+                         decimal=decimal)
 
 
-def _assert_series_equal(left_s, right_s, ignore_index=False):
+def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     # assert_series_equal doesn't like None...
     if left_s is None or right_s is None:
         assert left_s is None and right_s is None
     else:
-        if ignore_index:
-            npt.assert_almost_equal(left_s.values, right_s.values)
-        else:
-            assert_series_equal(left_s, right_s)
+        npt.assert_almost_equal(left_s.values, right_s.values,
+                                decimal=decimal)
+        if not ignore_index:
+            assert_index_equal(left_s.index, right_s.index)
 
 
 def _assert_frame_equal(left_df, right_df, ignore_index=False,
-                        ignore_columns=False, ignore_directionality=False):
+                        ignore_columns=False, ignore_directionality=False,
+                        decimal=7):
     # assert_frame_equal doesn't like None...
     if left_df is None or right_df is None:
         assert left_df is None and right_df is None
@@ -179,7 +192,7 @@ def _assert_frame_equal(left_df, right_df, ignore_index=False,
         if ignore_directionality:
             left_values, right_values = _normalize_signs(left_values,
                                                          right_values)
-        npt.assert_almost_equal(left_values, right_values)
+        npt.assert_almost_equal(left_values, right_values, decimal=decimal)
 
         if not ignore_index:
             assert_index_equal(left_df.index, right_df.index)
