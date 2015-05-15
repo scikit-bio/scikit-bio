@@ -102,13 +102,13 @@ References
 
 from skbio.util import TestRunner
 
+from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
-from ._redundancy_analysis import RDA
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa
 from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix)
 
-__all__ = ['ca', 'RDA', 'cca', 'pcoa',
+__all__ = ['ca', 'rda', 'cca', 'pcoa',
            'mean_and_std', 'scale', 'svd_rank', 'corr',
            'e_matrix', 'f_matrix']
 
