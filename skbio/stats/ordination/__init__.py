@@ -14,7 +14,7 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   PCoA
+   pcoa
    CA
    CCA
 
@@ -112,10 +112,11 @@ from skbio.util import TestRunner
 from ._correspondence_analysis import CA
 from ._redundancy_analysis import rda
 from ._canonical_correspondence_analysis import CCA
-from ._principal_coordinate_analysis import PCoA
-from ._utils import mean_and_std, scale, svd_rank, corr
+from ._principal_coordinate_analysis import pcoa
+from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix)
 
-__all__ = ['CA', 'rda', 'CCA', 'PCoA', 'mean_and_std', 'scale', 'svd_rank',
-           'corr']
+__all__ = ['CA', 'rda', 'CCA', 'pcoa', 'mean_and_std',
+           'scale', 'svd_rank', 'corr',
+           'e_matrix', 'f_matrix']
 
 test = TestRunner(__file__).test

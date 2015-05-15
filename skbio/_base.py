@@ -72,7 +72,7 @@ class OrdinationResults(SkbioObject):
     default_write_format = 'ordination'
 
     def __init__(self, short_method_name, long_method_name, eigvals,
-                 samples=None, features=None, biplot_scores=None,
+                 samples, features=None, biplot_scores=None,
                  sample_constraints=None, proportion_explained=None):
 
         self.short_method_name = short_method_name
