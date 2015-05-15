@@ -79,10 +79,13 @@ observed at different sites.
 
 We can now perform canonical correspondence analysis. Matrix `X` contains a
 continuous variable (depth) and a categorical one (substrate type) encoded
-using a one-hot encoding. We explicitly need to avoid perfect collinearity, so
-we'll drop one of the substrate types (the last column of `X`).
-
+using a one-hot encoding.
 >>> from skbio.stats.ordination import cca
+
+We explicitly need to avoid perfect collinearity, so we'll drop one of the
+substrate types (the last column of `X`).
+
+>>> del X['substrate_other']
 >>> ordination_result = cca(Y, X, scaling=2)
 
 Exploring the results we see that the first three axes explain about
