@@ -11,10 +11,12 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pandas as pd
+import numpy as np
 import numpy.testing as npt
 
 from skbio import OrdinationResults
 from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.util._testing import _normalize_signs
 
 
 def test_get_data_path():
@@ -88,6 +90,77 @@ def test_assert_ordination_results_equal():
         assert_ordination_results_equal(minimal1, almost_minimal1)
     almost_minimal1.proportion_explained = None
     almost_minimal1.proportion_explained = None
+
+
+class TestNormalizeSigns(object):
+    def test_shapes_and_nonarray_input(self):
+        with npt.assert_raises(ValueError):
+            _normalize_signs([[1, 2], [3, 5]], [[1, 2]])
+
+    def test_works_when_different(self):
+        """Taking abs value of everything would lead to false
+        positives."""
+        a = np.array([[1, -1],
+                      [2, 2]])
+        b = np.array([[-1, -1],
+                      [2, 2]])
+        with npt.assert_raises(AssertionError):
+            npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_easy_different(self):
+        a = np.array([[1, 2],
+                      [3, -1]])
+        b = np.array([[-1, 2],
+                      [-3, -1]])
+        npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_easy_already_equal(self):
+        a = np.array([[1, -2],
+                      [3, 1]])
+        b = a.copy()
+        npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_zeros(self):
+        a = np.array([[0, 3],
+                      [0, -1]])
+        b = np.array([[0, -3],
+                      [0, 1]])
+        npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_hard(self):
+        a = np.array([[0, 1],
+                      [1, 2]])
+        b = np.array([[0, 1],
+                      [-1, 2]])
+        npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_harder(self):
+        """We don't want a value that might be negative due to
+        floating point inaccuracies to make a call to allclose in the
+        result to be off."""
+        a = np.array([[-1e-15, 1],
+                      [5, 2]])
+        b = np.array([[1e-15, 1],
+                      [5, 2]])
+        # Clearly a and b would refer to the same "column
+        # eigenvectors" but a slopppy implementation of
+        # _normalize_signs could change the sign of column 0 and make a
+        # comparison fail
+        npt.assert_almost_equal(*_normalize_signs(a, b))
+
+    def test_column_zeros(self):
+        a = np.array([[0, 1],
+                      [0, 2]])
+        b = np.array([[0, -1],
+                      [0, -2]])
+        npt.assert_equal(*_normalize_signs(a, b))
+
+    def test_column_almost_zero(self):
+        a = np.array([[1e-15, 3],
+                      [-2e-14, -6]])
+        b = np.array([[0, 3],
+                      [-1e-15, -6]])
+        npt.assert_almost_equal(*_normalize_signs(a, b))
 
 
 if __name__ == '__main__':
