@@ -40,6 +40,10 @@ abundance in different sites (`Y`, the response variables) and
 environmental variables (`X`, the explanatory variables).
 
 >>> import numpy as np
+>>> import pandas as pd
+
+First we need to construct our explanatory variable dataset `X`.
+
 >>> X = np.array([[1.0, 0.0, 1.0, 0.0],
 ...               [2.0, 0.0, 1.0, 0.0],
 ...               [3.0, 0.0, 1.0, 0.0],
@@ -50,6 +54,17 @@ environmental variables (`X`, the explanatory variables).
 ...               [8.0, 0.0, 0.0, 1.0],
 ...               [9.0, 1.0, 0.0, 0.0],
 ...               [10.0, 0.0, 0.0, 1.0]])
+>>> transects = ['depth', 'substrate_coral', 'substrate_sand',
+...              'substrate_other']
+>>> sites = ['site1', 'site2', 'site3', 'site4', 'site5', 'site6', 'site7',
+...          'site8', 'site9', 'site10']
+>>> X = pd.DataFrame(X, sites, transects)
+
+Then we need to create a dataframe with the information about the species
+observed at different sites.
+
+>>> species = ['specie1', 'specie2', 'specie3', 'specie4', 'specie5',
+...            'specie6', 'specie7', 'specie8', 'specie9']
 >>> Y = np.array([[1, 0, 0, 0, 0, 0, 2, 4, 4],
 ...               [0, 0, 0, 0, 0, 0, 5, 6, 1],
 ...               [0, 1, 0, 0, 0, 0, 0, 2, 3],
@@ -60,6 +75,7 @@ environmental variables (`X`, the explanatory variables).
 ...               [7, 8, 0, 0, 4, 3, 6, 6, 4],
 ...               [7, 9, 10, 13, 0, 0, 6, 2, 0],
 ...               [5, 10, 0, 0, 2, 4, 0, 1, 3]])
+>>> Y = pd.DataFrame(Y, sites, species)
 
 We can now create a CCA object to perform canonical correspondence
 analysis. Matrix `X` contains a continuous variable (depth) and a
@@ -68,21 +84,23 @@ explicitly need to avoid perfect collinearity, so we'll drop one of
 the substrate types (the last column of `X`). We also expect to
 increase pandas integration to ease analyses.
 
->>> from skbio.stats.ordination import CCA
->>> ordination_result = CCA(Y, X[:, :-1],
-...                         ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-...                          'Site5', 'Site6', 'Site7', 'Site8', 'Site9'],
-...                         ['Species0', 'Species1', 'Species2', 'Species3',
-...                          'Species4', 'Species5', 'Species6', 'Species7',
-...                          'Species8'])
+>>> from skbio.stats.ordination import cca
+>>> ordination_result = cca(Y, X, scaling=2)
 
 Exploring the results we see that the first three axes explain about
 80% of all the variance.
 
->>> sc_2 = ordination_result.scores(scaling=2)
->>> print sc_2.proportion_explained
-[ 0.46691091  0.23832652  0.10054837  0.10493671  0.04480535  0.02974698
-  0.01263112  0.00156168  0.00053235]
+>>> ordination_result.proportion_explained
+CCA1    0.466911
+CCA2    0.238327
+CCA3    0.100548
+CCA4    0.104937
+CCA5    0.044805
+CCA6    0.029747
+CCA7    0.012631
+CCA8    0.001562
+CCA9    0.000532
+dtype: float64
 
 References
 ----------
