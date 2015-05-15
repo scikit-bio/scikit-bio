@@ -12,13 +12,90 @@ import warning
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from scipy.spatial.distance import pdist
 
+<<<<<<< HEAD
+from skbio import DistanceMatrix
+from skbio._base import OrdinationResults
+from skbio.stats.ordination import ca, RDA, CCA, PCoA, corr, mean_and_std
+from skbio.util import get_data_path, assert_ordination_results_equal
+
+
+def normalize_signs(arr1, arr2):
+    """Change column signs so that "column" and "-column" compare equal.
+
+    This is needed because results of eigenproblmes can have signs
+    flipped, but they're still right.
+
+    Notes
+    =====
+
+    This function tries hard to make sure that, if you find "column"
+    and "-column" almost equal, calling a function like np.allclose to
+    compare them after calling `normalize_signs` succeeds.
+
+    To do so, it distinguishes two cases for every column:
+
+    - It can be all almost equal to 0 (this includes a column of
+      zeros).
+    - Otherwise, it has a value that isn't close to 0.
+
+    In the first case, no sign needs to be flipped. I.e., for
+    |epsilon| small, np.allclose(-epsilon, 0) is true if and only if
+    np.allclose(epsilon, 0) is.
+
+    In the second case, the function finds the number in the column
+    whose absolute value is largest. Then, it compares its sign with
+    the number found in the same index, but in the other array, and
+    flips the sign of the column as needed.
+    """
+    # Let's convert everyting to floating point numbers (it's
+    # reasonable to assume that eigenvectors will already be floating
+    # point numbers). This is necessary because np.array(1) /
+    # np.array(0) != np.array(1.) / np.array(0.)
+    arr1 = np.asarray(arr1, dtype=np.float64)
+    arr2 = np.asarray(arr2, dtype=np.float64)
+
+    if arr1.shape != arr2.shape:
+        raise ValueError(
+            "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
+                                                                   arr2.shape)
+            )
+
+    # To avoid issues around zero, we'll compare signs of the values
+    # with highest absolute value
+    max_idx = np.abs(arr1).argmax(axis=0)
+    max_arr1 = arr1[max_idx, range(arr1.shape[1])]
+    max_arr2 = arr2[max_idx, range(arr2.shape[1])]
+
+    sign_arr1 = np.sign(max_arr1)
+    sign_arr2 = np.sign(max_arr2)
+
+    # Store current warnings, and ignore division by zero (like 1. /
+    # 0.) and invalid operations (like 0. / 0.)
+    wrn = np.seterr(invalid='ignore', divide='ignore')
+    differences = sign_arr1 / sign_arr2
+    # The values in `differences` can be:
+    #    1 -> equal signs
+    #   -1 -> diff signs
+    #   Or nan (0/0), inf (nonzero/0), 0 (0/nonzero)
+    np.seterr(**wrn)
+
+    # Now let's deal with cases where `differences != \pm 1`
+    special_cases = (~np.isfinite(differences)) | (differences == 0)
+    # In any of these cases, the sign of the column doesn't matter, so
+    # let's just keep it
+    differences[special_cases] = 1
+
+    return arr1 * differences, arr2
+=======
 from skbio import OrdinationResults
 from skbio.stats.distance import DistanceMatrix, DissimilarityMatrixError
 from skbio.stats.ordination import (
     CA, RDA, CCA, pcoa, corr, mean_and_std, e_matrix, f_matrix)
 from skbio.util import get_data_path, assert_ordination_results_equal
+>>>>>>> 4875060c8cbad3e8ae0fdc72d0b2c20e1daf6497
 
 
 def chi_square_distance(data_table, between_rows=True):
@@ -127,41 +204,60 @@ class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(self.X, ['Site1', 'Site2', 'Site3'],
-                             ['Species1', 'Species2', 'Species3'])
+
+        self.contingency = pd.DataFrame(self.X, ['Site1', 'Site2', 'Site3'],
+                                        ['Species1', 'Species2', 'Species3'])
 
     def test_scaling2(self):
-        scores = self.ordination.scores(scaling=2)
+
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 460 L&L 1998
-        F_hat = np.array([[0.40887, -0.06955],
-                          [-0.11539,  0.29977],
-                          [-0.30997, -0.18739]])
-        npt.assert_almost_equal(*normalize_signs(F_hat, scores.species),
-                                decimal=5)
-        V_hat = np.array([[-0.84896, -0.88276],
-                          [-0.22046,  1.34482],
-                          [1.66697, -0.47032]])
-        npt.assert_almost_equal(*normalize_signs(V_hat, scores.site),
-                                decimal=5)
+        features = pd.DataFrame(np.array([[0.40887, -0.06955], # F_hat
+                                          [-0.11539, 0.29977],
+                                          [-0.30997, -0.18739]]),
+                                ['Species1', 'Species2', 'Species3'],
+                                ['CA1', 'CA2'])
+        samples = pd.DataFrame(np.array([[-0.84896, -0.88276], # V_hat
+                                         [-0.22046, 1.34482],
+                                         [1.66697, -0.47032]]),
+                               ['Site1', 'Site2', 'Site3'],
+                               ['CA1', 'CA2'])
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples)
+
+        scores = ca(self.contingency, 2)
+
+        assert_ordination_results_equal(exp, scores,
+                                        ignore_directionality=True)
 
     def test_scaling1(self):
-        scores = self.ordination.scores(scaling=1)
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 458
-        V = np.array([[1.31871, -0.34374],
-                      [-0.37215,  1.48150],
-                      [-0.99972, -0.92612]])
-        npt.assert_almost_equal(*normalize_signs(V, scores.species), decimal=5)
-        F = np.array([[-0.26322, -0.17862],
-                      [-0.06835,  0.27211],
-                      [0.51685, -0.09517]])
-        npt.assert_almost_equal(*normalize_signs(F, scores.site), decimal=5)
+        features = pd.DataFrame(np.array([[1.31871, -0.34374], # V
+                                          [-0.37215, 1.48150],
+                                          [-0.99972, -0.92612]]),
+                                ['Species1', 'Species2', 'Species3'],
+                                ['CA1', 'CA2'])
+        samples = pd.DataFrame(np.array([[-0.26322, -0.17862], # F
+                                         [-0.06835, 0.27211],
+                                         [0.51685, -0.09517]]),
+                               ['Site1', 'Site2', 'Site3'],
+                               ['CA1', 'CA2'])
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples)
+        scores = ca(self.contingency, 1)
+
+        assert_ordination_results_equal(exp, scores,
+                                        ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):
         """In scaling 1, chi^2 distance among rows (sites) is equal to
         euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies)
-        transformed_sites = self.ordination.scores(1).site
+        transformed_sites = ca(self.contingency, 1).samples.values
         euclidean_distances = pdist(transformed_sites, 'euclidean')
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
@@ -170,7 +266,7 @@ class TestCAResults(object):
         equal to euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies, between_rows=False)
-        transformed_species = self.ordination.scores(2).species
+        transformed_species = ca(self.contingency, 2).samples.values
         euclidean_distances = pdist(transformed_species, 'euclidean')
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
@@ -179,7 +275,7 @@ class TestCAErrors(object):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
-            CA(X, None, None)
+            ca(pd.DataFrame(X))
 
 
 class TestRDAErrors(object):
