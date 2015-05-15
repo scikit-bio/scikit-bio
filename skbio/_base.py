@@ -235,8 +235,8 @@ class OrdinationResults(SkbioObject):
 
            Run principal coordinate analysis (PCoA) on the distance matrix:
 
-           >>> from skbio.stats.ordination import PCoA
-           >>> pcoa_results = PCoA(dm).scores()
+           >>> from skbio.stats.ordination import pcoa
+           >>> pcoa_results = pcoa(dm)
 
            Plot the ordination results, where each sample is colored by body
            site (a categorical variable):
