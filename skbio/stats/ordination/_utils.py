@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-import numpy.testing as npt
 
 
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
@@ -173,51 +172,21 @@ def corr(x, y=None):
     return x.T.dot(y) / x.shape[0]
 
 
-def assert_ordination_results_equal(left, right):
-    """Assert that ordination results objects are equal.
+def e_matrix(distance_matrix):
+    """Compute E matrix from a distance matrix.
 
-    This is a helper function intended to be used in unit tests that need to
-    compare ``OrdinationResults`` objects.
-
-    For numeric attributes (e.g., eigvals, site, etc.),
-    ``numpy.testing.assert_almost_equal`` is used. Otherwise,
-    ``numpy.testing.assert_equal`` is used for comparisons. An assertion is
-    in place to ensure the two objects are exactly the same type.
-
-    Parameters
-    ----------
-    left, right : OrdinationResults
-        Ordination results to be compared for equality.
-
-    Raises
-    ------
-    AssertionError
-        If the two objects are not equal.
-
-    """
-    npt.assert_equal(type(left) is type(right), True)
-
-    # eigvals should always be present
-    npt.assert_almost_equal(left.eigvals, right.eigvals)
-
-    # these attributes are strings, so can compare directly, even if one or
-    # both are None
-    npt.assert_equal(left.species_ids, right.species_ids)
-    npt.assert_equal(left.site_ids, right.site_ids)
-
-    # these attributes need to be checked that they are almost equal, but one
-    # or both can be None, which npt.assert_almost_equal doesn't like
-    _assert_optional_numeric_attr_equal(left.species, right.species)
-    _assert_optional_numeric_attr_equal(left.site, right.site)
-    _assert_optional_numeric_attr_equal(left.biplot, right.biplot)
-    _assert_optional_numeric_attr_equal(left.site_constraints,
-                                        right.site_constraints)
-    _assert_optional_numeric_attr_equal(left.proportion_explained,
-                                        right.proportion_explained)
+    Squares and divides by -2 the input elementwise. Eq. 9.20 in
+    Legendre & Legendre 1998."""
+    return distance_matrix * distance_matrix / -2
 
 
-def _assert_optional_numeric_attr_equal(left, right):
-    if left is None or right is None:
-        npt.assert_equal(left, right)
-    else:
-        npt.assert_almost_equal(left, right)
+def f_matrix(E_matrix):
+    """Compute F matrix from E matrix.
+
+    Centring step: for each element, the mean of the corresponding
+    row and column are substracted, and the mean of the whole
+    matrix is added. Eq. 9.21 in Legendre & Legendre 1998."""
+    row_means = E_matrix.mean(axis=1, keepdims=True)
+    col_means = E_matrix.mean(axis=0, keepdims=True)
+    matrix_mean = E_matrix.mean()
+    return E_matrix - row_means - col_means + matrix_mean

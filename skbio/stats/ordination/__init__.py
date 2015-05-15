@@ -8,18 +8,6 @@ This module contains several ordination methods, including Principal
 Coordinate Analysis, Correspondence Analysis, Redundancy Analysis and
 Canonical Correspondence Analysis.
 
-Classes
--------
-
-.. autosummary::
-   :toctree: generated/
-
-   PCoA
-   CA
-   RDA
-   CCA
-   OrdinationResults
-
 
 Functions
 ---------
@@ -27,6 +15,10 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   ca
+   pcoa
+   cca
+   rda
    mean_and_std
    corr
    scale
@@ -110,15 +102,14 @@ References
 
 from skbio.util import TestRunner
 
-from ._correspondence_analysis import CA
-from ._redundancy_analysis import RDA
-from ._canonical_correspondence_analysis import CCA
-from ._principal_coordinate_analysis import PCoA
-from ._base import OrdinationResults
-from ._utils import (mean_and_std, scale, svd_rank, corr,
-                     assert_ordination_results_equal)
+from ._redundancy_analysis import rda
+from ._correspondence_analysis import ca
+from ._canonical_correspondence_analysis import cca
+from ._principal_coordinate_analysis import pcoa
+from ._utils import (mean_and_std, scale, svd_rank, corr, e_matrix, f_matrix)
 
-__all__ = ['CA', 'RDA', 'CCA', 'PCoA', 'OrdinationResults', 'mean_and_std',
-           'scale', 'svd_rank', 'corr', 'assert_ordination_results_equal']
+__all__ = ['ca', 'rda', 'cca', 'pcoa',
+           'mean_and_std', 'scale', 'svd_rank', 'corr',
+           'e_matrix', 'f_matrix']
 
 test = TestRunner(__file__).test
