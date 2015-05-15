@@ -311,7 +311,7 @@ def register_writer(format, cls=None, binary=False):
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
         def wrapped_writer(obj, fp, mode='w', binary=binary,
-                           gzip=False, **kwargs):
+                           gzip=False, compresslevel=9, **kwargs):
             file_keys = []
             files = [fp]
             for file_arg in file_args:
@@ -322,7 +322,8 @@ def register_writer(format, cls=None, binary=False):
                 else:
                     kwargs[file_arg] = None
 
-            with open_files(files, mode=mode, binary=binary, gzip=gzip) as fhs:
+            with open_files(files, mode=mode, binary=binary,
+                            gzip=gzip, compresslevel=compresslevel) as fhs:
                 for key, fh in zip(file_keys, fhs[1:]):
                     kwargs[key] = fh
                 writer(obj, fhs[0], **kwargs)
@@ -611,7 +612,7 @@ def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
     return reader(fp, mode=mode, **kwargs)
 
 
-def write(obj, format, into, mode='w', gzip=False, **kwargs):
+def write(obj, format, into, mode='w', gzip=False, compresslevel=9, **kwargs):
     """Write a supported skbio file format from an instance or a generator.
 
     This function is able to reference and execute all *registered* write
@@ -655,7 +656,8 @@ def write(obj, format, into, mode='w', gzip=False, **kwargs):
                                                   'generator' if cls is None
                                                   else str(cls)))
 
-    writer(obj, into, mode=mode, gzip=gzip, **kwargs)
+    writer(obj, into, mode=mode, gzip=gzip,
+           compresslevel=compresslevel, **kwargs)
 
 
 # This is meant to be a handy indicator to the user that they have done
