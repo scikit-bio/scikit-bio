@@ -86,9 +86,9 @@ Create a table containing 7 OTUs and 6 samples:
    Compute PCoA for both distance matrices, and then find the Procrustes
    M-squared value that results from comparing the coordinate matrices.
 
-   >>> from skbio.stats.ordination import PCoA
-   >>> bc_pc = PCoA(bc_dm).scores()
-   >>> j_pc = PCoA(j_dm).scores()
+   >>> from skbio.stats.ordination import pcoa
+   >>> bc_pc = pcoa(bc_dm)
+   >>> j_pc = pcoa(j_dm)
    >>> from skbio.stats.spatial import procrustes
    >>> print(procrustes(bc_pc.site, j_pc.site)[2])
    0.466134984787
