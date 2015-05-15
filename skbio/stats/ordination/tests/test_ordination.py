@@ -12,11 +12,13 @@ import warnings
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import CA, RDA, CCA, PCoA, corr, mean_and_std
-from skbio.util import get_data_path
+from skbio._base import OrdinationResults
+from skbio.stats.ordination import ca, RDA, CCA, PCoA, corr, mean_and_std
+from skbio.util import get_data_path, assert_ordination_results_equal
 
 
 def normalize_signs(arr1, arr2):
@@ -265,41 +267,60 @@ class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-        self.ordination = CA(self.X, ['Site1', 'Site2', 'Site3'],
-                             ['Species1', 'Species2', 'Species3'])
+
+        self.contingency = pd.DataFrame(self.X, ['Site1', 'Site2', 'Site3'],
+                                        ['Species1', 'Species2', 'Species3'])
 
     def test_scaling2(self):
-        scores = self.ordination.scores(scaling=2)
+
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 460 L&L 1998
-        F_hat = np.array([[0.40887, -0.06955],
-                          [-0.11539,  0.29977],
-                          [-0.30997, -0.18739]])
-        npt.assert_almost_equal(*normalize_signs(F_hat, scores.species),
-                                decimal=5)
-        V_hat = np.array([[-0.84896, -0.88276],
-                          [-0.22046,  1.34482],
-                          [1.66697, -0.47032]])
-        npt.assert_almost_equal(*normalize_signs(V_hat, scores.site),
-                                decimal=5)
+        features = pd.DataFrame(np.array([[0.40887, -0.06955], # F_hat
+                                          [-0.11539, 0.29977],
+                                          [-0.30997, -0.18739]]),
+                                ['Species1', 'Species2', 'Species3'],
+                                ['CA1', 'CA2'])
+        samples = pd.DataFrame(np.array([[-0.84896, -0.88276], # V_hat
+                                         [-0.22046, 1.34482],
+                                         [1.66697, -0.47032]]),
+                               ['Site1', 'Site2', 'Site3'],
+                               ['CA1', 'CA2'])
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples)
+
+        scores = ca(self.contingency, 2)
+
+        assert_ordination_results_equal(exp, scores,
+                                        ignore_directionality=True)
 
     def test_scaling1(self):
-        scores = self.ordination.scores(scaling=1)
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
         # p. 458
-        V = np.array([[1.31871, -0.34374],
-                      [-0.37215,  1.48150],
-                      [-0.99972, -0.92612]])
-        npt.assert_almost_equal(*normalize_signs(V, scores.species), decimal=5)
-        F = np.array([[-0.26322, -0.17862],
-                      [-0.06835,  0.27211],
-                      [0.51685, -0.09517]])
-        npt.assert_almost_equal(*normalize_signs(F, scores.site), decimal=5)
+        features = pd.DataFrame(np.array([[1.31871, -0.34374], # V
+                                          [-0.37215, 1.48150],
+                                          [-0.99972, -0.92612]]),
+                                ['Species1', 'Species2', 'Species3'],
+                                ['CA1', 'CA2'])
+        samples = pd.DataFrame(np.array([[-0.26322, -0.17862], # F
+                                         [-0.06835, 0.27211],
+                                         [0.51685, -0.09517]]),
+                               ['Site1', 'Site2', 'Site3'],
+                               ['CA1', 'CA2'])
+        exp = OrdinationResults('CA', 'Correspondance Analysis',
+                                eigvals=eigvals, features=features,
+                                samples=samples)
+        scores = ca(self.contingency, 1)
+
+        assert_ordination_results_equal(exp, scores,
+                                        ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):
         """In scaling 1, chi^2 distance among rows (sites) is equal to
         euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies)
-        transformed_sites = self.ordination.scores(1).site
+        transformed_sites = ca(self.contingency, 1).samples.values
         euclidean_distances = pdist(transformed_sites, 'euclidean')
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
@@ -308,7 +329,7 @@ class TestCAResults(object):
         equal to euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies, between_rows=False)
-        transformed_species = self.ordination.scores(2).species
+        transformed_species = ca(self.contingency, 2).samples.values
         euclidean_distances = pdist(transformed_species, 'euclidean')
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
@@ -317,7 +338,7 @@ class TestCAErrors(object):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
-            CA(X, None, None)
+            ca(pd.DataFrame(X))
 
 
 class TestRDAErrors(object):
