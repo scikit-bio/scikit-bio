@@ -15,87 +15,10 @@ import numpy.testing as npt
 import pandas as pd
 from scipy.spatial.distance import pdist
 
-<<<<<<< HEAD
-from skbio import DistanceMatrix
-from skbio._base import OrdinationResults
-from skbio.stats.ordination import ca, RDA, CCA, PCoA, corr, mean_and_std
-from skbio.util import get_data_path, assert_ordination_results_equal
-
-
-def normalize_signs(arr1, arr2):
-    """Change column signs so that "column" and "-column" compare equal.
-
-    This is needed because results of eigenproblmes can have signs
-    flipped, but they're still right.
-
-    Notes
-    =====
-
-    This function tries hard to make sure that, if you find "column"
-    and "-column" almost equal, calling a function like np.allclose to
-    compare them after calling `normalize_signs` succeeds.
-
-    To do so, it distinguishes two cases for every column:
-
-    - It can be all almost equal to 0 (this includes a column of
-      zeros).
-    - Otherwise, it has a value that isn't close to 0.
-
-    In the first case, no sign needs to be flipped. I.e., for
-    |epsilon| small, np.allclose(-epsilon, 0) is true if and only if
-    np.allclose(epsilon, 0) is.
-
-    In the second case, the function finds the number in the column
-    whose absolute value is largest. Then, it compares its sign with
-    the number found in the same index, but in the other array, and
-    flips the sign of the column as needed.
-    """
-    # Let's convert everyting to floating point numbers (it's
-    # reasonable to assume that eigenvectors will already be floating
-    # point numbers). This is necessary because np.array(1) /
-    # np.array(0) != np.array(1.) / np.array(0.)
-    arr1 = np.asarray(arr1, dtype=np.float64)
-    arr2 = np.asarray(arr2, dtype=np.float64)
-
-    if arr1.shape != arr2.shape:
-        raise ValueError(
-            "Arrays must have the same shape ({0} vs {1}).".format(arr1.shape,
-                                                                   arr2.shape)
-            )
-
-    # To avoid issues around zero, we'll compare signs of the values
-    # with highest absolute value
-    max_idx = np.abs(arr1).argmax(axis=0)
-    max_arr1 = arr1[max_idx, range(arr1.shape[1])]
-    max_arr2 = arr2[max_idx, range(arr2.shape[1])]
-
-    sign_arr1 = np.sign(max_arr1)
-    sign_arr2 = np.sign(max_arr2)
-
-    # Store current warnings, and ignore division by zero (like 1. /
-    # 0.) and invalid operations (like 0. / 0.)
-    wrn = np.seterr(invalid='ignore', divide='ignore')
-    differences = sign_arr1 / sign_arr2
-    # The values in `differences` can be:
-    #    1 -> equal signs
-    #   -1 -> diff signs
-    #   Or nan (0/0), inf (nonzero/0), 0 (0/nonzero)
-    np.seterr(**wrn)
-
-    # Now let's deal with cases where `differences != \pm 1`
-    special_cases = (~np.isfinite(differences)) | (differences == 0)
-    # In any of these cases, the sign of the column doesn't matter, so
-    # let's just keep it
-    differences[special_cases] = 1
-
-    return arr1 * differences, arr2
-=======
 from skbio import OrdinationResults
-from skbio.stats.distance import DistanceMatrix, DissimilarityMatrixError
 from skbio.stats.ordination import (
-    CA, RDA, CCA, pcoa, corr, mean_and_std, e_matrix, f_matrix)
+    ca, rda, cca, corr, mean_and_std, e_matrix, f_matrix)
 from skbio.util import get_data_path, assert_ordination_results_equal
->>>>>>> 4875060c8cbad3e8ae0fdc72d0b2c20e1daf6497
 
 
 def chi_square_distance(data_table, between_rows=True):
