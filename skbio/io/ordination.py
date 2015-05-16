@@ -140,7 +140,7 @@ ordination results in ``ordination`` format::
 Load the ordination results from the file:
 
 >>> from StringIO import StringIO
->>> from skbio.stats.ordination import OrdinationResults
+>>> from skbio import OrdinationResults
 >>> or_f = StringIO(
 ...  "Eigvals\t4\n"
 ...  "0.36\t0.18\t0.07\t0.08\n"
