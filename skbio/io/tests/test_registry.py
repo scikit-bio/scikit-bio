@@ -12,7 +12,7 @@ try:
     from future.backports.test.support import import_fresh_module
 except ImportError:
     from future.standard_library.test.support import import_fresh_module
-from io import StringIO
+from io import StringIO, TextIOWrapper
 import os
 
 import unittest
@@ -489,22 +489,6 @@ class TestSniff(RegistryTest):
         self.assertTrue("format4" in str(cm.exception))
         fh.close()
 
-    def test_that_mode_is_used(self):
-        fp = self.fp1
-        with open(fp, 'w') as fh:
-            fh.write('@\n#\n')
-
-        @self.module.register_sniffer('format')
-        def sniffer(fh):
-            self.assertEqual(self.expected_mode, fh.mode)
-            return '@' in fh.readline(), {}
-
-        self.expected_mode = 'U'
-        self.module.sniff(fp)
-
-        self.expected_mode = 'r'
-        self.module.sniff(fp, mode='r')
-
     def test_position_not_mutated_real_file(self):
         @self.module.register_sniffer('format')
         def sniffer(fh):
@@ -527,6 +511,7 @@ class TestSniff(RegistryTest):
 
 
 class TestRead(RegistryTest):
+
     def test_format_and_into_are_none(self):
         fh = StringIO()
         with self.assertRaises(ValueError):
@@ -774,18 +759,19 @@ class TestRead(RegistryTest):
         def sniffer(fh):
             return '1' in fh.readline(), {}
 
-        @self.module.register_reader('format', TestClass)
+        @self.module.register_reader('format', TestClass, binary=False)
         def reader(fh):
-            self.assertEqual(self.expected_mode, fh.mode)
+            self.assertIsInstance(fh, TextIOWrapper)
+            self.assertEqual(self.expected_mode, fh.buffer.mode)
             return TestClass([int(x) for x in fh.read().split('\n')])
 
-        self.expected_mode = 'U'
+        self.expected_mode = 'rb'
         instance = self.module.read(fp, format='format', into=TestClass)
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
-        self.expected_mode = 'r'
-        instance = self.module.read(fp, format='format', into=TestClass,
-                                    mode='r')
+        self.expected_mode = 'rb+'
+        instance = self.module.read(fp, format='format',
+                                    into=TestClass, mode='r+')
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
 
     def test_file_sentinel_many(self):
@@ -911,6 +897,7 @@ class TestRead(RegistryTest):
 
 
 class TestWrite(RegistryTest):
+
     def test_writer_does_not_exist(self):
         fh = StringIO()
         with self.assertRaises(UnrecognizedFormatError) as cm:
@@ -963,19 +950,19 @@ class TestWrite(RegistryTest):
         obj = TestClass(['1', '2', '3', '4'])
         fp = self.fp1
 
-        @self.module.register_writer('format', TestClass)
+        @self.module.register_writer('format', TestClass, binary=False)
         def writer(obj, fh):
             fh.write('\n'.join(obj.list))
-            self.assertEqual(self.expected_mode, fh.mode)
+            self.assertEqual(self.expected_mode, fh.buffer.mode)
 
-        self.expected_mode = 'w'
+        self.expected_mode = 'wb'
         self.module.write(obj, format='format', into=fp)
 
         with open(fp, 'U') as fh:
             self.assertEqual("1\n2\n3\n4", fh.read())
 
         fp = self.fp2
-        self.expected_mode = 'a'
+        self.expected_mode = 'ab'
         self.module.write(obj, format='format', into=fp, mode='a')
 
         with open(fp, 'U') as fh:
