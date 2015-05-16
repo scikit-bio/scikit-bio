@@ -72,11 +72,11 @@ def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
     pass through.
     """
 
-    assert mode in {'r', 'w'}
+    assert mode in {'r', 'w', 'r+', 'a'}
 
     if _is_string_or_bytes(filepath_or):
         if requests.compat.urlparse(filepath_or).scheme in {'http', 'https'}:
-            if mode == 'w':
+            if mode != 'r':
                 raise ValueError('Writing not supported for URLs')
 
             sess = CacheControl(requests.Session(),
@@ -88,6 +88,9 @@ def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
 
             fh = BytesIO(req.content)
         else:
+            # Always use binary mode intially (extra 'b' is needed
+            # for windows, not necessary on Unix.). Note that text
+            # mode is supported using TextIOWrapper (below).
             fh = open(filepath_or, mode + 'b', **kwargs)
 
         own_fh = True
@@ -236,8 +239,7 @@ def _fileobj_is_binary(fileobj):
     elif hasattr(fileobj, 'fileobj'):
         return _fileobj_is_binary(fileobj.fileobj)
     else:
-        print(type(fileobj))
-        raise ValueError()
+        raise ValueError('Unsupported type {}'.format(type(fileobj)))
 
 
 def _fileobj_is_gzip(fileobj):
