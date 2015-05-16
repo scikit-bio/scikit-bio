@@ -473,7 +473,7 @@ def _rw_getter(name, fmt, cls):
     return None
 
 
-def sniff(fp, cls=None, mode='r', gzip=None):
+def sniff(fp, cls=None, mode='r'):
     """Attempt to guess the format of a file and return format str and kwargs.
 
     Parameters
@@ -512,7 +512,7 @@ def sniff(fp, cls=None, mode='r', gzip=None):
                 fmt not in _formats or cls not in _formats[fmt]):
             continue
         format_sniffer = _sniffers[fmt]
-        is_format, fmt_kwargs = format_sniffer(fp, mode=mode, gzip=gzip)
+        is_format, fmt_kwargs = format_sniffer(fp, mode=mode)
         if is_format:
             possibles.append(fmt)
             kwargs = fmt_kwargs

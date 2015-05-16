@@ -16,7 +16,7 @@ import shutil
 from os import path
 
 from skbio.io.util import (open_file, open_files,
-                           _is_string_or_bytes, get_filemode)
+                           _is_string_or_bytes)
 
 
 class TestFilePathOpening(unittest.TestCase):
@@ -107,7 +107,7 @@ class TestFilePathsOpening(unittest.TestCase):
         """Filehandles slip through untouched"""
         with tempfile.TemporaryFile('r') as fh:
             with tempfile.TemporaryFile('r') as fh2:
-                with open_file([fh, fh2]) as fhs:
+                with open_files([fh, fh2]) as fhs:
                     self.assertTrue(fh is fhs[0])
                     self.assertTrue(fh2 is fhs[1])
                 # And it doesn't close the file-handle
@@ -154,20 +154,18 @@ class TestFilePathsOpening(unittest.TestCase):
             tmp_dir = tempfile.mkdtemp()
             tmp_path = path.join(tmp_dir, 'test.fa.gz')
 
-            content = FASTA.decode('utf-8')
+            content_binary = FASTA
+            content = content_binary.decode('utf-8')
+
             with gzip.open(tmp_path, 'wt') as fh:
                 fh.write(content)
 
             # Vanilla.
             with open_files([fh.name]) as fhs:
-                self.assertEqual(fhs[0].read(), content)
+                self.assertEqual(fhs[0].read(), content_binary)
 
-            # Mode in kwargs.
-            with open_files([fh.name], mode='U') as fhs:
-                self.assertEqual(fhs[0].read(), content)
-
-            # Mode in args.
-            with open_files([fh.name], 'rU') as fhs:
+            # Non-binary.
+            with open_files([fh.name], binary=False) as fhs:
                 self.assertEqual(fhs[0].read(), content)
         finally:
             shutil.rmtree(tmp_dir)
@@ -179,29 +177,6 @@ FASTA = (b'>gi|459567|dbj|D28543.1|HPCNS5PC Hepatitis C virus gene for NS5 pr'
          b'TTAACTCGCGAGGTCAGCTCTGCGGGACACGCAGATGCCGGGCGAG\nCGGGGTTCTTCCAACCAG'
          b'CATGGGCAATACCCTCACATGTTACCTGAAAGCACAGGCAGCTTGCCGTGCA\nGCAGGCCTCACC'
          b'AATTCTGACATGTTGGTTTGCGGAGATGATTTGGTAGTCATCACTGAGAGTGCCGGAG\nTC\n\n')
-
-
-class TestGetFilemode(unittest.TestCase):
-
-    def test_file(self):
-        with tempfile.NamedTemporaryFile('r') as fh:
-            self.assertEqual(get_filemode(fh), 'r')
-
-    def test_gzip_file(self):
-        try:
-            tmp_dir = tempfile.mkdtemp()
-            tmp_path = path.join(tmp_dir, 'test.fa.gz')
-
-            with gzip.open(tmp_path, 'wb') as fh:
-                fh.write(FASTA)
-
-            with gzip.open(tmp_path, 'rb') as fh:
-                self.assertEqual(get_filemode(fh), 'rb')
-
-            with gzip.open(tmp_path, 'rt') as fh:
-                self.assertEqual(get_filemode(fh), 'rt')
-        finally:
-            shutil.rmtree(tmp_dir)
 
 
 if __name__ == '__main__':

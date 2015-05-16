@@ -66,7 +66,7 @@ def _is_gzip(filepath_or):
     return is_gzip
 
 
-def _get_filehandle(filepath_or, mode='r', binary=False, gzip=None,
+def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
                     compresslevel=9, encoding=None, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
@@ -107,7 +107,7 @@ def _get_filehandle(filepath_or, mode='r', binary=False, gzip=None,
 
 
 @contextmanager
-def open_file(filepath_or, mode='r', binary=False, gzip=None,
+def open_file(filepath_or, mode='r', binary=True, gzip=None,
               compresslevel=9, encoding=None, **kwargs):
     """Context manager, like ``open``, but lets file handles and file like
     objects pass untouched.
@@ -230,12 +230,13 @@ def _fileobj_is_binary(fileobj):
     elif isinstance(fileobj, io.BytesIO):
         return True
     elif hasattr(fileobj, 'mode') and isinstance(fileobj.mode, str):
-        return fileobj.mode[-1] == 'b'
+        return fileobj.mode[-1] not in {'t', 'U'}
     elif hasattr(fileobj, 'buffer'):
         return _fileobj_is_binary(fileobj.buffer)
     elif hasattr(fileobj, 'fileobj'):
         return _fileobj_is_binary(fileobj.fileobj)
     else:
+        print(type(fileobj))
         raise ValueError()
 
 
