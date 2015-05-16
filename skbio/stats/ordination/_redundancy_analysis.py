@@ -14,6 +14,7 @@ from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
 import pandas as pd
 
+
 def rda(Y, X, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
@@ -165,9 +166,12 @@ def rda(Y, X, scale_Y=False, scaling=1):
 
     eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
 
-    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, feature_ids)
+    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling,
+                   sample_ids, feature_ids)
 
-def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, feature_ids):
+
+def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids,
+            feature_ids):
     """Compute sample, feature and biplot scores for different scalings.
     """
     if scaling not in {1, 2}:
@@ -175,7 +179,7 @@ def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids, fe
     # According to the vegan-FAQ.pdf, the scaling factor for scores
     # is (notice that L&L 1998 says in p. 586 that such scaling
     # doesn't affect the interpretation of a biplot):
-    pc_ids = ['RDA%d'%(i+1) for i in range(len(eigenvalues))]
+    pc_ids = ['RDA%d' % (i+1) for i in range(len(eigenvalues))]
     eigvals = pd.Series(eigenvalues, index=pc_ids)
     const = np.sum(eigenvalues**2)**0.25
     if scaling == 1:

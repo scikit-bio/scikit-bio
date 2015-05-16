@@ -28,6 +28,7 @@ class TestGetDataPath(unittest.TestCase):
         data_path_2 = get_data_path(fn)
         self.assertEqual(data_path_2, data_path)
 
+
 class TestAssertOrdinationResultsEqual(unittest.TestCase):
     def test_assert_ordination_results_equal(self):
         minimal1 = OrdinationResults('foo', 'bar', pd.Series([1.0, 2.0]),

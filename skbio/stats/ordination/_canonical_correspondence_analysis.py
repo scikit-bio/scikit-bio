@@ -213,7 +213,7 @@ def cca(y, x, scaling=1):
 
     biplot_scores = corr(X_weighted, u)
 
-    pc_ids = ['CCA%d'%(i+1) for i in range(len(eigenvalues))]
+    pc_ids = ['CCA%d' % (i+1) for i in range(len(eigenvalues))]
     sample_ids = y.index
     feature_ids = y.columns
     eigvals = pd.Series(eigenvalues, index=pc_ids)
