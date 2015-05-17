@@ -461,7 +461,7 @@ class TestCCAResults(object):
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
+npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
 
 
 class TestPCoAPrivateMethods(object):

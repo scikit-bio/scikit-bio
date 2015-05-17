@@ -85,7 +85,7 @@ def ca(X, scaling=1):
 
     See Also
     --------
-    CCA
+    cca
 
     References
     ----------

@@ -71,7 +71,7 @@ def rda(Y, X, scale_Y=False, scaling=1):
 
     See Also
     --------
-    CCA
+    cca
 
     References
     ----------
