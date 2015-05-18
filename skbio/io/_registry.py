@@ -177,8 +177,7 @@ def register_reader(format, cls=None, binary=False):
         # We wrap the reader so that basic file handling can be managed
         # externally from the business logic.
         if cls is None:
-            def wrapped_reader(fp, mode='r', binary=binary,
-                               mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, mode='r', mutate_fh=False, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
@@ -218,8 +217,7 @@ def register_reader(format, cls=None, binary=False):
         else:
             # When an object is instantiated we don't need to worry about the
             # original position at every step, only at the end.
-            def wrapped_reader(fp, mode='r', binary=binary,
-                               mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, mode='r', mutate_fh=False, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
