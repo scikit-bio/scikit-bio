@@ -1411,12 +1411,6 @@ class Alignment(SequenceCollection):
     def sequence_logo(self, reverse=False):
         """Plots alignment as a sequence logo.
 
-        sdjdsfkjkjkjlsjkafj;f;kjs
-        asdfklasfkdjafksdj
-
-        asdlfsdfkjasdfkljskfjsd
-        sadfkjasdfljalkfdfsd
-
         Parameters
         ----------
         reverse: bool, optional
