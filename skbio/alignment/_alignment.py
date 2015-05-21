@@ -1408,8 +1408,14 @@ class Alignment(SequenceCollection):
         else:
             return len(self._data[0])
 
-    def weblogo(self, reverse=False):
-        """Plots alignment as a weblogo.
+    def sequence_logo(self, reverse=False):
+        """Plots alignment as a sequence logo.
+
+        sdjdsfkjkjkjlsjkafj;f;kjs
+        asdfklasfkdjafksdj
+
+        asdlfsdfkjasdfkljskfjsd
+        sadfkjasdfljalkfdfsd
 
         Parameters
         ----------
@@ -1420,15 +1426,15 @@ class Alignment(SequenceCollection):
         Returns
         -------
         matplotlib.figure.Figure
-            Figure containing the weblogo of the passed alignment.
+            Figure containing the sequence logo of the passed alignment.
 
         Examples
         --------
         ..plot::
 
             Define an alignment of DNA sequences with original ids (the names
-            of the ids will not change the weblogo, however Alignment requires
-            original ids):
+            of the ids will not change the sequence logo, however Alignment
+            requires original ids):
 
             >>> from skbio import Alignment, DNA
             >>> a1 = Alignment([DNA('ATT-GG-G', id='seq1'),
@@ -1436,9 +1442,9 @@ class Alignment(SequenceCollection):
             ...                 DNA('CTCTG--G', id='seq3'),
             ...                 DNA('GCT--T-G', id='seq4')])
 
-            Plot the alignment as a weblogo:
+            Plot the alignment as a sequence logo:
 
-            >>> fig = a1.weblogo()
+            >>> fig = a1.sequence_logo()
 
         """
         # catches an empty alignment so the user won't get an empty graph
@@ -1451,26 +1457,26 @@ class Alignment(SequenceCollection):
         # sets up graph with x and y ticks and labels
         fig, ax = plt.subplots()
         fig.set_size_inches([(len(pos_freq)*1.3), 6])
-        ax.set_xticks(np.array([i+0.35 for i in range(len(pos_freq))]))
+        ax.set_xticks(np.arange(0.35, len(pos_freq)))
         ax.set_xlim(right=len(pos_freq))
-        ax.set_xticklabels(range(1, self.sequence_length()+1, 1))
+        ax.set_xticklabels(range(1, self.sequence_length()+1))
         ax.set_ylim(top=1.0, bottom=0.0)
         ax.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax.set_yticklabels(['0.0', '', '', '', '1.0'])
 
         # runs through every sequence and graphs it
-        for i in range(len(pos_freq)):
+        for idx, pos in enumerate(pos_freq):
             # checks for accepted gap characters
             for gap in BiologicalSequence.gap_alphabet():
-                if gap in pos_freq[i]:
+                if gap in pos:
                     # instead of drawing an empty box for gaps, we delete gap
                     # positions
-                    del pos_freq[i][gap]
-            self._draw_position(ax, i, pos_freq[i], reverse)
+                    del pos[gap]
+            self._draw_sequence_logo_position(ax, idx, pos, reverse)
 
         return fig
 
-    def _draw_position(self, ax, position, freqs, reverse):
+    def _draw_sequence_logo_position(self, ax, position, freqs, reverse):
         sorted_freqs = sorted(freqs.items(), key=operator.itemgetter(1),
                               reverse=reverse)
         dx = 0.7
@@ -1481,9 +1487,9 @@ class Alignment(SequenceCollection):
                 add_letter(ax, letter, x, y, dx, dy)
             except KeyError as e:
                 raise AlignmentError("Character %r cannot currently be drawn "
-                                     "in ``Alignment.weblogo``. Support for "
-                                     "more characters will be added in the "
-                                     "future." % e.args[0])
+                                     "in ``Alignment.sequence_logo``. Support "
+                                     "for more characters will be added in"
+                                     "the future." % e.args[0])
             y += dy
 
     def _validate_lengths(self):

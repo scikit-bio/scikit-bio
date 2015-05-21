@@ -754,29 +754,30 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.sequence_length(), 5)
         self.assertEqual(self.empty.sequence_length(), 0)
 
-    def test_weblogo_error(self):
+    def test_sequence_logo_error(self):
         a1 = Alignment([DNA('ATTGK', id='seq1'),
                         DNA('ACGTT', id='seq2'),
                         DNA('CTCTG', id='seq3')])
         with self.assertRaises(AlignmentError):
-            a1.weblogo()
+            a1.sequence_logo()
         a2 = Alignment([])
         with self.assertRaises(AlignmentError):
-            a2.weblogo()
+            a2.sequence_logo()
 
-    def test_weblogo_reverse(self):
+    def test_sequence_logo_reverse(self):
         # Just for coverage, because there is no way to pull out the characters
         # to test if reverse is working.
         a1 = Alignment([DNA('ATCGTT', id='seq1')])
-        fig = Alignment.weblogo(a1, reverse=True)
-        self.check_weblogo_figure_sanity(fig, ['1', '2', '3', '4', '5', '6'])
+        fig = Alignment.sequence_logo(a1, reverse=True)
+        self.check_sequence_logo_figure_sanity(fig,
+                                               ['1', '2', '3', '4', '5', '6'])
 
-    def test_weblogo_mixed_gap_chars_and_single_seq(self):
+    def test_sequence_logo_mixed_gap_chars_and_single_seq(self):
         a1 = Alignment([DNA('A-T.C', id='seq1')])
-        fig = Alignment.weblogo(a1)
-        self.check_weblogo_figure_sanity(fig, ['1', '2', '3', '4', '5'])
+        fig = Alignment.sequence_logo(a1)
+        self.check_sequence_logo_figure_sanity(fig, ['1', '2', '3', '4', '5'])
 
-    def check_weblogo_figure_sanity(self, fig, xticks):
+    def check_sequence_logo_figure_sanity(self, fig, xticks):
         self.assertIsInstance(fig, mpl.figure.Figure)
         axes = fig.get_axes()
         ax = axes[0]
