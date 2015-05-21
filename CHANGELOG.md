@@ -5,7 +5,14 @@
 ### Features
 * Added `skbio.stats.composition` for analyzing data made up of proportions
 * Added new ``skbio.stats.evolve`` subpackage for evolutionary statistics. Currently contains a single function, ``hommola_cospeciation``, which implements a permutation-based test of correlation between two distance matrices.
+* Added support for ``skbio.io.util.open_file`` and ``skbio.io.util.open_files`` to pull files from HTTP and HTTPS URLs. This behavior propagates to the I/O registry.
+* FASTA/QUAL (``skbio.io.fasta``) and FASTQ (``skbio.io.fastq``) readers now allow blank or whitespace-only lines at the beginning of the file, between records, or at the end of the file. A blank or whitespace-only line in any other location will continue to raise an error [#781](https://github.com/biocore/scikit-bio/issues/781).
+* scikit-bio now ignores leading and trailing whitespace characters on each line while reading FASTA/QUAL and FASTQ files.
 * Added ``weblogo`` method to ``skbio.Alignment`` for plotting a weblogo (also known as a sequence logo). ([#805](https://github.com/biocore/scikit-bio/issues/805))
+
+### Performance enhancements
+* The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.
+* The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
