@@ -20,7 +20,7 @@ from scipy.stats import entropy
 
 from skbio.alignment._text import add_letter
 from skbio._base import SkbioObject
-from skbio.sequence import Sequence
+from skbio.sequence import Sequence, IUPACSequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -1376,7 +1376,7 @@ class Alignment(SequenceCollection):
         # runs through every sequence and graphs it
         for idx, pos in enumerate(pos_freq):
             # checks for accepted gap characters
-            for gap in BiologicalSequence.gap_alphabet():
+            for gap in IUPACSequence.gap_chars:
                 if gap in pos:
                     # instead of drawing an empty box for gaps, we delete gap
                     # positions
