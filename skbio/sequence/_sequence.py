@@ -20,6 +20,8 @@ from contextlib import contextmanager
 import numpy as np
 from scipy.spatial.distance import hamming
 
+import pandas as pd
+
 from skbio._base import SkbioObject
 from skbio.util._misc import reprnator
 
@@ -146,29 +148,8 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._description
 
     @property
-    def quality(self):
-        """Quality scores corresponding to biological sequence characters.
-
-        A 1D ``np.ndarray`` of nonnegative integers representing a Phred
-        quality score for each character in the biological sequence, or
-        ``None`` if quality scores are not present.
-
-        Notes
-        -----
-        This property is not writeable. A copy of the array is *not* returned.
-        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
-        ``False``).
-
-        Examples
-        --------
-        >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
-        >>> s.quality
-        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,   0,  42,  42])
-
-        """
-        return self._quality
+    def ranged_metadata(self):
+        return self._ranged_metadata
 
     @property
     def _string(self):
@@ -180,10 +161,12 @@ class Sequence(collections.Sequence, SkbioObject):
                 id = sequence.id
             if description == "":
                 description = sequence.description
-            if quality is None:
-                quality = sequence.quality
+            if quality is None and sequence._has_quality():
+                quality = sequence.ranged_metadata['quality']
 
             sequence = sequence._bytes
+
+        self._ranged_metadata = pd.DataFrame()
 
         self._set_id(id)
         self._set_description(description)
@@ -283,7 +266,7 @@ class Sequence(collections.Sequence, SkbioObject):
                     "Quality scores must be greater than or equal to "
                     "zero.")
 
-        self._quality = quality
+            self._ranged_metadata['quality'] = quality
 
     def __contains__(self, subsequence):
         """Determine if a subsequence is contained in the biological sequence.
@@ -476,7 +459,7 @@ class Sequence(collections.Sequence, SkbioObject):
                         list(self._slices_from_iter(self._bytes, indexable)))
                     if self._has_quality():
                         qual = np.concatenate(list(self._slices_from_iter(
-                            self.quality, indexable)))
+                            self.ranged_metadata['quality'], indexable)))
 
                     return self._to(sequence=seq, quality=qual)
         elif isinstance(indexable, string_types) or \
@@ -498,7 +481,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         seq = self._bytes[indexable]
         if self._has_quality():
-            qual = self.quality[indexable]
+            qual = self.ranged_metadata['quality'][indexable]
 
         return self._to(sequence=seq, quality=qual)
 
@@ -556,7 +539,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         if self._has_quality():
-            qual = self.quality
+            qual = self.ranged_metadata['quality']
         else:
             qual = []
 
@@ -655,7 +638,8 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.description:
             tokens.append("description=" + self._format_str(self.description))
         if self._has_quality():
-            tokens.append("quality=" + self._format_list(self.quality))
+            tokens.append("quality=" +
+                          self._format_list(self.ranged_metadata['quality']))
 
         return reprnator(start, tokens, end)
 
@@ -752,16 +736,26 @@ class Sequence(collections.Sequence, SkbioObject):
                 self.description != other.description):
             return False
 
-        # Use array_equal instead of (a == b).all() because of this issue:
-        #     http://stackoverflow.com/a/10582030
-        if 'quality' not in ignore and not np.array_equal(self.quality,
-                                                          other.quality):
+        if 'quality' not in ignore and not self._quality_equal(other):
             return False
 
         if 'sequence' not in ignore and self._string != other._string:
             return False
 
         return True
+
+    def _quality_equal(self, other):
+        if not self._has_quality() and not other._has_quality():
+            return True
+        elif self._has_quality() and not other._has_quality():
+            return False
+        elif not self._has_quality() and other._has_quality():
+            return False
+        else:
+            # Use array_equal instead of (a == b).all() because of this issue:
+            #     http://stackoverflow.com/a/10582030
+            return np.array_equal(self.ranged_metadata['quality'],
+                                  other.ranged_metadata['quality'])
 
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
@@ -1256,7 +1250,7 @@ class Sequence(collections.Sequence, SkbioObject):
         quality
 
         """
-        return self.quality is not None
+        return 'quality' in self.ranged_metadata
 
     def _to(self, **kwargs):
         """Return a copy of the current biological sequence.
@@ -1312,7 +1306,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         >>> str(new_seq)
         'AACCGGTT'
-        >>> new_seq.quality
+        >>> new_seq.ranged_metadata['quality'].values
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
 
         The ID and description have been updated:
@@ -1335,8 +1329,9 @@ class Sequence(collections.Sequence, SkbioObject):
             'sequence': self._bytes,
             'id': self.id,
             'description': self.description,
-            'quality': self.quality
         }
+        if self._has_quality():
+            defaults['quality'] = self.ranged_metadata['quality']
         defaults.update(kwargs)
         return self._constructor(**defaults)
 

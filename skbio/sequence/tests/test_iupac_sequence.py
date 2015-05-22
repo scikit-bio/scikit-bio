@@ -55,7 +55,7 @@ class TestIUPACSequence(TestCase):
         npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
         self.assertEqual(seq.id, "")
         self.assertEqual(seq.description, "")
-        self.assertIsNone(seq.quality)
+        self.assertNotIn('quality', seq.ranged_metadata)
 
     def test_init_nondefault_parameters(self):
         seq = ExampleIUPACSequence('.-ABCXYZ', id='foo', description='bar baz',
@@ -64,7 +64,8 @@ class TestIUPACSequence(TestCase):
         npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
         self.assertEqual(seq.id, 'foo')
         self.assertEqual(seq.description, 'bar baz')
-        npt.assert_equal(seq.quality, np.array(range(8), dtype='int'))
+        npt.assert_equal(seq.ranged_metadata['quality'], np.array(range(8),
+                         dtype='int'))
 
     def test_init_valid_empty_sequence(self):
         # just make sure we can instantiate an empty sequence regardless of

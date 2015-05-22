@@ -468,7 +468,7 @@ generator-based reader as we did above, providing both FASTA and QUAL files:
 
 >>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
 ...     seq # doctest: +NORMALIZE_WHITESPACE
-...     seq.quality # doctest: +NORMALIZE_WHITESPACE
+...     seq.ranged_metadata['quality'].values # doctest: +NORMALIZE_WHITESPACE
 Sequence('CGATGTC', length=7, id='seq1', description='db-acc ... 149855',
          quality=[40, 39, 39, 4, 50, 1, 100])
 array([ 40,  39,  39,   4,  50,   1, 100])
