@@ -51,7 +51,8 @@ class OrdinationResults(SkbioObject):
     long_method_name : str
         Ordination method name.
     eigvals : pd.Series
-        The resulting eigenvalues.  The index corresponds to the ordination axis labels
+        The resulting eigenvalues.  The index corresponds to the ordination
+        axis labels
     samples : pd.DataFrame
         The position of the samples in the ordination space, row-indexed by the
         sample id.
@@ -235,8 +236,8 @@ class OrdinationResults(SkbioObject):
 
            Run principal coordinate analysis (PCoA) on the distance matrix:
 
-           >>> from skbio.stats.ordination import PCoA
-           >>> pcoa_results = PCoA(dm).scores()
+           >>> from skbio.stats.ordination import pcoa
+           >>> pcoa_results = pcoa(dm)
 
            Plot the ordination results, where each sample is colored by body
            site (a categorical variable):

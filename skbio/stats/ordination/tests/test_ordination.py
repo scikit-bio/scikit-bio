@@ -8,13 +8,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-import warnings
-
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.spatial.distance import pdist
-import pandas as pd
 
 from skbio import OrdinationResults
 from skbio.stats.ordination import (
@@ -220,12 +217,13 @@ class TestRDAResults(object):
         sample_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
                       'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
         features_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                       'Species4', 'Species5']
+                        'Species4', 'Species5']
 
         self.Y = pd.DataFrame(np.loadtxt(get_data_path('example2_Y')),
-                              index=sample_ids,columns=features_ids)
+                              index=sample_ids, columns=features_ids)
         self.X = pd.DataFrame(np.loadtxt(get_data_path('example2_X')),
                               index=sample_ids)
+
     def test_scaling1(self):
 
         scores = rda(self.Y, self.X, scaling=1)
@@ -262,18 +260,15 @@ class TestRDAResults(object):
              [-0.806616713, -0.706673930, -0.934122703, 3.794874137e-01,
               -5.000170610e-02, -7.280846416e-16, -2.503875549e-04]])
 
-         # Load data as computed with vegan 2.0-8
+        # Load data as computed with vegan 2.0-8
         vegan_features = np.loadtxt(get_data_path(
             'example2_species_scaling1_from_vegan'))
-        #npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
 
         vegan_samples = np.loadtxt(get_data_path(
             'example2_site_scaling1_from_vegan'))
-        #npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
-
 
         exp = OrdinationResults(
-            'RDA','Redundancy Analysis',
+            'RDA', 'Redundancy Analysis',
             samples=pd.DataFrame(vegan_samples,
                                  index=['Site0', 'Site1', 'Site2',
                                         'Site3', 'Site4',
@@ -291,18 +286,19 @@ class TestRDAResults(object):
                                                    'Site5', 'Site6', 'Site7',
                                                    'Site8', 'Site9'],
                                             columns=pc_ids),
-            biplot_scores = pd.DataFrame(biplot_scores),
-            proportion_explained = pd.Series([0.44275783, 0.25614586,
-                                             0.15280354, 0.10497021,
-                                             0.02873375, 0.00987052,
-                                             0.00471828], index=pc_ids),
-            eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
-                                 1.680705, 0.577350, 0.275984], index=pc_ids)
+            biplot_scores=pd.DataFrame(biplot_scores),
+            proportion_explained=pd.Series([0.44275783, 0.25614586,
+                                            0.15280354, 0.10497021,
+                                            0.02873375, 0.00987052,
+                                            0.00471828], index=pc_ids),
+            eigvals=pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
+                               1.680705, 0.577350, 0.275984], index=pc_ids)
             )
 
         npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
         npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
-        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True,
+        assert_ordination_results_equal(scores, exp,
+                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
     def test_scaling2(self):
@@ -315,36 +311,36 @@ class TestRDAResults(object):
             'example2_site_scaling2_from_vegan'))
 
         sample_constraints = np.array(
-                [[-1.48131076e+00, 2.07063239e+00, 1.42061063e+00,
-                  -2.27234564e-01, -3.84130420e+00, -2.30487725e+00,
-                  2.60061683e-01],
-                 [-1.51771406e+00, 2.22973216e+00, 4.02841556e-01,
-                  1.01042110e-15, -6.73995569e-15, 4.60975451e+00,
-                  -1.79525017e-14],
-                 [-1.55411736e+00, 2.38883194e+00, -6.14927520e-01,
-                   2.27234564e-01, 3.84130420e+00, -2.30487725e+00,
-                  -2.60061683e-01],
-                 [-7.74350145e-01, -2.45801537e+00, 2.77528053e+00,
-                  -1.97005774e+00, 9.48287641e-01, 2.17403639e-14,
-                  2.89185344e-02],
-                 [2.76860070e+00, 9.30230162e-02, 2.00339886e+00,
-                  3.50264153e+00, 4.89477683e-01, 3.71341338e-14,
-                  2.11938274e+00],
-                 [-8.47156740e-01, -2.13981582e+00, 7.39742378e-01,
-                  -6.56685914e-01, 3.16095880e-01, -3.49673352e-15,
-                  9.63951148e-03],
-                 [2.69579411e+00, 4.11222563e-01, -3.21392915e-02,
-                  -2.11189360e-01, -2.98609965e-01, -3.67213519e-16,
-                  -4.59522227e+00],
-                 [-9.19963334e-01, -1.82161627e+00, -1.29579577e+00,
-                  6.56685914e-01, -3.16095880e-01, -2.26269871e-14,
-                  -9.63951148e-03],
-                 [2.62298752e+00, 7.29422110e-01, -2.06767744e+00,
-                  -3.29145217e+00, -1.90867717e-01, -2.67751173e-14,
-                  2.47583954e+00],
-                 [-9.92769928e-01, -1.50341672e+00, -3.33133393e+00,
-                  1.97005774e+00, -9.48287641e-01, -4.01966029e-14,
-                  -2.89185344e-02]])
+            [[-1.48131076e+00, 2.07063239e+00, 1.42061063e+00,
+              -2.27234564e-01, -3.84130420e+00, -2.30487725e+00,
+              2.60061683e-01],
+             [-1.51771406e+00, 2.22973216e+00, 4.02841556e-01,
+              1.01042110e-15, -6.73995569e-15, 4.60975451e+00,
+              -1.79525017e-14],
+             [-1.55411736e+00, 2.38883194e+00, -6.14927520e-01,
+              2.27234564e-01, 3.84130420e+00, -2.30487725e+00,
+              -2.60061683e-01],
+             [-7.74350145e-01, -2.45801537e+00, 2.77528053e+00,
+              -1.97005774e+00, 9.48287641e-01, 2.17403639e-14,
+              2.89185344e-02],
+             [2.76860070e+00, 9.30230162e-02, 2.00339886e+00,
+              3.50264153e+00, 4.89477683e-01, 3.71341338e-14,
+              2.11938274e+00],
+             [-8.47156740e-01, -2.13981582e+00, 7.39742378e-01,
+              -6.56685914e-01, 3.16095880e-01, -3.49673352e-15,
+              9.63951148e-03],
+             [2.69579411e+00, 4.11222563e-01, -3.21392915e-02,
+              -2.11189360e-01, -2.98609965e-01, -3.67213519e-16,
+              -4.59522227e+00],
+             [-9.19963334e-01, -1.82161627e+00, -1.29579577e+00,
+              6.56685914e-01, -3.16095880e-01, -2.26269871e-14,
+              -9.63951148e-03],
+             [2.62298752e+00, 7.29422110e-01, -2.06767744e+00,
+              -3.29145217e+00, -1.90867717e-01, -2.67751173e-14,
+              2.47583954e+00],
+             [-9.92769928e-01, -1.50341672e+00, -3.33133393e+00,
+              1.97005774e+00, -9.48287641e-01, -4.01966029e-14,
+              -2.89185344e-02]])
         biplot_scores = pd.DataFrame(
             [[4.22650019e-01, -5.59142586e-01, -7.13250678e-01,
               1.16573418e-16, 1.47104551e-16, 1.83186799e-16],
@@ -356,7 +352,7 @@ class TestRDAResults(object):
               2.77555756e-18, -2.22044605e-17, 0.00000000e+00]])
         pc_ids = ['RDA1', 'RDA2', 'RDA3', 'RDA4', 'RDA5', 'RDA6', 'RDA7']
         exp = OrdinationResults(
-            'RDA','Redundancy Analysis',
+            'RDA', 'Redundancy Analysis',
             samples=pd.DataFrame(vegan_samples,
                                  index=['Site0', 'Site1', 'Site2',
                                         'Site3', 'Site4',
@@ -374,20 +370,23 @@ class TestRDAResults(object):
                                                    'Site5', 'Site6', 'Site7',
                                                    'Site8', 'Site9'],
                                             columns=pc_ids),
-            biplot_scores = pd.DataFrame(biplot_scores),
-            proportion_explained = pd.Series([0.44275783, 0.25614586,
-                                             0.15280354, 0.10497021,
-                                             0.02873375, 0.00987052,
-                                             0.00471828], index=pc_ids),
-            eigvals = pd.Series([25.89795409, 14.98257798, 8.93784077, 6.13995623,
-                                 1.68070536, 0.57735027, 0.27598362],
-                                 index=pc_ids)
+            biplot_scores=pd.DataFrame(biplot_scores),
+            proportion_explained=pd.Series([0.44275783, 0.25614586,
+                                            0.15280354, 0.10497021,
+                                            0.02873375, 0.00987052,
+                                            0.00471828], index=pc_ids),
+            eigvals=pd.Series([25.89795409, 14.98257798, 8.93784077,
+                               6.13995623,
+                               1.68070536, 0.57735027, 0.27598362],
+                              index=pc_ids)
 
             )
         npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
         npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
-        assert_ordination_results_equal(scores, exp, ignore_biplot_scores_labels=True,
+        assert_ordination_results_equal(scores, exp,
+                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
+
 
 class TestCCAErrors(object):
     def setup(self):

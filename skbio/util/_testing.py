@@ -17,8 +17,7 @@ from nose.tools import nottest
 
 import numpy as np
 import numpy.testing as npt
-from pandas.util.testing import (assert_frame_equal, assert_series_equal,
-                                 assert_index_equal)
+from pandas.util.testing import assert_index_equal
 
 
 @nottest
@@ -158,7 +157,6 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
     _assert_frame_equal(left.sample_constraints, right.sample_constraints,
                         ignore_columns=ignore_axis_labels,
                         decimal=decimal)
-
 
     _assert_series_equal(left.eigvals, right.eigvals, ignore_axis_labels,
                          decimal=decimal)

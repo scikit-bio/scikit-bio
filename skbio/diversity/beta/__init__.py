@@ -90,7 +90,7 @@ Create a table containing 7 OTUs and 6 samples:
    >>> bc_pc = pcoa(bc_dm)
    >>> j_pc = pcoa(j_dm)
    >>> from skbio.stats.spatial import procrustes
-   >>> print(procrustes(bc_pc.site, j_pc.site)[2])
+   >>> print(procrustes(bc_pc.samples.values, j_pc.samples.values)[2])
    0.466134984787
 
    All of this only gets interesting in the context of sample metadata, so

@@ -11,6 +11,7 @@
 
 ### Performance enhancements
 * The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.
+* The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)

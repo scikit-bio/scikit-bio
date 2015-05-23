@@ -536,7 +536,7 @@ References
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
-from future.standard_library import hooks
+from six.moves import zip_longest
 
 import textwrap
 from functools import partial
@@ -551,9 +551,6 @@ from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
-
-with hooks():
-    from itertools import zip_longest
 
 
 @register_sniffer('fasta')
