@@ -92,8 +92,10 @@ def register_sniffer(format, binary=False):
             raise DuplicateRegistrationError(
                 msg="'%s' already has a sniffer." % format)
 
-        def wrapped_sniffer(fp, mode='r', binary=binary, **kwargs):
-            with reopen_file(fp, binary=binary) as fh:
+        def wrapped_sniffer(fp, mode='r', binary=binary,
+                            encoding=None, newline=None, **kwargs):
+            with reopen_file(fp, binary=binary,
+                             encoding=encoding, newline=newline) as fh:
                 try:
                     return sniffer(fh, **kwargs)
                 except Exception:
@@ -177,7 +179,7 @@ def register_reader(format, cls=None, binary=False):
         # We wrap the reader so that basic file handling can be managed
         # externally from the business logic.
         if cls is None:
-            def wrapped_reader(fp, mode='r', mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, encoding=None, newline=None, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
@@ -188,9 +190,8 @@ def register_reader(format, cls=None, binary=False):
                     else:
                         kwargs[file_arg] = None
 
-                # Do we want binary argument to come from the user
-                # (wrapped_reader) or from the reader (register_reader)?
-                with open_files(files, mode=mode, binary=binary) as fhs:
+                with open_files(files, mode='r', binary=binary,
+                                encoding=encoding, newline=newline) as fhs:
                     try:
                         for key, fh in zip(file_keys, fhs[1:]):
                             kwargs[key] = fh
@@ -217,7 +218,7 @@ def register_reader(format, cls=None, binary=False):
         else:
             # When an object is instantiated we don't need to worry about the
             # original position at every step, only at the end.
-            def wrapped_reader(fp, mode='r', mutate_fh=False, **kwargs):
+            def wrapped_reader(fp, encoding=None, newline=None, **kwargs):
                 file_keys = []
                 files = [fp]
                 for file_arg in file_args:
@@ -228,7 +229,8 @@ def register_reader(format, cls=None, binary=False):
                     else:
                         kwargs[file_arg] = None
 
-                with open_files(files, mode=mode, binary=binary) as fhs:
+                with open_files(files, mode='r', binary=binary,
+                                encoding=encoding, newline=newline) as fhs:
                     for key, fh in zip(file_keys, fhs[1:]):
                         kwargs[key] = fh
                     return reader(fhs[0], **kwargs)
@@ -308,8 +310,9 @@ def register_writer(format, cls=None, binary=False):
 
         # We wrap the writer so that basic file handling can be managed
         # externally from the business logic.
-        def wrapped_writer(obj, fp, mode='w', binary=binary,
-                           gzip=False, compresslevel=9, **kwargs):
+        def wrapped_writer(obj, fp, mode='w',
+                           gzip=False, compresslevel=9,
+                           encoding=None, newline=None, **kwargs):
             file_keys = []
             files = [fp]
             for file_arg in file_args:
@@ -321,7 +324,8 @@ def register_writer(format, cls=None, binary=False):
                     kwargs[file_arg] = None
 
             with open_files(files, mode=mode, binary=binary,
-                            gzip=gzip, compresslevel=compresslevel) as fhs:
+                            gzip=gzip, compresslevel=compresslevel,
+                            encoding=encoding, newline=newline) as fhs:
                 for key, fh in zip(file_keys, fhs[1:]):
                     kwargs[key] = fh
                 writer(obj, fhs[0], **kwargs)
@@ -471,7 +475,7 @@ def _rw_getter(name, fmt, cls):
     return None
 
 
-def sniff(fp, cls=None, mode='r'):
+def sniff(fp, cls=None, encoding=None, newline=None):
     """Attempt to guess the format of a file and return format str and kwargs.
 
     Parameters
@@ -510,7 +514,8 @@ def sniff(fp, cls=None, mode='r'):
                 fmt not in _formats or cls not in _formats[fmt]):
             continue
         format_sniffer = _sniffers[fmt]
-        is_format, fmt_kwargs = format_sniffer(fp, mode=mode)
+        is_format, fmt_kwargs = format_sniffer(
+            fp, encoding=encoding, newline=newline)
         if is_format:
             possibles.append(fmt)
             kwargs = fmt_kwargs
@@ -524,7 +529,8 @@ def sniff(fp, cls=None, mode='r'):
     return possibles[0], kwargs
 
 
-def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
+def read(fp, format=None, into=None, verify=True,
+         encoding=None, newline=None, **kwargs):
     """Read a supported skbio file format into an instance or a generator.
 
     This function is able to reference and execute all *registered* read
@@ -588,7 +594,7 @@ def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
         raise ValueError("`format` and `into` cannot both be None.")
 
     if format is None:
-        format, fmt_kwargs = sniff(fp, cls=into, mode=mode)
+        format, fmt_kwargs = sniff(fp, cls=into)
         kwargs = _override_kwargs(kwargs, fmt_kwargs, verify)
     elif verify:
         sniffer = get_sniffer(format)
@@ -607,10 +613,12 @@ def read(fp, format=None, into=None, verify=True, mode='r', **kwargs):
                                       "found." % (format, into.__name__
                                                   if into is not None
                                                   else 'generator'))
-    return reader(fp, mode=mode, **kwargs)
+
+    return reader(fp, encoding=encoding, newline=newline, **kwargs)
 
 
-def write(obj, format, into, mode='w', gzip=False, compresslevel=9, **kwargs):
+def write(obj, format, into, mode='w', gzip=False, compresslevel=9,
+          encoding=None, newline=None, **kwargs):
     """Write a supported skbio file format from an instance or a generator.
 
     This function is able to reference and execute all *registered* write
@@ -654,8 +662,9 @@ def write(obj, format, into, mode='w', gzip=False, compresslevel=9, **kwargs):
                                                   'generator' if cls is None
                                                   else str(cls)))
 
-    writer(obj, into, mode=mode, gzip=gzip,
-           compresslevel=compresslevel, **kwargs)
+    writer(obj, into, mode=mode,
+           gzip=gzip, compresslevel=compresslevel,
+           encoding=encoding, newline=newline, **kwargs)
 
 
 # This is meant to be a handy indicator to the user that they have done

@@ -750,30 +750,6 @@ class TestRead(RegistryTest):
                 self.module.read(StringIO(u'notempty'), into=TestClass,
                                  arg3=[1], override=100)
 
-    def test_that_mode_is_used(self):
-        fp = self.fp1
-        with open(fp, 'w') as fh:
-            fh.write('1\n2\n3\n4')
-
-        @self.module.register_sniffer('format')
-        def sniffer(fh):
-            return '1' in fh.readline(), {}
-
-        @self.module.register_reader('format', TestClass, binary=False)
-        def reader(fh):
-            self.assertIsInstance(fh, TextIOWrapper)
-            self.assertEqual(self.expected_mode, fh.buffer.mode)
-            return TestClass([int(x) for x in fh.read().split('\n')])
-
-        self.expected_mode = 'rb'
-        instance = self.module.read(fp, format='format', into=TestClass)
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
-
-        self.expected_mode = 'rb+'
-        instance = self.module.read(fp, format='format',
-                                    into=TestClass, mode='r+')
-        self.assertEqual(TestClass([1, 2, 3, 4]), instance)
-
     def test_file_sentinel_many(self):
         extra = get_data_path('real_file')
         extra_2 = get_data_path('real_file_2')

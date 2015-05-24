@@ -67,12 +67,12 @@ def _is_gzip(filepath_or):
 
 
 def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
-                    compresslevel=9, encoding=None, **kwargs):
+                    compresslevel=9, encoding=None, newline=None, **kwargs):
     """Open file if `filepath_or` looks like a string/unicode/bytes, else
     pass through.
     """
 
-    assert mode in {'r', 'w', 'r+', 'a'}
+    assert mode in {'r', 'w', 'a'}
 
     if _is_string_or_bytes(filepath_or):
         if requests.compat.urlparse(filepath_or).scheme in {'http', 'https'}:
@@ -91,7 +91,7 @@ def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
             # Always use binary mode intially (extra 'b' is needed
             # for windows, not necessary on Unix.). Note that text
             # mode is supported using TextIOWrapper (below).
-            fh = open(filepath_or, mode + 'b', **kwargs)
+            fh = io.open(filepath_or, mode + 'b', **kwargs)
 
         own_fh = True
     else:
@@ -104,14 +104,14 @@ def _get_filehandle(filepath_or, mode='r', binary=True, gzip=None,
             fh = GzipFile(fileobj=fh, compresslevel=compresslevel)
 
         if not binary:
-            fh = io.TextIOWrapper(fh, encoding=encoding)
+            fh = io.TextIOWrapper(fh, encoding=encoding, newline=newline)
 
     return fh, own_fh
 
 
 @contextmanager
 def open_file(filepath_or, mode='r', binary=True, gzip=None,
-              compresslevel=9, encoding=None, **kwargs):
+              compresslevel=9, encoding=None, newline=None, **kwargs):
     """Context manager, like ``open``, but lets file handles and file like
     objects pass untouched.
 
@@ -165,7 +165,8 @@ def open_file(filepath_or, mode='r', binary=True, gzip=None,
     """
     fh, own_fh = _get_filehandle(
         filepath_or, mode=mode, binary=binary, gzip=gzip,
-        compresslevel=compresslevel, encoding=encoding, **kwargs)
+        compresslevel=compresslevel, encoding=encoding,
+        newline=newline, **kwargs)
     try:
         yield fh
     finally:
@@ -175,10 +176,11 @@ def open_file(filepath_or, mode='r', binary=True, gzip=None,
 
 @contextmanager
 def open_files(fp_list, mode='r', binary=True, gzip=None,
-               compresslevel=9, encoding=None, **kwargs):
+               compresslevel=9, encoding=None, newline=None, **kwargs):
     fhs, owns = zip(*[_get_filehandle(
             f, mode=mode, binary=binary, gzip=gzip,
-            compresslevel=compresslevel, encoding=encoding, **kwargs)
+            compresslevel=compresslevel, encoding=encoding,
+            newline=newline, **kwargs)
         for f in fp_list])
     try:
         yield fhs
