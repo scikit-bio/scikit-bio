@@ -414,7 +414,7 @@ class TestCCAErrors(object):
             cca(Y, X, 3)
 
 
-class TestCCAResults(object):
+class TestCCAResults1(object):
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998
         (p. 590). Loaded results as computed with vegan 2.0-8 and
@@ -433,6 +433,37 @@ class TestCCAResults(object):
             index=['Sample0', 'Sample1', 'Sample2', 'Sample3', 'Sample4',
                    'Sample5', 'Sample6', 'Sample7', 'Sample8', 'Sample9']
             ).ix[:, :-1]
+
+        self.varespec = pd.read_csv(get_data_path('varespec'),
+                                    sep='\t', index_col=0)
+        self.varechem = pd.read_csv(get_data_path('varechem'),
+                                    sep='\t', index_col=0)
+
+    def test_vegan_scaling1(self):
+        exp_eigvals = pd.read_csv(get_data_path(
+            'vegan/cca_eigvals.txt'),
+            sep=' ', index_col=0, header=None).ix[:,1]
+        exp_samples = pd.read_csv(get_data_path(
+            'vegan/cca_samples.txt'),
+            sep='\t', index_col=0)
+        exp_features = pd.read_csv(get_data_path(
+            'vegan/cca_features.txt'),
+            sep='\t', index_col=0)
+        exp_biplot = pd.read_csv(get_data_path(
+            'vegan/cca_biplot.txt'),
+            sep='\t', index_col=0)
+
+        res = cca(self.varespec, self.varechem)
+
+        # Since vegan discards collinear axes
+        # we will only compare the axes that vegan didn't
+        # discard
+        npt.assert_almost_equal(exp_eigvals.values,
+                                res.eigvals.values[:14])
+
+        npt.assert_almost_equal(exp_sample_constraints.values,
+                                res.sample_constraints.values[:,:14])
+
 
     def test_scaling1_species(self):
         scores = cca(self.Y, self.X, 1)
@@ -460,7 +491,7 @@ class TestCCAResults(object):
 
         vegan_site = np.loadtxt(get_data_path(
             'example3_site_scaling2_from_vegan'))
-npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
+        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
 
 
 class TestPCoAPrivateMethods(object):
