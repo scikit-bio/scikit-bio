@@ -57,7 +57,7 @@ def _is_gzip(filepath_or):
         filepath_or = filepath_or.name
 
     if _is_string_or_bytes(filepath_or):
-        with open(filepath_or, 'rb') as file_:
+        with io.open(filepath_or, 'rb') as file_:
             is_gzip = file_.read(2) == magic_number
     else:
         with reopen_file(filepath_or, binary=True, gzip=False) as file_:
