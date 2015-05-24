@@ -191,11 +191,15 @@ def open_files(fp_list, mode='r', binary=True, gzip=None,
 
 
 @contextmanager
-def reopen_file(filepath_or, *args, **kwargs):
+def reopen_file(filepath_or, binary=None, gzip=None,
+                encoding=None, newline=None, **kwargs):
     if _is_string_or_bytes(filepath_or):
-        cfh, _ = _get_filehandle(filepath_or, *args, **kwargs)
+        binary = True if binary is None else binary
+        cfh, _ = _get_filehandle(filepath_or, binary=binary, gzip=gzip,
+                                 encoding=encoding, newline=newline, **kwargs)
     else:
-        cfh = _fileobj_reopen(filepath_or)
+        cfh = _fileobj_reopen(filepath_or, binary=binary, gzip=gzip,
+                              encoding=encoding, newline=newline, **kwargs)
 
     try:
         yield cfh
@@ -203,29 +207,42 @@ def reopen_file(filepath_or, *args, **kwargs):
         cfh.close()
 
 
-def _fileobj_reopen(fileobj):
-    # The reason we do a copy is because we need the sniffer to not
-    # mutate the orginal file while guessing the format. The
-    # naive solution would be to seek to 0 at the end, but that
-    # would break an explicit offset provided by the user. Instead
-    # we create a shallow copy which works out of the box for
-    # file-like object, but does not work for real files. Instead
-    # the name attribute is reused in open for a new filehandle.
-    # Using seek and tell is not viable because in real files tell
-    # reflects the position of the read-ahead buffer and not the
-    # true offset of the iterator.
-
+def _fileobj_reopen(fileobj, binary=None, gzip=None,
+                    encoding=None, newline=None, **kwargs):
     filename = _fileobj_filename(fileobj)
 
     if filename is None:
+        # If we can't find a name to reopen, we simply copy the fileobj
+        # for now and modify the copy. (Does this always work?)
+        #
+        # The reason we do a copy is because we need the sniffer to not
+        # mutate the orginal file while guessing the format. The
+        # naive solution would be to seek to 0 at the end, but that
+        # would break an explicit offset provided by the user. Instead
+        # we create a shallow copy which works out of the box for
+        # file-like object, but does not work for real files. Instead
+        # the name attribute is reused in open for a new filehandle.
+        # Using seek and tell is not viable because in real files tell
+        # reflects the position of the read-ahead buffer and not the
+        # true offset of the iterator.
+
         cfh = copy.copy(fileobj)
         cfh.seek(0)
         return cfh
     else:
-        gzip = _fileobj_is_gzip(fileobj)
-        binary = _fileobj_is_binary(fileobj)
+        # If gzip or binary are None we copy the gzip and
+        # binary 'status' from the fileobj. Otherwise we honor
+        # the arguments specified by the caller.
+
+        if gzip is None:
+            gzip = _fileobj_is_gzip(fileobj)
+
+        if binary is None:
+            binary = _fileobj_is_binary(fileobj)
+
         cfh, _ = _get_filehandle(
-            filename, mode='r', gzip=gzip, binary=binary)
+            filename, mode='r', gzip=gzip, binary=binary,
+            encoding=encoding, newline=newline, **kwargs)
         return cfh
 
 

@@ -92,8 +92,7 @@ def register_sniffer(format, binary=False):
             raise DuplicateRegistrationError(
                 msg="'%s' already has a sniffer." % format)
 
-        def wrapped_sniffer(fp, mode='r', binary=binary,
-                            encoding=None, newline=None, **kwargs):
+        def wrapped_sniffer(fp, encoding=None, newline=None, **kwargs):
             with reopen_file(fp, binary=binary,
                              encoding=encoding, newline=newline) as fh:
                 try:
