@@ -100,7 +100,7 @@ from collections import defaultdict
 from numbers import Integral
 
 import numpy as np
-from natsort import natsorted
+from natsort import realsorted
 from scipy.stats import f_oneway
 
 
@@ -530,7 +530,7 @@ class GradientANOVA(object):
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
-                self._groups[cat][g] = natsorted(df.index, key=sort_val)
+                self._groups[cat][g] = realsorted(df.index, key=sort_val)
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute the trajectory results for `group_name` containing the
