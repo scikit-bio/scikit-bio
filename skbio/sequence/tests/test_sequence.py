@@ -17,6 +17,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio import Sequence
 
@@ -1407,7 +1408,7 @@ class TestSequence(TestCase):
         pat = re.compile('(FOO)')
         self.assertEqual(list(seq.slices_from_regex(pat)), [])
 
-    def test_slice_from_regex_ignore_no_difference(self):
+    def test_slices_from_regex_ignore_no_difference(self):
         seq = Sequence('..ABCDEFG..')
         pat = "([A-Z]+)"
         exp = [slice(2, 9)]
@@ -1418,13 +1419,195 @@ class TestSequence(TestCase):
                                  dtype=bool))
         self.assertEqual(list(obs), exp)
 
-    def test_slice_from_regex_ignore(self):
+    def test_slices_from_regex_ignore(self):
         obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
             "(A+)", ignore=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
                                      1, 0, 0, 1, 1, 0, 1], dtype=bool))
 
         self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
                                      slice(19, 20)])
+
+    def test_slices_from_regex_ignore_index_array(self):
+        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
+            "(A+)", ignore=np.array([1, 2, 4, 5, 11, 13, 14, 17, 18, 20]))
+
+        self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
+                                     slice(19, 20)])
+
+    def test_iter_regions_index_array(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_regions(c([0, 1, 2, 3, 8, 9, 10, 11]))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_regions_boolean_vector(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_regions(c(([True] * 4 + [False] * 4) * 2))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_regions_iterable_slices(self):
+        def spaced_out():
+            yield slice(0, 4)
+            yield slice(8, 12)
+
+        def contiguous():
+            yield slice(0, 4)
+            yield slice(4, 8)
+            yield slice(12, 16)
+
+        s = Sequence("0123456789abcdef")
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = [Sequence("0123"), Sequence("89ab")]
+            obs = s.iter_regions(c(spaced_out()))
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("01234567"), Sequence("cdef")]
+            obs = s.iter_regions(c(contiguous()))
+            self.assertEqual(list(obs), exp)
+
+    def test_iter_regions_with_max_length(self):
+        s = Sequence("0123456789abcdef")
+        for c in list, tuple, np.array, pd.Series:
+            exp = [Sequence("234"), Sequence("678"), Sequence("abc")]
+            obs = s.iter_regions(c([True, False, True, True] * 4),
+                                 min_length=3)
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("0"), Sequence("234"), Sequence("678"),
+                   Sequence("abc"), Sequence("ef")]
+            obs1 = list(s.iter_regions(c([True, False, True, True] * 4),
+                                       min_length=1))
+
+            obs2 = list(s.iter_regions(c([True, False, True, True] * 4)))
+            self.assertEqual(obs1, obs2)
+            self.assertEqual(obs1, exp)
+
+    def test_munge_to_index_array_valid_index_array(self):
+        s = Sequence('123456')
+
+        for c in list, tuple, np.array, pd.Series:
+            exp = np.array([1, 2, 3], dtype=int)
+            obs = s._munge_to_index_array(c([1, 2, 3]))
+            npt.assert_equal(obs, exp)
+
+            exp = np.array([1, 3, 5], dtype=int)
+            obs = s._munge_to_index_array(c([1, 3, 5]))
+            npt.assert_equal(obs, exp)
+
+    def test_munge_to_index_array_invalid_index_array(self):
+        s = Sequence("12345678")
+        for c in list, tuple, np.array, pd.Series:
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([3, 2, 1]))
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([5, 6, 7, 2]))
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([0, 1, 2, 1]))
+
+    def test_munge_to_index_array_valid_bool_array(self):
+        s = Sequence('123456')
+
+        for c in list, tuple, np.array, pd.Series:
+            exp = np.array([2, 3, 5], dtype=int)
+            obs = s._munge_to_index_array(
+                c([False, False, True, True, False, True]))
+            npt.assert_equal(obs, exp)
+
+            exp = np.array([], dtype=int)
+            obs = s._munge_to_index_array(
+                c([False] * 6))
+            npt.assert_equal(obs, exp)
+
+            exp = np.arange(6)
+            obs = s._munge_to_index_array(
+                c([True] * 6))
+            npt.assert_equal(obs, exp)
+
+    def test_munge_to_index_array_invalid_bool_array(self):
+        s = Sequence('123456')
+
+        for c in (list, tuple, lambda x: np.array(x, dtype=bool),
+                  lambda x: pd.Series(x, dtype=bool)):
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([]))
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([True]))
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(c([True] * 10))
+
+    def test_munge_to_index_array_valid_iterable(self):
+        s = Sequence('')
+
+        def slices_only(): return (slice(i, i+1) for i in range(0, 10, 2))
+
+        def mixed():
+            return (slice(i, i+1) if i % 2 == 0 else i for i in range(10))
+
+        def unthinkable():
+            for i in range(10):
+                if i % 3 == 0:
+                    yield slice(i, i+1)
+                elif i % 3 == 1:
+                    yield i
+                else:
+                    yield np.array([i], dtype=int)
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = np.arange(10, dtype=int)
+            obs = s._munge_to_index_array(c(mixed()))
+            npt.assert_equal(obs, exp)
+
+            exp = np.arange(10, dtype=int)
+            obs = s._munge_to_index_array(c(unthinkable()))
+            npt.assert_equal(obs, exp)
+
+            exp = np.arange(10, step=2, dtype=int)
+            obs = s._munge_to_index_array(c(slices_only()))
+            npt.assert_equal(obs, exp)
+
+    def test_munge_to_index_array_invalid_iterable(self):
+        s = Sequence('')
+
+        def bad1():
+            yield "r"
+            yield [1, 2, 3]
+
+        def bad2():
+            yield 1
+            yield 'str'
+
+        def bad3():
+            yield False
+            yield True
+            yield 2
+
+        def bad4():
+            yield np.array([False, True])
+            yield slice(2, 5)
+
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(bad1())
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(bad2())
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(bad3())
+
+            with self.assertRaises(ValueError):
+                s._munge_to_index_array(bad4())
 
 
 if __name__ == "__main__":
