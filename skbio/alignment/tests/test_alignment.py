@@ -726,14 +726,6 @@ class AlignmentTests(TestCase):
         with self.assertRaises(AlignmentError):
             a2.sequence_logo()
 
-    def test_sequence_logo_reverse(self):
-        # Just for coverage, because there is no way to pull out the characters
-        # to test if reverse is working.
-        a1 = Alignment([DNA('ATCGTT', id='seq1')])
-        fig = Alignment.sequence_logo(a1, reverse=True)
-        self.check_sequence_logo_figure_sanity(fig,
-                                               ['1', '2', '3', '4', '5', '6'])
-
     def test_sequence_logo_mixed_gap_chars_and_single_seq(self):
         a1 = Alignment([DNA('A-T.C', id='seq1')])
         fig = Alignment.sequence_logo(a1)

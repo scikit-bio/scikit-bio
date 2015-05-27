@@ -1323,19 +1323,27 @@ class Alignment(SequenceCollection):
         else:
             return len(self._data[0])
 
-    def sequence_logo(self, reverse=False):
+    def sequence_logo(self):
         """Plots alignment as a sequence logo.
 
-        Parameters
-        ----------
-        reverse: bool, optional
-            If ``True``, letters on plot are ordered with the largest letters
-            on the bottom, and the smallest on the top.
+        A sequence logo is a visual represenation of amino acid frequency,
+        sometimes used to find characteristics such as protein-binding sites in
+        DNA or functional units in proteins.
+
+        The logo is created from a collection of aligned sequences and
+        is used to show the consensus sequence and diversity of the sequences.
+
+        More information on sequence logos can be found in [1]_.
 
         Returns
         -------
         matplotlib.figure.Figure
             Figure containing the sequence logo of the passed alignment.
+
+        References
+        ----------
+        .. [1] Schneider TD, Stephens RM. 1990. Sequence Logos: A New Way to
+               Display Consensus Sequences. Nucleic Acids Res. 18:6097-6100
 
         Examples
         --------
@@ -1371,7 +1379,11 @@ class Alignment(SequenceCollection):
         ax.set_xticklabels(range(1, self.sequence_length()+1))
         ax.set_ylim(top=1.0, bottom=0.0)
         ax.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
-        ax.set_yticklabels(['0.0', '', '', '', '1.0'])
+        ax.set_yticklabels(['0.0', '', '0.5', '', '1.0'])
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
 
         # runs through every sequence and graphs it
         for idx, pos in enumerate(pos_freq):
@@ -1381,25 +1393,24 @@ class Alignment(SequenceCollection):
                     # instead of drawing an empty box for gaps, we delete gap
                     # positions
                     del pos[gap]
-            self._draw_sequence_logo_position(ax, idx, pos, reverse)
+            self._draw_sequence_logo_position(ax, idx, pos)
 
         return fig
 
-    def _draw_sequence_logo_position(self, ax, position, freqs, reverse):
-        sorted_freqs = sorted(freqs.items(), key=operator.itemgetter(1),
-                              reverse=reverse)
+    def _draw_sequence_logo_position(self, ax, position, freqs):
+        sorted_freqs = sorted(freqs.items(), key=operator.itemgetter(1))
         dx = 0.7
         x = position
         y = 0
         for letter, dy in sorted_freqs:
             try:
                 add_letter(ax, letter, x, y, dx, dy)
+                y += dy
             except KeyError as e:
                 raise AlignmentError("Character %r cannot currently be drawn "
                                      "in ``Alignment.sequence_logo``. Support "
                                      "for more characters will be added in"
                                      "the future." % e.args[0])
-            y += dy
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
