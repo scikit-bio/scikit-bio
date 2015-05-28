@@ -1406,7 +1406,7 @@ class Sequence(collections.Sequence, SkbioObject):
                         hasattr(s, 'dtype') and s.dtype != np.bool):
                     int_mode = True
                 else:
-                    raise ValueError("Invalid type in iterable: %s"  %
+                    raise ValueError("Invalid type in iterable: %s" %
                                      s.__class__.__name__)
             if bool_mode and int_mode:
                 raise ValueError("Cannot provide iterable of both bool and"

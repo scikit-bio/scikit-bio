@@ -1547,7 +1547,8 @@ class TestSequence(TestCase):
     def test_munge_to_index_array_valid_iterable(self):
         s = Sequence('')
 
-        def slices_only(): return (slice(i, i+1) for i in range(0, 10, 2))
+        def slices_only():
+            return (slice(i, i+1) for i in range(0, 10, 2))
 
         def mixed():
             return (slice(i, i+1) if i % 2 == 0 else i for i in range(10))
