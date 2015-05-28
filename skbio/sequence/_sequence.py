@@ -1255,6 +1255,7 @@ class Sequence(collections.Sequence, SkbioObject):
         invert : bool, optional
             Whether to invert `included` such that it describes what should be
             skipped instead of included. Default is False.
+
         Returns
         -------
         generator
