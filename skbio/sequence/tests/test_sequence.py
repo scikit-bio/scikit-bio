@@ -49,7 +49,7 @@ class TestSequence(TestCase):
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
 
-        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual(seq.id, "")
         self.assertEqual(seq.description, "")
         self.assertIsNone(seq.quality)
@@ -58,7 +58,7 @@ class TestSequence(TestCase):
         seq = Sequence('.ABC123xyz-', id='foo', description='bar baz',
                        quality=range(11))
 
-        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual(seq.id, 'foo')
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
@@ -72,10 +72,10 @@ class TestSequence(TestCase):
                   Sequence('')):  # another Sequence object
             seq = Sequence(s)
 
-            self.assertIsInstance(seq.sequence, np.ndarray)
-            self.assertEqual(seq.sequence.dtype, '|S1')
-            self.assertEqual(seq.sequence.shape, (0,))
-            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (0,))
+            npt.assert_equal(seq.values, np.array('', dtype='c'))
 
     def test_init_single_character_sequence(self):
         for s in (b'A',
@@ -85,10 +85,10 @@ class TestSequence(TestCase):
                   Sequence('A')):
             seq = Sequence(s)
 
-            self.assertIsInstance(seq.sequence, np.ndarray)
-            self.assertEqual(seq.sequence.dtype, '|S1')
-            self.assertEqual(seq.sequence.shape, (1,))
-            npt.assert_equal(seq.sequence, np.array('A', dtype='c'))
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (1,))
+            npt.assert_equal(seq.values, np.array('A', dtype='c'))
 
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
@@ -98,10 +98,10 @@ class TestSequence(TestCase):
                   Sequence('.ABC\t123  xyz-')):
             seq = Sequence(s)
 
-            self.assertIsInstance(seq.sequence, np.ndarray)
-            self.assertEqual(seq.sequence.dtype, '|S1')
-            self.assertEqual(seq.sequence.shape, (14,))
-            npt.assert_equal(seq.sequence,
+            self.assertIsInstance(seq.values, np.ndarray)
+            self.assertEqual(seq.values.dtype, '|S1')
+            self.assertEqual(seq.values.shape, (14,))
+            npt.assert_equal(seq.values,
                              np.array('.ABC\t123  xyz-', dtype='c'))
 
     def test_init_from_sequence_object(self):
@@ -339,17 +339,17 @@ class TestSequence(TestCase):
         seq = Sequence('ACGT')
 
         # should get back a numpy.ndarray of '|S1' dtype
-        self.assertIsInstance(seq.sequence, np.ndarray)
-        self.assertEqual(seq.sequence.dtype, '|S1')
-        npt.assert_equal(seq.sequence, np.array('ACGT', dtype='c'))
+        self.assertIsInstance(seq.values, np.ndarray)
+        self.assertEqual(seq.values.dtype, '|S1')
+        npt.assert_equal(seq.values, np.array('ACGT', dtype='c'))
 
         # test that we can't mutate the property
         with self.assertRaises(ValueError):
-            seq.sequence[1] = 'A'
+            seq.values[1] = 'A'
 
         # test that we can't set the property
         with self.assertRaises(AttributeError):
-            seq.sequence = np.array("GGGG", dtype='c')
+            seq.values = np.array("GGGG", dtype='c')
 
     def test_id_property(self):
         seq = Sequence('', id='foo')
@@ -720,7 +720,7 @@ class TestSequence(TestCase):
         with self.assertRaises(TypeError):
             SequenceSubclass("A") in Sequence("AAA")
 
-        self.assertTrue(SequenceSubclass("A").sequence in Sequence("AAA"))
+        self.assertTrue(SequenceSubclass("A").values in Sequence("AAA"))
 
     def test_hash(self):
         with self.assertRaises(TypeError):
@@ -835,14 +835,14 @@ class TestSequence(TestCase):
         # attributes should be what we specified in the _to call...
         self.assertEqual(to.id, 'new id')
         npt.assert_array_equal(to.quality, np.array([20, 21, 22, 23, 24]))
-        npt.assert_array_equal(to.sequence, np.array('ACGTA', dtype='c'))
+        npt.assert_array_equal(to.values, np.array('ACGTA', dtype='c'))
         self.assertEqual(to.description, 'new desc')
 
         # ...and shouldn't have changed on the original sequence
         self.assertEqual(seq.id, 'hello')
         npt.assert_array_equal(seq.quality, range(11))
-        npt.assert_array_equal(seq.sequence, np.array('HE..--..LLO',
-                                                      dtype='c'))
+        npt.assert_array_equal(seq.values, np.array('HE..--..LLO',
+                                                    dtype='c'))
         self.assertEqual(seq.description, 'gapped hello')
 
     def test_to_invalid_kwargs(self):
@@ -1198,7 +1198,7 @@ class TestSequence(TestCase):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
             self.assertEqual(obs, exp)
 
-    def test_kmers(self):
+    def test_iter_kmers(self):
         seq = Sequence('GATTACA', quality=range(7))
 
         expected = [
@@ -1211,7 +1211,7 @@ class TestSequence(TestCase):
             Sequence('A', quality=[6])
         ]
         self._compare_kmers_results(
-            seq.kmers(1, overlap=False), expected)
+            seq.iter_kmers(1, overlap=False), expected)
 
         expected = [
             Sequence('GA', quality=[0, 1]),
@@ -1219,28 +1219,28 @@ class TestSequence(TestCase):
             Sequence('AC', quality=[4, 5])
         ]
         self._compare_kmers_results(
-            seq.kmers(2, overlap=False), expected)
+            seq.iter_kmers(2, overlap=False), expected)
 
         expected = [
             Sequence('GAT', quality=[0, 1, 2]),
             Sequence('TAC', quality=[3, 4, 5])
         ]
         self._compare_kmers_results(
-            seq.kmers(3, overlap=False), expected)
+            seq.iter_kmers(3, overlap=False), expected)
 
         expected = [
             Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
         self._compare_kmers_results(
-            seq.kmers(7, overlap=False), expected)
+            seq.iter_kmers(7, overlap=False), expected)
 
         expected = []
         self._compare_kmers_results(
-            seq.kmers(8, overlap=False), expected)
+            seq.iter_kmers(8, overlap=False), expected)
 
-        self.assertIs(type(seq.kmers(1)), GeneratorType)
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
-    def test_kmers_with_overlap(self):
+    def test_iter_kmers_with_overlap(self):
         seq = Sequence('GATTACA', quality=range(7))
         expected = [
             Sequence('G', quality=[0]),
@@ -1252,7 +1252,7 @@ class TestSequence(TestCase):
             Sequence('A', quality=[6])
         ]
         self._compare_kmers_results(
-            seq.kmers(1, overlap=True), expected)
+            seq.iter_kmers(1, overlap=True), expected)
 
         expected = [
             Sequence('GA', quality=[0, 1]),
@@ -1263,7 +1263,7 @@ class TestSequence(TestCase):
             Sequence('CA', quality=[5, 6])
         ]
         self._compare_kmers_results(
-            seq.kmers(2, overlap=True), expected)
+            seq.iter_kmers(2, overlap=True), expected)
 
         expected = [
             Sequence('GAT', quality=[0, 1, 2]),
@@ -1273,30 +1273,30 @@ class TestSequence(TestCase):
             Sequence('ACA', quality=[4, 5, 6])
         ]
         self._compare_kmers_results(
-            seq.kmers(3, overlap=True), expected)
+            seq.iter_kmers(3, overlap=True), expected)
 
         expected = [
             Sequence('GATTACA', quality=[0, 1, 2, 3, 4, 5, 6])
         ]
         self._compare_kmers_results(
-            seq.kmers(7, overlap=True), expected)
+            seq.iter_kmers(7, overlap=True), expected)
 
         expected = []
         self._compare_kmers_results(
-            seq.kmers(8, overlap=True), expected)
+            seq.iter_kmers(8, overlap=True), expected)
 
-        self.assertIs(type(seq.kmers(1)), GeneratorType)
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
-    def test_kmers_invalid_k(self):
+    def test_iter_kmers_invalid_k(self):
         seq = Sequence('GATTACA', quality=range(7))
 
         with self.assertRaises(ValueError):
-            list(seq.kmers(0))
+            list(seq.iter_kmers(0))
 
         with self.assertRaises(ValueError):
-            list(seq.kmers(-42))
+            list(seq.iter_kmers(-42))
 
-    def test_kmers_different_sequences(self):
+    def test_iter_kmers_different_sequences(self):
         seq = Sequence('HE..--..LLO', id='hello', description='gapped hello',
                        quality=range(11))
         expected = [
@@ -1307,7 +1307,7 @@ class TestSequence(TestCase):
             Sequence('..L', quality=[6, 7, 8], id='hello',
                      description='gapped hello')
         ]
-        self._compare_kmers_results(seq.kmers(3, overlap=False), expected)
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
 
     def test_kmer_frequencies(self):
         seq = Sequence('GATTACA', quality=range(7))
@@ -1383,72 +1383,72 @@ class TestSequence(TestCase):
         self.assertEqual(seq.kmer_frequencies(1, relative=True),
                          defaultdict(float, {'A': 1.0}))
 
-    def test_slices_from_regex(self):
+    def test_find_with_regex(self):
         seq = Sequence('GATTACA', quality=range(7))
         pat = re.compile('(T+A)(CA)')
 
-        obs = list(seq.slices_from_regex(pat))
+        obs = list(seq.find_with_regex(pat))
         exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
-        self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
+        self.assertIs(type(seq.find_with_regex(pat)), GeneratorType)
 
-    def test_slices_from_regex_string_as_input(self):
+    def test_find_with_regex_string_as_input(self):
         seq = Sequence('GATTACA', quality=range(7))
         pat = '(T+A)(CA)'
 
-        obs = list(seq.slices_from_regex(pat))
+        obs = list(seq.find_with_regex(pat))
         exp = [slice(2, 5), slice(5, 7)]
         self.assertEqual(obs, exp)
 
-        self.assertIs(type(seq.slices_from_regex(pat)), GeneratorType)
+        self.assertIs(type(seq.find_with_regex(pat)), GeneratorType)
 
-    def test_slices_from_regex_no_groups(self):
+    def test_find_with_regex_no_groups(self):
         seq = Sequence('GATTACA', quality=range(7))
         pat = re.compile('(FOO)')
-        self.assertEqual(list(seq.slices_from_regex(pat)), [])
+        self.assertEqual(list(seq.find_with_regex(pat)), [])
 
-    def test_slices_from_regex_ignore_no_difference(self):
+    def test_find_with_regex_ignore_no_difference(self):
         seq = Sequence('..ABCDEFG..')
         pat = "([A-Z]+)"
         exp = [slice(2, 9)]
-        self.assertEqual(list(seq.slices_from_regex(pat)), exp)
+        self.assertEqual(list(seq.find_with_regex(pat)), exp)
 
-        obs = seq.slices_from_regex(
+        obs = seq.find_with_regex(
             pat, ignore=np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
                                  dtype=bool))
         self.assertEqual(list(obs), exp)
 
-    def test_slices_from_regex_ignore(self):
-        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
+    def test_find_with_regex_ignore(self):
+        obs = Sequence('A..A..BBAAB.A..AB..A.').find_with_regex(
             "(A+)", ignore=np.array([0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
                                      1, 0, 0, 1, 1, 0, 1], dtype=bool))
 
         self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
                                      slice(19, 20)])
 
-    def test_slices_from_regex_ignore_index_array(self):
-        obs = Sequence('A..A..BBAAB.A..AB..A.').slices_from_regex(
+    def test_find_with_regex_ignore_index_array(self):
+        obs = Sequence('A..A..BBAAB.A..AB..A.').find_with_regex(
             "(A+)", ignore=np.array([1, 2, 4, 5, 11, 13, 14, 17, 18, 20]))
 
         self.assertEqual(list(obs), [slice(0, 4), slice(8, 10), slice(12, 16),
                                      slice(19, 20)])
 
-    def test_iter_regions_index_array(self):
+    def test_iter_contiguous_index_array(self):
         s = Sequence("0123456789abcdef")
         for c in list, tuple, np.array, pd.Series:
             exp = [Sequence("0123"), Sequence("89ab")]
-            obs = s.iter_regions(c([0, 1, 2, 3, 8, 9, 10, 11]))
+            obs = s.iter_contiguous(c([0, 1, 2, 3, 8, 9, 10, 11]))
             self.assertEqual(list(obs), exp)
 
-    def test_iter_regions_boolean_vector(self):
+    def test_iter_contiguous_boolean_vector(self):
         s = Sequence("0123456789abcdef")
         for c in list, tuple, np.array, pd.Series:
             exp = [Sequence("0123"), Sequence("89ab")]
-            obs = s.iter_regions(c(([True] * 4 + [False] * 4) * 2))
+            obs = s.iter_contiguous(c(([True] * 4 + [False] * 4) * 2))
             self.assertEqual(list(obs), exp)
 
-    def test_iter_regions_iterable_slices(self):
+    def test_iter_contiguous_iterable_slices(self):
         def spaced_out():
             yield slice(0, 4)
             yield slice(8, 12)
@@ -1462,29 +1462,50 @@ class TestSequence(TestCase):
         for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
                   lambda x: pd.Series(tuple(x))):
             exp = [Sequence("0123"), Sequence("89ab")]
-            obs = s.iter_regions(c(spaced_out()))
+            obs = s.iter_contiguous(c(spaced_out()))
             self.assertEqual(list(obs), exp)
 
             exp = [Sequence("01234567"), Sequence("cdef")]
-            obs = s.iter_regions(c(contiguous()))
+            obs = s.iter_contiguous(c(contiguous()))
             self.assertEqual(list(obs), exp)
 
-    def test_iter_regions_with_max_length(self):
+    def test_iter_contiguous_with_max_length(self):
         s = Sequence("0123456789abcdef")
         for c in list, tuple, np.array, pd.Series:
             exp = [Sequence("234"), Sequence("678"), Sequence("abc")]
-            obs = s.iter_regions(c([True, False, True, True] * 4),
-                                 min_length=3)
+            obs = s.iter_contiguous(c([True, False, True, True] * 4),
+                                    min_length=3)
             self.assertEqual(list(obs), exp)
 
             exp = [Sequence("0"), Sequence("234"), Sequence("678"),
                    Sequence("abc"), Sequence("ef")]
-            obs1 = list(s.iter_regions(c([True, False, True, True] * 4),
-                                       min_length=1))
+            obs1 = list(s.iter_contiguous(c([True, False, True, True] * 4),
+                                          min_length=1))
 
-            obs2 = list(s.iter_regions(c([True, False, True, True] * 4)))
+            obs2 = list(s.iter_contiguous(c([True, False, True, True] * 4)))
             self.assertEqual(obs1, obs2)
             self.assertEqual(obs1, exp)
+
+    def test_iter_contiguous_with_invert(self):
+        def spaced_out():
+            yield slice(0, 4)
+            yield slice(8, 12)
+
+        def contiguous():
+            yield slice(0, 4)
+            yield slice(4, 8)
+            yield slice(12, 16)
+
+        s = Sequence("0123456789abcdef")
+        for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                  lambda x: pd.Series(tuple(x))):
+            exp = [Sequence("4567"), Sequence("cdef")]
+            obs = s.iter_contiguous(c(spaced_out()), invert=True)
+            self.assertEqual(list(obs), exp)
+
+            exp = [Sequence("89ab")]
+            obs = s.iter_contiguous(c(contiguous()), invert=True)
+            self.assertEqual(list(obs), exp)
 
     def test_munge_to_index_array_valid_index_array(self):
         s = Sequence('123456')

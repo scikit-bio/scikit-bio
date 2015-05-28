@@ -92,8 +92,8 @@ class Sequence(collections.Sequence, SkbioObject):
     __hash__ = None  # TODO revisit hashability when all properties are present
 
     @property
-    def sequence(self):
-        """Array containing underlying biological sequence characters.
+    def values(self):
+        """Array containing underlying sequence characters.
 
         Notes
         -----
@@ -103,7 +103,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AACGA', id='seq1', description='some seq')
-        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
+        >>> s.values # doctest: +NORMALIZE_WHITESPACE
         array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
 
@@ -560,7 +560,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             qual = []
 
-        for c, q in zip_longest(self.sequence, qual, fillvalue=None):
+        for c, q in zip_longest(self.values, qual, fillvalue=None):
             yield self._to(sequence=c, quality=q)
 
     def __reversed__(self):
@@ -913,7 +913,7 @@ class Sequence(collections.Sequence, SkbioObject):
                     "Hamming distances can only be computed between "
                     "sequences of equal length.")
             metric = hamming
-        return float(metric(self.sequence, other.sequence))
+        return float(metric(self.values, other.values))
 
     def matches(self, other):
         """Find positions that match with another sequence.
@@ -1091,20 +1091,20 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.mismatches(other).sum())
 
-    def kmers(self, k, overlap=True):
-        """Generate words of length `k` from the biological sequence.
+    def iter_kmers(self, k, overlap=True):
+        """Generate kmers of length `k` from the biological sequence.
 
         Parameters
         ----------
         k : int
-            The word length.
+            The kmer length.
         overlap : bool, optional
             Defines whether the kmers should be overlapping or not.
 
         Returns
         -------
         iterator
-            Iterator of words of length `k` contained in the biological
+            Iterator of kmers of length `k` contained in the biological
             sequence.
 
         Raises
@@ -1116,11 +1116,11 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> for kmer in s.kmers(4, overlap=False):
+        >>> for kmer in s.iter_kmers(4, overlap=False):
         ...     kmer
         Sequence('ACAC', length=4)
         Sequence('GACG', length=4)
-        >>> for kmer in s.kmers(3, overlap=True):
+        >>> for kmer in s.iter_kmers(3, overlap=True):
         ...     kmer
         Sequence('ACA', length=3)
         Sequence('CAC', length=3)
@@ -1176,7 +1176,7 @@ class Sequence(collections.Sequence, SkbioObject):
         defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
         """
-        kmers = self.kmers(k, overlap=overlap)
+        kmers = self.iter_kmers(k, overlap=overlap)
         freqs = collections.Counter((str(seq) for seq in kmers))
 
         if relative:
@@ -1192,7 +1192,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def slices_from_regex(self, regex, ignore=None):
+    def find_with_regex(self, regex, ignore=None):
         """Generate slices for patterns matched by a regular expression.
 
         Parameters
@@ -1213,7 +1213,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AATATACCGGTTATAA')
-        >>> for match in s.slices_from_regex('(TATA+)'):
+        >>> for match in s.find_with_regex('(TATA+)'):
         ...     match
         ...     s[match]
         slice(2, 6, None)
@@ -1240,34 +1240,38 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
 
-    def iter_regions(self, regions, min_length=1):
-        """Yield contiguous regions.
+    def iter_contiguous(self, included, min_length=1, invert=False):
+        """Yield contiguous subsequences based on `included`.
 
         Parameters
         ----------
-        regions : 1D array_like (bool) or iterable (slices or ints)
-            `regions` is transformed into a flat boolean vector where each
-            position will either be yielded or skipped. All contiguous
-            yieldable positions will be yielded as a single region.
-        min_length : int
-            The minimum length of a region for it to be yielded.
-
+        included : 1D array_like (bool) or iterable (slices or ints)
+            `included` is transformed into a flat boolean vector where each
+            position will either be included or skipped. All contiguous
+            included positions will be yielded as a single region.
+        min_length : int, optional
+            The minimum length of a subsequence for it to be yielded.
+            Default is 1.
+        invert : bool, optional
+            Whether to invert `included` such that it describes what should be
+            skipped instead of included. Default is False.
         Returns
         -------
         generator
-            Yields subsequences as indicated by `regions`.
+            Yields subsequences as indicated by `included`.
 
         Notes
         -----
         If slices provide adjacent ranges, then they will be considered the
-        same region.
+        same contiguous subsequence.
 
         Examples
         --------
         >>> from skbio import DNA
         >>> s = DNA('AAA--TT-CCCC-G-')
         >>> no_gaps = ~s.gaps()
-        >>> for ungapped_subsequence in s.iter_regions(no_gaps, min_length=2):
+        >>> for ungapped_subsequence in s.iter_contiguous(no_gaps,
+        ...                                               min_length=2):
         ...     ungapped_subsequence
         DNA('AAA', length=3)
         DNA('TT', length=2)
@@ -1275,13 +1279,15 @@ class Sequence(collections.Sequence, SkbioObject):
 
         >>> from skbio import Protein
         >>> s = Protein('ACDFNASANFTACGNPNRTESL')
-        >>> for subseq in s.iter_regions(s.find_motifs('N-glycosylation')):
+        >>> for subseq in s.iter_contiguous(s.find_motifs('N-glycosylation')):
         ...     subseq
         Protein('NASANFTA', length=8)
         Protein('NRTE', length=4)
 
         """
-        idx = self._munge_to_index_array(regions)
+        idx = self._munge_to_index_array(included)
+        if invert:
+            idx = np.delete(np.arange(len(self)), idx)
 
         # Adapted from http://stackoverflow.com/a/7353335/579416
         for contig in np.split(idx, np.where(np.diff(idx) != 1)[0] + 1):
