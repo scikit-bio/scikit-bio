@@ -18,6 +18,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
+import pandas as pd
+
 from skbio import Sequence
 
 
@@ -51,7 +53,8 @@ class TestSequence(TestCase):
         npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual(seq.id, "")
         self.assertEqual(seq.description, "")
-        self.assertIsNone(seq.quality)
+        self.assertIsNotNone(seq.ranged_metadata)
+        self.assertNotIn('quality', seq.ranged_metadata)
 
     def test_init_nondefault_parameters(self):
         seq = Sequence('.ABC123xyz-', id='foo', description='bar baz',
@@ -60,7 +63,8 @@ class TestSequence(TestCase):
         npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual(seq.id, 'foo')
         self.assertEqual(seq.description, 'bar baz')
-        npt.assert_equal(seq.quality, np.array(range(11), dtype='int'))
+        npt.assert_equal(seq.ranged_metadata['quality'], np.array(range(11),
+                         dtype='int'))
 
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
@@ -226,19 +230,19 @@ class TestSequence(TestCase):
         for q in ([], (), np.array([])):
             seq = Sequence('', quality=q)
 
-            self.assertIsInstance(seq.quality, np.ndarray)
-            self.assertEqual(seq.quality.dtype, np.int)
-            self.assertEqual(seq.quality.shape, (0,))
-            npt.assert_equal(seq.quality, np.array([]))
+            self.assertIsInstance(seq.ranged_metadata['quality'], pd.Series)
+            self.assertEqual(seq.ranged_metadata['quality'].dtype, np.int)
+            self.assertEqual(seq.ranged_metadata['quality'].shape, (0,))
+            npt.assert_equal(seq.ranged_metadata['quality'], np.array([]))
 
     def test_init_single_quality_score(self):
         for q in (2, [2], (2,), np.array([2])):
             seq = Sequence('G', quality=q)
 
-            self.assertIsInstance(seq.quality, np.ndarray)
-            self.assertEqual(seq.quality.dtype, np.int)
-            self.assertEqual(seq.quality.shape, (1,))
-            npt.assert_equal(seq.quality, np.array([2]))
+            self.assertIsInstance(seq.ranged_metadata['quality'], pd.Series)
+            self.assertEqual(seq.ranged_metadata['quality'].dtype, np.int)
+            self.assertEqual(seq.ranged_metadata['quality'].shape, (1,))
+            npt.assert_equal(seq.ranged_metadata['quality'], np.array([2]))
 
     def test_init_multiple_quality_scores(self):
         for q in ([0, 42, 42, 1, 0, 8, 100, 0, 0],
@@ -246,20 +250,11 @@ class TestSequence(TestCase):
                   np.array([0, 42, 42, 1, 0, 8, 100, 0, 0])):
             seq = Sequence('G' * 9, quality=q)
 
-            self.assertIsInstance(seq.quality, np.ndarray)
-            self.assertEqual(seq.quality.dtype, np.int)
-            self.assertEqual(seq.quality.shape, (9,))
-            npt.assert_equal(seq.quality,
+            self.assertIsInstance(seq.ranged_metadata['quality'], pd.Series)
+            self.assertEqual(seq.ranged_metadata['quality'].dtype, np.int)
+            self.assertEqual(seq.ranged_metadata['quality'].shape, (9,))
+            npt.assert_equal(seq.ranged_metadata['quality'],
                              np.array([0, 42, 42, 1, 0, 8, 100, 0, 0]))
-
-    def test_init_no_copy_of_quality(self):
-        qual = np.array([22, 22, 1])
-        seq = Sequence('ACA', quality=qual)
-
-        self.assertIs(seq.quality, qual)
-
-        with self.assertRaises(ValueError):
-            qual[1] = 42
 
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
@@ -377,15 +372,9 @@ class TestSequence(TestCase):
     def test_quality_property(self):
         seq = Sequence('ACA', quality=[22, 22, 0])
 
-        self.assertIsInstance(seq.quality, np.ndarray)
-        self.assertEqual(seq.quality.dtype, np.int)
-        npt.assert_equal(seq.quality, np.array([22, 22, 0]))
-
-        with self.assertRaises(ValueError):
-            seq.quality[1] = 42
-
-        with self.assertRaises(AttributeError):
-            seq.quality = [22, 22, 42]
+        self.assertIsInstance(seq.ranged_metadata['quality'], pd.Series)
+        self.assertEqual(seq.ranged_metadata['quality'].dtype, np.int)
+        npt.assert_equal(seq.ranged_metadata['quality'], np.array([22, 22, 0]))
 
     def test_has_quality(self):
         seq = Sequence('')
@@ -833,13 +822,14 @@ class TestSequence(TestCase):
 
         # attributes should be what we specified in the _to call...
         self.assertEqual(to.id, 'new id')
-        npt.assert_array_equal(to.quality, np.array([20, 21, 22, 23, 24]))
+        npt.assert_array_equal(to.ranged_metadata['quality'],
+                               np.array([20, 21, 22, 23, 24]))
         npt.assert_array_equal(to.sequence, np.array('ACGTA', dtype='c'))
         self.assertEqual(to.description, 'new desc')
 
         # ...and shouldn't have changed on the original sequence
         self.assertEqual(seq.id, 'hello')
-        npt.assert_array_equal(seq.quality, range(11))
+        npt.assert_array_equal(seq.ranged_metadata['quality'], range(11))
         npt.assert_array_equal(seq.sequence, np.array('HE..--..LLO',
                                                       dtype='c'))
         self.assertEqual(seq.description, 'gapped hello')

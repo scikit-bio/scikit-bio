@@ -108,11 +108,13 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         """
         result = self._complement_lookup[self._bytes]
-        quality = self.quality
+        quality = None
+        if self._has_quality():
+            quality = self.ranged_metadata['quality']
         if reverse:
             result = result[::-1]
             if self._has_quality():
-                quality = self.quality[::-1]
+                quality = self.ranged_metadata['quality'][::-1]
 
         return self._to(sequence=result, quality=quality)
 

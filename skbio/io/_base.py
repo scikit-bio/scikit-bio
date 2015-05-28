@@ -178,12 +178,15 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         else:
             header = id_
 
-        if require_qual and seq.quality is None:
+        if require_qual and 'quality' not in seq.ranged_metadata:
             raise ValueError(
                 "Cannot write %s sequence because it does not have quality "
                 "scores associated with it." % cardinal_to_ordinal(idx + 1))
 
-        yield header, str(seq), seq.quality
+        qual = None
+        if 'quality' in seq.ranged_metadata:
+            qual = seq.ranged_metadata['quality'].values
+        yield header, str(seq), qual
 
 
 def _line_generator(fh, skip_blanks=False):
