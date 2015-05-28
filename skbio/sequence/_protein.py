@@ -51,7 +51,7 @@ class Protein(IUPACSequence):
     ----------
     id
     description
-    sequence
+    values
     quality
     alphabet
     gap_chars

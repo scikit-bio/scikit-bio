@@ -55,7 +55,7 @@ class Sequence(collections.Sequence, SkbioObject):
     ----------
     id
     description
-    sequence
+    values
     quality
 
     See Also

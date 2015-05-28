@@ -26,7 +26,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
     ----------
     id
     description
-    sequence
+    values
     quality
     alphabet
     gap_chars
