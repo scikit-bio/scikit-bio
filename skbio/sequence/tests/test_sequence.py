@@ -51,7 +51,7 @@ class TestSequence(TestCase):
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
 
-        #npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
         self.assertFalse(seq.metadata)
         self.assertTrue(seq.positional_metadata.empty)
@@ -62,7 +62,7 @@ class TestSequence(TestCase):
         seq = Sequence('.ABC123xyz-', metadata=metadata,
                           positional_metadata=positional_metadata)
 
-        #npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
+        npt.assert_equal(seq.sequence, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
         self.assertEqual(seq.metadata['id'], 'foo')
         self.assertEqual(seq.metadata['description'], 'bar baz')
@@ -78,10 +78,10 @@ class TestSequence(TestCase):
                   Sequence('')):  # another Sequence object
             seq = Sequence(s)
 
-            #self.assertIsInstance(seq.sequence, np.ndarray)
-            #self.assertEqual(seq.sequence.dtype, '|S1')
-            #self.assertEqual(seq.sequence.shape, (0,))
-            #npt.assert_equal(seq.sequence, np.array('', dtype='c'))
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (0,))
+            npt.assert_equal(seq.sequence, np.array('', dtype='c'))
             self.assertEqual('', str(seq))
             self.assertEqual(0, len(seq))
 
@@ -93,10 +93,10 @@ class TestSequence(TestCase):
                   Sequence('A')):
             seq = Sequence(s)
 
-            #self.assertIsInstance(seq.sequence, np.ndarray)
-            #self.assertEqual(seq.sequence.dtype, '|S1')
-            #self.assertEqual(seq.sequence.shape, (1,))
-            #npt.assert_equal(seq.sequence, np.array('A', dtype='c'))
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (1,))
+            npt.assert_equal(seq.sequence, np.array('A', dtype='c'))
             self.assertEqual('A', str(seq))
             self.assertEqual(1, len(seq))
 
@@ -108,11 +108,11 @@ class TestSequence(TestCase):
                   Sequence('.ABC\t123  xyz-')):
             seq = Sequence(s)
 
-            #self.assertIsInstance(seq.sequence, np.ndarray)
-            #self.assertEqual(seq.sequence.dtype, '|S1')
-            #self.assertEqual(seq.sequence.shape, (14,))
-            #npt.assert_equal(seq.sequence,
-            #                 np.array('.ABC\t123  xyz-', dtype='c'))
+            self.assertIsInstance(seq.sequence, np.ndarray)
+            self.assertEqual(seq.sequence.dtype, '|S1')
+            self.assertEqual(seq.sequence.shape, (14,))
+            npt.assert_equal(seq.sequence,
+                             np.array('.ABC\t123  xyz-', dtype='c'))
             self.assertEqual('.ABC\t123  xyz-', str(seq))
             self.assertEqual(len('.ABC\t123  xyz-'), len(seq))
 
@@ -322,52 +322,45 @@ class TestSequence(TestCase):
         with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4, 5, 6])
 
-    #def test_sequence_property(self):
-    #    # Property tests are only concerned with testing the interface
-    #    # provided by the property: that it can be accessed, can't be
-    #    # reassigned or mutated in place, and that the correct type is
-    #    # returned. More extensive testing of border cases (e.g., different
-    #    # sequence lengths or input types, odd characters, etc.) are performed
-    #    # in Sequence.__init__ tests.
+    def test_sequence_property(self):
+        # Property tests are only concerned with testing the interface
+        # provided by the property: that it can be accessed, can't be
+        # reassigned or mutated in place, and that the correct type is
+        # returned. More extensive testing of border cases (e.g., different
+        # sequence lengths or input types, odd characters, etc.) are performed
+        # in Sequence.__init__ tests.
 
-    #    seq = Sequence('ACGT')
+        seq = Sequence('ACGT')
 
-    #    # should get back a numpy.ndarray of '|S1' dtype
-    #    self.assertIsInstance(seq.sequence, np.ndarray)
-    #    self.assertEqual(seq.sequence.dtype, '|S1')
-    #    npt.assert_equal(seq.sequence, np.array('ACGT', dtype='c'))
+        # should get back a numpy.ndarray of '|S1' dtype
+        self.assertIsInstance(seq.sequence, np.ndarray)
+        self.assertEqual(seq.sequence.dtype, '|S1')
+        npt.assert_equal(seq.sequence, np.array('ACGT', dtype='c'))
 
-    #    # test that we can't mutate the property
-    #    with self.assertRaises(ValueError):
-    #        seq.sequence[1] = 'A'
+        # test that we can't mutate the property
+        with self.assertRaises(ValueError):
+            seq.sequence[1] = 'A'
 
-    #    # test that we can't set the property
-    #    with self.assertRaises(AttributeError):
-    #        seq.sequence = np.array("GGGG", dtype='c')
+        # test that we can't set the property
+        with self.assertRaises(AttributeError):
+            seq.sequence = np.array("GGGG", dtype='c')
 
-    #def test_id_property(self):
-    #    seq = Sequence('', id='foo')
+    def test_metadata_property(self):
+        seq = Sequence('', metadata={'foo':'bar'})
+        self.assertIsInstance(seq.metadata, dict)
+        self.assertEqual(seq.metadata['foo'], 'bar')
+        with self.assertRaises(AttributeError):
+            seq.metadata = {'foo':'bar'}
+        seq.metadata['foo'] = 'baz'
+        self.assertEqual(seq.metadata['foo'], 'baz')
+        seq.metadata['foo2'] = 'bar2'
+        self.assertEqual(seq.metadata['foo2'], 'bar2')
 
-    #    self.assertIsInstance(seq.id, string_types)
-    #    self.assertEqual(seq.id, 'foo')
-
-    #    with self.assertRaises(TypeError):
-    #        seq.id[1] = 42
-
-    #    with self.assertRaises(AttributeError):
-    #        seq.id = 'bar'
-
-    #def test_description_property(self):
-    #    seq = Sequence('', description='foo')
-
-    #    self.assertIsInstance(seq.description, string_types)
-    #    self.assertEqual(seq.description, 'foo')
-
-    #    with self.assertRaises(TypeError):
-    #        seq.description[1] = 42
-
-    #    with self.assertRaises(AttributeError):
-    #        seq.description = 'bar'
+    def test_positional_metadata_property(self):
+        seq = Sequence('ACA', positional_metadata={'foo':[22, 22, 0]})
+        self.assertIsInstance(seq.positional_metadata['foo'], pd.Series)
+        self.assertEqual(seq.positional_metadata['foo'].dtype, np.int)
+        npt.assert_equal(seq.positional_metadata['foo'], np.array([22, 22, 0]))
 
     #def test_quality_property(self):
     #    seq = Sequence('ACA', quality=[22, 22, 0])
