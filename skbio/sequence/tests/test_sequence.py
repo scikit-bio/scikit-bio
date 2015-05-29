@@ -362,26 +362,6 @@ class TestSequence(TestCase):
         self.assertEqual(seq.positional_metadata['foo'].dtype, np.int)
         npt.assert_equal(seq.positional_metadata['foo'], np.array([22, 22, 0]))
 
-    #def test_quality_property(self):
-    #    seq = Sequence('ACA', quality=[22, 22, 0])
-
-    #    self.assertIsInstance(seq.ranged_metadata['quality'], pd.Series)
-    #    self.assertEqual(seq.ranged_metadata['quality'].dtype, np.int)
-    #    npt.assert_equal(seq.ranged_metadata['quality'], np.array([22, 22, 0]))
-
-    #def test_has_quality(self):
-    #    seq = Sequence('')
-    #    self.assertFalse(seq._has_quality())
-
-    #    seq = Sequence('', quality=[])
-    #    self.assertTrue(seq._has_quality())
-
-    #    seq = Sequence('ACA', quality=(5, 4, 67))
-    #    self.assertTrue(seq._has_quality())
-
-    #    seq = Sequence('ACA')
-    #    self.assertFalse(seq._has_quality())
-
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
         seq_b = Sequence("B")

@@ -701,19 +701,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return True
 
-    def _quality_equal(self, other):
-        if not self._has_quality() and not other._has_quality():
-            return True
-        elif self._has_quality() and not other._has_quality():
-            return False
-        elif not self._has_quality() and other._has_quality():
-            return False
-        else:
-            # Use array_equal instead of (a == b).all() because of this issue:
-            #     http://stackoverflow.com/a/10582030
-            return np.array_equal(self.positional_metadata['quality'],
-                                  other.positional_metadata['quality'])
-
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
 
@@ -1192,22 +1179,6 @@ class Sequence(collections.Sequence, SkbioObject):
             for g in range(1, len(match.groups())+1):
                 yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
-
-    def _has_quality(self):
-        """Return bool indicating presence of quality scores in the sequence.
-
-        Returns
-        -------
-        bool
-            ``True`` if the biological sequence has quality scores, ``False``
-            otherwise.
-
-        See Also
-        --------
-        quality
-
-        """
-        return 'quality' in self.positional_metadata
 
     def _to(self, **kwargs):
         """Return a copy of the current biological sequence.
