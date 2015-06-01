@@ -1268,6 +1268,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        Here we use `iter_contiguous` to find all of the contiguous ungapped
+        sequences using a boolean vector derived from our DNA sequence.
+
         >>> from skbio import DNA
         >>> s = DNA('AAA--TT-CCCC-G-')
         >>> no_gaps = ~s.gaps()
@@ -1278,12 +1281,21 @@ class Sequence(collections.Sequence, SkbioObject):
         DNA('TT', length=2)
         DNA('CCCC', length=4)
 
+        Note how the last potential subsequence was skipped because it would
+        have been smaller than our `min_length` which was set to 2.
+
+        We can also use `iter_contiguous` on a generator of slices as is
+        produces by `find_motifs` (and `find_with_regex`).
+
         >>> from skbio import Protein
         >>> s = Protein('ACDFNASANFTACGNPNRTESL')
         >>> for subseq in s.iter_contiguous(s.find_motifs('N-glycosylation')):
         ...     subseq
         Protein('NASANFTA', length=8)
         Protein('NRTE', length=4)
+
+        Note how the first subsequence contains two N-glycosylation sites. This
+        happened because they were contiguous.
 
         """
         idx = self._munge_to_index_array(included)
@@ -1413,17 +1425,19 @@ class Sequence(collections.Sequence, SkbioObject):
                         hasattr(s, 'dtype') and s.dtype != np.bool):
                     int_mode = True
                 else:
-                    raise ValueError("Invalid type in iterable: %s" %
-                                     s.__class__.__name__)
+                    raise TypeError("Invalid type in iterable: %s, must be one"
+                                    " of {bool, int, slice, np.signedinteger}"
+                                    % s.__class__.__name__)
             if bool_mode and int_mode:
-                raise ValueError("Cannot provide iterable of both bool and"
-                                 " int.")
+                raise TypeError("Cannot provide iterable of both bool and"
+                                " int.")
             sliceable = np.r_[sliceable]
 
         if sliceable.dtype == np.bool:
             if sliceable.size != len(self):
-                raise ValueError("Boolean array does not match length of"
-                                 " sequence.")
+                raise ValueError("Boolean array (%d) does not match length of"
+                                 " sequence (%d)."
+                                 % (sliceable.size, len(self)))
             normalized, = np.where(sliceable)
         else:
             normalized = np.bincount(sliceable)

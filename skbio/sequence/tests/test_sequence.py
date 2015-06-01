@@ -328,7 +328,7 @@ class TestSequence(TestCase):
                                      'Quality scores.*greater than.*zero'):
             Sequence('ACGT', quality=[2, 3, -1, 4])
 
-    def test_sequence_property(self):
+    def test_value_property(self):
         # Property tests are only concerned with testing the interface
         # provided by the property: that it can be accessed, can't be
         # reassigned or mutated in place, and that the correct type is
@@ -1619,16 +1619,16 @@ class TestSequence(TestCase):
         for c in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
                   lambda x: pd.Series(tuple(x))):
 
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 s._munge_to_index_array(bad1())
 
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 s._munge_to_index_array(bad2())
 
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 s._munge_to_index_array(bad3())
 
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 s._munge_to_index_array(bad4())
 
 
