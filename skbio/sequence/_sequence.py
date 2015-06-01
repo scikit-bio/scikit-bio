@@ -1285,7 +1285,7 @@ class Sequence(collections.Sequence, SkbioObject):
         have been smaller than our `min_length` which was set to 2.
 
         We can also use `iter_contiguous` on a generator of slices as is
-        produces by `find_motifs` (and `find_with_regex`).
+        produced by `find_motifs` (and `find_with_regex`).
 
         >>> from skbio import Protein
         >>> s = Protein('ACDFNASANFTACGNPNRTESL')
