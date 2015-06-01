@@ -78,15 +78,16 @@ class Sequence(collections.Sequence, SkbioObject):
 
     Examples
     --------
-    >>> from skbio import Sequence
+    >>> from skbio.sequence._sequence_new import Sequence
     >>> s = Sequence('GGUCGUGAAGGA')
-    >>> s
-    Sequence('GGUCGUGAAGGA', length=12)
-    >>> t = Sequence('CAT', id='seq-id', description='seq desc',
-    ...              quality=[42, 42, 1])
+    >>> s # doctest: +NORMALIZE_WHITESPACE
+    Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
+             has_positional_metadata=False)
+    >>> t = Sequence('CAT', metadata={'id':'seq-id', 'desc':'seq desc'},
+    ...              positional_metadata={'qual':[42, 42, 1]})
     >>> t # doctest: +NORMALIZE_WHITESPACE
-    Sequence('CAT', length=3, id='seq-id', description='seq desc',
-             quality=[42, 42, 1])
+    Sequence('CAT', length=3, has_metadata=True,
+             has_positional_metadata=True)
 
     """
     default_write_format = 'fasta'
@@ -102,8 +103,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
-        >>> s = Sequence('AACGA', id='seq1', description='some seq')
+        >>> from skbio.sequence._sequence_new import Sequence
+        >>> s = Sequence('AACGA')
         >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
         array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
@@ -222,7 +223,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
@@ -262,7 +263,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> t = Sequence('GGUCGUGAAGGA')
         >>> s == t
@@ -275,7 +276,9 @@ class Sequence(collections.Sequence, SkbioObject):
         ``v``, they are not considered equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
+        ...              positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
+        ...                                              100, 9, 10, 0, 42,
+        ...                                              42]})
         >>> u == v
         False
 
@@ -309,7 +312,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> t = Sequence('GGUCGUGAAGGA')
         >>> s != t
@@ -317,7 +320,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u = Sequence('GGUCGUGACCGA')
         >>> u != t
         True
-        >>> v = Sequence('GGUCGUGACCGA', id='v')
+        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'v'})
         >>> u != v
         True
 
@@ -347,29 +350,34 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
 
         Obtain a single character from the biological sequence:
 
-        >>> s[1]
-        Sequence('G', length=1)
+        >>> s[1] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('G', length=1, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain a slice:
 
-        >>> s[7:]
-        Sequence('AAGGA', length=5)
+        >>> s[7:] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('AAGGA', length=5, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain characters at the following indices:
 
-        >>> s[[3, 4, 7, 0, 3]]
-        Sequence('CGAGC', length=5)
+        >>> s[[3, 4, 7, 0, 3]] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('CGAGC', length=5, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
-        >>> s[[True, False, True, 'a' is 'a', False]]
-        Sequence('GUC', length=3)
+        >>> index = [True, False, True, 'a' is 'a', False]
+        >>> s[index] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GUC', length=3, has_metadata=False,
+                 has_positional_metadata=False)
 
         """
         qual = None
@@ -424,6 +432,12 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._to(sequence=seq, metadata=metadata,
                         positional_metadata=positional_metadata)
 
+    def has_metadata(self):
+        return bool(self.metadata)
+
+    def has_positional_metadata(self):
+        return not self.positional_metadata.empty
+
     def _slices_from_iter(self, array, indexables):
         for i in indexables:
             if isinstance(i, slice):
@@ -473,7 +487,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> len(s)
         4
@@ -491,14 +505,14 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in s:
-        ...     c
-        Sequence('G', length=1)
-        Sequence('G', length=1)
-        Sequence('U', length=1)
-        Sequence('C', length=1)
+        ...     str(c)
+        'G'
+        'G'
+        'U'
+        'C'
 
         """
         for i, c in enumerate(self.sequence):
@@ -516,14 +530,14 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in reversed(s):
-        ...     c
-        Sequence('C', length=1)
-        Sequence('U', length=1)
-        Sequence('G', length=1)
-        Sequence('G', length=1)
+        ...     str(c)
+        'C'
+        'U'
+        'G'
+        'G'
 
         """
         return iter(self[::-1])
@@ -543,8 +557,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> from skbio.sequence._sequence_new import Sequence
+        >>> s = Sequence('GGUCGUAAAGGA', metadata={'id':'hello'})
         >>> str(s)
         'GGUCGUAAAGGA'
 
@@ -571,21 +585,27 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
-        >>> repr(s)
-        "Sequence('GGUCGUGAAGGA', length=12)"
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
+                 has_positional_metadata=False)
         >>> t = Sequence('ACGT')
-        >>> repr(t)
-        "Sequence('ACGT', length=4)"
-        >>> t
-        Sequence('ACGT', length=4)
-        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA')
-        Sequence('GGUCGU ... AAAGGA', length=22)
-        >>> Sequence('ACGT', id='seq1')
-        Sequence('ACGT', length=4, id='seq1')
-
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA') # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GGUCGU ... AAAGGA', length=22, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> Sequence('ACGT',
+        ...          metadata={id:'seq1'}) # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=True,
+                 has_positional_metadata=False)
         """
+
         start = self.__class__.__name__ + "("
         end = ")"
 
@@ -593,13 +613,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         tokens.append(self._format_str(self))
         tokens.append("length=%d" % len(self))
-        #if self.id:
-        #    tokens.append("id=" + self._format_str(self.id))
-        #if self.description:
-        #    tokens.append("description=" + self._format_str(self.description))
-        #if self._has_quality():
-        #    tokens.append("quality=" +
-        #                  self._format_list(self.positional_metadata['quality']))
+        tokens.append("has_metadata=%s" % self.has_metadata())
+        tokens.append("has_positional_metadata=%s" % 
+            self.has_positional_metadata())
 
         return reprnator(start, tokens, end)
 
@@ -642,7 +658,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Define two biological sequences that have the same underlying sequence
         of characters:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> t = Sequence('GGUCGUGAAGGA')
 
@@ -666,8 +682,10 @@ class Sequence(collections.Sequence, SkbioObject):
         Define a biological sequence with the same sequence of characters as
         ``u``, but with different identifier and quality scores:
 
-        >>> v = Sequence('GGUCGUGACCGA', id='abc',
-        ...               quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'abc'},
+        ...               positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
+        ...                                               100, 9, 10, 55, 42,
+        ...                                               42]})
 
         By default, the two sequences are *not* considered equal because their
         identifiers and quality scores do not match:
@@ -678,7 +696,7 @@ class Sequence(collections.Sequence, SkbioObject):
         By specifying that the quality scores and identifier should be ignored,
         they now compare equal:
 
-        >>> u.equals(v, ignore=['quality', 'id'])
+        >>> u.equals(v, ignore=['positional_metadata', 'metadata'])
         True
 
         """
@@ -728,7 +746,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUCG')
         >>> s.count('G')
         3
@@ -775,7 +793,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
@@ -831,7 +849,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.distance(t)
@@ -883,7 +901,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.matches(t)
@@ -924,7 +942,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
@@ -968,7 +986,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.match_frequency(t)
@@ -1017,7 +1035,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.mismatch_frequency(t)
@@ -1054,22 +1072,22 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('ACACGACGTT')
         >>> for kmer in s.kmers(4, overlap=False):
-        ...     kmer
-        Sequence('ACAC', length=4)
-        Sequence('GACG', length=4)
+        ...     str(kmer)
+        'ACAC'
+        'GACG'
         >>> for kmer in s.kmers(3, overlap=True):
-        ...     kmer
-        Sequence('ACA', length=3)
-        Sequence('CAC', length=3)
-        Sequence('ACG', length=3)
-        Sequence('CGA', length=3)
-        Sequence('GAC', length=3)
-        Sequence('ACG', length=3)
-        Sequence('CGT', length=3)
-        Sequence('GTT', length=3)
+        ...     str(kmer)
+        'ACA'
+        'CAC'
+        'ACG'
+        'CGA'
+        'GAC'
+        'ACG'
+        'CGT'
+        'GTT'
 
         """
         if k < 1:
@@ -1108,7 +1126,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> s.kmer_frequencies(3, overlap=False)
         Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
@@ -1151,15 +1169,15 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence._sequence_new import Sequence
         >>> s = Sequence('AATATACCGGTTATAA')
         >>> for match in s.slices_from_regex('(TATA+)'):
         ...     match
-        ...     s[match]
+        ...     str(s[match])
         slice(2, 6, None)
-        Sequence('TATA', length=4)
+        'TATA'
         slice(11, 16, None)
-        Sequence('TATAA', length=5)
+        'TATAA'
 
         """
         if isinstance(regex, string_types):
@@ -1219,38 +1237,35 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         Create a biological sequence:
 
-        >>> from skbio import Sequence
-        >>> seq = Sequence('AACCGGTT', id='id1',
-        ...                          description='biological sequence',
-        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
+        >>> from skbio.sequence._sequence_new import Sequence
+        >>> seq = Sequence('AACCGGTT',
+        ...                metadata={'id':'id1'},
+        ...                positional_metadata={
+        ...                    'qual':[4, 2, 22, 23, 1, 1, 1, 9]
+        ...                })
 
         Create a copy of ``seq``, keeping the same underlying sequence of
-        characters and quality scores, while updating ID and description:
+        characters and quality scores, while updating the metadata:
 
-        >>> new_seq = seq._to(id='new-id', description='new description')
+        >>> new_seq = seq._to(metadata={'id':'new-id'})
 
         Note that the copied biological sequence's underlying sequence and
-        quality scores are the same as ``seq``:
+        positional metadata are the same as ``seq``:
 
         >>> str(new_seq)
         'AACCGGTT'
-        >>> new_seq.positional_metadata['quality'].values
+        >>> new_seq.positional_metadata['qual'].values
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
 
-        The ID and description have been updated:
+        The metadata has been updated:
 
-        >>> new_seq.id
+        >>> new_seq.metadata['id']
         'new-id'
-        >>> new_seq.description
-        'new description'
 
-        The original biological sequence's ID and description have not been
-        changed:
+        The original biological sequence's metadata has not been changed:
 
-        >>> seq.id
+        >>> seq.metadata['id']
         'id1'
-        >>> seq.description
-        'biological sequence'
 
         """
         defaults = {'sequence': self._bytes,
