@@ -16,7 +16,7 @@ import numpy as np
 
 from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
-from ._sequence import Sequence
+from ._sequence_new import Sequence
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
@@ -164,10 +164,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             return _motifs
 
     @overrides(Sequence)
-    def __init__(self, sequence, id="", description="", quality=None,
+    def __init__(self, sequence, metadata=None, positional_metadata=None,
                  validate=True, case_insensitive=False):
         super(IUPACSequence, self).__init__(
-            sequence, id=id, description=description, quality=quality)
+            sequence, metadata, positional_metadata)
 
         if case_insensitive:
             self._convert_to_uppercase()
