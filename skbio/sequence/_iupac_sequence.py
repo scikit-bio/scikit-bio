@@ -379,10 +379,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> s = DNA('GGTC-C--ATT-C.', quality=range(14))
+        >>> s = DNA('GGTC-C--ATT-C.',
+        ...         positional_metadata={'quality':range(14)})
         >>> t = s.degap()
-        >>> t
-        DNA('GGTCCATTC', length=9, quality=[0, 1, 2, 3, 5, 8, 9, 10, 12])
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        DNA('GGTCCATTC', length=9, has_metadata=False,
+            has_positional_metadata=True)
 
         """
         return self[np.invert(self.gaps())]
@@ -415,8 +417,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
-        DNA('TAG', length=3)
-        DNA('TGG', length=3)
+        DNA('TAG', length=3, has_metadata=False, has_positional_metadata=False)
+        DNA('TGG', length=3, has_metadata=False, has_positional_metadata=False)
 
         """
         degen_chars = self.degenerate_map
@@ -465,11 +467,11 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> s = DNA('ACGGGGAGGCGGAG')
         >>> for motif_slice in s.find_motifs('purine-run', min_length=2):
         ...     motif_slice
-        ...     s[motif_slice]
+        ...     str(s[motif_slice])
         slice(2, 9, None)
-        DNA('GGGGAGG', length=7)
+        'GGGGAGG'
         slice(10, 14, None)
-        DNA('GGAG', length=4)
+        'GGAG'
 
         Gap characters can disrupt motifs:
 
