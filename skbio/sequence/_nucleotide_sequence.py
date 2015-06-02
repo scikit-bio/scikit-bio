@@ -101,10 +101,19 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> DNA('TTCATT', id='s', quality=range(6)).complement()
-        DNA('AAGTAA', length=6, id='s', quality=[0, 1, 2, 3, 4, 5])
-        >>> DNA('TTCATT', id='s', quality=range(6)).complement(reverse=True)
-        DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)}).complement()
+        >>> str(seq)
+        'AAGTAA'
+        >>> seq.positional_metadata['quality'].values
+        array([0, 1, 2, 3, 4, 5])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)})
+        >>> seq = seq.complement(reverse=True)
+        >>> str(seq)
+        'AATGAA'
+        >>> seq.positional_metadata['quality'].values
+        array([5, 4, 3, 2, 1, 0])
 
         """
         result = self._complement_lookup[self._bytes]
@@ -137,8 +146,14 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> DNA('TTCATT', id='s', quality=range(6)).reverse_complement()
-        DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)})
+        >>> seq = seq.reverse_complement()
+        >>> str(seq)
+        'AATGAA'
+        >>> seq.positional_metadata['quality'].values
+        array([5, 4, 3, 2, 1, 0])
+
 
         """
         return self.complement(reverse=True)
