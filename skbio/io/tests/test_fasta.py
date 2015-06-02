@@ -13,8 +13,7 @@ from six import StringIO
 from unittest import TestCase, main
 from functools import partial
 
-#from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
-from skbio.sequence._sequence_new import Sequence
+from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio import (DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (

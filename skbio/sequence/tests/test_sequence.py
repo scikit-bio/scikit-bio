@@ -20,8 +20,7 @@ import numpy.testing as npt
 
 import pandas as pd
 
-#from skbio import Sequence
-from skbio.sequence._sequence_new import Sequence
+from skbio import Sequence
 
 
 class SequenceSubclass(Sequence):

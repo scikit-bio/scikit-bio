@@ -16,7 +16,7 @@ import numpy as np
 
 from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
-from ._sequence_new import Sequence
+from ._sequence import Sequence
 
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
