@@ -442,11 +442,8 @@ class Sequence(collections.Sequence, SkbioObject):
         for i in indexables:
             if isinstance(i, slice):
                 pass
-            elif isinstance(i, numbers.Integral) and not isinstance(i, bool):
-                if i == -1:
-                    i = slice(i, None)
-                else:
-                    i = slice(i, i+1)
+            elif self._is_single_index(i):
+                i = self._single_index_to_slice(i)
             else:
                 raise IndexError("Cannot slice sequence from iterable "
                                  "containing %r." % i)
