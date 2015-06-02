@@ -550,8 +550,14 @@ from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
-from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.sequence._sequence_new import Sequence
+from skbio.sequence import DNA, RNA, Protein
 
+class QualNegativeError(FASTAFormatError):
+    pass
+
+class QualNonIntegerError(FASTAFormatError):
+    pass
 
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
@@ -580,8 +586,10 @@ def _fasta_sniffer(fh):
             try:
                 list(zip(range(num_records),
                          _parse_fasta_raw(fh, _parse_quality_scores, 'QUAL')))
-            except FASTAFormatError:
+            except QualNonIntegerError:
                 return True, {}
+            except QualNegativeError:
+                return False, {}
             else:
                 return False, {}
         else:
@@ -595,7 +603,7 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
                                                'FASTA'):
-            yield constructor(seq, id=id_, description=desc)
+            yield constructor(seq, metadata={'id':id_, 'description':desc})
     else:
         fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, 'FASTA')
         qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, 'QUAL')
@@ -622,8 +630,10 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
                     "records: %r != %r" % (fasta_desc, qual_desc))
 
             # sequence and quality scores lengths are checked in constructor
-            yield constructor(fasta_seq, id=fasta_id, description=fasta_desc,
-                              quality=qual_scores)
+            yield constructor(
+                fasta_seq,
+                metadata={'id':fasta_id, 'description':fasta_desc},
+                positional_metadata={'quality':qual_scores})
 
 
 @register_reader('fasta', Sequence)
@@ -808,11 +818,16 @@ def _parse_quality_scores(chunks):
 
     qual_str = ' '.join(chunks)
     try:
-        return np.asarray(qual_str.split(), dtype=int)
+        quality = np.asarray(qual_str.split(), dtype=int)
     except ValueError:
-        raise FASTAFormatError(
+        raise QualNonIntegerError(
             "Could not convert quality scores to integers:\n%s" % qual_str)
 
+    if (quality < 0).any():
+        raise QualNegativeError(
+            "Quality scores must be greater than or equal to "
+            "zero.")
+    return quality
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width):

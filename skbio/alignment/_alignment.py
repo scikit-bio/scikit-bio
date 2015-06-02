@@ -72,13 +72,17 @@ class SequenceCollection(SkbioObject):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
-            id = seq.id
-            if id in self:
+            if 'id' in seq.metadata:
+                id_ = seq.metadata['id']
+            else:
+                id_ = ''
+
+            if id_ in self:
                 raise SequenceCollectionError(
                     "All sequence ids must be unique, but "
-                    "id '%s' is present multiple times." % id)
+                    "id '%s' is present multiple times." % id_)
             else:
-                self._id_to_index[seq.id] = i
+                self._id_to_index[id_] = i
 
     def __contains__(self, id):
         r"""The in operator.

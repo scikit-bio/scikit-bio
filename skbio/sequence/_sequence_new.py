@@ -702,16 +702,20 @@ class Sequence(collections.Sequence, SkbioObject):
 
         # Checks are ordered from least to most expensive.
         if 'type' not in ignore and self.__class__ != other.__class__:
+            print("types different")
             return False
 
         if 'sequence' not in ignore and self._string != other._string:
+            print("sequences different")
             return False
 
         if 'metadata' not in ignore and self.metadata != other.metadata:
+            print("metadata different")
             return False
 
         if 'positional_metadata' not in ignore and \
                 not self.positional_metadata.equals(other.positional_metadata):
+            print("pos_metadata different")
             return False
 
         return True
