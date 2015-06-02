@@ -346,8 +346,11 @@ the correct file format for us!
 
 Let's inspect the type of sequences stored in the ``Alignment``:
 
->>> aln[0]
-Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
+>>> aln[0] # doctest: +NORMALIZE_WHITESPACE
+Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
+         has_positional_metadata=False)
+>>> aln[0].metadata
+{'id': 'seq1', 'description': 'Turkey'}
 
 By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
@@ -355,8 +358,9 @@ change the type of sequence via the ``constructor`` parameter:
 >>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> aln = Alignment.read(fh, constructor=DNA)
->>> aln[0]
-DNA('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
+>>> aln[0] # doctest: +NORMALIZE_WHITESPACE
+DNA('AAGCTN ... GGGTAT', length=42, has_metadata=True,
+    has_positional_metadata=False)
 
 We now have an ``Alignment`` of ``DNA`` objects instead of
 ``Sequence`` objects.
@@ -392,33 +396,43 @@ use the generator-based reader to process a single sequence at a time in a
 >>> import skbio.io
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> for seq in skbio.io.read(fh, format='fasta'):
-...     seq
-Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
-Sequence('AAGCCT ... CGGTAT', length=42, id='seq2', description='Salmo gair')
-Sequence('ACCGGT ... GGGTAA', length=42, id='seq3', description='H. Sapiens')
-Sequence('AAACCC ... ACTCAT', length=42, id='seq4', description='Chimp')
-Sequence('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
+...     print(seq[0:6], len(seq), seq.metadata['id'],
+...           seq.metadata['description'])
+AAGCTN 42 seq1 Turkey
+AAGCCT 42 seq2 Salmo gair
+ACCGGT 42 seq3 H. Sapiens
+AAACCC 42 seq4 Chimp
+AAACCC 42 seq5 Gorilla
 
 A single sequence can also be read into a ``Sequence`` (or subclass):
 
 >>> from skbio import Sequence
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> Sequence.read(fh)
-Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
+>>> seq = Sequence.read(fh)
+>>> seq # doctest: +NORMALIZE_WHITESPACE
+Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
+         has_positional_metadata=False)
 
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> Sequence.read(fh, seq_num=5)
-Sequence('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
+>>> seq = Sequence.read(fh, seq_num=5)
+>>> seq # doctest: +NORMALIZE_WHITESPACE
+Sequence('AAACCC ... GCTTAA', length=42, has_metadata=True,
+         has_positional_metadata=False)
+>>> seq.metadata
+{'id': 'seq5', 'description': 'Gorilla'}
 
 We can use the same API to read the fifth sequence into a ``DNA``:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> dna_seq = DNA.read(fh, seq_num=5)
->>> dna_seq
-DNA('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
+>>> dna_seq # doctest: +NORMALIZE_WHITESPACE
+DNA('AAACCC ... GCTTAA', length=42, has_metadata=True,
+    has_positional_metadata=False)
+>>> dna_seq.metadata
+{'id': 'seq5', 'description': 'Gorilla'}
 
 Individual sequence objects can also be written in FASTA format:
 
@@ -467,15 +481,11 @@ To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
 >>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
-...     seq # doctest: +NORMALIZE_WHITESPACE
-...     seq.ranged_metadata['quality'].values # doctest: +NORMALIZE_WHITESPACE
-Sequence('CGATGTC', length=7, id='seq1', description='db-acc ... 149855',
-         quality=[40, 39, 39, 4, 50, 1, 100])
-array([ 40,  39,  39,   4,  50,   1, 100])
-Sequence('CATCG', length=5, id='seq2', description='db-accession-34989',
-         quality=[3, 3, 10, 42, 80])
-array([ 3,  3, 10, 42, 80])
-
+...     print(seq[0:7], len(seq), seq.metadata['id'],
+...           seq.metadata['description'],
+...           seq.positional_metadata['quality'].values)
+CGATGTC 7 seq1 db-accession-149855 [ 40  39  39   4  50   1 100]
+CATCG 5 seq2 db-accession-34989 [ 3  3 10 42 80]
 
 Note that the sequence objects have quality scores since we provided a QUAL
 file. The other FASTA readers operate in a similar manner.
