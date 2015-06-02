@@ -77,13 +77,13 @@ class RNA(NucleotideSequence):
     >>> from skbio import RNA
     >>> s = RNA('ACCGAAU')
     >>> s
-    RNA('ACCGAAU', length=7)
+    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
 
     Convert lowercase characters to uppercase:
 
     >>> s = RNA('AcCGaaU', case_insensitive=True)
     >>> s
-    RNA('ACCGAAU', length=7)
+    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
 
     """
 

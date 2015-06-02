@@ -77,13 +77,13 @@ class DNA(NucleotideSequence):
     >>> from skbio import DNA
     >>> s = DNA('ACCGAAT')
     >>> s
-    DNA('ACCGAAT', length=7)
+    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
 
     Convert lowercase characters to uppercase:
 
     >>> s = DNA('AcCGaaT', case_insensitive=True)
     >>> s
-    DNA('ACCGAAT', length=7)
+    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
 
     """
 

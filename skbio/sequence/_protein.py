@@ -71,13 +71,13 @@ class Protein(IUPACSequence):
     >>> from skbio import Protein
     >>> s = Protein('PAW')
     >>> s
-    Protein('PAW', length=3)
+    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
 
     Convert lowercase characters to uppercase:
 
     >>> s = Protein('paW', case_insensitive=True)
     >>> s
-    Protein('PAW', length=3)
+    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
 
     """
 
