@@ -90,61 +90,76 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertEqual(comp, ExampleNucleotideSequence(''))
 
         # with optional attributes
-        comp = ExampleNucleotideSequence('', id='foo', description='bar',
-                                         quality=[]).complement()
+        comp = ExampleNucleotideSequence(
+            '',
+            metadata={'id':'foo', 'description':'bar'},
+            positional_metadata={'quality':[]}).complement()
         self.assertEqual(
             comp,
-            ExampleNucleotideSequence('', id='foo', description='bar',
-                                      quality=[]))
+            ExampleNucleotideSequence(
+                '',
+                metadata={'id':'foo', 'description':'bar'},
+                positional_metadata={'quality':[]}))
 
     def test_complement_without_reverse_non_empty(self):
         comp = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement()
         self.assertEqual(comp, ExampleNucleotideSequence('CBAYXZ.-BBZ'))
 
         comp = ExampleNucleotideSequence(
-            'ABCXYZ.-BBZ', id='foo', description='bar',
-            quality=range(11)).complement()
+            'ABCXYZ.-BBZ',
+            metadata={'id':'foo', 'description':'bar'},
+            positional_metadata={'quality':range(11)}).complement()
         self.assertEqual(
             comp,
-            ExampleNucleotideSequence('CBAYXZ.-BBZ', id='foo',
-                                      description='bar', quality=range(11)))
+            ExampleNucleotideSequence(
+                'CBAYXZ.-BBZ',
+                metadata={'id':'foo', 'description':'bar'},
+                positional_metadata={'quality':range(11)}))
 
     def test_complement_with_reverse_empty(self):
         rc = ExampleNucleotideSequence('').complement(reverse=True)
         self.assertEqual(rc, ExampleNucleotideSequence(''))
 
-        rc = ExampleNucleotideSequence('', id='foo', description='bar',
-                                       quality=[]).complement(reverse=True)
+        rc = ExampleNucleotideSequence(
+              '',
+              metadata={'id':'foo', 'description':'bar'},
+              positional_metadata={'quality':[]}).complement(reverse=True)
         self.assertEqual(
             rc,
-            ExampleNucleotideSequence('', id='foo', description='bar',
-                                      quality=[]))
+            ExampleNucleotideSequence(
+                '',
+                metadata={'id':'foo', 'description':'bar'},
+                positional_metadata={'quality':[]}))
 
     def test_complement_with_reverse_non_empty(self):
         rc = ExampleNucleotideSequence('ABCXYZ.-BBZ').complement(reverse=True)
         self.assertEqual(rc, ExampleNucleotideSequence('ZBB-.ZXYABC'))
 
         rc = ExampleNucleotideSequence(
-            'ABCXYZ.-BBZ', id='foo', description='bar',
-            quality=range(11)).complement(reverse=True)
+            'ABCXYZ.-BBZ',
+            metadata={'id':'foo', 'description':'bar'},
+            positional_metadata={'quality':range(11)}).complement(reverse=True)
         self.assertEqual(
             rc,
-            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
-                                      description='bar',
-                                      quality=list(range(11))[::-1]))
+            ExampleNucleotideSequence(
+                'ZBB-.ZXYABC',
+                metadata={'id':'foo', 'description':'bar'},
+                positional_metadata={'quality':list(range(11))[::-1]}))
 
     def test_reverse_complement(self):
         # light tests because this just calls
         # NucleotideSequence.complement(reverse=True), which is tested more
         # extensively
         rc = ExampleNucleotideSequence(
-            'ABCXYZ.-BBZ', id='foo', description='bar',
-            quality=range(11)).reverse_complement()
+            'ABCXYZ.-BBZ',
+            metadata={'id':'foo', 'description':'bar'},
+            positional_metadata={'quality':range(11)}).reverse_complement()
         self.assertEqual(
             rc,
-            ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
-                                      description='bar',
-                                      quality=list(range(11))[::-1]))
+            ExampleNucleotideSequence(
+                'ZBB-.ZXYABC',
+                metadata={'id':'foo', 'description':'bar'},
+                positional_metadata={'quality':list(range(11))[::-1]}))
 
     def test_is_reverse_complement_varied_types(self):
         tested = 0
@@ -162,16 +177,21 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertTrue(seq1.is_reverse_complement(seq1))
 
         # optional attributes are ignored, only the sequence is compared
-        seq2 = ExampleNucleotideSequence('', id='foo', description='bar',
-                                         quality=[])
+        seq2 = ExampleNucleotideSequence(
+                   '',
+                   metadata={'id':'foo', 'description':'bar'},
+                   positional_metadata={'quality':np.array([],
+                                                           dtype=np.int64)})
         self.assertTrue(seq2.is_reverse_complement(seq2))
         self.assertTrue(seq1.is_reverse_complement(seq2))
         self.assertTrue(seq2.is_reverse_complement(seq1))
 
     def test_is_reverse_complement_metadata_ignored(self):
         seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
-        seq2 = ExampleNucleotideSequence('ZBB-.ZXYABC', id='foo',
-                                         description='bar', quality=range(11))
+        seq2 = ExampleNucleotideSequence(
+                   'ZBB-.ZXYABC',
+                   metadata={'id':'foo', 'description':'bar'},
+                   positional_metadata={'quality':range(11)})
 
         self.assertFalse(seq1.is_reverse_complement(seq1))
         self.assertFalse(seq2.is_reverse_complement(seq2))

@@ -108,15 +108,12 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         """
         result = self._complement_lookup[self._bytes]
-        quality = None
-        if self._has_quality():
-            quality = self.ranged_metadata['quality']
+        pos_md = self.positional_metadata
         if reverse:
             result = result[::-1]
-            if self._has_quality():
-                quality = self.ranged_metadata['quality'][::-1]
+            pos_md = pos_md.iloc[::-1].reset_index(drop=True)
 
-        return self._to(sequence=result, quality=quality)
+        return self._to(sequence=result, positional_metadata=pos_md)
 
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.
