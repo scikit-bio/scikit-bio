@@ -24,6 +24,8 @@ from skbio.io.fastq import (
 
 from skbio.util import get_data_path
 
+import numpy as np
+
 # Note: the example FASTQ files with file extension .fastq are taken from the
 # following open-access publication's supplementary data:
 #
@@ -295,8 +297,12 @@ class TestReaders(unittest.TestCase):
                 for kwarg in kwargs:
                     _drop_kwargs(kwarg, 'seq_num')
                     constructor = kwarg.get('constructor', Sequence)
-                    expected = [constructor(c[2], id=c[0], description=c[1],
-                                quality=c[3]) for c in components]
+                    expected = [constructor(c[2],
+                                            metadata={'id':c[0],
+                                                      'description':c[1]},
+                                positional_metadata={'quality':np.array(c[3],
+                                                     dtype=np.uint8)})
+                                for c in components]
 
                     observed = list(_fastq_to_generator(valid, **kwarg))
                     self.assertEqual(len(expected), len(observed))
@@ -351,8 +357,11 @@ class TestReaders(unittest.TestCase):
 
                         seq_num = kwarg.get('seq_num', 1)
                         c = components[seq_num - 1]
-                        expected = constructor(c[2], id=c[0],
-                                               description=c[1], quality=c[3])
+                        expected = constructor(
+                                       c[2], metadata={'id':c[0],
+                                                       'description':c[1]},
+                                       positional_metadata={'quality':np.array(c[3],
+                                                            dtype=np.uint8)})
 
                         observed = read(valid, into=constructor.func,
                                         format='fastq', verify=False, **kwarg)
@@ -365,8 +374,10 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(kwarg, 'seq_num')
                     constructor = kwarg.get('constructor', Sequence)
                     expected = SequenceCollection(
-                        [constructor(c[2], id=c[0], description=c[1],
-                                     quality=c[3])
+                        [constructor(
+                            c[2], metadata={'id':c[0], 'description':c[1]},
+                            positional_metadata={'quality':np.array(c[3],
+                                                 np.uint8)})
                          for c in components])
 
                     observed = _fastq_to_sequence_collection(valid, **kwarg)
@@ -382,8 +393,11 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(kwarg, 'seq_num')
                     constructor = kwarg.get('constructor', Sequence)
                     expected = Alignment(
-                        [constructor(c[2], id=c[0], description=c[1],
-                                     quality=c[3])
+                        [constructor(
+                            c[2], metadata={'id':c[0],
+                            'description':c[1]},
+                            positional_metadata={'quality':np.array(c[3],
+                                                 dtype=np.uint8)})
                          for c in components])
 
                     observed = _fastq_to_alignment(valid, **kwarg)
@@ -424,7 +438,8 @@ class TestWriters(unittest.TestCase):
                 def gen():
                     for c in components:
                         yield Sequence(
-                            c[2], id=c[0], description=c[1], quality=c[3])
+                            c[2], metadata={'id':c[0], 'description':c[1]},
+                            positional_metadata={'quality':c[3]})
 
                 fh = StringIO()
                 _generator_to_fastq(gen(), fh, **kwargs)
@@ -444,8 +459,9 @@ class TestWriters(unittest.TestCase):
                 for kwargs, expected_fp in kwargs_expected_fp:
                     fh = StringIO()
                     for c in components:
-                        obj = constructor(c[2], id=c[0], description=c[1],
-                                          quality=c[3])
+                        obj = constructor(c[2], metadata={'id':c[0],
+                                                          'description':c[1]},
+                                          positional_metadata={'quality':c[3]})
                         write(obj, into=fh, format='fastq', **kwargs)
 
                     observed = fh.getvalue()
@@ -460,8 +476,9 @@ class TestWriters(unittest.TestCase):
         for components, kwargs_expected_fp in self.valid_files:
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = SequenceCollection([
-                    DNA(c[2], id=c[0], description=c[1],
-                        quality=c[3]) for c in components])
+                    DNA(c[2], metadata={'id':c[0], 'description':c[1]},
+                        positional_metadata={'quality':c[3]})
+                        for c in components])
 
                 fh = StringIO()
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
@@ -477,8 +494,9 @@ class TestWriters(unittest.TestCase):
         for components, kwargs_expected_fp in self.valid_files:
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = Alignment([
-                    Protein(c[2], id=c[0], description=c[1],
-                            quality=c[3]) for c in components])
+                    Protein(c[2], metadata={'id':c[0], 'description':c[1]},
+                            positional_metadata={'quality':c[3]})
+                            for c in components])
 
                 fh = StringIO()
                 _alignment_to_fastq(obj, fh, **kwargs)
@@ -492,9 +510,9 @@ class TestWriters(unittest.TestCase):
 
     def test_generator_to_fastq_no_qual(self):
         def gen():
-            yield Sequence('ACGT', id='foo', description='bar',
-                           quality=range(4))
-            yield Sequence('ACG', id='foo', description='bar')
+            yield Sequence('ACGT', metadata={'id':'foo', 'description':'bar'},
+                           positional_metadata={'quality':range(4)})
+            yield Sequence('ACG', metadata={'id':'foo', 'description':'bar'})
 
         with self.assertRaisesRegexp(ValueError, '2nd.*quality scores'):
             _generator_to_fastq(gen(), StringIO(), variant='illumina1.8')

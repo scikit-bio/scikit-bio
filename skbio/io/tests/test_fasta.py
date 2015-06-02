@@ -130,7 +130,6 @@ class SnifferTests(TestCase):
 
     def test_negatives(self):
         for fp in self.negative_fps:
-            print("fp: {}".format(fp))
             self.assertEqual(_fasta_sniffer(fp), (False, {}))
 
 
