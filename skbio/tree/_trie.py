@@ -239,10 +239,11 @@ def fasta_to_pairlist(seqs):
     seqs : Iterable
         tuples of the form ``(label, seq)``
 
-    Returns
-    -------
-    GeneratorType
-        yields tuples of the form ``(seq, label)``
+    Yields
+    ------
+    tuple
+        Tuple of the form ``(seq, label)``.
+
     """
     for label, seq in seqs:
         yield seq, label
