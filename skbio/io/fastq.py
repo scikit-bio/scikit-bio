@@ -211,9 +211,16 @@ as a ``DNA``:
 
 >>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> DNA.read(fh, variant='sanger', seq_num=2) # doctest: +NORMALIZE_WHITESPACE
-DNA('TATGTA ... TACATA', length=35, id='seq2', description='description 2',
-    quality=[60, 42, 57, 58, 47, 56, ..., 51, 6, 6, 33, 33, 33])
+>>> seq = DNA.read(fh, variant='sanger', seq_num=2) # doctest: +NORMALIZE_WHITESPACE
+>>> seq # doctest: +NORMALIZE_WHITESPACE
+DNA('TATGTA ... TACATA', length=35, has_metadata=True,
+    has_positional_metadata=True)
+>>> seq.metadata
+{'id': 'seq2', 'description': 'description 2'}
+>>> seq.positional_metadata['quality'].values
+array([60, 42, 57, 58, 47, 56, 60, 62, 58, 56, 56, 61,  6,  6,  6, 32, 34,
+       61, 59, 59,  6, 33, 51,  6,  6, 34,  6, 59, 32, 51,  6,  6, 33, 33,
+       33], dtype=uint8)
 
 To write our ``SequenceCollection`` to a FASTQ file with quality scores encoded
 using the ``illumina1.3`` variant:
