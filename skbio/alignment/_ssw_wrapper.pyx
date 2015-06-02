@@ -74,21 +74,6 @@ mid_table = np.array(['M', 'I', 'D'])
 cdef class AlignmentStructure:
     """Wraps the result of an alignment c struct so it is accessible to Python
 
-    Attributes
-    ----------
-    optimal_alignment_score
-    suboptimal_alignment_score
-    target_begin
-    target_end_optimal
-    target_end_suboptimal
-    query_begin
-    query_end
-    cigar
-    query_sequence
-    target_sequence
-    aligned_query_sequence
-    aligned_target_sequence
-
     Notes
     -----
     `cigar` may be empty depending on parameters used.

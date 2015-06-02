@@ -268,14 +268,6 @@ class Workflow(object):
         This is handy if additional contextual information is needed by a
         workflow method (e.g., a lookup table).
 
-    Attributes
-    ----------
-    state
-    short_circuit
-    debug
-    options
-    failed
-
     """
 
     def __init__(self, state, short_circuit=True, debug=False, options=None,

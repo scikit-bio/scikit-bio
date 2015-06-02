@@ -69,17 +69,6 @@ class DissimilarityMatrix(SkbioObject):
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
 
-    Attributes
-    ----------
-    data
-    ids
-    dtype
-    shape
-    size
-    T
-    png
-    svg
-
     See Also
     --------
     DistanceMatrix
