@@ -116,7 +116,6 @@ class TreeNode(SkbioObject):
         >>> repr(tree)
         '<TreeNode, name: root, internal node count: 1, tips count: 3>'
 
-        .. shownumpydoc
         """
         nodes = [n for n in self.traverse(include_self=False)]
         n_tips = sum([n.is_tip() for n in nodes])
@@ -148,7 +147,6 @@ class TreeNode(SkbioObject):
         >>> str(tree)
         '((a,b)c);\n'
 
-        .. shownumpydoc
         """
 
         fh = StringIO()

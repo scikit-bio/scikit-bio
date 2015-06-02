@@ -391,7 +391,6 @@ class Workflow(object):
         fail_callback : method to call on a failed item prior to yielding. By
             default, failures are ignored.
 
-        .. shownumpydoc
         """
         if success_callback is None:
             def success_callback(x):

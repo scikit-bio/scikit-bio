@@ -82,8 +82,6 @@ class OrdinationResults(SkbioObject):
         str
             String representation of the ordination results.
 
-        .. shownumpydoc
-
         """
         lines = ['Ordination results:']
 
