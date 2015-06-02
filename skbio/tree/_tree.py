@@ -1935,7 +1935,7 @@ class TreeNode(SkbioObject):
         ------
         tuple
             ``(tip, [lineage])`` where ``tip`` corresponds to a tip in the tree
-            and ``[lineage]`` is the expanded names from root to tip. ``None``s
+            and ``[lineage]`` is the expanded names from root to tip. ``None``
             and empty strings are omitted from the lineage.
 
         Notes
