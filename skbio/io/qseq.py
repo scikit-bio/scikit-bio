@@ -153,7 +153,9 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
             phred = _decode_qual_to_phred(raw_qual, variant, phred_offset)
             seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
                 machine_name, run, lane, tile, x, y, index, read)
-            yield constructor(seq, quality=phred, id=seq_id)
+            yield constructor(seq,
+                              positional_metadata={'quality':phred},
+                              metadata={'id':seq_id})
 
 
 @register_reader('qseq', SequenceCollection)

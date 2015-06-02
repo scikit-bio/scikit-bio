@@ -243,4 +243,4 @@ def _alignment_to_phylip(obj, fh):
     fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
         chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
-        fh.write(fmt.format(seq.id, chunked_seq))
+        fh.write(fmt.format(seq.metadata['id'], chunked_seq))

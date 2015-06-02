@@ -251,7 +251,7 @@ def _alignment_to_clustal(obj, fh):
 
     """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.id, str(s)) for s in obj])
+    names, seqs = zip(*[(s.metadata['id'], str(s)) for s in obj])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n\n')
@@ -320,5 +320,5 @@ def _clustal_to_alignment(fh, strict=True):
         raise ClustalFormatError("Sequences not aligned properly")
     alns = []
     for key in labels:
-        alns.append(Sequence(id=key, sequence=''.join(data[key])))
+        alns.append(Sequence(metadata={'id':key}, sequence=''.join(data[key])))
     return Alignment(alns)

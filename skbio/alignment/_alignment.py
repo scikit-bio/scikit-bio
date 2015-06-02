@@ -72,10 +72,9 @@ class SequenceCollection(SkbioObject):
         self._data = seqs
         self._id_to_index = {}
         for i, seq in enumerate(self._data):
-            if 'id' in seq.metadata:
-                id_ = seq.metadata['id']
-            else:
-                id_ = ''
+            if 'id' not in seq.metadata:
+                seq.metadata['id'] = ''
+            id_ = seq.metadata['id']
 
             if id_ in self:
                 raise SequenceCollectionError(
@@ -428,7 +427,7 @@ class SequenceCollection(SkbioObject):
         ['seq1', 'seq2']
 
         """
-        return [seq.id for seq in self]
+        return [seq.metadata['id'] for seq in self]
 
     def update_ids(self, ids=None, func=None, prefix=""):
         """Update sequence IDs on the sequence collection.

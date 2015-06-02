@@ -19,6 +19,7 @@ from skbio.util import get_data_path
 from skbio.io import QSeqFormatError
 from skbio.io.qseq import (_qseq_to_generator,
                            _qseq_to_sequence_collection, _qseq_sniffer)
+import numpy as np
 
 
 def _drop_kwargs(kwargs, *args):
@@ -203,8 +204,11 @@ class TestQSeqToGenerator(TestQSeqBase):
             for kwarg in kwargs:
                 _drop_kwargs(kwarg, 'seq_num')
                 constructor = kwarg.get('constructor', Sequence)
-                expected = [constructor(c[1], id=c[0], quality=c[2]) for
-                            c in components]
+                expected = [constructor(
+                                c[1], metadata={'id':c[0]},
+                                positional_metadata={'quality':np.array(c[2],
+                                                     dtype=np.uint8)})
+                            for c in components]
 
                 observed = list(_qseq_to_generator(valid, **kwarg))
                 self.assertEqual(len(expected), len(observed))
@@ -234,9 +238,13 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
             for kwarg in kwargs:
                 _drop_kwargs(kwarg, 'seq_num')
                 constructor = kwarg.get('constructor', Sequence)
-                expected = SequenceCollection([constructor(c[1], id=c[0],
-                                               quality=c[2]) for c in
-                                               components])
+                expected = SequenceCollection(
+                               [constructor(
+                                   c[1], metadata={'id':c[0]},
+                                   positional_metadata={'quality':np.array(
+                                                        c[2],
+                                                        dtype=np.uint8)})
+                                for c in components])
 
                 observed = _qseq_to_sequence_collection(valid, **kwarg)
                 # TODO remove when #656 is resolved
@@ -268,7 +276,10 @@ class TestQSeqToSequences(TestQSeqBase):
 
                     seq_num = kwarg.get('seq_num', 1)
                     c = components[seq_num - 1]
-                    expected = constructor(c[1], id=c[0], quality=c[2])
+                    expected = constructor(
+                                   c[1], metadata={'id':c[0]},
+                                   positional_metadata={'quality':np.array(
+                                                        c[2], np.uint8)})
 
                     observed = read(valid, into=constructor.func,
                                     format='qseq', verify=False, **kwarg)
