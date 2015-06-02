@@ -1,24 +1,45 @@
+# NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
+# scikit-bio/licenses/scipy.txt for scipy's license.
+
 import glob
 import sys
 import os
 
+# Check that dependencies are installed and the correct version if necessary
+sphinx_version = '1.2.2'
+import sphinx
+if sphinx.__version__ != sphinx_version:
+    raise RuntimeError("Sphinx %s required" % sphinx_version)
+
 import sphinx_bootstrap_theme
+
+# We currently rely on the latest version of numpydoc available on GitHub:
+#   git+git://github.com/numpy/numpydoc.git
+#
+# There isn't a way to specify this in setup.py as a dependency since this
+# feature is being removed from pip. We also can't check the version of
+# numpydoc installed because there isn't a numpydoc.__version__ defined.
+try:
+    import numpydoc
+except ImportError:
+    raise RuntimeError(
+        "numpydoc v0.6 or later required. Install it with:\n"
+        "  pip install git+git://github.com/numpy/numpydoc.git")
 
 import skbio
 from skbio.util import classproperty
 
-# NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
-# scikit-bio/licenses/scipy.txt for scipy's license.
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../sphinxext/numpydoc'))
+#sys.path.insert(0, os.path.abspath('../sphinxext/numpydoc'))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.1'
+# Using `sphinx_version` doesn't work, likely because Sphinx is expecting a
+# version string of the form X.Y, not X.Y.Z.
+needs_sphinx = '1.2'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -280,8 +301,8 @@ man_pages = [
 texinfo_documents = [
   ('index', 'scikit-bio', u'scikit-bio Documentation',
    u'scikit-bio development team', 'scikit-bio',
-   'Core objects, functions and statistics for working with biological data '
-   'in Python.', 'Miscellaneous'),
+   'Data structures, algorithms, and educational resources for working with '
+   'biological data in Python.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -302,6 +323,10 @@ autosummary_generate = glob.glob('*.rst')
 # -- Options for numpydoc -------------------------------------------------
 # Generate plots for example sections
 numpydoc_use_plots = True
+# If we don't turn numpydoc's toctree generation off, Sphinx will warn about
+# the toctree referencing missing document(s). This appears to be related to
+# generating docs for classes with a __call__ method.
+numpydoc_class_members_toctree = False
 
 #------------------------------------------------------------------------------
 # Plot

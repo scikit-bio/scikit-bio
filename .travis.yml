@@ -23,7 +23,7 @@ install:
   - conda create --yes -n env_name python=$PYTHON_VERSION pip numpy$NUMPY_VERSION scipy matplotlib$MATPLOTLIB_VERSION pandas nose pep8 Sphinx=1.2.2 IPython
   - if [ ${USE_CYTHON} ]; then conda install --yes -n env_name cython; fi
   - source activate env_name
-  - pip install sphinx-bootstrap-theme future six coveralls natsort pyflakes flake8 python-dateutil 'CacheControl[FileCache]'
+  - pip install sphinx-bootstrap-theme future six coveralls natsort pyflakes flake8 python-dateutil 'CacheControl[FileCache] git+git://github.com/numpy/numpydoc.git'
   - pip install -e . --no-deps
 script:
   - PYTHONWARNINGS=ignore WITH_COVERAGE=TRUE make test
