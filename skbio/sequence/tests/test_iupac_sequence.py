@@ -52,7 +52,7 @@ class TestIUPACSequence(TestCase):
     def test_init_default_parameters(self):
         seq = ExampleIUPACSequence('.-ABCXYZ')
 
-        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
         self.assertEqual(seq.id, "")
         self.assertEqual(seq.description, "")
         self.assertIsNone(seq.quality)
@@ -61,7 +61,7 @@ class TestIUPACSequence(TestCase):
         seq = ExampleIUPACSequence('.-ABCXYZ', id='foo', description='bar baz',
                                    quality=range(8))
 
-        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
         self.assertEqual(seq.id, 'foo')
         self.assertEqual(seq.description, 'bar baz')
         npt.assert_equal(seq.quality, np.array(range(8), dtype='int'))
