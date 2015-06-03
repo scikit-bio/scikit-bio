@@ -14,7 +14,6 @@ from unittest import TestCase, main
 from functools import partial
 
 from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
-from skbio import (DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
@@ -148,9 +147,9 @@ class ReaderTests(TestCase):
         # single sequence
         self.single = (
             [Sequence(
-                'ACGT-acgt.', metadata={'id':'seq1', 'description':'desc1'},
-                positional_metadata={'quality':[10, 20, 30, 10, 0, 0, 0,
-                                                88888, 1, 3456]})],
+                'ACGT-acgt.', metadata={'id': 'seq1', 'description': 'desc1'},
+                positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
+                                                 88888, 1, 3456]})],
             {},
             list(map(get_data_path, ['fasta_single_seq',
                                      'fasta_max_width_1'])),
@@ -160,27 +159,29 @@ class ReaderTests(TestCase):
         # multiple sequences
         self.multi = (
             [Sequence(
-                'ACGT-acgt.', metadata={'id':'seq1', 'description':'desc1'},
-                positional_metadata={'quality':[10, 20, 30, 10, 0, 0, 0,
-                                                88888, 1, 3456]}),
-             Sequence('A', metadata={'id':'_____seq__2_', 'description':''},
-                      positional_metadata={'quality':[42]}),
+                'ACGT-acgt.', metadata={'id': 'seq1', 'description': 'desc1'},
+                positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
+                                                 88888, 1, 3456]}),
+             Sequence('A', metadata={'id': '_____seq__2_', 'description': ''},
+                      positional_metadata={'quality': [42]}),
              Sequence(
-                'AACGGuA', metadata={'id':'', 'description':'desc3'},
-                positional_metadata={'quality':[0, 0, 0, 0, 0, 0, 0]}),
+                'AACGGuA', metadata={'id': '', 'description': 'desc3'},
+                positional_metadata={'quality': [0, 0, 0, 0, 0, 0, 0]}),
              Sequence(
                 'ACGTTGCAccGG',
-                metadata={'id':'', 'description':''},
-                positional_metadata={'quality':[55, 10, 0, 999, 1, 1, 8, 775,
-                                                40, 10, 10, 0]}),
+                metadata={'id': '', 'description': ''},
+                positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775,
+                                                 40, 10, 10, 0]}),
              Sequence('ACGUU',
-                      metadata={'id':'', 'description':''},
-                      positional_metadata={'quality':[10, 9, 8, 7, 6]}),
+                      metadata={'id': '', 'description': ''},
+                      positional_metadata={'quality': [10, 9, 8, 7, 6]}),
              Sequence(
-                 'pQqqqPPQQQ', metadata={'id':'proteinseq',
-                 'description':'detailed description \t\twith  new  lines'},
-                 positional_metadata={'quality':[42, 42, 442, 442, 42, 42, 42,
-                                                 42, 42, 43]})],
+                 'pQqqqPPQQQ',
+                 metadata={'id': 'proteinseq',
+                           'description':
+                               'detailed description \t\twith  new  lines'},
+                 positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42,
+                                                  42, 42, 43]})],
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
                                      'fasta_blank_lines_between_records',
@@ -213,12 +214,12 @@ class ReaderTests(TestCase):
         # after stripping leading/trailing whitespace from descriptions)
         self.odd_labels_different_type = (
             [Protein('DEFQfp',
-                     metadata={'id':'', 'description':''},
-                     positional_metadata={'quality':[0, 0, 1, 5, 44, 0]},
+                     metadata={'id': '', 'description': ''},
+                     positional_metadata={'quality': [0, 0, 1, 5, 44, 0]},
                      validate=False),
              Protein(
-                 'SKBI', metadata={'id':'', 'description':'skbio'},
-                 positional_metadata={'quality':[1, 2, 33, 123456789]})],
+                 'SKBI', metadata={'id': '', 'description': 'skbio'},
+                 positional_metadata={'quality': [1, 2, 33, 123456789]})],
             {'constructor': partial(Protein, validate=False)},
             list(map(get_data_path, ['fasta_prot_seqs_odd_labels'])),
             list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
@@ -228,15 +229,15 @@ class ReaderTests(TestCase):
         # they are also a different type than Sequence in order to
         # exercise the constructor parameter
         self.sequence_collection_different_type = (
-            [RNA('AUG', 
-                 metadata={'id':'', 'description':''},
-                 positional_metadata={'quality':[20, 20, 21]}),
+            [RNA('AUG',
+                 metadata={'id': '', 'description': ''},
+                 positional_metadata={'quality': [20, 20, 21]}),
              RNA('AUC',
-                 metadata={'id':'rnaseq-1', 'description':'rnaseq desc 1'},
-                 positional_metadata={'quality':[10, 9, 10]}),
+                 metadata={'id': 'rnaseq-1', 'description': 'rnaseq desc 1'},
+                 positional_metadata={'quality': [10, 9, 10]}),
              RNA('AUG',
-                 metadata={'id':'rnaseq-2', 'description':'rnaseq desc 2'},
-                 positional_metadata={'quality':[9, 99, 999]})],
+                 metadata={'id': 'rnaseq-2', 'description': 'rnaseq desc 2'},
+                 positional_metadata={'quality': [9, 99, 999]})],
             {'constructor': partial(RNA, validate=False)},
             list(map(get_data_path,
                      ['fasta_sequence_collection_different_type'])),
@@ -359,8 +360,8 @@ class ReaderTests(TestCase):
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
              ValueError,
-             'Number of positional metadata values \(3\) must match the number of characte'
-             'rs in the sequence \(4\)\.'),
+             'Number of positional metadata values \(3\) must match the '
+             'number of characters in the sequence \(4\)\.'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
@@ -396,7 +397,6 @@ class ReaderTests(TestCase):
         test_cases = (self.empty, self.single, self.multi,
                       self.odd_labels_different_type,
                       self.sequence_collection_different_type)
-        #test_cases = (self.empty, self.single)
 
         # Strategy:
         #   for each fasta file, read it without its corresponding qual file,
@@ -411,7 +411,8 @@ class ReaderTests(TestCase):
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    self.assertTrue(o.equals(e, ignore=['positional_metadata']))
+                    self.assertTrue(o.equals(e,
+                                             ignore=['positional_metadata']))
 
                 for qual_fp in qual_fps:
                     obs = list(_fasta_to_generator(fasta_fp, qual=qual_fp,
@@ -462,12 +463,14 @@ class ReaderTests(TestCase):
                                  ['fasta_single_seq', 'fasta_max_width_1']))
             for fasta_fp in fasta_fps:
                 exp = constructor(
-                    'ACGT-acgt.', metadata={'id':'seq1', 'description':'desc1'},
-                    positional_metadata={'quality':[10, 20, 30, 10, 0, 0, 0,
-                                                    88888, 1, 3456]})
+                    'ACGT-acgt.',
+                    metadata={'id': 'seq1', 'description': 'desc1'},
+                    positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
+                                                     88888, 1, 3456]})
 
                 obs = reader_fn(fasta_fp)
-                self.assertTrue(obs.equals(exp, ignore=['positional_metadata']))
+                self.assertTrue(obs.equals(exp,
+                                           ignore=['positional_metadata']))
 
                 qual_fps = list(map(get_data_path,
                                     ['qual_single_seq', 'qual_max_width_1']))
@@ -484,12 +487,13 @@ class ReaderTests(TestCase):
                 # get first
                 exp = constructor(
                     'ACGT-acgt.',
-                    metadata={'id':'seq1', 'description':'desc1'},
-                    positional_metadata={'quality':[10, 20, 30, 10, 0, 0, 0,
-                                                    88888, 1, 3456]})
+                    metadata={'id': 'seq1', 'description': 'desc1'},
+                    positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
+                                                     88888, 1, 3456]})
 
                 obs = reader_fn(fasta_fp)
-                self.assertTrue(obs.equals(exp, ignore=['positional_metadata']))
+                self.assertTrue(obs.equals(exp,
+                                           ignore=['positional_metadata']))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
@@ -497,14 +501,15 @@ class ReaderTests(TestCase):
 
                 # get middle
                 exp = constructor('ACGTTGCAccGG',
-                                  metadata={'id':'', 'description':''},
-                                  positional_metadata={'quality':[55, 10, 0,
-                                                                  999, 1, 1,
-                                                                  8, 775, 40,
-                                                                  10, 10, 0]})
+                                  metadata={'id': '', 'description': ''},
+                                  positional_metadata={'quality': [55, 10, 0,
+                                                                   999, 1, 1,
+                                                                   8, 775, 40,
+                                                                   10, 10, 0]})
 
                 obs = reader_fn(fasta_fp, seq_num=4)
-                self.assertTrue(obs.equals(exp, ignore=['positional_metadata']))
+                self.assertTrue(obs.equals(exp,
+                                           ignore=['positional_metadata']))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=4, qual=qual_fp)
@@ -512,13 +517,16 @@ class ReaderTests(TestCase):
 
                 # get last
                 exp = constructor(
-                    'pQqqqPPQQQ', metadata={'id':'proteinseq',
-                    'description':'detailed description \t\twith  new  lines'},
-                    positional_metadata={'quality':[42, 42, 442, 442, 42, 42,
-                                                    42, 42, 42, 43]})
+                    'pQqqqPPQQQ',
+                    metadata={'id': 'proteinseq',
+                              'description':
+                                  'detailed description \t\twith  new  lines'},
+                    positional_metadata={'quality': [42, 42, 442, 442, 42, 42,
+                                                     42, 42, 42, 43]})
 
                 obs = reader_fn(fasta_fp, seq_num=6)
-                self.assertTrue(obs.equals(exp, ignore=['positional_metadata']))
+                self.assertTrue(obs.equals(exp,
+                                           ignore=['positional_metadata']))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
@@ -560,7 +568,8 @@ class ReaderTests(TestCase):
                     # comparison (not part of SequenceCollection.__eq__).
                     self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
-                        self.assertTrue(o.equals(e, ignore=['positional_metadata']))
+                        self.assertTrue(
+                            o.equals(e, ignore=['positional_metadata']))
 
                     for qual_fp in qual_fps:
                         obs = reader_fn(fasta_fp, qual=qual_fp, **kwargs)
@@ -579,45 +588,45 @@ class WriterTests(TestCase):
     def setUp(self):
         self.bio_seq1 = Sequence(
             'ACGT-acgt.',
-            metadata={'id':'seq1', 'description':'desc1'},
-            positional_metadata={'quality':[10, 20, 30, 10, 0, 0, 0, 88888,
-                                            1, 3456]})
+            metadata={'id': 'seq1', 'description': 'desc1'},
+            positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0, 88888,
+                                             1, 3456]})
         self.bio_seq2 = Sequence(
             'A',
-            metadata={'id':' \n  \nseq \t2 '},
-            positional_metadata={'quality':[42]})
+            metadata={'id': ' \n  \nseq \t2 '},
+            positional_metadata={'quality': [42]})
         self.bio_seq3 = Sequence(
             'AACGGuA',
-            metadata={'description':'desc3'},
-            positional_metadata={'quality':[0, 0, 0, 0, 0, 0, 0]})
+            metadata={'description': 'desc3'},
+            positional_metadata={'quality': [0, 0, 0, 0, 0, 0, 0]})
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
-            positional_metadata={'quality':[55, 10, 0, 999, 1, 1, 8, 775, 40,
-                                            10, 10, 0]},
+            positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775, 40,
+                                             10, 10, 0]},
             validate=False)
         self.rna_seq = RNA('ACGUU',
-                           positional_metadata={'quality':[10, 9, 8, 7, 6]})
+                           positional_metadata={'quality': [10, 9, 8, 7, 6]})
         self.prot_seq = Protein(
             'pQqqqPPQQQ',
-            metadata={'id':'proteinseq',
-                      'description':"\ndetailed\ndescription \t\twith "
-                                    " new\n\nlines\n\n\n"},
-            positional_metadata={'quality':[42, 42, 442, 442, 42, 42, 42, 42,
-                                            42, 43]},
+            metadata={'id': 'proteinseq',
+                      'description': "\ndetailed\ndescription \t\twith "
+                                     " new\n\nlines\n\n\n"},
+            positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42, 42,
+                                             42, 43]},
             validate=False)
 
         seqs = [
             RNA('UUUU',
-                metadata={'id':'s\te\tq\t1', 'description':'desc\n1'},
-                positional_metadata={'quality':[1234, 0, 0, 2]}),
+                metadata={'id': 's\te\tq\t1', 'description': 'desc\n1'},
+                positional_metadata={'quality': [1234, 0, 0, 2]}),
             Sequence(
                 'CATC',
-                metadata={'id':'s\te\tq\t2', 'description':'desc\n2'},
-                positional_metadata={'quality':[1, 11, 111, 11112]}),
+                metadata={'id': 's\te\tq\t2', 'description': 'desc\n2'},
+                positional_metadata={'quality': [1, 11, 111, 11112]}),
             Protein('sits',
-                    metadata={'id':'s\te\tq\t3', 'description':'desc\n3'},
-                    positional_metadata={'quality':[12345, 678909, 999999,
-                                                    4242424242]},
+                    metadata={'id': 's\te\tq\t3', 'description': 'desc\n3'},
+                    positional_metadata={'quality': [12345, 678909, 999999,
+                                                     4242424242]},
                     validate=False)
         ]
         self.seq_coll = SequenceCollection(seqs)
@@ -635,15 +644,15 @@ class WriterTests(TestCase):
         def newline_description_gen():
             yield self.prot_seq
             yield DNA('AGGAGAATA',
-                      metadata={'id':'foo', 'description':'\n\n\n\n'},
-                      positional_metadata={'quality':range(9)})
+                      metadata={'id': 'foo', 'description': '\n\n\n\n'},
+                      positional_metadata={'quality': range(9)})
 
         # generate sequences with ids containing whitespace (to test
         # id_whitespace_replacement)
         def whitespace_id_gen():
             yield self.bio_seq2
-            yield RNA('UA', metadata={'id':'\n\t \t', 'description':'a\nb'},
-                      positional_metadata={'quality':[1000, 1]})
+            yield RNA('UA', metadata={'id': '\n\t \t', 'description': 'a\nb'},
+                      positional_metadata={'quality': [1000, 1]})
 
         # multiple sequences of mixed types, lengths, and metadata. lengths are
         # chosen to exercise various splitting cases when testing max_width,
@@ -658,8 +667,8 @@ class WriterTests(TestCase):
         # an error because one seq has qual scores and the other doesn't
         def mixed_qual_score_gen():
             missing_qual_seq = Sequence(
-                'AAAAT', metadata={'id':'da,dadadada',
-                                   'description':'10 hours'})
+                'AAAAT', metadata={'id': 'da,dadadada',
+                                   'description': '10 hours'})
             for seq in self.bio_seq1, missing_qual_seq:
                 yield seq
 
@@ -798,26 +807,26 @@ class WriterTests(TestCase):
         desc = 'b\na\nr'
         test_data = (
             (_biological_sequence_to_fasta,
-             Sequence('ACGT', metadata={'id':id_, 'description':desc},
-                      positional_metadata={'quality':range(1, 5)}),
+             Sequence('ACGT', metadata={'id': id_, 'description': desc},
+                      positional_metadata={'quality': range(1, 5)}),
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
               'qual_single_bio_seq_non_defaults')),
             (_dna_sequence_to_fasta,
-             DNA('TACG', metadata={'id':id_, 'description':desc},
-                 positional_metadata={'quality':range(4)}),
+             DNA('TACG', metadata={'id': id_, 'description': desc},
+                 positional_metadata={'quality': range(4)}),
              ('fasta_single_dna_seq_defaults',
               'fasta_single_dna_seq_non_defaults',
               'qual_single_dna_seq_non_defaults')),
             (_rna_sequence_to_fasta,
-             RNA('UACG', metadata={'id':id_, 'description':desc},
-                 positional_metadata={'quality':range(2, 6)}),
+             RNA('UACG', metadata={'id': id_, 'description': desc},
+                 positional_metadata={'quality': range(2, 6)}),
              ('fasta_single_rna_seq_defaults',
               'fasta_single_rna_seq_non_defaults',
               'qual_single_rna_seq_non_defaults')),
             (_protein_sequence_to_fasta,
-             Protein('PQQ', metadata={'id':id_, 'description':desc},
-                     positional_metadata={'quality':[42, 41, 40]}),
+             Protein('PQQ', metadata={'id': id_, 'description': desc},
+                     positional_metadata={'quality': [42, 41, 40]}),
              ('fasta_single_prot_seq_defaults',
               'fasta_single_prot_seq_non_defaults',
               'qual_single_prot_seq_non_defaults')))
