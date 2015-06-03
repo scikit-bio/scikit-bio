@@ -306,7 +306,7 @@ class SequenceCollection(SkbioObject):
         ids = []
         for i in range(sequence_count):
             self_i = self[i]
-            ids.append(self_i.id)
+            ids.append(self_i.metadata['id'])
             for j in range(i):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j], distance_fn)
         return DistanceMatrix(dm, ids)
@@ -556,7 +556,8 @@ class SequenceCollection(SkbioObject):
             #     new_seq = seq.copy()
             #     new_seq.id = new_id
             #     new_seqs.append(new_seq)
-            new_seqs.append(seq._to(id=new_id))
+            seq.metadata['id'] = new_id
+            new_seqs.append(seq._to(metadata=seq.metadata))
 
         return self.__class__(new_seqs), new_to_old_ids
 
@@ -583,7 +584,7 @@ class SequenceCollection(SkbioObject):
 
         """
         for seq in self:
-            yield seq.id, seq
+            yield seq.metadata['id'], seq
 
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
@@ -948,7 +949,7 @@ class Alignment(SequenceCollection):
         # iterate over sequences
         for sequence_index, seq in enumerate(self):
             # determine if we're keeping the current sequence
-            if keep_seq(sequence_index, seq.id):
+            if keep_seq(sequence_index, seq.metadata['id']):
                 # slice the current sequence with the indices
                 result.append(seq[indices])
             # if we're not keeping the current sequence, move on to the next
@@ -1153,7 +1154,7 @@ class Alignment(SequenceCollection):
         for seq, f in zip(self, base_frequencies):
             gap_frequency = sum([f[c] for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
-                seqs_to_keep.append(seq.id)
+                seqs_to_keep.append(seq.metadata['id'])
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
     def position_counters(self):
@@ -1447,7 +1448,7 @@ class StockholmAlignment(Alignment):
 
         # find length of leader info needed to make file pretty
         # 10 comes from the characters for '#=GF ' and the feature after label
-        infolen = max(len(seq.id) for seq in self._data) + 10
+        infolen = max(len(seq.metadata['id']) for seq in self._data) + 10
 
         GF_lines = []
         GS_lines = []
@@ -1713,8 +1714,8 @@ class StockholmAlignment(Alignment):
             elif line == "//":
                 # parse the record since we are at its end
                 # build the seuence list for alignment construction
-                seqs = [seq_constructor(seq, id=_id) for _id, seq in
-                        viewitems(seqs)]
+                seqs = [seq_constructor(seq, metadata={'id':_id})
+                        for _id, seq in viewitems(seqs)]
                 # get length of sequences in the alignment
                 seqlen = len(seqs[0][1])
 
