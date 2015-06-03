@@ -52,7 +52,7 @@ class DNA(NucleotideSequence):
     ----------
     id
     description
-    sequence
+    values
     quality
     alphabet
     gap_chars
