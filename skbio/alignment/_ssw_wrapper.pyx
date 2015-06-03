@@ -793,13 +793,17 @@ def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
         ]
     if kwargs.get('protein', False):
         seqs = [
-            Protein(alignment.aligned_query_sequence, id='query'),
-            Protein(alignment.aligned_target_sequence, id='target')
+            Protein(alignment.aligned_query_sequence,
+                    metadata={'id':'query'}),
+            Protein(alignment.aligned_target_sequence,
+                    metadata={'id':'target'})
         ]
     else:
         seqs = [
-            constructor(alignment.aligned_query_sequence, id='query'),
-            constructor(alignment.aligned_target_sequence, id='target')
+            constructor(alignment.aligned_query_sequence,
+                        metadata={'id':'query'}),
+            constructor(alignment.aligned_target_sequence,
+                        metadata={'id':'target'})
         ]
 
     return Alignment(seqs, score=alignment.optimal_alignment_score,
