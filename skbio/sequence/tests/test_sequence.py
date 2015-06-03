@@ -815,6 +815,52 @@ class TestSequence(TestCase):
             self.assertTrue(seq.equals(to))
             self.assertFalse(seq is to)
 
+    def test_to_update_single_attribute(self):
+        seq = Sequence('HE..--..LLO',
+                       metadata={'id': 'hello', 'description': 'gapped hello'},
+                       positional_metadata={'quality': range(11)})
+
+        to = seq._to(metadata={'id': 'new id'})
+        self.assertFalse(seq is to)
+
+        # they don't compare equal when we compare all attributes...
+        self.assertFalse(seq.equals(to))
+
+        # ...but they *do* compare equal when we ignore id, as that was the
+        # only attribute that changed
+        self.assertTrue(seq.equals(to, ignore=['metadata']))
+
+        # id should be what we specified in the _to call...
+        self.assertEqual(to.metadata['id'], 'new id')
+
+        # ...and shouldn't have changed on the original sequence
+        self.assertEqual(seq.metadata['id'], 'hello')
+
+    def test_to_update_multiple_attributes(self):
+        seq = Sequence('HE..--..LLO',
+                       metadata={'id': 'hello', 'description': 'gapped hello'},
+                       positional_metadata={'quality': range(11)})
+
+        to = seq._to(metadata={'id': 'new id', 'description': 'new desc'},
+                     positional_metadata={'quality': range(20, 25)},
+                     sequence='ACGTA')
+        self.assertFalse(seq is to)
+        self.assertFalse(seq.equals(to))
+
+        # attributes should be what we specified in the _to call...
+        self.assertEqual(to.metadata['id'], 'new id')
+        npt.assert_array_equal(to.positional_metadata['quality'],
+                               np.array([20, 21, 22, 23, 24]))
+        npt.assert_array_equal(to.sequence, np.array('ACGTA', dtype='c'))
+        self.assertEqual(to.metadata['description'], 'new desc')
+
+        # ...and shouldn't have changed on the original sequence
+        self.assertEqual(seq.metadata['id'], 'hello')
+        npt.assert_array_equal(seq.positional_metadata['quality'], range(11))
+        npt.assert_array_equal(seq.sequence, np.array('HE..--..LLO',
+                                                      dtype='c'))
+        self.assertEqual(seq.metadata['description'], 'gapped hello')
+
     def test_to_invalid_kwargs(self):
         seq = Sequence('ACCGGTACC', metadata={'id': "test-seq",
                        'desc': "A test sequence"})
