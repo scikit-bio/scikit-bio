@@ -68,7 +68,7 @@ We can use the following code to read a clustal file:
 ...                      'def   ---------------CGUGCAUGCAU-CGAU\n'
 ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
 >>> for dna in read(clustal_f, format="clustal", into=Alignment):
-...     print(dna.id)
+...     print(dna.metadata['id'])
 ...     print(str(dna))
 abc
 GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
@@ -81,9 +81,9 @@ We can use the following code to write to a clustal-formatted file:
 
 >>> from skbio import Alignment, DNA
 >>> from skbio.io import write
->>> seqs = [DNA('ACCGTTGTA-GTAGCT', id='seq1'),
-...         DNA('A--GTCGAA-GTACCT', id='sequence-2'),
-...         DNA('AGAGTTGAAGGTATCT', id='3')]
+>>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id':'seq1'}),
+...         DNA('A--GTCGAA-GTACCT', metadata={'id':'sequence-2'}),
+...         DNA('AGAGTTGAAGGTATCT', metadata={'id':'3'})]
 >>> aln = Alignment(seqs)
 >>> from StringIO import StringIO
 >>> fh = StringIO()

@@ -53,8 +53,8 @@ class SequenceCollection(SkbioObject):
     --------
     >>> from skbio import SequenceCollection
     >>> from skbio import DNA
-    >>> sequences = [DNA('ACCGT', id="seq1"),
-    ...              DNA('AACCGGT', id="seq2")]
+    >>> sequences = [DNA('ACCGT', metadata={'id':"seq1"}),
+    ...              DNA('AACCGGT', metadata={'id':"seq2"})]
     >>> s1 = SequenceCollection(sequences)
     >>> s1
     <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
@@ -149,13 +149,15 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
+        >>> sequences = [DNA('ACCGT', metadata={'id':"seq1"}),
+        ...              DNA('AACCGGT', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
-        >>> s1[0]
-        DNA('ACCGT', length=5, id='seq1')
-        >>> s1["seq1"]
-        DNA('ACCGT', length=5, id='seq1')
+        >>> print(s1[0])
+        ACCGT
+        >>> print(s1[0].metadata)
+        {'id': 'seq1'}
+        >>> print(s1["seq1"])
+        ACCGT
 
         """
         if isinstance(index, str):
@@ -223,8 +225,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
+        >>> sequences = [DNA('ACCGT', metadata={'id':"seq1"}),
+        ...              DNA('AACCGGT', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> print(repr(s1))
         <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
@@ -287,9 +289,9 @@ class SequenceCollection(SkbioObject):
         >>> from scipy.spatial.distance import hamming
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> seqs = [DNA("ACCGGGTT", id="s1"),
-        ...         DNA("ACTTGGTT", id="s2"),
-        ...         DNA("ACTAGGTT", id="s3")]
+        >>> seqs = [DNA("ACCGGGTT", metadata={'id':"s1"}),
+        ...         DNA("ACTTGGTT", metadata={'id':"s2"}),
+        ...         DNA("ACTAGGTT", metadata={'id':"s3"})]
         >>> a1 = SequenceCollection(seqs)
         >>> print(a1.distances(hamming))
         3x3 distance matrix
@@ -338,8 +340,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
+        >>> sequences = [DNA('ACCGT', metadata={'id':"seq1"}),
+        ...              DNA('AACCGGT', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> s1.distribution_stats()
         (2, 6.0, 1.0)
@@ -366,8 +368,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('A--CCGT.', id="seq1"),
-        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> sequences = [DNA('A--CCGT.', metadata={'id':"seq1"}),
+        ...              DNA('.AACCG-GT.', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> s2 = s1.degap()
         >>> s2
@@ -398,8 +400,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('A--CCGT.', id="seq1"),
-        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> sequences = [DNA('A--CCGT.', metadata={'id':"seq1"}),
+        ...              DNA('.AACCG-GT.', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> print(s1['seq1'])
         A--CCGT.
@@ -420,8 +422,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('A--CCGT.', id="seq1"),
-        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> sequences = [DNA('A--CCGT.', metadata={'id':"seq1"}),
+        ...              DNA('.AACCG-GT.', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> print(s1.ids())
         ['seq1', 'seq2']
@@ -484,8 +486,8 @@ class SequenceCollection(SkbioObject):
         and "def":
 
         >>> from skbio import DNA, SequenceCollection
-        >>> sequences = [DNA('A--CCGT.', id="abc"),
-        ...              DNA('.AACCG-GT.', id="def")]
+        >>> sequences = [DNA('A--CCGT.', metadata={'id':"abc"}),
+        ...              DNA('.AACCG-GT.', metadata={'id':"def"})]
         >>> s1 = SequenceCollection(sequences)
         >>> s1.ids()
         ['abc', 'def']
@@ -556,8 +558,9 @@ class SequenceCollection(SkbioObject):
             #     new_seq = seq.copy()
             #     new_seq.id = new_id
             #     new_seqs.append(new_seq)
-            seq.metadata['id'] = new_id
-            new_seqs.append(seq._to(metadata=seq.metadata))
+            metadata = seq.metadata.copy()
+            metadata['id'] = new_id
+            new_seqs.append(seq._to(metadata=metadata))
 
         return self.__class__(new_seqs), new_to_old_ids
 
@@ -603,8 +606,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('A--CCGT.', id="seq1"),
-        ...              DNA('.AACCG-GT.', id="seq2")]
+        >>> sequences = [DNA('A--CCGT.', metadata={'id':"seq1"}),
+        ...              DNA('.AACCG-GT.', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> print(s1.sequence_count())
         2
@@ -637,9 +640,9 @@ class SequenceCollection(SkbioObject):
         Examples
         --------
         >>> from skbio import SequenceCollection, DNA
-        >>> sequences = [DNA('A', id="seq1"),
-        ...              DNA('AT', id="seq2"),
-        ...              DNA('TTTT', id="seq3")]
+        >>> sequences = [DNA('A', metadata={'id':"seq1"}),
+        ...              DNA('AT', metadata={'id':"seq2"}),
+        ...              DNA('TTTT', metadata={'id':"seq3"})]
         >>> s1 = SequenceCollection(sequences)
         >>> for freqs in s1.kmer_frequencies(1):
         ...     print(freqs)
@@ -672,8 +675,8 @@ class SequenceCollection(SkbioObject):
         --------
         >>> from skbio import SequenceCollection
         >>> from skbio import DNA
-        >>> sequences = [DNA('ACCGT', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
+        >>> sequences = [DNA('ACCGT', metadata={'id':"seq1"}),
+        ...              DNA('AACCGGT', metadata={'id':"seq2"})]
         >>> s1 = SequenceCollection(sequences)
         >>> print(s1.sequence_lengths())
         [5, 7]
@@ -730,8 +733,8 @@ class Alignment(SequenceCollection):
     --------
     >>> from skbio import Alignment
     >>> from skbio import DNA
-    >>> sequences = [DNA('A--CCGT', id="seq1"),
-    ...              DNA('AACCGGT', id="seq2")]
+    >>> sequences = [DNA('A--CCGT', metadata={'id':"seq1"}),
+    ...              DNA('AACCGGT', metadata={'id':"seq2"})]
     >>> a1 = Alignment(sequences)
     >>> a1
     <Alignment: n=2; mean +/- std length=7.00 +/- 0.00>
@@ -772,9 +775,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> seqs = [DNA("A-CCGGG", id="s1"),
-        ...         DNA("ATCC--G", id="s2"),
-        ...         DNA("ATCCGGA", id="s3")]
+        >>> seqs = [DNA("A-CCGGG", metadata={'id':"s1"}),
+        ...         DNA("ATCC--G", metadata={'id':"s2"}),
+        ...         DNA("ATCCGGA", metadata={'id':"s3"})]
         >>> a1 = Alignment(seqs)
         >>> print(a1.distances())
         3x3 distance matrix
@@ -865,9 +868,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> seqs = [DNA("A-CCGGG", id="s1"),
-        ...         DNA("ATCC--G", id="s2"),
-        ...         DNA("ATCCGGA", id="s3")]
+        >>> seqs = [DNA("A-CCGGG", metadata={'id':"s1"}),
+        ...         DNA("ATCC--G", metadata={'id':"s2"}),
+        ...         DNA("ATCCGGA", metadata={'id':"s3"})]
         >>> a1 = Alignment(seqs)
         >>> a1
         <Alignment: n=3; mean +/- std length=7.00 +/- 0.00>
@@ -986,18 +989,34 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('ACCGT--', id="seq1"),
-        ...              DNA('AACCGGT', id="seq2")]
+        >>> sequences = [DNA('ACCGT--', metadata={'id':"seq1"}),
+        ...              DNA('AACCGGT', metadata={'id':"seq2"})]
         >>> a1 = Alignment(sequences)
         >>> for position in a1.iter_positions():
-        ...     print(position)
-        [DNA('A', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
-        [DNA('C', length=1, id='seq1'), DNA('A', length=1, id='seq2')]
-        [DNA('C', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
-        [DNA('G', length=1, id='seq1'), DNA('C', length=1, id='seq2')]
-        [DNA('T', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
-        [DNA('-', length=1, id='seq1'), DNA('G', length=1, id='seq2')]
-        [DNA('-', length=1, id='seq1'), DNA('T', length=1, id='seq2')]
+        ...     for seq in position:
+        ...         print(seq.metadata['id'], seq)
+        ...     print('')
+        seq1 A
+        seq2 A
+        <BLANKLINE>
+        seq1 C
+        seq2 A
+        <BLANKLINE>
+        seq1 C
+        seq2 C
+        <BLANKLINE>
+        seq1 G
+        seq2 C
+        <BLANKLINE>
+        seq1 T
+        seq2 G
+        <BLANKLINE>
+        seq1 -
+        seq2 G
+        <BLANKLINE>
+        seq1 -
+        seq2 T
+        <BLANKLINE>
 
         >>> for position in a1.iter_positions(constructor=str):
         ...     print(position)
@@ -1041,12 +1060,12 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> a1.majority_consensus()
-        DNA('AT-C', length=4)
+        DNA('AT-C', length=4, has_metadata=False, has_positional_metadata=False)
 
         """
         if self.is_empty():
@@ -1081,9 +1100,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_positions(0.50)
         >>> a2
@@ -1131,9 +1150,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> a2 = a1.omit_gap_sequences(0.49)
         >>> a2
@@ -1175,9 +1194,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> for counter in a1.position_counters():
         ...     print(counter)
@@ -1209,9 +1228,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> position_freqs = a1.position_frequencies()
         >>> round(position_freqs[0]['A'], 3)
@@ -1270,10 +1289,10 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AA--', id="seq1"),
-        ...              DNA('AC-C', id="seq2"),
-        ...              DNA('AT-C', id="seq3"),
-        ...              DNA('TG-C', id="seq4")]
+        >>> sequences = [DNA('AA--', metadata={'id':"seq1"}),
+        ...              DNA('AC-C', metadata={'id':"seq2"}),
+        ...              DNA('AT-C', metadata={'id':"seq3"}),
+        ...              DNA('TG-C', metadata={'id':"seq4"})]
         >>> a1 = Alignment(sequences)
         >>> print(a1.position_entropies())
         [0.56233514461880829, 1.3862943611198906, nan, nan]
@@ -1310,9 +1329,9 @@ class Alignment(SequenceCollection):
         --------
         >>> from skbio import Alignment
         >>> from skbio import DNA
-        >>> sequences = [DNA('AC--', id="seq1"),
-        ...              DNA('AT-C', id="seq2"),
-        ...              DNA('TT-C', id="seq3")]
+        >>> sequences = [DNA('AC--', metadata={'id':"seq1"}),
+        ...              DNA('AT-C', metadata={'id':"seq2"}),
+        ...              DNA('TT-C', metadata={'id':"seq3"})]
         >>> a1 = Alignment(sequences)
         >>> a1.sequence_length()
         4
@@ -1400,8 +1419,8 @@ class StockholmAlignment(Alignment):
 
     >>> from skbio import RNA
     >>> from skbio.alignment import StockholmAlignment
-    >>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-    ...         RNA("UCC--G-GGGA", id="seq2")]
+    >>> seqs = [RNA("ACC--G-GGGU", metadata={'id':"seq1"}),
+    ...         RNA("UCC--G-GGGA", metadata={'id':"seq2"})]
     >>> gf = {
     ... "RT": ["TITLE1",  "TITLE2"],
     ... "RA": ["Auth1;", "Auth2;"],
