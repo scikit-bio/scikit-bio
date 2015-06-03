@@ -27,12 +27,12 @@ from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
 
 class SequenceCollectionTests(TestCase):
     def setUp(self):
-        self.d1 = DNA('GATTACA', metadata={'id':"d1"})
-        self.d2 = DNA('TTG', metadata={'id':"d2"})
-        self.d3 = DNA('GTATACA', metadata={'id':"d3"})
-        self.r1 = RNA('GAUUACA', metadata={'id':"r1"})
-        self.r2 = RNA('UUG', metadata={'id':"r2"})
-        self.r3 = RNA('U-----UGCC--', metadata={'id':"r3"})
+        self.d1 = DNA('GATTACA', metadata={'id': "d1"})
+        self.d2 = DNA('TTG', metadata={'id': "d2"})
+        self.d3 = DNA('GTATACA', metadata={'id': "d3"})
+        self.r1 = RNA('GAUUACA', metadata={'id': "r1"})
+        self.r2 = RNA('UUG', metadata={'id': "r2"})
+        self.r3 = RNA('U-----UGCC--', metadata={'id': "r3"})
 
         self.seqs1 = [self.d1, self.d2]
         self.seqs2 = [self.r1, self.r2, self.r3]
@@ -176,8 +176,8 @@ class SequenceCollectionTests(TestCase):
 
         # Test to ensure floating point precision bug isn't present. See the
         # tests for Sequence.kmer_frequencies for more details.
-        sc = SequenceCollection([RNA('C' * 10, metadata={'id':'s1'}),
-                                 RNA('G' * 10, metadata={'id':'s2'})])
+        sc = SequenceCollection([RNA('C' * 10, metadata={'id': 's1'}),
+                                 RNA('G' * 10, metadata={'id': 's2'})])
         self.assertEqual(sc.kmer_frequencies(1, relative=True),
                          [defaultdict(float, {'C': 1.0}),
                           defaultdict(float, {'G': 1.0})])
@@ -191,8 +191,8 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(str(self.empty), exp4)
 
     def test_distances(self):
-        s1 = SequenceCollection([DNA("ACGT", metadata={'id':"d1"}),
-                                 DNA("ACGG", metadata={'id':"d2"})])
+        s1 = SequenceCollection([DNA("ACGT", metadata={'id': "d1"}),
+                                 DNA("ACGG", metadata={'id': "d2"})])
         expected = [[0, 0.25],
                     [0.25, 0]]
         expected = DistanceMatrix(expected, ['d1', 'd2'])
@@ -231,9 +231,9 @@ class SequenceCollectionTests(TestCase):
 
     def test_degap(self):
         expected = SequenceCollection([
-            RNA('GAUUACA', metadata={'id':"r1"}),
-            RNA('UUG', metadata={'id':"r2"}),
-            RNA('UUGCC', metadata={'id':"r3"})])
+            RNA('GAUUACA', metadata={'id': "r1"}),
+            RNA('UUG', metadata={'id': "r2"}),
+            RNA('UUGCC', metadata={'id': "r3"})])
         actual = self.s2.degap()
         self.assertEqual(actual, expected)
 
@@ -260,9 +260,9 @@ class SequenceCollectionTests(TestCase):
     def test_update_ids_default_behavior(self):
         # 3 seqs
         exp_sc = SequenceCollection([
-            RNA('GAUUACA', metadata={'id':"1"}),
-            RNA('UUG', metadata={'id':"2"}),
-            RNA('U-----UGCC--', metadata={'id':"3"})
+            RNA('GAUUACA', metadata={'id': "1"}),
+            RNA('UUG', metadata={'id': "2"}),
+            RNA('U-----UGCC--', metadata={'id': "3"})
         ])
         exp_id_map = {'1': 'r1', '2': 'r2', '3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids()
@@ -277,9 +277,9 @@ class SequenceCollectionTests(TestCase):
     def test_update_ids_prefix(self):
         # 3 seqs
         exp_sc = SequenceCollection([
-            RNA('GAUUACA', metadata={'id':"abc1"}),
-            RNA('UUG', metadata={'id':"abc2"}),
-            RNA('U-----UGCC--', metadata={'id':"abc3"})
+            RNA('GAUUACA', metadata={'id': "abc1"}),
+            RNA('UUG', metadata={'id': "abc2"}),
+            RNA('U-----UGCC--', metadata={'id': "abc3"})
         ])
         exp_id_map = {'abc1': 'r1', 'abc2': 'r2', 'abc3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(prefix='abc')
@@ -297,9 +297,9 @@ class SequenceCollectionTests(TestCase):
 
         # 3 seqs
         exp_sc = SequenceCollection([
-            RNA('GAUUACA', metadata={'id':"r1-42"}),
-            RNA('UUG', metadata={'id':"r2-42"}),
-            RNA('U-----UGCC--', metadata={'id':"r3-42"})
+            RNA('GAUUACA', metadata={'id': "r1-42"}),
+            RNA('UUG', metadata={'id': "r2-42"}),
+            RNA('U-----UGCC--', metadata={'id': "r3-42"})
         ])
         exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(func=append_42)
@@ -314,9 +314,9 @@ class SequenceCollectionTests(TestCase):
     def test_update_ids_ids_parameter(self):
         # 3 seqs
         exp_sc = SequenceCollection([
-            RNA('GAUUACA', metadata={'id':"abc"}),
-            RNA('UUG', metadata={'id':"def"}),
-            RNA('U-----UGCC--', metadata={'id':"ghi"})
+            RNA('GAUUACA', metadata={'id': "abc"}),
+            RNA('UUG', metadata={'id': "def"}),
+            RNA('U-----UGCC--', metadata={'id': "ghi"})
         ])
         exp_id_map = {'abc': 'r1', 'def': 'r2', 'ghi': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(ids=('abc', 'def', 'ghi'))
@@ -331,14 +331,14 @@ class SequenceCollectionTests(TestCase):
     def test_update_ids_sequence_attributes_propagated(self):
         # 1 seq
         exp_sc = Alignment([
-            DNA('ACGT', metadata={'id':"abc", 'description':'desc'},
-                positional_metadata={'quality':range(4)})
+            DNA('ACGT', metadata={'id': "abc", 'description': 'desc'},
+                positional_metadata={'quality': range(4)})
         ])
         exp_id_map = {'abc': 'seq1'}
 
         obj = Alignment([
-            DNA('ACGT', metadata={'id':"seq1", 'description':'desc'},
-                positional_metadata={'quality':range(4)})
+            DNA('ACGT', metadata={'id': "seq1", 'description': 'desc'},
+                positional_metadata={'quality': range(4)})
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc',))
@@ -347,18 +347,18 @@ class SequenceCollectionTests(TestCase):
 
         # 2 seqs
         exp_sc = Alignment([
-            DNA('ACGT', metadata={'id':"abc", 'description':'desc1'},
-                positional_metadata={'quality':range(4)}),
-            DNA('TGCA', metadata={'id':"def", 'description':'desc2'},
-                positional_metadata={'quality':range(4)[::-1]})
+            DNA('ACGT', metadata={'id': "abc", 'description': 'desc1'},
+                positional_metadata={'quality': range(4)}),
+            DNA('TGCA', metadata={'id': "def", 'description': 'desc2'},
+                positional_metadata={'quality': range(4)[::-1]})
         ])
         exp_id_map = {'abc': 'seq1', 'def': 'seq2'}
 
         obj = Alignment([
-            DNA('ACGT', metadata={'id':"seq1", 'description':'desc1'},
-                positional_metadata={'quality':(0, 1, 2, 3)}),
-            DNA('TGCA', metadata={'id':"seq2", 'description':'desc2'},
-                positional_metadata={'quality':(3, 2, 1, 0)})
+            DNA('ACGT', metadata={'id': "seq1", 'description': 'desc1'},
+                positional_metadata={'quality': (0, 1, 2, 3)}),
+            DNA('TGCA', metadata={'id': "seq2", 'description': 'desc2'},
+                positional_metadata={'quality': (3, 2, 1, 0)})
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc', 'def'))
@@ -415,12 +415,12 @@ class SequenceCollectionTests(TestCase):
 class AlignmentTests(TestCase):
 
     def setUp(self):
-        self.d1 = DNA('..ACC-GTTGG..', metadata={'id':"d1"})
-        self.d2 = DNA('TTACCGGT-GGCC', metadata={'id':"d2"})
-        self.d3 = DNA('.-ACC-GTTGC--', metadata={'id':"d3"})
+        self.d1 = DNA('..ACC-GTTGG..', metadata={'id': "d1"})
+        self.d2 = DNA('TTACCGGT-GGCC', metadata={'id': "d2"})
+        self.d3 = DNA('.-ACC-GTTGC--', metadata={'id': "d3"})
 
-        self.r1 = RNA('UUAU-', metadata={'id':"r1"})
-        self.r2 = RNA('ACGUU', metadata={'id':"r2"})
+        self.r1 = RNA('UUAU-', metadata={'id': "r1"})
+        self.r2 = RNA('ACGUU', metadata={'id': "r2"})
 
         self.seqs1 = [self.d1, self.d2, self.d3]
         self.seqs2 = [self.r1, self.r2]
@@ -436,20 +436,20 @@ class AlignmentTests(TestCase):
         self.empty = Alignment([])
 
         # sequences, but no positions
-        self.no_positions = Alignment([RNA('', metadata={'id':'a'}),
-                                       RNA('', metadata={'id':'b'})])
+        self.no_positions = Alignment([RNA('', metadata={'id': 'a'}),
+                                       RNA('', metadata={'id': 'b'})])
 
     def test_degap(self):
         expected = SequenceCollection([
-            DNA('ACCGTTGG', metadata={'id':"d1"}),
-            DNA('TTACCGGTGGCC', metadata={'id':"d2"}),
-            DNA('ACCGTTGC', metadata={'id':"d3"})])
+            DNA('ACCGTTGG', metadata={'id': "d1"}),
+            DNA('TTACCGGTGGCC', metadata={'id': "d2"}),
+            DNA('ACCGTTGC', metadata={'id': "d3"})])
         actual = self.a1.degap()
         self.assertEqual(actual, expected)
 
         expected = SequenceCollection([
-            RNA('UUAU', metadata={'id':"r1"}),
-            RNA('ACGUU', metadata={'id':"r2"})])
+            RNA('UUAU', metadata={'id': "r1"}),
+            RNA('ACGUU', metadata={'id': "r2"})])
         actual = self.a2.degap()
         self.assertEqual(actual, expected)
 
@@ -504,26 +504,26 @@ class AlignmentTests(TestCase):
 
         # keep positions
         actual = self.a1.subalignment(positions_to_keep=[0, 2, 3])
-        d1 = DNA('.AC', metadata={'id':"d1"})
-        d2 = DNA('TAC', metadata={'id':"d2"})
-        d3 = DNA('.AC', metadata={'id':"d3"})
+        d1 = DNA('.AC', metadata={'id': "d1"})
+        d2 = DNA('TAC', metadata={'id': "d2"})
+        d3 = DNA('.AC', metadata={'id': "d3"})
         expected = Alignment([d1, d2, d3])
         self.assertEqual(actual, expected)
 
         # keep positions (invert)
         actual = self.a1.subalignment(positions_to_keep=[0, 2, 3],
                                       invert_positions_to_keep=True)
-        d1 = DNA('.C-GTTGG..', metadata={'id':"d1"})
-        d2 = DNA('TCGGT-GGCC', metadata={'id':"d2"})
-        d3 = DNA('-C-GTTGC--', metadata={'id':"d3"})
+        d1 = DNA('.C-GTTGG..', metadata={'id': "d1"})
+        d2 = DNA('TCGGT-GGCC', metadata={'id': "d2"})
+        d3 = DNA('-C-GTTGC--', metadata={'id': "d3"})
         expected = Alignment([d1, d2, d3])
         self.assertEqual(actual, expected)
 
         # keep seqs and positions
         actual = self.a1.subalignment(seqs_to_keep=[0, 2],
                                       positions_to_keep=[0, 2, 3])
-        d1 = DNA('.AC', metadata={'id':"d1"})
-        d3 = DNA('.AC', metadata={'id':"d3"})
+        d1 = DNA('.AC', metadata={'id': "d1"})
+        d3 = DNA('.AC', metadata={'id': "d3"})
         expected = Alignment([d1, d3])
         self.assertEqual(actual, expected)
 
@@ -532,7 +532,7 @@ class AlignmentTests(TestCase):
                                       positions_to_keep=[0, 2, 3],
                                       invert_seqs_to_keep=True,
                                       invert_positions_to_keep=True)
-        d2 = DNA('TCGGT-GGCC', metadata={'id':"d2"})
+        d2 = DNA('TCGGT-GGCC', metadata={'id': "d2"})
         expected = Alignment([d2])
         self.assertEqual(actual, expected)
 
@@ -550,7 +550,7 @@ class AlignmentTests(TestCase):
 
     def test_init_not_equal_lengths(self):
         invalid_seqs = [self.d1, self.d2, self.d3,
-                        DNA('.-ACC-GTGC--', metadata={'id':"i2"})]
+                        DNA('.-ACC-GTGC--', metadata={'id': "i2"})]
         self.assertRaises(AlignmentError, Alignment,
                           invalid_seqs)
 
@@ -561,11 +561,11 @@ class AlignmentTests(TestCase):
     def test_iter_positions(self):
         actual = list(self.a2.iter_positions())
         expected = [
-            [RNA('U', metadata={'id':'r1'}), RNA('A', metadata={'id':'r2'})],
-            [RNA('U', metadata={'id':'r1'}), RNA('C', metadata={'id':'r2'})],
-            [RNA('A', metadata={'id':'r1'}), RNA('G', metadata={'id':'r2'})],
-            [RNA('U', metadata={'id':'r1'}), RNA('U', metadata={'id':'r2'})],
-            [RNA('-', metadata={'id':'r1'}), RNA('U', metadata={'id':'r2'})]
+            [RNA('U', metadata={'id': 'r1'}), RNA('A', metadata={'id': 'r2'})],
+            [RNA('U', metadata={'id': 'r1'}), RNA('C', metadata={'id': 'r2'})],
+            [RNA('A', metadata={'id': 'r1'}), RNA('G', metadata={'id': 'r2'})],
+            [RNA('U', metadata={'id': 'r1'}), RNA('U', metadata={'id': 'r2'})],
+            [RNA('-', metadata={'id': 'r1'}), RNA('U', metadata={'id': 'r2'})]
         ]
         self.assertEqual(actual, expected)
 
@@ -585,20 +585,20 @@ class AlignmentTests(TestCase):
             self.no_positions.majority_consensus().equals(RNA('')))
 
         # alignment where all sequences are the same
-        aln = Alignment([DNA('AG', metadata={'id':'a'}),
-                         DNA('AG', metadata={'id':'b'})])
+        aln = Alignment([DNA('AG', metadata={'id': 'a'}),
+                         DNA('AG', metadata={'id': 'b'})])
         self.assertTrue(aln.majority_consensus().equals(DNA('AG')))
 
         # no ties
-        d1 = DNA('TTT', metadata={'id':"d1"})
-        d2 = DNA('TT-', metadata={'id':"d2"})
-        d3 = DNA('TC-', metadata={'id':"d3"})
+        d1 = DNA('TTT', metadata={'id': "d1"})
+        d2 = DNA('TT-', metadata={'id': "d2"})
+        d3 = DNA('TC-', metadata={'id': "d3"})
         a1 = Alignment([d1, d2, d3])
         self.assertTrue(a1.majority_consensus().equals(DNA('TT-')))
 
         # ties
-        d1 = DNA('T', metadata={'id':"d1"})
-        d2 = DNA('A', metadata={'id':"d2"})
+        d1 = DNA('T', metadata={'id': "d1"})
+        d2 = DNA('A', metadata={'id': "d2"})
         a1 = Alignment([d1, d2])
         self.assertTrue(a1.majority_consensus() in
                         [DNA('T'), DNA('A')])
@@ -608,13 +608,13 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a2.omit_gap_positions(1.0), expected)
         self.assertEqual(self.a2.omit_gap_positions(0.51), expected)
 
-        r1 = RNA('UUAU', metadata={'id':"r1"})
-        r2 = RNA('ACGU', metadata={'id':"r2"})
+        r1 = RNA('UUAU', metadata={'id': "r1"})
+        r2 = RNA('ACGU', metadata={'id': "r2"})
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.49), expected)
 
-        r1 = RNA('UUAU', metadata={'id':"r1"})
-        r2 = RNA('ACGU', metadata={'id':"r2"})
+        r1 = RNA('UUAU', metadata={'id': "r1"})
+        r2 = RNA('ACGU', metadata={'id': "r2"})
         expected = Alignment([r1, r2])
         self.assertEqual(self.a2.omit_gap_positions(0.0), expected)
 
@@ -626,10 +626,10 @@ class AlignmentTests(TestCase):
         # tests for Alignment.position_frequencies for more details.
         seqs = []
         for i in range(33):
-            seqs.append(DNA('-.', metadata={'id':str(i)}))
+            seqs.append(DNA('-.', metadata={'id': str(i)}))
         aln = Alignment(seqs)
         self.assertEqual(aln.omit_gap_positions(1 - np.finfo(float).eps),
-                         Alignment([DNA('', metadata={'id':str(i)})
+                         Alignment([DNA('', metadata={'id': str(i)})
                                     for i in range(33)]))
 
     def test_omit_gap_sequences(self):
@@ -646,8 +646,8 @@ class AlignmentTests(TestCase):
 
         # Test to ensure floating point precision bug isn't present. See the
         # tests for Alignment.position_frequencies for more details.
-        aln = Alignment([DNA('.' * 33, metadata={'id':'abc'}),
-                         DNA('-' * 33, metadata={'id':'def'})])
+        aln = Alignment([DNA('.' * 33, metadata={'id': 'abc'}),
+                         DNA('-' * 33, metadata={'id': 'def'})])
         self.assertEqual(aln.omit_gap_sequences(1 - np.finfo(float).eps),
                          Alignment([]))
 
@@ -691,7 +691,7 @@ class AlignmentTests(TestCase):
         # cannot be represented exactly as a floating point number.
         seqs = []
         for i in range(10):
-            seqs.append(DNA('A', metadata={'id':str(i)}))
+            seqs.append(DNA('A', metadata={'id': str(i)}))
         aln = Alignment(seqs)
         self.assertEqual(aln.position_frequencies(),
                          [defaultdict(float, {'A': 1.0})])
@@ -731,13 +731,13 @@ class AlignmentTests(TestCase):
         self.assertTrue(self.empty._validate_lengths())
 
         self.assertTrue(Alignment([
-            DNA('TTT', metadata={'id':"d1"})])._validate_lengths())
+            DNA('TTT', metadata={'id': "d1"})])._validate_lengths())
 
 
 class StockholmAlignmentTests(TestCase):
     def setUp(self):
-        self.seqs = [DNA("ACC-G-GGTA", metadata={'id':"seq1"}),
-                     DNA("TCC-G-GGCA", metadata={'id':"seq2"})]
+        self.seqs = [DNA("ACC-G-GGTA", metadata={'id': "seq1"}),
+                     DNA("TCC-G-GGCA", metadata={'id': "seq2"})]
         self.GF = OrderedDict([
             ("AC", "RF00360"),
             ("BM", ["cmbuild  -F CM SEED",

@@ -88,8 +88,8 @@ class PairwiseAlignmentTests(TestCase):
         # Protein (rather than str) as input
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
         actual = global_pairwise_align_protein(
-            Protein("HEAGAWGHEE", metadata={'id':"s1"}),
-            Protein("PAWHEAE", metadata={'id':"s2"}),
+            Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
@@ -100,8 +100,8 @@ class PairwiseAlignmentTests(TestCase):
         # One Alignment and one Protein as input
         expected = ("HEAGAWGHEE-", "---PAW-HEAE", 23.0)
         actual = global_pairwise_align_protein(
-            Alignment([Protein("HEAGAWGHEE", metadata={'id':"s1"})]),
-            Protein("PAWHEAE", metadata={'id':"s2"}),
+            Alignment([Protein("HEAGAWGHEE", metadata={'id': "s1"})]),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
@@ -113,9 +113,9 @@ class PairwiseAlignmentTests(TestCase):
         # alignment as input. Score confirmed manually.
         expected = ("HEAGAWGHEE-", "HDAGAWGHDE-", "---PAW-HEAE", 21.0)
         actual = global_pairwise_align_protein(
-            Alignment([Protein("HEAGAWGHEE", metadata={'id':"s1"}),
-                       Protein("HDAGAWGHDE", metadata={'id':"s2"})]),
-            Alignment([Protein("PAWHEAE", metadata={'id':"s3"})]),
+            Alignment([Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+                       Protein("HDAGAWGHDE", metadata={'id': "s2"})]),
+            Alignment([Protein("PAWHEAE", metadata={'id': "s3"})]),
             gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
@@ -202,8 +202,8 @@ class PairwiseAlignmentTests(TestCase):
         expected = ("AWGHE", "AW-HE", 26.0, 4, 1)
         # Protein (rather than str) as input
         actual = local_pairwise_align_protein(
-            Protein("HEAGAWGHEE", metadata={'id':"s1"}),
-            Protein("PAWHEAE", metadata={'id':"s2"}),
+            Protein("HEAGAWGHEE", metadata={'id': "s1"}),
+            Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
         self.assertEqual(str(actual[0]), expected[0])
         self.assertEqual(str(actual[1]), expected[1])
@@ -214,14 +214,14 @@ class PairwiseAlignmentTests(TestCase):
         # Fails when either input is passed as an Alignment
         self.assertRaises(TypeError, local_pairwise_align_protein,
                           Alignment([Protein("HEAGAWGHEE",
-                                             metadata={'id':"s1"})]),
-                          Protein("PAWHEAE", metadata={'id':"s2"}),
-                                  gap_open_penalty=10.,
+                                             metadata={'id': "s1"})]),
+                          Protein("PAWHEAE", metadata={'id': "s2"}),
+                          gap_open_penalty=10.,
                           gap_extend_penalty=5.)
         self.assertRaises(TypeError, local_pairwise_align_protein,
-                          Protein("HEAGAWGHEE", metadata={'id':"s1"}),
+                          Protein("HEAGAWGHEE", metadata={'id': "s1"}),
                           Alignment([Protein("PAWHEAE",
-                                             metadata={'id':"s2"})]),
+                                             metadata={'id': "s2"})]),
                           gap_open_penalty=10., gap_extend_penalty=5.)
 
         # ids are provided if they're not passed in
@@ -260,8 +260,8 @@ class PairwiseAlignmentTests(TestCase):
         # DNA (rather than str) as input
         expected = ("-GACCTTGACCAGGTACC", "GAACTTTGAC---GTAAC", 32.0, 0, 0)
         actual = global_pairwise_align_nucleotide(
-            DNA("GACCTTGACCAGGTACC", metadata={'id':"s1"}),
-            DNA("GAACTTTGACGTAAC", metadata={'id':"s2"}),
+            DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
@@ -274,9 +274,9 @@ class PairwiseAlignmentTests(TestCase):
         expected = ("-GACCTTGACCAGGTACC", "-GACCATGACCAGGTACC",
                     "GAACTTTGAC---GTAAC", 27.5, 0, 0)
         actual = global_pairwise_align_nucleotide(
-            Alignment([DNA("GACCTTGACCAGGTACC", metadata={'id':"s1"}),
-                       DNA("GACCATGACCAGGTACC", metadata={'id':"s2"})]),
-            DNA("GAACTTTGACGTAAC", metadata={'id':"s3"}),
+            Alignment([DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                       DNA("GACCATGACCAGGTACC", metadata={'id': "s2"})]),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s3"}),
             gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
@@ -323,8 +323,8 @@ class PairwiseAlignmentTests(TestCase):
         # DNA (rather than str) as input
         expected = ("ACCTTGAC", "ACTTTGAC", 31.0, 1, 2)
         actual = local_pairwise_align_nucleotide(
-            DNA("GACCTTGACCAGGTACC", metadata={'id':"s1"}),
-            DNA("GAACTTTGACGTAAC", metadata={'id':"s2"}),
+            DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+            DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
             mismatch_score=-4)
         self.assertEqual(str(actual[0]), expected[0])
@@ -336,14 +336,14 @@ class PairwiseAlignmentTests(TestCase):
         # Fails when either input is passed as an Alignment
         self.assertRaises(TypeError, local_pairwise_align_nucleotide,
                           Alignment([DNA("GACCTTGACCAGGTACC",
-                                         metadata={'id':"s1"})]),
-                          DNA("GAACTTTGACGTAAC", metadata={'id':"s2"}),
+                                         metadata={'id': "s1"})]),
+                          DNA("GAACTTTGACGTAAC", metadata={'id': "s2"}),
                           gap_open_penalty=10., gap_extend_penalty=5.,
                           match_score=5, mismatch_score=-4)
         self.assertRaises(TypeError, local_pairwise_align_nucleotide,
-                          DNA("GACCTTGACCAGGTACC", metadata={'id':"s1"}),
+                          DNA("GACCTTGACCAGGTACC", metadata={'id': "s1"}),
                           Alignment([DNA("GAACTTTGACGTAAC",
-                                         metadata={'id':"s2"})]),
+                                         metadata={'id': "s2"})]),
                           gap_open_penalty=10., gap_extend_penalty=5.,
                           match_score=5, mismatch_score=-4)
 
@@ -494,10 +494,10 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 1]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACC', metadata={'id':'s1'}),
-                       DNA('ACC', metadata={'id':'s2'})]),
-            Alignment([DNA('ACGT', metadata={'id':'s3'}),
-                       DNA('ACGT', metadata={'id':'s4'})]), 5, 2, m)
+            Alignment([DNA('ACC', metadata={'id': 's1'}),
+                       DNA('ACC', metadata={'id': 's2'})]),
+            Alignment([DNA('ACGT', metadata={'id': 's3'}),
+                       DNA('ACGT', metadata={'id': 's4'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -523,8 +523,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-", metadata={'id':'0'})],
-                    [Sequence("ACGT", metadata={'id':'1'})], 1, 0, 0)
+        expected = ([Sequence("ACG-", metadata={'id': '0'})],
+                    [Sequence("ACGT", metadata={'id': '1'})], 1, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 4, 3)
         self.assertEqual(actual, expected)
@@ -543,22 +543,22 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-", metadata={'id':'s1'}),
-                     Sequence("ACG-", metadata={'id':'s2'})],
-                    [Sequence("ACGT", metadata={'id':'s3'}),
-                     Sequence("ACGT", metadata={'id':'s4'})],
+        expected = ([Sequence("ACG-", metadata={'id': 's1'}),
+                     Sequence("ACG-", metadata={'id': 's2'})],
+                    [Sequence("ACGT", metadata={'id': 's3'}),
+                     Sequence("ACGT", metadata={'id': 's4'})],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
-                            Alignment([DNA('ACG', metadata={'id':'s1'}),
-                                       DNA('ACG', metadata={'id':'s2'})]),
-                            Alignment([DNA('ACGT', metadata={'id':'s3'}),
-                                       DNA('ACGT', metadata={'id':'s4'})]),
+                            Alignment([DNA('ACG', metadata={'id': 's1'}),
+                                       DNA('ACG', metadata={'id': 's2'})]),
+                            Alignment([DNA('ACGT', metadata={'id': 's3'}),
+                                       DNA('ACGT', metadata={'id': 's4'})]),
                             4, 3)
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([Sequence("ACG", metadata={'id':'0'})],
-                    [Sequence("ACG", metadata={'id':'1'})], 6, 0, 0)
+        expected = ([Sequence("ACG", metadata={'id': '0'})],
+                    [Sequence("ACG", metadata={'id': '1'})], 6, 0, 0)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
@@ -571,8 +571,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
-        expected = ([Sequence("G", metadata={'id':'0'})],
-                    [Sequence("G", metadata={'id':'1'})], 6, 2, 2)
+        expected = ([Sequence("G", metadata={'id': '0'})],
+                    [Sequence("G", metadata={'id': '1'})], 6, 2, 2)
         actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
                             Alignment([DNA('ACGT')]), 3, 3)
         self.assertEqual(actual, expected)
@@ -580,7 +580,7 @@ class PairwiseAlignmentTests(TestCase):
     def test_get_seq_id(self):
         self.assertEqual(_get_seq_id("AAA", "hello"), "hello")
         self.assertEqual(_get_seq_id(DNA("AAA"), "hello"), "hello")
-        self.assertEqual(_get_seq_id(DNA("AAA", metadata={'id':"s1"}),
+        self.assertEqual(_get_seq_id(DNA("AAA", metadata={'id': "s1"}),
                                      "hello"), "s1")
 
     def test_first_largest(self):
