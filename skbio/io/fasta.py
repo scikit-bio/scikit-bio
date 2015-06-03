@@ -31,21 +31,19 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |generator of :mod:`skbio.sequence.BiologicalSequence` objects  |
+|Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.BiologicalSequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.NucleotideSequence`                       |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.DNASequence`                              |
+|Yes   |Yes   |:mod:`skbio.sequence.RNA`                                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.RNASequence`                              |
-+------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.sequence.ProteinSequence`                          |
+|Yes   |Yes   |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
 
 .. note:: All readers and writers support an optional QUAL file via the
@@ -99,7 +97,7 @@ a sequence ID (e.g., NCBI's FASTA defline format [5]_).
 
 .. note:: scikit-bio will enforce sequence ID uniqueness depending on the type
    of object that the FASTA file is read into. For example, reading a FASTA
-   file as a generator of ``BiologicalSequence`` objects will not enforce
+   file as a generator of ``Sequence`` objects will not enforce
    unique IDs since it simply yields each sequence it finds in the FASTA file.
    However, if the FASTA file is read into a ``SequenceCollection`` object, ID
    uniqueness will be enforced because that is a requirement of a
@@ -182,7 +180,7 @@ QUAL File Parameter (Readers and Writers)
 The ``qual`` parameter is available to all FASTA format readers and writers. It
 can be any file-like type supported by scikit-bio's I/O registry (e.g., file
 handle, file path, etc.). If ``qual`` is provided when reading, quality scores
-will be included in each in-memory ``BiologicalSequence`` object, in addition
+will be included in each in-memory ``Sequence`` object, in addition
 to sequence data stored in the FASTA file. When writing, quality scores will be
 written in QUAL format in addition to the sequence data being written in FASTA
 format.
@@ -193,26 +191,25 @@ The available reader parameters differ depending on which reader is used.
 
 Generator, SequenceCollection, and Alignment Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``constructor`` parameter can be used with the ``BiologicalSequence``
+The ``constructor`` parameter can be used with the ``Sequence``
 generator, ``SequenceCollection``, and ``Alignment`` FASTA readers.
 ``constructor`` specifies the in-memory type of each sequence that is parsed,
-and defaults to ``BiologicalSequence``. ``constructor`` should be a subclass of
-``BiologicalSequence``. For example, if you know that the FASTA file you're
+and defaults to ``Sequence``. ``constructor`` should be a subclass of
+``Sequence``. For example, if you know that the FASTA file you're
 reading contains protein sequences, you would pass
-``constructor=ProteinSequence`` to the reader call.
+``constructor=Protein`` to the reader call.
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
-   parameter, so it will always default to ``BiologicalSequence`` if another
+   parameter, so it will always default to ``Sequence`` if another
    type is not provided to the reader.
 
-BiologicalSequence Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``seq_num`` parameter can be used with the ``BiologicalSequence``,
-``NucleotideSequence``, ``DNASequence``, ``RNASequence``, and
-``ProteinSequence`` FASTA readers. ``seq_num`` specifies which sequence to read
-from the FASTA file (and optional QUAL file), and defaults to 1 (i.e., such
-that the first sequence is read). For example, to read the 50th sequence from a
-FASTA file, you would pass ``seq_num=50`` to the reader call.
+Sequence Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``seq_num`` parameter can be used with the ``Sequence``,
+``DNA``, ``RNA``, and ``Protein`` FASTA readers. ``seq_num`` specifies which
+sequence to read from the FASTA file (and optional QUAL file), and defaults to
+1 (i.e., such that the first sequence is read). For example, to read the 50th
+sequence from a FASTA file, you would pass ``seq_num=50`` to the reader call.
 
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -350,24 +347,19 @@ the correct file format for us!
 Let's inspect the type of sequences stored in the ``Alignment``:
 
 >>> aln[0]
-<BiologicalSequence: AAGCTNGGGC... (length: 42)>
+Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
 
-By default, sequences are loaded as ``BiologicalSequence`` objects. We can
+By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
 
->>> from skbio import DNASequence
+>>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> aln = Alignment.read(fh, constructor=DNASequence)
+>>> aln = Alignment.read(fh, constructor=DNA)
 >>> aln[0]
-<DNASequence: AAGCTNGGGC... (length: 42)>
+DNA('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
 
-We now have an ``Alignment`` of ``DNASequence`` objects instead of
-``BiologicalSequence`` objects. Validation of sequence character data is not
-performed during reading (see warning above for details). To verify that each
-of the sequences are valid DNA sequences:
-
->>> aln.is_valid()
-True
+We now have an ``Alignment`` of ``DNA`` objects instead of
+``Sequence`` objects.
 
 To write the alignment in FASTA format:
 
@@ -392,7 +384,7 @@ the FASTA file into memory at once. If the FASTA file is large (which is often
 the case), this may be infeasible if you don't have enough memory. To work
 around this issue, you can stream the sequences using scikit-bio's
 generator-based FASTA reader and writer. The generator-based reader yields
-``BiologicalSequence`` objects (or subclasses if ``constructor`` is supplied)
+``Sequence`` objects (or subclasses if ``constructor`` is supplied)
 one at a time, instead of loading all sequences into memory. For example, let's
 use the generator-based reader to process a single sequence at a time in a
 ``for`` loop:
@@ -401,32 +393,32 @@ use the generator-based reader to process a single sequence at a time in a
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> for seq in skbio.io.read(fh, format='fasta'):
 ...     seq
-<BiologicalSequence: AAGCTNGGGC... (length: 42)>
-<BiologicalSequence: AAGCCTTGGC... (length: 42)>
-<BiologicalSequence: ACCGGTTGGC... (length: 42)>
-<BiologicalSequence: AAACCCTTGC... (length: 42)>
-<BiologicalSequence: AAACCCTTGC... (length: 42)>
+Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
+Sequence('AAGCCT ... CGGTAT', length=42, id='seq2', description='Salmo gair')
+Sequence('ACCGGT ... GGGTAA', length=42, id='seq3', description='H. Sapiens')
+Sequence('AAACCC ... ACTCAT', length=42, id='seq4', description='Chimp')
+Sequence('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
 
-A single sequence can also be read into a ``BiologicalSequence`` (or subclass):
+A single sequence can also be read into a ``Sequence`` (or subclass):
 
->>> from skbio import BiologicalSequence
+>>> from skbio import Sequence
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> BiologicalSequence.read(fh)
-<BiologicalSequence: AAGCTNGGGC... (length: 42)>
+>>> Sequence.read(fh)
+Sequence('AAGCTN ... GGGTAT', length=42, id='seq1', description='Turkey')
 
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> BiologicalSequence.read(fh, seq_num=5)
-<BiologicalSequence: AAACCCTTGC... (length: 42)>
+>>> Sequence.read(fh, seq_num=5)
+Sequence('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
 
-We can use the same API to read the fifth sequence into a ``DNASequence``:
+We can use the same API to read the fifth sequence into a ``DNA``:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> dna_seq = DNASequence.read(fh, seq_num=5)
+>>> dna_seq = DNA.read(fh, seq_num=5)
 >>> dna_seq
-<DNASequence: AAACCCTTGC... (length: 42)>
+DNA('AAACCC ... GCTTAA', length=42, id='seq5', description='Gorilla')
 
 Individual sequence objects can also be written in FASTA format:
 
@@ -471,16 +463,19 @@ Also suppose we have the following QUAL file::
 ...     "3 3 10 42 80\\n")
 >>> qual_fh = StringIO(qual_fs)
 
-To read in a single ``BiologicalSequence`` at a time, we can use the
+To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
 >>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
-...     seq
-...     seq.quality
-<BiologicalSequence: CGATGTC (length: 7)>
+...     seq # doctest: +NORMALIZE_WHITESPACE
+...     seq.quality # doctest: +NORMALIZE_WHITESPACE
+Sequence('CGATGTC', length=7, id='seq1', description='db-acc ... 149855',
+         quality=[40, 39, 39, 4, 50, 1, 100])
 array([ 40,  39,  39,   4,  50,   1, 100])
-<BiologicalSequence: CATCG (length: 5)>
+Sequence('CATCG', length=5, id='seq2', description='db-accession-34989',
+         quality=[3, 3, 10, 42, 80])
 array([ 3,  3, 10, 42, 80])
+
 
 Note that the sequence objects have quality scores since we provided a QUAL
 file. The other FASTA readers operate in a similar manner.
@@ -541,9 +536,10 @@ References
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
-from future.standard_library import hooks
+from six.moves import zip_longest
 
 import textwrap
+from functools import partial
 
 import numpy as np
 
@@ -554,11 +550,7 @@ from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
-from skbio.sequence import (BiologicalSequence, NucleotideSequence,
-                            DNASequence, RNASequence, ProteinSequence)
-
-with hooks():
-    from itertools import zip_longest
+from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
 @register_sniffer('fasta')
@@ -599,7 +591,7 @@ def _fasta_sniffer(fh):
 
 
 @register_reader('fasta')
-def _fasta_to_generator(fh, qual=FileSentinel, constructor=BiologicalSequence):
+def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
                                                'FASTA'):
@@ -634,50 +626,46 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=BiologicalSequence):
                               quality=qual_scores)
 
 
-@register_reader('fasta', BiologicalSequence)
+@register_reader('fasta', Sequence)
 def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=BiologicalSequence),
+        _fasta_to_generator(fh, qual=qual, constructor=Sequence),
         seq_num)
 
 
-@register_reader('fasta', NucleotideSequence)
-def _fasta_to_nucleotide_sequence(fh, qual=FileSentinel, seq_num=1):
-    return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=NucleotideSequence),
-        seq_num)
-
-
-@register_reader('fasta', DNASequence)
+@register_reader('fasta', DNA)
 def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=DNASequence),
+        _fasta_to_generator(fh, qual=qual,
+                            constructor=partial(DNA, validate=False)),
         seq_num)
 
 
-@register_reader('fasta', RNASequence)
+@register_reader('fasta', RNA)
 def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=RNASequence),
+        _fasta_to_generator(fh, qual=qual,
+                            constructor=partial(RNA, validate=False)),
         seq_num)
 
 
-@register_reader('fasta', ProteinSequence)
+@register_reader('fasta', Protein)
 def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=ProteinSequence),
+        _fasta_to_generator(fh, qual=qual,
+                            constructor=partial(Protein, validate=False)),
         seq_num)
 
 
 @register_reader('fasta', SequenceCollection)
 def _fasta_to_sequence_collection(fh, qual=FileSentinel,
-                                  constructor=BiologicalSequence):
+                                  constructor=Sequence):
     return SequenceCollection(
         list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
 
 
 @register_reader('fasta', Alignment)
-def _fasta_to_alignment(fh, qual=FileSentinel, constructor=BiologicalSequence):
+def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence):
     return Alignment(
         list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
 
@@ -716,7 +704,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
             qual.write('>%s\n%s\n' % (header, qual_str))
 
 
-@register_writer('fasta', BiologicalSequence)
+@register_writer('fasta', Sequence)
 def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
@@ -725,16 +713,7 @@ def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width)
 
 
-@register_writer('fasta', NucleotideSequence)
-def _nucleotide_sequence_to_fasta(obj, fh, qual=FileSentinel,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  max_width=None):
-    _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
-
-
-@register_writer('fasta', DNASequence)
+@register_writer('fasta', DNA)
 def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
@@ -743,7 +722,7 @@ def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width)
 
 
-@register_writer('fasta', RNASequence)
+@register_writer('fasta', RNA)
 def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
@@ -752,7 +731,7 @@ def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width)
 
 
-@register_writer('fasta', ProteinSequence)
+@register_writer('fasta', Protein)
 def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',

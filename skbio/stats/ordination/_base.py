@@ -37,44 +37,47 @@ class OrdinationResults(SkbioObject):
     ----------
     eigvals : 1-D numpy array
         The result eigenvalues
-    species : 2-D numpy array
-        The result coordinates for each species
-    site : 2-D numpy array
-        The results coordinates for each site
-    biplot : 2-D numpy array
+    features : 2-D numpy array
+        The result coordinates for each features
+    samples : 2-D numpy array
+        The results coordinates for each samples
+    biplot_scores : 2-D numpy array
         The result biplot coordinates
-    site_constraints : 2-D numpy array
-        The result coordinates for each site constraint
+    samples_constraints : 2-D numpy array
+        The result coordinates for each samples constraint
     proportion_explained : 1-D numpy array
         The proportion explained by each eigenvector
-    species_ids : list of str
-        The species identifiers
-    site_ids : list of str
-        The site identifiers
+    features_ids : list of str
+        The features identifiers
+    samples_ids : list of str
+        The samples identifiers
     png
     svg
 
     """
     default_write_format = 'ordination'
 
-    def __init__(self, eigvals, species=None, site=None, biplot=None,
-                 site_constraints=None, proportion_explained=None,
-                 species_ids=None, site_ids=None):
+    def __init__(self, short_method_name, long_method_name, eigvals,
+                 samples, features=None, biplot_scores=None,
+                 samples_constraints=None, proportion_explained=None,
+                 features_ids=None, samples_ids=None):
+        self.short_method_name = short_method_name
+        self.long_method_name = long_method_name
         self.eigvals = eigvals
-        self.species = species
-        self.site = site
-        self.biplot = biplot
-        self.site_constraints = site_constraints
+        self.features = features
+        self.samples = samples
+        self.biplot = biplot_scores
+        self.samples_constraints = samples_constraints
         self.proportion_explained = proportion_explained
-        self.species_ids = species_ids
-        self.site_ids = site_ids
+        self.features_ids = features_ids
+        self.samples_ids = samples_ids
 
     def __str__(self):
         """Return a string representation of the ordination results.
 
         String representation lists ordination results attributes and indicates
         whether or not they are present. If an attribute is present, its
-        dimensions are listed. A truncated list of species and site IDs are
+        dimensions are listed. A truncated list of features and samples IDs are
         included (if they are present).
 
         Returns
@@ -89,19 +92,19 @@ class OrdinationResults(SkbioObject):
 
         attrs = [(self.eigvals, 'Eigvals'),
                  (self.proportion_explained, 'Proportion explained'),
-                 (self.species, 'Species'),
-                 (self.site, 'Site'),
+                 (self.features, 'Species'),
+                 (self.samples, 'Site'),
                  (self.biplot, 'Biplot'),
-                 (self.site_constraints, 'Site constraints')]
+                 (self.samples_constraints, 'Site constraints')]
         for attr, attr_label in attrs:
             def formatter(e):
                 return 'x'.join(['%d' % s for s in e.shape])
 
             lines.append(self._format_attribute(attr, attr_label, formatter))
 
-        lines.append(self._format_attribute(self.species_ids, 'Species IDs',
+        lines.append(self._format_attribute(self.features_ids, 'Species IDs',
                                             lambda e: _pprint_strs(e)))
-        lines.append(self._format_attribute(self.site_ids, 'Site IDs',
+        lines.append(self._format_attribute(self.samples_ids, 'Site IDs',
                                             lambda e: _pprint_strs(e)))
 
         return '\n'.join(lines)
@@ -111,28 +114,28 @@ class OrdinationResults(SkbioObject):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
         Creates a 3-D scatterplot of the ordination results, where each point
-        represents a site. Optionally, these points can be colored by metadata
+        represents a samples. Optionally, these points can be colored by metadata
         (see `df` and `column` below).
 
         Parameters
         ----------
         df : pandas.DataFrame, optional
-            ``DataFrame`` containing site metadata. Must be indexed by site ID,
-            and all site IDs in the ordination results must exist in the
-            ``DataFrame``. If ``None``, sites (i.e., points) will not be
+            ``DataFrame`` containing samples metadata. Must be indexed by samples ID,
+            and all samples IDs in the ordination results must exist in the
+            ``DataFrame``. If ``None``, sampless (i.e., points) will not be
             colored by metadata.
         column : str, optional
-            Column name in `df` to color sites (i.e., points in the plot) by.
+            Column name in `df` to color sampless (i.e., points in the plot) by.
             Cannot have missing data (i.e., ``np.nan``). `column` can be
             numeric or categorical. If numeric, all values in the column will
             be cast to ``float`` and mapped to colors using `cmap`. A colorbar
             will be included to serve as a legend. If categorical (i.e., not
             all values in `column` could be cast to ``float``), colors will be
             chosen for each category using evenly-spaced points along `cmap`. A
-            legend will be included. If ``None``, sites (i.e., points) will not
+            legend will be included. If ``None``, sampless (i.e., points) will not
             be colored by metadata.
         axes : iterable of int, optional
-            Indices of site coordinates to plot on the x-, y-, and z-axes. For
+            Indices of samples coordinates to plot on the x-, y-, and z-axes. For
             example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
             PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
             Must contain exactly three elements.
@@ -169,7 +172,7 @@ class OrdinationResults(SkbioObject):
             - there are not exactly three values in `axis_labels`
             - either `df` or `column` is provided without the other
             - `column` is not in the ``DataFrame``
-            - site IDs in the ordination results are not in `df` or have
+            - samples IDs in the ordination results are not in `df` or have
               missing data in `column`
 
         See Also
@@ -194,7 +197,7 @@ class OrdinationResults(SkbioObject):
         --------
         .. plot::
 
-           Define a distance matrix with four sites labelled A-D:
+           Define a distance matrix with four sampless labelled A-D:
 
            >>> from skbio import DistanceMatrix
            >>> dm = DistanceMatrix([[0., 0.21712454, 0.5007512, 0.91769271],
@@ -203,14 +206,14 @@ class OrdinationResults(SkbioObject):
            ...                      [0.91769271, 0.80332382, 0.65463348, 0.]],
            ...                     ['A', 'B', 'C', 'D'])
 
-           Define metadata for each site in a ``pandas.DataFrame``:
+           Define metadata for each samples in a ``pandas.DataFrame``:
 
            >>> import pandas as pd
            >>> metadata = {
-           ...     'A': {'body_site': 'skin'},
-           ...     'B': {'body_site': 'gut'},
-           ...     'C': {'body_site': 'gut'},
-           ...     'D': {'body_site': 'skin'}}
+           ...     'A': {'body_samples': 'skin'},
+           ...     'B': {'body_samples': 'gut'},
+           ...     'C': {'body_samples': 'gut'},
+           ...     'D': {'body_samples': 'skin'}}
            >>> df = pd.DataFrame.from_dict(metadata, orient='index')
 
            Run principal coordinate analysis (PCoA) on the distance matrix:
@@ -218,11 +221,11 @@ class OrdinationResults(SkbioObject):
            >>> from skbio.stats.ordination import PCoA
            >>> pcoa_results = PCoA(dm).scores()
 
-           Plot the ordination results, where each site is colored by body site
+           Plot the ordination results, where each samples is colored by body samples
            (a categorical variable):
 
-           >>> fig = pcoa_results.plot(df=df, column='body_site',
-           ...                         title='Sites colored by body site',
+           >>> fig = pcoa_results.plot(df=df, column='body_samples',
+           ...                         title='Sites colored by body samples',
            ...                         cmap='Set1', s=50)
 
         """
@@ -230,7 +233,7 @@ class OrdinationResults(SkbioObject):
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
 
-        coord_matrix = self.site.T
+        coord_matrix = self.samples.T
         self._validate_plot_axes(coord_matrix, axes)
 
         # derived from
@@ -243,7 +246,7 @@ class OrdinationResults(SkbioObject):
         zs = coord_matrix[axes[2]]
 
         point_colors, category_to_color = self._get_plot_point_colors(
-            df, column, self.site_ids, cmap)
+            df, column, self.samples_ids, cmap)
 
         scatter_fn = partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:

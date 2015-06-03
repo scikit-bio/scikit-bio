@@ -11,18 +11,16 @@ from future.builtins import map, range, zip
 from six import StringIO
 
 from unittest import TestCase, main
+from functools import partial
 
-from skbio import (BiologicalSequence, NucleotideSequence, DNA, RNA, Protein,
-                   ProteinSequence, SequenceCollection, Alignment)
-from skbio.sequence import BiologicalSequenceError
+from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
-    _fasta_to_nucleotide_sequence, _fasta_to_dna_sequence,
-    _fasta_to_rna_sequence, _fasta_to_protein_sequence,
+    _fasta_to_dna_sequence, _fasta_to_rna_sequence, _fasta_to_protein_sequence,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
-    _biological_sequence_to_fasta, _nucleotide_sequence_to_fasta,
-    _dna_sequence_to_fasta, _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _biological_sequence_to_fasta, _dna_sequence_to_fasta,
+    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
     _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
@@ -49,11 +47,9 @@ class SnifferTests(TestCase):
             'fasta_single_rna_seq_non_defaults',
             'fasta_description_newline_replacement_multi_char',
             'fasta_prot_seqs_odd_labels',
-            'fasta_single_nuc_seq_defaults',
             'fasta_single_seq',
             'fasta_id_whitespace_replacement_empty_str',
             'fasta_sequence_collection_different_type',
-            'fasta_single_nuc_seq_non_defaults',
             'fasta_id_whitespace_replacement_multi_char',
             'fasta_single_bio_seq_defaults',
             'fasta_single_prot_seq_defaults',
@@ -114,7 +110,6 @@ class SnifferTests(TestCase):
             'qual_sequence_collection_different_type',
             'qual_single_bio_seq_non_defaults',
             'qual_single_dna_seq_non_defaults',
-            'qual_single_nuc_seq_non_defaults',
             'qual_single_prot_seq_non_defaults',
             'qual_single_rna_seq_non_defaults',
             'qual_single_seq',
@@ -151,7 +146,7 @@ class ReaderTests(TestCase):
 
         # single sequence
         self.single = (
-            [BiologicalSequence(
+            [Sequence(
                 'ACGT-acgt.', id='seq1', description='desc1',
                 quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])],
             {},
@@ -162,18 +157,17 @@ class ReaderTests(TestCase):
 
         # multiple sequences
         self.multi = (
-            [BiologicalSequence(
+            [Sequence(
                 'ACGT-acgt.', id='seq1', description='desc1',
                 quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456]),
-             BiologicalSequence('A', id='_____seq__2_', quality=[42]),
-             BiologicalSequence(
+             Sequence('A', id='_____seq__2_', quality=[42]),
+             Sequence(
                 'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0]),
-             BiologicalSequence('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777]),
-             BiologicalSequence(
+             Sequence(
                 'ACGTTGCAccGG',
                 quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0]),
-             BiologicalSequence('ACGUU', quality=[10, 9, 8, 7, 6]),
-             BiologicalSequence(
+             Sequence('ACGUU', quality=[10, 9, 8, 7, 6]),
+             Sequence(
                  'pQqqqPPQQQ', id='proteinseq',
                  description='detailed description \t\twith  new  lines',
                  quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])],
@@ -208,16 +202,16 @@ class ReaderTests(TestCase):
         # exactly, only that they need to match exactly after parsing (e.g.,
         # after stripping leading/trailing whitespace from descriptions)
         self.odd_labels_different_type = (
-            [Protein('DEFQfp', quality=[0, 0, 1, 5, 44, 0]),
+            [Protein('DEFQfp', quality=[0, 0, 1, 5, 44, 0], validate=False),
              Protein(
                  'SKBI', description='skbio', quality=[1, 2, 33, 123456789])],
-            {'constructor': ProteinSequence},
+            {'constructor': partial(Protein, validate=False)},
             list(map(get_data_path, ['fasta_prot_seqs_odd_labels'])),
             list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
         )
 
         # sequences that can be loaded into a SequenceCollection or Alignment.
-        # they are also a different type than BiologicalSequence in order to
+        # they are also a different type than Sequence in order to
         # exercise the constructor parameter
         self.sequence_collection_different_type = (
             [RNA('AUG', quality=[20, 20, 21]),
@@ -225,7 +219,7 @@ class ReaderTests(TestCase):
                  quality=[10, 9, 10]),
              RNA('AUG', id='rnaseq-2', description='rnaseq desc 2',
                  quality=[9, 99, 999])],
-            {'constructor': RNA},
+            {'constructor': partial(RNA, validate=False)},
             list(map(get_data_path,
                      ['fasta_sequence_collection_different_type'])),
             list(map(get_data_path,
@@ -346,8 +340,9 @@ class ReaderTests(TestCase):
             # sequence and quality score length mismatch between fasta and qual
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
-             BiologicalSequenceError,
-             'Number of Phred quality scores \(3\).*\(4\)'),
+             ValueError,
+             'Number of quality scores \(3\) must match the number of characte'
+             'rs in the sequence \(4\)\.'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
@@ -364,8 +359,8 @@ class ReaderTests(TestCase):
             # invalid qual scores (negative integer)
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_qual_scores_negative')},
-             BiologicalSequenceError,
-             'Phred quality scores.*greater than or equal to zero'),
+             ValueError,
+             'Quality scores must be greater than or equal to zero\.'),
 
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
@@ -395,7 +390,6 @@ class ReaderTests(TestCase):
         for exp, kwargs, fasta_fps, qual_fps in test_cases:
             for fasta_fp in fasta_fps:
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
-
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
                     self.assertTrue(o.equals(e, ignore=['quality']))
@@ -418,15 +412,13 @@ class ReaderTests(TestCase):
     # performed above
 
     def test_fasta_to_any_sequence(self):
-        for constructor, reader_fn in ((BiologicalSequence,
+        for constructor, reader_fn in ((Sequence,
                                         _fasta_to_biological_sequence),
-                                       (NucleotideSequence,
-                                        _fasta_to_nucleotide_sequence),
-                                       (DNA,
+                                       (partial(DNA, validate=False),
                                         _fasta_to_dna_sequence),
-                                       (RNA,
+                                       (partial(RNA, validate=False),
                                         _fasta_to_rna_sequence),
-                                       (Protein,
+                                       (partial(Protein, validate=False),
                                         _fasta_to_protein_sequence)):
 
             # empty file
@@ -482,7 +474,9 @@ class ReaderTests(TestCase):
                     self.assertTrue(obs.equals(exp))
 
                 # get middle
-                exp = constructor('AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
+                exp = constructor('ACGTTGCAccGG',
+                                  quality=[55, 10, 0, 999, 1, 1, 8, 775, 40,
+                                           10, 10, 0])
 
                 obs = reader_fn(fasta_fp, seq_num=4)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
@@ -497,11 +491,11 @@ class ReaderTests(TestCase):
                     description='detailed description \t\twith  new  lines',
                     quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
 
-                obs = reader_fn(fasta_fp, seq_num=7)
+                obs = reader_fn(fasta_fp, seq_num=6)
                 self.assertTrue(obs.equals(exp, ignore=['quality']))
 
                 for qual_fp in qual_fps:
-                    obs = reader_fn(fasta_fp, seq_num=7, qual=qual_fp)
+                    obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
                     self.assertTrue(obs.equals(exp))
 
                 # seq_num too large
@@ -538,7 +532,7 @@ class ReaderTests(TestCase):
                     # SequenceCollection has an equals method (part of #656).
                     # We need this method to include IDs and description in the
                     # comparison (not part of SequenceCollection.__eq__).
-                    self.assertEqual(obs, exp)
+                    self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
                         self.assertTrue(o.equals(e, ignore=['quality']))
 
@@ -557,32 +551,32 @@ class ReaderTests(TestCase):
 
 class WriterTests(TestCase):
     def setUp(self):
-        self.bio_seq1 = BiologicalSequence(
+        self.bio_seq1 = Sequence(
             'ACGT-acgt.', id='seq1', description='desc1',
             quality=[10, 20, 30, 10, 0, 0, 0, 88888, 1, 3456])
-        self.bio_seq2 = BiologicalSequence(
+        self.bio_seq2 = Sequence(
             'A', id=' \n  \nseq \t2 ', quality=[42])
-        self.bio_seq3 = BiologicalSequence(
+        self.bio_seq3 = Sequence(
             'AACGGuA', description='desc3', quality=[0, 0, 0, 0, 0, 0, 0])
-        self.nuc_seq = NucleotideSequence(
-            'AcGtUTu', quality=[1, 2, 3, 4, 5, 6, 777])
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
-            quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0])
+            quality=[55, 10, 0, 999, 1, 1, 8, 775, 40, 10, 10, 0],
+            validate=False)
         self.rna_seq = RNA('ACGUU', quality=[10, 9, 8, 7, 6])
         self.prot_seq = Protein(
             'pQqqqPPQQQ', id='proteinseq',
             description='\ndetailed\ndescription \t\twith  new\n\nlines\n\n\n',
-            quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43])
+            quality=[42, 42, 442, 442, 42, 42, 42, 42, 42, 43], validate=False)
 
         seqs = [
             RNA('UUUU', id='s\te\tq\t1', description='desc\n1',
                 quality=[1234, 0, 0, 2]),
-            BiologicalSequence(
+            Sequence(
                 'CATC', id='s\te\tq\t2', description='desc\n2',
                 quality=[1, 11, 111, 11112]),
             Protein('sits', id='s\te\tq\t3', description='desc\n3',
-                    quality=[12345, 678909, 999999, 4242424242])
+                    quality=[12345, 678909, 999999, 4242424242],
+                    validate=False)
         ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
@@ -614,14 +608,13 @@ class WriterTests(TestCase):
         # sequence data vs. quality scores
         def multi_seq_gen():
             for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
-                        self.nuc_seq, self.dna_seq, self.rna_seq,
-                        self.prot_seq):
+                        self.dna_seq, self.rna_seq, self.prot_seq):
                 yield seq
 
         # can be serialized if no qual file is provided, else it should raise
         # an error because one seq has qual scores and the other doesn't
         def mixed_qual_score_gen():
-            missing_qual_seq = BiologicalSequence(
+            missing_qual_seq = Sequence(
                 'AAAAT', id='da,dadadada', description='10 hours')
             for seq in self.bio_seq1, missing_qual_seq:
                 yield seq
@@ -676,7 +669,7 @@ class WriterTests(TestCase):
         ]))
 
         def blank_seq_gen():
-            for seq in self.bio_seq1, BiologicalSequence(''):
+            for seq in self.bio_seq1, Sequence(''):
                 yield seq
 
         # generators or parameter combos that cannot be written in fasta
@@ -707,7 +700,6 @@ class WriterTests(TestCase):
 
             with open(fp, 'U') as fh:
                 exp = fh.read()
-
             self.assertEqual(obs, exp)
 
     def test_generator_to_fasta_mixed_qual_scores(self):
@@ -762,17 +754,11 @@ class WriterTests(TestCase):
         desc = 'b\na\nr'
         test_data = (
             (_biological_sequence_to_fasta,
-             BiologicalSequence('ACGT', id=id_, description=desc,
-                                quality=range(1, 5)),
+             Sequence('ACGT', id=id_, description=desc,
+                      quality=range(1, 5)),
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
               'qual_single_bio_seq_non_defaults')),
-            (_nucleotide_sequence_to_fasta,
-             NucleotideSequence('ACGTU', id=id_, description=desc,
-                                quality=range(5)),
-             ('fasta_single_nuc_seq_defaults',
-              'fasta_single_nuc_seq_non_defaults',
-              'qual_single_nuc_seq_non_defaults')),
             (_dna_sequence_to_fasta,
              DNA('TACG', id=id_, description=desc, quality=range(4)),
              ('fasta_single_dna_seq_defaults',
@@ -924,8 +910,6 @@ class RoundtripTests(TestCase):
 
         for reader, writer in ((_fasta_to_biological_sequence,
                                 _biological_sequence_to_fasta),
-                               (_fasta_to_nucleotide_sequence,
-                                _nucleotide_sequence_to_fasta),
                                (_fasta_to_dna_sequence,
                                 _dna_sequence_to_fasta),
                                (_fasta_to_rna_sequence,

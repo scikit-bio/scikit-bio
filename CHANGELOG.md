@@ -9,8 +9,10 @@
 * FASTA/QUAL (``skbio.io.fasta``) and FASTQ (``skbio.io.fastq``) readers now allow blank or whitespace-only lines at the beginning of the file, between records, or at the end of the file. A blank or whitespace-only line in any other location will continue to raise an error [#781](https://github.com/biocore/scikit-bio/issues/781).
 * scikit-bio now ignores leading and trailing whitespace characters on each line while reading FASTA/QUAL and FASTQ files.
 * Added `ratio` parameter to `skbio.stats.power.subsample_power`. This allows the user to calculate power on groups for uneven size (For example, draw twice as many samples from Group B than Group A). If `ratio` is not set, group sizes will remain equal across all groups.* Power calculations (`skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`) can use test functions that return multiple p values, like some multivariate linear regression models. Previously, the power calculations required the test to return a single p value.
+
 ### Performance enhancements
 * The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.
+* The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
 
 
 ### Bug fixes
@@ -50,6 +52,7 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
     - Autodetect Python version and disable doctests for Python 3.
 * `numpy` is no longer required to be installed before installing scikit-bio!
 * Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
+* Updated to use `natsort` >= 4.0.0.
 * The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results. 
 
 ## Version 0.2.3 (2015-02-13)

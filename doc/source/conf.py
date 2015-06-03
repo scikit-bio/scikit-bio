@@ -5,6 +5,7 @@ import os
 import sphinx_bootstrap_theme
 
 import skbio
+from skbio.util import classproperty
 
 # NOTE: parts of this file were taken from scipy's doc/source/conf.py. See
 # scikit-bio/licenses/scipy.txt for scipy's license.
@@ -434,9 +435,24 @@ def linkcode_resolve(domain, info):
 # Link-checking on Travis sometimes times out.
 linkcheck_timeout = 30
 
+# This is so that our docs build.
+def _closure():
+    def __get__(self, cls, owner):
+        return self
+
+    classproperty.__get__ = __get__
+
+_closure()
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    if what == "method":
+        if isinstance(obj, classproperty):
+            return True
+    return skip
 
 # Add the 'copybutton' javascript, to hide/show the prompt in code
 # examples, originally taken from scikit-learn's doc/conf.py
 def setup(app):
     app.add_javascript('copybutton.js')
     app.add_stylesheet('style.css')
+    app.connect('autodoc-skip-member', autodoc_skip_member)
