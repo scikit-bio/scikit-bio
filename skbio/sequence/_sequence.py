@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
 from six import string_types, text_type
-from six.moves import zip_longest
 
 import re
 import collections
@@ -380,7 +379,6 @@ class Sequence(collections.Sequence, SkbioObject):
                  has_positional_metadata=False)
 
         """
-        qual = None
         metadata = self.metadata
         if (not isinstance(indexable, np.ndarray) and
             ((not isinstance(indexable, string_types)) and
@@ -611,8 +609,8 @@ class Sequence(collections.Sequence, SkbioObject):
         tokens.append(self._format_str(self))
         tokens.append("length=%d" % len(self))
         tokens.append("has_metadata=%s" % self.has_metadata())
-        tokens.append("has_positional_metadata=%s" % 
-            self.has_positional_metadata())
+        tokens.append("has_positional_metadata=%s" %
+                      self.has_positional_metadata())
 
         return reprnator(start, tokens, end)
 
