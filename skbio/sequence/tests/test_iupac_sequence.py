@@ -58,8 +58,8 @@ class TestIUPACSequence(TestCase):
 
     def test_init_nondefault_parameters(self):
         seq = ExampleIUPACSequence('.-ABCXYZ',
-                                   metadata={'id':'foo'},
-                                   positional_metadata={'quality':range(8)})
+                                   metadata={'id': 'foo'},
+                                   positional_metadata={'quality': range(8)})
 
         npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
         self.assertTrue(seq.has_metadata())
@@ -324,44 +324,44 @@ class TestIUPACSequence(TestCase):
 
         self.assertEquals(ExampleIUPACSequence(
                               "",
-                              positional_metadata={'qual':[]},
+                              positional_metadata={'qual': []},
                               **kw).degap(),
-                         ExampleIUPACSequence("", **kw))
+                          ExampleIUPACSequence("", **kw))
 
         self.assertEquals(ExampleIUPACSequence(
                               "ABCXYZ",
-                              positional_metadata={'qual':np.arange(6)},
+                              positional_metadata={'qual': np.arange(6)},
                               **kw).degap(),
                           ExampleIUPACSequence(
                               "ABCXYZ",
-                              positional_metadata={'qual':np.arange(6)},
+                              positional_metadata={'qual': np.arange(6)},
                               **kw))
 
         self.assertEquals(ExampleIUPACSequence(
                               "ABC-XYZ",
-                              positional_metadata={'qual':np.arange(7)},
+                              positional_metadata={'qual': np.arange(7)},
                               **kw).degap(),
                           ExampleIUPACSequence(
                               "ABCXYZ",
-                              positional_metadata={'qual':[0, 1, 2, 4, 5, 6]},
+                              positional_metadata={'qual': [0, 1, 2, 4, 5, 6]},
                               **kw))
 
         self.assertEquals(ExampleIUPACSequence(
                               ".-ABC-XYZ.",
-                              positional_metadata={'qual':np.arange(10)},
+                              positional_metadata={'qual': np.arange(10)},
                               **kw).degap(),
                           ExampleIUPACSequence(
                               "ABCXYZ",
-                              positional_metadata={'qual':[2, 3, 4, 6, 7, 8]},
+                              positional_metadata={'qual': [2, 3, 4, 6, 7, 8]},
                               **kw))
 
         self.assertEquals(ExampleIUPACSequence(
                               "---.-.-.-.-.",
-                              positional_metadata={'quality':np.arange(12)},
+                              positional_metadata={'quality': np.arange(12)},
                               **kw).degap(),
                           ExampleIUPACSequence(
                               "",
-                              positional_metadata={'quality':np.array([],
+                              positional_metadata={'quality': np.array([],
                                                    dtype=np.int64)},
                               **kw))
 
