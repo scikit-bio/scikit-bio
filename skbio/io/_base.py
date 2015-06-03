@@ -160,7 +160,6 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
 
     for idx, seq in enumerate(generator):
 
-
         if len(seq) < 1:
             raise ValueError(
                 "%s sequence does not contain any characters (i.e., it is an "

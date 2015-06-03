@@ -273,13 +273,15 @@ class TestParseFASTALikeHeader(unittest.TestCase):
 class TestFormatFASTALikeRecords(unittest.TestCase):
     def setUp(self):
         def generator():
-            yield Sequence('ACGT', metadata={'id':'', 'description':''},
-                           positional_metadata={'quality':range(4)})
-            yield RNA('GAU', metadata={'id':'  foo \t\t bar ',
-                                       'description':''})
-            yield DNA('TAG', metadata={'id':'', 'description':'foo\n\n bar\n'})
-            yield Sequence('A', metadata={'id':'foo', 'description':'bar baz'},
-                           positional_metadata={'quality':[42]})
+            yield Sequence('ACGT', metadata={'id': '', 'description': ''},
+                           positional_metadata={'quality': range(4)})
+            yield RNA('GAU', metadata={'id': '  foo \t\t bar ',
+                                       'description': ''})
+            yield DNA('TAG',
+                      metadata={'id': '', 'description': 'foo\n\n bar\n'})
+            yield Sequence('A',
+                           metadata={'id': 'foo', 'description': 'bar baz'},
+                           positional_metadata={'quality': [42]})
         self.gen = generator()
 
     def test_no_replacement(self):
@@ -341,9 +343,9 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_missing_quality_scores(self):
         def missing_qual_gen():
-            for seq in (RNA('A', positional_metadata={'quality':[42]}),
+            for seq in (RNA('A', positional_metadata={'quality': [42]}),
                         Sequence('AG'),
-                        DNA('GG', positional_metadata={'quality':[41, 40]})):
+                        DNA('GG', positional_metadata={'quality': [41, 40]})):
                 yield seq
 
         with self.assertRaisesRegexp(ValueError,

@@ -81,9 +81,9 @@ We can use the following code to write to a clustal-formatted file:
 
 >>> from skbio import Alignment, DNA
 >>> from skbio.io import write
->>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id':'seq1'}),
-...         DNA('A--GTCGAA-GTACCT', metadata={'id':'sequence-2'}),
-...         DNA('AGAGTTGAAGGTATCT', metadata={'id':'3'})]
+>>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id': 'seq1'}),
+...         DNA('A--GTCGAA-GTACCT', metadata={'id': 'sequence-2'}),
+...         DNA('AGAGTTGAAGGTATCT', metadata={'id': '3'})]
 >>> aln = Alignment(seqs)
 >>> from StringIO import StringIO
 >>> fh = StringIO()
@@ -320,5 +320,6 @@ def _clustal_to_alignment(fh, strict=True):
         raise ClustalFormatError("Sequences not aligned properly")
     alns = []
     for key in labels:
-        alns.append(Sequence(metadata={'id':key}, sequence=''.join(data[key])))
+        alns.append(Sequence(sequence=''.join(data[key]),
+                             metadata={'id': key}))
     return Alignment(alns)

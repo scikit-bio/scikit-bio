@@ -154,8 +154,8 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
             seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
                 machine_name, run, lane, tile, x, y, index, read)
             yield constructor(seq,
-                              positional_metadata={'quality':phred},
-                              metadata={'id':seq_id})
+                              positional_metadata={'quality': phred},
+                              metadata={'id': seq_id})
 
 
 @register_reader('qseq', SequenceCollection)

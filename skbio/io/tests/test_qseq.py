@@ -205,8 +205,8 @@ class TestQSeqToGenerator(TestQSeqBase):
                 _drop_kwargs(kwarg, 'seq_num')
                 constructor = kwarg.get('constructor', Sequence)
                 expected = [constructor(
-                                c[1], metadata={'id':c[0]},
-                                positional_metadata={'quality':np.array(c[2],
+                                c[1], metadata={'id': c[0]},
+                                positional_metadata={'quality': np.array(c[2],
                                                      dtype=np.uint8)})
                             for c in components]
 
@@ -240,8 +240,8 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
                 constructor = kwarg.get('constructor', Sequence)
                 expected = SequenceCollection(
                                [constructor(
-                                   c[1], metadata={'id':c[0]},
-                                   positional_metadata={'quality':np.array(
+                                   c[1], metadata={'id': c[0]},
+                                   positional_metadata={'quality': np.array(
                                                         c[2],
                                                         dtype=np.uint8)})
                                 for c in components])
@@ -277,8 +277,8 @@ class TestQSeqToSequences(TestQSeqBase):
                     seq_num = kwarg.get('seq_num', 1)
                     c = components[seq_num - 1]
                     expected = constructor(
-                                   c[1], metadata={'id':c[0]},
-                                   positional_metadata={'quality':np.array(
+                                   c[1], metadata={'id': c[0]},
+                                   positional_metadata={'quality': np.array(
                                                         c[2], np.uint8)})
 
                     observed = read(valid, into=constructor.func,
