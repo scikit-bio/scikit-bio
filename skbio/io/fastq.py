@@ -211,7 +211,7 @@ as a ``DNA``:
 
 >>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> seq = DNA.read(fh, variant='sanger', seq_num=2) # doctest: +NORMALIZE_WHITESPACE
+>>> seq = DNA.read(fh, variant='sanger', seq_num=2)
 >>> seq # doctest: +NORMALIZE_WHITESPACE
 DNA('TATGTA ... TACATA', length=35, has_metadata=True,
     has_positional_metadata=True)
@@ -328,8 +328,8 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
                                                          variant,
                                                          phred_offset,
                                                          qual_header)
-        yield constructor(seq, metadata={'id':id_, 'description':desc},
-                          positional_metadata={'quality':phred_scores})
+        yield constructor(seq, metadata={'id': id_, 'description': desc},
+                          positional_metadata={'quality': phred_scores})
 
 
 @register_reader('fastq', Sequence)
