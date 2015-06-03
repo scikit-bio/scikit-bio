@@ -94,7 +94,6 @@ def rda(Y, X, scale_Y=False, scaling=1):
     feature_ids = Y.columns
     Y = Y.values
     X = X.values
-
     # Centre response variables (they must be dimensionally
     # homogeneous)
     Y = scale(Y, with_std=scale_Y)
