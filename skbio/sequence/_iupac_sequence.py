@@ -28,7 +28,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     ----------
     id
     description
-    sequence
+    values
     quality
     alphabet
     gap_chars
