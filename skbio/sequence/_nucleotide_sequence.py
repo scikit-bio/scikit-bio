@@ -24,10 +24,9 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
     Attributes
     ----------
-    id
-    description
     sequence
-    quality
+    metadata
+    positional_metadata
     alphabet
     gap_chars
     nondegenerate_chars
@@ -82,16 +81,16 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Parameters
         ----------
         reverse : bool, optional
-            If ``True``, return the reverse complement. If quality scores are
-            present, they will be reversed.
+            If ``True``, return the reverse complement. If positional metadata 
+            is present, it will be reversed.
 
         Returns
         -------
         NucleotideSequence
-            The (reverse) complement of the nucleotide sequence. The type, ID,
-            description, and quality scores of the result will be the same as
-            the nucleotide sequence. If `reverse` is ``True``, quality scores
-            will be reversed if they are present.
+            The (reverse) complement of the nucleotide sequence. The type and
+            metadata of the result will be the same as the nucleotide
+            sequence. If `reverse` is ``True``, positional metadata
+            will be reversed if it is present.
 
         See Also
         --------
@@ -130,9 +129,9 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Returns
         -------
         NucleotideSequence
-            The reverse complement of the nucleotide sequence. The type, ID,
-            and description of the result will be the same as the nucleotide
-            sequence. If quality scores are present, they will be reversed.
+            The reverse complement of the nucleotide sequence. The type and
+            metadata of the result will be the same as the nucleotide
+            sequence. If positional metadata is present, it will be reversed.
 
         See Also
         --------

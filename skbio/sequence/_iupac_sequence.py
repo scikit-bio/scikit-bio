@@ -26,10 +26,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     Attributes
     ----------
-    id
-    description
     sequence
-    quality
+    metadata
+    positional_metadata
     alphabet
     gap_chars
     nondegenerate_chars
@@ -371,8 +370,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Notes
         -----
-        The type, ID, and description of the result will be the same as the
-        biological sequence. If quality scores are present, they will be
+        The type and metadata of the result will be the same as the
+        biological sequence. If positional metadata is present, it will be
         filtered in the same manner as the sequence characters and included in
         the resulting degapped sequence.
 
@@ -407,8 +406,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         There is no guaranteed ordering to the non-degenerate sequences that
         are yielded.
 
-        Each non-degenerate sequence will have the same type, ID, description,
-        and quality scores as the biological sequence.
+        Each non-degenerate sequence will have the same type, metadata,
+        and positional metadata as the biological sequence.
 
         Examples
         --------
