@@ -81,7 +81,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Parameters
         ----------
         reverse : bool, optional
-            If ``True``, return the reverse complement. If positional metadata 
+            If ``True``, return the reverse complement. If positional metadata
             is present, it will be reversed.
 
         Returns

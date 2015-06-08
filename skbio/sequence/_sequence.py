@@ -117,7 +117,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('ACGTACGTACGTACGT', metadata={'id': 'seq-id',
         ...                                 'description': 'seq description'})
         >>> s # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=True, 
+        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=True,
                  has_positional_metadata=False)
         >>> s.metadata
         {'id': 'seq-id', 'description': 'seq description'}
@@ -139,7 +139,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('ACGTACGTACGTACGT',
         ...              positional_metadata={'quality': range(16)})
         >>> s # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=False, 
+        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=False,
                  has_positional_metadata=True)
         >>> s.positional_metadata['quality'].values
         array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15])
