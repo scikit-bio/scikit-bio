@@ -29,7 +29,7 @@ class AlignmentWriterTests(TestCase):
         # spaces. sequence characters are a mix of cases and gap characters.
         # sequences are shorter than 10 chars
         variable_length_ids = Alignment([
-            RNA('.-ACGU'),
+            RNA('.-ACGU', metadata={'id': ''}),
             RNA('UGCA-.', metadata={'id': 'a'}),
             RNA('.ACGU-', metadata={'id': 'bb'}),
             RNA('ugca-.', metadata={'id': '1'}, validate=False),
@@ -47,7 +47,7 @@ class AlignmentWriterTests(TestCase):
 
         # single sequence with only a single character (minimal writeable
         # alignment)
-        single_seq_short = Alignment([DNA('-')])
+        single_seq_short = Alignment([DNA('-', metadata={'id': ''})])
 
         # alignments that can be written in phylip format
         self.objs = [dna_3_seqs, variable_length_ids, two_chunks,
