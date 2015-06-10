@@ -776,7 +776,7 @@ struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure {
 };
 
 
-/* "skbio/alignment/_ssw_wrapper.pyx":416
+/* "skbio/alignment/_ssw_wrapper.pyx":401
  *         return tuples
  * 
  * cdef class StripedSmithWaterman:             # <<<<<<<<<<<<<<
@@ -817,7 +817,7 @@ struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure {
 static struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure *__pyx_vtabptr_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure;
 
 
-/* "skbio/alignment/_ssw_wrapper.pyx":416
+/* "skbio/alignment/_ssw_wrapper.pyx":401
  *         return tuples
  * 
  * cdef class StripedSmithWaterman:             # <<<<<<<<<<<<<<
@@ -1685,7 +1685,7 @@ static PyObject *__pyx_tuple__18;
 static PyObject *__pyx_tuple__19;
 static PyObject *__pyx_codeobj__20;
 
-/* "skbio/alignment/_ssw_wrapper.pyx":107
+/* "skbio/alignment/_ssw_wrapper.pyx":92
  *     cdef str _cigar_string
  * 
  *     def __cinit__(self, read_sequence, reference_sequence, index_starts_at):             # <<<<<<<<<<<<<<
@@ -1726,16 +1726,16 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_1__cin
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_reference_sequence)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 107; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 92; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_index_starts_at)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 107; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 92; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 107; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 92; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -1750,7 +1750,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_1__cin
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 107; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 92; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.AlignmentStructure.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -1773,14 +1773,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure___cini
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":111
+  /* "skbio/alignment/_ssw_wrapper.pyx":96
  *         # treated sematically as a private output of ssw.c like the `s_align`
  *         # struct
  *         self.read_sequence = read_sequence             # <<<<<<<<<<<<<<
  *         self.reference_sequence = reference_sequence
  *         self.index_starts_at = index_starts_at
  */
-  if (!(likely(PyString_CheckExact(__pyx_v_read_sequence))||((__pyx_v_read_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_read_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 111; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(PyString_CheckExact(__pyx_v_read_sequence))||((__pyx_v_read_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_read_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 96; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_1 = __pyx_v_read_sequence;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -1789,14 +1789,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure___cini
   __pyx_v_self->read_sequence = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":112
+  /* "skbio/alignment/_ssw_wrapper.pyx":97
  *         # struct
  *         self.read_sequence = read_sequence
  *         self.reference_sequence = reference_sequence             # <<<<<<<<<<<<<<
  *         self.index_starts_at = index_starts_at
  * 
  */
-  if (!(likely(PyString_CheckExact(__pyx_v_reference_sequence))||((__pyx_v_reference_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_reference_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 112; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(PyString_CheckExact(__pyx_v_reference_sequence))||((__pyx_v_reference_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_reference_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 97; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_1 = __pyx_v_reference_sequence;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -1805,17 +1805,17 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure___cini
   __pyx_v_self->reference_sequence = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":113
+  /* "skbio/alignment/_ssw_wrapper.pyx":98
  *         self.read_sequence = read_sequence
  *         self.reference_sequence = reference_sequence
  *         self.index_starts_at = index_starts_at             # <<<<<<<<<<<<<<
  * 
  *     cdef __constructor(self, s_align* pointer):
  */
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v_index_starts_at); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v_index_starts_at); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 98; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_self->index_starts_at = __pyx_t_2;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":107
+  /* "skbio/alignment/_ssw_wrapper.pyx":92
  *     cdef str _cigar_string
  * 
  *     def __cinit__(self, read_sequence, reference_sequence, index_starts_at):             # <<<<<<<<<<<<<<
@@ -1835,7 +1835,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure___cini
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":115
+/* "skbio/alignment/_ssw_wrapper.pyx":100
  *         self.index_starts_at = index_starts_at
  * 
  *     cdef __constructor(self, s_align* pointer):             # <<<<<<<<<<<<<<
@@ -1848,7 +1848,7 @@ static PyObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure__
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__constructor", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":116
+  /* "skbio/alignment/_ssw_wrapper.pyx":101
  * 
  *     cdef __constructor(self, s_align* pointer):
  *         self.p = pointer             # <<<<<<<<<<<<<<
@@ -1857,7 +1857,7 @@ static PyObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure__
  */
   __pyx_v_self->p = __pyx_v_pointer;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":115
+  /* "skbio/alignment/_ssw_wrapper.pyx":100
  *         self.index_starts_at = index_starts_at
  * 
  *     cdef __constructor(self, s_align* pointer):             # <<<<<<<<<<<<<<
@@ -1872,7 +1872,7 @@ static PyObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure__
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":118
+/* "skbio/alignment/_ssw_wrapper.pyx":103
  *         self.p = pointer
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -1896,7 +1896,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_2__de
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":119
+  /* "skbio/alignment/_ssw_wrapper.pyx":104
  * 
  *     def __dealloc__(self):
  *         if self.p is not NULL:             # <<<<<<<<<<<<<<
@@ -1906,7 +1906,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_2__de
   __pyx_t_1 = ((__pyx_v_self->p != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":120
+    /* "skbio/alignment/_ssw_wrapper.pyx":105
  *     def __dealloc__(self):
  *         if self.p is not NULL:
  *             align_destroy(self.p)             # <<<<<<<<<<<<<<
@@ -1918,7 +1918,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_2__de
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":118
+  /* "skbio/alignment/_ssw_wrapper.pyx":103
  *         self.p = pointer
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -1930,7 +1930,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_2__de
   __Pyx_RefNannyFinishContext();
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":122
+/* "skbio/alignment/_ssw_wrapper.pyx":107
  *             align_destroy(self.p)
  * 
  *     def __getitem__(self, key):             # <<<<<<<<<<<<<<
@@ -1960,7 +1960,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__getitem__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":123
+  /* "skbio/alignment/_ssw_wrapper.pyx":108
  * 
  *     def __getitem__(self, key):
  *         return getattr(self, key)             # <<<<<<<<<<<<<<
@@ -1968,13 +1968,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     def __repr__(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetAttr(((PyObject *)__pyx_v_self), __pyx_v_key); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 123; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetAttr(((PyObject *)__pyx_v_self), __pyx_v_key); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 108; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":122
+  /* "skbio/alignment/_ssw_wrapper.pyx":107
  *             align_destroy(self.p)
  * 
  *     def __getitem__(self, key):             # <<<<<<<<<<<<<<
@@ -1993,7 +1993,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":125
+/* "skbio/alignment/_ssw_wrapper.pyx":110
  *         return getattr(self, key)
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -2033,14 +2033,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__repr__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":126
+  /* "skbio/alignment/_ssw_wrapper.pyx":111
  * 
  *     def __repr__(self):
  *         data = ['optimal_alignment_score', 'suboptimal_alignment_score',             # <<<<<<<<<<<<<<
  *                 'query_begin', 'query_end', 'target_begin',
  *                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
  */
-  __pyx_t_1 = PyList_New(10); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 126; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(10); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 111; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_optimal_alignment_score);
   PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_optimal_alignment_score);
@@ -2075,7 +2075,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_v_data = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":130
+  /* "skbio/alignment/_ssw_wrapper.pyx":115
  *                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
  *                 'query_sequence', 'target_sequence']
  *         return "{\n%s\n}" % ',\n'.join([             # <<<<<<<<<<<<<<
@@ -2083,10 +2083,10 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 130; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":131
+  /* "skbio/alignment/_ssw_wrapper.pyx":116
  *                 'query_sequence', 'target_sequence']
  *         return "{\n%s\n}" % ',\n'.join([
  *             "    {!r}: {!r}".format(k, self[k]) for k in data])             # <<<<<<<<<<<<<<
@@ -2097,15 +2097,15 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   for (;;) {
     if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_2)) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #else
-    __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #endif
     __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_4);
     __pyx_t_4 = 0;
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_r_r, __pyx_n_s_format); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_kp_s_r_r, __pyx_n_s_format); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyObject_GetItem(((PyObject *)__pyx_v_self), __pyx_v_k); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_6 = PyObject_GetItem(((PyObject *)__pyx_v_self), __pyx_v_k); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = NULL;
     __pyx_t_8 = 0;
@@ -2119,7 +2119,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         __pyx_t_8 = 1;
       }
     }
-    __pyx_t_9 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_9);
     if (__pyx_t_7) {
       PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __Pyx_GIVEREF(__pyx_t_7); __pyx_t_7 = NULL;
@@ -2130,33 +2130,33 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_8, __pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_6);
     __pyx_t_6 = 0;
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_9, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 131; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_9, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 130; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":130
+  /* "skbio/alignment/_ssw_wrapper.pyx":115
  *                 'target_end_optimal', 'target_end_suboptimal', 'cigar',
  *                 'query_sequence', 'target_sequence']
  *         return "{\n%s\n}" % ',\n'.join([             # <<<<<<<<<<<<<<
  *             "    {!r}: {!r}".format(k, self[k]) for k in data])
  * 
  */
-  __pyx_t_2 = __Pyx_PyString_Join(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 130; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyString_Join(__pyx_kp_s_, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_s, __pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 130; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyString_Format(__pyx_kp_s_s, __pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":125
+  /* "skbio/alignment/_ssw_wrapper.pyx":110
  *         return getattr(self, key)
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -2183,7 +2183,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":133
+/* "skbio/alignment/_ssw_wrapper.pyx":118
  *             "    {!r}: {!r}".format(k, self[k]) for k in data])
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -2222,119 +2222,119 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__str__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":134
+  /* "skbio/alignment/_ssw_wrapper.pyx":119
  * 
  *     def __str__(self):
  *         score = "Score: %d" % self.optimal_alignment_score             # <<<<<<<<<<<<<<
  *         if self.query_sequence and self.cigar:
  *             target = self.aligned_target_sequence
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 134; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 119; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Score_d, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 134; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Score_d, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 119; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_score = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":135
+  /* "skbio/alignment/_ssw_wrapper.pyx":120
  *     def __str__(self):
  *         score = "Score: %d" % self.optimal_alignment_score
  *         if self.query_sequence and self.cigar:             # <<<<<<<<<<<<<<
  *             target = self.aligned_target_sequence
  *             query = self.aligned_query_sequence
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 135; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 135; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_4) {
   } else {
     __pyx_t_3 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cigar); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 135; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cigar); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 135; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_4 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_3 = __pyx_t_4;
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_3) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":136
+    /* "skbio/alignment/_ssw_wrapper.pyx":121
  *         score = "Score: %d" % self.optimal_alignment_score
  *         if self.query_sequence and self.cigar:
  *             target = self.aligned_target_sequence             # <<<<<<<<<<<<<<
  *             query = self.aligned_query_sequence
  *             align_len = len(query)
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 136; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_target = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":137
+    /* "skbio/alignment/_ssw_wrapper.pyx":122
  *         if self.query_sequence and self.cigar:
  *             target = self.aligned_target_sequence
  *             query = self.aligned_query_sequence             # <<<<<<<<<<<<<<
  *             align_len = len(query)
  *             if align_len > 13:
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 137; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 122; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_query = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":138
+    /* "skbio/alignment/_ssw_wrapper.pyx":123
  *             target = self.aligned_target_sequence
  *             query = self.aligned_query_sequence
  *             align_len = len(query)             # <<<<<<<<<<<<<<
  *             if align_len > 13:
  *                 target = target[:10] + "..."
  */
-    __pyx_t_5 = PyObject_Length(__pyx_v_query); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 138; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 138; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_Length(__pyx_v_query); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 123; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_5); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 123; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_align_len = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":139
+    /* "skbio/alignment/_ssw_wrapper.pyx":124
  *             query = self.aligned_query_sequence
  *             align_len = len(query)
  *             if align_len > 13:             # <<<<<<<<<<<<<<
  *                 target = target[:10] + "..."
  *                 query = query[:10] + "..."
  */
-    __pyx_t_2 = PyObject_RichCompare(__pyx_v_align_len, __pyx_int_13, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 139; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 139; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyObject_RichCompare(__pyx_v_align_len, __pyx_int_13, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 124; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 124; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (__pyx_t_3) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":140
+      /* "skbio/alignment/_ssw_wrapper.pyx":125
  *             align_len = len(query)
  *             if align_len > 13:
  *                 target = target[:10] + "..."             # <<<<<<<<<<<<<<
  *                 query = query[:10] + "..."
  * 
  */
-      __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_v_target, 0, 10, NULL, NULL, &__pyx_slice__2, 0, 1, 1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 140; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_v_target, 0, 10, NULL, NULL, &__pyx_slice__2, 0, 1, 1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 125; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_1 = PyNumber_Add(__pyx_t_2, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 140; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyNumber_Add(__pyx_t_2, __pyx_kp_s__3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 125; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF_SET(__pyx_v_target, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":141
+      /* "skbio/alignment/_ssw_wrapper.pyx":126
  *             if align_len > 13:
  *                 target = target[:10] + "..."
  *                 query = query[:10] + "..."             # <<<<<<<<<<<<<<
  * 
  *             length = "Length: %d" % align_len
  */
-      __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_query, 0, 10, NULL, NULL, &__pyx_slice__4, 0, 1, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 141; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_query, 0, 10, NULL, NULL, &__pyx_slice__4, 0, 1, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 126; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_2 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 141; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyNumber_Add(__pyx_t_1, __pyx_kp_s__3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 126; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_DECREF_SET(__pyx_v_query, __pyx_t_2);
@@ -2343,19 +2343,19 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     }
     __pyx_L6:;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":143
+    /* "skbio/alignment/_ssw_wrapper.pyx":128
  *                 query = query[:10] + "..."
  * 
  *             length = "Length: %d" % align_len             # <<<<<<<<<<<<<<
  *             return "\n".join([query, target, score, length])
  *         return score
  */
-    __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Length_d, __pyx_v_align_len); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Length_d, __pyx_v_align_len); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 128; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_length = ((PyObject*)__pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":144
+    /* "skbio/alignment/_ssw_wrapper.pyx":129
  * 
  *             length = "Length: %d" % align_len
  *             return "\n".join([query, target, score, length])             # <<<<<<<<<<<<<<
@@ -2363,7 +2363,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = PyList_New(4); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyList_New(4); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 129; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_v_query);
     PyList_SET_ITEM(__pyx_t_2, 0, __pyx_v_query);
@@ -2377,7 +2377,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __Pyx_INCREF(__pyx_v_length);
     PyList_SET_ITEM(__pyx_t_2, 3, __pyx_v_length);
     __Pyx_GIVEREF(__pyx_v_length);
-    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__5, __pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__5, __pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 129; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_r = __pyx_t_1;
@@ -2385,7 +2385,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":145
+  /* "skbio/alignment/_ssw_wrapper.pyx":130
  *             length = "Length: %d" % align_len
  *             return "\n".join([query, target, score, length])
  *         return score             # <<<<<<<<<<<<<<
@@ -2397,7 +2397,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = __pyx_v_score;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":133
+  /* "skbio/alignment/_ssw_wrapper.pyx":118
  *             "    {!r}: {!r}".format(k, self[k]) for k in data])
  * 
  *     def __str__(self):             # <<<<<<<<<<<<<<
@@ -2422,7 +2422,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":148
+/* "skbio/alignment/_ssw_wrapper.pyx":133
  * 
  *     @property
  *     def optimal_alignment_score(self):             # <<<<<<<<<<<<<<
@@ -2453,7 +2453,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("optimal_alignment_score", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":157
+  /* "skbio/alignment/_ssw_wrapper.pyx":142
  * 
  *         """
  *         return self.p.score1             # <<<<<<<<<<<<<<
@@ -2461,13 +2461,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_npy_uint16(__pyx_v_self->p->score1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 157; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_npy_uint16(__pyx_v_self->p->score1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 142; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":148
+  /* "skbio/alignment/_ssw_wrapper.pyx":133
  * 
  *     @property
  *     def optimal_alignment_score(self):             # <<<<<<<<<<<<<<
@@ -2486,7 +2486,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":160
+/* "skbio/alignment/_ssw_wrapper.pyx":145
  * 
  *     @property
  *     def suboptimal_alignment_score(self):             # <<<<<<<<<<<<<<
@@ -2517,7 +2517,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("suboptimal_alignment_score", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":169
+  /* "skbio/alignment/_ssw_wrapper.pyx":154
  * 
  *         """
  *         return self.p.score2             # <<<<<<<<<<<<<<
@@ -2525,13 +2525,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_npy_uint16(__pyx_v_self->p->score2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 169; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_npy_uint16(__pyx_v_self->p->score2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 154; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":160
+  /* "skbio/alignment/_ssw_wrapper.pyx":145
  * 
  *     @property
  *     def suboptimal_alignment_score(self):             # <<<<<<<<<<<<<<
@@ -2550,7 +2550,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":172
+/* "skbio/alignment/_ssw_wrapper.pyx":157
  * 
  *     @property
  *     def target_begin(self):             # <<<<<<<<<<<<<<
@@ -2582,7 +2582,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("target_begin", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":185
+  /* "skbio/alignment/_ssw_wrapper.pyx":170
  * 
  *         """
  *         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1             # <<<<<<<<<<<<<<
@@ -2591,7 +2591,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  */
   __Pyx_XDECREF(__pyx_r);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":186
+  /* "skbio/alignment/_ssw_wrapper.pyx":171
  *         """
  *         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1
  *                                                             >= 0) else -1             # <<<<<<<<<<<<<<
@@ -2600,14 +2600,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  */
   if (((__pyx_v_self->p->ref_begin1 >= 0) != 0)) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":185
+    /* "skbio/alignment/_ssw_wrapper.pyx":170
  * 
  *         """
  *         return self.p.ref_begin1 + self.index_starts_at if (self.p.ref_begin1             # <<<<<<<<<<<<<<
  *                                                             >= 0) else -1
  * 
  */
-    __pyx_t_2 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_begin1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 185; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_begin1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_t_1 = __pyx_t_2;
     __pyx_t_2 = 0;
@@ -2619,7 +2619,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":172
+  /* "skbio/alignment/_ssw_wrapper.pyx":157
  * 
  *     @property
  *     def target_begin(self):             # <<<<<<<<<<<<<<
@@ -2639,7 +2639,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":189
+/* "skbio/alignment/_ssw_wrapper.pyx":174
  * 
  *     @property
  *     def target_end_optimal(self):             # <<<<<<<<<<<<<<
@@ -2670,7 +2670,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("target_end_optimal", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":203
+  /* "skbio/alignment/_ssw_wrapper.pyx":188
  * 
  *         """
  *         return self.p.ref_end1 + self.index_starts_at             # <<<<<<<<<<<<<<
@@ -2678,13 +2678,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_end1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_end1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 188; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":189
+  /* "skbio/alignment/_ssw_wrapper.pyx":174
  * 
  *     @property
  *     def target_end_optimal(self):             # <<<<<<<<<<<<<<
@@ -2703,7 +2703,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":206
+/* "skbio/alignment/_ssw_wrapper.pyx":191
  * 
  *     @property
  *     def target_end_suboptimal(self):             # <<<<<<<<<<<<<<
@@ -2734,7 +2734,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("target_end_suboptimal", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":220
+  /* "skbio/alignment/_ssw_wrapper.pyx":205
  * 
  *         """
  *         return self.p.ref_end2 + self.index_starts_at             # <<<<<<<<<<<<<<
@@ -2742,13 +2742,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_end2 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 220; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->ref_end2 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":206
+  /* "skbio/alignment/_ssw_wrapper.pyx":191
  * 
  *     @property
  *     def target_end_suboptimal(self):             # <<<<<<<<<<<<<<
@@ -2767,7 +2767,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":223
+/* "skbio/alignment/_ssw_wrapper.pyx":208
  * 
  *     @property
  *     def query_begin(self):             # <<<<<<<<<<<<<<
@@ -2799,7 +2799,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("query_begin", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":236
+  /* "skbio/alignment/_ssw_wrapper.pyx":221
  * 
  *         """
  *         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1             # <<<<<<<<<<<<<<
@@ -2808,7 +2808,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  */
   __Pyx_XDECREF(__pyx_r);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":237
+  /* "skbio/alignment/_ssw_wrapper.pyx":222
  *         """
  *         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1
  *                                                              >= 0) else -1             # <<<<<<<<<<<<<<
@@ -2817,14 +2817,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  */
   if (((__pyx_v_self->p->read_begin1 >= 0) != 0)) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":236
+    /* "skbio/alignment/_ssw_wrapper.pyx":221
  * 
  *         """
  *         return self.p.read_begin1 + self.index_starts_at if (self.p.read_begin1             # <<<<<<<<<<<<<<
  *                                                              >= 0) else -1
  * 
  */
-    __pyx_t_2 = __Pyx_PyInt_From_int((__pyx_v_self->p->read_begin1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 236; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyInt_From_int((__pyx_v_self->p->read_begin1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 221; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_t_1 = __pyx_t_2;
     __pyx_t_2 = 0;
@@ -2836,7 +2836,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":223
+  /* "skbio/alignment/_ssw_wrapper.pyx":208
  * 
  *     @property
  *     def query_begin(self):             # <<<<<<<<<<<<<<
@@ -2856,7 +2856,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":240
+/* "skbio/alignment/_ssw_wrapper.pyx":225
  * 
  *     @property
  *     def query_end(self):             # <<<<<<<<<<<<<<
@@ -2887,7 +2887,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("query_end", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":253
+  /* "skbio/alignment/_ssw_wrapper.pyx":238
  * 
  *         """
  *         return self.p.read_end1 + self.index_starts_at             # <<<<<<<<<<<<<<
@@ -2895,13 +2895,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->read_end1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 253; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_self->p->read_end1 + __pyx_v_self->index_starts_at)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 238; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":240
+  /* "skbio/alignment/_ssw_wrapper.pyx":225
  * 
  *     @property
  *     def query_end(self):             # <<<<<<<<<<<<<<
@@ -2920,7 +2920,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":256
+/* "skbio/alignment/_ssw_wrapper.pyx":241
  * 
  *     @property
  *     def cigar(self):             # <<<<<<<<<<<<<<
@@ -2960,7 +2960,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("cigar", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":278
+  /* "skbio/alignment/_ssw_wrapper.pyx":263
  *         """
  *         # Memoization! (1/2)
  *         if self._cigar_string is not None:             # <<<<<<<<<<<<<<
@@ -2971,7 +2971,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":279
+    /* "skbio/alignment/_ssw_wrapper.pyx":264
  *         # Memoization! (1/2)
  *         if self._cigar_string is not None:
  *             return self._cigar_string             # <<<<<<<<<<<<<<
@@ -2984,19 +2984,19 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":280
+  /* "skbio/alignment/_ssw_wrapper.pyx":265
  *         if self._cigar_string is not None:
  *             return self._cigar_string
  *         cigar_list = []             # <<<<<<<<<<<<<<
  *         for i in range(self.p.cigarLen):
  *             # stored the same as that in BAM format,
  */
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_v_cigar_list = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":281
+  /* "skbio/alignment/_ssw_wrapper.pyx":266
  *             return self._cigar_string
  *         cigar_list = []
  *         for i in range(self.p.cigarLen):             # <<<<<<<<<<<<<<
@@ -3007,60 +3007,60 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":286
+    /* "skbio/alignment/_ssw_wrapper.pyx":271
  * 
  *             # Length, remove first 4 bits
  *             cigar_list.append(str(self.p.cigar[i] >> 4))             # <<<<<<<<<<<<<<
  *             # M/I/D, lookup first 4 bits in the mid_table
  *             cigar_list.append(mid_table[self.p.cigar[i] & 0xf])
  */
-    __pyx_t_3 = __Pyx_PyInt_From_long(((__pyx_v_self->p->cigar[__pyx_v_i]) >> 4)); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyInt_From_long(((__pyx_v_self->p->cigar[__pyx_v_i]) >> 4)); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3);
     __Pyx_GIVEREF(__pyx_t_3);
     __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_7 = __Pyx_PyList_Append(__pyx_v_cigar_list, __pyx_t_3); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyList_Append(__pyx_v_cigar_list, __pyx_t_3); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":288
+    /* "skbio/alignment/_ssw_wrapper.pyx":273
  *             cigar_list.append(str(self.p.cigar[i] >> 4))
  *             # M/I/D, lookup first 4 bits in the mid_table
  *             cigar_list.append(mid_table[self.p.cigar[i] & 0xf])             # <<<<<<<<<<<<<<
  *         # Memoization! (2/2)
  *         self._cigar_string = "".join(cigar_list)
  */
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_mid_table); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_mid_table); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 273; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_8 = ((__pyx_v_self->p->cigar[__pyx_v_i]) & 0xf);
-    __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_3, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_3, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 273; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_7 = __Pyx_PyList_Append(__pyx_v_cigar_list, __pyx_t_6); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyList_Append(__pyx_v_cigar_list, __pyx_t_6); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 273; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":290
+  /* "skbio/alignment/_ssw_wrapper.pyx":275
  *             cigar_list.append(mid_table[self.p.cigar[i] & 0xf])
  *         # Memoization! (2/2)
  *         self._cigar_string = "".join(cigar_list)             # <<<<<<<<<<<<<<
  *         return self._cigar_string
  * 
  */
-  __pyx_t_6 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_cigar_list); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_cigar_list); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
-  if (!(likely(PyString_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_6)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(PyString_CheckExact(__pyx_t_6))||((__pyx_t_6) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_6)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GIVEREF(__pyx_t_6);
   __Pyx_GOTREF(__pyx_v_self->_cigar_string);
   __Pyx_DECREF(__pyx_v_self->_cigar_string);
   __pyx_v_self->_cigar_string = ((PyObject*)__pyx_t_6);
   __pyx_t_6 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":291
+  /* "skbio/alignment/_ssw_wrapper.pyx":276
  *         # Memoization! (2/2)
  *         self._cigar_string = "".join(cigar_list)
  *         return self._cigar_string             # <<<<<<<<<<<<<<
@@ -3072,7 +3072,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = __pyx_v_self->_cigar_string;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":256
+  /* "skbio/alignment/_ssw_wrapper.pyx":241
  * 
  *     @property
  *     def cigar(self):             # <<<<<<<<<<<<<<
@@ -3093,7 +3093,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":294
+/* "skbio/alignment/_ssw_wrapper.pyx":279
  * 
  *     @property
  *     def query_sequence(self):             # <<<<<<<<<<<<<<
@@ -3120,7 +3120,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("query_sequence", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":303
+  /* "skbio/alignment/_ssw_wrapper.pyx":288
  * 
  *         """
  *         return self.read_sequence             # <<<<<<<<<<<<<<
@@ -3132,7 +3132,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = __pyx_v_self->read_sequence;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":294
+  /* "skbio/alignment/_ssw_wrapper.pyx":279
  * 
  *     @property
  *     def query_sequence(self):             # <<<<<<<<<<<<<<
@@ -3147,7 +3147,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":306
+/* "skbio/alignment/_ssw_wrapper.pyx":291
  * 
  *     @property
  *     def target_sequence(self):             # <<<<<<<<<<<<<<
@@ -3174,7 +3174,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("target_sequence", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":315
+  /* "skbio/alignment/_ssw_wrapper.pyx":300
  * 
  *         """
  *         return self.reference_sequence             # <<<<<<<<<<<<<<
@@ -3186,7 +3186,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = __pyx_v_self->reference_sequence;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":306
+  /* "skbio/alignment/_ssw_wrapper.pyx":291
  * 
  *     @property
  *     def target_sequence(self):             # <<<<<<<<<<<<<<
@@ -3201,7 +3201,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":318
+/* "skbio/alignment/_ssw_wrapper.pyx":303
  * 
  *     @property
  *     def aligned_query_sequence(self):             # <<<<<<<<<<<<<<
@@ -3241,20 +3241,20 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("aligned_query_sequence", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":332
+  /* "skbio/alignment/_ssw_wrapper.pyx":317
  * 
  *         """
  *         if self.query_sequence:             # <<<<<<<<<<<<<<
  *             return self._get_aligned_sequence(self.query_sequence,
  *                                               self._tuples_from_cigar(),
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 332; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 332; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":333
+    /* "skbio/alignment/_ssw_wrapper.pyx":318
  *         """
  *         if self.query_sequence:
  *             return self._get_aligned_sequence(self.query_sequence,             # <<<<<<<<<<<<<<
@@ -3262,19 +3262,19 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *                                               self.query_begin, self.query_end,
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_aligned_sequence); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_aligned_sequence); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":334
+    /* "skbio/alignment/_ssw_wrapper.pyx":319
  *         if self.query_sequence:
  *             return self._get_aligned_sequence(self.query_sequence,
  *                                               self._tuples_from_cigar(),             # <<<<<<<<<<<<<<
  *                                               self.query_begin, self.query_end,
  *                                               "D")
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_tuples_from_cigar); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 334; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_tuples_from_cigar); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 319; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
@@ -3287,24 +3287,24 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       }
     }
     if (__pyx_t_7) {
-      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 334; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 319; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     } else {
-      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 334; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 319; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":335
+    /* "skbio/alignment/_ssw_wrapper.pyx":320
  *             return self._get_aligned_sequence(self.query_sequence,
  *                                               self._tuples_from_cigar(),
  *                                               self.query_begin, self.query_end,             # <<<<<<<<<<<<<<
  *                                               "D")
  *         return None
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_begin); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 335; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_begin); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_end); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 335; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_query_end); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_8 = NULL;
     __pyx_t_9 = 0;
@@ -3318,7 +3318,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         __pyx_t_9 = 1;
       }
     }
-    __pyx_t_10 = PyTuple_New(5+__pyx_t_9); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyTuple_New(5+__pyx_t_9); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     if (__pyx_t_8) {
       PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_8); __Pyx_GIVEREF(__pyx_t_8); __pyx_t_8 = NULL;
@@ -3338,7 +3338,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __pyx_t_5 = 0;
     __pyx_t_6 = 0;
     __pyx_t_7 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3347,7 +3347,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":337
+  /* "skbio/alignment/_ssw_wrapper.pyx":322
  *                                               self.query_begin, self.query_end,
  *                                               "D")
  *         return None             # <<<<<<<<<<<<<<
@@ -3359,7 +3359,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":318
+  /* "skbio/alignment/_ssw_wrapper.pyx":303
  * 
  *     @property
  *     def aligned_query_sequence(self):             # <<<<<<<<<<<<<<
@@ -3385,7 +3385,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":340
+/* "skbio/alignment/_ssw_wrapper.pyx":325
  * 
  *     @property
  *     def aligned_target_sequence(self):             # <<<<<<<<<<<<<<
@@ -3425,20 +3425,20 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("aligned_target_sequence", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":354
+  /* "skbio/alignment/_ssw_wrapper.pyx":339
  * 
  *         """
  *         if self.target_sequence:             # <<<<<<<<<<<<<<
  *             return self._get_aligned_sequence(self.target_sequence,
  *                                               self._tuples_from_cigar(),
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 354; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 354; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":355
+    /* "skbio/alignment/_ssw_wrapper.pyx":340
  *         """
  *         if self.target_sequence:
  *             return self._get_aligned_sequence(self.target_sequence,             # <<<<<<<<<<<<<<
@@ -3446,19 +3446,19 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *                                               self.target_begin,
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_aligned_sequence); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 355; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_aligned_sequence); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 355; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":356
+    /* "skbio/alignment/_ssw_wrapper.pyx":341
  *         if self.target_sequence:
  *             return self._get_aligned_sequence(self.target_sequence,
  *                                               self._tuples_from_cigar(),             # <<<<<<<<<<<<<<
  *                                               self.target_begin,
  *                                               self.target_end_optimal,
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_tuples_from_cigar); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 356; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_tuples_from_cigar); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 341; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
@@ -3471,32 +3471,32 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       }
     }
     if (__pyx_t_7) {
-      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 356; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 341; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     } else {
-      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 356; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 341; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":357
+    /* "skbio/alignment/_ssw_wrapper.pyx":342
  *             return self._get_aligned_sequence(self.target_sequence,
  *                                               self._tuples_from_cigar(),
  *                                               self.target_begin,             # <<<<<<<<<<<<<<
  *                                               self.target_end_optimal,
  *                                               "I")
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_begin); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 357; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_begin); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 342; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":358
+    /* "skbio/alignment/_ssw_wrapper.pyx":343
  *                                               self._tuples_from_cigar(),
  *                                               self.target_begin,
  *                                               self.target_end_optimal,             # <<<<<<<<<<<<<<
  *                                               "I")
  *         return None
  */
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 358; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 343; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_8 = NULL;
     __pyx_t_9 = 0;
@@ -3510,7 +3510,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         __pyx_t_9 = 1;
       }
     }
-    __pyx_t_10 = PyTuple_New(5+__pyx_t_9); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 355; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyTuple_New(5+__pyx_t_9); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     if (__pyx_t_8) {
       PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_8); __Pyx_GIVEREF(__pyx_t_8); __pyx_t_8 = NULL;
@@ -3530,7 +3530,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __pyx_t_5 = 0;
     __pyx_t_6 = 0;
     __pyx_t_7 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 355; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3539,7 +3539,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":360
+  /* "skbio/alignment/_ssw_wrapper.pyx":345
  *                                               self.target_end_optimal,
  *                                               "I")
  *         return None             # <<<<<<<<<<<<<<
@@ -3551,7 +3551,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":340
+  /* "skbio/alignment/_ssw_wrapper.pyx":325
  * 
  *     @property
  *     def aligned_target_sequence(self):             # <<<<<<<<<<<<<<
@@ -3577,7 +3577,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":362
+/* "skbio/alignment/_ssw_wrapper.pyx":347
  *         return None
  * 
  *     def set_zero_based(self, is_zero_based):             # <<<<<<<<<<<<<<
@@ -3608,17 +3608,17 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("set_zero_based", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":366
+  /* "skbio/alignment/_ssw_wrapper.pyx":351
  * 
  *         """
  *         if is_zero_based:             # <<<<<<<<<<<<<<
  *             self.index_starts_at = 0
  *         else:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_is_zero_based); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 366; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_is_zero_based); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 351; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":367
+    /* "skbio/alignment/_ssw_wrapper.pyx":352
  *         """
  *         if is_zero_based:
  *             self.index_starts_at = 0             # <<<<<<<<<<<<<<
@@ -3630,7 +3630,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":369
+    /* "skbio/alignment/_ssw_wrapper.pyx":354
  *             self.index_starts_at = 0
  *         else:
  *             self.index_starts_at = 1             # <<<<<<<<<<<<<<
@@ -3641,7 +3641,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":362
+  /* "skbio/alignment/_ssw_wrapper.pyx":347
  *         return None
  * 
  *     def set_zero_based(self, is_zero_based):             # <<<<<<<<<<<<<<
@@ -3661,7 +3661,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":371
+/* "skbio/alignment/_ssw_wrapper.pyx":356
  *             self.index_starts_at = 1
  * 
  *     def is_zero_based(self):             # <<<<<<<<<<<<<<
@@ -3692,7 +3692,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("is_zero_based", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":380
+  /* "skbio/alignment/_ssw_wrapper.pyx":365
  * 
  *         """
  *         return self.index_starts_at == 0             # <<<<<<<<<<<<<<
@@ -3700,13 +3700,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     def _get_aligned_sequence(self, sequence, tuple_cigar, begin, end,
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyBool_FromLong((__pyx_v_self->index_starts_at == 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 380; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyBool_FromLong((__pyx_v_self->index_starts_at == 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 365; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":371
+  /* "skbio/alignment/_ssw_wrapper.pyx":356
  *             self.index_starts_at = 1
  * 
  *     def is_zero_based(self):             # <<<<<<<<<<<<<<
@@ -3725,7 +3725,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":382
+/* "skbio/alignment/_ssw_wrapper.pyx":367
  *         return self.index_starts_at == 0
  * 
  *     def _get_aligned_sequence(self, sequence, tuple_cigar, begin, end,             # <<<<<<<<<<<<<<
@@ -3770,26 +3770,26 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_tuple_cigar)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_begin)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  4:
         if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_gap_type)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_get_aligned_sequence") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_get_aligned_sequence") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 5) {
       goto __pyx_L5_argtuple_error;
@@ -3808,7 +3808,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 382; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("_get_aligned_sequence", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 367; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.AlignmentStructure._get_aligned_sequence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3847,14 +3847,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_get_aligned_sequence", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":385
+  /* "skbio/alignment/_ssw_wrapper.pyx":370
  *                               gap_type):
  *         # Save the original index scheme and then set it to 0 (1/2)
  *         orig_z_base = self.is_zero_based()             # <<<<<<<<<<<<<<
  *         self.set_zero_based(True)
  *         aligned_sequence = []
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_is_zero_based); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_is_zero_based); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 370; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
@@ -3867,58 +3867,58 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     }
   }
   if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 370; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 370; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_orig_z_base = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":386
+  /* "skbio/alignment/_ssw_wrapper.pyx":371
  *         # Save the original index scheme and then set it to 0 (1/2)
  *         orig_z_base = self.is_zero_based()
  *         self.set_zero_based(True)             # <<<<<<<<<<<<<<
  *         aligned_sequence = []
  *         seq = sequence[begin:end + 1]
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_zero_based); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 386; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_zero_based); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 371; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 386; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 371; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":387
+  /* "skbio/alignment/_ssw_wrapper.pyx":372
  *         orig_z_base = self.is_zero_based()
  *         self.set_zero_based(True)
  *         aligned_sequence = []             # <<<<<<<<<<<<<<
  *         seq = sequence[begin:end + 1]
  *         index = 0
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 387; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 372; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_v_aligned_sequence = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":388
+  /* "skbio/alignment/_ssw_wrapper.pyx":373
  *         self.set_zero_based(True)
  *         aligned_sequence = []
  *         seq = sequence[begin:end + 1]             # <<<<<<<<<<<<<<
  *         index = 0
  *         for length, mid in tuple_cigar:
  */
-  __pyx_t_2 = PyNumber_Add(__pyx_v_end, __pyx_int_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyNumber_Add(__pyx_v_end, __pyx_int_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 373; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_sequence, 0, 0, &__pyx_v_begin, &__pyx_t_2, NULL, 0, 0, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetSlice(__pyx_v_sequence, 0, 0, &__pyx_v_begin, &__pyx_t_2, NULL, 0, 0, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 373; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_seq = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":389
+  /* "skbio/alignment/_ssw_wrapper.pyx":374
  *         aligned_sequence = []
  *         seq = sequence[begin:end + 1]
  *         index = 0             # <<<<<<<<<<<<<<
@@ -3928,7 +3928,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_index = __pyx_int_0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":390
+  /* "skbio/alignment/_ssw_wrapper.pyx":375
  *         seq = sequence[begin:end + 1]
  *         index = 0
  *         for length, mid in tuple_cigar:             # <<<<<<<<<<<<<<
@@ -3939,25 +3939,25 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __pyx_t_1 = __pyx_v_tuple_cigar; __Pyx_INCREF(__pyx_t_1); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_tuple_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_tuple_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   for (;;) {
     if (likely(!__pyx_t_5)) {
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       } else {
         if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       }
     } else {
@@ -3966,7 +3966,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -3982,7 +3982,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       if (unlikely(size != 2)) {
         if (size > 2) __Pyx_RaiseTooManyValuesError(2);
         else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
       #if CYTHON_COMPILING_IN_CPYTHON
       if (likely(PyTuple_CheckExact(sequence))) {
@@ -3995,15 +3995,15 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       __Pyx_INCREF(__pyx_t_3);
       __Pyx_INCREF(__pyx_t_6);
       #else
-      __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_6);
       #endif
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else {
       Py_ssize_t index = -1;
-      __pyx_t_7 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_7 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_t_8 = Py_TYPE(__pyx_t_7)->tp_iternext;
@@ -4011,7 +4011,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       __Pyx_GOTREF(__pyx_t_3);
       index = 1; __pyx_t_6 = __pyx_t_8(__pyx_t_7); if (unlikely(!__pyx_t_6)) goto __pyx_L5_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_6);
-      if (__Pyx_IternextUnpackEndCheck(__pyx_t_8(__pyx_t_7), 2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_8(__pyx_t_7), 2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __pyx_t_8 = NULL;
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       goto __pyx_L6_unpacking_done;
@@ -4019,7 +4019,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_t_8 = NULL;
       if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 390; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 375; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __pyx_L6_unpacking_done:;
     }
     __Pyx_XDECREF_SET(__pyx_v_length, __pyx_t_3);
@@ -4027,36 +4027,36 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __Pyx_XDECREF_SET(__pyx_v_mid, __pyx_t_6);
     __pyx_t_6 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":391
+    /* "skbio/alignment/_ssw_wrapper.pyx":376
  *         index = 0
  *         for length, mid in tuple_cigar:
  *             if mid == 'M':             # <<<<<<<<<<<<<<
  *                 aligned_sequence += [seq[i]
  *                                      for i in range(index, length + index)]
  */
-    __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_mid, __pyx_n_s_M, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 391; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_mid, __pyx_n_s_M, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 376; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (__pyx_t_9) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":392
+      /* "skbio/alignment/_ssw_wrapper.pyx":377
  *         for length, mid in tuple_cigar:
  *             if mid == 'M':
  *                 aligned_sequence += [seq[i]             # <<<<<<<<<<<<<<
  *                                      for i in range(index, length + index)]
  *                 index += length
  */
-      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 392; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 377; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":393
+      /* "skbio/alignment/_ssw_wrapper.pyx":378
  *             if mid == 'M':
  *                 aligned_sequence += [seq[i]
  *                                      for i in range(index, length + index)]             # <<<<<<<<<<<<<<
  *                 index += length
  *             elif mid == gap_type:
  */
-      __pyx_t_6 = PyNumber_Add(__pyx_v_length, __pyx_v_index); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = PyNumber_Add(__pyx_v_length, __pyx_v_index); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_INCREF(__pyx_v_index);
       PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_v_index);
@@ -4064,16 +4064,16 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_6);
       __pyx_t_6 = 0;
-      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_3, NULL); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_3, NULL); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
         __pyx_t_3 = __pyx_t_6; __Pyx_INCREF(__pyx_t_3); __pyx_t_10 = 0;
         __pyx_t_11 = NULL;
       } else {
-        __pyx_t_10 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_10 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_GOTREF(__pyx_t_3);
-        __pyx_t_11 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_11 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       for (;;) {
@@ -4081,16 +4081,16 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
           if (likely(PyList_CheckExact(__pyx_t_3))) {
             if (__pyx_t_10 >= PyList_GET_SIZE(__pyx_t_3)) break;
             #if CYTHON_COMPILING_IN_CPYTHON
-            __pyx_t_6 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_6); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            __pyx_t_6 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_6); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
             #else
-            __pyx_t_6 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            __pyx_t_6 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
             #endif
           } else {
             if (__pyx_t_10 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
             #if CYTHON_COMPILING_IN_CPYTHON
-            __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_6); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_6); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
             #else
-            __pyx_t_6 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            __pyx_t_6 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
             #endif
           }
         } else {
@@ -4099,7 +4099,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
             PyObject* exc_type = PyErr_Occurred();
             if (exc_type) {
               if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-              else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+              else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 378; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
             }
             break;
           }
@@ -4108,19 +4108,19 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
         __pyx_t_6 = 0;
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":392
+        /* "skbio/alignment/_ssw_wrapper.pyx":377
  *         for length, mid in tuple_cigar:
  *             if mid == 'M':
  *                 aligned_sequence += [seq[i]             # <<<<<<<<<<<<<<
  *                                      for i in range(index, length + index)]
  *                 index += length
  */
-        __pyx_t_6 = PyObject_GetItem(__pyx_v_seq, __pyx_v_i); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 392; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+        __pyx_t_6 = PyObject_GetItem(__pyx_v_seq, __pyx_v_i); if (unlikely(__pyx_t_6 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 377; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
         __Pyx_GOTREF(__pyx_t_6);
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_6))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 392; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_6))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 377; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":393
+        /* "skbio/alignment/_ssw_wrapper.pyx":378
  *             if mid == 'M':
  *                 aligned_sequence += [seq[i]
  *                                      for i in range(index, length + index)]             # <<<<<<<<<<<<<<
@@ -4130,63 +4130,63 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       }
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":392
+      /* "skbio/alignment/_ssw_wrapper.pyx":377
  *         for length, mid in tuple_cigar:
  *             if mid == 'M':
  *                 aligned_sequence += [seq[i]             # <<<<<<<<<<<<<<
  *                                      for i in range(index, length + index)]
  *                 index += length
  */
-      __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 392; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 377; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF_SET(__pyx_v_aligned_sequence, ((PyObject*)__pyx_t_3));
       __pyx_t_3 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":394
+      /* "skbio/alignment/_ssw_wrapper.pyx":379
  *                 aligned_sequence += [seq[i]
  *                                      for i in range(index, length + index)]
  *                 index += length             # <<<<<<<<<<<<<<
  *             elif mid == gap_type:
  *                 aligned_sequence += (['-'] * length)
  */
-      __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_index, __pyx_v_length); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 394; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_index, __pyx_v_length); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 379; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF_SET(__pyx_v_index, __pyx_t_3);
       __pyx_t_3 = 0;
       goto __pyx_L7;
     }
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":395
+    /* "skbio/alignment/_ssw_wrapper.pyx":380
  *                                      for i in range(index, length + index)]
  *                 index += length
  *             elif mid == gap_type:             # <<<<<<<<<<<<<<
  *                 aligned_sequence += (['-'] * length)
  *             else:
  */
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_mid, __pyx_v_gap_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 395; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 395; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_mid, __pyx_v_gap_type, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 380; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 380; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_9) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":396
+      /* "skbio/alignment/_ssw_wrapper.pyx":381
  *                 index += length
  *             elif mid == gap_type:
  *                 aligned_sequence += (['-'] * length)             # <<<<<<<<<<<<<<
  *             else:
  *                 pass
  */
-      __pyx_t_3 = PyList_New(1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 396; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = PyList_New(1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 381; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_INCREF(__pyx_kp_s__8);
       PyList_SET_ITEM(__pyx_t_3, 0, __pyx_kp_s__8);
       __Pyx_GIVEREF(__pyx_kp_s__8);
-      { PyObject* __pyx_temp = PyNumber_InPlaceMultiply(__pyx_t_3, __pyx_v_length); if (unlikely(!__pyx_temp)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 396; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      { PyObject* __pyx_temp = PyNumber_InPlaceMultiply(__pyx_t_3, __pyx_v_length); if (unlikely(!__pyx_temp)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 381; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_GOTREF(__pyx_temp);
         __Pyx_DECREF(__pyx_t_3);
         __pyx_t_3 = __pyx_temp;
       }
-      __pyx_t_2 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 396; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 381; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_DECREF_SET(__pyx_v_aligned_sequence, ((PyObject*)__pyx_t_2));
@@ -4197,7 +4197,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     }
     __pyx_L7:;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":390
+    /* "skbio/alignment/_ssw_wrapper.pyx":375
  *         seq = sequence[begin:end + 1]
  *         index = 0
  *         for length, mid in tuple_cigar:             # <<<<<<<<<<<<<<
@@ -4207,21 +4207,21 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":400
+  /* "skbio/alignment/_ssw_wrapper.pyx":385
  *                 pass
  *         # Our sequence end is sometimes beyond the cigar:
  *         aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]             # <<<<<<<<<<<<<<
  *         # Revert our index scheme to the original (2/2)
  *         self.set_zero_based(orig_z_base)
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyNumber_Subtract(__pyx_v_end, __pyx_v_begin); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyNumber_Subtract(__pyx_v_end, __pyx_v_begin); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_int_1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_int_1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_index);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_index);
@@ -4229,16 +4229,16 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (likely(PyList_CheckExact(__pyx_t_3)) || PyTuple_CheckExact(__pyx_t_3)) {
     __pyx_t_2 = __pyx_t_3; __Pyx_INCREF(__pyx_t_2); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   for (;;) {
@@ -4246,16 +4246,16 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       } else {
         if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_3); __pyx_t_4++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       }
     } else {
@@ -4264,7 +4264,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -4272,26 +4272,26 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     }
     __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_3);
     __pyx_t_3 = 0;
-    __pyx_t_3 = PyObject_GetItem(__pyx_v_seq, __pyx_v_i); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_3 = PyObject_GetItem(__pyx_v_seq, __pyx_v_i); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_3);
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_3))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_3))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyNumber_InPlaceAdd(__pyx_v_aligned_sequence, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 385; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF_SET(__pyx_v_aligned_sequence, ((PyObject*)__pyx_t_2));
   __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":402
+  /* "skbio/alignment/_ssw_wrapper.pyx":387
  *         aligned_sequence += [seq[i] for i in range(index, end - begin + 1)]
  *         # Revert our index scheme to the original (2/2)
  *         self.set_zero_based(orig_z_base)             # <<<<<<<<<<<<<<
  *         return "".join(aligned_sequence)
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_zero_based); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_zero_based); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 387; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
@@ -4304,23 +4304,23 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     }
   }
   if (!__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_orig_z_base); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_orig_z_base); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 387; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
   } else {
-    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 387; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3); __Pyx_GIVEREF(__pyx_t_3); __pyx_t_3 = NULL;
     __Pyx_INCREF(__pyx_v_orig_z_base);
     PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_v_orig_z_base);
     __Pyx_GIVEREF(__pyx_v_orig_z_base);
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 387; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":403
+  /* "skbio/alignment/_ssw_wrapper.pyx":388
  *         # Revert our index scheme to the original (2/2)
  *         self.set_zero_based(orig_z_base)
  *         return "".join(aligned_sequence)             # <<<<<<<<<<<<<<
@@ -4328,13 +4328,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
  *     def _tuples_from_cigar(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_aligned_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 403; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_aligned_sequence); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":382
+  /* "skbio/alignment/_ssw_wrapper.pyx":367
  *         return self.index_starts_at == 0
  * 
  *     def _get_aligned_sequence(self, sequence, tuple_cigar, begin, end,             # <<<<<<<<<<<<<<
@@ -4364,7 +4364,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":405
+/* "skbio/alignment/_ssw_wrapper.pyx":390
  *         return "".join(aligned_sequence)
  * 
  *     def _tuples_from_cigar(self):             # <<<<<<<<<<<<<<
@@ -4404,46 +4404,46 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_tuples_from_cigar", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":406
+  /* "skbio/alignment/_ssw_wrapper.pyx":391
  * 
  *     def _tuples_from_cigar(self):
  *         tuples = []             # <<<<<<<<<<<<<<
  *         length_stack = []
  *         for character in self.cigar:
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 406; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 391; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_tuples = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":407
+  /* "skbio/alignment/_ssw_wrapper.pyx":392
  *     def _tuples_from_cigar(self):
  *         tuples = []
  *         length_stack = []             # <<<<<<<<<<<<<<
  *         for character in self.cigar:
  *             if character.isdigit():
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 407; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 392; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_length_stack = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":408
+  /* "skbio/alignment/_ssw_wrapper.pyx":393
  *         tuples = []
  *         length_stack = []
  *         for character in self.cigar:             # <<<<<<<<<<<<<<
  *             if character.isdigit():
  *                 length_stack.append(character)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_3 = 0;
     __pyx_t_4 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -4451,16 +4451,16 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       }
     } else {
@@ -4469,7 +4469,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -4478,14 +4478,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
     __Pyx_XDECREF_SET(__pyx_v_character, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":409
+    /* "skbio/alignment/_ssw_wrapper.pyx":394
  *         length_stack = []
  *         for character in self.cigar:
  *             if character.isdigit():             # <<<<<<<<<<<<<<
  *                 length_stack.append(character)
  *             else:
  */
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_character, __pyx_n_s_isdigit); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_character, __pyx_n_s_isdigit); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 394; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_6 = NULL;
     if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_5))) {
@@ -4498,42 +4498,42 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       }
     }
     if (__pyx_t_6) {
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 394; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     } else {
-      __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 394; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 394; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_7) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":410
+      /* "skbio/alignment/_ssw_wrapper.pyx":395
  *         for character in self.cigar:
  *             if character.isdigit():
  *                 length_stack.append(character)             # <<<<<<<<<<<<<<
  *             else:
  *                 tuples.append((int("".join(length_stack)), character))
  */
-      __pyx_t_8 = __Pyx_PyList_Append(__pyx_v_length_stack, __pyx_v_character); if (unlikely(__pyx_t_8 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 410; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = __Pyx_PyList_Append(__pyx_v_length_stack, __pyx_v_character); if (unlikely(__pyx_t_8 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 395; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       goto __pyx_L5;
     }
     /*else*/ {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":412
+      /* "skbio/alignment/_ssw_wrapper.pyx":397
  *                 length_stack.append(character)
  *             else:
  *                 tuples.append((int("".join(length_stack)), character))             # <<<<<<<<<<<<<<
  *                 length_stack = []
  *         return tuples
  */
-      __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_length_stack); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 412; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyString_Join(__pyx_kp_s__6, __pyx_v_length_stack); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_5 = PyNumber_Int(__pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 412; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = PyNumber_Int(__pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 412; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_5);
       __Pyx_GIVEREF(__pyx_t_5);
@@ -4541,24 +4541,24 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
       PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_character);
       __Pyx_GIVEREF(__pyx_v_character);
       __pyx_t_5 = 0;
-      __pyx_t_8 = __Pyx_PyList_Append(__pyx_v_tuples, __pyx_t_1); if (unlikely(__pyx_t_8 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 412; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = __Pyx_PyList_Append(__pyx_v_tuples, __pyx_t_1); if (unlikely(__pyx_t_8 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":413
+      /* "skbio/alignment/_ssw_wrapper.pyx":398
  *             else:
  *                 tuples.append((int("".join(length_stack)), character))
  *                 length_stack = []             # <<<<<<<<<<<<<<
  *         return tuples
  * 
  */
-      __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 413; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 398; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF_SET(__pyx_v_length_stack, ((PyObject*)__pyx_t_1));
       __pyx_t_1 = 0;
     }
     __pyx_L5:;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":408
+    /* "skbio/alignment/_ssw_wrapper.pyx":393
  *         tuples = []
  *         length_stack = []
  *         for character in self.cigar:             # <<<<<<<<<<<<<<
@@ -4568,7 +4568,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":414
+  /* "skbio/alignment/_ssw_wrapper.pyx":399
  *                 tuples.append((int("".join(length_stack)), character))
  *                 length_stack = []
  *         return tuples             # <<<<<<<<<<<<<<
@@ -4580,7 +4580,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   __pyx_r = __pyx_v_tuples;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":405
+  /* "skbio/alignment/_ssw_wrapper.pyx":390
  *         return "".join(aligned_sequence)
  * 
  *     def _tuples_from_cigar(self):             # <<<<<<<<<<<<<<
@@ -4605,7 +4605,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_18AlignmentStructure_
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":558
+/* "skbio/alignment/_ssw_wrapper.pyx":543
  *     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
  * 
  *     def __cinit__(self, query_sequence,             # <<<<<<<<<<<<<<
@@ -4646,7 +4646,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
     values[3] = ((PyObject *)__pyx_int_2);
     values[4] = ((PyObject *)__pyx_int_15);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":563
+    /* "skbio/alignment/_ssw_wrapper.pyx":548
  *                   score_size=2,  # BLASTN Default
  *                   mask_length=15,  # Minimum length for a suboptimal alignment
  *                   mask_auto=True,             # <<<<<<<<<<<<<<
@@ -4655,7 +4655,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[5] = ((PyObject *)Py_True);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":564
+    /* "skbio/alignment/_ssw_wrapper.pyx":549
  *                   mask_length=15,  # Minimum length for a suboptimal alignment
  *                   mask_auto=True,
  *                   score_only=False,             # <<<<<<<<<<<<<<
@@ -4664,7 +4664,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[6] = ((PyObject *)Py_False);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":565
+    /* "skbio/alignment/_ssw_wrapper.pyx":550
  *                   mask_auto=True,
  *                   score_only=False,
  *                   score_filter=None,             # <<<<<<<<<<<<<<
@@ -4673,7 +4673,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[7] = ((PyObject *)Py_None);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":566
+    /* "skbio/alignment/_ssw_wrapper.pyx":551
  *                   score_only=False,
  *                   score_filter=None,
  *                   distance_filter=None,             # <<<<<<<<<<<<<<
@@ -4682,7 +4682,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[8] = ((PyObject *)Py_None);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":567
+    /* "skbio/alignment/_ssw_wrapper.pyx":552
  *                   score_filter=None,
  *                   distance_filter=None,
  *                   override_skip_babp=False,             # <<<<<<<<<<<<<<
@@ -4691,7 +4691,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[9] = ((PyObject *)Py_False);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":568
+    /* "skbio/alignment/_ssw_wrapper.pyx":553
  *                   distance_filter=None,
  *                   override_skip_babp=False,
  *                   protein=False,             # <<<<<<<<<<<<<<
@@ -4702,7 +4702,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
     values[11] = ((PyObject *)__pyx_int_2);
     values[12] = ((PyObject *)__pyx_int_neg_3);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":571
+    /* "skbio/alignment/_ssw_wrapper.pyx":556
  *                   match_score=2,  # BLASTN Default
  *                   mismatch_score=-3,  # BLASTN Default
  *                   substitution_matrix=None,             # <<<<<<<<<<<<<<
@@ -4711,7 +4711,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[13] = ((PyObject *)Py_None);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":572
+    /* "skbio/alignment/_ssw_wrapper.pyx":557
  *                   mismatch_score=-3,  # BLASTN Default
  *                   substitution_matrix=None,
  *                   suppress_sequences=False,             # <<<<<<<<<<<<<<
@@ -4720,7 +4720,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
  */
     values[14] = ((PyObject *)Py_False);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":573
+    /* "skbio/alignment/_ssw_wrapper.pyx":558
  *                   substitution_matrix=None,
  *                   suppress_sequences=False,
  *                   zero_index=True):             # <<<<<<<<<<<<<<
@@ -4833,7 +4833,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 558; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 543; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4876,7 +4876,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 16, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 558; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 16, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 543; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.StripedSmithWaterman.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4884,7 +4884,7 @@ static int __pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_1__c
   __pyx_L4_argument_unpacking_done:;
   __pyx_r = __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___cinit__(((struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self), __pyx_v_query_sequence, __pyx_v_gap_open_penalty, __pyx_v_gap_extend_penalty, __pyx_v_score_size, __pyx_v_mask_length, __pyx_v_mask_auto, __pyx_v_score_only, __pyx_v_score_filter, __pyx_v_distance_filter, __pyx_v_override_skip_babp, __pyx_v_protein, __pyx_v_match_score, __pyx_v_mismatch_score, __pyx_v_substitution_matrix, __pyx_v_suppress_sequences, __pyx_v_zero_index);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":558
+  /* "skbio/alignment/_ssw_wrapper.pyx":543
  *     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
  * 
  *     def __cinit__(self, query_sequence,             # <<<<<<<<<<<<<<
@@ -4939,14 +4939,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __pyx_pybuffernd_read_seq.data = NULL;
   __pyx_pybuffernd_read_seq.rcbuffer = &__pyx_pybuffer_read_seq;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":575
+  /* "skbio/alignment/_ssw_wrapper.pyx":560
  *                   zero_index=True):
  *         # initalize our values
  *         self.read_sequence = query_sequence             # <<<<<<<<<<<<<<
  *         if gap_open_penalty <= 0:
  *             raise ValueError("`gap_open_penalty` must be > 0")
  */
-  if (!(likely(PyString_CheckExact(__pyx_v_query_sequence))||((__pyx_v_query_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_query_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 575; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(PyString_CheckExact(__pyx_v_query_sequence))||((__pyx_v_query_sequence) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_v_query_sequence)->tp_name), 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 560; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_1 = __pyx_v_query_sequence;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -4955,79 +4955,79 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __pyx_v_self->read_sequence = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":576
+  /* "skbio/alignment/_ssw_wrapper.pyx":561
  *         # initalize our values
  *         self.read_sequence = query_sequence
  *         if gap_open_penalty <= 0:             # <<<<<<<<<<<<<<
  *             raise ValueError("`gap_open_penalty` must be > 0")
  *         self.gap_open_penalty = gap_open_penalty
  */
-  __pyx_t_1 = PyObject_RichCompare(__pyx_v_gap_open_penalty, __pyx_int_0, Py_LE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 576; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 576; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_gap_open_penalty, __pyx_int_0, Py_LE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 561; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 561; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":577
+    /* "skbio/alignment/_ssw_wrapper.pyx":562
  *         self.read_sequence = query_sequence
  *         if gap_open_penalty <= 0:
  *             raise ValueError("`gap_open_penalty` must be > 0")             # <<<<<<<<<<<<<<
  *         self.gap_open_penalty = gap_open_penalty
  *         if gap_extend_penalty <= 0:
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 577; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 562; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 577; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 562; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":578
+  /* "skbio/alignment/_ssw_wrapper.pyx":563
  *         if gap_open_penalty <= 0:
  *             raise ValueError("`gap_open_penalty` must be > 0")
  *         self.gap_open_penalty = gap_open_penalty             # <<<<<<<<<<<<<<
  *         if gap_extend_penalty <= 0:
  *             raise ValueError("`gap_extend_penalty` must be > 0")
  */
-  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_v_gap_open_penalty); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 578; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_v_gap_open_penalty); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 563; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_self->gap_open_penalty = __pyx_t_3;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":579
+  /* "skbio/alignment/_ssw_wrapper.pyx":564
  *             raise ValueError("`gap_open_penalty` must be > 0")
  *         self.gap_open_penalty = gap_open_penalty
  *         if gap_extend_penalty <= 0:             # <<<<<<<<<<<<<<
  *             raise ValueError("`gap_extend_penalty` must be > 0")
  *         self.gap_extend_penalty = gap_extend_penalty
  */
-  __pyx_t_1 = PyObject_RichCompare(__pyx_v_gap_extend_penalty, __pyx_int_0, Py_LE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 579; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 579; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyObject_RichCompare(__pyx_v_gap_extend_penalty, __pyx_int_0, Py_LE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 564; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 564; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":580
+    /* "skbio/alignment/_ssw_wrapper.pyx":565
  *         self.gap_open_penalty = gap_open_penalty
  *         if gap_extend_penalty <= 0:
  *             raise ValueError("`gap_extend_penalty` must be > 0")             # <<<<<<<<<<<<<<
  *         self.gap_extend_penalty = gap_extend_penalty
  *         self.distance_filter = 0 if distance_filter is None else \
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 565; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 565; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":581
+  /* "skbio/alignment/_ssw_wrapper.pyx":566
  *         if gap_extend_penalty <= 0:
  *             raise ValueError("`gap_extend_penalty` must be > 0")
  *         self.gap_extend_penalty = gap_extend_penalty             # <<<<<<<<<<<<<<
  *         self.distance_filter = 0 if distance_filter is None else \
  *             distance_filter
  */
-  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_v_gap_extend_penalty); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 581; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_v_gap_extend_penalty); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 566; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_self->gap_extend_penalty = __pyx_t_3;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":582
+  /* "skbio/alignment/_ssw_wrapper.pyx":567
  *             raise ValueError("`gap_extend_penalty` must be > 0")
  *         self.gap_extend_penalty = gap_extend_penalty
  *         self.distance_filter = 0 if distance_filter is None else \             # <<<<<<<<<<<<<<
@@ -5039,18 +5039,18 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
     __pyx_t_4 = 0;
   } else {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":583
+    /* "skbio/alignment/_ssw_wrapper.pyx":568
  *         self.gap_extend_penalty = gap_extend_penalty
  *         self.distance_filter = 0 if distance_filter is None else \
  *             distance_filter             # <<<<<<<<<<<<<<
  *         self.score_filter = 0 if score_filter is None else score_filter
  *         self.suppress_sequences = suppress_sequences
  */
-    __pyx_t_5 = __Pyx_PyInt_As_npy_int32(__pyx_v_distance_filter); if (unlikely((__pyx_t_5 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 583; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyInt_As_npy_int32(__pyx_v_distance_filter); if (unlikely((__pyx_t_5 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 568; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_4 = __pyx_t_5;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":582
+  /* "skbio/alignment/_ssw_wrapper.pyx":567
  *             raise ValueError("`gap_extend_penalty` must be > 0")
  *         self.gap_extend_penalty = gap_extend_penalty
  *         self.distance_filter = 0 if distance_filter is None else \             # <<<<<<<<<<<<<<
@@ -5059,7 +5059,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
  */
   __pyx_v_self->distance_filter = __pyx_t_4;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":584
+  /* "skbio/alignment/_ssw_wrapper.pyx":569
  *         self.distance_filter = 0 if distance_filter is None else \
  *             distance_filter
  *         self.score_filter = 0 if score_filter is None else score_filter             # <<<<<<<<<<<<<<
@@ -5070,19 +5070,19 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   if ((__pyx_t_2 != 0)) {
     __pyx_t_6 = 0;
   } else {
-    __pyx_t_7 = __Pyx_PyInt_As_npy_uint16(__pyx_v_score_filter); if (unlikely((__pyx_t_7 == (npy_uint16)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 584; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyInt_As_npy_uint16(__pyx_v_score_filter); if (unlikely((__pyx_t_7 == (npy_uint16)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 569; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_6 = __pyx_t_7;
   }
   __pyx_v_self->score_filter = __pyx_t_6;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":585
+  /* "skbio/alignment/_ssw_wrapper.pyx":570
  *             distance_filter
  *         self.score_filter = 0 if score_filter is None else score_filter
  *         self.suppress_sequences = suppress_sequences             # <<<<<<<<<<<<<<
  *         self.is_protein = protein
  *         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)
  */
-  if (!(likely(((__pyx_v_suppress_sequences) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_suppress_sequences, __pyx_ptype_7cpython_4bool_bool))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 585; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_v_suppress_sequences) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_suppress_sequences, __pyx_ptype_7cpython_4bool_bool))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 570; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_1 = __pyx_v_suppress_sequences;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -5091,14 +5091,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __pyx_v_self->suppress_sequences = ((PyBoolObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":586
+  /* "skbio/alignment/_ssw_wrapper.pyx":571
  *         self.score_filter = 0 if score_filter is None else score_filter
  *         self.suppress_sequences = suppress_sequences
  *         self.is_protein = protein             # <<<<<<<<<<<<<<
  *         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)
  *         # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
  */
-  if (!(likely(((__pyx_v_protein) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_protein, __pyx_ptype_7cpython_4bool_bool))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 586; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_v_protein) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_protein, __pyx_ptype_7cpython_4bool_bool))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 571; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_1 = __pyx_v_protein;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
@@ -5107,14 +5107,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __pyx_v_self->is_protein = ((PyBoolObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":587
+  /* "skbio/alignment/_ssw_wrapper.pyx":572
  *         self.suppress_sequences = suppress_sequences
  *         self.is_protein = protein
  *         self.bit_flag = self._get_bit_flag(override_skip_babp, score_only)             # <<<<<<<<<<<<<<
  *         # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
  *         # Dijkstra knows what's up:
  */
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_bit_flag); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 587; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_bit_flag); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 572; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_9 = NULL;
   __pyx_t_10 = 0;
@@ -5128,7 +5128,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
       __pyx_t_10 = 1;
     }
   }
-  __pyx_t_11 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 587; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_11 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 572; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_11);
   if (__pyx_t_9) {
     PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_9); __Pyx_GIVEREF(__pyx_t_9); __pyx_t_9 = NULL;
@@ -5139,22 +5139,22 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __Pyx_INCREF(__pyx_v_score_only);
   PyTuple_SET_ITEM(__pyx_t_11, 1+__pyx_t_10, __pyx_v_score_only);
   __Pyx_GIVEREF(__pyx_v_score_only);
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_11, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 587; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_11, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 572; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_t_1); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 587; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyInt_As_npy_uint8(__pyx_t_1); if (unlikely((__pyx_t_3 == (npy_uint8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 572; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->bit_flag = __pyx_t_3;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":590
+  /* "skbio/alignment/_ssw_wrapper.pyx":575
  *         # http://www.cs.utexas.edu/users/EWD/transcriptions/EWD08xx/EWD831.html
  *         # Dijkstra knows what's up:
  *         self.index_starts_at = 0 if zero_index else 1             # <<<<<<<<<<<<<<
  *         # set up our matrix
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] matrix
  */
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_zero_index); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 590; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_v_zero_index); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 575; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_2) {
     __pyx_t_12 = 0;
   } else {
@@ -5162,7 +5162,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   }
   __pyx_v_self->index_starts_at = __pyx_t_12;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":593
+  /* "skbio/alignment/_ssw_wrapper.pyx":578
  *         # set up our matrix
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] matrix
  *         if substitution_matrix is None:             # <<<<<<<<<<<<<<
@@ -5173,38 +5173,38 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __pyx_t_13 = (__pyx_t_2 != 0);
   if (__pyx_t_13) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":594
+    /* "skbio/alignment/_ssw_wrapper.pyx":579
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] matrix
  *         if substitution_matrix is None:
  *             if protein:             # <<<<<<<<<<<<<<
  *                 raise Exception("Must provide a substitution matrix for"
  *                                 " protein sequences")
  */
-    __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_v_protein); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 594; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_v_protein); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 579; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (__pyx_t_13) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":595
+      /* "skbio/alignment/_ssw_wrapper.pyx":580
  *         if substitution_matrix is None:
  *             if protein:
  *                 raise Exception("Must provide a substitution matrix for"             # <<<<<<<<<<<<<<
  *                                 " protein sequences")
  *             matrix = self._build_match_matrix(match_score, mismatch_score)
  */
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_Exception, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_Exception, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_Raise(__pyx_t_1, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":597
+    /* "skbio/alignment/_ssw_wrapper.pyx":582
  *                 raise Exception("Must provide a substitution matrix for"
  *                                 " protein sequences")
  *             matrix = self._build_match_matrix(match_score, mismatch_score)             # <<<<<<<<<<<<<<
  *         else:
  *             matrix = self._convert_dict2d_to_matrix(substitution_matrix)
  */
-    __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_build_match_matrix(__pyx_v_self, __pyx_v_match_score, __pyx_v_mismatch_score)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 597; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_build_match_matrix(__pyx_v_self, __pyx_v_match_score, __pyx_v_mismatch_score)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 582; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5220,7 +5220,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
         }
       }
       __pyx_pybuffernd_matrix.diminfo[0].strides = __pyx_pybuffernd_matrix.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_matrix.diminfo[0].shape = __pyx_pybuffernd_matrix.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 597; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 582; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_v_matrix = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
@@ -5228,14 +5228,14 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":599
+    /* "skbio/alignment/_ssw_wrapper.pyx":584
  *             matrix = self._build_match_matrix(match_score, mismatch_score)
  *         else:
  *             matrix = self._convert_dict2d_to_matrix(substitution_matrix)             # <<<<<<<<<<<<<<
  *         # Set up our mask_length
  *         # Mask is recommended to be max(query_sequence/2, 15)
  */
-    __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_convert_dict2d_to_matrix(__pyx_v_self, __pyx_v_substitution_matrix)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 599; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_convert_dict2d_to_matrix(__pyx_v_self, __pyx_v_substitution_matrix)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 584; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5251,56 +5251,56 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
         }
       }
       __pyx_pybuffernd_matrix.diminfo[0].strides = __pyx_pybuffernd_matrix.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_matrix.diminfo[0].shape = __pyx_pybuffernd_matrix.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 599; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 584; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_v_matrix = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
   }
   __pyx_L5:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":602
+  /* "skbio/alignment/_ssw_wrapper.pyx":587
  *         # Set up our mask_length
  *         # Mask is recommended to be max(query_sequence/2, 15)
  *         if mask_auto:             # <<<<<<<<<<<<<<
  *             self.mask_length = len(query_sequence) / 2
  *             if self.mask_length < mask_length:
  */
-  __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_v_mask_auto); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 602; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_v_mask_auto); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 587; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_13) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":603
+    /* "skbio/alignment/_ssw_wrapper.pyx":588
  *         # Mask is recommended to be max(query_sequence/2, 15)
  *         if mask_auto:
  *             self.mask_length = len(query_sequence) / 2             # <<<<<<<<<<<<<<
  *             if self.mask_length < mask_length:
  *                 self.mask_length = mask_length
  */
-    __pyx_t_10 = PyObject_Length(__pyx_v_query_sequence); if (unlikely(__pyx_t_10 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 603; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyObject_Length(__pyx_v_query_sequence); if (unlikely(__pyx_t_10 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 588; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_v_self->mask_length = __Pyx_div_Py_ssize_t(__pyx_t_10, 2);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":604
+    /* "skbio/alignment/_ssw_wrapper.pyx":589
  *         if mask_auto:
  *             self.mask_length = len(query_sequence) / 2
  *             if self.mask_length < mask_length:             # <<<<<<<<<<<<<<
  *                 self.mask_length = mask_length
  *         else:
  */
-    __pyx_t_1 = __Pyx_PyInt_From_npy_int32(__pyx_v_self->mask_length); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 604; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyInt_From_npy_int32(__pyx_v_self->mask_length); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 589; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_8 = PyObject_RichCompare(__pyx_t_1, __pyx_v_mask_length, Py_LT); __Pyx_XGOTREF(__pyx_t_8); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 604; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyObject_RichCompare(__pyx_t_1, __pyx_v_mask_length, Py_LT); __Pyx_XGOTREF(__pyx_t_8); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 589; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_t_8); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 604; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_13 = __Pyx_PyObject_IsTrue(__pyx_t_8); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 589; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     if (__pyx_t_13) {
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":605
+      /* "skbio/alignment/_ssw_wrapper.pyx":590
  *             self.mask_length = len(query_sequence) / 2
  *             if self.mask_length < mask_length:
  *                 self.mask_length = mask_length             # <<<<<<<<<<<<<<
  *         else:
  *             self.mask_length = mask_length
  */
-      __pyx_t_4 = __Pyx_PyInt_As_npy_int32(__pyx_v_mask_length); if (unlikely((__pyx_t_4 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 605; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyInt_As_npy_int32(__pyx_v_mask_length); if (unlikely((__pyx_t_4 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 590; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __pyx_v_self->mask_length = __pyx_t_4;
       goto __pyx_L8;
     }
@@ -5309,26 +5309,26 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":607
+    /* "skbio/alignment/_ssw_wrapper.pyx":592
  *                 self.mask_length = mask_length
  *         else:
  *             self.mask_length = mask_length             # <<<<<<<<<<<<<<
  * 
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] read_seq
  */
-    __pyx_t_4 = __Pyx_PyInt_As_npy_int32(__pyx_v_mask_length); if (unlikely((__pyx_t_4 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 607; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyInt_As_npy_int32(__pyx_v_mask_length); if (unlikely((__pyx_t_4 == (npy_int32)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 592; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_v_self->mask_length = __pyx_t_4;
   }
   __pyx_L7:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":610
+  /* "skbio/alignment/_ssw_wrapper.pyx":595
  * 
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] read_seq
  *         read_seq = self._seq_converter(query_sequence)             # <<<<<<<<<<<<<<
  * 
  *         cdef cnp.int32_t read_length
  */
-  __pyx_t_8 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_seq_converter(__pyx_v_self, __pyx_v_query_sequence)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 610; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_seq_converter(__pyx_v_self, __pyx_v_query_sequence)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5344,39 +5344,39 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
       }
     }
     __pyx_pybuffernd_read_seq.diminfo[0].strides = __pyx_pybuffernd_read_seq.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_read_seq.diminfo[0].shape = __pyx_pybuffernd_read_seq.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 610; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_v_read_seq = ((PyArrayObject *)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":613
+  /* "skbio/alignment/_ssw_wrapper.pyx":598
  * 
  *         cdef cnp.int32_t read_length
  *         read_length = len(query_sequence)             # <<<<<<<<<<<<<<
  * 
  *         cdef cnp.int8_t s_size
  */
-  __pyx_t_10 = PyObject_Length(__pyx_v_query_sequence); if (unlikely(__pyx_t_10 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 613; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_10 = PyObject_Length(__pyx_v_query_sequence); if (unlikely(__pyx_t_10 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 598; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_read_length = __pyx_t_10;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":616
+  /* "skbio/alignment/_ssw_wrapper.pyx":601
  * 
  *         cdef cnp.int8_t s_size
  *         s_size = score_size             # <<<<<<<<<<<<<<
  * 
  *         cdef cnp.int32_t m_width
  */
-  __pyx_t_17 = __Pyx_PyInt_As_npy_int8(__pyx_v_score_size); if (unlikely((__pyx_t_17 == (npy_int8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 616; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_17 = __Pyx_PyInt_As_npy_int8(__pyx_v_score_size); if (unlikely((__pyx_t_17 == (npy_int8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 601; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_s_size = __pyx_t_17;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":619
+  /* "skbio/alignment/_ssw_wrapper.pyx":604
  * 
  *         cdef cnp.int32_t m_width
  *         m_width = 24 if self.is_protein else 5             # <<<<<<<<<<<<<<
  * 
  *         cdef s_profile* p
  */
-  __pyx_t_13 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 619; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_13 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 604; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_13) {
     __pyx_t_4 = 24;
   } else {
@@ -5384,7 +5384,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   }
   __pyx_v_m_width = __pyx_t_4;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":622
+  /* "skbio/alignment/_ssw_wrapper.pyx":607
  * 
  *         cdef s_profile* p
  *         self.profile = ssw_init(<cnp.int8_t*> read_seq.data,             # <<<<<<<<<<<<<<
@@ -5393,7 +5393,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
  */
   __pyx_v_self->profile = ssw_init(((__pyx_t_5numpy_int8_t *)__pyx_v_read_seq->data), __pyx_v_read_length, ((__pyx_t_5numpy_int8_t *)__pyx_v_matrix->data), __pyx_v_m_width, __pyx_v_s_size);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":629
+  /* "skbio/alignment/_ssw_wrapper.pyx":614
  * 
  *         # A hack to keep the python GC from eating our data
  *         self.__KEEP_IT_IN_SCOPE_read = read_seq             # <<<<<<<<<<<<<<
@@ -5406,7 +5406,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___KEEP_IT_IN_SCOPE_read));
   __pyx_v_self->__pyx___KEEP_IT_IN_SCOPE_read = ((PyArrayObject *)__pyx_v_read_seq);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":630
+  /* "skbio/alignment/_ssw_wrapper.pyx":615
  *         # A hack to keep the python GC from eating our data
  *         self.__KEEP_IT_IN_SCOPE_read = read_seq
  *         self.__KEEP_IT_IN_SCOPE_matrix = matrix             # <<<<<<<<<<<<<<
@@ -5419,7 +5419,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___KEEP_IT_IN_SCOPE_matrix));
   __pyx_v_self->__pyx___KEEP_IT_IN_SCOPE_matrix = ((PyArrayObject *)__pyx_v_matrix);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":558
+  /* "skbio/alignment/_ssw_wrapper.pyx":543
  *     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
  * 
  *     def __cinit__(self, query_sequence,             # <<<<<<<<<<<<<<
@@ -5453,7 +5453,7 @@ static int __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman___ci
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":632
+/* "skbio/alignment/_ssw_wrapper.pyx":617
  *         self.__KEEP_IT_IN_SCOPE_matrix = matrix
  * 
  *     def __call__(self, target_sequence):             # <<<<<<<<<<<<<<
@@ -5493,7 +5493,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__call__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 632; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__call__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 617; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
       goto __pyx_L5_argtuple_error;
@@ -5504,7 +5504,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__call__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 632; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("__call__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 617; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.StripedSmithWaterman.__call__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5544,7 +5544,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   __pyx_pybuffernd_reference.data = NULL;
   __pyx_pybuffernd_reference.rcbuffer = &__pyx_pybuffer_reference;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":645
+  /* "skbio/alignment/_ssw_wrapper.pyx":630
  * 
  *         """
  *         reference_sequence = target_sequence             # <<<<<<<<<<<<<<
@@ -5554,14 +5554,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   __Pyx_INCREF(__pyx_v_target_sequence);
   __pyx_v_reference_sequence = __pyx_v_target_sequence;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":647
+  /* "skbio/alignment/_ssw_wrapper.pyx":632
  *         reference_sequence = target_sequence
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] reference
  *         reference = self._seq_converter(reference_sequence)             # <<<<<<<<<<<<<<
  * 
  *         cdef cnp.int32_t ref_length
  */
-  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_seq_converter(__pyx_v_self, __pyx_v_reference_sequence)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 647; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_seq_converter(__pyx_v_self, __pyx_v_reference_sequence)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 632; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5577,22 +5577,22 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
       }
     }
     __pyx_pybuffernd_reference.diminfo[0].strides = __pyx_pybuffernd_reference.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_reference.diminfo[0].shape = __pyx_pybuffernd_reference.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 647; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 632; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_v_reference = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":650
+  /* "skbio/alignment/_ssw_wrapper.pyx":635
  * 
  *         cdef cnp.int32_t ref_length
  *         ref_length = len(reference_sequence)             # <<<<<<<<<<<<<<
  * 
  *         cdef s_align *align
  */
-  __pyx_t_6 = PyObject_Length(__pyx_v_reference_sequence); if (unlikely(__pyx_t_6 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 650; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = PyObject_Length(__pyx_v_reference_sequence); if (unlikely(__pyx_t_6 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 635; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_ref_length = __pyx_t_6;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":653
+  /* "skbio/alignment/_ssw_wrapper.pyx":638
  * 
  *         cdef s_align *align
  *         align = ssw_align(self.profile, <cnp.int8_t*> reference.data,             # <<<<<<<<<<<<<<
@@ -5601,26 +5601,26 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
  */
   __pyx_v_align = ssw_align(__pyx_v_self->profile, ((__pyx_t_5numpy_int8_t *)__pyx_v_reference->data), __pyx_v_ref_length, __pyx_v_self->gap_open_penalty, __pyx_v_self->gap_extend_penalty, __pyx_v_self->bit_flag, __pyx_v_self->score_filter, __pyx_v_self->distance_filter, __pyx_v_self->mask_length);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":660
+  /* "skbio/alignment/_ssw_wrapper.pyx":645
  * 
  *         # Cython won't let me do this correctly, so duplicate code ahoy:
  *         if self.suppress_sequences:             # <<<<<<<<<<<<<<
  *             alignment = AlignmentStructure("", "", self.index_starts_at)
  *         else:
  */
-  __pyx_t_7 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->suppress_sequences)); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 660; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->suppress_sequences)); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 645; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_7) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":661
+    /* "skbio/alignment/_ssw_wrapper.pyx":646
  *         # Cython won't let me do this correctly, so duplicate code ahoy:
  *         if self.suppress_sequences:
  *             alignment = AlignmentStructure("", "", self.index_starts_at)             # <<<<<<<<<<<<<<
  *         else:
  *             alignment = AlignmentStructure(self.read_sequence,
  */
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->index_starts_at); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 661; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->index_starts_at); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 646; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_8 = PyTuple_New(3); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 661; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyTuple_New(3); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 646; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_INCREF(__pyx_kp_s__6);
     PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_kp_s__6);
@@ -5631,7 +5631,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
     PyTuple_SET_ITEM(__pyx_t_8, 2, __pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 661; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 646; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __pyx_v_alignment = ((struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure *)__pyx_t_1);
@@ -5640,24 +5640,24 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":665
+    /* "skbio/alignment/_ssw_wrapper.pyx":650
  *             alignment = AlignmentStructure(self.read_sequence,
  *                                            reference_sequence,
  *                                            self.index_starts_at)             # <<<<<<<<<<<<<<
  *         alignment.__constructor(align)  # Hack to get a pointer through
  *         return alignment
  */
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->index_starts_at); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 665; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->index_starts_at); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 650; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":663
+    /* "skbio/alignment/_ssw_wrapper.pyx":648
  *             alignment = AlignmentStructure("", "", self.index_starts_at)
  *         else:
  *             alignment = AlignmentStructure(self.read_sequence,             # <<<<<<<<<<<<<<
  *                                            reference_sequence,
  *                                            self.index_starts_at)
  */
-    __pyx_t_8 = PyTuple_New(3); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 663; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyTuple_New(3); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 648; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_INCREF(__pyx_v_self->read_sequence);
     PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_v_self->read_sequence);
@@ -5668,7 +5668,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
     PyTuple_SET_ITEM(__pyx_t_8, 2, __pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 663; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 648; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __pyx_v_alignment = ((struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure *)__pyx_t_1);
@@ -5676,18 +5676,18 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":666
+  /* "skbio/alignment/_ssw_wrapper.pyx":651
  *                                            reference_sequence,
  *                                            self.index_starts_at)
  *         alignment.__constructor(align)  # Hack to get a pointer through             # <<<<<<<<<<<<<<
  *         return alignment
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure *)__pyx_v_alignment->__pyx_vtab)->__pyx___constructor(__pyx_v_alignment, __pyx_v_align); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 666; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure *)__pyx_v_alignment->__pyx_vtab)->__pyx___constructor(__pyx_v_alignment, __pyx_v_align); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 651; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":667
+  /* "skbio/alignment/_ssw_wrapper.pyx":652
  *                                            self.index_starts_at)
  *         alignment.__constructor(align)  # Hack to get a pointer through
  *         return alignment             # <<<<<<<<<<<<<<
@@ -5699,7 +5699,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   __pyx_r = ((PyObject *)__pyx_v_alignment);
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":632
+  /* "skbio/alignment/_ssw_wrapper.pyx":617
  *         self.__KEEP_IT_IN_SCOPE_matrix = matrix
  * 
  *     def __call__(self, target_sequence):             # <<<<<<<<<<<<<<
@@ -5729,7 +5729,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":669
+/* "skbio/alignment/_ssw_wrapper.pyx":654
  *         return alignment
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -5753,7 +5753,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_4__
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":670
+  /* "skbio/alignment/_ssw_wrapper.pyx":655
  * 
  *     def __dealloc__(self):
  *         if self.profile is not NULL:             # <<<<<<<<<<<<<<
@@ -5763,7 +5763,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_4__
   __pyx_t_1 = ((__pyx_v_self->profile != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":671
+    /* "skbio/alignment/_ssw_wrapper.pyx":656
  *     def __dealloc__(self):
  *         if self.profile is not NULL:
  *             init_destroy(self.profile)             # <<<<<<<<<<<<<<
@@ -5775,7 +5775,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_4__
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":669
+  /* "skbio/alignment/_ssw_wrapper.pyx":654
  *         return alignment
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -5787,7 +5787,7 @@ static void __pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_4__
   __Pyx_RefNannyFinishContext();
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":673
+/* "skbio/alignment/_ssw_wrapper.pyx":658
  *             init_destroy(self.profile)
  * 
  *     def _get_bit_flag(self, override_skip_babp, score_only):             # <<<<<<<<<<<<<<
@@ -5826,11 +5826,11 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_score_only)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_get_bit_flag", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 673; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("_get_bit_flag", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 658; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_get_bit_flag") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 673; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_get_bit_flag") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 658; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -5843,7 +5843,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_get_bit_flag", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 673; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("_get_bit_flag", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 658; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.StripedSmithWaterman._get_bit_flag", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5867,7 +5867,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_get_bit_flag", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":674
+  /* "skbio/alignment/_ssw_wrapper.pyx":659
  * 
  *     def _get_bit_flag(self, override_skip_babp, score_only):
  *         bit_flag = 0             # <<<<<<<<<<<<<<
@@ -5876,17 +5876,17 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
  */
   __pyx_v_bit_flag = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":675
+  /* "skbio/alignment/_ssw_wrapper.pyx":660
  *     def _get_bit_flag(self, override_skip_babp, score_only):
  *         bit_flag = 0
  *         if score_only:             # <<<<<<<<<<<<<<
  *             return bit_flag
  *         if override_skip_babp:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_score_only); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 675; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_score_only); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 660; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":676
+    /* "skbio/alignment/_ssw_wrapper.pyx":661
  *         bit_flag = 0
  *         if score_only:
  *             return bit_flag             # <<<<<<<<<<<<<<
@@ -5894,24 +5894,24 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
  *             bit_flag = bit_flag | 0x8
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_bit_flag); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_bit_flag); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 661; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":677
+  /* "skbio/alignment/_ssw_wrapper.pyx":662
  *         if score_only:
  *             return bit_flag
  *         if override_skip_babp:             # <<<<<<<<<<<<<<
  *             bit_flag = bit_flag | 0x8
  *         if self.distance_filter != 0:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_override_skip_babp); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 677; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_override_skip_babp); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 662; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":678
+    /* "skbio/alignment/_ssw_wrapper.pyx":663
  *             return bit_flag
  *         if override_skip_babp:
  *             bit_flag = bit_flag | 0x8             # <<<<<<<<<<<<<<
@@ -5923,7 +5923,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   __pyx_L4:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":679
+  /* "skbio/alignment/_ssw_wrapper.pyx":664
  *         if override_skip_babp:
  *             bit_flag = bit_flag | 0x8
  *         if self.distance_filter != 0:             # <<<<<<<<<<<<<<
@@ -5933,7 +5933,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   __pyx_t_1 = ((__pyx_v_self->distance_filter != 0) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":680
+    /* "skbio/alignment/_ssw_wrapper.pyx":665
  *             bit_flag = bit_flag | 0x8
  *         if self.distance_filter != 0:
  *             bit_flag = bit_flag | 0x4             # <<<<<<<<<<<<<<
@@ -5945,7 +5945,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   __pyx_L5:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":681
+  /* "skbio/alignment/_ssw_wrapper.pyx":666
  *         if self.distance_filter != 0:
  *             bit_flag = bit_flag | 0x4
  *         if self.score_filter != 0:             # <<<<<<<<<<<<<<
@@ -5955,7 +5955,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   __pyx_t_1 = ((__pyx_v_self->score_filter != 0) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":682
+    /* "skbio/alignment/_ssw_wrapper.pyx":667
  *             bit_flag = bit_flag | 0x4
  *         if self.score_filter != 0:
  *             bit_flag = bit_flag | 0x2             # <<<<<<<<<<<<<<
@@ -5967,7 +5967,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   }
   __pyx_L6:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":683
+  /* "skbio/alignment/_ssw_wrapper.pyx":668
  *         if self.score_filter != 0:
  *             bit_flag = bit_flag | 0x2
  *         if bit_flag == 0 or bit_flag == 8:             # <<<<<<<<<<<<<<
@@ -5978,7 +5978,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
     case 0:
     case 8:
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":684
+    /* "skbio/alignment/_ssw_wrapper.pyx":669
  *             bit_flag = bit_flag | 0x2
  *         if bit_flag == 0 or bit_flag == 8:
  *             bit_flag = bit_flag | 0x1             # <<<<<<<<<<<<<<
@@ -5990,7 +5990,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
     default: break;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":685
+  /* "skbio/alignment/_ssw_wrapper.pyx":670
  *         if bit_flag == 0 or bit_flag == 8:
  *             bit_flag = bit_flag | 0x1
  *         return bit_flag             # <<<<<<<<<<<<<<
@@ -5998,13 +5998,13 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] _seq_converter(
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_bit_flag); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 685; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_bit_flag); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 670; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":673
+  /* "skbio/alignment/_ssw_wrapper.pyx":658
  *             init_destroy(self.profile)
  * 
  *     def _get_bit_flag(self, override_skip_babp, score_only):             # <<<<<<<<<<<<<<
@@ -6023,7 +6023,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterma
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":687
+/* "skbio/alignment/_ssw_wrapper.pyx":672
  *         return bit_flag
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] _seq_converter(             # <<<<<<<<<<<<<<
@@ -6061,41 +6061,41 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __pyx_pybuffernd_seq.data = NULL;
   __pyx_pybuffernd_seq.rcbuffer = &__pyx_pybuffer_seq;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":691
+  /* "skbio/alignment/_ssw_wrapper.pyx":676
  *             sequence):
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] seq
  *         seq = np.empty(len(sequence), dtype=np.int8)             # <<<<<<<<<<<<<<
  *         if self.is_protein:
  *             for i, char in enumerate(sequence):
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = PyObject_Length(__pyx_v_sequence); if (unlikely(__pyx_t_3 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyObject_Length(__pyx_v_sequence); if (unlikely(__pyx_t_3 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_3); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_int8); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_int8); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_6);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -6111,23 +6111,23 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       }
     }
     __pyx_pybuffernd_seq.diminfo[0].strides = __pyx_pybuffernd_seq.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_seq.diminfo[0].shape = __pyx_pybuffernd_seq.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_8 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__pyx_t_8 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 676; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_t_7 = 0;
   __pyx_v_seq = ((PyArrayObject *)__pyx_t_6);
   __pyx_t_6 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":692
+  /* "skbio/alignment/_ssw_wrapper.pyx":677
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] seq
  *         seq = np.empty(len(sequence), dtype=np.int8)
  *         if self.is_protein:             # <<<<<<<<<<<<<<
  *             for i, char in enumerate(sequence):
  *                 seq[i] = np_aa_table[ord(char)]
  */
-  __pyx_t_12 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 692; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_12 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 677; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_12) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":693
+    /* "skbio/alignment/_ssw_wrapper.pyx":678
  *         seq = np.empty(len(sequence), dtype=np.int8)
  *         if self.is_protein:
  *             for i, char in enumerate(sequence):             # <<<<<<<<<<<<<<
@@ -6140,25 +6140,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_1 = __pyx_v_sequence; __Pyx_INCREF(__pyx_t_1); __pyx_t_3 = 0;
       __pyx_t_13 = NULL;
     } else {
-      __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_13 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_13 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     for (;;) {
       if (likely(!__pyx_t_13)) {
         if (likely(PyList_CheckExact(__pyx_t_1))) {
           if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         } else {
           if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         }
       } else {
@@ -6167,7 +6167,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           }
           break;
         }
@@ -6177,37 +6177,37 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_4 = 0;
       __Pyx_INCREF(__pyx_t_6);
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
-      __pyx_t_4 = PyNumber_Add(__pyx_t_6, __pyx_int_1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = PyNumber_Add(__pyx_t_6, __pyx_int_1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_6);
       __pyx_t_6 = __pyx_t_4;
       __pyx_t_4 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":694
+      /* "skbio/alignment/_ssw_wrapper.pyx":679
  *         if self.is_protein:
  *             for i, char in enumerate(sequence):
  *                 seq[i] = np_aa_table[ord(char)]             # <<<<<<<<<<<<<<
  *         else:
  *             for i, char in enumerate(sequence):
  */
-      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np_aa_table); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np_aa_table); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_INCREF(__pyx_v_char);
       PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_char);
       __Pyx_GIVEREF(__pyx_v_char);
-      __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_ord, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_ord, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = PyObject_GetItem(__pyx_t_4, __pyx_t_5); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_2 = PyObject_GetItem(__pyx_t_4, __pyx_t_5); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_seq), __pyx_v_i, __pyx_t_2) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_seq), __pyx_v_i, __pyx_t_2) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":693
+      /* "skbio/alignment/_ssw_wrapper.pyx":678
  *         seq = np.empty(len(sequence), dtype=np.int8)
  *         if self.is_protein:
  *             for i, char in enumerate(sequence):             # <<<<<<<<<<<<<<
@@ -6221,7 +6221,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":696
+    /* "skbio/alignment/_ssw_wrapper.pyx":681
  *                 seq[i] = np_aa_table[ord(char)]
  *         else:
  *             for i, char in enumerate(sequence):             # <<<<<<<<<<<<<<
@@ -6234,25 +6234,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_1 = __pyx_v_sequence; __Pyx_INCREF(__pyx_t_1); __pyx_t_3 = 0;
       __pyx_t_13 = NULL;
     } else {
-      __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_13 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_13 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     for (;;) {
       if (likely(!__pyx_t_13)) {
         if (likely(PyList_CheckExact(__pyx_t_1))) {
           if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         } else {
           if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         }
       } else {
@@ -6261,7 +6261,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           }
           break;
         }
@@ -6271,37 +6271,37 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_2 = 0;
       __Pyx_INCREF(__pyx_t_6);
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
-      __pyx_t_2 = PyNumber_Add(__pyx_t_6, __pyx_int_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 696; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyNumber_Add(__pyx_t_6, __pyx_int_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 681; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_6);
       __pyx_t_6 = __pyx_t_2;
       __pyx_t_2 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":697
+      /* "skbio/alignment/_ssw_wrapper.pyx":682
  *         else:
  *             for i, char in enumerate(sequence):
  *                 seq[i] = np_nt_table[ord(char)]             # <<<<<<<<<<<<<<
  *         return seq
  * 
  */
-      __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np_nt_table); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np_nt_table); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 682; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 682; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_INCREF(__pyx_v_char);
       PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_v_char);
       __Pyx_GIVEREF(__pyx_v_char);
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ord, __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ord, __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 682; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = PyObject_GetItem(__pyx_t_2, __pyx_t_4); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_5 = PyObject_GetItem(__pyx_t_2, __pyx_t_4); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 682; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_seq), __pyx_v_i, __pyx_t_5) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_seq), __pyx_v_i, __pyx_t_5) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 682; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":696
+      /* "skbio/alignment/_ssw_wrapper.pyx":681
  *                 seq[i] = np_aa_table[ord(char)]
  *         else:
  *             for i, char in enumerate(sequence):             # <<<<<<<<<<<<<<
@@ -6314,7 +6314,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":698
+  /* "skbio/alignment/_ssw_wrapper.pyx":683
  *             for i, char in enumerate(sequence):
  *                 seq[i] = np_nt_table[ord(char)]
  *         return seq             # <<<<<<<<<<<<<<
@@ -6326,7 +6326,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __pyx_r = ((PyArrayObject *)__pyx_v_seq);
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":687
+  /* "skbio/alignment/_ssw_wrapper.pyx":672
  *         return bit_flag
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] _seq_converter(             # <<<<<<<<<<<<<<
@@ -6359,7 +6359,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":700
+/* "skbio/alignment/_ssw_wrapper.pyx":685
  *         return seq
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \             # <<<<<<<<<<<<<<
@@ -6389,7 +6389,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_build_match_matrix", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":702
+  /* "skbio/alignment/_ssw_wrapper.pyx":687
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
  *             _build_match_matrix(self, match_score, mismatch_score):
  *         sequence_order = "ACGTN"             # <<<<<<<<<<<<<<
@@ -6399,19 +6399,19 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __Pyx_INCREF(__pyx_n_s_ACGTN);
   __pyx_v_sequence_order = __pyx_n_s_ACGTN;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":703
+  /* "skbio/alignment/_ssw_wrapper.pyx":688
  *             _build_match_matrix(self, match_score, mismatch_score):
  *         sequence_order = "ACGTN"
  *         dict2d = {}             # <<<<<<<<<<<<<<
  *         for row in sequence_order:
  *             dict2d[row] = {}
  */
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 703; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 688; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_dict2d = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":704
+  /* "skbio/alignment/_ssw_wrapper.pyx":689
  *         sequence_order = "ACGTN"
  *         dict2d = {}
  *         for row in sequence_order:             # <<<<<<<<<<<<<<
@@ -6422,25 +6422,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     __pyx_t_1 = __pyx_v_sequence_order; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
     __pyx_t_3 = NULL;
   } else {
-    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   for (;;) {
     if (likely(!__pyx_t_3)) {
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       } else {
         if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       }
     } else {
@@ -6449,7 +6449,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 704; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 689; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -6458,19 +6458,19 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     __Pyx_XDECREF_SET(__pyx_v_row, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":705
+    /* "skbio/alignment/_ssw_wrapper.pyx":690
  *         dict2d = {}
  *         for row in sequence_order:
  *             dict2d[row] = {}             # <<<<<<<<<<<<<<
  *             for column in sequence_order:
  *                 if column == 'N' or row == 'N':
  */
-    __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 705; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 690; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    if (unlikely(PyDict_SetItem(__pyx_v_dict2d, __pyx_v_row, __pyx_t_4) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 705; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(PyDict_SetItem(__pyx_v_dict2d, __pyx_v_row, __pyx_t_4) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 690; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":706
+    /* "skbio/alignment/_ssw_wrapper.pyx":691
  *         for row in sequence_order:
  *             dict2d[row] = {}
  *             for column in sequence_order:             # <<<<<<<<<<<<<<
@@ -6481,25 +6481,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_4 = __pyx_v_sequence_order; __Pyx_INCREF(__pyx_t_4); __pyx_t_5 = 0;
       __pyx_t_6 = NULL;
     } else {
-      __pyx_t_5 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_6 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     for (;;) {
       if (likely(!__pyx_t_6)) {
         if (likely(PyList_CheckExact(__pyx_t_4))) {
           if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_7 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_7); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_7 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_7); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_7 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_7 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         } else {
           if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_7 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_7); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_7 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_7); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_7 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_7 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         }
       } else {
@@ -6508,7 +6508,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 691; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           }
           break;
         }
@@ -6517,63 +6517,63 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __Pyx_XDECREF_SET(__pyx_v_column, __pyx_t_7);
       __pyx_t_7 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":707
+      /* "skbio/alignment/_ssw_wrapper.pyx":692
  *             dict2d[row] = {}
  *             for column in sequence_order:
  *                 if column == 'N' or row == 'N':             # <<<<<<<<<<<<<<
  *                     dict2d[row][column] = 0
  *                 else:
  */
-      __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_column, __pyx_n_s_N, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 707; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_column, __pyx_n_s_N, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 692; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       if (!__pyx_t_9) {
       } else {
         __pyx_t_8 = __pyx_t_9;
         goto __pyx_L8_bool_binop_done;
       }
-      __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_row, __pyx_n_s_N, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 707; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_9 = (__Pyx_PyString_Equals(__pyx_v_row, __pyx_n_s_N, Py_EQ)); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 692; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __pyx_t_8 = __pyx_t_9;
       __pyx_L8_bool_binop_done:;
       if (__pyx_t_8) {
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":708
+        /* "skbio/alignment/_ssw_wrapper.pyx":693
  *             for column in sequence_order:
  *                 if column == 'N' or row == 'N':
  *                     dict2d[row][column] = 0             # <<<<<<<<<<<<<<
  *                 else:
  *                     dict2d[row][column] = match_score if row == column \
  */
-        __pyx_t_7 = __Pyx_PyDict_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_7 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+        __pyx_t_7 = __Pyx_PyDict_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_7 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
         __Pyx_GOTREF(__pyx_t_7);
-        if (unlikely(PyObject_SetItem(__pyx_t_7, __pyx_v_column, __pyx_int_0) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        if (unlikely(PyObject_SetItem(__pyx_t_7, __pyx_v_column, __pyx_int_0) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
         goto __pyx_L7;
       }
       /*else*/ {
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":711
+        /* "skbio/alignment/_ssw_wrapper.pyx":696
  *                 else:
  *                     dict2d[row][column] = match_score if row == column \
  *                         else mismatch_score             # <<<<<<<<<<<<<<
  *         return self._convert_dict2d_to_matrix(dict2d)
  * 
  */
-        __pyx_t_10 = PyObject_RichCompare(__pyx_v_row, __pyx_v_column, Py_EQ); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_10 = PyObject_RichCompare(__pyx_v_row, __pyx_v_column, Py_EQ); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 695; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":710
+        /* "skbio/alignment/_ssw_wrapper.pyx":695
  *                     dict2d[row][column] = 0
  *                 else:
  *                     dict2d[row][column] = match_score if row == column \             # <<<<<<<<<<<<<<
  *                         else mismatch_score
  *         return self._convert_dict2d_to_matrix(dict2d)
  */
-        __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_10); if (unlikely(__pyx_t_8 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_10); if (unlikely(__pyx_t_8 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 695; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
         if (__pyx_t_8) {
           __Pyx_INCREF(__pyx_v_match_score);
           __pyx_t_7 = __pyx_v_match_score;
         } else {
 
-          /* "skbio/alignment/_ssw_wrapper.pyx":711
+          /* "skbio/alignment/_ssw_wrapper.pyx":696
  *                 else:
  *                     dict2d[row][column] = match_score if row == column \
  *                         else mismatch_score             # <<<<<<<<<<<<<<
@@ -6584,22 +6584,22 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
           __pyx_t_7 = __pyx_v_mismatch_score;
         }
 
-        /* "skbio/alignment/_ssw_wrapper.pyx":710
+        /* "skbio/alignment/_ssw_wrapper.pyx":695
  *                     dict2d[row][column] = 0
  *                 else:
  *                     dict2d[row][column] = match_score if row == column \             # <<<<<<<<<<<<<<
  *                         else mismatch_score
  *         return self._convert_dict2d_to_matrix(dict2d)
  */
-        __pyx_t_10 = __Pyx_PyDict_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+        __pyx_t_10 = __Pyx_PyDict_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 695; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
         __Pyx_GOTREF(__pyx_t_10);
-        if (unlikely(PyObject_SetItem(__pyx_t_10, __pyx_v_column, __pyx_t_7) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        if (unlikely(PyObject_SetItem(__pyx_t_10, __pyx_v_column, __pyx_t_7) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 695; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       }
       __pyx_L7:;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":706
+      /* "skbio/alignment/_ssw_wrapper.pyx":691
  *         for row in sequence_order:
  *             dict2d[row] = {}
  *             for column in sequence_order:             # <<<<<<<<<<<<<<
@@ -6609,7 +6609,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     }
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":704
+    /* "skbio/alignment/_ssw_wrapper.pyx":689
  *         sequence_order = "ACGTN"
  *         dict2d = {}
  *         for row in sequence_order:             # <<<<<<<<<<<<<<
@@ -6619,7 +6619,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":712
+  /* "skbio/alignment/_ssw_wrapper.pyx":697
  *                     dict2d[row][column] = match_score if row == column \
  *                         else mismatch_score
  *         return self._convert_dict2d_to_matrix(dict2d)             # <<<<<<<<<<<<<<
@@ -6627,13 +6627,13 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
  */
   __Pyx_XDECREF(((PyObject *)__pyx_r));
-  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_convert_dict2d_to_matrix(__pyx_v_self, __pyx_v_dict2d)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 712; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_v_self->__pyx_vtab)->_convert_dict2d_to_matrix(__pyx_v_self, __pyx_v_dict2d)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 697; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":700
+  /* "skbio/alignment/_ssw_wrapper.pyx":685
  *         return seq
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \             # <<<<<<<<<<<<<<
@@ -6659,7 +6659,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":714
+/* "skbio/alignment/_ssw_wrapper.pyx":699
  *         return self._convert_dict2d_to_matrix(dict2d)
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \             # <<<<<<<<<<<<<<
@@ -6701,17 +6701,17 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __pyx_pybuffernd_py_list_matrix.data = NULL;
   __pyx_pybuffernd_py_list_matrix.rcbuffer = &__pyx_pybuffer_py_list_matrix;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":716
+  /* "skbio/alignment/_ssw_wrapper.pyx":701
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \
  *             _convert_dict2d_to_matrix(self, dict2d):
  *         if self.is_protein:             # <<<<<<<<<<<<<<
  *             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
  *         else:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(((PyObject *)__pyx_v_self->is_protein)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 701; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_1) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":717
+    /* "skbio/alignment/_ssw_wrapper.pyx":702
  *             _convert_dict2d_to_matrix(self, dict2d):
  *         if self.is_protein:
  *             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"             # <<<<<<<<<<<<<<
@@ -6724,7 +6724,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":719
+    /* "skbio/alignment/_ssw_wrapper.pyx":704
  *             sequence_order = "ARNDCQEGHILKMFPSTWYVBZX*"
  *         else:
  *             sequence_order = "ACGTN"             # <<<<<<<<<<<<<<
@@ -6736,7 +6736,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":720
+  /* "skbio/alignment/_ssw_wrapper.pyx":705
  *         else:
  *             sequence_order = "ACGTN"
  *         cdef int i = 0             # <<<<<<<<<<<<<<
@@ -6745,59 +6745,59 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
  */
   __pyx_v_i = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":721
+  /* "skbio/alignment/_ssw_wrapper.pyx":706
  *             sequence_order = "ACGTN"
  *         cdef int i = 0
  *         length = len(sequence_order)             # <<<<<<<<<<<<<<
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
  *             np.empty(length*length, dtype=np.int8)
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_sequence_order); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 721; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_3 = PyInt_FromSsize_t(__pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 721; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyObject_Length(__pyx_v_sequence_order); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyInt_FromSsize_t(__pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 706; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_v_length = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":723
+  /* "skbio/alignment/_ssw_wrapper.pyx":708
  *         length = len(sequence_order)
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
  *             np.empty(length*length, dtype=np.int8)             # <<<<<<<<<<<<<<
  *         for row in sequence_order:
  *             for column in sequence_order:
  */
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Multiply(__pyx_v_length, __pyx_v_length); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_length, __pyx_v_length); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_int8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_int8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_7) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_7) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 723; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 708; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_8 = ((PyArrayObject *)__pyx_t_7);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer, (PyObject*)__pyx_t_8, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int8_t, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_py_list_matrix = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer.buf = NULL;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 722; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 707; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     } else {__pyx_pybuffernd_py_list_matrix.diminfo[0].strides = __pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_py_list_matrix.diminfo[0].shape = __pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -6805,7 +6805,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __pyx_v_py_list_matrix = ((PyArrayObject *)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":724
+  /* "skbio/alignment/_ssw_wrapper.pyx":709
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
  *             np.empty(length*length, dtype=np.int8)
  *         for row in sequence_order:             # <<<<<<<<<<<<<<
@@ -6816,25 +6816,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     __pyx_t_7 = __pyx_v_sequence_order; __Pyx_INCREF(__pyx_t_7); __pyx_t_2 = 0;
     __pyx_t_9 = NULL;
   } else {
-    __pyx_t_2 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_9 = Py_TYPE(__pyx_t_7)->tp_iternext; if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = Py_TYPE(__pyx_t_7)->tp_iternext; if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   for (;;) {
     if (likely(!__pyx_t_9)) {
       if (likely(PyList_CheckExact(__pyx_t_7))) {
         if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_7)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_7, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_7, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       } else {
         if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_7)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_7, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_7, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #endif
       }
     } else {
@@ -6843,7 +6843,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 724; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 709; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -6852,7 +6852,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     __Pyx_XDECREF_SET(__pyx_v_row, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":725
+    /* "skbio/alignment/_ssw_wrapper.pyx":710
  *             np.empty(length*length, dtype=np.int8)
  *         for row in sequence_order:
  *             for column in sequence_order:             # <<<<<<<<<<<<<<
@@ -6863,25 +6863,25 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __pyx_t_3 = __pyx_v_sequence_order; __Pyx_INCREF(__pyx_t_3); __pyx_t_10 = 0;
       __pyx_t_11 = NULL;
     } else {
-      __pyx_t_10 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_10 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_v_sequence_order); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_11 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_11 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     for (;;) {
       if (likely(!__pyx_t_11)) {
         if (likely(PyList_CheckExact(__pyx_t_3))) {
           if (__pyx_t_10 >= PyList_GET_SIZE(__pyx_t_3)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         } else {
           if (__pyx_t_10 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_5 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #else
-          __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = PySequence_ITEM(__pyx_t_3, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           #endif
         }
       } else {
@@ -6890,7 +6890,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 725; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+            else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 710; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           }
           break;
         }
@@ -6899,19 +6899,19 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       __Pyx_XDECREF_SET(__pyx_v_column, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":726
+      /* "skbio/alignment/_ssw_wrapper.pyx":711
  *         for row in sequence_order:
  *             for column in sequence_order:
  *                 py_list_matrix[i] = dict2d[row][column]             # <<<<<<<<<<<<<<
  *                 i += 1
  *         return py_list_matrix
  */
-      __pyx_t_5 = PyObject_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 726; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_5 = PyObject_GetItem(__pyx_v_dict2d, __pyx_v_row); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 711; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_4 = PyObject_GetItem(__pyx_t_5, __pyx_v_column); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 726; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_4 = PyObject_GetItem(__pyx_t_5, __pyx_v_column); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 711; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_12 = __Pyx_PyInt_As_npy_int8(__pyx_t_4); if (unlikely((__pyx_t_12 == (npy_int8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 726; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_12 = __Pyx_PyInt_As_npy_int8(__pyx_t_4); if (unlikely((__pyx_t_12 == (npy_int8)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 711; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __pyx_t_13 = __pyx_v_i;
       __pyx_t_14 = -1;
@@ -6921,11 +6921,11 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
       } else if (unlikely(__pyx_t_13 >= __pyx_pybuffernd_py_list_matrix.diminfo[0].shape)) __pyx_t_14 = 0;
       if (unlikely(__pyx_t_14 != -1)) {
         __Pyx_RaiseBufferIndexError(__pyx_t_14);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 726; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 711; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
       *__Pyx_BufPtrCContig1d(__pyx_t_5numpy_int8_t *, __pyx_pybuffernd_py_list_matrix.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_py_list_matrix.diminfo[0].strides) = __pyx_t_12;
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":727
+      /* "skbio/alignment/_ssw_wrapper.pyx":712
  *             for column in sequence_order:
  *                 py_list_matrix[i] = dict2d[row][column]
  *                 i += 1             # <<<<<<<<<<<<<<
@@ -6934,7 +6934,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
  */
       __pyx_v_i = (__pyx_v_i + 1);
 
-      /* "skbio/alignment/_ssw_wrapper.pyx":725
+      /* "skbio/alignment/_ssw_wrapper.pyx":710
  *             np.empty(length*length, dtype=np.int8)
  *         for row in sequence_order:
  *             for column in sequence_order:             # <<<<<<<<<<<<<<
@@ -6944,7 +6944,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":724
+    /* "skbio/alignment/_ssw_wrapper.pyx":709
  *         cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] py_list_matrix = \
  *             np.empty(length*length, dtype=np.int8)
  *         for row in sequence_order:             # <<<<<<<<<<<<<<
@@ -6954,7 +6954,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":728
+  /* "skbio/alignment/_ssw_wrapper.pyx":713
  *                 py_list_matrix[i] = dict2d[row][column]
  *                 i += 1
  *         return py_list_matrix             # <<<<<<<<<<<<<<
@@ -6966,7 +6966,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   __pyx_r = ((PyArrayObject *)__pyx_v_py_list_matrix);
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":714
+  /* "skbio/alignment/_ssw_wrapper.pyx":699
  *         return self._convert_dict2d_to_matrix(dict2d)
  * 
  *     cdef cnp.ndarray[cnp.int8_t, ndim = 1, mode = "c"] \             # <<<<<<<<<<<<<<
@@ -7001,7 +7001,7 @@ static PyArrayObject *__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWat
   return __pyx_r;
 }
 
-/* "skbio/alignment/_ssw_wrapper.pyx":731
+/* "skbio/alignment/_ssw_wrapper.pyx":716
  * 
  * 
  * def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,             # <<<<<<<<<<<<<<
@@ -7048,7 +7048,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_1local_pairwise_align
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_sequence2)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("local_pairwise_align_ssw", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("local_pairwise_align_ssw", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
@@ -7057,7 +7057,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_1local_pairwise_align
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, __pyx_v_kwargs, values, pos_args, "local_pairwise_align_ssw") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, __pyx_v_kwargs, values, pos_args, "local_pairwise_align_ssw") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7074,7 +7074,7 @@ static PyObject *__pyx_pw_5skbio_9alignment_12_ssw_wrapper_1local_pairwise_align
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("local_pairwise_align_ssw", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("local_pairwise_align_ssw", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
   __Pyx_AddTraceback("skbio.alignment._ssw_wrapper.local_pairwise_align_ssw", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -7108,92 +7108,92 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("local_pairwise_align_ssw", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":775
+  /* "skbio/alignment/_ssw_wrapper.pyx":760
  *     # We need the sequences for `Alignment` to make sense, so don't let the
  *     # user suppress them.
  *     kwargs['suppress_sequences'] = False             # <<<<<<<<<<<<<<
  *     kwargs['zero_index'] = True
  * 
  */
-  if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_suppress_sequences, Py_False) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 775; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_suppress_sequences, Py_False) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 760; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":776
+  /* "skbio/alignment/_ssw_wrapper.pyx":761
  *     # user suppress them.
  *     kwargs['suppress_sequences'] = False
  *     kwargs['zero_index'] = True             # <<<<<<<<<<<<<<
  * 
  *     if isinstance(sequence1, Protein):
  */
-  if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_zero_index, Py_True) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 776; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_zero_index, Py_True) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 761; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":778
+  /* "skbio/alignment/_ssw_wrapper.pyx":763
  *     kwargs['zero_index'] = True
  * 
  *     if isinstance(sequence1, Protein):             # <<<<<<<<<<<<<<
  *         kwargs['protein'] = True
  * 
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 778; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 763; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyObject_IsInstance(__pyx_v_sequence1, __pyx_t_1); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 778; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyObject_IsInstance(__pyx_v_sequence1, __pyx_t_1); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 763; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (__pyx_t_3) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":779
+    /* "skbio/alignment/_ssw_wrapper.pyx":764
  * 
  *     if isinstance(sequence1, Protein):
  *         kwargs['protein'] = True             # <<<<<<<<<<<<<<
  * 
  *     query = StripedSmithWaterman(str(sequence1), **kwargs)
  */
-    if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_protein, Py_True) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 779; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_s_protein, Py_True) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 764; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     goto __pyx_L3;
   }
   __pyx_L3:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":781
+  /* "skbio/alignment/_ssw_wrapper.pyx":766
  *         kwargs['protein'] = True
  * 
  *     query = StripedSmithWaterman(str(sequence1), **kwargs)             # <<<<<<<<<<<<<<
  *     alignment = query(str(sequence2))
  * 
  */
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 766; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_sequence1);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_sequence1);
   __Pyx_GIVEREF(__pyx_v_sequence1);
-  __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_1, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 766; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 766; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_4);
   __pyx_t_4 = 0;
   __pyx_t_4 = __pyx_v_kwargs;
   __Pyx_INCREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman)), __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman)), __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 766; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_query = ((struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":782
+  /* "skbio/alignment/_ssw_wrapper.pyx":767
  * 
  *     query = StripedSmithWaterman(str(sequence1), **kwargs)
  *     alignment = query(str(sequence2))             # <<<<<<<<<<<<<<
  * 
  *     # If there is no cigar, then it has failed a filter. Return None.
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 767; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF(__pyx_v_sequence2);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_sequence2);
   __Pyx_GIVEREF(__pyx_v_sequence2);
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyString_Type))), __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 767; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_INCREF(((PyObject *)__pyx_v_query));
@@ -7208,17 +7208,17 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
     }
   }
   if (!__pyx_t_6) {
-    __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 767; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_GOTREF(__pyx_t_5);
   } else {
-    __pyx_t_7 = PyTuple_New(1+1); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyTuple_New(1+1); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 767; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_6); __Pyx_GIVEREF(__pyx_t_6); __pyx_t_6 = NULL;
     PyTuple_SET_ITEM(__pyx_t_7, 0+1, __pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 767; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   }
@@ -7226,21 +7226,21 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   __pyx_v_alignment = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":785
+  /* "skbio/alignment/_ssw_wrapper.pyx":770
  * 
  *     # If there is no cigar, then it has failed a filter. Return None.
  *     if not alignment.cigar:             # <<<<<<<<<<<<<<
  *         return None
  * 
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_cigar); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 785; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_cigar); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 770; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 785; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 770; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_2 = ((!__pyx_t_3) != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":786
+    /* "skbio/alignment/_ssw_wrapper.pyx":771
  *     # If there is no cigar, then it has failed a filter. Return None.
  *     if not alignment.cigar:
  *         return None             # <<<<<<<<<<<<<<
@@ -7253,7 +7253,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
     goto __pyx_L0;
   }
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":788
+  /* "skbio/alignment/_ssw_wrapper.pyx":773
  *         return None
  * 
  *     start_end = None             # <<<<<<<<<<<<<<
@@ -7263,33 +7263,33 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   __Pyx_INCREF(Py_None);
   __pyx_v_start_end = Py_None;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":789
+  /* "skbio/alignment/_ssw_wrapper.pyx":774
  * 
  *     start_end = None
  *     if alignment.query_begin != -1:             # <<<<<<<<<<<<<<
  *         start_end = [
  *             (alignment.query_begin, alignment.query_end),
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 789; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 774; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_4 = PyObject_RichCompare(__pyx_t_5, __pyx_int_neg_1, Py_NE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 789; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyObject_RichCompare(__pyx_t_5, __pyx_int_neg_1, Py_NE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 774; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 789; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 774; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":791
+    /* "skbio/alignment/_ssw_wrapper.pyx":776
  *     if alignment.query_begin != -1:
  *         start_end = [
  *             (alignment.query_begin, alignment.query_end),             # <<<<<<<<<<<<<<
  *             (alignment.target_begin, alignment.target_end_optimal)
  *         ]
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 791; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 776; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 791; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_query_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 776; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 791; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 776; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
@@ -7298,18 +7298,18 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
     __pyx_t_4 = 0;
     __pyx_t_5 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":792
+    /* "skbio/alignment/_ssw_wrapper.pyx":777
  *         start_end = [
  *             (alignment.query_begin, alignment.query_end),
  *             (alignment.target_begin, alignment.target_end_optimal)             # <<<<<<<<<<<<<<
  *         ]
  *     if kwargs.get('protein', False):
  */
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_target_begin); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 792; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_target_begin); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 777; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 792; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 777; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 792; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 777; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_5);
@@ -7318,14 +7318,14 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
     __pyx_t_5 = 0;
     __pyx_t_4 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":790
+    /* "skbio/alignment/_ssw_wrapper.pyx":775
  *     start_end = None
  *     if alignment.query_begin != -1:
  *         start_end = [             # <<<<<<<<<<<<<<
  *             (alignment.query_begin, alignment.query_end),
  *             (alignment.target_begin, alignment.target_end_optimal)
  */
-    __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyList_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 775; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     PyList_SET_ITEM(__pyx_t_4, 0, __pyx_t_7);
     __Pyx_GIVEREF(__pyx_t_7);
@@ -7339,117 +7339,117 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   }
   __pyx_L5:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":794
+  /* "skbio/alignment/_ssw_wrapper.pyx":779
  *             (alignment.target_begin, alignment.target_end_optimal)
  *         ]
  *     if kwargs.get('protein', False):             # <<<<<<<<<<<<<<
  *         seqs = [
  *             Protein(alignment.aligned_query_sequence,
  */
-  __pyx_t_4 = __Pyx_PyDict_GetItemDefault(__pyx_v_kwargs, __pyx_n_s_protein, Py_False); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyDict_GetItemDefault(__pyx_v_kwargs, __pyx_n_s_protein, Py_False); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 779; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 779; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":796
+    /* "skbio/alignment/_ssw_wrapper.pyx":781
  *     if kwargs.get('protein', False):
  *         seqs = [
  *             Protein(alignment.aligned_query_sequence,             # <<<<<<<<<<<<<<
  *                     metadata={'id':'query'}),
  *             Protein(alignment.aligned_target_sequence,
  */
-    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = PyTuple_New(1); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyTuple_New(1); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":797
+    /* "skbio/alignment/_ssw_wrapper.pyx":782
  *         seqs = [
  *             Protein(alignment.aligned_query_sequence,
  *                     metadata={'id':'query'}),             # <<<<<<<<<<<<<<
  *             Protein(alignment.aligned_target_sequence,
  *                     metadata={'id':'target'})
  */
-    __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 797; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_id, __pyx_n_s_query) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 797; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_metadata, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_id, __pyx_n_s_query) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 782; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_metadata, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":796
+    /* "skbio/alignment/_ssw_wrapper.pyx":781
  *     if kwargs.get('protein', False):
  *         seqs = [
  *             Protein(alignment.aligned_query_sequence,             # <<<<<<<<<<<<<<
  *                     metadata={'id':'query'}),
  *             Protein(alignment.aligned_target_sequence,
  */
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, __pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, __pyx_t_1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 781; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":798
+    /* "skbio/alignment/_ssw_wrapper.pyx":783
  *             Protein(alignment.aligned_query_sequence,
  *                     metadata={'id':'query'}),
  *             Protein(alignment.aligned_target_sequence,             # <<<<<<<<<<<<<<
  *                     metadata={'id':'target'})
  *         ]
  */
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Protein); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7);
     __Pyx_GIVEREF(__pyx_t_7);
     __pyx_t_7 = 0;
-    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":799
+    /* "skbio/alignment/_ssw_wrapper.pyx":784
  *                     metadata={'id':'query'}),
  *             Protein(alignment.aligned_target_sequence,
  *                     metadata={'id':'target'})             # <<<<<<<<<<<<<<
  *         ]
  *     else:
  */
-    __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 784; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_id, __pyx_n_s_target) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_id, __pyx_n_s_target) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 784; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":798
+    /* "skbio/alignment/_ssw_wrapper.pyx":783
  *             Protein(alignment.aligned_query_sequence,
  *                     metadata={'id':'query'}),
  *             Protein(alignment.aligned_target_sequence,             # <<<<<<<<<<<<<<
  *                     metadata={'id':'target'})
  *         ]
  */
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, __pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 783; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":795
+    /* "skbio/alignment/_ssw_wrapper.pyx":780
  *         ]
  *     if kwargs.get('protein', False):
  *         seqs = [             # <<<<<<<<<<<<<<
  *             Protein(alignment.aligned_query_sequence,
  *                     metadata={'id':'query'}),
  */
-    __pyx_t_7 = PyList_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 795; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyList_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 780; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     PyList_SET_ITEM(__pyx_t_7, 0, __pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_5);
@@ -7463,98 +7463,98 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   }
   /*else*/ {
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":803
+    /* "skbio/alignment/_ssw_wrapper.pyx":788
  *     else:
  *         seqs = [
  *             constructor(alignment.aligned_query_sequence,             # <<<<<<<<<<<<<<
  *                         metadata={'id':'query'}),
  *             constructor(alignment.aligned_target_sequence,
  */
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 803; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 788; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 803; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 788; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_7);
     __Pyx_GIVEREF(__pyx_t_7);
     __pyx_t_7 = 0;
-    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 803; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 788; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":804
+    /* "skbio/alignment/_ssw_wrapper.pyx":789
  *         seqs = [
  *             constructor(alignment.aligned_query_sequence,
  *                         metadata={'id':'query'}),             # <<<<<<<<<<<<<<
  *             constructor(alignment.aligned_target_sequence,
  *                         metadata={'id':'target'})
  */
-    __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 804; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 789; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_id, __pyx_n_s_query) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 804; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 803; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_id, __pyx_n_s_query) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 789; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 788; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":803
+    /* "skbio/alignment/_ssw_wrapper.pyx":788
  *     else:
  *         seqs = [
  *             constructor(alignment.aligned_query_sequence,             # <<<<<<<<<<<<<<
  *                         metadata={'id':'query'}),
  *             constructor(alignment.aligned_target_sequence,
  */
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_v_constructor, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 803; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_v_constructor, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 788; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":805
+    /* "skbio/alignment/_ssw_wrapper.pyx":790
  *             constructor(alignment.aligned_query_sequence,
  *                         metadata={'id':'query'}),
  *             constructor(alignment.aligned_target_sequence,             # <<<<<<<<<<<<<<
  *                         metadata={'id':'target'})
  *         ]
  */
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 805; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 805; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_7);
     __Pyx_GIVEREF(__pyx_t_7);
     __pyx_t_7 = 0;
-    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 805; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyDict_New(); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":806
+    /* "skbio/alignment/_ssw_wrapper.pyx":791
  *                         metadata={'id':'query'}),
  *             constructor(alignment.aligned_target_sequence,
  *                         metadata={'id':'target'})             # <<<<<<<<<<<<<<
  *         ]
  * 
  */
-    __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 806; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyDict_New(); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 791; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_id, __pyx_n_s_target) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 806; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 805; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_id, __pyx_n_s_target) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 791; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_metadata, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":805
+    /* "skbio/alignment/_ssw_wrapper.pyx":790
  *             constructor(alignment.aligned_query_sequence,
  *                         metadata={'id':'query'}),
  *             constructor(alignment.aligned_target_sequence,             # <<<<<<<<<<<<<<
  *                         metadata={'id':'target'})
  *         ]
  */
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_v_constructor, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 805; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_v_constructor, __pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 790; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "skbio/alignment/_ssw_wrapper.pyx":802
+    /* "skbio/alignment/_ssw_wrapper.pyx":787
  *         ]
  *     else:
  *         seqs = [             # <<<<<<<<<<<<<<
  *             constructor(alignment.aligned_query_sequence,
  *                         metadata={'id':'query'}),
  */
-    __pyx_t_7 = PyList_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyList_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 787; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     PyList_SET_ITEM(__pyx_t_7, 0, __pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_5);
@@ -7567,41 +7567,41 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   }
   __pyx_L6:;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":809
+  /* "skbio/alignment/_ssw_wrapper.pyx":794
  *         ]
  * 
  *     return Alignment(seqs, score=alignment.optimal_alignment_score,             # <<<<<<<<<<<<<<
  *                      start_end_positions=start_end)
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_Alignment); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_Alignment); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF(__pyx_v_seqs);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_seqs);
   __Pyx_GIVEREF(__pyx_v_seqs);
-  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
-  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_score, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_score, __pyx_t_6) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":810
+  /* "skbio/alignment/_ssw_wrapper.pyx":795
  * 
  *     return Alignment(seqs, score=alignment.optimal_alignment_score,
  *                      start_end_positions=start_end)             # <<<<<<<<<<<<<<
  */
-  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_start_end_positions, __pyx_v_start_end) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_start_end_positions, __pyx_v_start_end) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":809
+  /* "skbio/alignment/_ssw_wrapper.pyx":794
  *         ]
  * 
  *     return Alignment(seqs, score=alignment.optimal_alignment_score,             # <<<<<<<<<<<<<<
  *                      start_end_positions=start_end)
  */
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 809; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 794; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -7610,7 +7610,7 @@ static PyObject *__pyx_pf_5skbio_9alignment_12_ssw_wrapper_local_pairwise_align_
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":731
+  /* "skbio/alignment/_ssw_wrapper.pyx":716
  * 
  * 
  * def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,             # <<<<<<<<<<<<<<
@@ -9752,7 +9752,7 @@ static PyTypeObject __pyx_type_5skbio_9alignment_12_ssw_wrapper_AlignmentStructu
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Wraps the result of an alignment c struct so it is accessible to Python\n\n    Attributes\n    ----------\n    optimal_alignment_score\n    suboptimal_alignment_score\n    target_begin\n    target_end_optimal\n    target_end_suboptimal\n    query_begin\n    query_end\n    cigar\n    query_sequence\n    target_sequence\n    aligned_query_sequence\n    aligned_target_sequence\n\n    Notes\n    -----\n    `cigar` may be empty depending on parameters used.\n\n    `target_begin` and `query_begin` may be -1 depending on parameters used.\n\n    Developer note: `read_sequence` is an alias for `query_sequence` used by\n    ssw.c as is `reference_sequence` for `target_sequence`\n    ", /*tp_doc*/
+  "Wraps the result of an alignment c struct so it is accessible to Python\n\n    Notes\n    -----\n    `cigar` may be empty depending on parameters used.\n\n    `target_begin` and `query_begin` may be -1 depending on parameters used.\n\n    Developer note: `read_sequence` is an alias for `query_sequence` used by\n    ssw.c as is `reference_sequence` for `target_sequence`\n    ", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -10064,12 +10064,12 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_property = __Pyx_GetBuiltinName(__pyx_n_s_property); if (!__pyx_builtin_property) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 147; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 577; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_Exception = __Pyx_GetBuiltinName(__pyx_n_s_Exception); if (!__pyx_builtin_Exception) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 693; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_ord = __Pyx_GetBuiltinName(__pyx_n_s_ord); if (!__pyx_builtin_ord) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 694; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_property = __Pyx_GetBuiltinName(__pyx_n_s_property); if (!__pyx_builtin_property) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 562; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_Exception = __Pyx_GetBuiltinName(__pyx_n_s_Exception); if (!__pyx_builtin_Exception) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 678; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_ord = __Pyx_GetBuiltinName(__pyx_n_s_ord); if (!__pyx_builtin_ord) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 679; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
@@ -10080,69 +10080,69 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":140
+  /* "skbio/alignment/_ssw_wrapper.pyx":125
  *             align_len = len(query)
  *             if align_len > 13:
  *                 target = target[:10] + "..."             # <<<<<<<<<<<<<<
  *                 query = query[:10] + "..."
  * 
  */
-  __pyx_slice__2 = PySlice_New(Py_None, __pyx_int_10, Py_None); if (unlikely(!__pyx_slice__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 140; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_slice__2 = PySlice_New(Py_None, __pyx_int_10, Py_None); if (unlikely(!__pyx_slice__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 125; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_slice__2);
   __Pyx_GIVEREF(__pyx_slice__2);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":141
+  /* "skbio/alignment/_ssw_wrapper.pyx":126
  *             if align_len > 13:
  *                 target = target[:10] + "..."
  *                 query = query[:10] + "..."             # <<<<<<<<<<<<<<
  * 
  *             length = "Length: %d" % align_len
  */
-  __pyx_slice__4 = PySlice_New(Py_None, __pyx_int_10, Py_None); if (unlikely(!__pyx_slice__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 141; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_slice__4 = PySlice_New(Py_None, __pyx_int_10, Py_None); if (unlikely(!__pyx_slice__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 126; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_slice__4);
   __Pyx_GIVEREF(__pyx_slice__4);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":386
+  /* "skbio/alignment/_ssw_wrapper.pyx":371
  *         # Save the original index scheme and then set it to 0 (1/2)
  *         orig_z_base = self.is_zero_based()
  *         self.set_zero_based(True)             # <<<<<<<<<<<<<<
  *         aligned_sequence = []
  *         seq = sequence[begin:end + 1]
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, Py_True); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 386; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__7 = PyTuple_Pack(1, Py_True); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 371; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":577
+  /* "skbio/alignment/_ssw_wrapper.pyx":562
  *         self.read_sequence = query_sequence
  *         if gap_open_penalty <= 0:
  *             raise ValueError("`gap_open_penalty` must be > 0")             # <<<<<<<<<<<<<<
  *         self.gap_open_penalty = gap_open_penalty
  *         if gap_extend_penalty <= 0:
  */
-  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s_gap_open_penalty_must_be_0); if (unlikely(!__pyx_tuple__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 577; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s_gap_open_penalty_must_be_0); if (unlikely(!__pyx_tuple__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 562; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":580
+  /* "skbio/alignment/_ssw_wrapper.pyx":565
  *         self.gap_open_penalty = gap_open_penalty
  *         if gap_extend_penalty <= 0:
  *             raise ValueError("`gap_extend_penalty` must be > 0")             # <<<<<<<<<<<<<<
  *         self.gap_extend_penalty = gap_extend_penalty
  *         self.distance_filter = 0 if distance_filter is None else \
  */
-  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_s_gap_extend_penalty_must_be_0); if (unlikely(!__pyx_tuple__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_s_gap_extend_penalty_must_be_0); if (unlikely(!__pyx_tuple__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 565; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":595
+  /* "skbio/alignment/_ssw_wrapper.pyx":580
  *         if substitution_matrix is None:
  *             if protein:
  *                 raise Exception("Must provide a substitution matrix for"             # <<<<<<<<<<<<<<
  *                                 " protein sequences")
  *             matrix = self._build_match_matrix(match_score, mismatch_score)
  */
-  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_s_Must_provide_a_substitution_matr); if (unlikely(!__pyx_tuple__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 595; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_s_Must_provide_a_substitution_matr); if (unlikely(!__pyx_tuple__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 580; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
 
@@ -10212,17 +10212,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":731
+  /* "skbio/alignment/_ssw_wrapper.pyx":716
  * 
  * 
  * def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,             # <<<<<<<<<<<<<<
  *                              **kwargs):
  *     """Align query and target sequences with Striped Smith-Waterman.
  */
-  __pyx_tuple__19 = PyTuple_Pack(8, __pyx_n_s_sequence1, __pyx_n_s_sequence2, __pyx_n_s_constructor, __pyx_n_s_kwargs, __pyx_n_s_query, __pyx_n_s_alignment, __pyx_n_s_start_end, __pyx_n_s_seqs); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__19 = PyTuple_Pack(8, __pyx_n_s_sequence1, __pyx_n_s_sequence2, __pyx_n_s_constructor, __pyx_n_s_kwargs, __pyx_n_s_query, __pyx_n_s_alignment, __pyx_n_s_start_end, __pyx_n_s_seqs); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(3, 0, 8, 0, CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_anders_code_scikit_bio_skb, __pyx_n_s_local_pairwise_align_ssw, 731, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(3, 0, 8, 0, CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_anders_code_scikit_bio_skb, __pyx_n_s_local_pairwise_align_ssw, 716, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -10358,11 +10358,11 @@ PyMODINIT_FUNC PyInit__ssw_wrapper(void)
   __pyx_vtable_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman._seq_converter = (PyArrayObject *(*)(struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *, PyObject *))__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman__seq_converter;
   __pyx_vtable_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman._build_match_matrix = (PyArrayObject *(*)(struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *, PyObject *, PyObject *))__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman__build_match_matrix;
   __pyx_vtable_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman._convert_dict2d_to_matrix = (PyArrayObject *(*)(struct __pyx_obj_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman *, PyObject *))__pyx_f_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman__convert_dict2d_to_matrix;
-  if (PyType_Ready(&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyType_Ready(&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 401; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman.tp_print = 0;
   #if CYTHON_COMPILING_IN_CPYTHON
   {
-    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman, "__call__"); if (unlikely(!wrapper)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman, "__call__"); if (unlikely(!wrapper)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 401; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (Py_TYPE(wrapper) == &PyWrapperDescr_Type) {
       __pyx_wrapperbase_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_2__call__ = *((PyWrapperDescrObject *)wrapper)->d_base;
       __pyx_wrapperbase_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_2__call__.doc = __pyx_doc_5skbio_9alignment_12_ssw_wrapper_20StripedSmithWaterman_2__call__;
@@ -10370,8 +10370,8 @@ PyMODINIT_FUNC PyInit__ssw_wrapper(void)
     }
   }
   #endif
-  if (__Pyx_SetVtable(__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman.tp_dict, __pyx_vtabptr_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (PyObject_SetAttrString(__pyx_m, "StripedSmithWaterman", (PyObject *)&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_SetVtable(__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman.tp_dict, __pyx_vtabptr_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 401; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyObject_SetAttrString(__pyx_m, "StripedSmithWaterman", (PyObject *)&__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 401; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman = &__pyx_type_5skbio_9alignment_12_ssw_wrapper_StripedSmithWaterman;
   /*--- Type import code ---*/
   __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__Pyx_BUILTIN_MODULE_NAME, "type", 
@@ -11359,369 +11359,369 @@ PyMODINIT_FUNC PyInit__ssw_wrapper(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_mid_table, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 71; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":148
+  /* "skbio/alignment/_ssw_wrapper.pyx":133
  * 
  *     @property
  *     def optimal_alignment_score(self):             # <<<<<<<<<<<<<<
  *         """Optimal alignment score
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 148; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_optimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":147
+  /* "skbio/alignment/_ssw_wrapper.pyx":132
  *         return score
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def optimal_alignment_score(self):
  *         """Optimal alignment score
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 147; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 147; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_optimal_alignment_score, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 148; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_optimal_alignment_score, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 133; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":160
+  /* "skbio/alignment/_ssw_wrapper.pyx":145
  * 
  *     @property
  *     def suboptimal_alignment_score(self):             # <<<<<<<<<<<<<<
  *         """Suboptimal alignment score
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_suboptimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 160; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_suboptimal_alignment_score); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":159
+  /* "skbio/alignment/_ssw_wrapper.pyx":144
  *         return self.p.score1
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def suboptimal_alignment_score(self):
  *         """Suboptimal alignment score
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 159; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 159; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_suboptimal_alignment_score, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 160; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_suboptimal_alignment_score, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":172
+  /* "skbio/alignment/_ssw_wrapper.pyx":157
  * 
  *     @property
  *     def target_begin(self):             # <<<<<<<<<<<<<<
  *         """Character index where the target's alignment begins
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_begin); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 172; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_begin); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 157; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":171
+  /* "skbio/alignment/_ssw_wrapper.pyx":156
  *         return self.p.score2
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def target_begin(self):
  *         """Character index where the target's alignment begins
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 171; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 156; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 171; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 156; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_begin, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 172; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_begin, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 157; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":189
+  /* "skbio/alignment/_ssw_wrapper.pyx":174
  * 
  *     @property
  *     def target_end_optimal(self):             # <<<<<<<<<<<<<<
  *         """Character index where the target's optimal alignment ends
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_end_optimal); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 174; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":188
+  /* "skbio/alignment/_ssw_wrapper.pyx":173
  *                                                             >= 0) else -1
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def target_end_optimal(self):
  *         """Character index where the target's optimal alignment ends
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 188; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 173; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 188; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 173; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_end_optimal, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_end_optimal, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 174; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":206
+  /* "skbio/alignment/_ssw_wrapper.pyx":191
  * 
  *     @property
  *     def target_end_suboptimal(self):             # <<<<<<<<<<<<<<
  *         """Character index where the target's suboptimal alignment ends
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_end_suboptimal); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 206; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_end_suboptimal); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 191; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":205
+  /* "skbio/alignment/_ssw_wrapper.pyx":190
  *         return self.p.ref_end1 + self.index_starts_at
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def target_end_suboptimal(self):
  *         """Character index where the target's suboptimal alignment ends
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 190; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 190; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_end_suboptimal, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 206; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_end_suboptimal, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 191; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":223
+  /* "skbio/alignment/_ssw_wrapper.pyx":208
  * 
  *     @property
  *     def query_begin(self):             # <<<<<<<<<<<<<<
  *         """Returns the character index at which the query sequence begins
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 223; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_begin); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":222
+  /* "skbio/alignment/_ssw_wrapper.pyx":207
  *         return self.p.ref_end2 + self.index_starts_at
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def query_begin(self):
  *         """Returns the character index at which the query sequence begins
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 222; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 222; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_begin, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 223; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_begin, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":240
+  /* "skbio/alignment/_ssw_wrapper.pyx":225
  * 
  *     @property
  *     def query_end(self):             # <<<<<<<<<<<<<<
  *         """Character index at where query sequence ends
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_end); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_end); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 225; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":239
+  /* "skbio/alignment/_ssw_wrapper.pyx":224
  *                                                              >= 0) else -1
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def query_end(self):
  *         """Character index at where query sequence ends
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 224; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 224; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_end, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_end, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 225; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":256
+  /* "skbio/alignment/_ssw_wrapper.pyx":241
  * 
  *     @property
  *     def cigar(self):             # <<<<<<<<<<<<<<
  *         """Cigar formatted string for the optimal alignment
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_cigar); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 241; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":255
+  /* "skbio/alignment/_ssw_wrapper.pyx":240
  *         return self.p.read_end1 + self.index_starts_at
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def cigar(self):
  *         """Cigar formatted string for the optimal alignment
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 255; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 255; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_cigar, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_cigar, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 241; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":294
+  /* "skbio/alignment/_ssw_wrapper.pyx":279
  * 
  *     @property
  *     def query_sequence(self):             # <<<<<<<<<<<<<<
  *         """Query sequence
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 294; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 279; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":293
+  /* "skbio/alignment/_ssw_wrapper.pyx":278
  *         return self._cigar_string
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def query_sequence(self):
  *         """Query sequence
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 293; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 278; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 293; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 278; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 294; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_query_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 279; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":306
+  /* "skbio/alignment/_ssw_wrapper.pyx":291
  * 
  *     @property
  *     def target_sequence(self):             # <<<<<<<<<<<<<<
  *         """Target sequence
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 291; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":305
+  /* "skbio/alignment/_ssw_wrapper.pyx":290
  *         return self.read_sequence
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def target_sequence(self):
  *         """Target sequence
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 305; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 305; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_target_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 291; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":318
+  /* "skbio/alignment/_ssw_wrapper.pyx":303
  * 
  *     @property
  *     def aligned_query_sequence(self):             # <<<<<<<<<<<<<<
  *         """Returns the query sequence aligned by the cigar
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_aligned_query_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":317
+  /* "skbio/alignment/_ssw_wrapper.pyx":302
  *         return self.reference_sequence
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def aligned_query_sequence(self):
  *         """Returns the query sequence aligned by the cigar
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 302; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 302; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_aligned_query_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_aligned_query_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":340
+  /* "skbio/alignment/_ssw_wrapper.pyx":325
  * 
  *     @property
  *     def aligned_target_sequence(self):             # <<<<<<<<<<<<<<
  *         """Returns the target sequence aligned by the cigar
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure, __pyx_n_s_aligned_target_sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":339
+  /* "skbio/alignment/_ssw_wrapper.pyx":324
  *         return None
  * 
  *     @property             # <<<<<<<<<<<<<<
  *     def aligned_target_sequence(self):
  *         """Returns the target sequence aligned by the cigar
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_property, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_aligned_target_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 340; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure->tp_dict, __pyx_n_s_aligned_target_sequence, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_9alignment_12_ssw_wrapper_AlignmentStructure);
 
-  /* "skbio/alignment/_ssw_wrapper.pyx":731
+  /* "skbio/alignment/_ssw_wrapper.pyx":716
  * 
  * 
  * def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,             # <<<<<<<<<<<<<<
  *                              **kwargs):
  *     """Align query and target sequences with Striped Smith-Waterman.
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_Sequence); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_k__12 = __pyx_t_1;
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9alignment_12_ssw_wrapper_1local_pairwise_align_ssw, NULL, __pyx_n_s_skbio_alignment__ssw_wrapper); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9alignment_12_ssw_wrapper_1local_pairwise_align_ssw, NULL, __pyx_n_s_skbio_alignment__ssw_wrapper); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_local_pairwise_align_ssw, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 731; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_local_pairwise_align_ssw, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 716; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "skbio/alignment/_ssw_wrapper.pyx":1

@@ -28,21 +28,7 @@ def _simple_rc(seq):
 
 
 class GeneticCode(SkbioObject):
-
     """Class to hold codon to amino acid mapping, and vice versa.
-
-    Attributes
-    ----------
-    code_sequence
-    id
-    name
-    start_codon_sequence
-    start_codons
-    codons
-    synonyms
-    sense_codons
-    anticodons
-    blocks
 
     Parameters
     ----------
@@ -64,19 +50,6 @@ class GeneticCode(SkbioObject):
     ------
     GeneticCodeInitError
         If the length of `code_sequence` is different to `64`.
-
-    Methods
-    -------
-    changes
-    get_stop_indices
-    is_start
-    is_stop
-    translate_six_frames
-    translate
-    __repr__
-    __getitem__
-    __str__
-    __eq__
 
     Examples
     --------
