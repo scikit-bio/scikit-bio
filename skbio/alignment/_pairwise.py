@@ -620,7 +620,13 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
     if isinstance(seq, string_types):
         return Alignment([Sequence(seq, metadata={'id':''})])
     elif isinstance(seq, Sequence):
-        return Alignment([seq])
+        if 'id' in seq.metadata:
+            return Alignment([seq])
+        else:
+            # HACK: Update to use Sequence.copy() method once it exists.
+            metadata = seq.metadata.copy()
+            metadata['id'] = ''
+            return Alignment([seq._to(metadata=metadata)])
     elif isinstance(seq, Alignment):
         if disallow_alignment:
             # This will disallow aligning either a pair of alignments, or an
@@ -641,11 +647,10 @@ _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
 
 
 def _get_seq_id(seq, default_id):
-    if 'id' in seq.metadata and seq.metadata['id'] != '':
-        return seq.metadata['id']
-    else:
-        return default_id
-
+    result = seq.metadata['id'] if 'id' in seq.metadata else default_id
+    if result is None or result.strip() == "":
+        result = default_id
+    return result
 
 def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)

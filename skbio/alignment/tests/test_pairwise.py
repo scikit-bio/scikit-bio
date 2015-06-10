@@ -125,11 +125,11 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
 
         # ids are provided if they're not passed in
-        #actual = global_pairwise_align_protein(
-        #    Protein("HEAGAWGHEE", metadata={'id':'id0'}),
-        #    Protein("PAWHEAE", metadata={'id':'id1'}),
-        #    gap_open_penalty=10., gap_extend_penalty=5.)
-        #self.assertEqual(actual.ids(), list('01'))
+        actual = global_pairwise_align_protein(
+            Protein("HEAGAWGHEE"),
+            Protein("PAWHEAE"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
         self.assertRaises(TypeError, global_pairwise_align_protein,
@@ -225,12 +225,12 @@ class PairwiseAlignmentTests(TestCase):
                                              metadata={'id': "s2"})]),
                           gap_open_penalty=10., gap_extend_penalty=5.)
 
-        ## ids are provided if they're not passed in
-        #actual = local_pairwise_align_protein(
-        #    Protein("HEAGAWGHEE", metadata={'id':'id0'}),
-        #    Protein("PAWHEAE", metadata={'id':'id1'}),
-        #    gap_open_penalty=10., gap_extend_penalty=5.)
-        #self.assertEqual(actual.ids(), list('01'))
+        # ids are provided if they're not passed in
+        actual = local_pairwise_align_protein(
+            Protein("HEAGAWGHEE"),
+            Protein("PAWHEAE"),
+            gap_open_penalty=10., gap_extend_penalty=5.)
+        self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
         self.assertRaises(TypeError, local_pairwise_align_protein,
@@ -289,12 +289,12 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual.ids(), ["s1", "s2", "s3"])
 
         # ids are provided if they're not passed in
-        #actual = global_pairwise_align_nucleotide(
-        #    DNA("GACCTTGACCAGGTACC", metadata={'id':'id0'}),
-        #    DNA("GAACTTTGACGTAAC", metadata={'id':'id1'}),
-        #    gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
-        #    mismatch_score=-4)
-        #self.assertEqual(actual.ids(), list('01'))
+        actual = global_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"),
+            DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
+            mismatch_score=-4)
+        self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
         self.assertRaises(TypeError, global_pairwise_align_nucleotide,
@@ -351,12 +351,12 @@ class PairwiseAlignmentTests(TestCase):
                           match_score=5, mismatch_score=-4)
 
         # ids are provided if they're not passed in
-        #actual = local_pairwise_align_nucleotide(
-        #    DNA("GACCTTGACCAGGTACC", metadata={'id':'id0'}),
-        #    DNA("GAACTTTGACGTAAC", metadata={'id':'id1'}),
-        #    gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
-        #    mismatch_score=-4)
-        #self.assertEqual(actual.ids(), list('01'))
+        actual = local_pairwise_align_nucleotide(
+            DNA("GACCTTGACCAGGTACC"),
+            DNA("GAACTTTGACGTAAC"),
+            gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
+            mismatch_score=-4)
+        self.assertEqual(actual.ids(), list('01'))
 
         # TypeError on invalid input
         self.assertRaises(TypeError, local_pairwise_align_nucleotide,
@@ -515,81 +515,87 @@ class PairwiseAlignmentTests(TestCase):
                           Alignment([DNA('AWG', metadata={'id':'id'})]),
                           Alignment([DNA('ACGT', metadata={'id':'id'})]), 5, 2, m)
 
-    #def test_traceback(self):
-    #    score_m = [[0, -5, -7, -9],
-    #               [-5, 2, -3, -5],
-    #               [-7, -3, 4, -1],
-    #               [-9, -5, -1, 6],
-    #               [-11, -7, -3, 1]]
-    #    score_m = np.array(score_m)
-    #    tback_m = [[0, 3, 3, 3],
-    #               [2, 1, 3, 3],
-    #               [2, 2, 1, 3],
-    #               [2, 2, 2, 1],
-    #               [2, 2, 2, 2]]
-    #    tback_m = np.array(tback_m)
-    #    # start at bottom-right
-    #    expected = ([Sequence("ACG-", metadata={'id': '0'})],
-    #                [Sequence("ACGT", metadata={'id': '1'})], 1, 0, 0)
-    #    actual = _traceback(tback_m, score_m,
-    #                        Alignment([DNA('ACG', metadata={'id':'id'})]),
-    #                        Alignment([DNA('ACGT', metadata={'id':'id'})]),
-    #                                  4, 3)
-    #    self.assertEqual(actual, expected)
+    def test_traceback(self):
+        score_m = [[0, -5, -7, -9],
+                   [-5, 2, -3, -5],
+                   [-7, -3, 4, -1],
+                   [-9, -5, -1, 6],
+                   [-11, -7, -3, 1]]
+        score_m = np.array(score_m)
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 1, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
+        # start at bottom-right
+        expected = ([Sequence("ACG-", metadata={'id': '0'})],
+                    [Sequence("ACGT", metadata={'id': '1'})], 1, 0, 0)
+        actual = _traceback(tback_m, score_m,
+                            Alignment([DNA('ACG', metadata={'id':''})]),
+                            Alignment([DNA('ACGT', metadata={'id':''})]),
+                                      4, 3)
+        self.assertEqual(actual, expected)
 
-    #    # four sequences in two alignments
-    #    score_m = [[0, -5, -7, -9],
-    #               [-5, 2, -3, -5],
-    #               [-7, -3, 4, -1],
-    #               [-9, -5, -1, 6],
-    #               [-11, -7, -3, 1]]
-    #    score_m = np.array(score_m)
-    #    tback_m = [[0, 3, 3, 3],
-    #               [2, 1, 3, 3],
-    #               [2, 2, 1, 3],
-    #               [2, 2, 2, 1],
-    #               [2, 2, 2, 2]]
-    #    tback_m = np.array(tback_m)
-    #    # start at bottom-right
-    #    expected = ([Sequence("ACG-", metadata={'id': 's1'}),
-    #                 Sequence("ACG-", metadata={'id': 's2'})],
-    #                [Sequence("ACGT", metadata={'id': 's3'}),
-    #                 Sequence("ACGT", metadata={'id': 's4'})],
-    #                1, 0, 0)
-    #    actual = _traceback(tback_m, score_m,
-    #                        Alignment([DNA('ACG', metadata={'id': 's1'}),
-    #                                   DNA('ACG', metadata={'id': 's2'})]),
-    #                        Alignment([DNA('ACGT', metadata={'id': 's3'}),
-    #                                   DNA('ACGT', metadata={'id': 's4'})]),
-    #                        4, 3)
-    #    self.assertEqual(actual, expected)
+        # four sequences in two alignments
+        score_m = [[0, -5, -7, -9],
+                   [-5, 2, -3, -5],
+                   [-7, -3, 4, -1],
+                   [-9, -5, -1, 6],
+                   [-11, -7, -3, 1]]
+        score_m = np.array(score_m)
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 1, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
+        # start at bottom-right
+        expected = ([Sequence("ACG-", metadata={'id': 's1'}),
+                     Sequence("ACG-", metadata={'id': 's2'})],
+                    [Sequence("ACGT", metadata={'id': 's3'}),
+                     Sequence("ACGT", metadata={'id': 's4'})],
+                    1, 0, 0)
+        actual = _traceback(tback_m, score_m,
+                            Alignment([DNA('ACG', metadata={'id': 's1'}),
+                                       DNA('ACG', metadata={'id': 's2'})]),
+                            Alignment([DNA('ACGT', metadata={'id': 's3'}),
+                                       DNA('ACGT', metadata={'id': 's4'})]),
+                            4, 3)
+        self.assertEqual(actual, expected)
 
-    #    # start at highest-score
-    #    expected = ([Sequence("ACG", metadata={'id': '0'})],
-    #                [Sequence("ACG", metadata={'id': '1'})], 6, 0, 0)
-    #    actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-    #                        Alignment([DNA('ACGT')]), 3, 3)
-    #    self.assertEqual(actual, expected)
+        # start at highest-score
+        expected = ([Sequence("ACG", metadata={'id': '0'})],
+                    [Sequence("ACG", metadata={'id': '1'})], 6, 0, 0)
+        actual = _traceback(tback_m, score_m,
+                            Alignment([DNA('ACG', metadata={'id': ''})]),
+                            Alignment([DNA('ACGT', metadata={'id': ''})]), 3, 3)
+        self.assertEqual(actual, expected)
 
-    #    # terminate traceback before top-right
-    #    tback_m = [[0, 3, 3, 3],
-    #               [2, 1, 3, 3],
-    #               [2, 2, 0, 3],
-    #               [2, 2, 2, 1],
-    #               [2, 2, 2, 2]]
-    #    tback_m = np.array(tback_m)
-    #    expected = ("G", "G", 6, 2, 2)
-    #    expected = ([Sequence("G", metadata={'id': '0'})],
-    #                [Sequence("G", metadata={'id': '1'})], 6, 2, 2)
-    #    actual = _traceback(tback_m, score_m, Alignment([DNA('ACG')]),
-    #                        Alignment([DNA('ACGT')]), 3, 3)
-    #    self.assertEqual(actual, expected)
+        # terminate traceback before top-right
+        tback_m = [[0, 3, 3, 3],
+                   [2, 1, 3, 3],
+                   [2, 2, 0, 3],
+                   [2, 2, 2, 1],
+                   [2, 2, 2, 2]]
+        tback_m = np.array(tback_m)
+        expected = ("G", "G", 6, 2, 2)
+        expected = ([Sequence("G", metadata={'id': '0'})],
+                    [Sequence("G", metadata={'id': '1'})], 6, 2, 2)
+        actual = _traceback(tback_m, score_m,
+                            Alignment([DNA('ACG', metadata={'id': ''})]),
+                            Alignment([DNA('ACGT', metadata={'id': ''})]),
+                            3, 3)
+        self.assertEqual(actual, expected)
 
     def test_get_seq_id(self):
-        #self.assertEqual(_get_seq_id("AAA", "hello"), "hello")
         self.assertEqual(_get_seq_id(DNA("AAA"), "hello"), "hello")
         self.assertEqual(_get_seq_id(DNA("AAA", metadata={'id': "s1"}),
                                      "hello"), "s1")
+        self.assertEqual(_get_seq_id(DNA("AAA", metadata={'id': None}),
+                                     "hello"), "hello")
+        self.assertEqual(_get_seq_id(DNA("AAA", metadata={'id': '\t'}),
+                                     "hello"), "hello")
 
     def test_first_largest(self):
         l = [(5, 'a'), (5, 'b'), (5, 'c')]
