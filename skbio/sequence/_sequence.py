@@ -538,10 +538,11 @@ class Sequence(collections.Sequence, SkbioObject):
     def __iter__(self):
         """Iterate over positions in the biological sequence.
 
-        Returns
-        -------
-        iterator
-            Position iterator for the biological sequence.
+        Yields
+        ------
+        Sequence
+            Single character subsequence, one for each position in the
+            sequence.
 
         Examples
         --------
@@ -564,12 +565,13 @@ class Sequence(collections.Sequence, SkbioObject):
             yield self._to(sequence=c, quality=q)
 
     def __reversed__(self):
-        """Iterate over positions in the biological sequence.
+        """Iterate over positions in the biological sequence in reverse order.
 
-        Returns
-        -------
-        iterator
-            Reverse position iterator for the biological sequence.
+        Yields
+        ------
+        Sequence
+            Single character subsequence, one for each position in the
+            sequence.
 
         Examples
         --------
@@ -1101,11 +1103,10 @@ class Sequence(collections.Sequence, SkbioObject):
         overlap : bool, optional
             Defines whether the kmers should be overlapping or not.
 
-        Returns
-        -------
-        iterator
-            Iterator of kmers of length `k` contained in the biological
-            sequence.
+        Yields
+        ------
+        Sequence
+            kmer of length `k` contained in the biological sequence.
 
         Raises
         ------
@@ -1204,10 +1205,10 @@ class Sequence(collections.Sequence, SkbioObject):
         ignore : 1D array_like (bool) or iterable (slices or ints), optional
             Indicate the positions to ignore when matching.
 
-        Returns
-        -------
-        generator
-            Yields slices where the regular expression matched.
+        Yields
+        ------
+        slice
+            Location where the regular expression matched.
 
         Examples
         --------
@@ -1256,10 +1257,10 @@ class Sequence(collections.Sequence, SkbioObject):
             Whether to invert `included` such that it describes what should be
             skipped instead of included. Default is False.
 
-        Returns
-        -------
-        generator
-            Yields subsequences as indicated by `included`.
+        Yields
+        ------
+        Sequence
+            Contiguous subsequence as indicated by `included`.
 
         Notes
         -----
