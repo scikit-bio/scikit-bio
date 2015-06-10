@@ -75,7 +75,6 @@ class SequenceCollection(SkbioObject):
             if 'id' not in seq.metadata:
                 raise SequenceCollectionError(
                     "'id' must be included in the sequence metadata")
-                #seq.metadata['id'] = ''
             id_ = seq.metadata['id']
 
             if id_ in self:

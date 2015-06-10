@@ -402,8 +402,8 @@ class PairwiseAlignmentTests(TestCase):
                             [0, -1, -1, -1],
                             [0, -1, -1, -1]]
         actual_score_m, actual_tback_m = _init_matrices_sw(
-            Alignment([DNA('AAA', metadata={'id':'id'})]),
-            Alignment([DNA('AAAA', metadata={'id':'id'})]), 5, 2)
+            Alignment([DNA('AAA', metadata={'id': 'id'})]),
+            Alignment([DNA('AAAA', metadata={'id': 'id'})]), 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -419,8 +419,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, -1, -1, -1],
                             [2, -1, -1, -1]]
         actual_score_m, actual_tback_m = _init_matrices_nw(
-            Alignment([DNA('AAA', metadata={'id':'id'})]),
-            Alignment([DNA('AAAA', metadata={'id':'id'})]), 5, 2)
+            Alignment([DNA('AAA', metadata={'id': 'id'})]),
+            Alignment([DNA('AAAA', metadata={'id': 'id'})]), 5, 2)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -462,8 +462,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 2]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACG', metadata={'id':'id'})]),
-            Alignment([DNA('ACGT', metadata={'id':'id'})]), 5, 2, m)
+            Alignment([DNA('ACG', metadata={'id': 'id'})]),
+            Alignment([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -481,8 +481,8 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 2, 1]]
         m = make_identity_substitution_matrix(2, -1)
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
-            Alignment([DNA('ACC', metadata={'id':'id'})]),
-            Alignment([DNA('ACGT', metadata={'id':'id'})]), 5, 2, m)
+            Alignment([DNA('ACC', metadata={'id': 'id'})]),
+            Alignment([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
         np.testing.assert_array_equal(actual_score_m, expected_score_m)
         np.testing.assert_array_equal(actual_tback_m, expected_tback_m)
 
@@ -512,8 +512,9 @@ class PairwiseAlignmentTests(TestCase):
         # substitution matrix, an informative error should be raised
         m = make_identity_substitution_matrix(2, -1)
         self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
-                          Alignment([DNA('AWG', metadata={'id':'id'})]),
-                          Alignment([DNA('ACGT', metadata={'id':'id'})]), 5, 2, m)
+                          Alignment([DNA('AWG', metadata={'id': 'id'})]),
+                          Alignment([DNA('ACGT', metadata={'id': 'id'})]),
+                          5, 2, m)
 
     def test_traceback(self):
         score_m = [[0, -5, -7, -9],
@@ -532,9 +533,9 @@ class PairwiseAlignmentTests(TestCase):
         expected = ([Sequence("ACG-", metadata={'id': '0'})],
                     [Sequence("ACGT", metadata={'id': '1'})], 1, 0, 0)
         actual = _traceback(tback_m, score_m,
-                            Alignment([DNA('ACG', metadata={'id':''})]),
-                            Alignment([DNA('ACGT', metadata={'id':''})]),
-                                      4, 3)
+                            Alignment([DNA('ACG', metadata={'id': ''})]),
+                            Alignment([DNA('ACGT', metadata={'id': ''})]),
+                            4, 3)
         self.assertEqual(actual, expected)
 
         # four sequences in two alignments
@@ -569,7 +570,8 @@ class PairwiseAlignmentTests(TestCase):
                     [Sequence("ACG", metadata={'id': '1'})], 6, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', metadata={'id': ''})]),
-                            Alignment([DNA('ACGT', metadata={'id': ''})]), 3, 3)
+                            Alignment([DNA('ACGT', metadata={'id': ''})]),
+                            3, 3)
         self.assertEqual(actual, expected)
 
         # terminate traceback before top-right

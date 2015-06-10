@@ -618,7 +618,7 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
     """ Converts variety of types into an skbio.Alignment object
     """
     if isinstance(seq, string_types):
-        return Alignment([Sequence(seq, metadata={'id':''})])
+        return Alignment([Sequence(seq, metadata={'id': ''})])
     elif isinstance(seq, Sequence):
         if 'id' in seq.metadata:
             return Alignment([seq])
@@ -651,6 +651,7 @@ def _get_seq_id(seq, default_id):
     if result is None or result.strip() == "":
         result = default_id
     return result
+
 
 def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.sequence_length()+1, aln1.sequence_length()+1)
