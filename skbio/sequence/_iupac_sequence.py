@@ -390,11 +390,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     def expand_degenerates(self):
         """Yield all possible non-degenerate versions of the sequence.
 
-        Returns
-        -------
-        generator
-            Generator yielding all possible non-degenerate versions of the
-            sequence.
+        Yields
+        ------
+        IUPACSequence
+            Non-degenerate version of the sequence.
 
         See Also
         --------
@@ -448,11 +447,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         ignore : 1D array_like (bool), optional
             Boolean vector indicating positions to ignore when matching.
 
-        Returns
-        -------
-        generator
-            Yields slices indicating the locations of the motif in the
-            biological sequence.
+        Yields
+        ------
+        slice
+            Location of the motif in the biological sequence.
 
         Raises
         ------
