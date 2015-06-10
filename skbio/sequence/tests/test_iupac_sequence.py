@@ -322,48 +322,52 @@ class TestIUPACSequence(TestCase):
             },
         }
 
-        self.assertEquals(ExampleIUPACSequence(
-                              "",
-                              positional_metadata={'qual': []},
-                              **kw).degap(),
-                          ExampleIUPACSequence("", **kw))
+        self.assertEquals(
+            ExampleIUPACSequence(
+                "",
+                positional_metadata={'qual': []},
+                **kw).degap(),
+            ExampleIUPACSequence("", **kw))
 
-        self.assertEquals(ExampleIUPACSequence(
-                              "ABCXYZ",
-                              positional_metadata={'qual': np.arange(6)},
-                              **kw).degap(),
-                          ExampleIUPACSequence(
-                              "ABCXYZ",
-                              positional_metadata={'qual': np.arange(6)},
-                              **kw))
+        self.assertEquals(
+            ExampleIUPACSequence(
+                "ABCXYZ",
+                positional_metadata={'qual': np.arange(6)},
+                **kw).degap(),
+            ExampleIUPACSequence(
+                "ABCXYZ",
+                positional_metadata={'qual': np.arange(6)},
+                **kw))
 
-        self.assertEquals(ExampleIUPACSequence(
-                              "ABC-XYZ",
-                              positional_metadata={'qual': np.arange(7)},
-                              **kw).degap(),
-                          ExampleIUPACSequence(
-                              "ABCXYZ",
-                              positional_metadata={'qual': [0, 1, 2, 4, 5, 6]},
-                              **kw))
+        self.assertEquals(
+            ExampleIUPACSequence(
+                "ABC-XYZ",
+                positional_metadata={'qual': np.arange(7)},
+                **kw).degap(),
+            ExampleIUPACSequence(
+                "ABCXYZ",
+                positional_metadata={'qual': [0, 1, 2, 4, 5, 6]},
+                **kw))
 
-        self.assertEquals(ExampleIUPACSequence(
-                              ".-ABC-XYZ.",
-                              positional_metadata={'qual': np.arange(10)},
-                              **kw).degap(),
-                          ExampleIUPACSequence(
-                              "ABCXYZ",
-                              positional_metadata={'qual': [2, 3, 4, 6, 7, 8]},
-                              **kw))
+        self.assertEquals(
+            ExampleIUPACSequence(
+                ".-ABC-XYZ.",
+                positional_metadata={'qual': np.arange(10)},
+                **kw).degap(),
+            ExampleIUPACSequence(
+                "ABCXYZ",
+                positional_metadata={'qual': [2, 3, 4, 6, 7, 8]},
+                **kw))
 
-        self.assertEquals(ExampleIUPACSequence(
-                              "---.-.-.-.-.",
-                              positional_metadata={'quality': np.arange(12)},
-                              **kw).degap(),
-                          ExampleIUPACSequence(
-                              "",
-                              positional_metadata={'quality': np.array([],
-                                                   dtype=np.int64)},
-                              **kw))
+        self.assertEquals(
+            ExampleIUPACSequence(
+                "---.-.-.-.-.",
+                positional_metadata={'quality': np.arange(12)},
+                **kw).degap(),
+            ExampleIUPACSequence(
+                "",
+                positional_metadata={'quality': np.array([], dtype=np.int64)},
+                **kw))
 
     def test_expand_degenerates_no_degens(self):
         seq = ExampleIUPACSequence("ABCABCABC")

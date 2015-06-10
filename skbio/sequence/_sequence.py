@@ -519,8 +519,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @staticmethod
     def _is_single_index(index):
-        return isinstance(index, numbers.Integral) and \
-               not isinstance(index, bool)
+        return (isinstance(index, numbers.Integral) and
+                not isinstance(index, bool))
 
     @staticmethod
     def _as_slice_if_single_index(indexable):

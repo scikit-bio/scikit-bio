@@ -121,9 +121,9 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertEqual(rc, ExampleNucleotideSequence(''))
 
         rc = ExampleNucleotideSequence(
-              '',
-              metadata={'id': 'foo', 'description': 'bar'},
-              positional_metadata={'quality': []}).complement(reverse=True)
+            '',
+            metadata={'id': 'foo', 'description': 'bar'},
+            positional_metadata={'quality': []}).complement(reverse=True)
         self.assertEqual(
             rc,
             ExampleNucleotideSequence(
@@ -179,10 +179,10 @@ class TestNucelotideSequence(unittest.TestCase):
 
         # optional attributes are ignored, only the sequence is compared
         seq2 = ExampleNucleotideSequence(
-                   '',
-                   metadata={'id': 'foo', 'description': 'bar'},
-                   positional_metadata={'quality':
-                                        np.array([], dtype=np.int64)})
+            '',
+            metadata={'id': 'foo', 'description': 'bar'},
+            positional_metadata={'quality':
+                                 np.array([], dtype=np.int64)})
         self.assertTrue(seq2.is_reverse_complement(seq2))
         self.assertTrue(seq1.is_reverse_complement(seq2))
         self.assertTrue(seq2.is_reverse_complement(seq1))
@@ -190,9 +190,9 @@ class TestNucelotideSequence(unittest.TestCase):
     def test_is_reverse_complement_metadata_ignored(self):
         seq1 = ExampleNucleotideSequence('ABCXYZ.-BBZ')
         seq2 = ExampleNucleotideSequence(
-                   'ZBB-.ZXYABC',
-                   metadata={'id': 'foo', 'description': 'bar'},
-                   positional_metadata={'quality': range(11)})
+            'ZBB-.ZXYABC',
+            metadata={'id': 'foo', 'description': 'bar'},
+            positional_metadata={'quality': range(11)})
 
         self.assertFalse(seq1.is_reverse_complement(seq1))
         self.assertFalse(seq2.is_reverse_complement(seq2))

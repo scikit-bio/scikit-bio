@@ -461,9 +461,9 @@ class TestWriters(unittest.TestCase):
                     fh = StringIO()
                     for c in components:
                         obj = constructor(
-                                  c[2], metadata={'id': c[0],
-                                                  'description': c[1]},
-                                  positional_metadata={'quality': c[3]})
+                            c[2],
+                            metadata={'id': c[0], 'description': c[1]},
+                            positional_metadata={'quality': c[3]})
                         write(obj, into=fh, format='fastq', **kwargs)
 
                     observed = fh.getvalue()
