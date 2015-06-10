@@ -2,11 +2,12 @@
 # modified from https://gist.github.com/dan-blanchard/7045057
 language: python
 env:
-  # Test against latest versions of numpy and matplotlib. Also test against
-  # older versions of numpy and matplotlib (pre-1.4.0). matplotlib's boxplot
-  # functionality was largely rewritten/refactored in 1.4.0 and some of skbio's
-  # code had to be updated in the process, so it's worth testing against a
-  # pre-1.4.0 version and whatever the latest version is.
+  # Test against latest versions of pandas and matplotlib. Also test against
+  # minimum required version of pandas, and an older version of matplotlib
+  # (pre-1.4.0). matplotlib's boxplot functionality was largely
+  # rewritten/refactored in 1.4.0 and some of skbio's code had to be updated in
+  # the process, so it's worth testing against a pre-1.4.0 version and whatever
+  # the latest version is.
   - PYTHON_VERSION=3.4 PANDAS_VERSION= MATPLOTLIB_VERSION=
   - PYTHON_VERSION=2.7 PANDAS_VERSION= MATPLOTLIB_VERSION= USE_CYTHON=TRUE
   - PYTHON_VERSION=2.7 PANDAS_VERSION='=0.14.0' MATPLOTLIB_VERSION='=1.3.1'
