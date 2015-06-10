@@ -43,7 +43,7 @@ class RNA(NucleotideSequence):
 
     Attributes
     ----------
-    sequence
+    values
     metadata
     positional_metadata
     alphabet

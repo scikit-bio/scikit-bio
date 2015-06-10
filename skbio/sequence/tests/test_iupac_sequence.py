@@ -52,7 +52,7 @@ class TestIUPACSequence(TestCase):
     def test_init_default_parameters(self):
         seq = ExampleIUPACSequence('.-ABCXYZ')
 
-        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
         self.assertFalse(seq.has_metadata())
         self.assertFalse(seq.has_positional_metadata())
 
@@ -61,7 +61,7 @@ class TestIUPACSequence(TestCase):
                                    metadata={'id': 'foo'},
                                    positional_metadata={'quality': range(8)})
 
-        npt.assert_equal(seq.sequence, np.array('.-ABCXYZ', dtype='c'))
+        npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
         self.assertTrue(seq.has_metadata())
         self.assertEqual(seq.metadata['id'], 'foo')
         self.assertTrue(seq.has_positional_metadata())

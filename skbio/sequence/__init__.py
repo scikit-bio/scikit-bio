@@ -134,7 +134,7 @@ RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
 
->>> for match in r5.slices_from_regex('(G+AC[UT])'):
+>>> for match in r5.find_with_regex('(G+AC[UT])'):
 ...     match
 slice(4, 9, None)
 

@@ -24,7 +24,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
     Attributes
     ----------
-    sequence
+    values
     metadata
     positional_metadata
     alphabet
@@ -210,15 +210,15 @@ _motifs = parent_motifs.copy()
 @_motifs("purine-run")
 def _motif_purine_run(sequence, min_length, ignore):
     """Identifies purine runs"""
-    return sequence.slices_from_regex("([AGR]{%d,})" % min_length,
-                                      ignore=ignore)
+    return sequence.find_with_regex("([AGR]{%d,})" % min_length,
+                                    ignore=ignore)
 
 
 @_motifs("pyrimidine-run")
 def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
-    return sequence.slices_from_regex("([CTUY]{%d,})" % min_length,
-                                      ignore=ignore)
+    return sequence.find_with_regex("([CTUY]{%d,})" % min_length,
+                                    ignore=ignore)
 
 # Leave this at the bottom
 _motifs.interpolate(NucleotideSequence, "find_motifs")

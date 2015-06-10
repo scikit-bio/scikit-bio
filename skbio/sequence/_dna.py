@@ -43,7 +43,7 @@ class DNA(NucleotideSequence):
 
     Attributes
     ----------
-    sequence
+    values
     metadata
     positional_metadata
     alphabet

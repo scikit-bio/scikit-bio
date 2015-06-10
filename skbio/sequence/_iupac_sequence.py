@@ -26,7 +26,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     Attributes
     ----------
-    sequence
+    values
     metadata
     positional_metadata
     alphabet
