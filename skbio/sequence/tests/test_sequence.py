@@ -20,6 +20,8 @@ import numpy.testing as npt
 import pandas as pd
 
 from skbio import Sequence
+from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
+                                      _as_slice_if_single_index)
 
 
 class SequenceSubclass(Sequence):
@@ -312,7 +314,7 @@ class TestSequence(TestCase):
     def test_init_invalid_positional_metadata(self):
         # not consumable by Pandas
         with self.assertRaisesRegexp(TypeError,
-                                     'Positional.*Must.*Pandas'):
+                                     'Positional.*Must.*pandas\.DataFrame'):
             Sequence('ACGT', positional_metadata=2)
 
         # not enough elements
@@ -421,23 +423,23 @@ class TestSequence(TestCase):
 
     def test_single_index_to_slice(self):
         a = [1, 2, 3, 4]
-        self.assertEqual(slice(0, 1), Sequence._single_index_to_slice(0))
-        self.assertEqual([1], a[Sequence._single_index_to_slice(0)])
+        self.assertEqual(slice(0, 1), _single_index_to_slice(0))
+        self.assertEqual([1], a[_single_index_to_slice(0)])
         self.assertEqual(slice(-1, None),
-                         Sequence._single_index_to_slice(-1))
-        self.assertEqual([4], a[Sequence._single_index_to_slice(-1)])
+                         _single_index_to_slice(-1))
+        self.assertEqual([4], a[_single_index_to_slice(-1)])
 
     def test_is_single_index(self):
-        self.assertTrue(Sequence._is_single_index(0))
-        self.assertFalse(Sequence._is_single_index(True))
-        self.assertFalse(Sequence._is_single_index(bool()))
-        self.assertFalse(Sequence._is_single_index('a'))
+        self.assertTrue(_is_single_index(0))
+        self.assertFalse(_is_single_index(True))
+        self.assertFalse(_is_single_index(bool()))
+        self.assertFalse(_is_single_index('a'))
 
     def test_as_slice_if_single_index(self):
-        self.assertEqual(slice(0, 1), Sequence._as_slice_if_single_index(0))
+        self.assertEqual(slice(0, 1), _as_slice_if_single_index(0))
         slice_obj = slice(2, 3)
         self.assertIs(slice_obj,
-                      Sequence._as_slice_if_single_index(slice_obj))
+                      _as_slice_if_single_index(slice_obj))
 
     def test_slice_positional_metadata(self):
         seq = Sequence('ABCDEFGHIJ',

@@ -26,6 +26,36 @@ from skbio._base import SkbioObject
 from skbio.util._misc import reprnator
 
 
+def _single_index_to_slice(start_index):
+    end_index = None if start_index == -1 else start_index+1
+    return slice(start_index, end_index)
+
+
+def _is_single_index(index):
+    return (isinstance(index, numbers.Integral) and
+            not isinstance(index, bool))
+
+
+def _as_slice_if_single_index(indexable):
+    if _is_single_index(indexable):
+        return _single_index_to_slice(indexable)
+    else:
+        return indexable
+
+
+def _slices_from_iter(array, indexables):
+    for i in indexables:
+        if isinstance(i, slice):
+            pass
+        elif _is_single_index(i):
+            i = _single_index_to_slice(i)
+        else:
+            raise IndexError("Cannot slice sequence from iterable "
+                             "containing %r." % i)
+
+        yield array[i]
+
+
 class Sequence(collections.Sequence, SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
@@ -170,9 +200,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         try:
             self._positional_metadata = pd.DataFrame(positional_metadata)
-        except:
+        except pd.core.common.PandasError:
             raise TypeError("Positional metadata invalid. Must be consumable "
-                            "by Pandas")
+                            "by pandas.DataFrame")
 
         self._set_sequence(sequence)
 
@@ -423,11 +453,10 @@ class Sequence(collections.Sequence, SkbioObject):
                     indexable = np.asarray(indexable)
                 else:
                     seq = np.concatenate(
-                        list(self._slices_from_iter(self._bytes, indexable)))
-                    index = self._as_slice_if_single_index(indexable)
-                    pos_md_slices = \
-                        list(self._slices_from_iter(self.positional_metadata,
-                                                    index))
+                        list(_slices_from_iter(self._bytes, indexable)))
+                    index = _as_slice_if_single_index(indexable)
+                    pos_md_slices = list(_slices_from_iter(
+                                         self.positional_metadata, index))
                     positional_metadata = \
                         pd.concat(pos_md_slices).reset_index(drop=True)
 
@@ -500,38 +529,9 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return not self.positional_metadata.empty
 
-    def _slices_from_iter(self, array, indexables):
-        for i in indexables:
-            if isinstance(i, slice):
-                pass
-            elif self._is_single_index(i):
-                i = self._single_index_to_slice(i)
-            else:
-                raise IndexError("Cannot slice sequence from iterable "
-                                 "containing %r." % i)
-
-            yield array[i]
-
-    @staticmethod
-    def _single_index_to_slice(start_index):
-        end_index = None if start_index == -1 else start_index+1
-        return slice(start_index, end_index)
-
-    @staticmethod
-    def _is_single_index(index):
-        return (isinstance(index, numbers.Integral) and
-                not isinstance(index, bool))
-
-    @staticmethod
-    def _as_slice_if_single_index(indexable):
-        if Sequence._is_single_index(indexable):
-            return Sequence._single_index_to_slice(indexable)
-        else:
-            return indexable
-
     def _slice_positional_metadata(self, indexable):
-        if self._is_single_index(indexable):
-            index = self._single_index_to_slice(indexable)
+        if _is_single_index(indexable):
+            index = _single_index_to_slice(indexable)
         else:
             index = indexable
         return self.positional_metadata.iloc[index].reset_index(drop=True)
@@ -773,8 +773,8 @@ class Sequence(collections.Sequence, SkbioObject):
         if 'metadata' not in ignore and self.metadata != other.metadata:
             return False
 
-        if 'positional_metadata' not in ignore and \
-                not self.positional_metadata.equals(other.positional_metadata):
+        if ('positional_metadata' not in ignore and not
+                self.positional_metadata.equals(other.positional_metadata)):
             return False
 
         return True
