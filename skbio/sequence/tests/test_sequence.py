@@ -54,7 +54,7 @@ class TestSequence(TestCase):
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
         self.assertFalse(seq.metadata)
-        self.assertTrue(seq.positional_metadata.empty)
+        self.assertFalse(seq.has_positional_metadata())
 
     def test_init_nondefault_parameters(self):
         metadata = {'id': 'foo', 'description': 'bar baz'}

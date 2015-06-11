@@ -323,11 +323,10 @@ class TestIUPACSequence(TestCase):
         }
 
         self.assertEquals(
-            ExampleIUPACSequence(
-                "",
-                positional_metadata={'qual': []},
-                **kw).degap(),
-            ExampleIUPACSequence("", **kw))
+            ExampleIUPACSequence("", positional_metadata={'qual': []},
+                                 **kw).degap(),
+            ExampleIUPACSequence("", positional_metadata={'qual': []},
+                                 **kw))
 
         self.assertEquals(
             ExampleIUPACSequence(

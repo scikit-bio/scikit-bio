@@ -481,7 +481,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         seq = self._bytes[indexable]
         positional_metadata = None
-        if not self.positional_metadata.empty:
+        if self.has_positional_metadata():
             positional_metadata = self._slice_positional_metadata(indexable)
 
         return self._to(sequence=seq, metadata=metadata,
@@ -527,7 +527,7 @@ class Sequence(collections.Sequence, SkbioObject):
         True
 
         """
-        return not self.positional_metadata.empty
+        return len(self.positional_metadata.columns) > 0
 
     def _slice_positional_metadata(self, indexable):
         if _is_single_index(indexable):
