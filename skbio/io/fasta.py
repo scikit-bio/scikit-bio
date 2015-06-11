@@ -554,7 +554,7 @@ from functools import partial
 import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
-                      FASTAFormatError, FileSentinel)
+                      FASTAFormatError, QUALFormatError, FileSentinel)
 from skbio.io._base import (_chunk_str, _get_nth_sequence,
                             _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
@@ -563,51 +563,44 @@ from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
-class QualNegativeError(FASTAFormatError):
-    pass
-
-
-class QualNonIntegerError(FASTAFormatError):
-    pass
-
-
 @register_sniffer('fasta')
 def _fasta_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
-    #   file. Read up to 10 FASTA records. If at least one record is read (i.e.
+    #   file. Read up to 10 records. If at least one record is read (i.e.
     #   the file isn't empty) and no errors are thrown during reading, assume
-    #   the file is in FASTA format. Next, try to parse the file as QUAL, which
-    #   has stricter requirements. If this succeeds, do *not* identify the file
-    #   as FASTA since we don't want to sniff QUAL files as FASTA (technically
-    #   they can be read as FASTA since the sequences aren't validated but it
-    #   probably isn't what the user wanted). Also, if we add QUAL as its own
-    #   file format in the future, we wouldn't want the FASTA and QUAL sniffers
-    #   to both identify a QUAL file.
+    #   the file is in FASTA format. If a record appears to be QUAL, do *not*
+    #   identify the file as FASTA since we don't want to sniff QUAL files as
+    #   FASTA (technically they can be read as FASTA since the sequences may
+    #   not be validated but it probably isn't what the user wanted). Also, if
+    #   we add QUAL as its own file format in the future, we wouldn't want the
+    #   FASTA and QUAL sniffers to both positively identify a QUAL file.
     if _too_many_blanks(fh, 5):
         return False, {}
 
     num_records = 10
+    empty = True
     try:
-        not_empty = False
-        for _ in zip(range(num_records), _fasta_to_generator(fh)):
-            not_empty = True
-
-        if not_empty:
-            fh.seek(0)
-            try:
-                list(zip(range(num_records),
-                         _parse_fasta_raw(fh, _parse_quality_scores, 'QUAL')))
-            except QualNonIntegerError:
-                return True, {}
-            except QualNegativeError:
-                return False, {}
-            else:
-                return False, {}
-        else:
-            return False, {}
+        for _ in zip(range(num_records),
+                     _parse_fasta_raw(fh, _sniffer_data_parser, '')):
+            empty = False
     except FASTAFormatError:
         return False, {}
+
+    if empty:
+        return False, {}
+    else:
+        return True, {}
+
+
+def _sniffer_data_parser(chunks):
+    data = _parse_sequence_data(chunks)
+    try:
+        _parse_quality_scores(chunks)
+    except QUALFormatError:
+        return data
+    else:
+        raise FASTAFormatError()
 
 
 @register_reader('fasta')
@@ -826,19 +819,19 @@ def _parse_sequence_data(chunks):
 
 def _parse_quality_scores(chunks):
     if not chunks:
-        raise FASTAFormatError("Found QUAL header without quality scores.")
+        raise QUALFormatError("Found QUAL header without quality scores.")
 
     qual_str = ' '.join(chunks)
     try:
         quality = np.asarray(qual_str.split(), dtype=int)
     except ValueError:
-        raise QualNonIntegerError(
+        raise QUALFormatError(
             "Could not convert quality scores to integers:\n%s" % qual_str)
 
     if (quality < 0).any():
-        raise QualNegativeError(
-            "Quality scores must be greater than or equal to "
-            "zero.")
+        raise QUALFormatError(
+            "Encountered negative quality score(s). Quality scores must be "
+            "greater than or equal to zero.")
     return quality
 
 

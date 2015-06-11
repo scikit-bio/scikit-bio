@@ -55,9 +55,7 @@ class SnifferTests(TestCase):
             'fasta_single_prot_seq_defaults',
             'fasta_10_seqs',
             'fasta_invalid_after_10_seqs',
-            'fasta_mixed_qual_scores',
-            'qual_invalid_qual_scores_float',
-            'qual_invalid_qual_scores_string'
+            'fasta_mixed_qual_scores'
         ]))
 
         self.negative_fps = list(map(get_data_path, [
@@ -102,6 +100,8 @@ class SnifferTests(TestCase):
             'qual_invalid_blank_sequence',
             'qual_invalid_whitespace_only_sequence',
             'qual_invalid_ws_line_after_header',
+            'qual_invalid_qual_scores_float',
+            'qual_invalid_qual_scores_string',
             'qual_max_width_1',
             'qual_max_width_5',
             'qual_multi_seq',
