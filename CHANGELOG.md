@@ -8,6 +8,7 @@
 * Added support for ``skbio.io.util.open_file`` and ``skbio.io.util.open_files`` to pull files from HTTP and HTTPS URLs. This behavior propagates to the I/O registry.
 * FASTA/QUAL (``skbio.io.fasta``) and FASTQ (``skbio.io.fastq``) readers now allow blank or whitespace-only lines at the beginning of the file, between records, or at the end of the file. A blank or whitespace-only line in any other location will continue to raise an error [#781](https://github.com/biocore/scikit-bio/issues/781).
 * scikit-bio now ignores leading and trailing whitespace characters on each line while reading FASTA/QUAL and FASTQ files.
+* Added ``weblogo`` method to ``skbio.Alignment`` for plotting a weblogo (also known as a sequence logo). ([#805](https://github.com/biocore/scikit-bio/issues/805))
 
 ### Performance enhancements
 * The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.

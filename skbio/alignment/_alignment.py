@@ -11,13 +11,16 @@ from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
 from six import StringIO
 
+import operator
 from collections import Counter, defaultdict, OrderedDict
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import entropy
 
+from skbio.alignment._text import add_letter
 from skbio._base import SkbioObject
-from skbio.sequence import Sequence
+from skbio.sequence import Sequence, IUPACSequence
 from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
@@ -1319,6 +1322,95 @@ class Alignment(SequenceCollection):
             return 0
         else:
             return len(self._data[0])
+
+    def sequence_logo(self):
+        """Plots alignment as a sequence logo.
+
+        A sequence logo is a visual represenation of amino acid frequency,
+        sometimes used to find characteristics such as protein-binding sites in
+        DNA or functional units in proteins.
+
+        The logo is created from a collection of aligned sequences and
+        is used to show the consensus sequence and diversity of the sequences.
+
+        More information on sequence logos can be found in [1]_.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the sequence logo of the passed alignment.
+
+        References
+        ----------
+        .. [1] Schneider TD, Stephens RM. 1990. Sequence Logos: A New Way to
+               Display Consensus Sequences. Nucleic Acids Res. 18:6097-6100
+
+        Examples
+        --------
+        ..plot::
+
+            Define an alignment of DNA sequences with original ids (the names
+            of the ids will not change the sequence logo, however Alignment
+            requires original ids):
+
+            >>> from skbio import Alignment, DNA
+            >>> a1 = Alignment([DNA('ATT-GG-G', id='seq1'),
+            ...                 DNA('ACGTT--G', id='seq2'),
+            ...                 DNA('CTCTG--G', id='seq3'),
+            ...                 DNA('GCT--T-G', id='seq4')])
+
+            Plot the alignment as a sequence logo:
+
+            >>> fig = a1.sequence_logo()
+
+        """
+        # catches an empty alignment so the user won't get an empty graph
+        if self.sequence_count() == 0:
+            raise AlignmentError("You have passed an empty Alignment.")
+
+        # acquires amount of each nucleotide at a given point
+        pos_freq = self.position_frequencies()
+
+        # sets up graph with x and y ticks and labels
+        fig, ax = plt.subplots()
+        fig.set_size_inches([(len(pos_freq)*1.3), 6])
+        ax.set_xticks(np.arange(0.35, len(pos_freq)))
+        ax.set_xlim(right=len(pos_freq))
+        ax.set_xticklabels(range(1, self.sequence_length()+1))
+        ax.set_ylim(top=1.0, bottom=0.0)
+        ax.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+        ax.set_yticklabels(['0.0', '', '0.5', '', '1.0'])
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
+
+        # runs through every sequence and graphs it
+        for idx, pos in enumerate(pos_freq):
+            # checks for accepted gap characters
+            for gap in IUPACSequence.gap_chars:
+                if gap in pos:
+                    # instead of drawing an empty box for gaps, we delete gap
+                    # positions
+                    del pos[gap]
+            self._draw_sequence_logo_position(ax, idx, pos)
+
+        return fig
+
+    def _draw_sequence_logo_position(self, ax, position, freqs):
+        sorted_freqs = sorted(freqs.items(), key=operator.itemgetter(1))
+        dx = 0.7
+        x = position
+        y = 0
+        for letter, dy in sorted_freqs:
+            try:
+                add_letter(ax, letter, x, y, dx, dy)
+                y += dy
+            except KeyError as e:
+                raise AlignmentError("Character %r cannot currently be drawn "
+                                     "in ``Alignment.sequence_logo``. Support "
+                                     "for more characters will be added in"
+                                     "the future." % e.args[0])
 
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
