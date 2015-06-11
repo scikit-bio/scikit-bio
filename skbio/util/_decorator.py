@@ -86,7 +86,61 @@ class classproperty(property):
         raise AttributeError("can't set attribute")
 
 
-class state_decorator(object):
+class _state_decorator(object):
+    """ Base class for decorators of all public functionality.
+
+    **This documentation will be ported to an easily accessible location before
+    this code is merged. This location may be linked from the docstrings.**
+
+    All public functionality in scikit-bio has a defined stability state.
+    These states inform users and developers to what extent they can rely on
+    different APIs in the package. Definitions of the stability states and the
+    information associated with each follow.
+
+    stable
+    ------
+    Functionality defined as stable is part of scikit-bio's backward-
+    compatible API. Users can be confident that the API will not change without
+    first passing through the deprecated state, typically for at least two
+    release cycles. We make every effort to maintain the API of this code.
+
+    The docstrings of stable functionality will indicate the first scikit-bio
+    version where the functionality was considered stable.
+
+    experimental
+    ------------
+    Functionality defined as experimental is being considered for addition to
+    scikit-bio's stable API. Users are encouraged to use this code, but to be
+    aware that its API may change or be removed. Experimental functionality
+    will typically pass through the deprecated state before it is removed, but
+    in rare cases it may be removed directly (for example, if a serious
+    methodological flaw is discovered that makes the functionality
+    scientifically invalid).
+
+    The docstrings of experimental functionality will indicate the first
+    scikit-bio version where the functionality was considered experimental.
+
+    We aim to move functionality through the experimental phase quickly (for
+    example, two releases before moving to stable), but we don't make specific
+    promises about when experimental functionality will become stable. This
+    aligns with our philosophy that we don't make promises about experimental
+    APIs, only about stable APIs.
+
+    deprecated
+    ----------
+    Functionality defined as deprecated is targeted for removal from
+    scikit-bio. Users should transition away from using it.
+
+    The docstrings of deprecated functionality will indicate the first version
+    of scikit-bio where the functionality was deprecated, the version of
+    scikit-bio when the functionality will be removed, and the reason for
+    deprecation of the code (for example, because a function was determined to
+    be scientifically invalid, or because the API was adapted, and users should
+    be using a different version of the function).
+
+    Using deprecated functionality will raise a DeprecationWarning.
+
+    """
 
     _line_prefix = '\n        '
 
@@ -101,10 +155,10 @@ class state_decorator(object):
         return '\n'.join(doc_lines)
 
 
-class stable(state_decorator):
+class stable(_state_decorator):
     """ State decorator indicating stable functionality.
 
-    Used to indicate that a public class or function is considered ``stable``,
+    Used to indicate that public functionality is considered ``stable``,
     meaning that its API will be backward compatible unless it is deprecated.
     Decorating functionality as stable will update its doc string to indicate
     the first version of scikit-bio when the functionality was considered
@@ -146,14 +200,14 @@ class stable(state_decorator):
         return func
 
 
-class experimental(state_decorator):
+class experimental(_state_decorator):
     """ State decorator indicating experimental functionality.
 
-    Used to indicate that a public class or function is considered
-    experimental, meaning that its API is subject to change, and that it may be
-    deprecated with little warning. Decorating functionality as experimental
-    will update its doc string to indicate the first version of scikit-bio when
-    the functionality was considered experimental.
+    Used to indicate that public functionality is considered experimental,
+    meaning that its API is subject to change or removal with little or
+    (rarely) no warning. Decorating functionality as experimental will update
+    its doc string to indicate the first version of scikit-bio when the
+    functionality was considered experimental.
 
     Parameters
     ----------
@@ -192,7 +246,7 @@ class experimental(state_decorator):
         return func
 
 
-class deprecated(state_decorator):
+class deprecated(_state_decorator):
     """ State decorator indicating deprecated functionality.
 
     Used to indicate that a public class or function is deprecated, meaning
@@ -258,6 +312,10 @@ class deprecated(state_decorator):
         # [decorator module](https://pypi.python.org/pypi/decorator) which
         # @ebolyen pointed me to. I'm out of time for experimentation now
         # though. This needs to be resolved before this code is merged.
+        # For testing purposes, we can test the signature of a deprecated
+        # function ``f`` with:
+        # import inspect
+        # inspect.getargspec(f)
         wrapped_f.__name__ = func.__name__
         wrapped_f.__doc__ = func.__doc__
 
