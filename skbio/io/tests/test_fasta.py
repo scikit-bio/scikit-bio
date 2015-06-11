@@ -14,7 +14,7 @@ from unittest import TestCase, main
 from functools import partial
 
 from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
-from skbio.io import FASTAFormatError
+from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
     _fasta_to_dna_sequence, _fasta_to_rna_sequence, _fasta_to_protein_sequence,
@@ -258,59 +258,59 @@ class ReaderTests(TestCase):
                                                e[1], e[2], e[3]), [
             # fasta and qual missing header
             ('fasta_invalid_missing_header', {}, FASTAFormatError,
-             'non-header.*1st FASTA'),
+             'non-header.*1st'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_missing_header')},
-             FASTAFormatError, 'non-header.*1st QUAL'),
+             QUALFormatError, 'non-header.*1st'),
 
             # fasta and qual with blank line within sequence
             ('fasta_invalid_blank_line_within_sequence', {}, FASTAFormatError,
-             'whitespace-only.*FASTA'),
+             'whitespace-only'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_blank_line_within_seq')},
-             FASTAFormatError, 'whitespace-only.*QUAL'),
+             QUALFormatError, 'whitespace-only'),
 
             # fasta and qual with blank after header
             ('fasta_invalid_blank_sequence', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_blank_sequence')},
-             FASTAFormatError, 'without quality scores'),
+             QUALFormatError, 'without quality scores'),
 
             # fasta and qual with whitespace only sequence
             ('fasta_invalid_whitespace_only_sequence', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_whitespace_only_sequence')},
-             FASTAFormatError, 'without quality scores'),
+             QUALFormatError, 'without quality scores'),
 
             # fasta and qual with blank line within sequence
             ('fasta_invalid_blank_line_after_header', {}, FASTAFormatError,
-             'whitespace-only.*FASTA'),
+             'whitespace-only'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_blank_line_after_header')},
-             FASTAFormatError, 'whitespace-only.*QUAL'),
+             QUALFormatError, 'whitespace-only'),
 
             # fasta and qual with whitespace-only line within sequence
             ('fasta_invalid_whitespace_only_line_within_sequence',
-             {}, FASTAFormatError, 'whitespace-only.*FASTA'),
+             {}, FASTAFormatError, 'whitespace-only'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_whitespace_line_in_seq')},
-             FASTAFormatError, 'whitespace-only.*QUAL'),
+             QUALFormatError, 'whitespace-only'),
 
             # fasta and qual with whitespace-only line after header
             ('fasta_invalid_whitespace_line_after_header',
-             {}, FASTAFormatError, 'whitespace-only.*FASTA'),
+             {}, FASTAFormatError, 'whitespace-only'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_ws_line_after_header')},
-             FASTAFormatError, 'whitespace-only.*QUAL'),
+             QUALFormatError, 'whitespace-only'),
 
             # fasta and qual missing record data (first record)
             ('fasta_invalid_missing_seq_data_first', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_missing_qual_scores_first')},
-             FASTAFormatError, 'without quality scores'),
+             QUALFormatError, 'without quality scores'),
 
             # fasta and qual missing record data (middle record)
             ('fasta_invalid_missing_seq_data_middle', {}, FASTAFormatError,
@@ -318,21 +318,21 @@ class ReaderTests(TestCase):
             ('fasta_3_seqs_defaults',
              {'qual':
               get_data_path('qual_invalid_missing_qual_scores_middle')},
-             FASTAFormatError, 'without quality scores'),
+             QUALFormatError, 'without quality scores'),
 
             # fasta and qual missing record data (last record)
             ('fasta_invalid_missing_seq_data_last', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_missing_qual_scores_last')},
-             FASTAFormatError, 'without quality scores'),
+             QUALFormatError, 'without quality scores'),
 
             # fasta and qual in legacy format (;)
             ('fasta_invalid_legacy_format', {}, FASTAFormatError,
-             'non-header.*1st FASTA'),
+             'non-header.*1st'),
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_legacy_format')},
-             FASTAFormatError, 'non-header.*1st QUAL'),
+             QUALFormatError, 'non-header.*1st'),
 
             # qual file with an extra record
             ('fasta_3_seqs_defaults',
@@ -366,28 +366,28 @@ class ReaderTests(TestCase):
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_qual_scores_string')},
-             FASTAFormatError,
+             QUALFormatError,
              'quality scores to integers:\n100 0 1a -42'),
 
             # invalid qual scores (float value can't be converted to integer)
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_qual_scores_float')},
-             FASTAFormatError,
+             QUALFormatError,
              'quality scores to integers:\n42    41.0 39 40'),
 
             # invalid qual scores (negative integer)
             ('fasta_3_seqs_defaults',
              {'qual': get_data_path('qual_invalid_qual_scores_negative')},
-             FASTAFormatError,
+             QUALFormatError,
              'Quality scores must be greater than or equal to zero\.'),
 
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
              'without sequence data'),
             ('fasta_id_whitespace_replacement_none', {}, FASTAFormatError,
-             'whitespace-only.*FASTA'),
+             'whitespace-only'),
             ('fasta_description_newline_replacement_none', {},
-             FASTAFormatError, 'whitespace-only.*FASTA')
+             FASTAFormatError, 'whitespace-only')
         ]))
 
     # extensive tests for fasta -> generator reader since it is used by all

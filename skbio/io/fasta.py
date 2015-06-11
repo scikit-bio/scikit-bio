@@ -581,8 +581,8 @@ def _fasta_sniffer(fh):
     num_records = 10
     empty = True
     try:
-        for _ in zip(range(num_records),
-                     _parse_fasta_raw(fh, _sniffer_data_parser, '')):
+        parser = _parse_fasta_raw(fh, _sniffer_data_parser, FASTAFormatError)
+        for _ in zip(range(num_records), parser):
             empty = False
     except FASTAFormatError:
         return False, {}
@@ -600,18 +600,22 @@ def _sniffer_data_parser(chunks):
     except QUALFormatError:
         return data
     else:
-        raise FASTAFormatError()
+        # used for flow control within sniffer, user should never see this
+        # message
+        raise FASTAFormatError('Data appear to be quality scores.')
 
 
 @register_reader('fasta')
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
-                                               'FASTA'):
+                                               FASTAFormatError):
             yield constructor(seq, metadata={'id': id_, 'description': desc})
     else:
-        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data, 'FASTA')
-        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores, 'QUAL')
+        fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data,
+                                     FASTAFormatError)
+        qual_gen = _parse_fasta_raw(qual, _parse_quality_scores,
+                                    QUALFormatError)
 
         for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
                                                fillvalue=None):
@@ -772,7 +776,7 @@ def _alignment_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width)
 
 
-def _parse_fasta_raw(fh, data_parser, format_label):
+def _parse_fasta_raw(fh, data_parser, error_type):
     """Raw parser for FASTA or QUAL files.
 
     Returns raw values (seq/qual, id, description). It is the responsibility of
@@ -786,9 +790,9 @@ def _parse_fasta_raw(fh, data_parser, format_label):
     if seq_header.startswith('>'):
         id_, desc = _parse_fasta_like_header(seq_header)
     else:
-        raise FASTAFormatError(
-            "Found non-header line when attempting to read the 1st %s record:"
-            "\n%s" % (format_label, seq_header))
+        raise error_type(
+            "Found non-header line when attempting to read the 1st record:"
+            "\n%s" % seq_header)
 
     data_chunks = []
     prev = seq_header
@@ -802,9 +806,8 @@ def _parse_fasta_raw(fh, data_parser, format_label):
             if line:
                 # ensure no blank lines within a single record
                 if not prev:
-                    raise FASTAFormatError(
-                        "Found blank or whitespace-only line within %s "
-                        "record." % format_label)
+                    raise error_type(
+                        "Found blank or whitespace-only line within record.")
                 data_chunks.append(line)
         prev = line
     # yield last record in file
@@ -813,13 +816,13 @@ def _parse_fasta_raw(fh, data_parser, format_label):
 
 def _parse_sequence_data(chunks):
     if not chunks:
-        raise FASTAFormatError("Found FASTA header without sequence data.")
+        raise FASTAFormatError("Found header without sequence data.")
     return ''.join(chunks)
 
 
 def _parse_quality_scores(chunks):
     if not chunks:
-        raise QUALFormatError("Found QUAL header without quality scores.")
+        raise QUALFormatError("Found header without quality scores.")
 
     qual_str = ' '.join(chunks)
     try:
