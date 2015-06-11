@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from warnings import warn
+from textwrap import wrap
 
 from ._exception import OverrideError
 
@@ -82,3 +84,181 @@ class classproperty(property):
 
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")
+
+
+class state_decorator(object):
+
+    _line_prefix = '\n        '
+
+    def _update_doc_string(self, func, state_desc):
+        doc_lines = func.__doc__.split('\n')
+        # wrap lines at 79 characters, accounting for the length of
+        # self._line_prefix
+        state_desc_lines = wrap('State: ' + state_desc,
+                                79 - len(self._line_prefix))
+        doc_lines.insert(
+            1, self._line_prefix + self._line_prefix.join(state_desc_lines))
+        return '\n'.join(doc_lines)
+
+
+class stable(state_decorator):
+    """ State decorator indicating stable functionality.
+
+    Used to indicate that a public class or function is considered ``stable``,
+    meaning that its API will be backward compatible unless it is deprecated.
+    Decorating functionality as stable will update its doc string to indicate
+    the first version of scikit-bio when the functionality was considered
+    stable.
+
+    Parameters
+    ----------
+    as_of : str
+        First release version where functionality is considered to be stable.
+
+    See Also
+    --------
+    experimental
+    deprecated
+
+    Examples
+    --------
+    >>> @stable(as_of='0.3.0')
+    ... def f_stable():
+    ...     \"\"\" An example stable function.
+    ...     \"\"\"
+    ...     pass
+    >>> help(f_stable)
+    Help on function f_stable in module skbio.util._decorator:
+    <BLANKLINE>
+    f_stable()
+        An example stable function.
+    <BLANKLINE>
+        State: Stable as of 0.3.0.
+    <BLANKLINE>
+    """
+
+    def __init__(self, **kwargs):
+        self.as_of = kwargs['as_of']
+
+    def __call__(self, func):
+        state_desc = 'Stable as of %s.' % self.as_of
+        func.__doc__ = self._update_doc_string(func, state_desc)
+        return func
+
+
+class experimental(state_decorator):
+    """ State decorator indicating experimental functionality.
+
+    Used to indicate that a public class or function is considered
+    experimental, meaning that its API is subject to change, and that it may be
+    deprecated with little warning. Decorating functionality as experimental
+    will update its doc string to indicate the first version of scikit-bio when
+    the functionality was considered experimental.
+
+    Parameters
+    ----------
+    as_of : str
+        First release version where feature is considered to be experimental.
+
+    See Also
+    --------
+    stable
+    deprecated
+
+    Examples
+    --------
+    >>> @experimental(as_of='0.3.0')
+    ... def f_experimental():
+    ...     \"\"\" An example experimental function.
+    ...     \"\"\"
+    ...     pass
+    >>> help(f_experimental)
+    Help on function f_experimental in module skbio.util._decorator:
+    <BLANKLINE>
+    f_experimental()
+        An example experimental function.
+    <BLANKLINE>
+        State: Experimental as of 0.3.0.
+    <BLANKLINE>
+
+    """
+
+    def __init__(self, **kwargs):
+        self.as_of = kwargs['as_of']
+
+    def __call__(self, func):
+        state_desc = 'Experimental as of %s.' % self.as_of
+        func.__doc__ = self._update_doc_string(func, state_desc)
+        return func
+
+
+class deprecated(state_decorator):
+    """ State decorator indicating deprecated functionality.
+
+    Used to indicate that a public class or function is deprecated, meaning
+    that its API will be removed in a future version of scikit-bio. Decorating
+    functionality as experimental will update its doc string to indicate the
+    first version of scikit-bio when the functionality was deprecated, the
+    first version of scikit-bio when the functionality will no longer exist,
+    and the reason for deprecation of the API. It will also cause calls to the
+    API to raise a ``DeprecationWarning``.
+
+    Parameters
+    ----------
+    as_of : str
+        First development version where feature is considered to be deprecated.
+    until : str
+        First release version where feature will no longer exist.
+    reason : str
+        Brief description of why the API is deprecated.
+
+    See Also
+    --------
+    stable
+    experimental
+
+    Examples
+    --------
+    >>> @deprecated(as_of='0.3.0', until='0.3.3',
+    ...             reason='Users should now use skbio.g().')
+    ... def f_deprecated(x, verbose=False):
+    ...     \"\"\" An example deprecated function.
+    ...     \"\"\"
+    ...     pass
+    >>> help(f_deprecated)
+    Help on function f_deprecated in module skbio.util._decorator:
+    <BLANKLINE>
+    f_deprecated(x, verbose=False)
+        An example deprecated function.
+    <BLANKLINE>
+        State: Deprecated as of 0.3.0 for removal in 0.3.3. Users should now
+        use skbio.g().
+    <BLANKLINE>
+
+    """
+
+    def __init__(self, **kwargs):
+        self.as_of = kwargs['as_of']
+        self.until = kwargs['until']
+        self.reason = kwargs['reason']
+
+    def __call__(self, func, *args, **kwargs):
+        state_desc = 'Deprecated as of %s for removal in %s. %s' %\
+         (self.as_of, self.until, self.reason)
+        func.__doc__ = self._update_doc_string(func, state_desc)
+
+        def wrapped_f(*args, **kwargs):
+            warn('%s is deprecated as of scikit-bio version %s, and will be'
+                 ' removed in version %s. %s' %
+                 (func.__name__, self.as_of, self.until, self.reason),
+                 DeprecationWarning)
+            return func(*args, **kwargs)
+        # Currently func's signature is lost (and this is caught by the
+        # doctests). It looks like the solution is probably to use the
+        # [decorator module](https://pypi.python.org/pypi/decorator) which
+        # @ebolyen pointed me to. I'm out of time for experimentation now
+        # though. This needs to be resolved before this code is merged.
+        wrapped_f.__name__ = func.__name__
+        wrapped_f.__doc__ = func.__doc__
+
+        return wrapped_f
