@@ -100,6 +100,10 @@ class TestSequence(TestCase):
             self.assertEqual('A', str(seq))
             self.assertEqual(1, len(seq))
 
+            self.assertIsInstance(seq.positional_metadata, pd.DataFrame)
+            self.assertEquals(len(seq.positional_metadata.index), 1)
+            self.assertFalse(seq.has_positional_metadata())
+
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
                   u'.ABC\t123  xyz-',
@@ -115,6 +119,11 @@ class TestSequence(TestCase):
                              np.array('.ABC\t123  xyz-', dtype='c'))
             self.assertEqual('.ABC\t123  xyz-', str(seq))
             self.assertEqual(len('.ABC\t123  xyz-'), len(seq))
+
+            self.assertIsInstance(seq.positional_metadata, pd.DataFrame)
+            self.assertEquals(len(seq.positional_metadata.index),
+                              len('.ABC\t123  xyz-'))
+            self.assertFalse(seq.has_positional_metadata())
 
     def test_init_from_sequence_object(self):
         # We're testing this in its simplest form in other tests. This test
@@ -233,7 +242,7 @@ class TestSequence(TestCase):
         for empty in ({}, pd.DataFrame()):
             seq = Sequence('', positional_metadata=empty)
 
-            self.assertTrue(seq.positional_metadata.empty)
+            self.assertFalse(seq.has_positional_metadata())
             self.assertEqual((0, 0), seq.positional_metadata.shape)
             self.assertIsInstance(seq.positional_metadata, pd.DataFrame)
 
@@ -242,7 +251,9 @@ class TestSequence(TestCase):
             seq = Sequence('', positional_metadata={'foo': item})
 
             self.assertIsInstance(seq.positional_metadata['foo'], pd.Series)
-            self.assertEqual(seq.positional_metadata['foo'].dtype, np.float)
+            self.assertEqual(seq.positional_metadata['foo'].dtype, np.float64)
+            self.assertEqual(seq.positional_metadata['foo'].index.dtype,
+                             np.int64)
             self.assertEqual(seq.positional_metadata['foo'].shape, (0, ))
             npt.assert_equal(seq.positional_metadata['foo'], np.array([]))
 
@@ -316,16 +327,31 @@ class TestSequence(TestCase):
         with self.assertRaisesRegexp(TypeError,
                                      'Positional.*Must.*pandas\.DataFrame'):
             Sequence('ACGT', positional_metadata=2)
-
+        # 0 elements
+        with self.assertRaisesRegexp(ValueError, '\(0\).*\(4\)'):
+            Sequence('ACGT', positional_metadata=[])
         # not enough elements
         with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4])
-
         # too many elements
         with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4, 5, 6])
+        # Series not enough rows
+        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+            Sequence('ACGT', positional_metadata=pd.Series(range(3)))
+        # Series too many rows
+        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+            Sequence('ACGT', positional_metadata=pd.Series(range(5)))
+        # DataFrame not enough rows
+        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+            Sequence('ACGT',
+                     positional_metadata=pd.DataFrame({'quality': range(3)}))
+        # DataFrame too many rows
+        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+            Sequence('ACGT',
+                     positional_metadata=pd.DataFrame({'quality': range(5)}))
 
-    def test_value_property(self):
+    def test_values_property(self):
         # Property tests are only concerned with testing the interface
         # provided by the property: that it can be accessed, can't be
         # reassigned or mutated in place, and that the correct type is
@@ -364,6 +390,31 @@ class TestSequence(TestCase):
         self.assertIsInstance(seq.positional_metadata['foo'], pd.Series)
         self.assertEqual(seq.positional_metadata['foo'].dtype, np.int)
         npt.assert_equal(seq.positional_metadata['foo'], np.array([22, 22, 0]))
+
+    def test_positional_metadata_set_column_series(self):
+        seq_text = 'ACGTACGT'
+        l = len(seq_text)
+        seq = Sequence(seq_text, positional_metadata={'foo': range(l)})
+        seq.positional_metadata['bar'] = pd.Series(range(l-3))
+        # pandas.Series will be padded with NaN if too short
+        npt.assert_equal(seq.positional_metadata['bar'],
+                         np.array(range(l-3) + [np.NaN]*3))
+        seq.positional_metadata['baz'] = pd.Series(range(l+3))
+        # pandas.Series will be truncated if too long
+        npt.assert_equal(seq.positional_metadata['baz'],
+                         np.array(range(l)))
+
+    def test_positional_metadata_set_column_array(self):
+        seq_text = 'ACGTACGT'
+        l = len(seq_text)
+        seq = Sequence(seq_text, positional_metadata={'foo': range(l)})
+        # array-like objects will fail if wrong size
+        for array_like in (np.array(range(l-1)), range(l-1),
+                           np.array(range(l+1)), range(l+1)):
+            with self.assertRaisesRegexp(ValueError,
+                                         "Length of values does not match "
+                                         "length of index"):
+                seq.positional_metadata['bar'] = array_like
 
     def test_eq_and_ne(self):
         seq_a = Sequence("A")

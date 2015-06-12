@@ -189,29 +189,11 @@ class Sequence(collections.Sequence, SkbioObject):
                 metadata = sequence.metadata
             if positional_metadata is None:
                 positional_metadata = sequence.positional_metadata
-
             sequence = sequence._bytes
 
-        if metadata is None:
-            metadata = {}
-        elif not isinstance(metadata, dict):
-            raise TypeError("metadata must be a {}".format(type(dict())))
-        self._metadata = metadata
-
-        try:
-            self._positional_metadata = pd.DataFrame(positional_metadata)
-        except pd.core.common.PandasError:
-            raise TypeError("Positional metadata invalid. Must be consumable "
-                            "by pandas.DataFrame")
-
         self._set_sequence(sequence)
-
-        num_rows = len(self.positional_metadata.index)
-        if num_rows > 0 and num_rows != len(self):
-            raise ValueError(
-                "Number of positional metadata values (%d) must match the "
-                "number of characters in the sequence (%d)." %
-                (num_rows, len(self)))
+        self._set_metadata(metadata)
+        self._set_positional_metadata(positional_metadata)
 
     def _set_sequence(self, sequence):
         """Munge the sequence data into a numpy array of dtype uint8."""
@@ -258,6 +240,31 @@ class Sequence(collections.Sequence, SkbioObject):
 
         sequence.flags.writeable = False
         self._bytes = sequence
+
+    def _set_metadata(self, metadata):
+        if metadata is None:
+            metadata = {}
+        elif not isinstance(metadata, dict):
+            raise TypeError("metadata must be a {}".format(type(dict())))
+        self._metadata = metadata
+
+    def _set_positional_metadata(self, positional_metadata):
+        if positional_metadata is None:
+            # ensure dataframe of proper length
+            positional_metadata = pd.DataFrame(index=range(len(self)))
+
+        try:
+            self._positional_metadata = pd.DataFrame(positional_metadata)
+        except pd.core.common.PandasError:
+            raise TypeError("Positional metadata invalid. Must be consumable "
+                            "by pandas.DataFrame")
+
+        num_rows = len(self.positional_metadata.index)
+        if num_rows != len(self):
+            raise ValueError(
+                "Number of positional metadata values (%d) must match the "
+                "number of characters in the sequence (%d)." %
+                (num_rows, len(self)))
 
     def __contains__(self, subsequence):
         """Determine if a subsequence is contained in the biological sequence.
