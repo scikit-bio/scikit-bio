@@ -325,7 +325,9 @@ class TestSequence(TestCase):
     def test_init_invalid_positional_metadata(self):
         # not consumable by Pandas
         with self.assertRaisesRegexp(TypeError,
-                                     'Positional.*Must.*pandas\.DataFrame'):
+                                     'Positional metadata invalid. Must be '
+                                     'consumable by pandas.DataFrame. '
+                                     'Original Pandas error message: '):
             Sequence('ACGT', positional_metadata=2)
         # 0 elements
         with self.assertRaisesRegexp(ValueError, '\(0\).*\(4\)'):

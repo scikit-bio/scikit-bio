@@ -56,6 +56,12 @@ def _slices_from_iter(array, indexables):
         yield array[i]
 
 
+def _dataframe_with_reset_index(dataframe):
+    # By default Pandas adds a column containing the original indices.
+    # For now we're just throwing it away using the following.
+    return dataframe.reset_index(drop=True)
+
+
 class Sequence(collections.Sequence, SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
@@ -255,9 +261,10 @@ class Sequence(collections.Sequence, SkbioObject):
 
         try:
             self._positional_metadata = pd.DataFrame(positional_metadata)
-        except pd.core.common.PandasError:
-            raise TypeError("Positional metadata invalid. Must be consumable "
-                            "by pandas.DataFrame")
+        except pd.core.common.PandasError as e:
+            raise TypeError('Positional metadata invalid. Must be consumable '
+                            'by pandas.DataFrame. Original Pandas error '
+                            'message: "%s"' % e.message)
 
         num_rows = len(self.positional_metadata.index)
         if num_rows != len(self):
@@ -465,12 +472,12 @@ class Sequence(collections.Sequence, SkbioObject):
                     pos_md_slices = list(_slices_from_iter(
                                          self.positional_metadata, index))
                     positional_metadata = \
-                        pd.concat(pos_md_slices).reset_index(drop=True)
+                        _dataframe_with_reset_index(pd.concat(pos_md_slices))
 
                     return self._to(sequence=seq, metadata=metadata,
                                     positional_metadata=positional_metadata)
-        elif isinstance(indexable, string_types) or \
-                isinstance(indexable, bool):
+        elif (isinstance(indexable, string_types) or
+                isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
 
@@ -541,7 +548,8 @@ class Sequence(collections.Sequence, SkbioObject):
             index = _single_index_to_slice(indexable)
         else:
             index = indexable
-        return self.positional_metadata.iloc[index].reset_index(drop=True)
+        return _dataframe_with_reset_index(
+            self.positional_metadata.iloc[index])
 
     def __len__(self):
         """Return the number of characters in the biological sequence.
@@ -582,10 +590,8 @@ class Sequence(collections.Sequence, SkbioObject):
         'C'
 
         """
-        for i, c in enumerate(self.values):
-            pos_md = self._slice_positional_metadata(i)
-            yield self._to(sequence=c, metadata=self.metadata,
-                           positional_metadata=pos_md)
+        for i in range(len(self)):
+            yield self[i]
 
     def __reversed__(self):
         """Iterate over positions in the biological sequence in reverse order.
