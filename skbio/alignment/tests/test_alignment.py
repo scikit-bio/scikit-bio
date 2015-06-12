@@ -56,6 +56,13 @@ class SequenceCollectionTests(TestCase):
         s1 = [self.d1, self.d1]
         self.assertRaises(SequenceCollectionError, SequenceCollection, s1)
 
+    def test_init_fail_no_id(self):
+        seq = Sequence('ACGTACGT')
+        with self.assertRaisesRegexp(SequenceCollectionError,
+                                     "'id' must be included in the sequence "
+                                     "metadata"):
+            SequenceCollection([seq])
+
     def test_contains(self):
         self.assertTrue('d1' in self.s1)
         self.assertTrue('r2' in self.s2)
