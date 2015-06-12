@@ -264,7 +264,7 @@ class Sequence(collections.Sequence, SkbioObject):
         except pd.core.common.PandasError as e:
             raise TypeError('Positional metadata invalid. Must be consumable '
                             'by pandas.DataFrame. Original Pandas error '
-                            'message: "%s"' % e.message)
+                            'message: "%s"' % e)
 
         num_rows = len(self.positional_metadata.index)
         if num_rows != len(self):
