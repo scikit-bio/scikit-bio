@@ -52,23 +52,29 @@ Examples
 --------
 >>> from skbio import DNA, RNA
 
-New sequences are created with optional id, description, and quality fields.
+New sequences are created with optional metadata and positional metadata
+fields. Metadata is stored as a Python dict, while positional metadata
+becomes a Pandas DataFrame.
 
 >>> d = DNA('ACCGGGTA')
->>> d = DNA('ACCGGGTA', id="my-sequence", description="GFP",
-...          quality=[22, 25, 22, 18, 23, 25, 25, 25])
->>> d = DNA('ACCGGTA', id="my-sequence")
+>>> d = DNA('ACCGGGTA', metadata={'id':"my-sequence", 'description':"GFP"},
+...          positional_metadata={'quality':[22, 25, 22, 18, 23, 25, 25, 25]})
+>>> d = DNA('ACCGGTA', metadata={'id':"my-sequence"})
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
 
->>> d1 = DNA('.ACC--GGG-TA...', id='my-sequence')
+>>> d1 = DNA('.ACC--GGG-TA...', metadata={'id':'my-sequence'})
 >>> d2 = d1.degap()
 >>> d2
-DNA('ACCGGGTA', length=8, id='my-sequence')
+DNA('ACCGGGTA', length=8, has_metadata=True, has_positional_metadata=False)
+>>> d2.metadata
+{'id': 'my-sequence'}
 >>> d3 = d2.reverse_complement()
 >>> d3
-DNA('TACCCGGT', length=8, id='my-sequence')
+DNA('TACCCGGT', length=8, has_metadata=True, has_positional_metadata=False)
+>>> d3.metadata
+{'id': 'my-sequence'}
 
 It's also straightforward to compute distances between sequences (optionally
 using user-defined distance metrics, the default is Hamming distance which
@@ -104,17 +110,17 @@ Those slices can be used to extract the relevant subsequences.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2):
 ...     r5[motif]
-RNA('AGG', length=3)
-RNA('GGA', length=3)
-RNA('GAA', length=3)
+RNA('AGG', length=3, has_metadata=False, has_positional_metadata=False)
+RNA('GGA', length=3, has_metadata=False, has_positional_metadata=False)
+RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
 
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif]
-RNA('AGG-GGA', length=7)
-RNA('GAA', length=3)
+RNA('AGG-GGA', length=7, has_metadata=False, has_positional_metadata=False)
+RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
 
 In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
@@ -122,8 +128,8 @@ the input.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif].degap()
-RNA('AGGGGA', length=6)
-RNA('GAA', length=3)
+RNA('AGGGGA', length=6, has_metadata=False, has_positional_metadata=False)
+RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
 
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
@@ -187,7 +193,7 @@ Nucleotide sequences can be translated using a ``GeneticCode`` object.
 >>> from skbio.sequence import genetic_code
 >>> gc = genetic_code(11)
 >>> gc.translate(d6)
-Protein('MSK*', length=4)
+Protein('MSK*', length=4, has_metadata=False, has_positional_metadata=False)
 
 """
 

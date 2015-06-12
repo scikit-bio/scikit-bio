@@ -11,7 +11,6 @@ from future.builtins import range
 from future.utils import viewitems
 import six
 from six import string_types, text_type
-from six.moves import zip_longest
 
 import re
 import collections
@@ -21,8 +20,46 @@ from contextlib import contextmanager
 import numpy as np
 from scipy.spatial.distance import hamming
 
+import pandas as pd
+
 from skbio._base import SkbioObject
 from skbio.util._misc import reprnator
+
+
+def _single_index_to_slice(start_index):
+    end_index = None if start_index == -1 else start_index+1
+    return slice(start_index, end_index)
+
+
+def _is_single_index(index):
+    return (isinstance(index, numbers.Integral) and
+            not isinstance(index, bool))
+
+
+def _as_slice_if_single_index(indexable):
+    if _is_single_index(indexable):
+        return _single_index_to_slice(indexable)
+    else:
+        return indexable
+
+
+def _slices_from_iter(array, indexables):
+    for i in indexables:
+        if isinstance(i, slice):
+            pass
+        elif _is_single_index(i):
+            i = _single_index_to_slice(i)
+        else:
+            raise IndexError("Cannot slice sequence from iterable "
+                             "containing %r." % i)
+
+        yield array[i]
+
+
+def _dataframe_with_reset_index(dataframe):
+    # By default Pandas adds a column containing the original indices.
+    # For now we're just throwing it away using the following.
+    return dataframe.reset_index(drop=True)
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -37,26 +74,18 @@ class Sequence(collections.Sequence, SkbioObject):
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
         Characters representing the biological sequence itself.
-    id : str, optional
-        Sequence identifier (e.g., an accession number).
-    description : str, optional
-        Description or comment about the sequence (e.g., "green fluorescent
-        protein").
-    quality : 1D array_like (int), optional
-        Phred quality scores stored as nonnegative integers, one per sequence
-        character. If provided, must be the same length as the biological
-        sequence. Can be a 1D ``np.ndarray`` of integers or a structure that
-        can be converted into this representation using ``np.asarray``. A copy
-        will *not* be made if `quality` is already a 1D ``np.ndarray``
-        with an ``int`` ``dtype``. The array will be made read-only (i.e., its
-        ``WRITEABLE`` flag will be set to ``False``).
+    metadata : dict, optional
+        Arbitrary metadata which applies to the entire sequence.
+    positional_metadata : Pandas DataFrame consumable, optional
+        Arbitrary per-character metadata. For example, quality data from
+        sequencing reads. Must be able to be passed directly to the Pandas
+        DataFrame constructor.
 
     Attributes
     ----------
-    id
-    description
     values
-    quality
+    metadata
+    positional_metadata
 
     See Also
     --------
@@ -79,13 +108,14 @@ class Sequence(collections.Sequence, SkbioObject):
     --------
     >>> from skbio import Sequence
     >>> s = Sequence('GGUCGUGAAGGA')
-    >>> s
-    Sequence('GGUCGUGAAGGA', length=12)
-    >>> t = Sequence('CAT', id='seq-id', description='seq desc',
-    ...              quality=[42, 42, 1])
+    >>> s # doctest: +NORMALIZE_WHITESPACE
+    Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
+             has_positional_metadata=False)
+    >>> t = Sequence('CAT', metadata={'id':'seq-id', 'desc':'seq desc'},
+    ...              positional_metadata={'qual':[42, 42, 1]})
     >>> t # doctest: +NORMALIZE_WHITESPACE
-    Sequence('CAT', length=3, id='seq-id', description='seq desc',
-             quality=[42, 42, 1])
+    Sequence('CAT', length=3, has_metadata=True,
+             has_positional_metadata=True)
 
     """
     default_write_format = 'fasta'
@@ -102,7 +132,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Examples
         --------
         >>> from skbio import Sequence
-        >>> s = Sequence('AACGA', id='seq1', description='some seq')
+        >>> s = Sequence('AACGA')
         >>> s.values # doctest: +NORMALIZE_WHITESPACE
         array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
@@ -111,98 +141,65 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
-    def id(self):
-        """Biological sequence identifier.
+    def metadata(self):
+        """dict containing metadata which applies to the entire sequence.
 
         Notes
         -----
-        This property is not writeable.
+        This property is writeable.
 
         Examples
         --------
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.id
-        'seq1'
+        >>> s = Sequence('ACGTACGTACGTACGT', metadata={'id': 'seq-id',
+        ...                                 'description': 'seq description'})
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=True,
+                 has_positional_metadata=False)
+        >>> s.metadata
+        {'id': 'seq-id', 'description': 'seq description'}
 
         """
-        return self._id
+        return self._metadata
 
     @property
-    def description(self):
-        """Biological sequence description.
+    def positional_metadata(self):
+        """Pandas DataFrame containing metadata on a per-character basis.
 
         Notes
         -----
-        This property is not writeable.
+        This property is writeable.
 
         Examples
         --------
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUAAAGGA', id='seq1', description='some seq')
-        >>> s.description
-        'some seq'
+        >>> s = Sequence('ACGTACGTACGTACGT',
+        ...              positional_metadata={'quality': range(16)})
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=False,
+                 has_positional_metadata=True)
+        >>> s.positional_metadata['quality'].values
+        array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15])
 
         """
-        return self._description
-
-    @property
-    def quality(self):
-        """Quality scores corresponding to biological sequence characters.
-
-        A 1D ``np.ndarray`` of nonnegative integers representing a Phred
-        quality score for each character in the biological sequence, or
-        ``None`` if quality scores are not present.
-
-        Notes
-        -----
-        This property is not writeable. A copy of the array is *not* returned.
-        The array is read-only (i.e., its ``WRITEABLE`` flag is set to
-        ``False``).
-
-        Examples
-        --------
-        >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGACCGA', id='seq1', description='some seq',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
-        >>> s.quality
-        array([  1,   5,   3,   3,   2,  42, 100,   9,  10,   0,  42,  42])
-
-        """
-        return self._quality
+        return self._positional_metadata
 
     @property
     def _string(self):
         return self._bytes.tostring()
 
-    def __init__(self, sequence, id="", description="", quality=None):
+    def __init__(self, sequence, metadata=None,
+                 positional_metadata=None):
         if isinstance(sequence, Sequence):
-            if id == "":
-                id = sequence.id
-            if description == "":
-                description = sequence.description
-            if quality is None:
-                quality = sequence.quality
-
+            if metadata is None:
+                metadata = sequence.metadata
+            if positional_metadata is None:
+                positional_metadata = sequence.positional_metadata
             sequence = sequence._bytes
 
-        self._set_id(id)
-        self._set_description(description)
         self._set_sequence(sequence)
-        self._set_quality(quality)
-
-    def _set_id(self, id_):
-        if isinstance(id_, str):
-            self._id = id_
-        else:
-            raise TypeError("Sequence ID %r must be of type `str`." % (id_,))
-
-    def _set_description(self, description):
-        if isinstance(description, str):
-            self._description = description
-        else:
-            raise TypeError("Sequence description %r must be of type `str`." %
-                            (description,))
+        self._set_metadata(metadata)
+        self._set_positional_metadata(positional_metadata)
 
     def _set_sequence(self, sequence):
         """Munge the sequence data into a numpy array of dtype uint8."""
@@ -250,41 +247,31 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
         self._bytes = sequence
 
-    def _set_quality(self, quality):
-        if quality is not None:
-            quality = np.asarray(quality)
+    def _set_metadata(self, metadata):
+        if metadata is None:
+            metadata = {}
+        elif not isinstance(metadata, dict):
+            raise TypeError("metadata must be a {}".format(type(dict())))
+        self._metadata = metadata
 
-            if quality.ndim == 0:
-                # We have something scalar-like, so create a single-element
-                # vector to store it.
-                quality = np.reshape(quality, 1)
+    def _set_positional_metadata(self, positional_metadata):
+        if positional_metadata is None:
+            # ensure dataframe of proper length
+            positional_metadata = pd.DataFrame(index=range(len(self)))
 
-            if quality.shape == (0,):
-                # cannot safe cast an empty vector from float to int
-                cast_type = 'unsafe'
-            else:
-                cast_type = 'safe'
+        try:
+            self._positional_metadata = pd.DataFrame(positional_metadata)
+        except pd.core.common.PandasError as e:
+            raise TypeError('Positional metadata invalid. Must be consumable '
+                            'by pandas.DataFrame. Original Pandas error '
+                            'message: "%s"' % e)
 
-            quality = quality.astype(int, casting=cast_type, copy=False)
-            quality.flags.writeable = False
-
-            if quality.ndim != 1:
-                raise ValueError(
-                    "Quality scores have %d dimension(s). Quality scores must "
-                    "be 1-D." % quality.ndim)
-
-            if len(quality) != len(self):
-                raise ValueError(
-                    "Number of quality scores (%d) must match the "
-                    "number of characters in the sequence (%d)." %
-                    (len(quality), len(self)))
-
-            if (quality < 0).any():
-                raise ValueError(
-                    "Quality scores must be greater than or equal to "
-                    "zero.")
-
-        self._quality = quality
+        num_rows = len(self.positional_metadata.index)
+        if num_rows != len(self):
+            raise ValueError(
+                "Number of positional metadata values (%d) must match the "
+                "number of characters in the sequence (%d)." %
+                (num_rows, len(self)))
 
     def __contains__(self, subsequence):
         """Determine if a subsequence is contained in the biological sequence.
@@ -322,7 +309,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """Determine if the biological sequence is equal to another.
 
         Biological sequences are equal if they are *exactly* the same type and
-        their sequence characters, ID, description, and quality scores are the
+        their sequence characters, metadata, and positional metadata are the
         same.
 
         Parameters
@@ -356,11 +343,13 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u == t
         False
 
-        Note that because the quality scores do not match between ``u`` and
-        ``v``, they are not considered equal:
+        Note that because the positional metadata does not match between ``u``
+        and ``v``, they are not considered equal:
 
         >>> v = Sequence('GGUCGUGACCGA',
-        ...              quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 0, 42, 42])
+        ...              positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
+        ...                                              100, 9, 10, 0, 42,
+        ...                                              42]})
         >>> u == v
         False
 
@@ -371,7 +360,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """Determine if the biological sequence is not equal to another.
 
         Biological sequences are not equal if they are not *exactly* the same
-        type, or their sequence characters, ID, description, or quality scores
+        type, or their sequence characters, metadata, or positional metadata
         differ.
 
         Parameters
@@ -402,7 +391,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> u = Sequence('GGUCGUGACCGA')
         >>> u != t
         True
-        >>> v = Sequence('GGUCGUGACCGA', id='v')
+        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'v'})
         >>> u != v
         True
 
@@ -437,27 +426,32 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Obtain a single character from the biological sequence:
 
-        >>> s[1]
-        Sequence('G', length=1)
+        >>> s[1] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('G', length=1, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain a slice:
 
-        >>> s[7:]
-        Sequence('AAGGA', length=5)
+        >>> s[7:] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('AAGGA', length=5, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain characters at the following indices:
 
-        >>> s[[3, 4, 7, 0, 3]]
-        Sequence('CGAGC', length=5)
+        >>> s[[3, 4, 7, 0, 3]] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('CGAGC', length=5, has_metadata=False,
+                 has_positional_metadata=False)
 
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
-        >>> s[[True, False, True, 'a' is 'a', False]]
-        Sequence('GUC', length=3)
+        >>> index = [True, False, True, 'a' is 'a', False]
+        >>> s[index] # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GUC', length=3, has_metadata=False,
+                 has_positional_metadata=False)
 
         """
-        qual = None
+        metadata = self.metadata
         if (not isinstance(indexable, np.ndarray) and
             ((not isinstance(indexable, string_types)) and
              hasattr(indexable, '__iter__'))):
@@ -473,14 +467,17 @@ class Sequence(collections.Sequence, SkbioObject):
                     indexable = np.asarray(indexable)
                 else:
                     seq = np.concatenate(
-                        list(self._slices_from_iter(self._bytes, indexable)))
-                    if self._has_quality():
-                        qual = np.concatenate(list(self._slices_from_iter(
-                            self.quality, indexable)))
+                        list(_slices_from_iter(self._bytes, indexable)))
+                    index = _as_slice_if_single_index(indexable)
+                    pos_md_slices = list(_slices_from_iter(
+                                         self.positional_metadata, index))
+                    positional_metadata = \
+                        _dataframe_with_reset_index(pd.concat(pos_md_slices))
 
-                    return self._to(sequence=seq, quality=qual)
-        elif isinstance(indexable, string_types) or \
-                isinstance(indexable, bool):
+                    return self._to(sequence=seq, metadata=metadata,
+                                    positional_metadata=positional_metadata)
+        elif (isinstance(indexable, string_types) or
+                isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
 
@@ -497,25 +494,62 @@ class Sequence(collections.Sequence, SkbioObject):
             indexable = indexable.astype(int)
 
         seq = self._bytes[indexable]
-        if self._has_quality():
-            qual = self.quality[indexable]
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self._slice_positional_metadata(indexable)
 
-        return self._to(sequence=seq, quality=qual)
+        return self._to(sequence=seq, metadata=metadata,
+                        positional_metadata=positional_metadata)
 
-    def _slices_from_iter(self, array, indexables):
-        for i in indexables:
-            if isinstance(i, slice):
-                pass
-            elif isinstance(i, numbers.Integral) and not isinstance(i, bool):
-                if i == -1:
-                    i = slice(i, None)
-                else:
-                    i = slice(i, i+1)
-            else:
-                raise IndexError("Cannot slice sequence from iterable "
-                                 "containing %r." % i)
+    def has_metadata(self):
+        """Determine if the sequence contains metadata.
 
-            yield array[i]
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
+        >>> t.has_metadata()
+        True
+
+        """
+        return bool(self.metadata)
+
+    def has_positional_metadata(self):
+        """Determine if the sequence contains positional metadata.
+
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has positional metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_positional_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
+        >>> t.has_positional_metadata()
+        True
+
+        """
+        return len(self.positional_metadata.columns) > 0
+
+    def _slice_positional_metadata(self, indexable):
+        if _is_single_index(indexable):
+            index = _single_index_to_slice(indexable)
+        else:
+            index = indexable
+        return _dataframe_with_reset_index(
+            self.positional_metadata.iloc[index])
 
     def __len__(self):
         """Return the number of characters in the biological sequence.
@@ -549,20 +583,15 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in s:
-        ...     c
-        Sequence('G', length=1)
-        Sequence('G', length=1)
-        Sequence('U', length=1)
-        Sequence('C', length=1)
+        ...     str(c)
+        'G'
+        'G'
+        'U'
+        'C'
 
         """
-        if self._has_quality():
-            qual = self.quality
-        else:
-            qual = []
-
-        for c, q in zip_longest(self.values, qual, fillvalue=None):
-            yield self._to(sequence=c, quality=q)
+        for i in range(len(self)):
+            yield self[i]
 
     def __reversed__(self):
         """Iterate over positions in the biological sequence in reverse order.
@@ -578,11 +607,11 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in reversed(s):
-        ...     c
-        Sequence('C', length=1)
-        Sequence('U', length=1)
-        Sequence('G', length=1)
-        Sequence('G', length=1)
+        ...     str(c)
+        'C'
+        'U'
+        'G'
+        'G'
 
         """
         return iter(self[::-1])
@@ -593,8 +622,8 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         str
-            Sequence characters as a string. No metadata (e.g., ID,
-            desctiption, or quality scores) will be included.
+            Sequence characters as a string. No metadata or positional
+            metadata will be included.
 
         See Also
         --------
@@ -603,7 +632,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Examples
         --------
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUAAAGGA', id='hello', description='world')
+        >>> s = Sequence('GGUCGUAAAGGA', metadata={'id':'hello'})
         >>> str(s)
         'GGUCGUAAAGGA'
 
@@ -624,27 +653,32 @@ class Sequence(collections.Sequence, SkbioObject):
         of the sequence, followed by ellipses, followed by the last six
         characters of the sequence (or the full sequence without
         ellipses, if the sequence is less than 21 characters long), followed by
-        the sequence length. If ID, description, or quality are present, they
-        will be included after the sequence length (and truncated in a similar
-        manner if they are too long).
+        the sequence length, followed by flags indicating whether the sequence
+        has metadata and/or positional metadata.
 
         Examples
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
-        >>> repr(s)
-        "Sequence('GGUCGUGAAGGA', length=12)"
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
+                 has_positional_metadata=False)
         >>> t = Sequence('ACGT')
-        >>> repr(t)
-        "Sequence('ACGT', length=4)"
-        >>> t
-        Sequence('ACGT', length=4)
-        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA')
-        Sequence('GGUCGU ... AAAGGA', length=22)
-        >>> Sequence('ACGT', id='seq1')
-        Sequence('ACGT', length=4, id='seq1')
-
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA') # doctest: +NORMALIZE_WHITESPACE
+        Sequence('GGUCGU ... AAAGGA', length=22, has_metadata=False,
+                 has_positional_metadata=False)
+        >>> Sequence('ACGT',
+        ...          metadata={id:'seq1'}) # doctest: +NORMALIZE_WHITESPACE
+        Sequence('ACGT', length=4, has_metadata=True,
+                 has_positional_metadata=False)
         """
+
         start = self.__class__.__name__ + "("
         end = ")"
 
@@ -652,12 +686,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         tokens.append(self._format_str(self))
         tokens.append("length=%d" % len(self))
-        if self.id:
-            tokens.append("id=" + self._format_str(self.id))
-        if self.description:
-            tokens.append("description=" + self._format_str(self.description))
-        if self._has_quality():
-            tokens.append("quality=" + self._format_list(self.quality))
+        tokens.append("has_metadata=%s" % self.has_metadata())
+        tokens.append("has_positional_metadata=%s" %
+                      self.has_positional_metadata())
 
         return reprnator(start, tokens, end)
 
@@ -667,18 +698,12 @@ class Sequence(collections.Sequence, SkbioObject):
             return "%s ... %s" % (s[:7], s[-7:])
         return s
 
-    def _format_list(self, l):
-        l = list(l)
-        if len(l) > 13:
-            return "[%s, ..., %s]" % (repr(l[:6])[1:-1], repr(l[-6:])[1:-1])
-        return "%r" % l
-
     def equals(self, other, ignore=None):
         """Determine if the biological sequence is equal to another.
 
         By default, biological sequences are equal if they are *exactly* the
-        same type and their sequence characters, ID, description, and quality
-        scores are the same.
+        same type and their sequence characters, metadata, and positional
+        metadata are the same.
 
         Parameters
         ----------
@@ -688,7 +713,7 @@ class Sequence(collections.Sequence, SkbioObject):
             List of features to ignore in the equality test. By default, all
             features must be the same for two biological sequences to be
             considered equal. Features that can be ignored are ``'type'``,
-            ``'id'``, ``'description'``, ``'quality'``, and ``'sequence'``.
+            ``'sequence'``, ``'metadata'``, and ``'positional_metadata'``.
 
         Returns
         -------
@@ -706,7 +731,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         The two sequences are considered equal because they are the same type,
         their underlying sequence of characters are the same, and their
-        optional attributes (id, description, and quality scores) were not
+        optional attributes (metadata and positional_metadata) were not
         provided:
 
         >>> s.equals(t)
@@ -722,21 +747,23 @@ class Sequence(collections.Sequence, SkbioObject):
         False
 
         Define a biological sequence with the same sequence of characters as
-        ``u``, but with different identifier and quality scores:
+        ``u``, but with different metadata and positional metadata:
 
-        >>> v = Sequence('GGUCGUGACCGA', id='abc',
-        ...               quality=[1, 5, 3, 3, 2, 42, 100, 9, 10, 55, 42, 42])
+        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'abc'},
+        ...               positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
+        ...                                               100, 9, 10, 55, 42,
+        ...                                               42]})
 
         By default, the two sequences are *not* considered equal because their
-        identifiers and quality scores do not match:
+        metadata and positional metadata do not match:
 
         >>> u.equals(v)
         False
 
-        By specifying that the quality scores and identifier should be ignored,
-        they now compare equal:
+        By specifying that the metadata and positonal metadata should be
+        ignored, they now compare equal:
 
-        >>> u.equals(v, ignore=['quality', 'id'])
+        >>> u.equals(v, ignore=['metadata', 'positional_metadata'])
         True
 
         """
@@ -747,20 +774,14 @@ class Sequence(collections.Sequence, SkbioObject):
         if 'type' not in ignore and self.__class__ != other.__class__:
             return False
 
-        if 'id' not in ignore and self.id != other.id:
-            return False
-
-        if ('description' not in ignore and
-                self.description != other.description):
-            return False
-
-        # Use array_equal instead of (a == b).all() because of this issue:
-        #     http://stackoverflow.com/a/10582030
-        if 'quality' not in ignore and not np.array_equal(self.quality,
-                                                          other.quality):
-            return False
-
         if 'sequence' not in ignore and self._string != other._string:
+            return False
+
+        if 'metadata' not in ignore and self.metadata != other.metadata:
+            return False
+
+        if ('positional_metadata' not in ignore and not
+                self.positional_metadata.equals(other.positional_metadata)):
             return False
 
         return True
@@ -1118,19 +1139,19 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import Sequence
         >>> s = Sequence('ACACGACGTT')
         >>> for kmer in s.iter_kmers(4, overlap=False):
-        ...     kmer
-        Sequence('ACAC', length=4)
-        Sequence('GACG', length=4)
+        ...     str(kmer)
+        'ACAC'
+        'GACG'
         >>> for kmer in s.iter_kmers(3, overlap=True):
-        ...     kmer
-        Sequence('ACA', length=3)
-        Sequence('CAC', length=3)
-        Sequence('ACG', length=3)
-        Sequence('CGA', length=3)
-        Sequence('GAC', length=3)
-        Sequence('ACG', length=3)
-        Sequence('CGT', length=3)
-        Sequence('GTT', length=3)
+        ...     str(kmer)
+        'ACA'
+        'CAC'
+        'ACG'
+        'CGA'
+        'GAC'
+        'ACG'
+        'CGT'
+        'GTT'
 
         """
         if k < 1:
@@ -1216,11 +1237,11 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('AATATACCGGTTATAA')
         >>> for match in s.find_with_regex('(TATA+)'):
         ...     match
-        ...     s[match]
+        ...     str(s[match])
         slice(2, 6, None)
-        Sequence('TATA', length=4)
+        'TATA'
         slice(11, 16, None)
-        Sequence('TATAA', length=5)
+        'TATAA'
 
         """
         if isinstance(regex, string_types):
@@ -1277,10 +1298,10 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> no_gaps = ~s.gaps()
         >>> for ungapped_subsequence in s.iter_contiguous(no_gaps,
         ...                                               min_length=2):
-        ...     ungapped_subsequence
-        DNA('AAA', length=3)
-        DNA('TT', length=2)
-        DNA('CCCC', length=4)
+        ...     print(ungapped_subsequence)
+        AAA
+        TT
+        CCCC
 
         Note how the last potential subsequence was skipped because it would
         have been smaller than our `min_length` which was set to 2.
@@ -1291,9 +1312,9 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import Protein
         >>> s = Protein('ACDFNASANFTACGNPNRTESL')
         >>> for subseq in s.iter_contiguous(s.find_motifs('N-glycosylation')):
-        ...     subseq
-        Protein('NASANFTA', length=8)
-        Protein('NRTE', length=4)
+        ...     print(subseq)
+        NASANFTA
+        NRTE
 
         Note how the first subsequence contains two N-glycosylation sites. This
         happened because they were contiguous.
@@ -1309,22 +1330,6 @@ class Sequence(collections.Sequence, SkbioObject):
             if len(r) >= min_length:
                 yield r
 
-    def _has_quality(self):
-        """Return bool indicating presence of quality scores in the sequence.
-
-        Returns
-        -------
-        bool
-            ``True`` if the biological sequence has quality scores, ``False``
-            otherwise.
-
-        See Also
-        --------
-        quality
-
-        """
-        return self.quality is not None
-
     def _to(self, **kwargs):
         """Return a copy of the current biological sequence.
 
@@ -1339,7 +1344,7 @@ class Sequence(collections.Sequence, SkbioObject):
             updated based on the values in `kwargs`. If an attribute is
             missing, the copy will keep the same attribute as the current
             biological sequence. Valid attribute names are `'sequence'`,
-            `'id'`, `'description'`, and `'quality'`. Default behavior is to
+            `'metadata'`, `'positional_metadata'`. Default behavior is to
             return a copy of the current biological sequence without changing
             any attributes.
 
@@ -1365,45 +1370,39 @@ class Sequence(collections.Sequence, SkbioObject):
         Create a biological sequence:
 
         >>> from skbio import Sequence
-        >>> seq = Sequence('AACCGGTT', id='id1',
-        ...                          description='biological sequence',
-        ...                          quality=[4, 2, 22, 23, 1, 1, 1, 9])
+        >>> seq = Sequence('AACCGGTT',
+        ...                metadata={'id':'id1'},
+        ...                positional_metadata={
+        ...                    'qual':[4, 2, 22, 23, 1, 1, 1, 9]
+        ...                })
 
         Create a copy of ``seq``, keeping the same underlying sequence of
-        characters and quality scores, while updating ID and description:
+        characters and quality scores, while updating the metadata:
 
-        >>> new_seq = seq._to(id='new-id', description='new description')
+        >>> new_seq = seq._to(metadata={'id':'new-id'})
 
         Note that the copied biological sequence's underlying sequence and
-        quality scores are the same as ``seq``:
+        positional metadata are the same as ``seq``:
 
         >>> str(new_seq)
         'AACCGGTT'
-        >>> new_seq.quality
+        >>> new_seq.positional_metadata['qual'].values
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
 
-        The ID and description have been updated:
+        The metadata has been updated:
 
-        >>> new_seq.id
+        >>> new_seq.metadata['id']
         'new-id'
-        >>> new_seq.description
-        'new description'
 
-        The original biological sequence's ID and description have not been
-        changed:
+        The original biological sequence's metadata has not been changed:
 
-        >>> seq.id
+        >>> seq.metadata['id']
         'id1'
-        >>> seq.description
-        'biological sequence'
 
         """
-        defaults = {
-            'sequence': self._bytes,
-            'id': self.id,
-            'description': self.description,
-            'quality': self.quality
-        }
+        defaults = {'sequence': self._bytes,
+                    'metadata': self.metadata,
+                    'positional_metadata': self._positional_metadata}
         defaults.update(kwargs)
         return self._constructor(**defaults)
 
