@@ -698,12 +698,6 @@ class Sequence(collections.Sequence, SkbioObject):
             return "%s ... %s" % (s[:7], s[-7:])
         return s
 
-    def _format_list(self, l):
-        l = list(l)
-        if len(l) > 13:
-            return "[%s, ..., %s]" % (repr(l[:6])[1:-1], repr(l[-6:])[1:-1])
-        return "%r" % l
-
     def equals(self, other, ignore=None):
         """Determine if the biological sequence is equal to another.
 
