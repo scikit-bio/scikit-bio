@@ -398,7 +398,7 @@ class TestSequence(TestCase):
         seq.positional_metadata['bar'] = pd.Series(range(l-3))
         # pandas.Series will be padded with NaN if too short
         npt.assert_equal(seq.positional_metadata['bar'],
-                         np.array(range(l-3) + [np.NaN]*3))
+                         np.array(list(range(l-3)) + [np.NaN]*3))
         seq.positional_metadata['baz'] = pd.Series(range(l+3))
         # pandas.Series will be truncated if too long
         npt.assert_equal(seq.positional_metadata['baz'],
