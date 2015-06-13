@@ -150,17 +150,44 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from pprint import pprint
         >>> from skbio import Sequence
-        >>> s = Sequence('ACGTACGTACGTACGT', metadata={'id': 'seq-id',
-        ...                                 'description': 'seq description'})
+
+        Create a sequence with metadata:
+
+        >>> s = Sequence('ACGTACGTACGTACGT',
+        ...              metadata={'id': 'seq-id',
+        ...                        'description': 'seq description'})
         >>> s # doctest: +NORMALIZE_WHITESPACE
         Sequence('ACGTACGTACGTACGT', length=16, has_metadata=True,
                  has_positional_metadata=False)
+
+        Retrieve metadata:
+
+        >>> pprint(s.metadata) # using pprint to display dict in sorted order
+        {'description': 'seq description', 'id': 'seq-id'}
+
+        Update metadata:
+
+        >>> s.metadata['id'] = 'new-id'
+        >>> s.metadata['pubmed'] = 12345
+        >>> pprint(s.metadata)
+        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
+
+        Set metadata:
+
+        >>> s.metadata = {'abc': 123}
         >>> s.metadata
-        {'id': 'seq-id', 'description': 'seq description'}
+        {'abc': 123}
 
         """
         return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        if not isinstance(metadata, dict):
+            raise TypeError("metadata must be a dict")
+        self._metadata = metadata
 
     @property
     def positional_metadata(self):
@@ -196,9 +223,12 @@ class Sequence(collections.Sequence, SkbioObject):
             if positional_metadata is None:
                 positional_metadata = sequence.positional_metadata
             sequence = sequence._bytes
+        else:
+            if metadata is None:
+                metadata = {}
 
         self._set_sequence(sequence)
-        self._set_metadata(metadata)
+        self.metadata = metadata
         self._set_positional_metadata(positional_metadata)
 
     def _set_sequence(self, sequence):
@@ -246,13 +276,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         sequence.flags.writeable = False
         self._bytes = sequence
-
-    def _set_metadata(self, metadata):
-        if metadata is None:
-            metadata = {}
-        elif not isinstance(metadata, dict):
-            raise TypeError("metadata must be a {}".format(type(dict())))
-        self._metadata = metadata
 
     def _set_positional_metadata(self, positional_metadata):
         if positional_metadata is None:
