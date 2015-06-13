@@ -320,7 +320,7 @@ class TestSequence(TestCase):
     def test_init_invalid_metadata(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
             with self.assertRaisesRegexp(TypeError,
-                                        'metadata must be a dict'):
+                                         'metadata must be a dict'):
                 Sequence('abc', metadata=md)
 
     def test_init_invalid_positional_metadata(self):
@@ -412,7 +412,7 @@ class TestSequence(TestCase):
         for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
                    pd.DataFrame()):
             with self.assertRaisesRegexp(TypeError,
-                                        'metadata must be a dict'):
+                                         'metadata must be a dict'):
                 seq.metadata = md
 
             # object should still be usable and its original metadata shouldn't
