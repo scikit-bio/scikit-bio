@@ -265,8 +265,8 @@ class GeneticCode(SkbioObject):
         >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        Protein('CMTF', length=4)
+        >>> print(sgc.translate('AUGCAUGACUUUUGA', 1))
+        CMTF
 
         """
         if len(nucleotide_sequence) == 0:
@@ -338,13 +338,13 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> for e in results: e
-        Protein('MLT*', length=4)
-        Protein('C*HK', length=4)
-        Protein('ANI', length=3)
-        Protein('FMLA', length=4)
-        Protein('LC*H', length=4)
-        Protein('YVS', length=3)
+        >>> for e in results: print(e)
+        MLT*
+        C*HK
+        ANI
+        FMLA
+        LC*H
+        YVS
 
 
         """

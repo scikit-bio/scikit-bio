@@ -21,33 +21,33 @@ class AlignmentWriterTests(TestCase):
     def setUp(self):
         # ids all same length, seqs longer than 10 chars
         dna_3_seqs = Alignment([
-            DNA('..ACC-GTTGG..', id="d1"),
-            DNA('TTACCGGT-GGCC', id="d2"),
-            DNA('.-ACC-GTTGC--', id="d3")])
+            DNA('..ACC-GTTGG..', metadata={'id': "d1"}),
+            DNA('TTACCGGT-GGCC', metadata={'id': "d2"}),
+            DNA('.-ACC-GTTGC--', metadata={'id': "d3"})])
 
         # id lengths from 0 to 10, with mixes of numbers, characters, and
         # spaces. sequence characters are a mix of cases and gap characters.
         # sequences are shorter than 10 chars
         variable_length_ids = Alignment([
-            RNA('.-ACGU'),
-            RNA('UGCA-.', id='a'),
-            RNA('.ACGU-', id='bb'),
-            RNA('ugca-.', id='1', validate=False),
-            RNA('AaAaAa', id='abcdefghij', validate=False),
-            RNA('GGGGGG', id='ab def42ij')])
+            RNA('.-ACGU', metadata={'id': ''}),
+            RNA('UGCA-.', metadata={'id': 'a'}),
+            RNA('.ACGU-', metadata={'id': 'bb'}),
+            RNA('ugca-.', metadata={'id': '1'}, validate=False),
+            RNA('AaAaAa', metadata={'id': 'abcdefghij'}, validate=False),
+            RNA('GGGGGG', metadata={'id': 'ab def42ij'})])
 
         # sequences with 20 chars = exactly two chunks of size 10
         two_chunks = Alignment([
-            DNA('..ACC-GTTGG..AATGC.C', id='foo'),
-            DNA('TTACCGGT-GGCCTA-GCAT', id='bar')])
+            DNA('..ACC-GTTGG..AATGC.C', metadata={'id': 'foo'}),
+            DNA('TTACCGGT-GGCCTA-GCAT', metadata={'id': 'bar'})])
 
         # single sequence with more than two chunks
         single_seq_long = Alignment([
-            DNA('..ACC-GTTGG..AATGC.C----', id='foo')])
+            DNA('..ACC-GTTGG..AATGC.C----', metadata={'id': 'foo'})])
 
         # single sequence with only a single character (minimal writeable
         # alignment)
-        single_seq_short = Alignment([DNA('-')])
+        single_seq_short = Alignment([DNA('-', metadata={'id': ''})])
 
         # alignments that can be written in phylip format
         self.objs = [dna_3_seqs, variable_length_ids, two_chunks,
@@ -64,12 +64,12 @@ class AlignmentWriterTests(TestCase):
             (Alignment([]), 'one sequence'),
 
             # no positions
-            (Alignment([DNA('', id="d1"),
-                        DNA('', id="d2")]), 'one position'),
+            (Alignment([DNA('', metadata={'id': "d1"}),
+                        DNA('', metadata={'id': "d2"})]), 'one position'),
 
             # ids too long
-            (Alignment([RNA('ACGU', id="foo"),
-                        RNA('UGCA', id="alongsequenceid")]),
+            (Alignment([RNA('ACGU', metadata={'id': "foo"}),
+                        RNA('UGCA', metadata={'id': "alongsequenceid"})]),
              '10.*alongsequenceid')
         ]
 

@@ -66,14 +66,14 @@ Data Structure Examples
 -----------------------
 >>> from StringIO import StringIO
 >>> from skbio import SequenceCollection, Alignment, DNA
->>> seqs = [DNA("ACC--G-GGTA..", id="seq1"),
-...         DNA("TCC--G-GGCA..", id="seqs2")]
+>>> seqs = [DNA("ACC--G-GGTA..", metadata={'id':"seq1"}),
+...         DNA("TCC--G-GGCA..", metadata={'id':"seqs2"})]
 >>> a1 = Alignment(seqs)
 >>> a1
 <Alignment: n=2; mean +/- std length=13.00 +/- 0.00>
 
->>> seqs = [DNA("ACCGGG", id="seq1"),
-...         DNA("TCCGGGCA", id="seq2")]
+>>> seqs = [DNA("ACCGGG", metadata={'id':"seq1"}),
+...         DNA("TCCGGGCA", metadata={'id':"seq2"})]
 >>> s1 = SequenceCollection(seqs)
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
@@ -88,8 +88,8 @@ Data Structure Examples
 
 >>> from skbio.sequence import RNA
 >>> from skbio.alignment import StockholmAlignment
->>> seqs = [RNA("ACC--G-GGGU", id="seq1"),
-...         RNA("UCC--G-GGGA", id="seq2")]
+>>> seqs = [RNA("ACC--G-GGGU", metadata={'id':"seq1"}),
+...         RNA("UCC--G-GGGA", metadata={'id':"seq2"})]
 >>> gc = {'SS_cons': '(((.....)))'}
 >>> sto = StockholmAlignment(seqs, gc=gc)
 >>> print(sto)
