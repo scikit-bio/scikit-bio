@@ -214,11 +214,12 @@ class TestSequence(TestCase):
             bytes[1] = 42
 
     def test_init_empty_metadata(self):
-        seq = Sequence('', metadata={})
+        for empty in None, {}:
+            seq = Sequence('', metadata=empty)
 
-        self.assertIsInstance(seq.metadata, dict)
-        self.assertFalse(seq.metadata)
-        self.assertEqual(seq.metadata, {})
+            self.assertIsInstance(seq.metadata, dict)
+            self.assertFalse(seq.metadata)
+            self.assertEqual(seq.metadata, {})
 
     def test_init_empty_metadata_item(self):
         seq = Sequence('', metadata={'foo': ''})
@@ -319,7 +320,7 @@ class TestSequence(TestCase):
     def test_init_invalid_metadata(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
             with self.assertRaisesRegexp(TypeError,
-                                         'metadata must be.*dict'):
+                                         'metadata must be a dict'):
                 Sequence('abc', metadata=md)
 
     def test_init_invalid_positional_metadata(self):
@@ -376,16 +377,47 @@ class TestSequence(TestCase):
         with self.assertRaises(AttributeError):
             seq.values = np.array("GGGG", dtype='c')
 
-    def test_metadata_property(self):
-        seq = Sequence('', metadata={'foo': 'bar'})
+    def test_metadata_property_getter(self):
+        md = {'foo': 'bar'}
+        seq = Sequence('', metadata=md)
         self.assertIsInstance(seq.metadata, dict)
-        self.assertEqual(seq.metadata['foo'], 'bar')
-        with self.assertRaises(AttributeError):
-            seq.metadata = {'foo': 'bar'}
+        self.assertEqual(seq.metadata, md)
+        self.assertIs(seq.metadata, md)
+
+        # update existing key
         seq.metadata['foo'] = 'baz'
-        self.assertEqual(seq.metadata['foo'], 'baz')
+        self.assertEqual(seq.metadata, {'foo': 'baz'})
+
+        # add new key
         seq.metadata['foo2'] = 'bar2'
-        self.assertEqual(seq.metadata['foo2'], 'bar2')
+        self.assertEqual(seq.metadata, {'foo': 'baz', 'foo2': 'bar2'})
+
+    def test_metadata_property_setter(self):
+        md = {'foo': 'bar'}
+        seq = Sequence('', metadata=md)
+        self.assertEqual(seq.metadata, md)
+        self.assertIs(seq.metadata, md)
+
+        new_md = {'bar': 'baz', 42: 42}
+        seq.metadata = new_md
+        self.assertEqual(seq.metadata, new_md)
+        self.assertIs(seq.metadata, new_md)
+
+        seq.metadata = {}
+        self.assertEqual(seq.metadata, {})
+
+    def test_metadata_property_setter_invalid_type(self):
+        seq = Sequence('abc', metadata={123: 456})
+
+        for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
+                   pd.DataFrame()):
+            with self.assertRaisesRegexp(TypeError,
+                                         'metadata must be a dict'):
+                seq.metadata = md
+
+            # object should still be usable and its original metadata shouldn't
+            # have changed
+            self.assertEqual(seq.metadata, {123: 456})
 
     def test_positional_metadata_property(self):
         seq = Sequence('ACA', positional_metadata={'foo': [22, 22, 0]})
