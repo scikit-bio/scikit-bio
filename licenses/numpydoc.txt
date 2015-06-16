@@ -1,1 +1,0 @@
-numpydoc license is at scikit-bio/doc/sphinxext/numpydoc/LICENSE.txt
