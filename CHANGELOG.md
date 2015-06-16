@@ -18,12 +18,12 @@
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
 * Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
-* Changed the way power was calculated in `subsample_paired_power` to move the subsample selection before the test is performed, as happens in `subsample_power`. This improves the accuracy of the returned estimate.
+* Changed the way power was calculated in `subsample_paired_power` to move the subsample selection before the test is performed, as happens in `subsample_power`. This increasese the number of Monte Carlo simulations performed during power estimation, and improves the accuracy of the returned estimate. Previous power estimates are unreliable, and should be re-calculated. ([#910](https://github.com/biocore/scikit-bio/issues/910))
 
 ### Deprecated functionality
 * Deprecated `skbio.util.flatten`. This function will be removed in scikit-bio 0.3.1. Please use standard python library functionality
 described here [Making a flat list out of lists of lists](http://stackoverflow.com/a/952952/3639023), [Flattening a shallow list](http://stackoverflow.com/a/406199/3639023) ([#833](https://github.com/biocore/scikit-bio/issues/833))
-* Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.3.1. It is deprecated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals. 
+* Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.4.1. It is deprecated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals. 
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
@@ -43,6 +43,8 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
     - `skbio.stats.distance.PERMANOVA`; please use `skbio.stats.distance.permanova` instead.
     - `skbio.stats.distance.CategoricalStatsResults`; there is no replacement, please use `skbio.stats.distance.anosim` or `skbio.stats.distance.permanova`, which will return a `pandas.Series` object.
 * `skbio.alignment.Alignment.majority_consensus` now returns `BiologicalSequence('')` if the alignment is empty. Previously, `''` was returned.
+* `min_observations` was removed from `skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`. The minimum number of samples for subsampling depends on the data set and statistical tests. Having a default parameter to set unnecessary limitations on the technique.
+
 
 ### Miscellaneous
 * Changed testing procedures
