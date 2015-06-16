@@ -1735,16 +1735,17 @@ class TestSequence(TestCase):
                        positional_metadata={'introns': [False, True, True,
                                                         False, False, True,
                                                         False, False]})
-        npt.assert_equal(np.array([1,2,5]),
+        npt.assert_equal(np.array([1, 2, 5]),
                          seq._munge_to_index_array('introns'))
 
         seq.positional_metadata['exons'] = ~seq.positional_metadata['introns']
-        npt.assert_equal(np.array([0,3,4,6,7]),
+        npt.assert_equal(np.array([0, 3, 4, 6, 7]),
                          seq._munge_to_index_array('exons'))
 
     def test_munge_to_index_array_invalid_string(self):
         seq_str = 'ACGT'
-        seq = Sequence(seq_str, positional_metadata={'quality': range(len(seq_str))})
+        seq = Sequence(seq_str,
+                       positional_metadata={'quality': range(len(seq_str))})
 
         with self.assertRaisesRegexp(ValueError,
                                      "No positional metadata associated with "

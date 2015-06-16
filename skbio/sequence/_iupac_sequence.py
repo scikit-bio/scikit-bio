@@ -18,11 +18,13 @@ from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
+
 def _invert_case(array):
     # ASCII is built such that the difference between uppercase and
     # lowercase is the 6th bit.
     array ^= 32
     return array
+
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     """Store biological sequence data conforming to the IUPAC character set.

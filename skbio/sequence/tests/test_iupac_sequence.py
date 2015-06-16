@@ -180,7 +180,7 @@ class TestIUPACSequence(TestCase):
                               np.array([True, True, False, False, True, True,
                                         True, True])))
         self.assertEquals('AaAAaAAA',
-                          self.lowercase_seq.lowercase([1,4]))
+                          self.lowercase_seq.lowercase([1, 4]))
 
     def test_degenerate_chars(self):
         expected = set("XYZ")
