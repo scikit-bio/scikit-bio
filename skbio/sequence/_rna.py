@@ -73,7 +73,7 @@ class RNA(NucleotideSequence):
 
     Convert lowercase characters to uppercase:
 
-    >>> s = RNA('AcCGaaU', case_insensitive=True)
+    >>> s = RNA('AcCGaaU', lowercase=True)
     >>> s
     RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
 

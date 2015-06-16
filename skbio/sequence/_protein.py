@@ -67,7 +67,7 @@ class Protein(IUPACSequence):
 
     Convert lowercase characters to uppercase:
 
-    >>> s = Protein('paW', case_insensitive=True)
+    >>> s = Protein('paW', lowercase=True)
     >>> s
     Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
 

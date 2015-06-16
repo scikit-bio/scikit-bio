@@ -18,6 +18,11 @@ from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
+def _invert_case(array):
+    # ASCII is built such that the difference between uppercase and
+    # lowercase is the 6th bit.
+    array ^= 32
+    return array
 
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     """Store biological sequence data conforming to the IUPAC character set.
@@ -164,23 +169,36 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 validate=True, case_insensitive=False):
+                 validate=True, lowercase=False):
         super(IUPACSequence, self).__init__(
             sequence, metadata, positional_metadata)
 
-        if case_insensitive:
+        if not isinstance(lowercase, bool):
+            self._positional_metadata[lowercase] = self._lowercase_bytes()
+            self._convert_to_uppercase()
+        elif lowercase:
             self._convert_to_uppercase()
 
         if validate:
             self._validate()
 
     def _convert_to_uppercase(self):
-        lowercase = self._bytes > self._ascii_lowercase_boundary
+        lowercase = self._lowercase_bytes()
         if np.any(lowercase):
             with self._byte_ownership():
-                # ASCII is built such that the difference between uppercase and
-                # lowercase is the 6th bit.
-                self._bytes[lowercase] ^= 32
+                self._bytes[lowercase] = _invert_case(self._bytes[lowercase])
+
+    def _lowercase_bytes(self):
+        return self._bytes > self._ascii_lowercase_boundary
+
+    def lowercase(self, lowercase):
+        # First try to treat lowercase like an index array (boolean array,
+        # etc). If the coercion doesn't work, assume lowercase is a key into
+        # the current positional metadata.
+        index = self._munge_to_index_array(lowercase)
+        outbytes = self._bytes.copy()
+        outbytes[index] = _invert_case(outbytes[index])
+        return outbytes.tostring()
 
     def _validate(self):
         # This is the fastest way that we have found to identify the
@@ -494,7 +512,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):
-        return self.__class__(validate=False, case_insensitive=False, **kwargs)
+        return self.__class__(validate=False, lowercase=False, **kwargs)
 
 
 _motifs = MiniRegistry()
