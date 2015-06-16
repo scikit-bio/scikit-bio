@@ -1730,6 +1730,33 @@ class TestSequence(TestCase):
             with self.assertRaises(TypeError):
                 s._munge_to_index_array(bad4())
 
+    def test_munge_to_index_array_valid_string(self):
+        seq = Sequence('ACGTACGT',
+                       positional_metadata={'introns': [False, True, True,
+                                                        False, False, True,
+                                                        False, False]})
+        npt.assert_equal(np.array([1,2,5]),
+                         seq._munge_to_index_array('introns'))
+
+        seq.positional_metadata['exons'] = ~seq.positional_metadata['introns']
+        npt.assert_equal(np.array([0,3,4,6,7]),
+                         seq._munge_to_index_array('exons'))
+
+    def test_munge_to_index_array_invalid_string(self):
+        seq_str = 'ACGT'
+        seq = Sequence(seq_str, positional_metadata={'quality': range(len(seq_str))})
+
+        with self.assertRaisesRegexp(ValueError,
+                                     "No positional metadata associated with "
+                                     "key 'introns'"):
+            seq._munge_to_index_array('introns')
+
+        with self.assertRaisesRegexp(TypeError,
+                                     "Column 'quality' in positional metadata "
+                                     "does not correspond to a boolean "
+                                     "vector"):
+            seq._munge_to_index_array('quality')
+
 
 if __name__ == "__main__":
     main()

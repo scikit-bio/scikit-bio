@@ -1436,6 +1436,18 @@ class Sequence(collections.Sequence, SkbioObject):
         """Return an index array from something isomorphic to a boolean vector.
 
         """
+        if isinstance(sliceable, string_types):
+            if sliceable in self.positional_metadata:
+                if self.positional_metadata[sliceable].dtype == np.bool:
+                    sliceable = self.positional_metadata[sliceable]
+                else:
+                    raise TypeError("Column '%s' in positional metadata does "
+                                    "not correspond to a boolean vector" %
+                                    sliceable)
+            else:
+                raise ValueError("No positional metadata associated with key "
+                                 "'%s'" % sliceable)
+
         if not hasattr(sliceable, 'dtype') or (hasattr(sliceable, 'dtype') and
                                                sliceable.dtype == 'object'):
             sliceable = tuple(sliceable)
