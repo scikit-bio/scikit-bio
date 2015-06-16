@@ -52,6 +52,7 @@ class PowerAnalysisTest(TestCase):
         self.test_meta = test_meta
         self.f = f
         self.meta_f = meta_f
+        self.num_p = 1
 
         # Sets the random seed
         np.random.seed(5)
@@ -91,6 +92,9 @@ class PowerAnalysisTest(TestCase):
                 'NR': {'INT': 'Y', 'ABX': 'Y', 'DIV': 15.7, 'AGE': '20s',
                        'SEX': 'F'}}
         self.meta = pd.DataFrame.from_dict(meta, orient='index')
+        self.meta_pairs = {0: [['GW', 'SR', 'TS'], ['CB', 'LF', 'PC']],
+                           1: [['MM', 'PP', 'WM'], ['CD', 'MH', 'NR']]}
+        self.pair_index = np.array([0, 0, 0, 1, 1, 1])
         self.counts = np.array([5, 15, 25, 35, 45])
         self.powers = [np.array([[0.105, 0.137, 0.174, 0.208, 0.280],
                                  [0.115, 0.135, 0.196, 0.204, 0.281],
@@ -286,11 +290,17 @@ class PowerAnalysisTest(TestCase):
         known_std = 0.121887
         known_shape = (100,)
         # Tests the sample value
-        test = _compare_distributions(self.f, self.pop, 1, mode='matched',
-                                      num_iter=100)
+        test = _compare_distributions(self.f, self.pop, self.num_p,
+                                      mode='matched', num_iter=100)
         npt.assert_allclose(known_mean, test.mean(), rtol=0.1, atol=0.02)
         npt.assert_allclose(known_std, test.std(), rtol=0.1, atol=0.02)
         self.assertEqual(known_shape, test.shape)
+
+    def test__compare_distributions_draw_mode(self):
+        draw_mode = 'Ultron'
+        with self.assertRaises(ValueError):
+            _check_subsample_power_inputs(self.f, self.pop, draw_mode,
+                                          self.num_p)
 
     def test__compare_distributions_multiple_returns(self):
         known = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
@@ -502,13 +512,11 @@ class PowerAnalysisTest(TestCase):
         npt.assert_array_equal(known_index, test_index)
 
     def test__draw_paired_samples(self):
-        meta_pairs = {0: [['GW', 'SR', 'TS'], ['CB', 'LF', 'PC']],
-                      1: [['MM', 'PP', 'WM'], ['CD', 'MH', 'NR']]}
-        index = np.array([0, 0, 0, 1, 1, 1])
         num_samps = 3
         known_sets = [{'GW', 'SR', 'TS', 'MM', 'PP', 'WM'},
                       {'CB', 'LF', 'PC', 'CD', 'MH', 'NR'}]
-        test_samps = _draw_paired_samples(meta_pairs, index, num_samps)
+        test_samps = _draw_paired_samples(self.meta_pairs, self.pair_index,
+                                          num_samps)
         for i, t in enumerate(test_samps):
             self.assertTrue(set(t).issubset(known_sets[i]))
 

@@ -142,14 +142,12 @@ from __future__ import absolute_import, division, print_function
 from future.utils import viewitems
 from future.builtins import range
 
-from warnings import warn
-
+import collections
 import copy
+import warnings
 
 import numpy as np
 import scipy.stats
-
-from collections import Counter
 
 
 def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
@@ -616,7 +614,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     r"""Repeatedly calculates the power curve for a specified alpha level
 
     .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``bootstrap_power_curve`` will be removed in scikit-bio 0.3.1. It is
+       ``bootstrap_power_curve`` will be removed in scikit-bio 0.4.1. It is
        Deprecated in favor of using ``subsample_power`` or
        ``sample_paired_power`` to calculate a power array, and then using
        ``confidence_bound`` to perform bootstrapping.
@@ -695,10 +693,10 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     """
 
-    warn("skbio.stats.power.bootstrap_power_curve is deprecated. Please "
-         "use skbio.stats.power.subsample_power or "
-         "skbio.stats.power.subsample_paired_power followed by "
-         "confidence_bound.", DeprecationWarning)
+    warnings.warn("skbio.stats.power.bootstrap_power_curve is deprecated. "
+                  "Please use skbio.stats.power.subsample_power or "
+                  "skbio.stats.power.subsample_paired_power followed by "
+                  "confidence_bound.", DeprecationWarning)
 
     # Corrects the alpha value into a matrix
     alpha = np.ones((num_runs)) * alpha
@@ -816,6 +814,7 @@ def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
 
 def _get_min_size(meta, cat, control_cats, order, strict_match):
     """Determines the smallest group represented"""
+
     if strict_match:
         all_cats = copy.deepcopy(control_cats)
         all_cats.append(cat)
@@ -825,7 +824,8 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 
 
 def _check_nans(x, switch=False):
-    r"""Returns False if x is a nan and True is x is a string or number"""
+    r"""Returns False if x is a nan and True is x is a string or number
+    """
     if isinstance(x, str):
         return True
     elif isinstance(x, (float, int)):
@@ -929,8 +929,6 @@ def _compare_distributions(test, samples, num_p, counts=5, mode="ind",
             pos = np.random.choice(np.arange(0, samp_lens[0]), counts[0],
                                    replace=False)
             subs = [sample[pos] for sample in samples]
-        elif mode == "paired":
-            subs = _draw_paired_samples(*samples)
         else:
             subs = [np.random.choice(np.array(pop), counts[i], replace=False)
                     for i, pop in enumerate(samples)]
@@ -1175,7 +1173,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     subs = []
 
     # Draws the other groups
-    for set_, num_ in viewitems(Counter(set_pos)):
+    for set_, num_ in viewitems(collections.Counter(set_pos)):
         r2 = [np.random.choice(col, num_, replace=False) for col in
               meta_pairs[set_]]
         subs.append(r2)
