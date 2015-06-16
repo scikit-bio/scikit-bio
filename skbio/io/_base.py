@@ -149,7 +149,8 @@ def _parse_fasta_like_header(line):
 
 
 def _format_fasta_like_records(generator, id_whitespace_replacement,
-                               description_newline_replacement, require_qual):
+                               description_newline_replacement, require_qual,
+                               **kwargs):
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or
         (description_newline_replacement is not None and

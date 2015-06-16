@@ -435,11 +435,14 @@ class ReaderTests(TestCase):
         for constructor, reader_fn in ((Sequence,
                                         _fasta_to_biological_sequence),
                                        (partial(DNA, validate=False),
-                                        _fasta_to_dna_sequence),
+                                        partial(_fasta_to_dna_sequence,
+                                                validate=False)),
                                        (partial(RNA, validate=False),
-                                        _fasta_to_rna_sequence),
+                                        partial(_fasta_to_rna_sequence,
+                                                validate=False)),
                                        (partial(Protein, validate=False),
-                                        _fasta_to_protein_sequence)):
+                                        partial(_fasta_to_protein_sequence,
+                                                validate=False))):
 
             # empty file
             empty_fp = get_data_path('empty')
@@ -966,11 +969,14 @@ class RoundtripTests(TestCase):
 
         for reader, writer in ((_fasta_to_biological_sequence,
                                 _biological_sequence_to_fasta),
-                               (_fasta_to_dna_sequence,
+                               (partial(_fasta_to_dna_sequence,
+                                        validate=False),
                                 _dna_sequence_to_fasta),
-                               (_fasta_to_rna_sequence,
+                               (partial(_fasta_to_rna_sequence,
+                                        validate=False),
                                 _rna_sequence_to_fasta),
-                               (_fasta_to_protein_sequence,
+                               (partial(_fasta_to_protein_sequence,
+                                        validate=False),
                                 _protein_sequence_to_fasta)):
             for fasta_fp, qual_fp in fps:
                 # read
