@@ -15,7 +15,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.io import OrdinationFormatError
-from skbio.io.ordination import (
+from skbio.io.formats.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,
     _ordination_sniffer)
 from skbio.stats.ordination import (

@@ -8,6 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+class IOSourceError(Exception):
+    """Raised when a file source cannot be resolved."""
+    pass
 
 class FileFormatError(Exception):
     """Raised when a file cannot be parsed."""

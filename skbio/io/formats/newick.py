@@ -1,8 +1,8 @@
 """
-Newick format (:mod:`skbio.io.newick`)
-======================================
+Newick format (:mod:`skbio.io.formats.newick`)
+==============================================
 
-.. currentmodule:: skbio.io.newick
+.. currentmodule:: skbio.io.formats.newick
 
 Newick format (``newick``) stores spanning-trees with weighted edges and node
 names in a minimal file format [1]_. This is useful for representing
@@ -221,15 +221,16 @@ References
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 from future.builtins import zip, range
 
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      NewickFormatError)
+from skbio.io import create_format, NewickFormatError
 from skbio.tree import TreeNode
 
+newick = create_format('newick')
 
-@register_sniffer("newick")
+@newick.sniffer
 def _newick_sniffer(fh):
     # Strategy:
     #   The following conditions preclude a file from being newick:
@@ -270,7 +271,7 @@ def _newick_sniffer(fh):
     return not empty, {}
 
 
-@register_reader('newick', TreeNode)
+@newick.reader(TreeNode)
 def _newick_to_tree_node(fh, convert_underscores=True):
     tree_stack = []
     current_depth = 0
@@ -326,13 +327,14 @@ def _newick_to_tree_node(fh, convert_underscores=True):
 
         last_token = token
 
+    fh.seek(0)
     raise NewickFormatError("Could not parse file as newick."
                             " `(Parenthesis)`, `'single-quotes'`,"
                             " `[comments]` may be unbalanced, or tree may be"
                             " missing its root.")
 
 
-@register_writer("newick", TreeNode)
+@newick.writer(TreeNode)
 def _tree_node_to_newick(obj, fh):
     operators = set(",:_;()[]")
     current_depth = 0
@@ -341,34 +343,34 @@ def _tree_node_to_newick(obj, fh):
         entry = nodes_left.pop()
         node, node_depth = entry
         if node.children and node_depth >= current_depth:
-            fh.write('(')
+            fh.write(u'(')
             nodes_left.append(entry)
             nodes_left += ((child, node_depth + 1) for child in
                            reversed(node.children))
             current_depth = node_depth + 1
         else:
             if node_depth < current_depth:
-                fh.write(')')
+                fh.write(u')')
                 current_depth -= 1
 
             # Note we don't check for None because there is no way to represent
             # an empty string as a label in Newick. Therefore, both None and ''
             # are considered to be the absence of a label.
             if node.name:
-                escaped = node.name.replace("'", "''")
+                escaped = six.u(node.name.replace("'", "''"))
                 if any(t in operators for t in node.name):
-                    fh.write("'")
+                    fh.write(u"'")
                     fh.write(escaped)
-                    fh.write("'")
+                    fh.write(u"'")
                 else:
                     fh.write(escaped.replace(" ", "_"))
             if node.length is not None:
-                fh.write(':')
-                fh.write(str(node.length))
+                fh.write(u':')
+                fh.write(six.u(str(node.length)))
             if nodes_left and nodes_left[-1][1] == current_depth:
-                fh.write(',')
+                fh.write(u',')
 
-    fh.write(';\n')
+    fh.write(u';\n')
 
 
 def _tokenize_newick(fh, convert_underscores=True):

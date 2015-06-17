@@ -1,8 +1,8 @@
 """
-Labeled square matrix format (:mod:`skbio.io.lsmat`)
-====================================================
+Labeled square matrix format (:mod:`skbio.io.formats.lsmat`)
+============================================================
 
-.. currentmodule:: skbio.io.lsmat
+.. currentmodule:: skbio.io.formats.lsmat
 
 The labeled square matrix file format (``lsmat``) stores numeric square
 matrix data relating a set of objects along each axis. The format also stores
@@ -71,17 +71,20 @@ or writing to a file.
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 import csv
 
 import numpy as np
 
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      LSMatFormatError)
+from skbio.io import create_format, LSMatFormatError
 
 
-@register_sniffer('lsmat')
+lsmat = create_format('lsmat')
+
+
+@lsmat.sniffer
 def _lsmat_sniffer(fh):
     header = _find_header(fh)
 
@@ -101,22 +104,22 @@ def _lsmat_sniffer(fh):
     return False, {}
 
 
-@register_reader('lsmat', DissimilarityMatrix)
+@lsmat.reader(DissimilarityMatrix)
 def _lsmat_to_dissimilarity_matrix(fh, delimiter='\t'):
     return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
 
 
-@register_reader('lsmat', DistanceMatrix)
+@lsmat.reader(DistanceMatrix)
 def _lsmat_to_distance_matrix(fh, delimiter='\t'):
     return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
 
 
-@register_writer('lsmat', DissimilarityMatrix)
+@lsmat.writer(DissimilarityMatrix)
 def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter='\t'):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
-@register_writer('lsmat', DistanceMatrix)
+@lsmat.writer(DistanceMatrix)
 def _distance_matrix_to_lsmat(obj, fh, delimiter='\t'):
     _matrix_to_lsmat(obj, fh, delimiter)
 
@@ -217,15 +220,16 @@ def _parse_data(fh, delimiter):
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):
+    delimiter = six.u(delimiter)
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
-    fh.write('\n')
+    fh.write(u'\n')
 
     for id_, vals in zip(ids, obj.data):
-        fh.write(id_)
+        fh.write(six.u(id_))
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
-        fh.write('\n')
+        fh.write(u'\n')
 
 
 def _format_ids(ids, delimiter):

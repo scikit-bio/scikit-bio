@@ -13,8 +13,8 @@ import unittest
 
 from skbio import TreeNode
 from skbio.io import NewickFormatError
-from skbio.io.newick import (_newick_to_tree_node, _tree_node_to_newick,
-                             _newick_sniffer)
+from skbio.io.formats.newick import (
+    _newick_to_tree_node, _tree_node_to_newick, _newick_sniffer)
 
 
 class TestNewick(unittest.TestCase):

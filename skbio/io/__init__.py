@@ -140,6 +140,7 @@ User exceptions
    :toctree: generated/
 
    UnrecognizedFormatError
+   IOSourceError
    FileFormatError
    ClustalFormatError
    FASTAFormatError
@@ -278,16 +279,10 @@ from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError)
-from ._registry import (write, read, sniff, get_writer, get_reader,
-                        get_sniffer, list_write_formats, list_read_formats,
-                        register_writer, register_reader, register_sniffer,
-                        initialize_oop_interface, FileSentinel)
+from .registry import write, read, sniff, create_format, io_registry
+from .util import open
 
-__all__ = ['write', 'read', 'sniff',
-           'list_write_formats', 'list_read_formats',
-           'get_writer', 'get_reader', 'get_sniffer',
-           'register_writer', 'register_reader', 'register_sniffer',
-           'initialize_oop_interface', 'FileSentinel',
+__all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
 
@@ -305,20 +300,26 @@ __all__ = ['write', 'read', 'sniff',
            'QSeqFormatError',
            'QUALFormatError']
 
+
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.clustal')
-import_module('skbio.io.fasta')
-import_module('skbio.io.fastq')
-import_module('skbio.io.lsmat')
-import_module('skbio.io.newick')
-import_module('skbio.io.ordination')
-import_module('skbio.io.phylip')
-import_module('skbio.io.qseq')
+import_module('skbio.io.formats.clustal')
+import_module('skbio.io.formats.fasta')
+import_module('skbio.io.formats.fastq')
+import_module('skbio.io.formats.lsmat')
+import_module('skbio.io.formats.newick')
+import_module('skbio.io.formats.ordination')
+import_module('skbio.io.formats.phylip')
+import_module('skbio.io.formats.qseq')
+
+
+# This is meant to be a handy indicator to the user that they have done
+# something wrong.
+import_module('skbio.io.formats.emptyfile')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
-initialize_oop_interface()
+io_registry.monkey_patch()
 
 test = TestRunner(__file__).test

@@ -9,7 +9,8 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
-from six import StringIO
+from io import StringIO
+import six
 
 from collections import Counter, defaultdict, OrderedDict
 
@@ -259,11 +260,7 @@ class SequenceCollection(SkbioObject):
             Fasta-formatted string of all sequences in the object.
 
         """
-        fh = StringIO()
-        self.write(fh, format='fasta')
-        fasta_str = fh.getvalue()
-        fh.close()
-        return fasta_str
+        return str(''.join(self.write([], format='fasta')))
 
     def distances(self, distance_fn):
         """Compute distances between all pairs of sequences
@@ -1400,8 +1397,8 @@ class StockholmAlignment(Alignment):
 
     >>> from skbio import RNA
     >>> from skbio.alignment import StockholmAlignment
-    >>> from StringIO import StringIO
-    >>> sto_in = StringIO("# STOCKHOLM 1.0\\n"
+    >>> from io import StringIO
+    >>> sto_in = StringIO(u"# STOCKHOLM 1.0\\n"
     ...                   "seq1     ACC--G-GGGU\\nseq2     UCC--G-GGGA\\n"
     ...                   "#=GC SS_cons (((.....)))\\n//")
     >>> sto_records = StockholmAlignment.from_file(sto_in, RNA)
@@ -1413,7 +1410,7 @@ class StockholmAlignment(Alignment):
     #=GC SS_cons  (((.....)))
     //
     >>> sto.gc
-    {'SS_cons': '(((.....)))'}
+    {u'SS_cons': u'(((.....)))'}
 
     We can also write out information by instantiating the StockholmAlignment
     object and then printing it.
@@ -1570,8 +1567,8 @@ class StockholmAlignment(Alignment):
         --------
         from_file
         """
-        with open_file(out_f, 'w') as out_f:
-            out_f.write(self.__str__())
+        with open_file(out_f, mode='w') as out_f:
+            out_f.write(six.u(str(self)))
 
     @staticmethod
     def _parse_gf_info(lines):

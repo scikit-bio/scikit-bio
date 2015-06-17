@@ -15,10 +15,10 @@ import numpy.testing as npt
 import numpy as np
 
 from skbio import Sequence, DNA, RNA
-from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
-                            _encode_phred_to_qual, _get_nth_sequence,
-                            _parse_fasta_like_header,
-                            _format_fasta_like_records)
+from skbio.io.formats._base import (_chunk_str, _decode_qual_to_phred,
+                                    _encode_phred_to_qual, _get_nth_sequence,
+                                    _parse_fasta_like_header,
+                                    _format_fasta_like_records)
 
 
 class ChunkStrTests(unittest.TestCase):

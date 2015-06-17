@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
+import six
 
 import re
 import warnings
@@ -195,7 +196,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         qual = None
         if 'quality' in seq.positional_metadata:
             qual = seq.positional_metadata['quality'].values
-        yield header, str(seq), qual
+        yield six.u(header), six.u(str(seq)), qual
 
 
 def _line_generator(fh, skip_blanks=False):

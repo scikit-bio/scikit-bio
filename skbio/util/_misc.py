@@ -7,14 +7,48 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six.moves import zip_longest
+from six.moves import zip_longest, range
 
 import hashlib
+import sys
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from warnings import warn
 from types import FunctionType
+import inspect
+
+
+def make_sentinel(name):
+    return type(name, (object, ), {
+        '__repr__': lambda s: name,
+        '__str__': lambda s: name,
+        '__class__': None
+    })()
+
+
+Inherit = make_sentinel('Inherit')
+
+
+def find_sentinels(function, sentinel):
+    keys = []
+    function_spec = inspect.getargspec(function)
+    if function_spec.defaults is not None:
+        # Concept from http://stackoverflow.com/a/12627202/579416
+        keywords_start = -len(function_spec.defaults)
+        for key, default in zip(function_spec.args[keywords_start:],
+                                function_spec.defaults):
+            if default is sentinel:
+                keys.append(key)
+    return keys
+
+
+def ifpylt(hexversion, do_thing, alternative=None):
+    if sys.hexversion < int(hexversion, 16):
+        return do_thing()
+    else:
+        if alternative:
+            return alterantive()
 
 
 class MiniRegistry(dict):

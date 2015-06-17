@@ -15,7 +15,7 @@ from functools import partial
 
 from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError, QUALFormatError
-from skbio.io.fasta import (
+from skbio.io.formats.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
     _fasta_to_dna_sequence, _fasta_to_rna_sequence, _fasta_to_protein_sequence,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,

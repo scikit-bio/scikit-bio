@@ -1,8 +1,8 @@
 r"""
-FASTQ format (:mod:`skbio.io.fastq`)
-====================================
+FASTQ format (:mod:`skbio.io.formats.fastq`)
+============================================
 
-.. currentmodule:: skbio.io.fastq
+.. currentmodule:: skbio.io.formats.fastq
 
 The FASTQ file format (``fastq``) stores biological (e.g., nucleotide)
 sequences and their quality scores in a simple plain text format that is both
@@ -273,9 +273,8 @@ from functools import partial
 
 import numpy as np
 
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      FASTQFormatError)
-from skbio.io._base import (_decode_qual_to_phred, _encode_phred_to_qual,
+from skbio.io import create_format, FASTQFormatError
+from skbio.io.formats._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
@@ -285,7 +284,10 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 _whitespace_regex = re.compile(r'\s')
 
 
-@register_sniffer('fastq')
+fastq = create_format('fastq')
+
+
+@fastq.sniffer
 def _fastq_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
@@ -304,7 +306,7 @@ def _fastq_sniffer(fh):
         return False, {}
 
 
-@register_reader('fastq')
+@fastq.reader(None)
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=Sequence):
     # Skip any blank or whitespace-only lines at beginning of file
@@ -332,7 +334,7 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
                           positional_metadata={'quality': phred_scores})
 
 
-@register_reader('fastq', Sequence)
+@fastq.reader(Sequence)
 def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
                                   seq_num=1):
     return _get_nth_sequence(
@@ -341,7 +343,7 @@ def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
         seq_num)
 
 
-@register_reader('fastq', DNA)
+@fastq.reader(DNA)
 def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
@@ -349,7 +351,7 @@ def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
         seq_num)
 
 
-@register_reader('fastq', RNA)
+@fastq.reader(RNA)
 def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
@@ -357,7 +359,7 @@ def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
         seq_num)
 
 
-@register_reader('fastq', Protein)
+@fastq.reader(Protein)
 def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
@@ -365,7 +367,7 @@ def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
         seq_num)
 
 
-@register_reader('fastq', SequenceCollection)
+@fastq.reader(SequenceCollection)
 def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
                                   constructor=Sequence):
     return SequenceCollection(
@@ -374,7 +376,7 @@ def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
                                  constructor=constructor)))
 
 
-@register_reader('fastq', Alignment)
+@fastq.reader(Alignment)
 def _fastq_to_alignment(fh, variant=None, phred_offset=None,
                         constructor=Sequence):
     return Alignment(
@@ -383,7 +385,7 @@ def _fastq_to_alignment(fh, variant=None, phred_offset=None,
                                  constructor=constructor)))
 
 
-@register_writer('fastq')
+@fastq.writer(None)
 def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' '):
@@ -392,7 +394,7 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
     for header, seq_str, qual_scores in formatted_records:
         qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
-        fh.write('@')
+        fh.write(u'@')
         fh.write(header)
         fh.write('\n')
         fh.write(seq_str)
@@ -401,7 +403,7 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
         fh.write('\n')
 
 
-@register_writer('fastq', Sequence)
+@fastq.writer(Sequence)
 def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' '):
@@ -410,7 +412,7 @@ def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', DNA)
+@fastq.writer(DNA)
 def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' '):
@@ -419,7 +421,7 @@ def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', RNA)
+@fastq.writer(RNA)
 def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' '):
@@ -428,7 +430,7 @@ def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', Protein)
+@fastq.writer(Protein)
 def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' '):
@@ -437,7 +439,7 @@ def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', SequenceCollection)
+@fastq.writer(SequenceCollection)
 def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' '):
@@ -446,7 +448,7 @@ def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement)
 
 
-@register_writer('fastq', Alignment)
+@fastq.writer(Alignment)
 def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' '):

@@ -1,8 +1,8 @@
 r"""
-Ordination results format (:mod:`skbio.io.ordination`)
-======================================================
+Ordination results format (:mod:`skbio.io.formats.ordination`)
+==============================================================
 
-.. currentmodule:: skbio.io.ordination
+.. currentmodule:: skbio.io.formats.ordination
 
 The ordination results file format (``ordination``) stores the results of an
 ordination method in a human-readable, text-based format. The format supports
@@ -192,11 +192,11 @@ from future.builtins import zip
 import numpy as np
 
 from skbio.stats.ordination import OrdinationResults
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      OrdinationFormatError)
+from skbio.io import create_format, OrdinationFormatError
 
+ordination = create_format('ordination')
 
-@register_sniffer('ordination')
+@ordination.sniffer
 def _ordination_sniffer(fh):
     # Smells an ordination file if *all* of the following lines are present
     # *from the beginning* of the file:
@@ -218,7 +218,7 @@ def _ordination_sniffer(fh):
     return False, {}
 
 
-@register_reader('ordination', OrdinationResults)
+@ordination.reader(OrdinationResults)
 def _ordination_to_ordination_results(fh):
     eigvals = _parse_vector_section(fh, 'Eigvals')
     if eigvals is None:
@@ -363,7 +363,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
     return data, ids
 
 
-@register_writer('ordination', OrdinationResults)
+@ordination.writer(OrdinationResults)
 def _ordination_results_to_ordination(obj, fh):
     _write_vector_section(fh, 'Eigvals', obj.eigvals)
     _write_vector_section(fh, 'Proportion explained', obj.proportion_explained)
@@ -379,11 +379,11 @@ def _write_vector_section(fh, header_id, vector):
         shape = 0
     else:
         shape = vector.shape[0]
-    fh.write("%s\t%d\n" % (header_id, shape))
+    fh.write(u"%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
         fh.write(_format_vector(vector))
-    fh.write("\n")
+    fh.write(u"\n")
 
 
 def _write_array_section(fh, header_id, data, ids=None,
@@ -393,7 +393,7 @@ def _write_array_section(fh, header_id, data, ids=None,
         shape = (0, 0)
     else:
         shape = data.shape
-    fh.write("%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
+    fh.write(u"%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
 
     # write section data
     if data is not None:
@@ -405,13 +405,13 @@ def _write_array_section(fh, header_id, data, ids=None,
                 fh.write(_format_vector(vals, id_))
 
     if include_section_separator:
-        fh.write("\n")
+        fh.write(u"\n")
 
 
 def _format_vector(vector, id_=None):
     formatted_vector = '\t'.join(np.asarray(vector, dtype=np.str))
 
     if id_ is None:
-        return "%s\n" % formatted_vector
+        return u"%s\n" % formatted_vector
     else:
-        return "%s\t%s\n" % (id_, formatted_vector)
+        return u"%s\t%s\n" % (id_, formatted_vector)

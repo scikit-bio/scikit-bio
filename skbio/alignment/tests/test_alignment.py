@@ -24,6 +24,9 @@ from skbio import (Sequence, DNA, RNA,
 from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
                              StockholmParseError, AlignmentError)
 
+from skbio.io._fileobject import TemporaryFile
+import io
+
 
 class SequenceCollectionTests(TestCase):
     def setUp(self):
@@ -936,7 +939,7 @@ class StockholmAlignmentTests(TestCase):
         st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
                                 gr=self.GR)
 
-        with tempfile.NamedTemporaryFile('r+') as temp_file:
+        with io.BufferedRandom(TemporaryFile('r+')) as temp_file:
             st.to_file(temp_file)
             temp_file.flush()
             temp_file.seek(0)
@@ -962,7 +965,7 @@ class StockholmAlignmentTests(TestCase):
                    '#=GR seq1 SS  1110101111\n'
                    'seq2          TCC-G-GGCA\n'
                    '#=GR seq2 SS  0110101110\n'
-                   '#=GC SS_cons  (((....)))\n//')
+                   '#=GC SS_cons  (((....)))\n//').encode('utf-8')
         self.assertEqual(obs, exp)
 
     def test_str_gc(self):

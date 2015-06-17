@@ -1,8 +1,8 @@
 """
-PHYLIP multiple sequence alignment format (:mod:`skbio.io.phylip`)
-==================================================================
+PHYLIP multiple sequence alignment format (:mod:`skbio.io.formats.phylip`)
+==========================================================================
 
-.. currentmodule:: skbio.io.phylip
+.. currentmodule:: skbio.io.formats.phylip
 
 The PHYLIP file format stores a multiple sequence alignment. The format was
 originally defined and used in Joe Felsenstein's PHYLIP package [1]_, and has
@@ -133,7 +133,7 @@ Let's create an alignment with three DNA sequences of equal length:
 Now let's write the alignment to file in PHYLIP format, and take a look at the
 output:
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> fh = StringIO()
 >>> aln.write(fh, format='phylip')
 >>> print(fh.getvalue())
@@ -209,11 +209,12 @@ References
 from __future__ import absolute_import, division, print_function
 
 from skbio.alignment import Alignment
-from skbio.io import register_writer, PhylipFormatError
-from skbio.io._base import _chunk_str
+from skbio.io import create_format, PhylipFormatError
+from skbio.io.formats._base import _chunk_str
 
+phylip = create_format('phylip')
 
-@register_writer('phylip', Alignment)
+@phylip.writer(Alignment)
 def _alignment_to_phylip(obj, fh):
 
     if obj.is_empty():
@@ -238,9 +239,9 @@ def _alignment_to_phylip(obj, fh):
                 (chunk_size, id_))
 
     sequence_count = obj.sequence_count()
-    fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
+    fh.write(u'{0:d} {1:d}\n'.format(sequence_count, sequence_length))
 
-    fmt = '{0:%d}{1}\n' % chunk_size
+    fmt = u'{0:%d}{1}\n' % chunk_size
     for seq in obj:
         chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.metadata['id'], chunked_seq))
