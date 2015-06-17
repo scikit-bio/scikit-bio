@@ -460,8 +460,7 @@ class TestWriters(unittest.TestCase):
                 self.assertEqual(observed, expected)
 
     def test_sequence_to_fastq_kwargs_passed(self):
-        for constructor in [Sequence, DNA,
-                            partial(RNA, validate=False),
+        for constructor in [Sequence, DNA, partial(RNA, validate=False),
                             Protein]:
             for components, kwargs_expected_fp in self.valid_files:
                 for kwargs, expected_fp in kwargs_expected_fp:

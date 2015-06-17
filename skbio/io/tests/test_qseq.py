@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 
 import unittest
-from functools import partial
 
 from skbio import SequenceCollection, Sequence, DNA, RNA, Protein
 from skbio import read
@@ -62,9 +61,9 @@ class TestQSeqBase(unittest.TestCase):
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 1},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 2},
                 {'variant': 'illumina1.3', 'filter': False, 'seq_num': 3,
-                 'constructor': partial(Protein, validate=False)},
+                 'constructor': Protein},
                 {'phred_offset': 64, 'filter': False, 'seq_num': 4,
-                 'constructor': partial(DNA, validate=False)},
+                 'constructor': DNA},
             ], [
                 ('illumina_1:3:34:-30:30#0/1', 'ACG....ACGTAC', [
                     50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8]),
@@ -269,23 +268,29 @@ class TestQSeqToSequences(TestQSeqBase):
                     self.assertIn(e, str(cm.exception))
 
     def test_valid_files(self):
-        for constructor in [partial(Sequence), partial(DNA, validate=False),
-                            partial(RNA, validate=False),
-                            partial(Protein, validate=False)]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for valid, kwargs, components in self.valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'constructor', 'filter')
+                for observed_kwargs in kwargs:
+                    expected_kwargs = {}
+                    # Currently not validating the alphabet for fastq
+                    # files that are read in.
+                    if hasattr(constructor, 'alphabet'):
+                        observed_kwargs['validate'] = False
+                        expected_kwargs['validate'] = False
+                    _drop_kwargs(observed_kwargs, 'constructor', 'filter')
 
-                    seq_num = kwarg.get('seq_num', 1)
+                    seq_num = observed_kwargs.get('seq_num', 1)
                     c = components[seq_num - 1]
                     expected = constructor(
                         c[1],
                         metadata={'id': c[0]},
                         positional_metadata={
-                            'quality': np.array(c[2], np.uint8)})
+                            'quality': np.array(c[2], np.uint8)},
+                        **expected_kwargs)
 
-                    observed = read(valid, into=constructor.func,
-                                    format='qseq', verify=False, **kwarg)
+                    observed = read(valid, into=constructor,
+                                    format='qseq', verify=False,
+                                    **observed_kwargs)
                     self.assertTrue(observed.equals(expected))
 
 
