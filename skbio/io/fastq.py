@@ -269,7 +269,6 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range, zip
 
 import re
-from functools import partial
 
 import numpy as np
 
@@ -306,7 +305,7 @@ def _fastq_sniffer(fh):
 
 @register_reader('fastq')
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
-                        constructor=Sequence):
+                        constructor=Sequence, **kwargs):
     # Skip any blank or whitespace-only lines at beginning of file
     seq_header = next(_line_generator(fh, skip_blanks=True))
 
@@ -329,7 +328,8 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
                                                          phred_offset,
                                                          qual_header)
         yield constructor(seq, metadata={'id': id_, 'description': desc},
-                          positional_metadata={'quality': phred_scores})
+                          positional_metadata={'quality': phred_scores},
+                          **kwargs)
 
 
 @register_reader('fastq', Sequence)
@@ -342,26 +342,30 @@ def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
 
 
 @register_reader('fastq', DNA)
-def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
+                           **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=partial(DNA, validate=False)),
+                            constructor=DNA),
         seq_num)
 
 
 @register_reader('fastq', RNA)
-def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
+                           **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=partial(RNA, validate=False)),
+                            constructor=RNA, **kwargs),
         seq_num)
 
 
 @register_reader('fastq', Protein)
-def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1):
+def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1,
+                               **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=partial(Protein, validate=False)),
+                            constructor=Protein,
+                            **kwargs),
         seq_num)
 
 

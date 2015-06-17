@@ -146,14 +146,14 @@ class TestReaders(unittest.TestCase):
              [{},
               {'variant': 'illumina1.8'},
               {'phred_offset': 33,
-               'constructor': partial(DNA, validate=False)}],
+               'constructor': DNA}],
              []),
 
             ([get_data_path('fastq_single_seq_illumina1.3')], [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3',
-                 'constructor': partial(Protein, validate=False)},
+                 'constructor': Protein},
             ], [
                 ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
             ]),
@@ -342,9 +342,7 @@ class TestReaders(unittest.TestCase):
                 variant='solexa'))
 
     def test_fastq_to_sequence(self):
-        for constructor in [partial(Sequence), partial(DNA, validate=False),
-                            partial(RNA, validate=False),
-                            partial(Protein, validate=False)]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for valid_files, kwargs, components in self.valid_configurations:
                 for valid in valid_files:
                     # skip empty file case since we cannot read a specific
@@ -352,20 +350,29 @@ class TestReaders(unittest.TestCase):
                     if len(components) == 0:
                         continue
 
-                    for kwarg in kwargs:
-                        _drop_kwargs(kwarg, 'constructor')
+                    for observed_kwargs in kwargs:
+                        expected_kwargs = {}
+                        # Currently not validating the alphabet for fastq
+                        # files that are read in.
+                        if hasattr(constructor, 'alphabet'):
+                            observed_kwargs['validate'] = False
+                            expected_kwargs['validate'] = False
 
-                        seq_num = kwarg.get('seq_num', 1)
+                        _drop_kwargs(observed_kwargs, 'constructor')
+
+                        seq_num = observed_kwargs.get('seq_num', 1)
                         c = components[seq_num - 1]
                         expected = \
                             constructor(
                                 c[2], metadata={'id': c[0],
                                                 'description': c[1]},
                                 positional_metadata={'quality': np.array(c[3],
-                                                     dtype=np.uint8)})
+                                                     dtype=np.uint8)},
+                                **expected_kwargs)
 
-                        observed = read(valid, into=constructor.func,
-                                        format='fastq', verify=False, **kwarg)
+                        observed = read(valid, into=constructor,
+                                        format='fastq', verify=False,
+                                        **observed_kwargs)
                         self.assertTrue(observed.equals(expected))
 
     def test_fastq_to_sequence_collection(self):
@@ -453,9 +460,9 @@ class TestWriters(unittest.TestCase):
                 self.assertEqual(observed, expected)
 
     def test_sequence_to_fastq_kwargs_passed(self):
-        for constructor in [Sequence, partial(DNA, validate=False),
+        for constructor in [Sequence, DNA,
                             partial(RNA, validate=False),
-                            partial(Protein, validate=False)]:
+                            Protein]:
             for components, kwargs_expected_fp in self.valid_files:
                 for kwargs, expected_fp in kwargs_expected_fp:
                     fh = StringIO()
