@@ -542,6 +542,9 @@ class RandomDistanceMatrixTests(TestCase):
 
         self.assertTrue(found_diff)
 
+        obs3 = randdm(100)
+        self.assertTrue(obs3 == obs3.T)
+
     def test_ids(self):
         ids = ['foo', 'bar', 'baz']
         obs = randdm(3, ids=ids)
