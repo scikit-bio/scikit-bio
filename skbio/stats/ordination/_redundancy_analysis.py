@@ -9,17 +9,18 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+from scipy.linalg import svd, lstsq
 
 from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
 import pandas as pd
 
 
-def rda(Y, X, scale_Y=False, scaling=1):
+def rda(y, x, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
-    variables `Y` are fitted to the explanatory variables `X` and PCA
+    variables `y` are fitted to the explanatory variables `x` and PCA
     is then performed on the fitted values. A similar process is
     performed on the residuals.
 
@@ -28,11 +29,13 @@ def rda(Y, X, scale_Y=False, scaling=1):
 
     Parameters
     ----------
-    X : pd.DataFrame
+    y : pd.DataFrame
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
-    Y : pd.DataFrame
+        This matrix is also referred to as the community matrix that
+        commonly stores information about species abundances
+    x : pd.DataFrame
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
@@ -49,7 +52,7 @@ def rda(Y, X, scale_Y=False, scaling=1):
         variables are binary.
 
         Scaling type 2 produces a correlation biplot. It focuses
-        on the relationships among explained variables (`Y`). It
+        on the relationships among explained variables (`y`). It
         is interpreted like scaling type 1, but taking into
         account that distances between objects don't approximate
         their euclidean distances.
@@ -68,11 +71,11 @@ def rda(Y, X, scale_Y=False, scaling=1):
     Notes
     -----
     The algorithm is based on [1]_, \S 11.1, and is expected to
-    give the same results as ``rda(Y, X)`` in R's package vegan.
+    give the same results as ``rda(y, x)`` in R's package vegan.
 
     See Also
     --------
-    CCA
+    cca
 
     References
     ----------
@@ -80,8 +83,11 @@ def rda(Y, X, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    n, p = Y.shape
-    n_, m = X.shape
+    Y = y.as_matrix()
+    X = x.as_matrix()
+
+    n, p = y.shape
+    n_, m = x.shape
     if n != n_:
         raise ValueError(
             "Both data matrices must have the same number of rows.")
@@ -90,11 +96,8 @@ def rda(Y, X, scale_Y=False, scaling=1):
         raise ValueError(
             "Explanatory variables cannot have less rows than columns.")
 
-    sample_ids = Y.index
-    feature_ids = Y.columns
-    Y = Y.values
-    X = X.values
-
+    sample_ids = y.index
+    feature_ids = y.columns
     # Centre response variables (they must be dimensionally
     # homogeneous)
     Y = scale(Y, with_std=scale_Y)
@@ -128,11 +131,11 @@ def rda(Y, X, scale_Y=False, scaling=1):
     # reproduce an example in L&L where X was rank-deficient, we'll
     # just use `np.linalg.lstsq`, which uses the SVD decomposition
     # under the hood and so it's also more expensive.
-    B, _, rank_X, _ = np.linalg.lstsq(X, Y)
+    B, _, rank_X, _ = lstsq(X, Y)
     Y_hat = X.dot(B)
     # Now let's perform PCA on the fitted values from the multiple
     # regression
-    u, s, vt = np.linalg.svd(Y_hat, full_matrices=False)
+    u, s, vt = svd(Y_hat, full_matrices=False)
     # vt are the right eigenvectors, which is what we need to
     # perform PCA. That is, we're changing points in Y_hat from the
     # canonical basis to the orthonormal basis given by the right
@@ -156,24 +159,17 @@ def rda(Y, X, scale_Y=False, scaling=1):
 
     Y_res = Y - Y_hat
     # PCA on the residuals
-    u_res, s_res, vt_res = np.linalg.svd(Y_res, full_matrices=False)
+    u_res, s_res, vt_res = svd(Y_res, full_matrices=False)
     # See 9) in p. 587 in L&L 1998
     rank_res = svd_rank(Y_res.shape, s_res)
-    # Theoretically, there're at most min(p, n - 1) non-zero eigenvaluesas
+    # Theoretically, there're at most min(p, n - 1) non-zero eigenvalues as
 
     U_res = vt_res[:rank_res].T
     F_res = Y_res.dot(U_res)  # Ordination in the space of residuals
 
     eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
 
-    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling,
-                   sample_ids, feature_ids)
-
-
-def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids,
-            feature_ids):
-    """Compute sample, feature and biplot scores for different scalings.
-    """
+    # Compute scores
     if scaling not in {1, 2}:
         raise NotImplementedError("Only scalings 1, 2 available for RDA.")
     # According to the vegan-FAQ.pdf, the scaling factor for scores

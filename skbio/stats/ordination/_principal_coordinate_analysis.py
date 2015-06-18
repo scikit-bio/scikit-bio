@@ -12,6 +12,7 @@ from warnings import warn
 
 import pandas as pd
 import numpy as np
+from scipy.linalg import eigh
 
 from skbio import OrdinationResults
 from skbio.stats.distance import DistanceMatrix
@@ -77,7 +78,7 @@ def pcoa(distance_matrix):
     # If the eigendecomposition ever became a bottleneck, it could
     # be replaced with an iterative version that computes the
     # largest k eigenvectors.
-    eigvals, eigvecs = np.linalg.eigh(F_matrix)
+    eigvals, eigvecs = eigh(F_matrix)
 
     # eigvals might not be ordered, so we order them (at least one
     # is zero). cogent makes eigenvalues positive by taking the

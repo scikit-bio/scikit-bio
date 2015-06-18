@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
+import six
 from six import string_types, text_type
 from six.moves import zip_longest
 
@@ -54,7 +55,7 @@ class Sequence(collections.Sequence, SkbioObject):
     ----------
     id
     description
-    sequence
+    values
     quality
 
     See Also
@@ -91,8 +92,8 @@ class Sequence(collections.Sequence, SkbioObject):
     __hash__ = None  # TODO revisit hashability when all properties are present
 
     @property
-    def sequence(self):
-        """Array containing underlying biological sequence characters.
+    def values(self):
+        """Array containing underlying sequence characters.
 
         Notes
         -----
@@ -102,7 +103,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AACGA', id='seq1', description='some seq')
-        >>> s.sequence # doctest: +NORMALIZE_WHITESPACE
+        >>> s.values # doctest: +NORMALIZE_WHITESPACE
         array(['A', 'A', 'C', 'G', 'A'],
               dtype='|S1')
 
@@ -315,8 +316,7 @@ class Sequence(collections.Sequence, SkbioObject):
         False
 
         """
-        subsequence = self._munge_to_sequence(subsequence, "in")
-        return subsequence._string in self._string
+        return self._munge_to_bytestring(subsequence, "in") in self._string
 
     def __eq__(self, other):
         """Determine if the biological sequence is equal to another.
@@ -560,7 +560,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             qual = []
 
-        for c, q in zip_longest(self.sequence, qual, fillvalue=None):
+        for c, q in zip_longest(self.values, qual, fillvalue=None):
             yield self._to(sequence=c, quality=q)
 
     def __reversed__(self):
@@ -805,9 +805,8 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(subsequence) == 0:
             raise ValueError("`count` is not defined for empty subsequences.")
 
-        subsequence = self._munge_to_sequence(subsequence, "count")
-
-        return self._string.count(subsequence._string, start, end)
+        return self._string.count(
+            self._munge_to_bytestring(subsequence, "count"), start, end)
 
     def index(self, subsequence, start=None, end=None):
         """Find position where subsequence first occurs in the sequence.
@@ -845,8 +844,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         try:
             return self._string.index(
-                self._munge_to_sequence(subsequence, "index")._string, start,
-                end)
+                self._munge_to_bytestring(subsequence, "index"), start, end)
         except ValueError:
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))
@@ -915,7 +913,7 @@ class Sequence(collections.Sequence, SkbioObject):
                     "Hamming distances can only be computed between "
                     "sequences of equal length.")
             metric = hamming
-        return float(metric(self.sequence, other.sequence))
+        return float(metric(self.values, other.values))
 
     def matches(self, other):
         """Find positions that match with another sequence.
@@ -1093,20 +1091,20 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.mismatches(other).sum())
 
-    def kmers(self, k, overlap=True):
-        """Generate words of length `k` from the biological sequence.
+    def iter_kmers(self, k, overlap=True):
+        """Generate kmers of length `k` from the biological sequence.
 
         Parameters
         ----------
         k : int
-            The word length.
+            The kmer length.
         overlap : bool, optional
             Defines whether the kmers should be overlapping or not.
 
         Returns
         -------
         iterator
-            Iterator of words of length `k` contained in the biological
+            Iterator of kmers of length `k` contained in the biological
             sequence.
 
         Raises
@@ -1118,11 +1116,11 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('ACACGACGTT')
-        >>> for kmer in s.kmers(4, overlap=False):
+        >>> for kmer in s.iter_kmers(4, overlap=False):
         ...     kmer
         Sequence('ACAC', length=4)
         Sequence('GACG', length=4)
-        >>> for kmer in s.kmers(3, overlap=True):
+        >>> for kmer in s.iter_kmers(3, overlap=True):
         ...     kmer
         Sequence('ACA', length=3)
         Sequence('CAC', length=3)
@@ -1178,7 +1176,7 @@ class Sequence(collections.Sequence, SkbioObject):
         defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
 
         """
-        kmers = self.kmers(k, overlap=overlap)
+        kmers = self.iter_kmers(k, overlap=overlap)
         freqs = collections.Counter((str(seq) for seq in kmers))
 
         if relative:
@@ -1194,7 +1192,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
-    def slices_from_regex(self, regex, ignore=None):
+    def find_with_regex(self, regex, ignore=None):
         """Generate slices for patterns matched by a regular expression.
 
         Parameters
@@ -1203,8 +1201,8 @@ class Sequence(collections.Sequence, SkbioObject):
             String to be compiled into a regular expression, or a pre-
             compiled regular expression object (e.g., from calling
             ``re.compile``).
-        ignore : 1D array_like (bool), optional
-            Boolean vector indicating positions to ignore when matching.
+        ignore : 1D array_like (bool) or iterable (slices or ints), optional
+            Indicate the positions to ignore when matching.
 
         Returns
         -------
@@ -1215,7 +1213,7 @@ class Sequence(collections.Sequence, SkbioObject):
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AATATACCGGTTATAA')
-        >>> for match in s.slices_from_regex('(TATA+)'):
+        >>> for match in s.find_with_regex('(TATA+)'):
         ...     match
         ...     s[match]
         slice(2, 6, None)
@@ -1227,13 +1225,13 @@ class Sequence(collections.Sequence, SkbioObject):
         if isinstance(regex, string_types):
             regex = re.compile(regex)
 
+        lookup = np.arange(len(self))
         if ignore is None:
-            lookup = np.arange(len(self))
             string = str(self)
         else:
-            include = np.invert(ignore)
-            lookup = np.where(include)[0]
-            string = str(self[include])
+            ignore = self._munge_to_index_array(ignore)
+            lookup = np.delete(lookup, ignore)
+            string = str(self[lookup])
 
         for match in regex.finditer(string):
             # We start at 1 because we don't want the group that contains all
@@ -1241,6 +1239,74 @@ class Sequence(collections.Sequence, SkbioObject):
             for g in range(1, len(match.groups())+1):
                 yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
+
+    def iter_contiguous(self, included, min_length=1, invert=False):
+        """Yield contiguous subsequences based on `included`.
+
+        Parameters
+        ----------
+        included : 1D array_like (bool) or iterable (slices or ints)
+            `included` is transformed into a flat boolean vector where each
+            position will either be included or skipped. All contiguous
+            included positions will be yielded as a single region.
+        min_length : int, optional
+            The minimum length of a subsequence for it to be yielded.
+            Default is 1.
+        invert : bool, optional
+            Whether to invert `included` such that it describes what should be
+            skipped instead of included. Default is False.
+
+        Returns
+        -------
+        generator
+            Yields subsequences as indicated by `included`.
+
+        Notes
+        -----
+        If slices provide adjacent ranges, then they will be considered the
+        same contiguous subsequence.
+
+        Examples
+        --------
+        Here we use `iter_contiguous` to find all of the contiguous ungapped
+        sequences using a boolean vector derived from our DNA sequence.
+
+        >>> from skbio import DNA
+        >>> s = DNA('AAA--TT-CCCC-G-')
+        >>> no_gaps = ~s.gaps()
+        >>> for ungapped_subsequence in s.iter_contiguous(no_gaps,
+        ...                                               min_length=2):
+        ...     ungapped_subsequence
+        DNA('AAA', length=3)
+        DNA('TT', length=2)
+        DNA('CCCC', length=4)
+
+        Note how the last potential subsequence was skipped because it would
+        have been smaller than our `min_length` which was set to 2.
+
+        We can also use `iter_contiguous` on a generator of slices as is
+        produced by `find_motifs` (and `find_with_regex`).
+
+        >>> from skbio import Protein
+        >>> s = Protein('ACDFNASANFTACGNPNRTESL')
+        >>> for subseq in s.iter_contiguous(s.find_motifs('N-glycosylation')):
+        ...     subseq
+        Protein('NASANFTA', length=8)
+        Protein('NRTE', length=4)
+
+        Note how the first subsequence contains two N-glycosylation sites. This
+        happened because they were contiguous.
+
+        """
+        idx = self._munge_to_index_array(included)
+        if invert:
+            idx = np.delete(np.arange(len(self)), idx)
+
+        # Adapted from http://stackoverflow.com/a/7353335/579416
+        for contig in np.split(idx, np.where(np.diff(idx) != 1)[0] + 1):
+            r = self[contig]
+            if len(r) >= min_length:
+                yield r
 
     def _has_quality(self):
         """Return bool indicating presence of quality scores in the sequence.
@@ -1343,6 +1409,47 @@ class Sequence(collections.Sequence, SkbioObject):
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
 
+    def _munge_to_index_array(self, sliceable):
+        """Return an index array from something isomorphic to a boolean vector.
+
+        """
+        if not hasattr(sliceable, 'dtype') or (hasattr(sliceable, 'dtype') and
+                                               sliceable.dtype == 'object'):
+            sliceable = tuple(sliceable)
+            bool_mode = False
+            int_mode = False
+            for s in sliceable:
+                if isinstance(s, (bool, np.bool_)):
+                    bool_mode = True
+                elif isinstance(s, (slice, int, np.signedinteger)) or (
+                        hasattr(s, 'dtype') and s.dtype != np.bool):
+                    int_mode = True
+                else:
+                    raise TypeError("Invalid type in iterable: %s, must be one"
+                                    " of {bool, int, slice, np.signedinteger}"
+                                    % s.__class__.__name__)
+            if bool_mode and int_mode:
+                raise TypeError("Cannot provide iterable of both bool and"
+                                " int.")
+            sliceable = np.r_[sliceable]
+
+        if sliceable.dtype == np.bool:
+            if sliceable.size != len(self):
+                raise ValueError("Boolean array (%d) does not match length of"
+                                 " sequence (%d)."
+                                 % (sliceable.size, len(self)))
+            normalized, = np.where(sliceable)
+        else:
+            normalized = np.bincount(sliceable)
+            if np.any(normalized > 1):
+                raise ValueError("Overlapping index regions are not allowed.")
+
+            normalized, = np.where(normalized)
+            if np.any(normalized != sliceable):
+                raise ValueError("Index regions are out of order.")
+
+        return normalized
+
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):
             if type(other) != type(self):
@@ -1356,6 +1463,11 @@ class Sequence(collections.Sequence, SkbioObject):
         # to construct the most general type of Sequence object in order to
         # avoid validation errors.
         return Sequence(other)
+
+    def _munge_to_bytestring(self, other, method):
+        if isinstance(other, string_types):
+            return six.b(other)
+        return self._munge_to_sequence(other, method)._string
 
     @contextmanager
     def _byte_ownership(self):

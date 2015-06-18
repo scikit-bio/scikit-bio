@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
+from scipy.linalg import svd, lstsq
 
 from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
@@ -40,7 +41,7 @@ def cca(y, x, scaling=1):
     ----------
     y : DataFrame
         Samples by features table (n, m)
-    X : DataFrame
+    x : DataFrame
         Samples by constraints table (n, q)
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
@@ -66,7 +67,7 @@ def cca(y, x, scaling=1):
     -----
 
     The algorithm is based on [3]_, \S 11.2, and is expected to give
-    the same results as ``cca(Y, X)`` in R's package vegan, except
+    the same results as ``cca(y, x)`` in R's package vegan, except
     that this implementation won't drop constraining variables due to
     perfect collinearity: the user needs to choose which ones to
     input.
@@ -143,12 +144,12 @@ def cca(y, x, scaling=1):
 
     # Step 3. Weighted multiple regression.
     X_weighted = row_marginals[:, None]**0.5 * X
-    B, _, rank_lstsq, _ = np.linalg.lstsq(X_weighted, Q_bar)
+    B, _, rank_lstsq, _ = lstsq(X_weighted, Q_bar)
     Y_hat = X_weighted.dot(B)
     Y_res = Q_bar - Y_hat
 
     # Step 4. Eigenvalue decomposition
-    u, s, vt = np.linalg.svd(Y_hat, full_matrices=False)
+    u, s, vt = svd(Y_hat, full_matrices=False)
     rank = svd_rank(Y_hat.shape, s)
     s = s[:rank]
     u = u[:, :rank]
@@ -159,7 +160,7 @@ def cca(y, x, scaling=1):
     U_hat = Q_bar.dot(U) * s**-1
 
     # Residuals analysis
-    u_res, s_res, vt_res = np.linalg.svd(Y_res, full_matrices=False)
+    u_res, s_res, vt_res = svd(Y_res, full_matrices=False)
     rank = svd_rank(Y_res.shape, s_res)
     s_res = s_res[:rank]
     u_res = u_res[:, :rank]
