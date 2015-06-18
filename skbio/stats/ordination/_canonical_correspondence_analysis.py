@@ -40,7 +40,7 @@ def cca(y, x, scaling=1):
     ----------
     y : DataFrame
         Samples by features table (n, m)
-    X : DataFrame
+    x : DataFrame
         Samples by constraints table (n, q)
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
@@ -66,7 +66,7 @@ def cca(y, x, scaling=1):
     -----
 
     The algorithm is based on [3]_, \S 11.2, and is expected to give
-    the same results as ``cca(Y, X)`` in R's package vegan, except
+    the same results as ``cca(y, x)`` in R's package vegan, except
     that this implementation won't drop constraining variables due to
     perfect collinearity: the user needs to choose which ones to
     input.

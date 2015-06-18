@@ -19,7 +19,7 @@ def rda(y, x, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
-    variables `Y` are fitted to the explanatory variables `X` and PCA
+    variables `y` are fitted to the explanatory variables `x` and PCA
     is then performed on the fitted values. A similar process is
     performed on the residuals.
 
@@ -51,7 +51,7 @@ def rda(y, x, scale_Y=False, scaling=1):
         variables are binary.
 
         Scaling type 2 produces a correlation biplot. It focuses
-        on the relationships among explained variables (`Y`). It
+        on the relationships among explained variables (`y`). It
         is interpreted like scaling type 1, but taking into
         account that distances between objects don't approximate
         their euclidean distances.
@@ -70,7 +70,7 @@ def rda(y, x, scale_Y=False, scaling=1):
     Notes
     -----
     The algorithm is based on [1]_, \S 11.1, and is expected to
-    give the same results as ``rda(Y, X)`` in R's package vegan.
+    give the same results as ``rda(y, x)`` in R's package vegan.
 
     See Also
     --------
