@@ -346,7 +346,7 @@ def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
                            **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=DNA),
+                            constructor=DNA, **kwargs),
         seq_num)
 
 
@@ -371,28 +371,29 @@ def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1,
 
 @register_reader('fastq', SequenceCollection)
 def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
-                                  constructor=Sequence):
+                                  constructor=Sequence, **kwargs):
     return SequenceCollection(
         list(_fastq_to_generator(fh, variant=variant,
                                  phred_offset=phred_offset,
-                                 constructor=constructor)))
+                                 constructor=constructor, **kwargs)))
 
 
 @register_reader('fastq', Alignment)
 def _fastq_to_alignment(fh, variant=None, phred_offset=None,
-                        constructor=Sequence):
+                        constructor=Sequence, **kwargs):
     return Alignment(
         list(_fastq_to_generator(fh, variant=variant,
                                  phred_offset=phred_offset,
-                                 constructor=constructor)))
+                                 constructor=constructor, **kwargs)))
 
 
 @register_writer('fastq')
 def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' '):
+                        description_newline_replacement=' ', **kwargs):
     formatted_records = _format_fasta_like_records(
-        obj, id_whitespace_replacement, description_newline_replacement, True)
+        obj, id_whitespace_replacement, description_newline_replacement, True,
+        **kwargs)
     for header, seq_str, qual_scores in formatted_records:
         qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
@@ -435,10 +436,10 @@ def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
 @register_writer('fastq', Protein)
 def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                id_whitespace_replacement='_',
-                               description_newline_replacement=' '):
+                               description_newline_replacement=' ', **kwargs):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, **kwargs)
 
 
 @register_writer('fastq', SequenceCollection)
@@ -523,7 +524,7 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
 
 def _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement):
+                        description_newline_replacement, **kwargs):
     def seq_gen():
         for seq in obj:
             yield seq
@@ -531,4 +532,5 @@ def _sequences_to_fastq(obj, fh, variant, phred_offset,
     _generator_to_fastq(
         seq_gen(), fh, variant=variant, phred_offset=phred_offset,
         id_whitespace_replacement=id_whitespace_replacement,
-        description_newline_replacement=description_newline_replacement)
+        description_newline_replacement=description_newline_replacement,
+        **kwargs)

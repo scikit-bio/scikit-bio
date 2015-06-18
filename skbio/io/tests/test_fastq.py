@@ -153,9 +153,9 @@ class TestReaders(unittest.TestCase):
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3',
-                 'constructor': Protein},
+                 'constructor': partial(Protein, lowercase='introns')},
             ], [
-                ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
+                ('', 'bar\t baz', 'aCGT', [33, 34, 35, 36])
             ]),
 
             ([get_data_path('fastq_multi_seq_sanger'),
@@ -294,9 +294,10 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_generator_valid_files(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
                     expected = [constructor(c[2],
                                             metadata={'id': c[0],
                                                       'description': c[1]},
@@ -304,7 +305,8 @@ class TestReaders(unittest.TestCase):
                                                      dtype=np.uint8)})
                                 for c in components]
 
-                    observed = list(_fastq_to_generator(valid, **kwarg))
+                    observed = list(_fastq_to_generator(valid,
+                                                        **observed_kwargs))
                     self.assertEqual(len(expected), len(observed))
                     for o, e in zip(observed, expected):
                         self.assertTrue(o.equals(e))
@@ -352,13 +354,22 @@ class TestReaders(unittest.TestCase):
 
                     for observed_kwargs in kwargs:
                         expected_kwargs = {}
-                        # Currently not validating the alphabet for fastq
-                        # files that are read in.
-                        if hasattr(constructor, 'alphabet'):
+
+                        # TODO:
+                        # some of the test files contain characters which are
+                        # invalid for RNA, so don't validate for now. Need to
+                        # fix this
+                        if constructor is RNA:
                             observed_kwargs['validate'] = False
                             expected_kwargs['validate'] = False
 
                         _drop_kwargs(observed_kwargs, 'constructor')
+
+                        # Can't use partials for this because the read
+                        # function below can't operate on partials
+                        if hasattr(constructor, 'lowercase'):
+                            expected_kwargs['lowercase'] = 'introns'
+                            observed_kwargs['lowercase'] = 'introns'
 
                         seq_num = observed_kwargs.get('seq_num', 1)
                         c = components[seq_num - 1]
@@ -378,9 +389,10 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_sequence_collection(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
                     expected = SequenceCollection(
                         [constructor(
                             c[2], metadata={'id': c[0], 'description': c[1]},
@@ -388,7 +400,8 @@ class TestReaders(unittest.TestCase):
                                                  np.uint8)})
                          for c in components])
 
-                    observed = _fastq_to_sequence_collection(valid, **kwarg)
+                    observed = _fastq_to_sequence_collection(valid,
+                                                             **observed_kwargs)
                     # TODO remove when #656 is resolved
                     self.assertEqual(observed, expected)
                     for o, e in zip(observed, expected):
@@ -397,9 +410,10 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_alignment(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
                     expected = Alignment(
                         [constructor(
                             c[2], metadata={'id': c[0],
@@ -408,7 +422,7 @@ class TestReaders(unittest.TestCase):
                                                  dtype=np.uint8)})
                          for c in components])
 
-                    observed = _fastq_to_alignment(valid, **kwarg)
+                    observed = _fastq_to_alignment(valid, **observed_kwargs)
                     # TODO remove when #656 is resolved
                     self.assertEqual(observed, expected)
                     for o, e in zip(observed, expected):
