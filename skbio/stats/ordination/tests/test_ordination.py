@@ -202,8 +202,8 @@ class TestCAErrors(object):
 class TestRDAErrors(object):
     def test_shape(self):
         for n, p, n_, m in [(3, 4, 2, 1), (3, 4, 3, 10)]:
-            Y = np.random.randn(n, p)
-            X = np.random.randn(n_, m)
+            Y = pd.DataFrame(np.random.randn(n, p))
+            X = pd.DataFrame(np.random.randn(n_, m))
             yield npt.assert_raises, ValueError, rda, Y, X, None, None
 
 
@@ -214,175 +214,131 @@ class TestRDAResults(object):
     # results in L&L.
     def setup(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
-        sample_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
-                      'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
-        features_ids = ['Species0', 'Species1', 'Species2', 'Species3',
-                        'Species4', 'Species5']
+        self.sample_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4',
+                           'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
+        self.feature_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                            'Species4', 'Species5']
+        self.env_ids = map(str, range(4))
+        self.pc_ids = ['RDA1', 'RDA2', 'RDA3', 'RDA4', 'RDA5', 'RDA6', 'RDA7']
 
-        self.Y = pd.DataFrame(np.loadtxt(get_data_path('example2_Y')),
-                              index=sample_ids, columns=features_ids)
-        self.X = pd.DataFrame(np.loadtxt(get_data_path('example2_X')),
-                              index=sample_ids)
+        self.Y = pd.DataFrame(
+            np.loadtxt(get_data_path('example2_Y')),
+            index=self.sample_ids, columns=self.feature_ids)
+
+        self.X = pd.DataFrame(
+            np.loadtxt(get_data_path('example2_X')),
+            index=self.sample_ids, columns=self.env_ids)
 
     def test_scaling1(self):
 
         scores = rda(self.Y, self.X, scaling=1)
-        pc_ids = ['RDA1', 'RDA2', 'RDA3', 'RDA4', 'RDA5', 'RDA6', 'RDA7']
-        biplot_scores = np.array(
-            [[0.422650019, -0.559142586, -0.713250678,
-              1.165734176e-16, 1.471045508e-16, 1.831867991e-16],
-             [0.988495964, 0.150787422, -0.011784861,
-              6.106226635e-17, 6.661338148e-17, 8.326672685e-17],
-             [-0.556516619, 0.817599993, 0.147714267,
-              -4.996003611e-17, 4.440892099e-17, -7.216449660e-17],
-             [-0.404079677, -0.905843481, -0.127150317,
-              2.775557562e-18, -2.220446049e-17, 0.000000000e+00]])
 
-        sample_constraints = np.array(
-            [[-1.203551785, 0.973290974, 0.398346330, -4.377163939e-02,
-              -2.025458896e-01, -4.174844658e-02, 2.251711925e-03],
-             [-1.233129139, 1.048075071, 0.112958788, 1.946349502e-16,
-              -3.553871934e-16, 8.349689316e-02, -1.554395167e-16],
-             [-1.262706493, 1.122859169, -0.172428754, 4.377163939e-02,
-              2.025458896e-01, -4.174844658e-02, -2.251711925e-03],
-             [-0.629152587, -1.155378512, 0.778202548, -3.794874137e-01,
-              5.000170610e-02, 3.937851438e-16, 2.503875549e-04],
-             [2.249463380, 0.043725029, 0.561763065, 6.747052880e-01,
-              2.580938331e-02, 6.726138671e-16, 1.835041340e-02],
-             [-0.688307296, -1.005810318, 0.207427464, -1.264958046e-01,
-              1.666723537e-02, -6.333664505e-17, 8.346251830e-05],
-             [2.190308672, 0.193293223, -0.009012018, -4.068089086e-02,
-              -1.574523073e-02, -6.651371118e-18, -3.978716391e-02],
-             [-0.747462004, -0.856242124, -0.363347619, 1.264958046e-01,
-              -1.666723537e-02, -4.098446294e-16, -8.346251830e-05],
-             [2.131153964, 0.342861418, -0.579787102, -6.340243972e-01,
-              -1.006415258e-02, -4.849800803e-16, 2.143675051e-02],
-             [-0.806616713, -0.706673930, -0.934122703, 3.794874137e-01,
-              -5.000170610e-02, -7.280846416e-16, -2.503875549e-04]])
+        biplot_scores = pd.DataFrame(np.loadtxt(
+            get_data_path('example2_biplot_scaling1')))
+
+        sample_constraints = pd.DataFrame(np.loadtxt(
+            get_data_path('example2_sample_constraints_scaling1')))
 
         # Load data as computed with vegan 2.0-8
-        vegan_features = np.loadtxt(get_data_path(
-            'example2_species_scaling1_from_vegan'))
+        vegan_features = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_species_scaling1_from_vegan')),
+            index=self.feature_ids,
+            columns=self.pc_ids)
 
-        vegan_samples = np.loadtxt(get_data_path(
-            'example2_site_scaling1_from_vegan'))
+        vegan_samples = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_site_scaling1_from_vegan')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
+
+        sample_constraints = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_sample_constraints_scaling1')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
+
+        biplot_scores = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_biplot_scaling1')))
+
+        # These are wrong. @JorgeC don't forget to fix these
+        proportion_explained = pd.Series([0.44275783, 0.25614586,
+                                          0.15280354, 0.10497021,
+                                          0.02873375, 0.00987052,
+                                          0.00471828],
+                                         index=self.pc_ids)
+
+        eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
+                             1.680705, 0.577350, 0.275984],
+                            index=self.pc_ids)
 
         exp = OrdinationResults(
             'RDA', 'Redundancy Analysis',
-            samples=pd.DataFrame(vegan_samples,
-                                 index=['Site0', 'Site1', 'Site2',
-                                        'Site3', 'Site4',
-                                        'Site5', 'Site6', 'Site7',
-                                        'Site8', 'Site9'],
-                                 columns=pc_ids),
-            features=pd.DataFrame(vegan_features,
-                                  index=['Species0', 'Species1',
-                                         'Species2', 'Species3',
-                                         'Species4', 'Species5'],
-                                  columns=pc_ids),
-            sample_constraints=pd.DataFrame(sample_constraints,
-                                            index=['Site0', 'Site1', 'Site2',
-                                                   'Site3', 'Site4',
-                                                   'Site5', 'Site6', 'Site7',
-                                                   'Site8', 'Site9'],
-                                            columns=pc_ids),
-            biplot_scores=pd.DataFrame(biplot_scores),
-            proportion_explained=pd.Series([0.44275783, 0.25614586,
-                                            0.15280354, 0.10497021,
-                                            0.02873375, 0.00987052,
-                                            0.00471828], index=pc_ids),
-            eigvals=pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
-                               1.680705, 0.577350, 0.275984], index=pc_ids)
-            )
+            samples=vegan_samples,
+            features=vegan_features,
+            sample_constraints=sample_constraints,
+            biplot_scores=biplot_scores,
+            proportion_explained=proportion_explained,
+            eigvals=eigvals)
 
-        npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
-        npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
         assert_ordination_results_equal(scores, exp,
                                         ignore_biplot_scores_labels=True,
                                         decimal=6)
 
     def test_scaling2(self):
+
         scores = rda(self.Y, self.X, scaling=2)
 
-        # Load data as computed with vegan 2.0-8
-        vegan_features = np.loadtxt(get_data_path(
-            'example2_species_scaling2_from_vegan'))
-        vegan_samples = np.loadtxt(get_data_path(
-            'example2_site_scaling2_from_vegan'))
+        biplot_scores = pd.DataFrame(np.loadtxt(
+            get_data_path('example2_biplot_scaling2')))
 
-        sample_constraints = np.array(
-            [[-1.48131076e+00, 2.07063239e+00, 1.42061063e+00,
-              -2.27234564e-01, -3.84130420e+00, -2.30487725e+00,
-              2.60061683e-01],
-             [-1.51771406e+00, 2.22973216e+00, 4.02841556e-01,
-              1.01042110e-15, -6.73995569e-15, 4.60975451e+00,
-              -1.79525017e-14],
-             [-1.55411736e+00, 2.38883194e+00, -6.14927520e-01,
-              2.27234564e-01, 3.84130420e+00, -2.30487725e+00,
-              -2.60061683e-01],
-             [-7.74350145e-01, -2.45801537e+00, 2.77528053e+00,
-              -1.97005774e+00, 9.48287641e-01, 2.17403639e-14,
-              2.89185344e-02],
-             [2.76860070e+00, 9.30230162e-02, 2.00339886e+00,
-              3.50264153e+00, 4.89477683e-01, 3.71341338e-14,
-              2.11938274e+00],
-             [-8.47156740e-01, -2.13981582e+00, 7.39742378e-01,
-              -6.56685914e-01, 3.16095880e-01, -3.49673352e-15,
-              9.63951148e-03],
-             [2.69579411e+00, 4.11222563e-01, -3.21392915e-02,
-              -2.11189360e-01, -2.98609965e-01, -3.67213519e-16,
-              -4.59522227e+00],
-             [-9.19963334e-01, -1.82161627e+00, -1.29579577e+00,
-              6.56685914e-01, -3.16095880e-01, -2.26269871e-14,
-              -9.63951148e-03],
-             [2.62298752e+00, 7.29422110e-01, -2.06767744e+00,
-              -3.29145217e+00, -1.90867717e-01, -2.67751173e-14,
-              2.47583954e+00],
-             [-9.92769928e-01, -1.50341672e+00, -3.33133393e+00,
-              1.97005774e+00, -9.48287641e-01, -4.01966029e-14,
-              -2.89185344e-02]])
+        sample_constraints = pd.DataFrame(np.loadtxt(
+            get_data_path('example2_sample_constraints_scaling2')))
+
+        # Load data as computed with vegan 2.0-8
+        vegan_features = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_species_scaling2_from_vegan')),
+            index=self.feature_ids,
+            columns=self.pc_ids)
+
+        vegan_samples = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_site_scaling2_from_vegan')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
+
+        sample_constraints = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example2_sample_constraints_scaling2')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
+
         biplot_scores = pd.DataFrame(
-            [[4.22650019e-01, -5.59142586e-01, -7.13250678e-01,
-              1.16573418e-16, 1.47104551e-16, 1.83186799e-16],
-             [9.88495964e-01, 1.50787422e-01, -1.17848614e-02,
-              6.10622664e-17, 6.66133815e-17, 8.32667268e-17],
-             [-5.56516619e-01, 8.17599993e-01, 1.47714267e-01,
-              -4.99600361e-17, 4.44089210e-17, -7.21644966e-17],
-             [-4.04079677e-01, -9.05843481e-01, -1.27150317e-01,
-              2.77555756e-18, -2.22044605e-17, 0.00000000e+00]])
-        pc_ids = ['RDA1', 'RDA2', 'RDA3', 'RDA4', 'RDA5', 'RDA6', 'RDA7']
+            np.loadtxt(get_data_path(
+                'example2_biplot_scaling2')))
+
+        # These are wrong. @JorgeC don't forget to fix these
+        proportion_explained = pd.Series([0.44275783, 0.25614586,
+                                          0.15280354, 0.10497021,
+                                          0.02873375, 0.00987052,
+                                          0.00471828],
+                                         index=self.pc_ids)
+
+        eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
+                             1.680705, 0.577350, 0.275984],
+                            index=self.pc_ids)
+
         exp = OrdinationResults(
             'RDA', 'Redundancy Analysis',
-            samples=pd.DataFrame(vegan_samples,
-                                 index=['Site0', 'Site1', 'Site2',
-                                        'Site3', 'Site4',
-                                        'Site5', 'Site6', 'Site7',
-                                        'Site8', 'Site9'],
-                                 columns=pc_ids),
-            features=pd.DataFrame(vegan_features,
-                                  index=['Species0', 'Species1',
-                                         'Species2', 'Species3',
-                                         'Species4', 'Species5'],
-                                  columns=pc_ids),
-            sample_constraints=pd.DataFrame(sample_constraints,
-                                            index=['Site0', 'Site1', 'Site2',
-                                                   'Site3', 'Site4',
-                                                   'Site5', 'Site6', 'Site7',
-                                                   'Site8', 'Site9'],
-                                            columns=pc_ids),
-            biplot_scores=pd.DataFrame(biplot_scores),
-            proportion_explained=pd.Series([0.44275783, 0.25614586,
-                                            0.15280354, 0.10497021,
-                                            0.02873375, 0.00987052,
-                                            0.00471828], index=pc_ids),
-            eigvals=pd.Series([25.89795409, 14.98257798, 8.93784077,
-                               6.13995623,
-                               1.68070536, 0.57735027, 0.27598362],
-                              index=pc_ids)
+            samples=vegan_samples,
+            features=vegan_features,
+            sample_constraints=sample_constraints,
+            biplot_scores=biplot_scores,
+            proportion_explained=proportion_explained,
+            eigvals=eigvals)
 
-            )
-        npt.assert_almost_equal(scores.features, vegan_features, decimal=6)
-        npt.assert_almost_equal(scores.samples, vegan_samples, decimal=6)
         assert_ordination_results_equal(scores, exp,
                                         ignore_biplot_scores_labels=True,
                                         decimal=6)
@@ -390,9 +346,9 @@ class TestRDAResults(object):
 
 class TestCCAErrors(object):
     def setup(self):
-        """Data from R's vegan package"""
-        self.Y = pd.read_csv(get_data_path('varespec'), sep='\t', index_col=0)
-        self.X = pd.read_csv(get_data_path('varechem'), sep='\t', index_col=0)
+        """Data from table 11.3 in Legendre & Legendre 1998."""
+        self.Y = pd.DataFrame(np.loadtxt(get_data_path('example3_Y')))
+        self.X = pd.DataFrame(np.loadtxt(get_data_path('example3_X')))
 
     def test_shape(self):
         X, Y = self.X, self.Y
@@ -419,79 +375,119 @@ class TestCCAResults1(object):
         """Data from table 11.3 in Legendre & Legendre 1998
         (p. 590). Loaded results as computed with vegan 2.0-8 and
         compared with table 11.5 if also there."""
+        self.feature_ids = ['Feature0', 'Feature1', 'Feature2', 'Feature3',
+                            'Feature4', 'Feature5', 'Feature6', 'Feature7',
+                            'Feature8']
+        self.sample_ids = ['Sample0', 'Sample1', 'Sample2', 'Sample3',
+                           'Sample4', 'Sample5', 'Sample6', 'Sample7',
+                           'Sample8', 'Sample9']
+        self.env_ids = ['Constraint0', 'Constraint1',
+                        'Constraint2', 'Constraint3']
+        self.pc_ids = ['CCA1', 'CCA2', 'CCA3', 'CCA4', 'CCA5', 'CCA6', 'CCA7',
+                       'CCA8', 'CCA9']
         self.Y = pd.DataFrame(
             np.loadtxt(get_data_path('example3_Y')),
-            columns=['Feature0', 'Feature1', 'Feature2', 'Feature3',
-                     'Feature4', 'Feature5', 'Feature6', 'Feature7',
-                     'Feature8'],
-            index=['Sample0', 'Sample1', 'Sample2', 'Sample3', 'Sample4',
-                   'Sample5', 'Sample6', 'Sample7', 'Sample8', 'Sample9'])
+            columns=self.feature_ids,
+            index=self.sample_ids)
         self.X = pd.DataFrame(
             np.loadtxt(get_data_path('example3_X')),
-            columns=['Constraint0', 'Constraint1',
-                     'Constraint2', 'Constraint3'],
-            index=['Sample0', 'Sample1', 'Sample2', 'Sample3', 'Sample4',
-                   'Sample5', 'Sample6', 'Sample7', 'Sample8', 'Sample9']
+            columns=self.env_ids,
+            index=self.sample_ids
             ).ix[:, :-1]
 
-        self.varespec = pd.read_csv(get_data_path('varespec'),
-                                    sep='\t', index_col=0)
-        self.varechem = pd.read_csv(get_data_path('varechem'),
-                                    sep='\t', index_col=0)
+    def test_scaling1(self):
+        scores = cca(self.Y, self.X, scaling=1)
 
-    def test_vegan_scaling1(self):
-        exp_eigvals = pd.read_csv(get_data_path(
-            'vegan/cca_eigvals.txt'),
-            sep=' ', index_col=0, header=None).ix[:,1]
-        exp_samples = pd.read_csv(get_data_path(
-            'vegan/cca_samples.txt'),
-            sep='\t', index_col=0)
-        exp_features = pd.read_csv(get_data_path(
-            'vegan/cca_features.txt'),
-            sep='\t', index_col=0)
-        exp_biplot = pd.read_csv(get_data_path(
-            'vegan/cca_biplot.txt'),
-            sep='\t', index_col=0)
+        # Load data as computed with vegan 2.0-8
+        vegan_features = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_species_scaling1_from_vegan')),
+            index=self.feature_ids,
+            columns=self.pc_ids)
 
-        res = cca(self.varespec, self.varechem)
+        vegan_samples = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_site_scaling1_from_vegan')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
 
-        # Since vegan discards collinear axes
-        # we will only compare the axes that vegan didn't
-        # discard
-        npt.assert_almost_equal(exp_eigvals.values,
-                                res.eigvals.values[:14])
+        sample_constraints = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_sample_constraints_scaling1')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
 
-        npt.assert_almost_equal(exp_sample_constraints.values,
-                                res.sample_constraints.values[:,:14])
+        biplot_scores = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_biplot_scaling1')))
 
+        proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
+                                          0.104937, 0.044805, 0.029747,
+                                          0.012631, 0.001562, 0.000532],
+                                         index=self.pc_ids)
+        eigvals = pd.Series([0.366136, 0.186888, 0.078847, 0.082288,
+                             0.035135, 0.023327, 0.009905, 0.001225,
+                             0.000417], index=self.pc_ids)
 
-    def test_scaling1_species(self):
-        scores = cca(self.Y, self.X, 1)
+        exp = OrdinationResults(
+            'CCA', 'Canonical Correspondence Analysis',
+            samples=vegan_samples,
+            features=vegan_features,
+            sample_constraints=sample_constraints,
+            biplot_scores=biplot_scores,
+            proportion_explained=proportion_explained,
+            eigvals=eigvals)
 
-        vegan_species = np.loadtxt(get_data_path(
-            'example3_species_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.features, vegan_species, decimal=6)
+        assert_ordination_results_equal(scores, exp,
+                                        ignore_biplot_scores_labels=True,
+                                        decimal=6)
 
-    def test_scaling1_site(self):
-        scores = cca(self.Y, self.X, 1)
+    def test_scaling2(self):
+        scores = cca(self.Y, self.X, scaling=2)
 
-        vegan_site = np.loadtxt(get_data_path(
-            'example3_site_scaling1_from_vegan'))
-        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
+        # Load data as computed with vegan 2.0-8
+        vegan_features = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_species_scaling2_from_vegan')),
+            index=self.feature_ids,
+            columns=self.pc_ids)
 
-    def test_scaling2_species(self):
-        scores = cca(self.Y, self.X, 2)
+        vegan_samples = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_site_scaling2_from_vegan')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
 
-        vegan_species = np.loadtxt(get_data_path(
-            'example3_species_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.features, vegan_species, decimal=5)
+        sample_constraints = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_sample_constraints_scaling2')),
+            index=self.sample_ids,
+            columns=self.pc_ids)
 
-    def test_scaling2_site(self):
-        scores = cca(self.Y, self.X, 2)
+        biplot_scores = pd.DataFrame(
+            np.loadtxt(get_data_path(
+                'example3_biplot_scaling2')))
 
-        vegan_site = np.loadtxt(get_data_path(
-            'example3_site_scaling2_from_vegan'))
-        npt.assert_almost_equal(scores.samples, vegan_site, decimal=4)
+        proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
+                                          0.104937, 0.044805, 0.029747,
+                                          0.012631, 0.001562, 0.000532],
+                                         index=self.pc_ids)
+        eigvals = pd.Series([0.366136, 0.186888, 0.078847, 0.082288,
+                             0.035135, 0.023327, 0.009905, 0.001225,
+                             0.000417], index=self.pc_ids)
+
+        exp = OrdinationResults(
+            'CCA', 'Canonical Correspondence Analysis',
+            samples=vegan_samples,
+            features=vegan_features,
+            sample_constraints=sample_constraints,
+            biplot_scores=biplot_scores,
+            proportion_explained=proportion_explained,
+            eigvals=eigvals)
+
+        assert_ordination_results_equal(scores, exp,
+                                        ignore_biplot_scores_labels=True,
+                                        decimal=6)
 
 
 class TestPCoAPrivateMethods(object):

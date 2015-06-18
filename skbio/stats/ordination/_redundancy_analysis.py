@@ -15,7 +15,7 @@ from ._utils import corr, svd_rank, scale
 import pandas as pd
 
 
-def rda(Y, X, scale_Y=False, scaling=1):
+def rda(y, x, scale_Y=False, scaling=1):
     r"""Compute redundancy analysis, a type of canonical analysis.
 
     It is related to PCA and multiple regression because the explained
@@ -28,11 +28,13 @@ def rda(Y, X, scale_Y=False, scaling=1):
 
     Parameters
     ----------
-    X : pd.DataFrame
+    y : pd.DataFrame
         :math:`n \times p` response matrix, where :math:`n` is the number
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
-    Y : pd.DataFrame
+        This matrix is also referred to as the community matrix that
+        commonly stores information about species abundances
+    x : pd.DataFrame
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
@@ -80,8 +82,11 @@ def rda(Y, X, scale_Y=False, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    n, p = Y.shape
-    n_, m = X.shape
+    Y = y.as_matrix()
+    X = x.as_matrix()
+
+    n, p = y.shape
+    n_, m = x.shape
     if n != n_:
         raise ValueError(
             "Both data matrices must have the same number of rows.")
@@ -90,10 +95,8 @@ def rda(Y, X, scale_Y=False, scaling=1):
         raise ValueError(
             "Explanatory variables cannot have less rows than columns.")
 
-    sample_ids = Y.index
-    feature_ids = Y.columns
-    Y = Y.values
-    X = X.values
+    sample_ids = y.index
+    feature_ids = y.columns
     # Centre response variables (they must be dimensionally
     # homogeneous)
     Y = scale(Y, with_std=scale_Y)
