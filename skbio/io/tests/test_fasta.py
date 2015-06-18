@@ -606,9 +606,11 @@ class WriterTests(TestCase):
             'ACGTTGCAccGG',
             positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775, 40,
                                              10, 10, 0]},
-            validate=False)
+            validate=False,
+            lowercase='introns')
         self.rna_seq = RNA('ACGUU',
-                           positional_metadata={'quality': [10, 9, 8, 7, 6]})
+                           positional_metadata={'quality': [10, 9, 8, 7, 6]},
+                           lowercase='introns')
         self.prot_seq = Protein(
             'pQqqqPPQQQ',
             metadata={'id': 'proteinseq',
@@ -616,7 +618,8 @@ class WriterTests(TestCase):
                                      " new\n\nlines\n\n\n"},
             positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42, 42,
                                              42, 43]},
-            validate=False)
+            validate=False,
+            lowercase='introns')
 
         seqs = [
             RNA('UUUU',
@@ -648,7 +651,8 @@ class WriterTests(TestCase):
             yield self.prot_seq
             yield DNA('AGGAGAATA',
                       metadata={'id': 'foo', 'description': '\n\n\n\n'},
-                      positional_metadata={'quality': range(9)})
+                      positional_metadata={'quality': range(9)},
+                      lowercase='introns')
 
         # generate sequences with ids containing whitespace (to test
         # id_whitespace_replacement)
@@ -664,6 +668,10 @@ class WriterTests(TestCase):
         def multi_seq_gen():
             for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
                         self.dna_seq, self.rna_seq, self.prot_seq):
+                yield seq
+
+        def lowercase_multi_seq_gen():
+            for seq in (self.dna_seq, self.rna_seq, self.prot_seq):
                 yield seq
 
         # can be serialized if no qual file is provided, else it should raise
@@ -682,7 +690,8 @@ class WriterTests(TestCase):
         self.objs_fps = list(map(lambda e: (e[0], e[1], get_data_path(e[2]),
                                             get_data_path(e[3])), [
             (empty_gen(), {}, 'empty', 'empty'),
-            (single_seq_gen(), {}, 'fasta_single_seq', 'qual_single_seq'),
+            (single_seq_gen(), {'lowercase': 'introns'}, 'fasta_single_seq',
+             'qual_single_seq'),
 
             # no splitting of sequence or qual data across lines b/c max_width
             # is sufficiently large
@@ -695,19 +704,23 @@ class WriterTests(TestCase):
             (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1',
              'qual_max_width_1'),
 
-            (multi_seq_gen(), {}, 'fasta_multi_seq', 'qual_multi_seq'),
-            (multi_seq_gen(), {'max_width': 5}, 'fasta_max_width_5',
-             'qual_max_width_5'),
+            (multi_seq_gen(), {'lowercase': 'introns'}, 'fasta_multi_seq',
+             'qual_multi_seq'),
+            (multi_seq_gen(), {'max_width': 5, 'lowercase': 'introns'},
+             'fasta_max_width_5', 'qual_max_width_5'),
             (newline_description_gen(),
-             {'description_newline_replacement': ':-)'},
+             {'description_newline_replacement': ':-)',
+              'lowercase': 'introns'},
              'fasta_description_newline_replacement_multi_char',
              'qual_description_newline_replacement_multi_char'),
             (newline_description_gen(),
-             {'description_newline_replacement': ''},
+             {'description_newline_replacement': '',
+              'lowercase': 'introns'},
              'fasta_description_newline_replacement_empty_str',
              'qual_description_newline_replacement_empty_str',),
             (newline_description_gen(),
-             {'description_newline_replacement': None},
+             {'description_newline_replacement': None,
+              'lowercase': 'introns'},
              'fasta_description_newline_replacement_none',
              'qual_description_newline_replacement_none'),
             (whitespace_id_gen(),

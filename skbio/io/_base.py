@@ -196,7 +196,12 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         qual = None
         if 'quality' in seq.positional_metadata:
             qual = seq.positional_metadata['quality'].values
-        yield header, str(seq), qual
+
+        if 'lowercase' in kwargs and hasattr(seq, 'lowercase'):
+            seq_str = seq.lowercase(kwargs['lowercase'])
+        else:
+            seq_str = str(seq)
+        yield header, seq_str, qual
 
 
 def _line_generator(fh, skip_blanks=False):

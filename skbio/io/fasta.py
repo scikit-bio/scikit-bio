@@ -755,9 +755,9 @@ def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
 def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',
-                               max_width=None):
+                               max_width=None, **kwargs):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, **kwargs)
 
 
 @register_writer('fasta', SequenceCollection)
@@ -844,6 +844,10 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
     def seq_gen():
         for seq in obj:
             yield seq
+
+    lowercase = None
+    if 'lowercase' in kwargs:
+        lowercase = kwargs['lowercase']
 
     _generator_to_fasta(
         seq_gen(), fh, qual=qual,
