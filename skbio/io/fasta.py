@@ -845,10 +845,6 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
         for seq in obj:
             yield seq
 
-    lowercase = None
-    if 'lowercase' in kwargs:
-        lowercase = kwargs['lowercase']
-
     _generator_to_fasta(
         seq_gen(), fh, qual=qual,
         id_whitespace_replacement=id_whitespace_replacement,
