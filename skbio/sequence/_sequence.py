@@ -102,8 +102,8 @@ class Sequence(collections.Sequence, SkbioObject):
     >>> from pprint import pprint
     >>> from skbio import Sequence
 
-    Creating sequences
-    ^^^^^^^^^^^^^^^^^^
+    **Creating sequences:**
+
     Create a sequence without any metadata:
 
     >>> seq = Sequence('GGUCGUGAAGGA')
@@ -122,8 +122,8 @@ class Sequence(collections.Sequence, SkbioObject):
     Sequence('ACGT', length=4, has_metadata=True,
              has_positional_metadata=True)
 
-    Retrieving sequence metadata
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Retrieving sequence metadata:**
+
     Retrieve metadata:
 
     >>> pprint(seq.metadata) # using pprint to display dict in sorted order
@@ -138,8 +138,8 @@ class Sequence(collections.Sequence, SkbioObject):
     2  False     4
     3   True    10
 
-    Updating sequence metadata
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Updating sequence metadata:**
+
     .. warning:: Be aware that a shallow copy of ``metadata`` and
        ``positional_metadata`` is made for performance. Since a deep copy is
        not made, changes made to mutable Python objects stored as metadata may
