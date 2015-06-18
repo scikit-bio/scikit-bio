@@ -125,24 +125,26 @@ class TestCAResults(object):
     def setup(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
-
-        self.contingency = pd.DataFrame(self.X, ['Site1', 'Site2', 'Site3'],
-                                        ['Species1', 'Species2', 'Species3'])
+        self.sample_ids = ['Site1', 'Site2', 'Site3']
+        self.feature_ids = ['Species1', 'Species2', 'Species3']
+        self.pc_ids = ['CA1', 'CA2']
+        self.contingency = pd.DataFrame(self.X, self.sample_ids,
+                                        self.feature_ids)
 
     def test_scaling2(self):
 
-        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), self.pc_ids)
         # p. 460 L&L 1998
         features = pd.DataFrame(np.array([[0.40887, -0.06955],  # F_hat
                                           [-0.11539, 0.29977],
                                           [-0.30997, -0.18739]]),
-                                ['Species1', 'Species2', 'Species3'],
-                                ['CA1', 'CA2'])
+                                self.feature_ids,
+                                self.pc_ids)
         samples = pd.DataFrame(np.array([[-0.84896, -0.88276],  # V_hat
                                          [-0.22046, 1.34482],
                                          [1.66697, -0.47032]]),
-                               ['Site1', 'Site2', 'Site3'],
-                               ['CA1', 'CA2'])
+                               self.sample_ids,
+                               self.pc_ids)
         exp = OrdinationResults('CA', 'Correspondance Analysis',
                                 eigvals=eigvals, features=features,
                                 samples=samples)
@@ -153,18 +155,18 @@ class TestCAResults(object):
                                         ignore_directionality=True)
 
     def test_scaling1(self):
-        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), ['CA1', 'CA2'])
+        eigvals = pd.Series(np.array([0.09613302, 0.04094181]), self.pc_ids)
         # p. 458
         features = pd.DataFrame(np.array([[1.31871, -0.34374],  # V
                                           [-0.37215, 1.48150],
                                           [-0.99972, -0.92612]]),
-                                ['Species1', 'Species2', 'Species3'],
-                                ['CA1', 'CA2'])
+                                self.feature_ids,
+                                self.pc_ids)
         samples = pd.DataFrame(np.array([[-0.26322, -0.17862],  # F
                                          [-0.06835, 0.27211],
                                          [0.51685, -0.09517]]),
-                               ['Site1', 'Site2', 'Site3'],
-                               ['CA1', 'CA2'])
+                               self.sample_ids,
+                               self.pc_ids)
         exp = OrdinationResults('CA', 'Correspondance Analysis',
                                 eigvals=eigvals, features=features,
                                 samples=samples)
