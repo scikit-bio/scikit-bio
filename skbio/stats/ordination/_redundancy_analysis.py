@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+from scipy.linalg import svd, lstsq
 
 from skbio import OrdinationResults
 from ._utils import corr, svd_rank, scale
@@ -130,11 +131,11 @@ def rda(y, x, scale_Y=False, scaling=1):
     # reproduce an example in L&L where X was rank-deficient, we'll
     # just use `np.linalg.lstsq`, which uses the SVD decomposition
     # under the hood and so it's also more expensive.
-    B, _, rank_X, _ = np.linalg.lstsq(X, Y)
+    B, _, rank_X, _ = lstsq(X, Y)
     Y_hat = X.dot(B)
     # Now let's perform PCA on the fitted values from the multiple
     # regression
-    u, s, vt = np.linalg.svd(Y_hat, full_matrices=False)
+    u, s, vt = svd(Y_hat, full_matrices=False)
     # vt are the right eigenvectors, which is what we need to
     # perform PCA. That is, we're changing points in Y_hat from the
     # canonical basis to the orthonormal basis given by the right
@@ -158,7 +159,7 @@ def rda(y, x, scale_Y=False, scaling=1):
 
     Y_res = Y - Y_hat
     # PCA on the residuals
-    u_res, s_res, vt_res = np.linalg.svd(Y_res, full_matrices=False)
+    u_res, s_res, vt_res = svd(Y_res, full_matrices=False)
     # See 9) in p. 587 in L&L 1998
     rank_res = svd_rank(Y_res.shape, s_res)
     # Theoretically, there're at most min(p, n - 1) non-zero eigenvalues as

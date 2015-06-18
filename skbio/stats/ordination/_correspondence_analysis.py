@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
+from scipy.linalg import svd
 
 from skbio import OrdinationResults
 from ._utils import svd_rank
@@ -127,7 +128,7 @@ def ca(X, scaling=1):
     Q_bar = (Q - expected) / np.sqrt(expected)  # Eq. 9.32
 
     # Step 2 (Singular Value Decomposition)
-    U_hat, W, Ut = np.linalg.svd(Q_bar, full_matrices=False)
+    U_hat, W, Ut = svd(Q_bar, full_matrices=False)
     # Due to the centering, there are at most min(r, c) - 1 non-zero
     # eigenvalues (which are all positive)
     rank = svd_rank(Q_bar.shape, W)
