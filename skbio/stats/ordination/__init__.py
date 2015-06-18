@@ -24,13 +24,6 @@ Functions
    scale
    svd_rank
 
-Testing Utilities
------------------
-
-.. autosummary::
-   :toctree: generated/
-
-   assert_ordination_results_equal
 
 Examples
 --------

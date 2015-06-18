@@ -161,21 +161,14 @@ def rda(y, x, scale_Y=False, scaling=1):
     u_res, s_res, vt_res = np.linalg.svd(Y_res, full_matrices=False)
     # See 9) in p. 587 in L&L 1998
     rank_res = svd_rank(Y_res.shape, s_res)
-    # Theoretically, there're at most min(p, n - 1) non-zero eigenvaluesas
+    # Theoretically, there're at most min(p, n - 1) non-zero eigenvalues as
 
     U_res = vt_res[:rank_res].T
     F_res = Y_res.dot(U_res)  # Ordination in the space of residuals
 
     eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
 
-    return _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling,
-                   sample_ids, feature_ids)
-
-
-def _scores(Y, X, U, U_res, F, F_res, Z, u, eigenvalues, scaling, sample_ids,
-            feature_ids):
-    """Compute sample, feature and biplot scores for different scalings.
-    """
+    # Compute scores
     if scaling not in {1, 2}:
         raise NotImplementedError("Only scalings 1, 2 available for RDA.")
     # According to the vegan-FAQ.pdf, the scaling factor for scores
