@@ -433,11 +433,11 @@ class TestWriters(unittest.TestCase):
     def setUp(self):
         self.valid_files = [
             ([
-                ('f o  o', 'bar\n\nbaz', 'AACCGG',
+                ('f o  o', 'bar\n\nbaz', 'AaCcGg',
                  [16, 17, 18, 19, 20, 21]),
-                ('bar', 'baz foo', 'TTGGCC',
+                ('bar', 'baz foo', 'TtGgCc',
                  [23, 22, 21, 20, 19, 18]),
-                ('ba\n\t\tz', 'foo bar', 'GATTTC',
+                ('ba\n\t\tz', 'foo bar', 'gAtTtC',
                  [20, 21, 22, 23, 24, 18])
             ], [
                 ({'variant': 'sanger'},
@@ -474,17 +474,33 @@ class TestWriters(unittest.TestCase):
                 self.assertEqual(observed, expected)
 
     def test_sequence_to_fastq_kwargs_passed(self):
-        for constructor in [Sequence, DNA, partial(RNA, validate=False),
-                            Protein]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for components, kwargs_expected_fp in self.valid_files:
-                for kwargs, expected_fp in kwargs_expected_fp:
+                for expected_kwargs, expected_fp in kwargs_expected_fp:
+
+                    observed_kwargs = {}
+                    # TODO:
+                    # some of the test files contain characters which are
+                    # invalid for RNA, so don't validate for now. Need to
+                    # fix this
+                    if constructor is RNA:
+                        observed_kwargs['validate'] = False
+                        expected_kwargs['validate'] = False
+
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     fh = StringIO()
                     for c in components:
                         obj = constructor(
                             c[2],
                             metadata={'id': c[0], 'description': c[1]},
-                            positional_metadata={'quality': c[3]})
-                        write(obj, into=fh, format='fastq', **kwargs)
+                            positional_metadata={'quality': c[3]},
+                            **observed_kwargs)
+                        write(obj, into=fh, format='fastq', **expected_kwargs)
 
                     observed = fh.getvalue()
                     fh.close()
@@ -499,10 +515,12 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = SequenceCollection([
                     DNA(c[2], metadata={'id': c[0], 'description': c[1]},
-                        positional_metadata={'quality': c[3]})
+                        positional_metadata={'quality': c[3]},
+                        lowercase='introns')
                     for c in components])
 
                 fh = StringIO()
+                kwargs['lowercase'] = 'introns'
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
@@ -517,10 +535,12 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = Alignment([
                     Protein(c[2], metadata={'id': c[0], 'description': c[1]},
-                            positional_metadata={'quality': c[3]})
+                            positional_metadata={'quality': c[3]},
+                            lowercase='introns')
                     for c in components])
 
                 fh = StringIO()
+                kwargs['lowercase'] = 'introns'
                 _alignment_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()

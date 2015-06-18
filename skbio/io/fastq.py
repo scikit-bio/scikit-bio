@@ -418,19 +418,19 @@ def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
 @register_writer('fastq', DNA)
 def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
-                           description_newline_replacement=' '):
+                           description_newline_replacement=' ', **kwargs):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, **kwargs)
 
 
 @register_writer('fastq', RNA)
 def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
-                           description_newline_replacement=' '):
+                           description_newline_replacement=' ', **kwargs):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, **kwargs)
 
 
 @register_writer('fastq', Protein)
@@ -445,19 +445,20 @@ def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
 @register_writer('fastq', SequenceCollection)
 def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
                                   id_whitespace_replacement='_',
-                                  description_newline_replacement=' '):
+                                  description_newline_replacement=' ',
+                                  **kwargs):
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, **kwargs)
 
 
 @register_writer('fastq', Alignment)
 def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' '):
+                        description_newline_replacement=' ', **kwargs):
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, **kwargs)
 
 
 def _blank_error(unique_text):
