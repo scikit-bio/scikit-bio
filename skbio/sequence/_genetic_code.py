@@ -28,21 +28,7 @@ def _simple_rc(seq):
 
 
 class GeneticCode(SkbioObject):
-
     """Class to hold codon to amino acid mapping, and vice versa.
-
-    Attributes
-    ----------
-    code_sequence
-    id
-    name
-    start_codon_sequence
-    start_codons
-    codons
-    synonyms
-    sense_codons
-    anticodons
-    blocks
 
     Parameters
     ----------
@@ -64,19 +50,6 @@ class GeneticCode(SkbioObject):
     ------
     GeneticCodeInitError
         If the length of `code_sequence` is different to `64`.
-
-    Methods
-    -------
-    changes
-    get_stop_indices
-    is_start
-    is_stop
-    translate_six_frames
-    translate
-    __repr__
-    __getitem__
-    __str__
-    __eq__
 
     Examples
     --------
@@ -292,8 +265,8 @@ class GeneticCode(SkbioObject):
         >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
-        Protein('CMTF', length=4)
+        >>> print(sgc.translate('AUGCAUGACUUUUGA', 1))
+        CMTF
 
         """
         if len(nucleotide_sequence) == 0:
@@ -365,13 +338,13 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> for e in results: e
-        Protein('MLT*', length=4)
-        Protein('C*HK', length=4)
-        Protein('ANI', length=3)
-        Protein('FMLA', length=4)
-        Protein('LC*H', length=4)
-        Protein('YVS', length=3)
+        >>> for e in results: print(e)
+        MLT*
+        C*HK
+        ANI
+        FMLA
+        LC*H
+        YVS
 
 
         """

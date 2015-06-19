@@ -139,8 +139,6 @@ User exceptions
 .. autosummary::
    :toctree: generated/
 
-   RecordError
-   FieldError
    UnrecognizedFormatError
    FileFormatError
    ClustalFormatError
@@ -151,6 +149,7 @@ User exceptions
    OrdinationFormatError
    PhylipFormatError
    QSeqFormatError
+   QUALFormatError
 
 User warnings
 ^^^^^^^^^^^^^
@@ -274,11 +273,11 @@ from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
-                         RecordError, FieldError, UnrecognizedFormatError,
-                         FileFormatError, ClustalFormatError, FASTAFormatError,
+                         UnrecognizedFormatError, FileFormatError,
+                         ClustalFormatError, FASTAFormatError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
-                         QSeqFormatError)
+                         QSeqFormatError, QUALFormatError)
 from ._registry import (write, read, sniff, get_writer, get_reader,
                         get_sniffer, list_write_formats, list_read_formats,
                         register_writer, register_reader, register_sniffer,
@@ -293,7 +292,7 @@ __all__ = ['write', 'read', 'sniff',
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
 
            'DuplicateRegistrationError', 'InvalidRegistrationError',
-           'RecordError', 'FieldError', 'UnrecognizedFormatError',
+           'UnrecognizedFormatError',
 
            'FileFormatError',
            'ClustalFormatError',
@@ -303,7 +302,8 @@ __all__ = ['write', 'read', 'sniff',
            'NewickFormatError',
            'OrdinationFormatError',
            'PhylipFormatError',
-           'QSeqFormatError']
+           'QSeqFormatError',
+           'QUALFormatError']
 
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8

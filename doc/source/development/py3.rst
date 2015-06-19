@@ -180,7 +180,7 @@ StringIO and BytesIO
 
 In Py2 there are three flavours of StringIO: a pure Python module
 (StringIO), an accelerated version (cStringIO), and another one in the
-io module. They all behave in a slightly different way, with differnt
+io module. They all behave in a slightly different way, with different
 memory and performance characteristics. So far, we're using::
 
     from six import StringIO
@@ -294,7 +294,7 @@ When testing if a variable is a string use
 Numbers
 -------
 
-The `long` type no longer exists in Py2. To test if a number is an
+The `long` type no longer exists in Py3. To test if a number is an
 integer (`int` or `long` in Py2, `int` in Py3), compare it to
 the abstract base class `Integral`::
 

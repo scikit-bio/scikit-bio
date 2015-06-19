@@ -618,9 +618,15 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
     """ Converts variety of types into an skbio.Alignment object
     """
     if isinstance(seq, string_types):
-        return Alignment([Sequence(seq)])
+        return Alignment([Sequence(seq, metadata={'id': ''})])
     elif isinstance(seq, Sequence):
-        return Alignment([seq])
+        if 'id' in seq.metadata:
+            return Alignment([seq])
+        else:
+            # HACK: Update to use Sequence.copy() method once it exists.
+            metadata = seq.metadata.copy()
+            metadata['id'] = ''
+            return Alignment([seq._to(metadata=metadata)])
     elif isinstance(seq, Alignment):
         if disallow_alignment:
             # This will disallow aligning either a pair of alignments, or an
@@ -641,13 +647,9 @@ _traceback_encoding = {'match': 1, 'vertical-gap': 2, 'horizontal-gap': 3,
 
 
 def _get_seq_id(seq, default_id):
-    try:
-        result = seq.id
-    except AttributeError:
+    result = seq.metadata['id'] if 'id' in seq.metadata else default_id
+    if result is None or result.strip() == "":
         result = default_id
-    else:
-        if result is None or result.strip() == "":
-            result = default_id
     return result
 
 
@@ -877,12 +879,12 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
     for i in range(aln1_sequence_count):
         aligned_seq = ''.join(aligned_seqs1[i][::-1])
         seq_id = _get_seq_id(aln1[i], str(i))
-        aligned_seqs1[i] = Sequence(aligned_seq, id=seq_id)
+        aligned_seqs1[i] = Sequence(aligned_seq, metadata={'id': seq_id})
 
     for i in range(aln2_sequence_count):
         aligned_seq = ''.join(aligned_seqs2[i][::-1])
         seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
-        aligned_seqs2[i] = Sequence(aligned_seq, id=seq_id)
+        aligned_seqs2[i] = Sequence(aligned_seq, metadata={'id': seq_id})
 
     return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)

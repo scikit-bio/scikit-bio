@@ -22,19 +22,12 @@ class RNA(NucleotideSequence):
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
         Characters representing the RNA sequence itself.
-    id : str, optional
-        Sequence identifier (e.g., an accession number).
-    description : str, optional
-        Description or comment about the sequence (e.g., "green fluorescent
-        protein").
-    quality : 1D array_like (int), optional
-        Phred quality scores stored as nonnegative integers, one per sequence
-        character. If provided, must be the same length as the RNA sequence.
-        Can be a 1D ``np.ndarray`` of integers or a structure that can be
-        converted into this representation using ``np.asarray``. A copy will
-        *not* be made if `quality` is already a 1D ``np.ndarray`` with an
-        ``int`` ``dtype``. The array will be made read-only (i.e., its
-        ``WRITEABLE`` flag will be set to ``False``).
+    metadata : dict, optional
+        Arbitrary metadata which applies to the entire sequence.
+    positional_metadata : Pandas DataFrame consumable, optional
+        Arbitrary per-character metadata. For example, quality data from
+        sequencing reads. Must be able to be passed directly to the Pandas
+        DataFrame constructor.
     validate : bool, optional
         If ``True``, validation will be performed to ensure that all sequence
         characters are in the IUPAC RNA character set. If ``False``, validation
@@ -50,10 +43,9 @@ class RNA(NucleotideSequence):
 
     Attributes
     ----------
-    id
-    description
     values
-    quality
+    metadata
+    positional_metadata
     alphabet
     gap_chars
     nondegenerate_chars
@@ -77,13 +69,13 @@ class RNA(NucleotideSequence):
     >>> from skbio import RNA
     >>> s = RNA('ACCGAAU')
     >>> s
-    RNA('ACCGAAU', length=7)
+    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
 
     Convert lowercase characters to uppercase:
 
     >>> s = RNA('AcCGaaU', case_insensitive=True)
     >>> s
-    RNA('ACCGAAU', length=7)
+    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
 
     """
 

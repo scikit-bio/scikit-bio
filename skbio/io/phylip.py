@@ -123,9 +123,9 @@ Examples
 Let's create an alignment with three DNA sequences of equal length:
 
 >>> from skbio import Alignment, DNA
->>> seqs = [DNA('ACCGTTGTA-GTAGCT', id='seq1'),
-...         DNA('A--GTCGAA-GTACCT', id='sequence-2'),
-...         DNA('AGAGTTGAAGGTATCT', id='3')]
+>>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id':'seq1'}),
+...         DNA('A--GTCGAA-GTACCT', metadata={'id':'sequence-2'}),
+...         DNA('AGAGTTGAAGGTATCT', metadata={'id':'3'})]
 >>> aln = Alignment(seqs)
 >>> aln
 <Alignment: n=3; mean +/- std length=16.00 +/- 0.00>
@@ -152,9 +152,9 @@ width column.
 If the sequence IDs in an alignment surpass the 10-character limit, an error
 will be raised when we try to write a PHYLIP file:
 
->>> long_id_seqs = [DNA('ACCGT', id='seq1'),
-...                 DNA('A--GT', id='long-sequence-2'),
-...                 DNA('AGAGT', id='seq3')]
+>>> long_id_seqs = [DNA('ACCGT', metadata={'id':'seq1'}),
+...                 DNA('A--GT', metadata={'id':'long-sequence-2'}),
+...                 DNA('AGAGT', metadata={'id':'seq3'})]
 >>> long_id_aln = Alignment(long_id_seqs)
 >>> fh = StringIO()
 >>> long_id_aln.write(fh, format='phylip')
@@ -243,4 +243,4 @@ def _alignment_to_phylip(obj, fh):
     fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
         chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
-        fh.write(fmt.format(seq.id, chunked_seq))
+        fh.write(fmt.format(seq.metadata['id'], chunked_seq))
