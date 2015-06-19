@@ -69,17 +69,6 @@ class DissimilarityMatrix(SkbioObject):
         monotonically-increasing integers cast as strings, with numbering
         starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
 
-    Attributes
-    ----------
-    data
-    ids
-    dtype
-    shape
-    size
-    T
-    png
-    svg
-
     See Also
     --------
     DistanceMatrix
@@ -409,8 +398,6 @@ class DissimilarityMatrix(SkbioObject):
         str
             String representation of the dissimilarity matrix.
 
-        .. shownumpydoc
-
         """
         return '%dx%d %s matrix\nIDs:\n%s\nData:\n' % (
             self.shape[0], self.shape[1], self._matrix_element_name,
@@ -434,8 +421,6 @@ class DissimilarityMatrix(SkbioObject):
         -------
         bool
             ``True`` if `self` is equal to `other`, ``False`` otherwise.
-
-        .. shownumpydoc
 
         """
         equal = True
@@ -475,8 +460,6 @@ class DissimilarityMatrix(SkbioObject):
         --------
         __eq__
 
-        .. shownumpydoc
-
         """
         return not self == other
 
@@ -497,8 +480,6 @@ class DissimilarityMatrix(SkbioObject):
         See Also
         --------
         index
-
-        .. shownumpydoc
 
         """
         return lookup_id in self._id_index
@@ -548,8 +529,6 @@ class DissimilarityMatrix(SkbioObject):
         Notes
         -----
         The lookup based on ID(s) is quick.
-
-        .. shownumpydoc
 
         """
         if isinstance(index, string_types):

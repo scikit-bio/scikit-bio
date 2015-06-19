@@ -159,17 +159,26 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
             "sequence IDs, nor to replace newlines in sequence descriptions.")
 
     for idx, seq in enumerate(generator):
+
         if len(seq) < 1:
             raise ValueError(
                 "%s sequence does not contain any characters (i.e., it is an "
                 "empty/blank sequence). Writing empty sequences is not "
                 "supported." % cardinal_to_ordinal(idx + 1))
 
-        id_ = seq.id
+        if 'id' in seq.metadata:
+            id_ = seq.metadata['id']
+        else:
+            id_ = ''
+
         if id_whitespace_replacement is not None:
             id_ = _whitespace_regex.sub(id_whitespace_replacement, id_)
 
-        desc = seq.description
+        if 'description' in seq.metadata:
+            desc = seq.metadata['description']
+        else:
+            desc = ''
+
         if description_newline_replacement is not None:
             desc = _newline_regex.sub(description_newline_replacement, desc)
 
@@ -178,12 +187,15 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         else:
             header = id_
 
-        if require_qual and seq.quality is None:
+        if require_qual and 'quality' not in seq.positional_metadata:
             raise ValueError(
                 "Cannot write %s sequence because it does not have quality "
                 "scores associated with it." % cardinal_to_ordinal(idx + 1))
 
-        yield header, str(seq), seq.quality
+        qual = None
+        if 'quality' in seq.positional_metadata:
+            qual = seq.positional_metadata['quality'].values
+        yield header, str(seq), qual
 
 
 def _line_generator(fh, skip_blanks=False):

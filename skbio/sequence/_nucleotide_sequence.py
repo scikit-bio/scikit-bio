@@ -24,10 +24,9 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
     Attributes
     ----------
-    id
-    description
     values
-    quality
+    metadata
+    positional_metadata
     alphabet
     gap_chars
     nondegenerate_chars
@@ -82,16 +81,16 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Parameters
         ----------
         reverse : bool, optional
-            If ``True``, return the reverse complement. If quality scores are
-            present, they will be reversed.
+            If ``True``, return the reverse complement. If positional metadata
+            is present, it will be reversed.
 
         Returns
         -------
         NucleotideSequence
-            The (reverse) complement of the nucleotide sequence. The type, ID,
-            description, and quality scores of the result will be the same as
-            the nucleotide sequence. If `reverse` is ``True``, quality scores
-            will be reversed if they are present.
+            The (reverse) complement of the nucleotide sequence. The type and
+            metadata of the result will be the same as the nucleotide
+            sequence. If `reverse` is ``True``, positional metadata
+            will be reversed if it is present.
 
         See Also
         --------
@@ -101,20 +100,26 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> DNA('TTCATT', id='s', quality=range(6)).complement()
-        DNA('AAGTAA', length=6, id='s', quality=[0, 1, 2, 3, 4, 5])
-        >>> DNA('TTCATT', id='s', quality=range(6)).complement(reverse=True)
-        DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)}).complement()
+        >>> str(seq)
+        'AAGTAA'
+        >>> seq.positional_metadata['quality'].values
+        array([0, 1, 2, 3, 4, 5])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)})
+        >>> seq = seq.complement(reverse=True)
+        >>> str(seq)
+        'AATGAA'
+        >>> seq.positional_metadata['quality'].values
+        array([5, 4, 3, 2, 1, 0])
 
         """
         result = self._complement_lookup[self._bytes]
-        quality = self.quality
+        complement = self._to(sequence=result)
         if reverse:
-            result = result[::-1]
-            if self._has_quality():
-                quality = self.quality[::-1]
-
-        return self._to(sequence=result, quality=quality)
+            complement = complement[::-1]
+        return complement
 
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.
@@ -122,9 +127,9 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Returns
         -------
         NucleotideSequence
-            The reverse complement of the nucleotide sequence. The type, ID,
-            and description of the result will be the same as the nucleotide
-            sequence. If quality scores are present, they will be reversed.
+            The reverse complement of the nucleotide sequence. The type and
+            metadata of the result will be the same as the nucleotide
+            sequence. If positional metadata is present, it will be reversed.
 
         See Also
         --------
@@ -138,8 +143,14 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> DNA('TTCATT', id='s', quality=range(6)).reverse_complement()
-        DNA('AATGAA', length=6, id='s', quality=[5, 4, 3, 2, 1, 0])
+        >>> seq = DNA('TTCATT',
+        ...           positional_metadata={'quality':range(6)})
+        >>> seq = seq.reverse_complement()
+        >>> str(seq)
+        'AATGAA'
+        >>> seq.positional_metadata['quality'].values
+        array([5, 4, 3, 2, 1, 0])
+
 
         """
         return self.complement(reverse=True)

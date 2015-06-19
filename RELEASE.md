@@ -14,7 +14,7 @@ To illustrate examples of commands you might run, let's assume that the current 
 
 1. Ensure the Travis build is passing against master.
 
-2. Update the version strings (1.2.3-dev) to the new version (1.2.4). There should only be two places this needs to be done: ``setup.py`` and ``skbio/__init__.py``. It's a good idea to ``grep`` for the current version string just to be safe:
+2. Update the version strings (1.2.3-dev) to the new version (1.2.4). There should only be one place this needs to be done: ``skbio/__init__.py``. It's a good idea to ``grep`` for the current version string just to be safe:
 
         grep -ir '1\.2\.3-dev' *
 

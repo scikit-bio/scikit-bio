@@ -26,10 +26,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     Attributes
     ----------
-    id
-    description
     values
-    quality
+    metadata
+    positional_metadata
     alphabet
     gap_chars
     nondegenerate_chars
@@ -164,10 +163,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             return _motifs
 
     @overrides(Sequence)
-    def __init__(self, sequence, id="", description="", quality=None,
+    def __init__(self, sequence, metadata=None, positional_metadata=None,
                  validate=True, case_insensitive=False):
         super(IUPACSequence, self).__init__(
-            sequence, id=id, description=description, quality=quality)
+            sequence, metadata, positional_metadata)
 
         if case_insensitive:
             self._convert_to_uppercase()
@@ -371,18 +370,20 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Notes
         -----
-        The type, ID, and description of the result will be the same as the
-        biological sequence. If quality scores are present, they will be
+        The type and metadata of the result will be the same as the
+        biological sequence. If positional metadata is present, it will be
         filtered in the same manner as the sequence characters and included in
         the resulting degapped sequence.
 
         Examples
         --------
         >>> from skbio import DNA
-        >>> s = DNA('GGTC-C--ATT-C.', quality=range(14))
+        >>> s = DNA('GGTC-C--ATT-C.',
+        ...         positional_metadata={'quality':range(14)})
         >>> t = s.degap()
-        >>> t
-        DNA('GGTCCATTC', length=9, quality=[0, 1, 2, 3, 5, 8, 9, 10, 12])
+        >>> t # doctest: +NORMALIZE_WHITESPACE
+        DNA('GGTCCATTC', length=9, has_metadata=False,
+            has_positional_metadata=True)
 
         """
         return self[np.invert(self.gaps())]
@@ -390,11 +391,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     def expand_degenerates(self):
         """Yield all possible non-degenerate versions of the sequence.
 
-        Returns
-        -------
-        generator
-            Generator yielding all possible non-degenerate versions of the
-            sequence.
+        Yields
+        ------
+        IUPACSequence
+            Non-degenerate version of the sequence.
 
         See Also
         --------
@@ -405,8 +405,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         There is no guaranteed ordering to the non-degenerate sequences that
         are yielded.
 
-        Each non-degenerate sequence will have the same type, ID, description,
-        and quality scores as the biological sequence.
+        Each non-degenerate sequence will have the same type, metadata,
+        and positional metadata as the biological sequence.
 
         Examples
         --------
@@ -415,8 +415,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
-        DNA('TAG', length=3)
-        DNA('TGG', length=3)
+        DNA('TAG', length=3, has_metadata=False, has_positional_metadata=False)
+        DNA('TGG', length=3, has_metadata=False, has_positional_metadata=False)
 
         """
         degen_chars = self.degenerate_map
@@ -448,11 +448,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         ignore : 1D array_like (bool), optional
             Boolean vector indicating positions to ignore when matching.
 
-        Returns
-        -------
-        generator
-            Yields slices indicating the locations of the motif in the
-            biological sequence.
+        Yields
+        ------
+        slice
+            Location of the motif in the biological sequence.
 
         Raises
         ------
@@ -465,11 +464,11 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> s = DNA('ACGGGGAGGCGGAG')
         >>> for motif_slice in s.find_motifs('purine-run', min_length=2):
         ...     motif_slice
-        ...     s[motif_slice]
+        ...     str(s[motif_slice])
         slice(2, 9, None)
-        DNA('GGGGAGG', length=7)
+        'GGGGAGG'
         slice(10, 14, None)
-        DNA('GGAG', length=4)
+        'GGAG'
 
         Gap characters can disrupt motifs:
 
