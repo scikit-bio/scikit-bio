@@ -37,7 +37,7 @@ def lladser_pe(counts, r=10):
     -----
     This function is just a wrapper around the full point estimator described
     in Theorem 2 (i) in [1]_, intended to be called for a single best estimate
-    on a complete sample. This function is not guaranteed to return estimated 
+    on a complete sample. This function is not guaranteed to return estimated
     uncovered probabilities less than 1 if the coverage is too low.
 
     References
