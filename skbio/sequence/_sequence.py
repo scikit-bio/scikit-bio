@@ -114,7 +114,7 @@ class Sequence(collections.Sequence, SkbioObject):
     Create a sequence with metadata and positional metadata:
 
     >>> metadata = {'id':'seq-id', 'desc':'seq desc', 'authors': ['Alice']}
-    >>> positional_metadata = {'qual': [3, 3, 4, 10],
+    >>> positional_metadata = {'quality': [3, 3, 4, 10],
     ...                        'exons': [True, True, False, True]}
     >>> seq = Sequence('ACGT', metadata=metadata,
     ...                positional_metadata=positional_metadata)
@@ -132,11 +132,11 @@ class Sequence(collections.Sequence, SkbioObject):
     Retrieve positional metadata:
 
     >>> seq.positional_metadata
-       exons  qual
-    0   True     3
-    1   True     3
-    2  False     4
-    3   True    10
+       exons  quality
+    0   True        3
+    1   True        3
+    2  False        4
+    3   True       10
 
     **Updating sequence metadata:**
 
@@ -202,39 +202,39 @@ class Sequence(collections.Sequence, SkbioObject):
     ``pd.DataFrame``:
 
     >>> positional_metadata = pd.DataFrame(
-    ...     {'qual': [3, 3, 4, 10], 'list': [[], [], [], []]})
+    ...     {'quality': [3, 3, 4, 10], 'list': [[], [], [], []]})
     >>> seq = Sequence('ACGT', positional_metadata=positional_metadata)
     >>> seq # doctest: +NORMALIZE_WHITESPACE
     Sequence('ACGT', length=4, has_metadata=False,
              has_positional_metadata=True)
     >>> seq.positional_metadata
-      list  qual
-    0   []     3
-    1   []     3
-    2   []     4
-    3   []    10
+      list  quality
+    0   []        3
+    1   []        3
+    2   []        4
+    3   []       10
 
     Now let's update the sequence's positional metadata by adding a new column
     and changing a value in another column:
 
     >>> seq.positional_metadata['gaps'] = [False, False, False, False]
-    >>> seq.positional_metadata.loc[0, 'qual'] = 999
+    >>> seq.positional_metadata.loc[0, 'quality'] = 999
     >>> seq.positional_metadata
-      list  qual   gaps
-    0   []   999  False
-    1   []     3  False
-    2   []     4  False
-    3   []    10  False
+      list  quality   gaps
+    0   []      999  False
+    1   []        3  False
+    2   []        4  False
+    3   []       10  False
 
     Note that the original positional metadata (stored in variable
     ``positional_metadata``) hasn't changed because a shallow copy was made:
 
     >>> positional_metadata
-      list  qual
-    0   []     3
-    1   []     3
-    2   []     4
-    3   []    10
+      list  quality
+    0   []        3
+    1   []        3
+    2   []        4
+    3   []       10
     >>> seq.positional_metadata.equals(positional_metadata)
     False
 
@@ -244,9 +244,9 @@ class Sequence(collections.Sequence, SkbioObject):
     >>> subseq
     Sequence('CG', length=2, has_metadata=False, has_positional_metadata=True)
     >>> subseq.positional_metadata
-      list  qual   gaps
-    0   []     3  False
-    1   []     4  False
+      list  quality   gaps
+    0   []        3  False
+    1   []        4  False
 
     As described above for metadata, since only a *shallow* copy was made of
     the positional metadata, updates to mutable objects will also change the
@@ -255,21 +255,21 @@ class Sequence(collections.Sequence, SkbioObject):
 
     >>> subseq.positional_metadata.loc[0, 'list'].append('item')
     >>> subseq.positional_metadata
-         list  qual   gaps
-    0  [item]     3  False
-    1      []     4  False
+         list  quality   gaps
+    0  [item]        3  False
+    1      []        4  False
     >>> seq.positional_metadata
-         list  qual   gaps
-    0      []   999  False
-    1  [item]     3  False
-    2      []     4  False
-    3      []    10  False
+         list  quality   gaps
+    0      []      999  False
+    1  [item]        3  False
+    2      []        4  False
+    3      []       10  False
     >>> positional_metadata
-         list  qual
-    0      []     3
-    1  [item]     3
-    2      []     4
-    3      []    10
+         list  quality
+    0      []        3
+    1  [item]        3
+    2      []        4
+    3      []       10
 
     """
     default_write_format = 'fasta'
@@ -296,7 +296,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @property
     def metadata(self):
-        """dict containing metadata which applies to the entire sequence.
+        """``dict`` containing metadata which applies to the entire sequence.
 
         Notes
         -----
@@ -356,13 +356,17 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @metadata.deleter
     def metadata(self):
+        # deleter is called in the constructor where self._metadata hasn't been
+        # set yet. having this check allows the deleter to define the "missing"
+        # metadata representation instead of also defining that in the
+        # constructor. same goes for positional_metadata deleter
         if hasattr(self, '_metadata'):
             del self._metadata
         self.metadata = {}
 
     @property
     def positional_metadata(self):
-        """pandas.DataFrame containing metadata on a per-character basis.
+        """``pd.DataFrame`` containing metadata on a per-character basis.
 
         Notes
         -----
@@ -370,20 +374,20 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        Create a sequence with positional metadata:
+        Create a DNA sequence with positional metadata:
 
-        >>> from skbio import Sequence
-        >>> s = Sequence(
+        >>> from skbio import DNA
+        >>> seq = DNA(
         ...     'ACGT',
         ...     positional_metadata={'quality': [3, 3, 20, 11],
         ...                          'exons': [True, True, False, True]})
-        >>> s # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGT', length=4, has_metadata=False,
-                 has_positional_metadata=True)
+        >>> seq # doctest: +NORMALIZE_WHITESPACE
+        DNA('ACGT', length=4, has_metadata=False,
+            has_positional_metadata=True)
 
         Retrieve positional metadata:
 
-        >>> s.positional_metadata
+        >>> seq.positional_metadata
            exons  quality
         0   True        3
         1   True        3
@@ -392,8 +396,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Update positional metadata:
 
-        >>> s.positional_metadata['gaps'] = [False, False, False, False]
-        >>> s.positional_metadata
+        >>> seq.positional_metadata['gaps'] = seq.gaps()
+        >>> seq.positional_metadata
            exons  quality   gaps
         0   True        3  False
         1   True        3  False
@@ -402,9 +406,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Set positional metadata:
 
-        >>> s.positional_metadata = {'degenerates':
-        ...                          [False, False, False, False]}
-        >>> s.positional_metadata
+        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
+        >>> seq.positional_metadata
           degenerates
         0       False
         1       False
@@ -413,14 +416,14 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Delete positional metadata:
 
-        >>> s.has_positional_metadata()
+        >>> seq.has_positional_metadata()
         True
-        >>> del s.positional_metadata
-        >>> s.positional_metadata
+        >>> del seq.positional_metadata
+        >>> seq.positional_metadata
         Empty DataFrame
         Columns: []
         Index: [0, 1, 2, 3]
-        >>> s.has_positional_metadata()
+        >>> seq.has_positional_metadata()
         False
 
         """
@@ -433,8 +436,8 @@ class Sequence(collections.Sequence, SkbioObject):
             positional_metadata = pd.DataFrame(positional_metadata, copy=True)
         except pd.core.common.PandasError as e:
             raise TypeError('Positional metadata invalid. Must be consumable '
-                            'by pandas.DataFrame. Original pandas error '
-                            'message: "%s"' % e)
+                            'by pd.DataFrame. Original pandas error message: '
+                            '"%s"' % e)
 
         num_rows = len(positional_metadata.index)
         if num_rows != len(self):
@@ -1620,7 +1623,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> seq = Sequence('AACCGGTT',
         ...                metadata={'id':'id1'},
         ...                positional_metadata={
-        ...                    'qual':[4, 2, 22, 23, 1, 1, 1, 9]
+        ...                    'quality':[4, 2, 22, 23, 1, 1, 1, 9]
         ...                })
 
         Create a copy of ``seq``, keeping the same underlying sequence of
@@ -1633,7 +1636,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         >>> str(new_seq)
         'AACCGGTT'
-        >>> new_seq.positional_metadata['qual'].values
+        >>> new_seq.positional_metadata['quality'].values
         array([ 4,  2, 22, 23,  1,  1,  1,  9])
 
         The metadata has been updated:

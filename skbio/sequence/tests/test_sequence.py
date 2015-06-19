@@ -405,7 +405,7 @@ class TestSequence(TestCase):
         # not consumable by Pandas
         with self.assertRaisesRegexp(TypeError,
                                      'Positional metadata invalid. Must be '
-                                     'consumable by pandas.DataFrame. '
+                                     'consumable by pd.DataFrame. '
                                      'Original pandas error message: '):
             Sequence('ACGT', positional_metadata=2)
         # 0 elements
@@ -588,7 +588,7 @@ class TestSequence(TestCase):
         # not consumable by Pandas
         with self.assertRaisesRegexp(TypeError,
                                      'Positional metadata invalid. Must be '
-                                     'consumable by pandas.DataFrame. '
+                                     'consumable by pd.DataFrame. '
                                      'Original pandas error message: '):
             seq.positional_metadata = 2
 
