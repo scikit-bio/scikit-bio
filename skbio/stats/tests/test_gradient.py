@@ -293,7 +293,7 @@ class GradientTests(BaseTests):
                                       's2': np.array([2, 3, 4]),
                                       's3': np.array([5, 6, 7]),
                                       's4': np.array([8, 9, 10])},
-                                     orient='index')
+                                     orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
 
@@ -494,7 +494,7 @@ class GradientANOVATests(BaseTests):
         exp_weighting_vector = pd.Series(
             np.array([60, 55, 50, 52, 57, 65, 68, 70, 72]),
             ['PC.354', 'PC.355', 'PC.356', 'PC.481', 'PC.593', 'PC.607',
-             'PC.634', 'PC.635', 'PC.636']
+             'PC.634', 'PC.635', 'PC.636'], name='Weight'
             ).astype(np.float64)
         pdt.assert_series_equal(bv._weighting_vector, exp_weighting_vector)
         self.assertTrue(bv._weighted)
