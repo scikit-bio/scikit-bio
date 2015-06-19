@@ -542,8 +542,9 @@ class RandomDistanceMatrixTests(TestCase):
 
         self.assertTrue(found_diff)
 
+    def test_large_matrix_for_symmetry(self):
         obs3 = randdm(100)
-        self.assertTrue(obs3 == obs3.T)
+        self.assertEqual(obs3, obs3.T)
 
     def test_ids(self):
         ids = ['foo', 'bar', 'baz']

@@ -16,7 +16,7 @@
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
 * Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
-* Fixed issue where non-symmetric distance matrices were being created by `randdm`.
+* Fixed issue where `randdm` was attempting to create asymmetric distance matrices.This was causing an error to be raised by the `DistanceMatrix` constructor inside of the `randdm` function, so that `randdm` would fail when attempting to create large distance matrices.
 ([#943](https://github.com/biocore/scikit-bio/issues/943))
 
 ### Deprecated functionality
