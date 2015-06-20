@@ -413,6 +413,8 @@ class ReaderTests(TestCase):
                 for o, e in zip(obs, exp):
                     # ignore positional metadata by creating a copy of the
                     # expected sequence without positional metadata
+                    # TODO use Sequence.copy and setter when copy is
+                    # implemented
                     e = e._to(positional_metadata=None)
                     self.assertEqual(o, e)
 

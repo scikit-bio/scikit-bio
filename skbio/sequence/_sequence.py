@@ -359,7 +359,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @metadata.deleter
     def metadata(self):
-        del self._metadata
         self._metadata = None
 
     @property
@@ -453,7 +452,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @positional_metadata.deleter
     def positional_metadata(self):
-        del self._positional_metadata
         self._positional_metadata = None
 
     @property
