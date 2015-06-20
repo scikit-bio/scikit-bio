@@ -345,6 +345,9 @@ class Sequence(collections.Sequence, SkbioObject):
         False
 
         """
+        if self._metadata is None:
+            # not using setter to avoid copy
+            self._metadata = {}
         return self._metadata
 
     @metadata.setter
@@ -356,13 +359,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @metadata.deleter
     def metadata(self):
-        # deleter is called in the constructor where self._metadata hasn't been
-        # set yet. having this check allows the deleter to define the "missing"
-        # metadata representation instead of also defining that in the
-        # constructor. same goes for positional_metadata deleter
-        if hasattr(self, '_metadata'):
-            del self._metadata
-        self.metadata = {}
+        del self._metadata
+        self._metadata = None
 
     @property
     def positional_metadata(self):
@@ -427,6 +425,10 @@ class Sequence(collections.Sequence, SkbioObject):
         False
 
         """
+        if self._positional_metadata is None:
+            # not using setter to avoid copy
+            self._positional_metadata = pd.DataFrame(
+                index=np.arange(len(self)))
         return self._positional_metadata
 
     @positional_metadata.setter
@@ -451,9 +453,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @positional_metadata.deleter
     def positional_metadata(self):
-        if hasattr(self, '_positional_metadata'):
-            del self._positional_metadata
-        self.positional_metadata = pd.DataFrame(index=np.arange(len(self)))
+        del self._positional_metadata
+        self._positional_metadata = None
 
     @property
     def _string(self):
@@ -462,22 +463,26 @@ class Sequence(collections.Sequence, SkbioObject):
     def __init__(self, sequence, metadata=None,
                  positional_metadata=None):
         if isinstance(sequence, Sequence):
-            if metadata is None:
+            # we're not simply accessing sequence.metadata in order to avoid
+            # creating "empty" metadata representations on both sequence
+            # objects if they don't have metadata. same strategy is used below
+            # for positional metadata
+            if metadata is None and sequence.has_metadata():
                 metadata = sequence.metadata
-            if positional_metadata is None:
+            if (positional_metadata is None and
+                    sequence.has_positional_metadata()):
                 positional_metadata = sequence.positional_metadata
             sequence = sequence._bytes
 
         self._set_sequence(sequence)
 
         if metadata is None:
-            # reset to default empty metadata representation
-            del self.metadata
+            self._metadata = None
         else:
             self.metadata = metadata
 
         if positional_metadata is None:
-            del self.positional_metadata
+            self._positional_metadata = None
         else:
             self.positional_metadata = positional_metadata
 
@@ -576,39 +581,78 @@ class Sequence(collections.Sequence, SkbioObject):
         bool
             Indicates whether the biological sequence is equal to `other`.
 
-        See Also
-        --------
-        equals
-
-        Notes
-        -----
-        See ``Sequence.equals`` for more control over equality testing.
-
-        This method is equivalent to ``self.equals(other)``.
-
         Examples
         --------
+        Define two biological sequences that have the same underlying sequence
+        of characters:
+
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> t = Sequence('GGUCGUGAAGGA')
+        >>> s = Sequence('ACGT')
+        >>> t = Sequence('ACGT')
+
+        The two sequences are considered equal because they are the same type,
+        their underlying sequence of characters are the same, and their
+        optional metadata attributes (``metadata`` and ``positional_metadata``)
+        were not provided:
+
         >>> s == t
         True
-        >>> u = Sequence('GGUCGUGACCGA')
+        >>> t == s
+        True
+
+        Define another biological sequence with a different sequence of
+        characters than the previous two biological sequences:
+
+        >>> u = Sequence('ACGA')
         >>> u == t
         False
 
-        Note that because the positional metadata does not match between ``u``
-        and ``v``, they are not considered equal:
+        Define a biological sequence with the same sequence of characters as
+        ``u`` but with different metadata and positional metadata:
 
-        >>> v = Sequence('GGUCGUGACCGA',
-        ...              positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
-        ...                                              100, 9, 10, 0, 42,
-        ...                                              42]})
+        >>> v = Sequence('ACGA', metadata={'id': 'abc'},
+        ...              positional_metadata={'quality':[1, 5, 3, 3]})
+
+        The two sequences are not considered equal because their metadata and
+        positional metadata do not match:
+
         >>> u == v
         False
 
         """
-        return self.equals(other)
+        # checks ordered from least to most expensive
+        if self.__class__ != other.__class__:
+            return False
+
+        # we're not simply comparing self.metadata to other.metadata in order
+        # to avoid creating "empty" metadata representations on the sequence
+        # objects if they don't have metadata. same strategy is used below for
+        # positional metadata
+        if self.has_metadata() and other.has_metadata():
+            if self.metadata != other.metadata:
+                return False
+        elif not (self.has_metadata() or other.has_metadata()):
+            # both don't have metadata
+            pass
+        else:
+            # one has metadata while the other does not
+            return False
+
+        if self._string != other._string:
+            return False
+
+        if self.has_positional_metadata() and other.has_positional_metadata():
+            if not self.positional_metadata.equals(other.positional_metadata):
+                return False
+        elif not (self.has_positional_metadata() or
+                  other.has_positional_metadata()):
+            # both don't have positional metadata
+            pass
+        else:
+            # one has positional metadata while the other does not
+            return False
+
+        return True
 
     def __ne__(self, other):
         """Determine if the biological sequence is not equal to another.
@@ -627,25 +671,17 @@ class Sequence(collections.Sequence, SkbioObject):
         bool
             Indicates whether the biological sequence is not equal to `other`.
 
-        See Also
-        --------
-        equals
-
-        Notes
-        -----
-        See ``Sequence.equals`` for more control over equality testing.
-
         Examples
         --------
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> t = Sequence('GGUCGUGAAGGA')
+        >>> s = Sequence('ACGT')
+        >>> t = Sequence('ACGT')
         >>> s != t
         False
-        >>> u = Sequence('GGUCGUGACCGA')
+        >>> u = Sequence('ACGA')
         >>> u != t
         True
-        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'v'})
+        >>> v = Sequence('ACGA', metadata={'id': 'v'})
         >>> u != v
         True
 
@@ -705,7 +741,6 @@ class Sequence(collections.Sequence, SkbioObject):
                  has_positional_metadata=False)
 
         """
-        metadata = self.metadata
         if (not isinstance(indexable, np.ndarray) and
             ((not isinstance(indexable, string_types)) and
              hasattr(indexable, '__iter__'))):
@@ -723,11 +758,14 @@ class Sequence(collections.Sequence, SkbioObject):
                     seq = np.concatenate(
                         list(_slices_from_iter(self._bytes, indexable)))
                     index = _as_slice_if_single_index(indexable)
-                    pos_md_slices = list(_slices_from_iter(
-                                         self.positional_metadata, index))
-                    positional_metadata = pd.concat(pos_md_slices)
 
-                    return self._to(sequence=seq, metadata=metadata,
+                    positional_metadata = None
+                    if self.has_positional_metadata():
+                        pos_md_slices = list(_slices_from_iter(
+                                             self.positional_metadata, index))
+                        positional_metadata = pd.concat(pos_md_slices)
+
+                    return self._to(sequence=seq,
                                     positional_metadata=positional_metadata)
         elif (isinstance(indexable, string_types) or
                 isinstance(indexable, bool)):
@@ -749,8 +787,7 @@ class Sequence(collections.Sequence, SkbioObject):
         seq = self._bytes[indexable]
         positional_metadata = self._slice_positional_metadata(indexable)
 
-        return self._to(sequence=seq, metadata=metadata,
-                        positional_metadata=positional_metadata)
+        return self._to(sequence=seq, positional_metadata=positional_metadata)
 
     def has_metadata(self):
         """Determine if the sequence contains metadata.
@@ -771,7 +808,7 @@ class Sequence(collections.Sequence, SkbioObject):
         True
 
         """
-        return bool(self.metadata)
+        return self._metadata is not None and bool(self.metadata)
 
     def has_positional_metadata(self):
         """Determine if the sequence contains positional metadata.
@@ -792,14 +829,18 @@ class Sequence(collections.Sequence, SkbioObject):
         True
 
         """
-        return len(self.positional_metadata.columns) > 0
+        return (self._positional_metadata is not None and
+                len(self.positional_metadata.columns) > 0)
 
     def _slice_positional_metadata(self, indexable):
-        if _is_single_index(indexable):
-            index = _single_index_to_slice(indexable)
+        if self.has_positional_metadata():
+            if _is_single_index(indexable):
+                index = _single_index_to_slice(indexable)
+            else:
+                index = indexable
+            return self.positional_metadata.iloc[index]
         else:
-            index = indexable
-        return self.positional_metadata.iloc[index]
+            return None
 
     def __len__(self):
         """Return the number of characters in the biological sequence.
@@ -947,94 +988,6 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(s) > 20:
             return "%s ... %s" % (s[:7], s[-7:])
         return s
-
-    def equals(self, other, ignore=None):
-        """Determine if the biological sequence is equal to another.
-
-        By default, biological sequences are equal if they are *exactly* the
-        same type and their sequence characters, metadata, and positional
-        metadata are the same.
-
-        Parameters
-        ----------
-        other : Sequence
-            Sequence to test for equality against.
-        ignore : iterable (str), optional
-            List of features to ignore in the equality test. By default, all
-            features must be the same for two biological sequences to be
-            considered equal. Features that can be ignored are ``'type'``,
-            ``'sequence'``, ``'metadata'``, and ``'positional_metadata'``.
-
-        Returns
-        -------
-        bool
-            Indicates whether the biological sequence is equal to `other`.
-
-        Examples
-        --------
-        Define two biological sequences that have the same underlying sequence
-        of characters:
-
-        >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> t = Sequence('GGUCGUGAAGGA')
-
-        The two sequences are considered equal because they are the same type,
-        their underlying sequence of characters are the same, and their
-        optional attributes (metadata and positional_metadata) were not
-        provided:
-
-        >>> s.equals(t)
-        True
-        >>> t.equals(s)
-        True
-
-        Define another biological sequence with a different sequence of
-        characters than the previous two biological sequences:
-
-        >>> u = Sequence('GGUCGUGACCGA')
-        >>> u.equals(t)
-        False
-
-        Define a biological sequence with the same sequence of characters as
-        ``u``, but with different metadata and positional metadata:
-
-        >>> v = Sequence('GGUCGUGACCGA', metadata={'id':'abc'},
-        ...               positional_metadata={'quality':[1, 5, 3, 3, 2, 42,
-        ...                                               100, 9, 10, 55, 42,
-        ...                                               42]})
-
-        By default, the two sequences are *not* considered equal because their
-        metadata and positional metadata do not match:
-
-        >>> u.equals(v)
-        False
-
-        By specifying that the metadata and positonal metadata should be
-        ignored, they now compare equal:
-
-        >>> u.equals(v, ignore=['metadata', 'positional_metadata'])
-        True
-
-        """
-        if ignore is None:
-            ignore = {}
-
-        # Checks are ordered from least to most expensive.
-        if 'type' not in ignore and self.__class__ != other.__class__:
-            return False
-
-        if 'sequence' not in ignore and self._string != other._string:
-            return False
-
-        if 'metadata' not in ignore and self.metadata != other.metadata:
-            return False
-
-        if ('positional_metadata' not in ignore and not
-                self.positional_metadata.equals(other.positional_metadata)):
-            return False
-
-        return True
 
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
@@ -1651,7 +1604,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         defaults = {'sequence': self._bytes,
-                    'metadata': self.metadata,
+                    'metadata': self._metadata,
                     'positional_metadata': self._positional_metadata}
         defaults.update(kwargs)
         return self._constructor(**defaults)
