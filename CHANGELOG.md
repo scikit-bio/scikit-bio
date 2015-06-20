@@ -10,11 +10,11 @@
 * scikit-bio now ignores leading and trailing whitespace characters on each line while reading FASTA/QUAL and FASTQ files.
 * Added `ratio` parameter to `skbio.stats.power.subsample_power`. This allows the user to calculate power on groups for uneven size (For example, draw twice as many samples from Group B than Group A). If `ratio` is not set, group sizes will remain equal across all groups.
 * Power calculations (`skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`) can use test functions that return multiple p values, like some multivariate linear regression models. Previously, the power calculations required the test to return a single p value.
+* Added ``skbio.util.assert_data_frame_almost_equal`` function for comparing ``pd.DataFrame`` objects in unit tests.
 
 ### Performance enhancements
 * The speed of quality score decoding has been significantly improved (~2x) when reading `fastq` files.
 * The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
-
 
 ### Bug fixes
 * Changed `BiologicalSequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
@@ -24,7 +24,7 @@
 ### Deprecated functionality
 * Deprecated `skbio.util.flatten`. This function will be removed in scikit-bio 0.3.1. Please use standard python library functionality
 described here [Making a flat list out of lists of lists](http://stackoverflow.com/a/952952/3639023), [Flattening a shallow list](http://stackoverflow.com/a/406199/3639023) ([#833](https://github.com/biocore/scikit-bio/issues/833))
-* Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.4.1. It is deprecated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals. 
+* Deprecated `skbio.stats.power.bootstrap_power_curve` will be removed in scikit-bio 0.4.1. It is deprecated in favor of using ``subsample_power`` or ``sample_paired_power`` to calculate a power matrix, and then the use of ``confidence_bounds`` to calculate the average and confidence intervals.
 
 ### Backward-incompatible changes
 * Removed the following deprecated functionality:
@@ -46,7 +46,6 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * `skbio.alignment.Alignment.majority_consensus` now returns `BiologicalSequence('')` if the alignment is empty. Previously, `''` was returned.
 * `min_observations` was removed from `skbio.stats.power.subsample_power` and `skbio.stats.power.subsample_paired_power`. The minimum number of samples for subsampling depends on the data set and statistical tests. Having a default parameter to set unnecessary limitations on the technique.
 
-
 ### Miscellaneous
 * Changed testing procedures
     - Developers should now use `make test`
@@ -56,7 +55,7 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * `numpy` is no longer required to be installed before installing scikit-bio!
 * Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
 * Updated to use `natsort` >= 4.0.0.
-* The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results. 
+* The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results.
 
 ## Version 0.2.3 (2015-02-13)
 
@@ -353,5 +352,3 @@ Fixes to setup.py. This is a pre-alpha release. At this stage, major backwards-i
 ## Version 0.1.0 (2014-05-15)
 
 Initial pre-alpha release. At this stage, major backwards-incompatible API changes can and will happen.
-
-

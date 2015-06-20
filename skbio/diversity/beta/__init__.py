@@ -97,11 +97,6 @@ Create a table containing 7 OTUs and 6 samples:
    let's define some:
 
    >>> import pandas as pd
-   >>> try:
-   ...     # not necessary for normal use
-   ...     pd.set_option('show_dimensions', True)
-   ... except KeyError:
-   ...     pass
    >>> sample_md = {
    ...    'A': {'body_site': 'gut', 'subject': 's1'},
    ...    'B': {'body_site': 'skin', 'subject': 's1'},
@@ -118,8 +113,6 @@ Create a table containing 7 OTUs and 6 samples:
    D      s2       gut
    E      s2    tongue
    F      s2      skin
-   <BLANKLINE>
-   [6 rows x 2 columns]
 
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
