@@ -945,6 +945,34 @@ class Sequence(collections.Sequence, SkbioObject):
             return "%s ... %s" % (s[:7], s[-7:])
         return s
 
+    def __copy__(self):
+        """Return a shallow copy of the biological sequence.
+
+        See Also
+        --------
+        copy
+
+        Notes
+        -----
+        This method is equivalent to ``seq.copy(deep=False)``.
+
+        """
+        return self.copy(deep=False)
+
+    def __deepcopy__(self, memo):
+        """Return a deep copy of the biological sequence.
+
+        See Also
+        --------
+        copy
+
+        Notes
+        -----
+        This method is equivalent to ``seq.copy(deep=True)``.
+
+        """
+        return self._copy(True, memo)
+
     def has_metadata(self):
         """Determine if the sequence contains metadata.
 
@@ -1105,6 +1133,9 @@ class Sequence(collections.Sequence, SkbioObject):
         3   []        5
 
         """
+        return self._copy(deep, {})
+
+    def _copy(self, deep, memo):
         # strategy: copy the sequence without metadata first, then set metadata
         # attributes with copies. we take this approach instead of simply
         # passing the metadata through the Sequence constructor because we
@@ -1113,7 +1144,7 @@ class Sequence(collections.Sequence, SkbioObject):
         # also directly set the private metadata attributes instead of using
         # their public setters to avoid an unnecessary copy
         if deep:
-            bytes = copy.deepcopy(self._bytes)
+            bytes = copy.deepcopy(self._bytes, memo)
         else:
             bytes = np.copy(self._bytes)
 
@@ -1123,7 +1154,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.has_metadata():
             metadata = self.metadata
             if deep:
-                metadata = copy.deepcopy(metadata)
+                metadata = copy.deepcopy(metadata, memo)
             else:
                 metadata = metadata.copy()
             seq_copy._metadata = metadata
@@ -1131,7 +1162,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.has_positional_metadata():
             positional_metadata = self.positional_metadata
             if deep:
-                positional_metadata = copy.deepcopy(positional_metadata)
+                positional_metadata = copy.deepcopy(positional_metadata, memo)
             else:
                 # deep=True makes a shallow copy of the underlying data buffer
                 positional_metadata = positional_metadata.copy(deep=True)
