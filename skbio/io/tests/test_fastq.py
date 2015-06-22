@@ -309,7 +309,7 @@ class TestReaders(unittest.TestCase):
                                                         **observed_kwargs))
                     self.assertEqual(len(expected), len(observed))
                     for o, e in zip(observed, expected):
-                        self.assertTrue(o.equals(e))
+                        self.assertEqual(o, e)
 
     def test_fastq_to_generator_invalid_files_all_variants(self):
         # files that should be invalid for all variants, as well as custom
@@ -384,7 +384,7 @@ class TestReaders(unittest.TestCase):
                         observed = read(valid, into=constructor,
                                         format='fastq', verify=False,
                                         **observed_kwargs)
-                        self.assertTrue(observed.equals(expected))
+                        self.assertEqual(observed, expected)
 
     def test_fastq_to_sequence_collection(self):
         for valid_files, kwargs, components in self.valid_configurations:
@@ -402,10 +402,7 @@ class TestReaders(unittest.TestCase):
 
                     observed = _fastq_to_sequence_collection(valid,
                                                              **observed_kwargs)
-                    # TODO remove when #656 is resolved
                     self.assertEqual(observed, expected)
-                    for o, e in zip(observed, expected):
-                        self.assertTrue(o.equals(e))
 
     def test_fastq_to_alignment(self):
         for valid_files, kwargs, components in self.valid_configurations:
@@ -423,10 +420,7 @@ class TestReaders(unittest.TestCase):
                          for c in components])
 
                     observed = _fastq_to_alignment(valid, **observed_kwargs)
-                    # TODO remove when #656 is resolved
                     self.assertEqual(observed, expected)
-                    for o, e in zip(observed, expected):
-                        self.assertTrue(o.equals(e))
 
 
 class TestWriters(unittest.TestCase):

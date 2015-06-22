@@ -176,7 +176,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             sequence, metadata, positional_metadata)
 
         if not isinstance(lowercase, bool):
-            self._positional_metadata[lowercase] = self._lowercase_bytes()
+            self.positional_metadata[lowercase] = self._lowercase_bytes()
             self._convert_to_uppercase()
         elif lowercase:
             self._convert_to_uppercase()

@@ -214,7 +214,7 @@ class TestQSeqToGenerator(TestQSeqBase):
                 observed = list(_qseq_to_generator(valid, **kwarg))
                 self.assertEqual(len(expected), len(observed))
                 for o, e in zip(observed, expected):
-                    self.assertTrue(o.equals(e))
+                    self.assertEqual(o, e)
 
 
 class TestQSeqToSequenceCollection(TestQSeqBase):
@@ -248,10 +248,7 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
                     for c in components])
 
                 observed = _qseq_to_sequence_collection(valid, **kwarg)
-                # TODO remove when #656 is resolved
                 self.assertEqual(observed, expected)
-                for o, e in zip(observed, expected):
-                    self.assertTrue(o.equals(e))
 
 
 class TestQSeqToSequences(TestQSeqBase):
@@ -291,7 +288,7 @@ class TestQSeqToSequences(TestQSeqBase):
                     observed = read(valid, into=constructor,
                                     format='qseq', verify=False,
                                     **observed_kwargs)
-                    self.assertTrue(observed.equals(expected))
+                    self.assertEqual(observed, expected)
 
 
 class TestQSeqSniffer(TestQSeqBase):
