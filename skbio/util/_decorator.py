@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from warnings import warn
 from textwrap import wrap
+from decorator import decorator
 
 from ._exception import OverrideError
 
@@ -306,17 +307,8 @@ class deprecated(_state_decorator):
                  ' removed in version %s. %s' %
                  (func.__name__, self.as_of, self.until, self.reason),
                  DeprecationWarning)
-            return func(*args, **kwargs)
-        # Currently func's signature is lost (and this is caught by the
-        # doctests). It looks like the solution is probably to use the
-        # [decorator module](https://pypi.python.org/pypi/decorator) which
-        # @ebolyen pointed me to. I'm out of time for experimentation now
-        # though. This needs to be resolved before this code is merged.
-        # For testing purposes, we can test the signature of a deprecated
-        # function ``f`` with:
-        # import inspect
-        # inspect.getargspec(f)
-        wrapped_f.__name__ = func.__name__
-        wrapped_f.__doc__ = func.__doc__
+            # args[0] is the function being wrapped when this is called
+            # after wrapping with decorator.decorator, but why???
+            return func(*args[1:], **kwargs)
 
-        return wrapped_f
+        return decorator(wrapped_f, func)
