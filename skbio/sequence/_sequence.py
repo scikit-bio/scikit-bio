@@ -14,6 +14,7 @@ from six import string_types, text_type
 
 import re
 import collections
+import copy
 import numbers
 from contextlib import contextmanager
 
@@ -986,6 +987,41 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return (self._positional_metadata is not None and
                 len(self.positional_metadata.columns) > 0)
+
+    def copy(self, deep=False):
+        # strategy: copy the sequence without metadata first, then set metadata
+        # attributes with copies. we take this approach instead of simply
+        # passing the metadata through the Sequence constructor because we
+        # don't want to copy twice (this could happen when deep=True, where we
+        # deep copy here and then shallow copy in the Sequence constructor). we
+        # also directly set the private metadata attributes instead of using
+        # their public setters to avoid an unnecessary copy
+        if deep:
+            bytes = copy.deepcopy(self._bytes)
+        else:
+            bytes = np.copy(self._bytes)
+
+        seq_copy = self._constructor(sequence=bytes, metadata=None,
+                                     positional_metadata=None)
+
+        if self.has_metadata():
+            metadata = self.metadata
+            if deep:
+                metadata = copy.deepcopy(metadata)
+            else:
+                metadata = metadata.copy()
+            seq_copy._metadata = metadata
+
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+            if deep:
+                positional_metadata = copy.deepcopy(positional_metadata)
+            else:
+                # deep=True makes a shallow copy of the underlying data buffer
+                positional_metadata = positional_metadata.copy(deep=True)
+            seq_copy._positional_metadata = positional_metadata
+
+        return seq_copy
 
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.

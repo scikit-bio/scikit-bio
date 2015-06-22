@@ -1960,6 +1960,95 @@ class TestSequence(TestCase):
         seq = Sequence('ACGT', positional_metadata={'foo': [1, 2, 3, 4]})
         self.assertTrue(seq.has_positional_metadata())
 
+    def test_copy_without_metadata(self):
+        # shallow vs deep copy with sequence only should be equivalent
+        # (deepcopy vs copy of a numpy array is only different for object
+        # dtype)
+        for deep in False, True:
+            seq = Sequence('ACGT')
+            copy = seq.copy(deep=deep)
+
+            self.assertEqual(copy, seq)
+            self.assertIsNot(copy, seq)
+            self.assertIsNot(copy._bytes, seq._bytes)
+
+            # metadata attributes should be None and not initialized to a
+            # "missing" representation
+            self.assertIsNone(seq._metadata)
+            self.assertIsNone(seq._positional_metadata)
+            self.assertIsNone(copy._metadata)
+            self.assertIsNone(copy._positional_metadata)
+
+    def test_copy_with_metadata_shallow(self):
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        copy = seq.copy()
+
+        self.assertEqual(copy, seq)
+        self.assertIsNot(copy, seq)
+        self.assertIsNot(copy._bytes, seq._bytes)
+        self.assertIsNot(copy._metadata, seq._metadata)
+        self.assertIsNot(copy._positional_metadata, seq._positional_metadata)
+        self.assertIsNot(copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIs(copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIs(copy._positional_metadata.loc[0, 'bar'],
+                      seq._positional_metadata.loc[0, 'bar'])
+
+        copy.metadata['foo'].append(2)
+        copy.metadata['foo2'] = 42
+
+        self.assertEqual(copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1, 2]})
+
+        copy.positional_metadata.loc[0, 'bar'].append(1)
+        copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
+    def test_copy_with_metadata_deep(self):
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        copy = seq.copy(deep=True)
+
+        self.assertEqual(copy, seq)
+        self.assertIsNot(copy, seq)
+        self.assertIsNot(copy._bytes, seq._bytes)
+        self.assertIsNot(copy._metadata, seq._metadata)
+        self.assertIsNot(copy._positional_metadata, seq._positional_metadata)
+        self.assertIsNot(copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIsNot(copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIsNot(copy._positional_metadata.loc[0, 'bar'],
+                         seq._positional_metadata.loc[0, 'bar'])
+
+        copy.metadata['foo'].append(2)
+        copy.metadata['foo2'] = 42
+
+        self.assertEqual(copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1]})
+
+        copy.positional_metadata.loc[0, 'bar'].append(1)
+        copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
     def test_munge_to_index_array_valid_index_array(self):
         s = Sequence('123456')
 
