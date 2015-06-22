@@ -678,15 +678,17 @@ def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
 
 @register_reader('fasta', SequenceCollection)
 def _fasta_to_sequence_collection(fh, qual=FileSentinel,
-                                  constructor=Sequence):
+                                  constructor=Sequence, **kwargs):
     return SequenceCollection(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
+        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
+                                 **kwargs)))
 
 
 @register_reader('fasta', Alignment)
-def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence):
+def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     return Alignment(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
+        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
+                                 **kwargs)))
 
 
 @register_writer('fasta')
@@ -746,9 +748,9 @@ def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
 def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
-                           max_width=None):
+                           max_width=None, **kwargs):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, **kwargs)
 
 
 @register_writer('fasta', Protein)
@@ -764,17 +766,18 @@ def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
 def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
-                                  max_width=None):
+                                  max_width=None, **kwargs):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, **kwargs)
 
 
 @register_writer('fasta', Alignment)
 def _alignment_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' ', max_width=None):
+                        description_newline_replacement=' ', max_width=None,
+                        **kwargs):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, **kwargs)
 
 
 def _parse_fasta_raw(fh, data_parser, error_type):

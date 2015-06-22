@@ -229,20 +229,36 @@ class ReaderTests(TestCase):
         # they are also a different type than Sequence in order to
         # exercise the constructor parameter
         self.sequence_collection_different_type = (
-            [RNA('AUG',
+            [RNA('aUG',
                  metadata={'id': '', 'description': ''},
-                 positional_metadata={'quality': [20, 20, 21]}),
-             RNA('AUC',
+                 positional_metadata={'quality': [20, 20, 21]},
+                 lowercase='introns'),
+             RNA('AuC',
                  metadata={'id': 'rnaseq-1', 'description': 'rnaseq desc 1'},
-                 positional_metadata={'quality': [10, 9, 10]}),
-             RNA('AUG',
+                 positional_metadata={'quality': [10, 9, 10]},
+                 lowercase='introns'),
+             RNA('AUg',
                  metadata={'id': 'rnaseq-2', 'description': 'rnaseq desc 2'},
-                 positional_metadata={'quality': [9, 99, 999]})],
-            {'constructor': partial(RNA, validate=False)},
+                 positional_metadata={'quality': [9, 99, 999]},
+                 lowercase='introns')],
+            {'constructor': partial(RNA, lowercase='introns'),
+             'lowercase': 'introns'},
             list(map(get_data_path,
                      ['fasta_sequence_collection_different_type'])),
             list(map(get_data_path,
                      ['qual_sequence_collection_different_type']))
+        )
+
+        self.lowercase_seqs = (
+            [DNA('TAcg',
+                 metadata={'id': 'f-o-o', 'description': 'b_a_r'},
+                 positional_metadata={'quality': [0, 1, 2, 3]},
+                 lowercase='introns')],
+            {'constructor': DNA, 'lowercase': 'introns'},
+            list(map(get_data_path,
+                     ['fasta_single_dna_seq_non_defaults'])),
+            list(map(get_data_path,
+                     ['qual_single_dna_seq_non_defaults']))
         )
 
         # store fasta filepath, kwargs, error type, and expected error message
@@ -396,7 +412,8 @@ class ReaderTests(TestCase):
     def test_fasta_to_generator_valid_files(self):
         test_cases = (self.empty, self.single, self.multi,
                       self.odd_labels_different_type,
-                      self.sequence_collection_different_type)
+                      self.sequence_collection_different_type,
+                      self.lowercase_seqs)
 
         # Strategy:
         #   for each fasta file, read it without its corresponding qual file,
@@ -434,15 +451,21 @@ class ReaderTests(TestCase):
     def test_fasta_to_any_sequence(self):
         for constructor, reader_fn in ((Sequence,
                                         _fasta_to_biological_sequence),
-                                       (partial(DNA, validate=False),
+                                       (partial(DNA, validate=False,
+                                                lowercase='introns'),
                                         partial(_fasta_to_dna_sequence,
-                                                validate=False)),
-                                       (partial(RNA, validate=False),
+                                                validate=False,
+                                                lowercase='introns')),
+                                       (partial(RNA, validate=False,
+                                                lowercase='introns'),
                                         partial(_fasta_to_rna_sequence,
-                                                validate=False)),
-                                       (partial(Protein, validate=False),
+                                                validate=False,
+                                                lowercase='introns')),
+                                       (partial(Protein, validate=False,
+                                                lowercase='introns'),
                                         partial(_fasta_to_protein_sequence,
-                                                validate=False))):
+                                                validate=False,
+                                                lowercase='introns'))):
 
             # empty file
             empty_fp = get_data_path('empty')
@@ -606,7 +629,6 @@ class WriterTests(TestCase):
             'ACGTTGCAccGG',
             positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775, 40,
                                              10, 10, 0]},
-            validate=False,
             lowercase='introns')
         self.rna_seq = RNA('ACGUU',
                            positional_metadata={'quality': [10, 9, 8, 7, 6]},
@@ -618,13 +640,13 @@ class WriterTests(TestCase):
                                      " new\n\nlines\n\n\n"},
             positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42, 42,
                                              42, 43]},
-            validate=False,
             lowercase='introns')
 
         seqs = [
-            RNA('UUUU',
+            RNA('UuuU',
                 metadata={'id': 's\te\tq\t1', 'description': 'desc\n1'},
-                positional_metadata={'quality': [1234, 0, 0, 2]}),
+                positional_metadata={'quality': [1234, 0, 0, 2]},
+                lowercase='introns'),
             Sequence(
                 'CATC',
                 metadata={'id': 's\te\tq\t2', 'description': 'desc\n2'},
@@ -633,7 +655,7 @@ class WriterTests(TestCase):
                     metadata={'id': 's\te\tq\t3', 'description': 'desc\n3'},
                     positional_metadata={'quality': [12345, 678909, 999999,
                                                      4242424242]},
-                    validate=False)
+                    validate=False, lowercase='introns')
         ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
@@ -828,21 +850,24 @@ class WriterTests(TestCase):
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
               'qual_single_bio_seq_non_defaults')),
-            (_dna_sequence_to_fasta,
-             DNA('TACG', metadata={'id': id_, 'description': desc},
-                 positional_metadata={'quality': range(4)}),
+            (partial(_dna_sequence_to_fasta, lowercase='introns'),
+             DNA('TAcg', metadata={'id': id_, 'description': desc},
+                 positional_metadata={'quality': range(4)},
+                 lowercase='introns'),
              ('fasta_single_dna_seq_defaults',
               'fasta_single_dna_seq_non_defaults',
               'qual_single_dna_seq_non_defaults')),
-            (_rna_sequence_to_fasta,
-             RNA('UACG', metadata={'id': id_, 'description': desc},
-                 positional_metadata={'quality': range(2, 6)}),
+            (partial(_rna_sequence_to_fasta, lowercase='introns'),
+             RNA('uaCG', metadata={'id': id_, 'description': desc},
+                 positional_metadata={'quality': range(2, 6)},
+                 lowercase='introns'),
              ('fasta_single_rna_seq_defaults',
               'fasta_single_rna_seq_non_defaults',
               'qual_single_rna_seq_non_defaults')),
-            (_protein_sequence_to_fasta,
-             Protein('PQQ', metadata={'id': id_, 'description': desc},
-                     positional_metadata={'quality': [42, 41, 40]}),
+            (partial(_protein_sequence_to_fasta, lowercase='introns'),
+             Protein('PqQ', metadata={'id': id_, 'description': desc},
+                     positional_metadata={'quality': [42, 41, 40]},
+                     lowercase='introns'),
              ('fasta_single_prot_seq_defaults',
               'fasta_single_prot_seq_non_defaults',
               'qual_single_prot_seq_non_defaults')))
@@ -884,7 +909,7 @@ class WriterTests(TestCase):
                         (_alignment_to_fasta, self.align)):
             # test writing with default parameters
             fh = StringIO()
-            fn(obj, fh)
+            fn(obj, fh, lowercase='introns')
             obs = fh.getvalue()
             fh.close()
 
@@ -897,7 +922,8 @@ class WriterTests(TestCase):
             fasta_fh = StringIO()
             qual_fh = StringIO()
             fn(obj, fasta_fh, id_whitespace_replacement='*',
-               description_newline_replacement='+', max_width=3, qual=qual_fh)
+               description_newline_replacement='+', max_width=3, qual=qual_fh,
+               lowercase='introns')
             obs_fasta = fasta_fh.getvalue()
             obs_qual = qual_fh.getvalue()
             fasta_fh.close()
