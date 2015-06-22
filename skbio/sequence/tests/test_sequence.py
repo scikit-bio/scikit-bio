@@ -2033,7 +2033,8 @@ class TestSequence(TestCase):
             self.assertIsNot(seq_copy, seq)
             self.assertIsNot(seq_copy._bytes, seq._bytes)
             self.assertIsNot(seq_copy._metadata, seq._metadata)
-            self.assertIsNot(seq_copy._positional_metadata, seq._positional_metadata)
+            self.assertIsNot(seq_copy._positional_metadata,
+                             seq._positional_metadata)
             self.assertIsNot(seq_copy._positional_metadata.values,
                              seq._positional_metadata.values)
             self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
