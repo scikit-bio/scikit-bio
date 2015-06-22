@@ -989,6 +989,122 @@ class Sequence(collections.Sequence, SkbioObject):
                 len(self.positional_metadata.columns) > 0)
 
     def copy(self, deep=False):
+        """Return a copy of the biological sequence.
+
+        Parameters
+        ----------
+        deep : bool, optional
+            Perform a deep copy. If ``False``, perform a shallow copy.
+
+        Returns
+        -------
+        Sequence
+            Copy of the biological sequence.
+
+        Notes
+        -----
+        Since sequence objects can share the same underlying immutable sequence
+        data (or pieces of it), this method can be used to create a sequence
+        object with its own copy of the sequence data so that the original
+        sequence data can be garbage-collected.
+
+        Examples
+        --------
+        Create a sequence:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ACGT',
+        ...                metadata={'id': 'seq-id', 'authors': ['Alice']},
+        ...                positional_metadata={'quality': [7, 10, 8, 5],
+        ...                                     'list': [[], [], [], []]})
+
+        Make a shallow copy of the sequence:
+
+        >>> seq_copy = seq.copy()
+        >>> seq_copy == seq
+        True
+
+        Setting new references in the copied sequence's metadata doesn't affect
+        the original sequence's metadata:
+
+        >>> seq_copy.metadata['id'] = 'new-id'
+        >>> pprint(seq_copy.metadata)
+        {'authors': ['Alice'], 'id': 'new-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice'], 'id': 'seq-id'}
+
+        The same applies to the sequence's positional metadata:
+
+        >>> seq_copy.positional_metadata.loc[0, 'quality'] = 999
+        >>> seq_copy.positional_metadata
+          list  quality
+        0   []      999
+        1   []       10
+        2   []        8
+        3   []        5
+        >>> seq.positional_metadata
+          list  quality
+        0   []        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        Since only a *shallow* copy was made, updates to mutable objects stored
+        as metadata affect the original sequence's metadata:
+
+        >>> seq_copy.metadata['authors'].append('Bob')
+        >>> pprint(seq_copy.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'new-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
+
+        The same applies to the sequence's positional metadata:
+
+        >>> seq_copy.positional_metadata.loc[0, 'list'].append(1)
+        >>> seq_copy.positional_metadata
+          list  quality
+        0  [1]      999
+        1   []       10
+        2   []        8
+        3   []        5
+        >>> seq.positional_metadata
+          list  quality
+        0  [1]        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        Perform a deep copy to avoid this behavior:
+
+        >>> seq_deep_copy = seq.copy(deep=True)
+
+        Updates to mutable objects no longer affect the original sequence's
+        metadata:
+
+        >>> seq_deep_copy.metadata['authors'].append('Carol')
+        >>> pprint(seq_deep_copy.metadata)
+        {'authors': ['Alice', 'Bob', 'Carol'], 'id': 'seq-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
+
+        Nor its positional metadata:
+
+        >>> seq_deep_copy.positional_metadata.loc[0, 'list'].append(2)
+        >>> seq_deep_copy.positional_metadata
+             list  quality
+        0  [1, 2]        7
+        1      []       10
+        2      []        8
+        3      []        5
+        >>> seq.positional_metadata
+          list  quality
+        0  [1]        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        """
         # strategy: copy the sequence without metadata first, then set metadata
         # attributes with copies. we take this approach instead of simply
         # passing the metadata through the Sequence constructor because we
