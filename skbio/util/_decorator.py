@@ -146,12 +146,23 @@ class _state_decorator(object):
     _line_prefix = '\n        '
     _required_kwargs = []
 
-    def _update_doc_string(self, func, state_desc):
+    def _update_doc_string(self, func, state_desc,
+                           state_desc_prefix='State: '):
         doc_lines = func.__doc__.split('\n')
         # wrap lines at 79 characters, accounting for the length of
-        # self._line_prefix
-        state_desc_lines = wrap('State: ' + state_desc,
-                                79 - len(self._line_prefix))
+        # self._line_prefix and start_desc_prefix
+        len_state_desc_prefix = len(state_desc_prefix)
+        wrap_at = 79 - (len(self._line_prefix) + len_state_desc_prefix)
+        state_desc_lines = wrap(state_desc, wrap_at)
+        # The first line of the state description should start with
+        # state_desc_prefix, while the others should start with the number of
+        # spaces in each. This is for consistency with numpydoc formatting of
+        # deprecation notices, which are done using the note Sphinx directive.
+        state_desc_lines[0] = '%s%s' % (state_desc_prefix, state_desc_lines[0])
+        header_spaces = ' ' * len_state_desc_prefix
+        for i, line in enumerate(state_desc_lines[1:], 1):
+            state_desc_lines[i] = '%s%s' % (header_spaces, line)
+
         doc_lines.insert(
             1, self._line_prefix + self._line_prefix.join(state_desc_lines))
         return '\n'.join(doc_lines)
@@ -299,8 +310,8 @@ class deprecated(_state_decorator):
     f_deprecated(x, verbose=False)
         An example deprecated function.
     <BLANKLINE>
-        State: Deprecated as of 0.3.0 for removal in 0.3.3. Users should now
-        use skbio.g().
+        .. note:: Deprecated as of 0.3.0 for removal in 0.3.3. Users should
+                  now use skbio.g().
     <BLANKLINE>
 
     """
@@ -316,7 +327,8 @@ class deprecated(_state_decorator):
     def __call__(self, func, *args, **kwargs):
         state_desc = 'Deprecated as of %s for removal in %s. %s' %\
          (self.as_of, self.until, self.reason)
-        func.__doc__ = self._update_doc_string(func, state_desc)
+        func.__doc__ = self._update_doc_string(func, state_desc,
+                                               state_desc_prefix='.. note:: ')
 
         def wrapped_f(*args, **kwargs):
             warn('%s is deprecated as of scikit-bio version %s, and will be'
