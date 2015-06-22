@@ -144,6 +144,7 @@ class _state_decorator(object):
     """
 
     _line_prefix = '\n        '
+    _required_kwargs = []
 
     def _update_doc_string(self, func, state_desc):
         doc_lines = func.__doc__.split('\n')
@@ -154,6 +155,12 @@ class _state_decorator(object):
         doc_lines.insert(
             1, self._line_prefix + self._line_prefix.join(state_desc_lines))
         return '\n'.join(doc_lines)
+
+    def _validate_kwargs(self, **kwargs):
+        for required_kwarg in self._required_kwargs:
+            if required_kwarg not in kwargs:
+                raise ValueError('%s decorator requires parameter: %s' %
+                                 (self.__class__, required_kwarg))
 
 
 class stable(_state_decorator):
@@ -192,7 +199,10 @@ class stable(_state_decorator):
     <BLANKLINE>
     """
 
+    _required_kwargs = ['as_of']
+
     def __init__(self, **kwargs):
+        self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
 
     def __call__(self, func):
@@ -238,7 +248,10 @@ class experimental(_state_decorator):
 
     """
 
+    _required_kwargs = ['as_of']
+
     def __init__(self, **kwargs):
+        self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
 
     def __call__(self, func):
@@ -292,7 +305,10 @@ class deprecated(_state_decorator):
 
     """
 
+    _required_kwargs = ['as_of', 'until', 'reason']
+
     def __init__(self, **kwargs):
+        self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
         self.until = kwargs['until']
         self.reason = kwargs['reason']
