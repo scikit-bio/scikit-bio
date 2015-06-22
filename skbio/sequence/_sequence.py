@@ -1594,47 +1594,15 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        This is a shallow copy, but since biological sequences are immutable,
-        it is conceptually the same as a deep copy.
+        By default, `metadata` and `positional_metadata` are shallow-copied and
+        the reference to `sequence` is used (without copying) for efficiency
+        since `sequence` is immutable. This differs from the behavior of
+        `Sequence.copy`, which will actually copy `sequence`.
 
         This method is the preferred way of creating new instances from an
         existing biological sequence, instead of calling
         ``self.__class__(...)``, as the latter can be error-prone (e.g.,
         it's easy to forget to propagate attributes to the new instance).
-
-        Examples
-        --------
-        Create a biological sequence:
-
-        >>> from skbio import Sequence
-        >>> seq = Sequence('AACCGGTT',
-        ...                metadata={'id':'id1'},
-        ...                positional_metadata={
-        ...                    'quality':[4, 2, 22, 23, 1, 1, 1, 9]
-        ...                })
-
-        Create a copy of ``seq``, keeping the same underlying sequence of
-        characters and quality scores, while updating the metadata:
-
-        >>> new_seq = seq._to(metadata={'id':'new-id'})
-
-        Note that the copied biological sequence's underlying sequence and
-        positional metadata are the same as ``seq``:
-
-        >>> str(new_seq)
-        'AACCGGTT'
-        >>> new_seq.positional_metadata['quality'].values
-        array([ 4,  2, 22, 23,  1,  1,  1,  9])
-
-        The metadata has been updated:
-
-        >>> new_seq.metadata['id']
-        'new-id'
-
-        The original biological sequence's metadata has not been changed:
-
-        >>> seq.metadata['id']
-        'id1'
 
         """
         defaults = {'sequence': self._bytes,
