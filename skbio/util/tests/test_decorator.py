@@ -8,8 +8,11 @@
 
 from __future__ import absolute_import, division, print_function
 import unittest
+import inspect
+import warnings
 
 from skbio.util import classproperty, overrides
+from skbio.util._decorator import stable, experimental, deprecated
 from skbio.util._exception import OverrideError
 
 
@@ -71,6 +74,131 @@ class TestClassProperty(unittest.TestCase):
         with self.assertRaises(AttributeError):
             f.foo = 4242
 
+class TestStable(unittest.TestCase):
+
+    def _get_f(self, as_of):
+        @stable(as_of=as_of)
+        def f(x, y=42):
+            """ Add 42, or something else, to x.
+
+                Parameters
+                ----------
+                x : int, x
+                y : int, optional
+
+            """
+            return x + y
+        return f
+
+    def test_function_output(self):
+        f = self._get_f('0.1.0')
+        self.assertEqual(f(1), 43)
+
+    def test_function_docstring(self):
+        f = self._get_f('0.1.0')
+        self.assertTrue('State: Stable as of 0.1.0.' in f.__doc__)
+        f = self._get_f('0.1.1')
+        self.assertTrue('State: Stable as of 0.1.1.' in f.__doc__)
+
+    def test_function_signature(self):
+        f = self._get_f('0.1.0')
+        expected = inspect.ArgSpec(
+            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+        self.assertEqual(inspect.getargspec(f), expected)
+        self.assertEqual(f.__name__, 'f')
+
+class TestExperimental(unittest.TestCase):
+
+    def _get_f(self, as_of):
+        @experimental(as_of=as_of)
+        def f(x, y=42):
+            """ Add 42, or something else, to x.
+
+                Parameters
+                ----------
+                x : int, x
+                y : int, optional
+
+            """
+            return x + y
+        return f
+
+    def test_function_output(self):
+        f = self._get_f('0.1.0')
+        self.assertEqual(f(1), 43)
+
+    def test_function_docstring(self):
+        f = self._get_f('0.1.0')
+        self.assertTrue(
+            'State: Experimental as of 0.1.0.' in f.__doc__)
+        f = self._get_f('0.1.1')
+        self.assertTrue(
+            'State: Experimental as of 0.1.1.' in f.__doc__)
+
+    def test_function_signature(self):
+        f = self._get_f('0.1.0')
+        expected = inspect.ArgSpec(
+            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+        self.assertEqual(inspect.getargspec(f), expected)
+        self.assertEqual(f.__name__, 'f')
+
+class TestDeprecated(unittest.TestCase):
+
+    def _get_f(self, as_of, until, reason):
+        @deprecated(as_of=as_of, until=until, reason=reason)
+        def f(x, y=42):
+            """ Add 42, or something else, to x.
+
+                Parameters
+                ----------
+                x : int, x
+                y : int, optional
+
+            """
+            return x + y
+        return f
+
+    def test_function_output(self):
+        f = self._get_f('0.1.0', until='0.1.4',
+                        reason='You should now use skbio.g().')
+        self.assertEqual(f(1), 43)
+
+    def test_deprecation_warning(self):
+        f = self._get_f('0.1.0', until='0.1.4',
+                        reason='You should now use skbio.g().')
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            f(1)
+            print(type(w[-1].category))
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            expected_str = "is deprecated as of scikit-bio version 0.1.0"
+            self.assertTrue(expected_str in str(w[-1].message))
+
+    def test_function_docstring(self):
+        f = self._get_f('0.1.0', until='0.1.4',
+                        reason='You should now use skbio.g().')
+        e1 = ("        .. note:: Deprecated as of 0.1.0 for "
+              "removal in 0.1.4. You should now")
+        e2 = "                  use skbio.g()."
+        self.assertTrue(e1 in f.__doc__)
+        self.assertTrue(e2 in f.__doc__)
+
+        f = self._get_f('0.1.1', until='0.1.5',
+                        reason='You should now use skbio.h().')
+        e1 = ("        .. note:: Deprecated as of 0.1.1 for "
+              "removal in 0.1.5. You should now")
+        e2 = "                  use skbio.h()."
+        self.assertTrue(e1 in f.__doc__)
+        self.assertTrue(e2 in f.__doc__)
+
+    def test_function_signature(self):
+        f = self._get_f('0.1.0', until='0.1.4',
+                        reason='You should now use skbio.g().')
+        expected = inspect.ArgSpec(
+            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+        self.assertEqual(inspect.getargspec(f), expected)
+        self.assertEqual(f.__name__, 'f')
 
 if __name__ == '__main__':
     unittest.main()
