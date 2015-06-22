@@ -73,8 +73,7 @@ Warnings
 
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
-from ._decorator import (classproperty, overrides, stable, experimental,
-                         deprecated)
+from ._decorator import (classproperty, overrides)
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import (get_data_path, TestRunner,
