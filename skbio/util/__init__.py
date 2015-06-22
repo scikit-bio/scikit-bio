@@ -18,6 +18,7 @@ Common functionality to support testing in skbio.
 
    get_data_path
    TestRunner
+   assert_data_frame_almost_equal
 
 Decorators
 ----------
@@ -76,12 +77,13 @@ from ._decorator import (classproperty, overrides, stable, experimental,
                          deprecated)
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
-from ._testing import get_data_path, TestRunner
+from ._testing import (get_data_path, TestRunner,
+                       assert_data_frame_almost_equal)
 
 __all__ = ['EfficiencyWarning', 'TestingUtilError', 'classproperty',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', 'overrides', 'stable',
-           'experimental', 'deprecated']
+           'get_data_path', 'TestRunner', 'overrides',
+           'assert_data_frame_almost_equal']
 
 test = TestRunner(__file__).test

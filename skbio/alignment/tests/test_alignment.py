@@ -255,15 +255,6 @@ class SequenceCollectionTests(TestCase):
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
         self.assertEqual(self.empty.ids(), [])
 
-    def _assert_sequence_collections_equal(self, observed, expected):
-        """Compare SequenceCollections strictly."""
-        # TODO remove this custom equality testing code when SequenceCollection
-        # has an equals method (part of #656). We need this method to include
-        # IDs in the comparison (not part of SequenceCollection.__eq__).
-        self.assertEqual(observed, expected)
-        for obs_seq, exp_seq in zip(observed, expected):
-            self.assertTrue(obs_seq.equals(exp_seq))
-
     def test_update_ids_default_behavior(self):
         # 3 seqs
         exp_sc = SequenceCollection([
@@ -273,12 +264,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'1': 'r1', '2': 'r2', '3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids()
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids()
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_prefix(self):
@@ -290,12 +281,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'abc1': 'r1', 'abc2': 'r2', 'abc3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(prefix='abc')
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(prefix='abc')
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_func_parameter(self):
@@ -310,12 +301,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(func=append_42)
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(func=append_42)
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_ids_parameter(self):
@@ -327,12 +318,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'abc': 'r1', 'def': 'r2', 'ghi': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(ids=('abc', 'def', 'ghi'))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(ids=[])
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_sequence_attributes_propagated(self):
@@ -349,7 +340,7 @@ class SequenceCollectionTests(TestCase):
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc',))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # 2 seqs
@@ -369,7 +360,7 @@ class SequenceCollectionTests(TestCase):
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc', 'def'))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
     def test_update_ids_invalid_parameter_combos(self):
@@ -586,22 +577,22 @@ class AlignmentTests(TestCase):
 
     def test_majority_consensus(self):
         # empty cases
-        self.assertTrue(
-            self.empty.majority_consensus().equals(Sequence('')))
-        self.assertTrue(
-            self.no_positions.majority_consensus().equals(RNA('')))
+        self.assertEqual(
+            self.empty.majority_consensus(), Sequence(''))
+        self.assertEqual(
+            self.no_positions.majority_consensus(), RNA(''))
 
         # alignment where all sequences are the same
         aln = Alignment([DNA('AG', metadata={'id': 'a'}),
                          DNA('AG', metadata={'id': 'b'})])
-        self.assertTrue(aln.majority_consensus().equals(DNA('AG')))
+        self.assertEqual(aln.majority_consensus(), DNA('AG'))
 
         # no ties
         d1 = DNA('TTT', metadata={'id': "d1"})
         d2 = DNA('TT-', metadata={'id': "d2"})
         d3 = DNA('TC-', metadata={'id': "d3"})
         a1 = Alignment([d1, d2, d3])
-        self.assertTrue(a1.majority_consensus().equals(DNA('TT-')))
+        self.assertEqual(a1.majority_consensus(), DNA('TT-'))
 
         # ties
         d1 = DNA('T', metadata={'id': "d1"})

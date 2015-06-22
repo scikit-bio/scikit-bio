@@ -353,19 +353,10 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     Examples
     --------
-    Import the functionality we'll use in the following examples. The call to
-    ``pd.set_option`` ensures consistent ``DataFrame`` formatting across
-    different versions of pandas. This call is not necessary for normal
-    use; it is only included here so that the doctests will pass.
+    Import the functionality we'll use in the following examples:
 
-    >>> import pandas as pd
     >>> from skbio import DistanceMatrix
     >>> from skbio.stats.distance import pwmantel
-    >>> try:
-    ...     # not necessary for normal use
-    ...     pd.set_option('show_dimensions', True)
-    ... except KeyError:
-    ...     pass
 
     Define three 3x3 distance matrices:
 
@@ -389,8 +380,6 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
     x   y     0.755929     NaN  3  pearson             0   two-sided
         z    -0.755929     NaN  3  pearson             0   two-sided
     y   z    -0.142857     NaN  3  pearson             0   two-sided
-    <BLANKLINE>
-    [3 rows x 6 columns]
 
     Note that we passed ``permutations=0`` to suppress significance tests; the
     p-values in the output are labelled ``NaN``.

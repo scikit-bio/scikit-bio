@@ -411,8 +411,12 @@ class ReaderTests(TestCase):
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    self.assertTrue(o.equals(e,
-                                             ignore=['positional_metadata']))
+                    # ignore positional metadata by creating a copy of the
+                    # expected sequence without positional metadata
+                    # TODO use Sequence.copy and setter when copy is
+                    # implemented
+                    e = e._to(positional_metadata=None)
+                    self.assertEqual(o, e)
 
                 for qual_fp in qual_fps:
                     obs = list(_fasta_to_generator(fasta_fp, qual=qual_fp,
@@ -420,7 +424,7 @@ class ReaderTests(TestCase):
 
                     self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
-                        self.assertTrue(o.equals(e))
+                        self.assertEqual(o, e)
 
     def test_fasta_to_generator_invalid_files(self):
         for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
@@ -469,14 +473,13 @@ class ReaderTests(TestCase):
                                                      88888, 1, 3456]})
 
                 obs = reader_fn(fasta_fp)
-                self.assertTrue(obs.equals(exp,
-                                           ignore=['positional_metadata']))
+                self.assertEqual(obs, exp._to(positional_metadata=None))
 
                 qual_fps = list(map(get_data_path,
                                     ['qual_single_seq', 'qual_max_width_1']))
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
-                    self.assertTrue(obs.equals(exp))
+                    self.assertEqual(obs, exp)
 
             # file with multiple seqs
             fasta_fps = list(map(get_data_path,
@@ -492,12 +495,11 @@ class ReaderTests(TestCase):
                                                      88888, 1, 3456]})
 
                 obs = reader_fn(fasta_fp)
-                self.assertTrue(obs.equals(exp,
-                                           ignore=['positional_metadata']))
+                self.assertEqual(obs, exp._to(positional_metadata=None))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
-                    self.assertTrue(obs.equals(exp))
+                    self.assertEqual(obs, exp)
 
                 # get middle
                 exp = constructor('ACGTTGCAccGG',
@@ -508,12 +510,11 @@ class ReaderTests(TestCase):
                                                                    10, 10, 0]})
 
                 obs = reader_fn(fasta_fp, seq_num=4)
-                self.assertTrue(obs.equals(exp,
-                                           ignore=['positional_metadata']))
+                self.assertEqual(obs, exp._to(positional_metadata=None))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=4, qual=qual_fp)
-                    self.assertTrue(obs.equals(exp))
+                    self.assertEqual(obs, exp)
 
                 # get last
                 exp = constructor(
@@ -525,12 +526,11 @@ class ReaderTests(TestCase):
                                                      42, 42, 42, 43]})
 
                 obs = reader_fn(fasta_fp, seq_num=6)
-                self.assertTrue(obs.equals(exp,
-                                           ignore=['positional_metadata']))
+                self.assertEqual(obs, exp._to(positional_metadata=None))
 
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
-                    self.assertTrue(obs.equals(exp))
+                    self.assertEqual(obs, exp)
 
                 # seq_num too large
                 with self.assertRaisesRegexp(ValueError, '8th sequence'):
@@ -562,26 +562,13 @@ class ReaderTests(TestCase):
                 for fasta_fp in fasta_fps:
                     obs = reader_fn(fasta_fp, **kwargs)
 
-                    # TODO remove this custom equality testing code when
-                    # SequenceCollection has an equals method (part of #656).
-                    # We need this method to include IDs and description in the
-                    # comparison (not part of SequenceCollection.__eq__).
                     self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
-                        self.assertTrue(
-                            o.equals(e, ignore=['positional_metadata']))
+                        self.assertEqual(o, e._to(positional_metadata=None))
 
                     for qual_fp in qual_fps:
                         obs = reader_fn(fasta_fp, qual=qual_fp, **kwargs)
-
-                        # TODO remove this custom equality testing code when
-                        # SequenceCollection has an equals method (part of
-                        # #656). We need this method to include IDs and
-                        # description in the comparison (not part of
-                        # SequenceCollection.__eq__).
                         self.assertEqual(obs, exp)
-                        for o, e in zip(obs, exp):
-                            self.assertTrue(o.equals(e))
 
 
 class WriterTests(TestCase):
@@ -949,13 +936,7 @@ class RoundtripTests(TestCase):
                 fasta_fh.close()
                 qual_fh.close()
 
-                # TODO remove this custom equality testing code when
-                # SequenceCollection has an equals method (part of #656).
-                # We need this method to include IDs and description in the
-                # comparison (not part of SequenceCollection.__eq__).
                 self.assertEqual(obj1, obj2)
-                for s1, s2 in zip(obj1, obj2):
-                    self.assertTrue(s1.equals(s2))
 
     def test_roundtrip_biological_sequences(self):
         fps = list(map(lambda e: list(map(get_data_path, e)),
@@ -988,7 +969,7 @@ class RoundtripTests(TestCase):
                 fasta_fh.close()
                 qual_fh.close()
 
-                self.assertTrue(obj1.equals(obj2))
+                self.assertEqual(obj1, obj2)
 
 
 if __name__ == '__main__':
