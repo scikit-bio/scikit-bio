@@ -787,49 +787,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return self._to(sequence=seq, positional_metadata=positional_metadata)
 
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
-
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
-
     def _slice_positional_metadata(self, indexable):
         if self.has_positional_metadata():
             if _is_single_index(indexable):
@@ -986,6 +943,49 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(s) > 20:
             return "%s ... %s" % (s[:7], s[-7:])
         return s
+
+    def has_metadata(self):
+        """Determine if the sequence contains metadata.
+
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
+        >>> t.has_metadata()
+        True
+
+        """
+        return self._metadata is not None and bool(self.metadata)
+
+    def has_positional_metadata(self):
+        """Determine if the sequence contains positional metadata.
+
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has positional metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_positional_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
+        >>> t.has_positional_metadata()
+        True
+
+        """
+        return (self._positional_metadata is not None and
+                len(self.positional_metadata.columns) > 0)
 
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
