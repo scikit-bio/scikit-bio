@@ -6,9 +6,11 @@ These states inform users and developers to what extent they can rely on
 different APIs in the package.
 
 You can find out the stability state of public functionality by looking at its
-docstring. This information will either be in the *Extended Summary* section
-of the docstring, or in the case of deprecation, this information will appear
-as a note following the *Short Summary*.
+docstring, which is formatted based on
+[numpydoc](https://github.com/numpy/numpydoc). This information will either
+be in the *Extended Summary* section of the docstring, or in the case of
+deprecation, this information will appear as a note following the *Short
+Summary*.
 
 Definitions of the stability states and the information associated with each
 follow.
