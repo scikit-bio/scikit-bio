@@ -19,13 +19,6 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
-def _invert_case(array):
-    # ASCII is built such that the difference between uppercase and
-    # lowercase is the 6th bit.
-    array ^= 32
-    return array
-
-
 class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     """Store biological sequence data conforming to the IUPAC character set.
 
@@ -62,6 +55,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
+    _ascii_invert_case_bit_offset = 32
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
     __validation_mask = None
@@ -175,23 +169,22 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         super(IUPACSequence, self).__init__(
             sequence, metadata, positional_metadata)
 
-        if not isinstance(lowercase, bool):
-            self.positional_metadata[lowercase] = self._lowercase_bytes()
-            self._convert_to_uppercase()
-        elif lowercase:
+        # Note we are checking identity against the False object here and not
+        # just falsiness
+        if lowercase is not False:
+            self._lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            if not isinstance(lowercase, bool):
+                self.positional_metadata[lowercase] = self._lowercase_mask
             self._convert_to_uppercase()
 
         if validate:
             self._validate()
 
     def _convert_to_uppercase(self):
-        lowercase = self._lowercase_bytes()
+        lowercase = self._lowercase_mask
         if np.any(lowercase):
             with self._byte_ownership():
-                self._bytes[lowercase] = _invert_case(self._bytes[lowercase])
-
-    def _lowercase_bytes(self):
-        return self._bytes > self._ascii_lowercase_boundary
+                self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
     def lowercase(self, lowercase):
         # First try to treat lowercase like an index array (boolean array,
@@ -199,7 +192,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         # the current positional metadata.
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
-        outbytes[index] = _invert_case(outbytes[index])
+        outbytes[index] ^= self._ascii_invert_case_bit_offset
         return str(outbytes.tostring().decode('ascii'))
 
     def _validate(self):
