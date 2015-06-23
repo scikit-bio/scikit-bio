@@ -200,7 +200,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
         outbytes[index] = _invert_case(outbytes[index])
-        return outbytes.tostring()
+        return str(outbytes.tostring().decode('ascii'))
 
     def _validate(self):
         # This is the fastest way that we have found to identify the
