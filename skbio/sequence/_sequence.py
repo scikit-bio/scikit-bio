@@ -14,6 +14,7 @@ from six import string_types, text_type
 
 import re
 import collections
+import copy
 import numbers
 from contextlib import contextmanager
 
@@ -787,49 +788,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return self._to(sequence=seq, positional_metadata=positional_metadata)
 
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
-
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
-
     def _slice_positional_metadata(self, indexable):
         if self.has_positional_metadata():
             if _is_single_index(indexable):
@@ -986,6 +944,232 @@ class Sequence(collections.Sequence, SkbioObject):
         if len(s) > 20:
             return "%s ... %s" % (s[:7], s[-7:])
         return s
+
+    def __copy__(self):
+        """Return a shallow copy of the biological sequence.
+
+        See Also
+        --------
+        copy
+
+        Notes
+        -----
+        This method is equivalent to ``seq.copy(deep=False)``.
+
+        """
+        return self.copy(deep=False)
+
+    def __deepcopy__(self, memo):
+        """Return a deep copy of the biological sequence.
+
+        See Also
+        --------
+        copy
+
+        Notes
+        -----
+        This method is equivalent to ``seq.copy(deep=True)``.
+
+        """
+        return self._copy(True, memo)
+
+    def has_metadata(self):
+        """Determine if the sequence contains metadata.
+
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
+        >>> t.has_metadata()
+        True
+
+        """
+        return self._metadata is not None and bool(self.metadata)
+
+    def has_positional_metadata(self):
+        """Determine if the sequence contains positional metadata.
+
+        Returns
+        -------
+        bool
+            Indicates whether the sequence has positional metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACACGACGTT')
+        >>> s.has_positional_metadata()
+        False
+        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
+        >>> t.has_positional_metadata()
+        True
+
+        """
+        return (self._positional_metadata is not None and
+                len(self.positional_metadata.columns) > 0)
+
+    def copy(self, deep=False):
+        """Return a copy of the biological sequence.
+
+        Parameters
+        ----------
+        deep : bool, optional
+            Perform a deep copy. If ``False``, perform a shallow copy.
+
+        Returns
+        -------
+        Sequence
+            Copy of the biological sequence.
+
+        Notes
+        -----
+        Since sequence objects can share the same underlying immutable sequence
+        data (or pieces of it), this method can be used to create a sequence
+        object with its own copy of the sequence data so that the original
+        sequence data can be garbage-collected.
+
+        Examples
+        --------
+        Create a sequence:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ACGT',
+        ...                metadata={'id': 'seq-id', 'authors': ['Alice']},
+        ...                positional_metadata={'quality': [7, 10, 8, 5],
+        ...                                     'list': [[], [], [], []]})
+
+        Make a shallow copy of the sequence:
+
+        >>> seq_copy = seq.copy()
+        >>> seq_copy == seq
+        True
+
+        Setting new references in the copied sequence's metadata doesn't affect
+        the original sequence's metadata:
+
+        >>> seq_copy.metadata['id'] = 'new-id'
+        >>> pprint(seq_copy.metadata)
+        {'authors': ['Alice'], 'id': 'new-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice'], 'id': 'seq-id'}
+
+        The same applies to the sequence's positional metadata:
+
+        >>> seq_copy.positional_metadata.loc[0, 'quality'] = 999
+        >>> seq_copy.positional_metadata
+          list  quality
+        0   []      999
+        1   []       10
+        2   []        8
+        3   []        5
+        >>> seq.positional_metadata
+          list  quality
+        0   []        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        Since only a *shallow* copy was made, updates to mutable objects stored
+        as metadata affect the original sequence's metadata:
+
+        >>> seq_copy.metadata['authors'].append('Bob')
+        >>> pprint(seq_copy.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'new-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
+
+        The same applies to the sequence's positional metadata:
+
+        >>> seq_copy.positional_metadata.loc[0, 'list'].append(1)
+        >>> seq_copy.positional_metadata
+          list  quality
+        0  [1]      999
+        1   []       10
+        2   []        8
+        3   []        5
+        >>> seq.positional_metadata
+          list  quality
+        0  [1]        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        Perform a deep copy to avoid this behavior:
+
+        >>> seq_deep_copy = seq.copy(deep=True)
+
+        Updates to mutable objects no longer affect the original sequence's
+        metadata:
+
+        >>> seq_deep_copy.metadata['authors'].append('Carol')
+        >>> pprint(seq_deep_copy.metadata)
+        {'authors': ['Alice', 'Bob', 'Carol'], 'id': 'seq-id'}
+        >>> pprint(seq.metadata)
+        {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
+
+        Nor its positional metadata:
+
+        >>> seq_deep_copy.positional_metadata.loc[0, 'list'].append(2)
+        >>> seq_deep_copy.positional_metadata
+             list  quality
+        0  [1, 2]        7
+        1      []       10
+        2      []        8
+        3      []        5
+        >>> seq.positional_metadata
+          list  quality
+        0  [1]        7
+        1   []       10
+        2   []        8
+        3   []        5
+
+        """
+        return self._copy(deep, {})
+
+    def _copy(self, deep, memo):
+        # strategy: copy the sequence without metadata first, then set metadata
+        # attributes with copies. we take this approach instead of simply
+        # passing the metadata through the Sequence constructor because we
+        # don't want to copy twice (this could happen when deep=True, where we
+        # deep copy here and then shallow copy in the Sequence constructor). we
+        # also directly set the private metadata attributes instead of using
+        # their public setters to avoid an unnecessary copy
+
+        # we don't make a distinction between deep vs. shallow copy of bytes
+        # because dtype=np.uint8. we only need to make the distinction when
+        # dealing with object dtype
+        bytes = np.copy(self._bytes)
+
+        seq_copy = self._constructor(sequence=bytes, metadata=None,
+                                     positional_metadata=None)
+
+        if self.has_metadata():
+            metadata = self.metadata
+            if deep:
+                metadata = copy.deepcopy(metadata, memo)
+            else:
+                metadata = metadata.copy()
+            seq_copy._metadata = metadata
+
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+            if deep:
+                positional_metadata = copy.deepcopy(positional_metadata, memo)
+            else:
+                # deep=True makes a shallow copy of the underlying data buffer
+                positional_metadata = positional_metadata.copy(deep=True)
+            seq_copy._positional_metadata = positional_metadata
+
+        return seq_copy
 
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
@@ -1558,47 +1742,15 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        This is a shallow copy, but since biological sequences are immutable,
-        it is conceptually the same as a deep copy.
+        By default, `metadata` and `positional_metadata` are shallow-copied and
+        the reference to `sequence` is used (without copying) for efficiency
+        since `sequence` is immutable. This differs from the behavior of
+        `Sequence.copy`, which will actually copy `sequence`.
 
         This method is the preferred way of creating new instances from an
         existing biological sequence, instead of calling
         ``self.__class__(...)``, as the latter can be error-prone (e.g.,
         it's easy to forget to propagate attributes to the new instance).
-
-        Examples
-        --------
-        Create a biological sequence:
-
-        >>> from skbio import Sequence
-        >>> seq = Sequence('AACCGGTT',
-        ...                metadata={'id':'id1'},
-        ...                positional_metadata={
-        ...                    'quality':[4, 2, 22, 23, 1, 1, 1, 9]
-        ...                })
-
-        Create a copy of ``seq``, keeping the same underlying sequence of
-        characters and quality scores, while updating the metadata:
-
-        >>> new_seq = seq._to(metadata={'id':'new-id'})
-
-        Note that the copied biological sequence's underlying sequence and
-        positional metadata are the same as ``seq``:
-
-        >>> str(new_seq)
-        'AACCGGTT'
-        >>> new_seq.positional_metadata['quality'].values
-        array([ 4,  2, 22, 23,  1,  1,  1,  9])
-
-        The metadata has been updated:
-
-        >>> new_seq.metadata['id']
-        'new-id'
-
-        The original biological sequence's metadata has not been changed:
-
-        >>> seq.metadata['id']
-        'id1'
 
         """
         defaults = {'sequence': self._bytes,
