@@ -604,19 +604,22 @@ class ReaderTests(TestCase):
 
 class WriterTests(TestCase):
     def setUp(self):
-        self.bio_seq1 = Sequence(
+        self.bio_seq1 = DNA(
             'ACGT-acgt.',
             metadata={'id': 'seq1', 'description': 'desc1'},
             positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0, 88888,
-                                             1, 3456]})
-        self.bio_seq2 = Sequence(
+                                             1, 3456]},
+            lowercase='introns')
+        self.bio_seq2 = DNA(
             'A',
             metadata={'id': ' \n  \nseq \t2 '},
-            positional_metadata={'quality': [42]})
-        self.bio_seq3 = Sequence(
+            positional_metadata={'quality': [42]},
+            lowercase='introns')
+        self.bio_seq3 = RNA(
             'AACGGuA',
             metadata={'description': 'desc3'},
-            positional_metadata={'quality': [0, 0, 0, 0, 0, 0, 0]})
+            positional_metadata={'quality': [0, 0, 0, 0, 0, 0, 0]},
+            lowercase='introns')
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
             positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775, 40,
@@ -635,7 +638,7 @@ class WriterTests(TestCase):
             lowercase='introns')
 
         seqs = [
-            RNA('UuuU',
+            RNA('UUUU',
                 metadata={'id': 's\te\tq\t1', 'description': 'desc\n1'},
                 positional_metadata={'quality': [1234, 0, 0, 2]},
                 lowercase='introns'),
@@ -647,7 +650,7 @@ class WriterTests(TestCase):
                     metadata={'id': 's\te\tq\t3', 'description': 'desc\n3'},
                     positional_metadata={'quality': [12345, 678909, 999999,
                                                      4242424242]},
-                    validate=False, lowercase='introns')
+                    validate=False)
         ]
         self.seq_coll = SequenceCollection(seqs)
         self.align = Alignment(seqs)
@@ -684,16 +687,13 @@ class WriterTests(TestCase):
                         self.dna_seq, self.rna_seq, self.prot_seq):
                 yield seq
 
-        def lowercase_multi_seq_gen():
-            for seq in (self.dna_seq, self.rna_seq, self.prot_seq):
-                yield seq
-
         # can be serialized if no qual file is provided, else it should raise
         # an error because one seq has qual scores and the other doesn't
         def mixed_qual_score_gen():
-            missing_qual_seq = Sequence(
+            missing_qual_seq = DNA(
                 'AAAAT', metadata={'id': 'da,dadadada',
-                                   'description': '10 hours'})
+                                   'description': '10 hours'},
+                lowercase='introns')
             for seq in self.bio_seq1, missing_qual_seq:
                 yield seq
 
@@ -709,19 +709,21 @@ class WriterTests(TestCase):
 
             # no splitting of sequence or qual data across lines b/c max_width
             # is sufficiently large
-            (single_seq_gen(), {'max_width': 32}, 'fasta_single_seq',
+            (single_seq_gen(), {'max_width': 32, 'lowercase': 'introns'},
+             'fasta_single_seq',
              'qual_single_seq'),
 
             # splitting algorithm for sequence and qual scores is different;
             # make sure individual qual scores aren't split across lines even
             # if they exceed max_width
-            (single_seq_gen(), {'max_width': 1}, 'fasta_max_width_1',
+            (single_seq_gen(), {'max_width': 1, 'lowercase': 'introns'},
+             'fasta_max_width_1',
              'qual_max_width_1'),
-
-            (multi_seq_gen(), {'lowercase': 'introns'}, 'fasta_multi_seq',
-             'qual_multi_seq'),
-            (multi_seq_gen(), {'max_width': 5, 'lowercase': 'introns'},
-             'fasta_max_width_5', 'qual_max_width_5'),
+            (multi_seq_gen(),
+             {'lowercase': 'introns'}, 'fasta_multi_seq', 'qual_multi_seq'),
+            (multi_seq_gen(),
+             {'max_width': 5, 'lowercase': 'introns'}, 'fasta_max_width_5',
+             'qual_max_width_5'),
             (newline_description_gen(),
              {'description_newline_replacement': ':-)',
               'lowercase': 'introns'},
@@ -776,6 +778,7 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_no_qual(self):
         # test writing standalone fasta (i.e., without a qual file)
         for obj, kwargs, fp, _ in self.objs_fps:
+            print(fp)
             fh = StringIO()
             _generator_to_fasta(obj, fh, **kwargs)
             obs = fh.getvalue()
@@ -789,7 +792,7 @@ class WriterTests(TestCase):
         # test writing some sequences with qual scores and some without is
         # possible if no qual output file is specified
         fh = StringIO()
-        _generator_to_fasta(self.mixed_qual_score_gen, fh)
+        _generator_to_fasta(self.mixed_qual_score_gen, fh, lowercase='introns')
         obs = fh.getvalue()
         fh.close()
 
@@ -825,6 +828,16 @@ class WriterTests(TestCase):
                 _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 
+    def test_generator_to_fasta_sequence_lowercase_exception(self):
+        seq = Sequence('ACgt', metadata={'id': ''})
+        fh = StringIO()
+        with self.assertRaisesRegexp(TypeError,
+                                     "lowercase specified but class Sequence "
+                                     "does not support lowercase "
+                                     "functionality"):
+            _generator_to_fasta(SequenceCollection([seq]), fh,
+                                lowercase='introns')
+
     # light testing of object -> fasta writers to ensure interface is present
     # and kwargs are passed through. extensive testing of underlying writer is
     # performed above
@@ -837,7 +850,7 @@ class WriterTests(TestCase):
         desc = 'b\na\nr'
         test_data = (
             (_biological_sequence_to_fasta,
-             Sequence('ACGT', metadata={'id': id_, 'description': desc},
+             Sequence('ACgt', metadata={'id': id_, 'description': desc},
                       positional_metadata={'quality': range(1, 5)}),
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
@@ -901,7 +914,7 @@ class WriterTests(TestCase):
                         (_alignment_to_fasta, self.align)):
             # test writing with default parameters
             fh = StringIO()
-            fn(obj, fh, lowercase='introns')
+            fn(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
@@ -914,8 +927,7 @@ class WriterTests(TestCase):
             fasta_fh = StringIO()
             qual_fh = StringIO()
             fn(obj, fasta_fh, id_whitespace_replacement='*',
-               description_newline_replacement='+', max_width=3, qual=qual_fh,
-               lowercase='introns')
+               description_newline_replacement='+', max_width=3, qual=qual_fh)
             obs_fasta = fasta_fh.getvalue()
             obs_qual = qual_fh.getvalue()
             fasta_fh.close()
@@ -928,6 +940,26 @@ class WriterTests(TestCase):
 
             self.assertEqual(obs_fasta, exp_fasta)
             self.assertEqual(obs_qual, exp_qual)
+
+            fh2 = StringIO()
+            with self.assertRaisesRegexp(TypeError,
+                                         "lowercase specified but class "
+                                         "Sequence does not support lowercase "
+                                         "functionality"):
+                fn(obj, fh2, lowercase='introns')
+            fh2.close()
+
+            fasta_fh2 = StringIO()
+            qual_fh2 = StringIO()
+            with self.assertRaisesRegexp(TypeError,
+                                         "lowercase specified but class "
+                                         "Sequence does not support lowercase "
+                                         "functionality"):
+                fn(obj, fasta_fh2, id_whitespace_replacement='*',
+                   description_newline_replacement='+', max_width=3,
+                   qual=qual_fh2, lowercase='introns')
+            fasta_fh2.close()
+            qual_fh2.close()
 
 
 class RoundtripTests(TestCase):
