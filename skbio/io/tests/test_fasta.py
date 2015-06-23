@@ -241,8 +241,7 @@ class ReaderTests(TestCase):
                  metadata={'id': 'rnaseq-2', 'description': 'rnaseq desc 2'},
                  positional_metadata={'quality': [9, 99, 999]},
                  lowercase='introns')],
-            {'constructor': partial(RNA, lowercase='introns'),
-             'lowercase': 'introns'},
+            {'constructor': partial(RNA, lowercase='introns')},
             list(map(get_data_path,
                      ['fasta_sequence_collection_different_type'])),
             list(map(get_data_path,
@@ -587,7 +586,8 @@ class ReaderTests(TestCase):
 
     def test_fasta_to_sequence_collection_and_alignment(self):
         test_cases = (self.empty, self.single,
-                      self.sequence_collection_different_type)
+                      self.sequence_collection_different_type,
+                      self.lowercase_seqs)
 
         for constructor, reader_fn in ((SequenceCollection,
                                         _fasta_to_sequence_collection),

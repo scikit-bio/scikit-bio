@@ -153,7 +153,7 @@ class TestReaders(unittest.TestCase):
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3',
-                 'constructor': partial(Protein, lowercase='introns')},
+                 'constructor': Protein},
             ], [
                 ('', 'bar\t baz', 'aCGT', [33, 34, 35, 36])
             ]),
@@ -298,11 +298,19 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = [constructor(c[2],
                                             metadata={'id': c[0],
                                                       'description': c[1]},
                                 positional_metadata={'quality': np.array(c[3],
-                                                     dtype=np.uint8)})
+                                                     dtype=np.uint8)},
+                                **expected_kwargs)
                                 for c in components]
 
                     observed = list(_fastq_to_generator(valid,
@@ -393,16 +401,26 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = SequenceCollection(
                         [constructor(
                             c[2], metadata={'id': c[0], 'description': c[1]},
                             positional_metadata={'quality': np.array(c[3],
-                                                 np.uint8)})
+                                                 np.uint8)},
+                            **expected_kwargs)
                          for c in components])
 
                     observed = _fastq_to_sequence_collection(valid,
                                                              **observed_kwargs)
                     self.assertEqual(observed, expected)
+
+        #self.assertTrue(False)
 
     def test_fastq_to_alignment(self):
         for valid_files, kwargs, components in self.valid_configurations:
@@ -411,12 +429,20 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = Alignment(
                         [constructor(
                             c[2], metadata={'id': c[0],
                                             'description': c[1]},
                             positional_metadata={'quality': np.array(c[3],
-                                                 dtype=np.uint8)})
+                                                 dtype=np.uint8)},
+                            **expected_kwargs)
                          for c in components])
 
                     observed = _fastq_to_alignment(valid, **observed_kwargs)
