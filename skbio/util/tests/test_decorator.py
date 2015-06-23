@@ -74,6 +74,7 @@ class TestClassProperty(unittest.TestCase):
         with self.assertRaises(AttributeError):
             f.foo = 4242
 
+
 class TestStable(unittest.TestCase):
 
     def _get_f(self, as_of):
@@ -103,9 +104,14 @@ class TestStable(unittest.TestCase):
     def test_function_signature(self):
         f = self._get_f('0.1.0')
         expected = inspect.ArgSpec(
-            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)
         self.assertEqual(f.__name__, 'f')
+
+    def test_missing_kwarg(self):
+        self.assertRaises(ValueError, stable)
+        self.assertRaises(ValueError, stable, '0.1.0')
+
 
 class TestExperimental(unittest.TestCase):
 
@@ -138,9 +144,14 @@ class TestExperimental(unittest.TestCase):
     def test_function_signature(self):
         f = self._get_f('0.1.0')
         expected = inspect.ArgSpec(
-            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)
         self.assertEqual(f.__name__, 'f')
+
+    def test_missing_kwarg(self):
+        self.assertRaises(ValueError, experimental)
+        self.assertRaises(ValueError, experimental, '0.1.0')
+
 
 class TestDeprecated(unittest.TestCase):
 
@@ -196,9 +207,15 @@ class TestDeprecated(unittest.TestCase):
         f = self._get_f('0.1.0', until='0.1.4',
                         reason='You should now use skbio.g().')
         expected = inspect.ArgSpec(
-            args=['x','y'], varargs=None, keywords=None, defaults=(42,))
+            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)
         self.assertEqual(f.__name__, 'f')
+
+    def test_missing_kwarg(self):
+        self.assertRaises(ValueError, deprecated)
+        self.assertRaises(ValueError, deprecated, '0.1.0')
+        self.assertRaises(ValueError, deprecated, as_of='0.1.0')
+        self.assertRaises(ValueError, deprecated, as_of='0.1.0', until='0.1.4')
 
 if __name__ == '__main__':
     unittest.main()

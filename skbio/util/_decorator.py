@@ -103,9 +103,10 @@ class _state_decorator(object):
         wrap_at = 79 - (len(self._line_prefix) + len_state_desc_prefix)
         state_desc_lines = wrap(state_desc, wrap_at)
         # The first line of the state description should start with
-        # state_desc_prefix, while the others should start with the number of
-        # spaces in each. This is for consistency with numpydoc formatting of
-        # deprecation notices, which are done using the note Sphinx directive.
+        # state_desc_prefix, while the others should start with spaces to align
+        # the text in this section. This is for consistency with numpydoc
+        # formatting of deprecation notices, which are done using the note
+        # Sphinx directive.
         state_desc_lines[0] = '%s%s' % (state_desc_prefix, state_desc_lines[0])
         header_spaces = ' ' * len_state_desc_prefix
         for i, line in enumerate(state_desc_lines[1:], 1):
