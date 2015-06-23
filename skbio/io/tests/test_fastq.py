@@ -420,8 +420,6 @@ class TestReaders(unittest.TestCase):
                                                              **observed_kwargs)
                     self.assertEqual(observed, expected)
 
-        #self.assertTrue(False)
-
     def test_fastq_to_alignment(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:

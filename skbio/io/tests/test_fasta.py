@@ -427,12 +427,8 @@ class ReaderTests(TestCase):
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    # ignore positional metadata by creating a copy of the
-                    # expected sequence without positional metadata
-                    # TODO use Sequence.copy and setter when copy is
-                    # implemented
-                    e = e._to(positional_metadata=e.positional_metadata.drop(
-                              'quality', 1))
+                    e = e.copy()
+                    e.positional_metadata.drop('quality', 1, inplace=True)
                     self.assertEqual(o, e)
 
                 for qual_fp in qual_fps:
@@ -494,16 +490,15 @@ class ReaderTests(TestCase):
             for fasta_fp in fasta_fps:
                 exp = constructor(
                     'ACGT-acgt.',
-                    metadata={'id': 'seq1', 'description': 'desc1'},
-                    positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
-                                                     88888, 1, 3456]})
+                    metadata={'id': 'seq1', 'description': 'desc1'})
 
                 obs = reader_fn(fasta_fp)
-                self.assertEqual(
-                    obs,
-                    exp._to(positional_metadata=exp.positional_metadata.drop(
-                            'quality', 1)))
+                self.assertEqual(obs, exp)
 
+                exp.positional_metadata.insert(0,
+                                               'quality',
+                                               [10, 20, 30, 10, 0, 0, 0,
+                                                88888, 1, 3456])
                 qual_fps = list(map(get_data_path,
                                     ['qual_single_seq', 'qual_max_width_1']))
                 for qual_fp in qual_fps:
@@ -519,34 +514,30 @@ class ReaderTests(TestCase):
                 # get first
                 exp = constructor(
                     'ACGT-acgt.',
-                    metadata={'id': 'seq1', 'description': 'desc1'},
-                    positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
-                                                     88888, 1, 3456]})
+                    metadata={'id': 'seq1', 'description': 'desc1'})
 
                 obs = reader_fn(fasta_fp)
-                self.assertEqual(
-                    obs,
-                    exp._to(positional_metadata=exp.positional_metadata.drop(
-                            'quality', 1)))
+                self.assertEqual(obs, exp)
 
+                exp.positional_metadata.insert(0,
+                                               'quality',
+                                               [10, 20, 30, 10, 0, 0, 0,
+                                                88888, 1, 3456])
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
                     self.assertEqual(obs, exp)
 
                 # get middle
                 exp = constructor('ACGTTGCAccGG',
-                                  metadata={'id': '', 'description': ''},
-                                  positional_metadata={'quality': [55, 10, 0,
-                                                                   999, 1, 1,
-                                                                   8, 775, 40,
-                                                                   10, 10, 0]})
+                                  metadata={'id': '', 'description': ''})
 
                 obs = reader_fn(fasta_fp, seq_num=4)
-                self.assertEqual(
-                    obs,
-                    exp._to(positional_metadata=exp.positional_metadata.drop(
-                            'quality', 1)))
+                self.assertEqual(obs, exp)
 
+                exp.positional_metadata.insert(0,
+                                               'quality',
+                                               [55, 10, 0, 999, 1, 1, 8, 775,
+                                                40, 10, 10, 0])
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=4, qual=qual_fp)
                     self.assertEqual(obs, exp)
@@ -556,16 +547,15 @@ class ReaderTests(TestCase):
                     'pQqqqPPQQQ',
                     metadata={'id': 'proteinseq',
                               'description':
-                                  'detailed description \t\twith  new  lines'},
-                    positional_metadata={'quality': [42, 42, 442, 442, 42, 42,
-                                                     42, 42, 42, 43]})
+                                  'detailed description \t\twith  new  lines'})
 
                 obs = reader_fn(fasta_fp, seq_num=6)
-                self.assertEqual(
-                    obs,
-                    exp._to(positional_metadata=exp.positional_metadata.drop(
-                            'quality', 1)))
+                self.assertEqual(obs, exp)
 
+                exp.positional_metadata.insert(0,
+                                               'quality',
+                                               [42, 42, 442, 442, 42, 42, 42,
+                                                42, 42, 43])
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
                     self.assertEqual(obs, exp)
@@ -603,11 +593,9 @@ class ReaderTests(TestCase):
 
                     self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
-                        self.assertEqual(
-                            o,
-                            e._to(
-                                positional_metadata=e.positional_metadata.drop(
-                                    'quality', 1)))
+                        e = e.copy()
+                        e.positional_metadata.drop('quality', 1, inplace=True)
+                        self.assertEqual(o, e)
 
                     for qual_fp in qual_fps:
                         obs = reader_fn(fasta_fp, qual=qual_fp, **kwargs)

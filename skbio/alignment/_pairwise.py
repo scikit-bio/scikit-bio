@@ -623,10 +623,9 @@ def _coerce_alignment_input_type(seq, disallow_alignment):
         if 'id' in seq.metadata:
             return Alignment([seq])
         else:
-            # HACK: Update to use Sequence.copy() method once it exists.
-            metadata = seq.metadata.copy()
-            metadata['id'] = ''
-            return Alignment([seq._to(metadata=metadata)])
+            seq = seq.copy()
+            seq.metadata['id'] = ''
+            return Alignment([seq])
     elif isinstance(seq, Alignment):
         if disallow_alignment:
             # This will disallow aligning either a pair of alignments, or an
