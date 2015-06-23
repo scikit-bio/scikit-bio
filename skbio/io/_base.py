@@ -201,9 +201,9 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
             if hasattr(seq, 'lowercase'):
                 seq_str = seq.lowercase(kwargs['lowercase'])
             else:
-                raise TypeError("lowercase specified but class %s does not "
-                                "support lowercase functionality" %
-                                seq.__class__.__name__)
+                raise AttributeError("lowercase specified but class %s does "
+                                     "not support lowercase functionality" %
+                                     seq.__class__.__name__)
         else:
             seq_str = str(seq)
         yield header, seq_str, qual

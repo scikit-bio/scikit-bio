@@ -831,7 +831,7 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_sequence_lowercase_exception(self):
         seq = Sequence('ACgt', metadata={'id': ''})
         fh = StringIO()
-        with self.assertRaisesRegexp(TypeError,
+        with self.assertRaisesRegexp(AttributeError,
                                      "lowercase specified but class Sequence "
                                      "does not support lowercase "
                                      "functionality"):
@@ -942,7 +942,7 @@ class WriterTests(TestCase):
             self.assertEqual(obs_qual, exp_qual)
 
             fh2 = StringIO()
-            with self.assertRaisesRegexp(TypeError,
+            with self.assertRaisesRegexp(AttributeError,
                                          "lowercase specified but class "
                                          "Sequence does not support lowercase "
                                          "functionality"):
@@ -951,7 +951,7 @@ class WriterTests(TestCase):
 
             fasta_fh2 = StringIO()
             qual_fh2 = StringIO()
-            with self.assertRaisesRegexp(TypeError,
+            with self.assertRaisesRegexp(AttributeError,
                                          "lowercase specified but class "
                                          "Sequence does not support lowercase "
                                          "functionality"):
