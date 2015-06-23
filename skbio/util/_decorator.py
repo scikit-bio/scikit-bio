@@ -130,11 +130,17 @@ class _state_decorator(object):
         # line, return the corresponding default
         return default_existing_docstring
 
-    def _update_docstring(self, func, state_desc,
+    def _update_docstring(self, docstring, state_desc,
                           state_desc_prefix='State: '):
         docstring_content_indentation = \
-            self._get_indentation_level(func.__doc__)
-        doc_lines = func.__doc__.split('\n')
+            self._get_indentation_level(docstring)
+        # Hande the case of no initial docstring
+        if docstring is None:
+            return "%s%s%s" % (
+                ' ' * docstring_content_indentation, state_desc_prefix,
+                state_desc)
+
+        doc_lines = docstring.split('\n')
         # wrap lines at 79 characters, accounting for the length of
         # docstring_content_indentation and start_desc_prefix
         len_state_desc_prefix = len(state_desc_prefix)
@@ -208,7 +214,7 @@ class stable(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Stable as of %s.' % self.as_of
-        func.__doc__ = self._update_docstring(func, state_desc)
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
@@ -257,7 +263,7 @@ class experimental(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Experimental as of %s.' % self.as_of
-        func.__doc__ = self._update_docstring(func, state_desc)
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
@@ -316,7 +322,7 @@ class deprecated(_state_decorator):
     def __call__(self, func, *args, **kwargs):
         state_desc = 'Deprecated as of %s for removal in %s. %s' %\
             (self.as_of, self.until, self.reason)
-        func.__doc__ = self._update_docstring(func, state_desc,
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc,
                                               state_desc_prefix='.. note:: ')
 
         def wrapped_f(*args, **kwargs):

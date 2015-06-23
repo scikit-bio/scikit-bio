@@ -108,6 +108,36 @@ class TestBase(TestStabilityState):
         in_ = ("""summary\n     Parameters\n Bad indentation\n""")
         self.assertEqual(c._get_indentation_level(in_), 5)
 
+    def test_update_docstring(self):
+        c = _state_decorator()
+        in_ = None
+        exp = ("""State: Test!!""")
+        self.assertEqual(c._update_docstring(in_, "Test!!"), exp)
+
+        in_ = """"""
+        exp = ("""\n\n    State: Test!!""")
+        self.assertEqual(c._update_docstring(in_, "Test!!"), exp)
+
+        in_ = ("""Short summary\n\n    Parameters\n\n----------\n    """
+               """x : int\n""")
+        exp = ("""Short summary\n\n    State: Test!!\n\n"""
+               """    Parameters\n\n----------\n    x : int\n""")
+        self.assertEqual(c._update_docstring(in_, "Test!!"), exp)
+
+        in_ = ("""Short summary\n\n      Parameters\n\n----------\n      """
+               """x : int\n""")
+        exp = ("""Short summary\n\n      State: Test!!\n\n"""
+               """      Parameters\n\n----------\n      x : int\n""")
+        self.assertEqual(c._update_docstring(in_, "Test!!"), exp)
+
+        in_ = ("""Short summary\n\n    Parameters\n\n----------\n    """
+               """x : int\n""")
+        exp = ("""Short summary\n\n    State: Test!!Test!!Test!!Test!!Test!!"""
+               """Test!!Test!!Test!!Test!!Test!!Test!!Te\n           st!!T"""
+               """est!!Test!!Test!!Test!!Test!!Test!!Test!!Test!!\n\n"""
+               """    Parameters\n\n----------\n    x : int\n""")
+        self.assertEqual(c._update_docstring(in_, "Test!!"*20), exp)
+
 
 class TestStable(TestStabilityState):
 
