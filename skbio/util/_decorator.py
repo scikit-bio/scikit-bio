@@ -7,9 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from warnings import warn
-from textwrap import wrap
-from decorator import decorator
+import warnings
+import textwrap
+
+import decorator
 
 from ._exception import OverrideError
 
@@ -91,29 +92,69 @@ class _state_decorator(object):
     """ Base class for decorators of all public functionality.
     """
 
-    _line_prefix = '\n        '
-    _required_kwargs = []
+    _required_kwargs = ()
 
-    def _update_doc_string(self, func, state_desc,
-                           state_desc_prefix='State: '):
+    def _get_indentation_level(self, docstring, default_existing_docstring=4,
+                               default_no_existing_docstring=0):
+        """ Determine the level of indentation of the docstring to match it.
+
+            The indented content after the first line of a docstring can
+            differ based on the nesting of the functionality being documented.
+            For example, a top-level function may have its "Parameters" section
+            indented four-spaces, but a method nested under a class may have
+            its "Parameters" section indented eight spaces. This function
+            determines the indentation level of the first non-whitespace line
+            following the initial summary line.
+        """
+        # if there is no existing docstring, return the corresponding default
+        if docstring is None:
+            return default_no_existing_docstring
+
+        docstring_lines = docstring.split('\n')
+
+        # if there is an existing docstring with only a single line, return
+        # the corresponding default
+        if len(docstring_lines) == 1:
+            return default_existing_docstring
+
+        # find the first non-blank line (after the initial summary line) and
+        # return the number of leading spaces on that line
+        for line in docstring_lines[1:]:
+            if len(line.strip()) == 0:
+                # ignore blank lines
+                continue
+            else:
+                return len(line) - len(line.lstrip())
+
+        # if there is an existing docstring with only a single non-whitespace
+        # line, return the corresponding default
+        return default_existing_docstring
+
+    def _update_docstring(self, func, state_desc,
+                          state_desc_prefix='State: '):
+        docstring_content_indentation = \
+            self._get_indentation_level(func.__doc__)
         doc_lines = func.__doc__.split('\n')
         # wrap lines at 79 characters, accounting for the length of
-        # self._line_prefix and start_desc_prefix
+        # docstring_content_indentation and start_desc_prefix
         len_state_desc_prefix = len(state_desc_prefix)
-        wrap_at = 79 - (len(self._line_prefix) + len_state_desc_prefix)
-        state_desc_lines = wrap(state_desc, wrap_at)
+        wrap_at = 79 - (docstring_content_indentation + len_state_desc_prefix)
+        state_desc_lines = textwrap.wrap(state_desc, wrap_at)
         # The first line of the state description should start with
         # state_desc_prefix, while the others should start with spaces to align
         # the text in this section. This is for consistency with numpydoc
         # formatting of deprecation notices, which are done using the note
         # Sphinx directive.
-        state_desc_lines[0] = '%s%s' % (state_desc_prefix, state_desc_lines[0])
-        header_spaces = ' ' * len_state_desc_prefix
+        state_desc_lines[0] = '%s%s%s' % (' ' * docstring_content_indentation,
+                                          state_desc_prefix,
+                                          state_desc_lines[0])
+        header_spaces = ' ' * (docstring_content_indentation +
+                               len_state_desc_prefix)
         for i, line in enumerate(state_desc_lines[1:], 1):
             state_desc_lines[i] = '%s%s' % (header_spaces, line)
 
-        doc_lines.insert(
-            1, self._line_prefix + self._line_prefix.join(state_desc_lines))
+        new_doc_lines = '\n'.join(state_desc_lines)
+        doc_lines[0] = '%s\n\n%s' % (doc_lines[0], new_doc_lines)
         return '\n'.join(doc_lines)
 
     def _validate_kwargs(self, **kwargs):
@@ -159,7 +200,7 @@ class stable(_state_decorator):
     <BLANKLINE>
     """
 
-    _required_kwargs = ['as_of']
+    _required_kwargs = ('as_of', )
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
@@ -167,7 +208,7 @@ class stable(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Stable as of %s.' % self.as_of
-        func.__doc__ = self._update_doc_string(func, state_desc)
+        func.__doc__ = self._update_docstring(func, state_desc)
         return func
 
 
@@ -208,7 +249,7 @@ class experimental(_state_decorator):
 
     """
 
-    _required_kwargs = ['as_of']
+    _required_kwargs = ('as_of', )
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
@@ -216,7 +257,7 @@ class experimental(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Experimental as of %s.' % self.as_of
-        func.__doc__ = self._update_doc_string(func, state_desc)
+        func.__doc__ = self._update_docstring(func, state_desc)
         return func
 
 
@@ -248,7 +289,7 @@ class deprecated(_state_decorator):
     Examples
     --------
     >>> @deprecated(as_of='0.3.0', until='0.3.3',
-    ...             reason='Users should now use skbio.g().')
+    ...             reason='Use skbio.g().')
     ... def f_deprecated(x, verbose=False):
     ...     \"\"\" An example deprecated function.
     ...     \"\"\"
@@ -259,13 +300,12 @@ class deprecated(_state_decorator):
     f_deprecated(x, verbose=False)
         An example deprecated function.
     <BLANKLINE>
-        .. note:: Deprecated as of 0.3.0 for removal in 0.3.3. Users should
-                  now use skbio.g().
+        .. note:: Deprecated as of 0.3.0 for removal in 0.3.3. Use skbio.g().
     <BLANKLINE>
 
     """
 
-    _required_kwargs = ['as_of', 'until', 'reason']
+    _required_kwargs = ('as_of', 'until', 'reason')
 
     def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
@@ -276,16 +316,16 @@ class deprecated(_state_decorator):
     def __call__(self, func, *args, **kwargs):
         state_desc = 'Deprecated as of %s for removal in %s. %s' %\
             (self.as_of, self.until, self.reason)
-        func.__doc__ = self._update_doc_string(func, state_desc,
-                                               state_desc_prefix='.. note:: ')
+        func.__doc__ = self._update_docstring(func, state_desc,
+                                              state_desc_prefix='.. note:: ')
 
         def wrapped_f(*args, **kwargs):
-            warn('%s is deprecated as of scikit-bio version %s, and will be'
-                 ' removed in version %s. %s' %
-                 (func.__name__, self.as_of, self.until, self.reason),
-                 DeprecationWarning)
+            warnings.warn('%s is deprecated as of scikit-bio version %s, and '
+                          ' will be removed in version %s. %s' %
+                          (func.__name__, self.as_of, self.until, self.reason),
+                          DeprecationWarning)
             # args[0] is the function being wrapped when this is called
             # after wrapping with decorator.decorator, but why???
             return func(*args[1:], **kwargs)
 
-        return decorator(wrapped_f, func)
+        return decorator.decorator(wrapped_f, func)

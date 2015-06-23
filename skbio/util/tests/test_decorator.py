@@ -12,7 +12,8 @@ import inspect
 import warnings
 
 from skbio.util import classproperty, overrides
-from skbio.util._decorator import stable, experimental, deprecated
+from skbio.util._decorator import (stable, experimental, deprecated,
+                                   _state_decorator)
 from skbio.util._exception import OverrideError
 
 
@@ -75,20 +76,46 @@ class TestClassProperty(unittest.TestCase):
             f.foo = 4242
 
 
-class TestStable(unittest.TestCase):
+class TestStabilityState(unittest.TestCase):
+    # the indentation spacing gets weird, so I'm defining the
+    # input doc string explicitly and adding it after function
+    # defintion
+    _test_docstring = (" Add 42, or something else, to x.\n"
+                       "\n"
+                       "    Parameters\n"
+                       "    ----------\n"
+                       "    x : int, x\n"
+                       "    y : int, optional\n")
+
+
+class TestBase(TestStabilityState):
+
+    def test_get_indentation_level(self):
+
+        c = _state_decorator()
+        self.assertEqual(c._get_indentation_level(None), 0)
+        self.assertEqual(
+            c._get_indentation_level(None, default_no_existing_docstring=3), 3)
+        self.assertEqual(c._get_indentation_level(""), 4)
+        self.assertEqual(
+            c._get_indentation_level("", default_existing_docstring=3), 3)
+
+        in_ = ("""summary""")
+        self.assertEqual(c._get_indentation_level(in_), 4)
+        in_ = ("""summary\n\n\n\n\n    \n\n\n\n \n""")
+        self.assertEqual(c._get_indentation_level(in_), 4)
+
+        in_ = ("""summary\n     Parameters\n Bad indentation\n""")
+        self.assertEqual(c._get_indentation_level(in_), 5)
+
+
+class TestStable(TestStabilityState):
 
     def _get_f(self, as_of):
-        @stable(as_of=as_of)
         def f(x, y=42):
-            """ Add 42, or something else, to x.
-
-                Parameters
-                ----------
-                x : int, x
-                y : int, optional
-
-            """
             return x + y
+        f.__doc__ = self._test_docstring
+        f = stable(as_of=as_of)(f)
         return f
 
     def test_function_output(self):
@@ -97,9 +124,15 @@ class TestStable(unittest.TestCase):
 
     def test_function_docstring(self):
         f = self._get_f('0.1.0')
-        self.assertTrue('State: Stable as of 0.1.0.' in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    State: Stable as of 0.1.0.\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
         f = self._get_f('0.1.1')
-        self.assertTrue('State: Stable as of 0.1.1.' in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    State: Stable as of 0.1.1.\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
@@ -113,20 +146,13 @@ class TestStable(unittest.TestCase):
         self.assertRaises(ValueError, stable, '0.1.0')
 
 
-class TestExperimental(unittest.TestCase):
+class TestExperimental(TestStabilityState):
 
     def _get_f(self, as_of):
-        @experimental(as_of=as_of)
         def f(x, y=42):
-            """ Add 42, or something else, to x.
-
-                Parameters
-                ----------
-                x : int, x
-                y : int, optional
-
-            """
             return x + y
+        f.__doc__ = self._test_docstring
+        f = experimental(as_of=as_of)(f)
         return f
 
     def test_function_output(self):
@@ -135,11 +161,15 @@ class TestExperimental(unittest.TestCase):
 
     def test_function_docstring(self):
         f = self._get_f('0.1.0')
-        self.assertTrue(
-            'State: Experimental as of 0.1.0.' in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    State: Experimental as of 0.1.0.\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
         f = self._get_f('0.1.1')
-        self.assertTrue(
-            'State: Experimental as of 0.1.1.' in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    State: Experimental as of 0.1.1.\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
@@ -153,20 +183,13 @@ class TestExperimental(unittest.TestCase):
         self.assertRaises(ValueError, experimental, '0.1.0')
 
 
-class TestDeprecated(unittest.TestCase):
+class TestDeprecated(TestStabilityState):
 
     def _get_f(self, as_of, until, reason):
-        @deprecated(as_of=as_of, until=until, reason=reason)
         def f(x, y=42):
-            """ Add 42, or something else, to x.
-
-                Parameters
-                ----------
-                x : int, x
-                y : int, optional
-
-            """
             return x + y
+        f.__doc__ = self._test_docstring
+        f = deprecated(as_of=as_of, until=until, reason=reason)(f)
         return f
 
     def test_function_output(self):
@@ -188,19 +211,21 @@ class TestDeprecated(unittest.TestCase):
     def test_function_docstring(self):
         f = self._get_f('0.1.0', until='0.1.4',
                         reason='You should now use skbio.g().')
-        e1 = ("        .. note:: Deprecated as of 0.1.0 for "
-              "removal in 0.1.4. You should now")
-        e2 = "                  use skbio.g()."
-        self.assertTrue(e1 in f.__doc__)
-        self.assertTrue(e2 in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    .. note:: Deprecated as of 0.1.0 for "
+              "removal in 0.1.4. You should now use\n"
+              "              skbio.g().\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
 
         f = self._get_f('0.1.1', until='0.1.5',
                         reason='You should now use skbio.h().')
-        e1 = ("        .. note:: Deprecated as of 0.1.1 for "
-              "removal in 0.1.5. You should now")
-        e2 = "                  use skbio.h()."
-        self.assertTrue(e1 in f.__doc__)
-        self.assertTrue(e2 in f.__doc__)
+        e1 = (" Add 42, or something else, to x.\n\n"
+              "    .. note:: Deprecated as of 0.1.1 for "
+              "removal in 0.1.5. You should now use\n"
+              "              skbio.h().\n\n"
+              "    Parameters")
+        self.assertTrue(f.__doc__.startswith(e1))
 
     def test_function_signature(self):
         f = self._get_f('0.1.0', until='0.1.4',
