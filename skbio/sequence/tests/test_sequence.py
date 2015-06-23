@@ -1962,10 +1962,9 @@ class TestSequence(TestCase):
         self.assertTrue(seq.has_positional_metadata())
 
     def test_copy_without_metadata(self):
-        # shallow vs deep copy with sequence only should be equivalent
-        # (deepcopy vs copy of a numpy array is only different for object
-        # dtype). thus, copy.copy, copy.deepcopy, and
-        # Sequence.copy(deep=True|False) should all be equivalent
+        # shallow vs deep copy with sequence only should be equivalent. thus,
+        # copy.copy, copy.deepcopy, and Sequence.copy(deep=True|False) should
+        # all be equivalent
         for copy_method in (lambda seq: seq.copy(deep=False),
                             lambda seq: seq.copy(deep=True),
                             copy.copy, copy.deepcopy):
@@ -2062,7 +2061,7 @@ class TestSequence(TestCase):
     def test_deepcopy_memo_is_respected(self):
         # basic test to ensure deepcopy's memo is passed through to recursive
         # deepcopy calls
-        seq = Sequence('ACGT')
+        seq = Sequence('ACGT', metadata={'foo': 'bar'})
         memo = {}
         copy.deepcopy(seq, memo)
         self.assertGreater(len(memo), 2)

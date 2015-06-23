@@ -1143,10 +1143,11 @@ class Sequence(collections.Sequence, SkbioObject):
         # deep copy here and then shallow copy in the Sequence constructor). we
         # also directly set the private metadata attributes instead of using
         # their public setters to avoid an unnecessary copy
-        if deep:
-            bytes = copy.deepcopy(self._bytes, memo)
-        else:
-            bytes = np.copy(self._bytes)
+
+        # we don't make a distinction between deep vs. shallow copy of bytes
+        # because dtype=np.uint8. we only need to make the distinction when
+        # dealing with object dtype
+        bytes = np.copy(self._bytes)
 
         seq_copy = self._constructor(sequence=bytes, metadata=None,
                                      positional_metadata=None)
