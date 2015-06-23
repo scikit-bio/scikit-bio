@@ -7,7 +7,7 @@ different APIs in the package.
 
 You can find out the stability state of public functionality by looking at its
 docstring, which is formatted based on
-[numpydoc](https://github.com/numpy/numpydoc). This information will either
+`numpydoc <https://github.com/numpy/numpydoc>`_. This information will either
 be in the *Extended Summary* section of the docstring, or in the case of
 deprecation, this information will appear as a note following the *Short
 Summary*.
