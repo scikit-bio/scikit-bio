@@ -181,7 +181,6 @@ class TestDeprecated(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             f(1)
-            print(type(w[-1].category))
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
             expected_str = "is deprecated as of scikit-bio version 0.1.0"
             self.assertTrue(expected_str in str(w[-1].message))
