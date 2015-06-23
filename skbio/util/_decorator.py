@@ -161,7 +161,7 @@ class stable(_state_decorator):
 
     _required_kwargs = ['as_of']
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
 
@@ -210,7 +210,7 @@ class experimental(_state_decorator):
 
     _required_kwargs = ['as_of']
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
 
@@ -267,7 +267,7 @@ class deprecated(_state_decorator):
 
     _required_kwargs = ['as_of', 'until', 'reason']
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._validate_kwargs(**kwargs)
         self.as_of = kwargs['as_of']
         self.until = kwargs['until']
