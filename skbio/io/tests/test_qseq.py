@@ -269,8 +269,8 @@ class TestQSeqToSequences(TestQSeqBase):
             for valid, kwargs, components in self.valid_files:
                 for observed_kwargs in kwargs:
                     expected_kwargs = {}
-                    # Currently not validating the alphabet for fastq
-                    # files that are read in.
+                    # Currently not validating the alphabet for qseq
+                    # files that are read in for this test.
                     if hasattr(constructor, 'alphabet'):
                         observed_kwargs['validate'] = False
                         expected_kwargs['validate'] = False
