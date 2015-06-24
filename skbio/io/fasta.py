@@ -695,7 +695,7 @@ def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
 def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None,
-                        **kwargs):
+                        lowercase=None):
     if max_width is not None:
         if max_width < 1:
             raise ValueError(
@@ -712,7 +712,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
 
     formatted_records = _format_fasta_like_records(
         obj, id_whitespace_replacement, description_newline_replacement,
-        qual is not None, **kwargs)
+        qual is not None, lowercase)
     for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
@@ -739,45 +739,45 @@ def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
 def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
-                           max_width=None, **kwargs):
+                           max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', RNA)
 def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
-                           max_width=None, **kwargs):
+                           max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', Protein)
 def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',
-                               max_width=None, **kwargs):
+                               max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', SequenceCollection)
 def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
-                                  max_width=None, **kwargs):
+                                  max_width=None, lowercase=None):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', Alignment)
 def _alignment_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None,
-                        **kwargs):
+                        lowercase=None):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs)
+                        description_newline_replacement, max_width, lowercase)
 
 
 def _parse_fasta_raw(fh, data_parser, error_type):
@@ -843,7 +843,8 @@ def _parse_quality_scores(chunks):
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, **kwargs):
+                        description_newline_replacement, max_width,
+                        lowercase=None):
     def seq_gen():
         for seq in obj:
             yield seq
@@ -852,4 +853,4 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
         seq_gen(), fh, qual=qual,
         id_whitespace_replacement=id_whitespace_replacement,
         description_newline_replacement=description_newline_replacement,
-        max_width=max_width, **kwargs)
+        max_width=max_width, lowercase=lowercase)

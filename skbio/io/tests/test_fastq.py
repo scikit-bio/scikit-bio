@@ -503,7 +503,6 @@ class TestWriters(unittest.TestCase):
                     # fix this
                     if constructor is RNA:
                         observed_kwargs['validate'] = False
-                        expected_kwargs['validate'] = False
 
                     # Can't use partials for this because the read
                     # function below can't operate on partials

@@ -390,10 +390,10 @@ def _fastq_to_alignment(fh, variant=None, phred_offset=None,
 @register_writer('fastq')
 def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' ', **kwargs):
+                        description_newline_replacement=' ', lowercase=None):
     formatted_records = _format_fasta_like_records(
         obj, id_whitespace_replacement, description_newline_replacement, True,
-        **kwargs)
+        lowercase=lowercase)
     for header, seq_str, qual_scores in formatted_records:
         qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
@@ -418,47 +418,51 @@ def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
 @register_writer('fastq', DNA)
 def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
-                           description_newline_replacement=' ', **kwargs):
+                           description_newline_replacement=' ',
+                           lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 @register_writer('fastq', RNA)
 def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                            id_whitespace_replacement='_',
-                           description_newline_replacement=' ', **kwargs):
+                           description_newline_replacement=' ',
+                           lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 @register_writer('fastq', Protein)
 def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
                                id_whitespace_replacement='_',
-                               description_newline_replacement=' ', **kwargs):
+                               description_newline_replacement=' ',
+                               lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 @register_writer('fastq', SequenceCollection)
 def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
-                                  **kwargs):
+                                  lowercase=None):
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 @register_writer('fastq', Alignment)
 def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' ', **kwargs):
+                        description_newline_replacement=' ',
+                        lowercase=None):
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 def _blank_error(unique_text):
@@ -525,7 +529,7 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
 
 def _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement, **kwargs):
+                        description_newline_replacement, lowercase=None):
     def seq_gen():
         for seq in obj:
             yield seq
@@ -534,4 +538,4 @@ def _sequences_to_fastq(obj, fh, variant, phred_offset,
         seq_gen(), fh, variant=variant, phred_offset=phred_offset,
         id_whitespace_replacement=id_whitespace_replacement,
         description_newline_replacement=description_newline_replacement,
-        **kwargs)
+        lowercase=lowercase)
