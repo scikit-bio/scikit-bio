@@ -428,7 +428,7 @@ class ReaderTests(TestCase):
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
                     e = e.copy()
-                    e.positional_metadata.drop('quality', 1, inplace=True)
+                    del e.positional_metadata['quality']
                     self.assertEqual(o, e)
 
                 for qual_fp in qual_fps:
@@ -461,10 +461,8 @@ class ReaderTests(TestCase):
                                         partial(_fasta_to_rna_sequence,
                                                 validate=False,
                                                 lowercase='introns')),
-                                       (partial(Protein, validate=False,
-                                                lowercase='introns'),
+                                       (partial(Protein, lowercase='introns'),
                                         partial(_fasta_to_protein_sequence,
-                                                validate=False,
                                                 lowercase='introns'))):
 
             # empty file
@@ -594,7 +592,7 @@ class ReaderTests(TestCase):
                     self.assertEqual(len(obs), len(exp))
                     for o, e in zip(obs, exp):
                         e = e.copy()
-                        e.positional_metadata.drop('quality', 1, inplace=True)
+                        del e.positional_metadata['quality']
                         self.assertEqual(o, e)
 
                     for qual_fp in qual_fps:
