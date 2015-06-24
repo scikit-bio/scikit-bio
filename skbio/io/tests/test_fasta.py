@@ -463,6 +463,7 @@ class ReaderTests(TestCase):
                                                 lowercase='introns')),
                                        (partial(Protein, lowercase='introns'),
                                         partial(_fasta_to_protein_sequence,
+                                                validate=False,
                                                 lowercase='introns'))):
 
             # empty file
