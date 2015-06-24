@@ -94,7 +94,8 @@ class _state_decorator(object):
 
     _required_kwargs = ()
 
-    def _get_indentation_level(self, docstring, default_existing_docstring=4,
+    def _get_indentation_level(self, docstring_lines,
+                               default_existing_docstring=4,
                                default_no_existing_docstring=0):
         """ Determine the level of indentation of the docstring to match it.
 
@@ -107,10 +108,8 @@ class _state_decorator(object):
             following the initial summary line.
         """
         # if there is no existing docstring, return the corresponding default
-        if docstring is None:
+        if len(docstring_lines) == 0:
             return default_no_existing_docstring
-
-        docstring_lines = docstring.split('\n')
 
         # if there is an existing docstring with only a single line, return
         # the corresponding default
@@ -132,15 +131,14 @@ class _state_decorator(object):
 
     def _update_docstring(self, docstring, state_desc,
                           state_desc_prefix='State: '):
-        docstring_content_indentation = \
-            self._get_indentation_level(docstring)
         # Hande the case of no initial docstring
         if docstring is None:
-            return "%s%s%s" % (
-                ' ' * docstring_content_indentation, state_desc_prefix,
-                state_desc)
+            return "%s%s" % (state_desc_prefix, state_desc)
 
-        doc_lines = docstring.split('\n')
+        docstring_lines = docstring.split('\n')
+        docstring_content_indentation = \
+            self._get_indentation_level(docstring_lines)
+
         # wrap lines at 79 characters, accounting for the length of
         # docstring_content_indentation and start_desc_prefix
         len_state_desc_prefix = len(state_desc_prefix)
@@ -160,8 +158,8 @@ class _state_decorator(object):
             state_desc_lines[i] = '%s%s' % (header_spaces, line)
 
         new_doc_lines = '\n'.join(state_desc_lines)
-        doc_lines[0] = '%s\n\n%s' % (doc_lines[0], new_doc_lines)
-        return '\n'.join(doc_lines)
+        docstring_lines[0] = '%s\n\n%s' % (docstring_lines[0], new_doc_lines)
+        return '\n'.join(docstring_lines)
 
     def _validate_kwargs(self, **kwargs):
         for required_kwarg in self._required_kwargs:

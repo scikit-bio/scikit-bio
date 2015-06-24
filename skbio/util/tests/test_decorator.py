@@ -93,19 +93,19 @@ class TestBase(TestStabilityState):
     def test_get_indentation_level(self):
 
         c = _state_decorator()
-        self.assertEqual(c._get_indentation_level(None), 0)
+        self.assertEqual(c._get_indentation_level([]), 0)
         self.assertEqual(
-            c._get_indentation_level(None, default_no_existing_docstring=3), 3)
-        self.assertEqual(c._get_indentation_level(""), 4)
+            c._get_indentation_level([], default_no_existing_docstring=3), 3)
+        self.assertEqual(c._get_indentation_level([""]), 4)
         self.assertEqual(
-            c._get_indentation_level("", default_existing_docstring=3), 3)
+            c._get_indentation_level([""], default_existing_docstring=3), 3)
 
-        in_ = ("""summary""")
+        in_ = (["summary"])
         self.assertEqual(c._get_indentation_level(in_), 4)
-        in_ = ("""summary\n\n\n\n\n    \n\n\n\n \n""")
+        in_ = (["summary", "", "", "    ", "", " ", ""])
         self.assertEqual(c._get_indentation_level(in_), 4)
 
-        in_ = ("""summary\n     Parameters\n Bad indentation\n""")
+        in_ = (["summary", "     More indentation", " Less indentation"])
         self.assertEqual(c._get_indentation_level(in_), 5)
 
     def test_update_docstring(self):
