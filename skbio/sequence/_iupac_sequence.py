@@ -187,9 +187,46 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
     def lowercase(self, lowercase):
-        # First try to treat lowercase like an index array (boolean array,
-        # etc). If the coercion doesn't work, assume lowercase is a key into
-        # the current positional metadata.
+        """Return a case-sensitive string representation of the sequence.
+
+        Parameters
+        ----------
+        lowercase: str or boolean vector
+            If lowercase is a boolean vector, it is used to set sequence
+            characters to lowercase in the output string. True values in the
+            boolean vector correspond to lowercase characters. If lowercase
+            is a str, it is treated like a key into the positional metadata,
+            pointing to a column which must be a boolean vector.
+            That boolean vector is then used as described previously.
+
+        Returns
+        -------
+        str
+            String representation of sequence with specified characters set to
+            lowercase.
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACGT')
+        >>> s.lowercase([True, True, False, False])
+        'acGT'
+        >>> s = DNA('ACGT',
+        ...         positional_metadata={'exons': [True, False, False, True]})
+        >>> s.lowercase('exons')
+        'aCGt'
+
+        Constructor automatically populates a column in positional metadata
+        when the lowercase keyword argument is provided:
+
+        >>> s = DNA('ACgt', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACgt'
+        >>> s = DNA('ACGT', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACGT'
+
+        """
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
         outbytes[index] ^= self._ascii_invert_case_bit_offset
