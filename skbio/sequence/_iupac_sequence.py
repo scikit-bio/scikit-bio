@@ -55,6 +55,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
+    # ASCII is built such that the difference between uppercase and lowercase
+    # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
@@ -172,16 +174,15 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         # Note we are checking identity against the False object here and not
         # just falsiness
         if lowercase is not False:
-            self._lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            self._convert_to_uppercase(lowercase_mask)
             if not isinstance(lowercase, bool):
-                self.positional_metadata[lowercase] = self._lowercase_mask
-            self._convert_to_uppercase()
+                self.positional_metadata[lowercase] = lowercase_mask
 
         if validate:
             self._validate()
 
-    def _convert_to_uppercase(self):
-        lowercase = self._lowercase_mask
+    def _convert_to_uppercase(self, lowercase):
         if np.any(lowercase):
             with self._byte_ownership():
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
