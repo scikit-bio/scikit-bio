@@ -89,7 +89,6 @@ cdef class AlignmentStructure:
     cdef int index_starts_at
     cdef str _cigar_string
 
-    @experimental(as_of="0.4.0")
     def __cinit__(self, read_sequence, reference_sequence, index_starts_at):
         # We use `read_sequence` and `reference_sequence` here as they are
         # treated sematically as a private output of ssw.c like the `s_align`
@@ -101,16 +100,13 @@ cdef class AlignmentStructure:
     cdef __constructor(self, s_align* pointer):
         self.p = pointer
 
-    @experimental(as_of="0.4.0")
     def __dealloc__(self):
         if self.p is not NULL:
             align_destroy(self.p)
 
-    @experimental(as_of="0.4.0")
     def __getitem__(self, key):
         return getattr(self, key)
 
-    @experimental(as_of="0.4.0")
     def __repr__(self):
         data = ['optimal_alignment_score', 'suboptimal_alignment_score',
                 'query_begin', 'query_end', 'target_begin',
@@ -119,7 +115,6 @@ cdef class AlignmentStructure:
         return "{\n%s\n}" % ',\n'.join([
             "    {!r}: {!r}".format(k, self[k]) for k in data])
 
-    @experimental(as_of="0.4.0")
     def __str__(self):
         score = "Score: %d" % self.optimal_alignment_score
         if self.query_sequence and self.cigar:
@@ -135,7 +130,6 @@ cdef class AlignmentStructure:
         return score
 
     @property
-    @experimental(as_of="0.4.0")
     def optimal_alignment_score(self):
         """Optimal alignment score
 
@@ -148,7 +142,6 @@ cdef class AlignmentStructure:
         return self.p.score1
 
     @property
-    @experimental(as_of="0.4.0")
     def suboptimal_alignment_score(self):
         """Suboptimal alignment score
 
@@ -161,7 +154,6 @@ cdef class AlignmentStructure:
         return self.p.score2
 
     @property
-    @experimental(as_of="0.4.0")
     def target_begin(self):
         """Character index where the target's alignment begins
 
@@ -179,7 +171,6 @@ cdef class AlignmentStructure:
                                                             >= 0) else -1
 
     @property
-    @experimental(as_of="0.4.0")
     def target_end_optimal(self):
         """Character index where the target's optimal alignment ends
 
@@ -197,7 +188,6 @@ cdef class AlignmentStructure:
         return self.p.ref_end1 + self.index_starts_at
 
     @property
-    @experimental(as_of="0.4.0")
     def target_end_suboptimal(self):
         """Character index where the target's suboptimal alignment ends
 
@@ -215,7 +205,6 @@ cdef class AlignmentStructure:
         return self.p.ref_end2 + self.index_starts_at
 
     @property
-    @experimental(as_of="0.4.0")
     def query_begin(self):
         """Returns the character index at which the query sequence begins
 
@@ -233,7 +222,6 @@ cdef class AlignmentStructure:
                                                              >= 0) else -1
 
     @property
-    @experimental(as_of="0.4.0")
     def query_end(self):
         """Character index at where query sequence ends
 
@@ -250,7 +238,6 @@ cdef class AlignmentStructure:
         return self.p.read_end1 + self.index_starts_at
 
     @property
-    @experimental(as_of="0.4.0")
     def cigar(self):
         """Cigar formatted string for the optimal alignment
 
@@ -289,7 +276,6 @@ cdef class AlignmentStructure:
         return self._cigar_string
 
     @property
-    @experimental(as_of="0.4.0")
     def query_sequence(self):
         """Query sequence
 
@@ -302,7 +288,6 @@ cdef class AlignmentStructure:
         return self.read_sequence
 
     @property
-    @experimental(as_of="0.4.0")
     def target_sequence(self):
         """Target sequence
 
@@ -315,7 +300,6 @@ cdef class AlignmentStructure:
         return self.reference_sequence
 
     @property
-    @experimental(as_of="0.4.0")
     def aligned_query_sequence(self):
         """Returns the query sequence aligned by the cigar
 
@@ -338,7 +322,6 @@ cdef class AlignmentStructure:
         return None
 
     @property
-    @experimental(as_of="0.4.0")
     def aligned_target_sequence(self):
         """Returns the target sequence aligned by the cigar
 
@@ -361,7 +344,6 @@ cdef class AlignmentStructure:
                                               "I")
         return None
 
-    @experimental(as_of="0.4.0")
     def set_zero_based(self, is_zero_based):
         """Set the aligment indices to start at 0 if True else 1 if False
 
@@ -371,7 +353,6 @@ cdef class AlignmentStructure:
         else:
             self.index_starts_at = 1
 
-    @experimental(as_of="0.4.0")
     def is_zero_based(self):
         """Returns True if alignment inidices start at 0 else False
 
@@ -559,7 +540,6 @@ cdef class StripedSmithWaterman:
     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_read
     cdef cnp.ndarray __KEEP_IT_IN_SCOPE_matrix
 
-    @experimental(as_of="0.4.0")
     def __cinit__(self, query_sequence,
                   gap_open_penalty=5,  # BLASTN Default
                   gap_extend_penalty=2,  # BLASTN Default
@@ -634,7 +614,6 @@ cdef class StripedSmithWaterman:
         self.__KEEP_IT_IN_SCOPE_read = read_seq
         self.__KEEP_IT_IN_SCOPE_matrix = matrix
 
-    @experimental(as_of="0.4.0")
     def __call__(self, target_sequence):
         """Align `target_sequence` to `query_sequence`
 
@@ -672,7 +651,6 @@ cdef class StripedSmithWaterman:
         alignment.__constructor(align)  # Hack to get a pointer through
         return alignment
 
-    @experimental(as_of="0.4.0")
     def __dealloc__(self):
         if self.profile is not NULL:
             init_destroy(self.profile)
@@ -735,7 +713,6 @@ cdef class StripedSmithWaterman:
         return py_list_matrix
 
 
-@experimental(as_of="0.4.0")
 def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
                              **kwargs):
     """Align query and target sequences with Striped Smith-Waterman.
