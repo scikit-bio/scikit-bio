@@ -118,7 +118,6 @@ References
 from __future__ import absolute_import, division, print_function
 
 from future.builtins import zip, range
-from functools import partial
 
 from skbio.io import register_reader, register_sniffer, QSeqFormatError
 from skbio.io._base import _decode_qual_to_phred, _get_nth_sequence
@@ -145,7 +144,7 @@ def _qseq_sniffer(fh):
 @register_reader('qseq')
 def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
                        phred_offset=_default_phred_offset,
-                       variant=_default_variant):
+                       variant=_default_variant, **kwargs):
     for line in fh:
         (machine_name, run, lane, tile, x, y, index, read, seq, raw_qual,
          filtered) = _record_parser(line)
@@ -154,7 +153,8 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
             seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
                 machine_name, run, lane, tile, x, y, index, read)
             yield constructor(seq, metadata={'id': seq_id},
-                              positional_metadata={'quality': phred})
+                              positional_metadata={'quality': phred},
+                              **kwargs)
 
 
 @register_reader('qseq', SequenceCollection)
@@ -179,30 +179,30 @@ def _qseq_to_biological_sequence(fh, seq_num=1,
 @register_reader('qseq', DNA)
 def _qseq_to_dna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
-                          variant=_default_variant):
+                          variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(DNA, validate=False)),
+                             constructor=DNA, **kwargs),
                              seq_num)
 
 
 @register_reader('qseq', RNA)
 def _qseq_to_rna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
-                          variant=_default_variant):
+                          variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(RNA, validate=False)),
+                             constructor=RNA, **kwargs),
                              seq_num)
 
 
 @register_reader('qseq', Protein)
 def _qseq_to_protein_sequence(fh, seq_num=1,
                               phred_offset=_default_phred_offset,
-                              variant=_default_variant):
+                              variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=partial(Protein, validate=False)),
+                             constructor=Protein, **kwargs),
                              seq_num)
 
 

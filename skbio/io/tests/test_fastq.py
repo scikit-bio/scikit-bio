@@ -146,16 +146,16 @@ class TestReaders(unittest.TestCase):
              [{},
               {'variant': 'illumina1.8'},
               {'phred_offset': 33,
-               'constructor': partial(DNA, validate=False)}],
+               'constructor': DNA}],
              []),
 
             ([get_data_path('fastq_single_seq_illumina1.3')], [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64},
                 {'variant': 'illumina1.3',
-                 'constructor': partial(Protein, validate=False)},
+                 'constructor': Protein},
             ], [
-                ('', 'bar\t baz', 'ACGT', [33, 34, 35, 36])
+                ('', 'bar\t baz', 'aCGT', [33, 34, 35, 36])
             ]),
 
             ([get_data_path('fastq_multi_seq_sanger'),
@@ -294,17 +294,27 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_generator_valid_files(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = [constructor(c[2],
                                             metadata={'id': c[0],
                                                       'description': c[1]},
                                 positional_metadata={'quality': np.array(c[3],
-                                                     dtype=np.uint8)})
+                                                     dtype=np.uint8)},
+                                **expected_kwargs)
                                 for c in components]
 
-                    observed = list(_fastq_to_generator(valid, **kwarg))
+                    observed = list(_fastq_to_generator(valid,
+                                                        **observed_kwargs))
                     self.assertEqual(len(expected), len(observed))
                     for o, e in zip(observed, expected):
                         self.assertEqual(o, e)
@@ -342,9 +352,7 @@ class TestReaders(unittest.TestCase):
                 variant='solexa'))
 
     def test_fastq_to_sequence(self):
-        for constructor in [partial(Sequence), partial(DNA, validate=False),
-                            partial(RNA, validate=False),
-                            partial(Protein, validate=False)]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for valid_files, kwargs, components in self.valid_configurations:
                 for valid in valid_files:
                     # skip empty file case since we cannot read a specific
@@ -352,53 +360,90 @@ class TestReaders(unittest.TestCase):
                     if len(components) == 0:
                         continue
 
-                    for kwarg in kwargs:
-                        _drop_kwargs(kwarg, 'constructor')
+                    for observed_kwargs in kwargs:
+                        expected_kwargs = {}
 
-                        seq_num = kwarg.get('seq_num', 1)
+                        # TODO:
+                        # some of the test files contain characters which are
+                        # invalid for RNA, so don't validate for now. Need to
+                        # fix this
+                        if constructor is RNA:
+                            observed_kwargs['validate'] = False
+                            expected_kwargs['validate'] = False
+
+                        _drop_kwargs(observed_kwargs, 'constructor')
+
+                        # Can't use partials for this because the read
+                        # function below can't operate on partials
+                        if hasattr(constructor, 'lowercase'):
+                            expected_kwargs['lowercase'] = 'introns'
+                            observed_kwargs['lowercase'] = 'introns'
+
+                        seq_num = observed_kwargs.get('seq_num', 1)
                         c = components[seq_num - 1]
                         expected = \
                             constructor(
                                 c[2], metadata={'id': c[0],
                                                 'description': c[1]},
                                 positional_metadata={'quality': np.array(c[3],
-                                                     dtype=np.uint8)})
+                                                     dtype=np.uint8)},
+                                **expected_kwargs)
 
-                        observed = read(valid, into=constructor.func,
-                                        format='fastq', verify=False, **kwarg)
+                        observed = read(valid, into=constructor,
+                                        format='fastq', verify=False,
+                                        **observed_kwargs)
                         self.assertEqual(observed, expected)
 
     def test_fastq_to_sequence_collection(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = SequenceCollection(
                         [constructor(
                             c[2], metadata={'id': c[0], 'description': c[1]},
                             positional_metadata={'quality': np.array(c[3],
-                                                 np.uint8)})
+                                                 np.uint8)},
+                            **expected_kwargs)
                          for c in components])
 
-                    observed = _fastq_to_sequence_collection(valid, **kwarg)
+                    observed = _fastq_to_sequence_collection(valid,
+                                                             **observed_kwargs)
                     self.assertEqual(observed, expected)
 
     def test_fastq_to_alignment(self):
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    constructor = kwarg.get('constructor', Sequence)
+                for observed_kwargs in kwargs:
+                    _drop_kwargs(observed_kwargs, 'seq_num')
+                    constructor = observed_kwargs.get('constructor', Sequence)
+
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    expected_kwargs = {}
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     expected = Alignment(
                         [constructor(
                             c[2], metadata={'id': c[0],
                                             'description': c[1]},
                             positional_metadata={'quality': np.array(c[3],
-                                                 dtype=np.uint8)})
+                                                 dtype=np.uint8)},
+                            **expected_kwargs)
                          for c in components])
 
-                    observed = _fastq_to_alignment(valid, **kwarg)
+                    observed = _fastq_to_alignment(valid, **observed_kwargs)
                     self.assertEqual(observed, expected)
 
 
@@ -406,11 +451,11 @@ class TestWriters(unittest.TestCase):
     def setUp(self):
         self.valid_files = [
             ([
-                ('f o  o', 'bar\n\nbaz', 'AACCGG',
+                ('f o  o', 'bar\n\nbaz', 'AaCcGg',
                  [16, 17, 18, 19, 20, 21]),
-                ('bar', 'baz foo', 'TTGGCC',
+                ('bar', 'baz foo', 'TtGgCc',
                  [23, 22, 21, 20, 19, 18]),
-                ('ba\n\t\tz', 'foo bar', 'GATTTC',
+                ('ba\n\t\tz', 'foo bar', 'gAtTtC',
                  [20, 21, 22, 23, 24, 18])
             ], [
                 ({'variant': 'sanger'},
@@ -447,18 +492,32 @@ class TestWriters(unittest.TestCase):
                 self.assertEqual(observed, expected)
 
     def test_sequence_to_fastq_kwargs_passed(self):
-        for constructor in [Sequence, partial(DNA, validate=False),
-                            partial(RNA, validate=False),
-                            partial(Protein, validate=False)]:
+        for constructor in [Sequence, DNA, RNA, Protein]:
             for components, kwargs_expected_fp in self.valid_files:
-                for kwargs, expected_fp in kwargs_expected_fp:
+                for expected_kwargs, expected_fp in kwargs_expected_fp:
+
+                    observed_kwargs = {}
+                    # TODO:
+                    # some of the test files contain characters which are
+                    # invalid for RNA, so don't validate for now. Need to
+                    # fix this
+                    if constructor is RNA:
+                        observed_kwargs['validate'] = False
+
+                    # Can't use partials for this because the read
+                    # function below can't operate on partials
+                    if hasattr(constructor, 'lowercase'):
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
+
                     fh = StringIO()
                     for c in components:
                         obj = constructor(
                             c[2],
                             metadata={'id': c[0], 'description': c[1]},
-                            positional_metadata={'quality': c[3]})
-                        write(obj, into=fh, format='fastq', **kwargs)
+                            positional_metadata={'quality': c[3]},
+                            **observed_kwargs)
+                        write(obj, into=fh, format='fastq', **expected_kwargs)
 
                     observed = fh.getvalue()
                     fh.close()
@@ -473,10 +532,12 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = SequenceCollection([
                     DNA(c[2], metadata={'id': c[0], 'description': c[1]},
-                        positional_metadata={'quality': c[3]})
+                        positional_metadata={'quality': c[3]},
+                        lowercase='introns')
                     for c in components])
 
                 fh = StringIO()
+                kwargs['lowercase'] = 'introns'
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
@@ -491,10 +552,12 @@ class TestWriters(unittest.TestCase):
             for kwargs, expected_fp in kwargs_expected_fp:
                 obj = Alignment([
                     Protein(c[2], metadata={'id': c[0], 'description': c[1]},
-                            positional_metadata={'quality': c[3]})
+                            positional_metadata={'quality': c[3]},
+                            lowercase='introns')
                     for c in components])
 
                 fh = StringIO()
+                kwargs['lowercase'] = 'introns'
                 _alignment_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()

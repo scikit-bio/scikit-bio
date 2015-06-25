@@ -549,7 +549,6 @@ from future.builtins import range, zip
 from six.moves import zip_longest
 
 import textwrap
-from functools import partial
 
 import numpy as np
 
@@ -606,11 +605,12 @@ def _sniffer_data_parser(chunks):
 
 
 @register_reader('fasta')
-def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
+def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
                                                FASTAFormatError):
-            yield constructor(seq, metadata={'id': id_, 'description': desc})
+            yield constructor(seq, metadata={'id': id_, 'description': desc},
+                              **kwargs)
     else:
         fasta_gen = _parse_fasta_raw(fh, _parse_sequence_data,
                                      FASTAFormatError)
@@ -642,7 +642,7 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
             yield constructor(
                 fasta_seq,
                 metadata={'id': fasta_id, 'description': fasta_desc},
-                positional_metadata={'quality': qual_scores})
+                positional_metadata={'quality': qual_scores}, **kwargs)
 
 
 @register_reader('fasta', Sequence)
@@ -653,46 +653,49 @@ def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
 
 
 @register_reader('fasta', DNA)
-def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1):
+def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
-                            constructor=partial(DNA, validate=False)),
+                            constructor=DNA, **kwargs),
         seq_num)
 
 
 @register_reader('fasta', RNA)
-def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1):
+def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
-                            constructor=partial(RNA, validate=False)),
+                            constructor=RNA, **kwargs),
         seq_num)
 
 
 @register_reader('fasta', Protein)
-def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1):
+def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
-                            constructor=partial(Protein, validate=False)),
+                            constructor=Protein, **kwargs),
         seq_num)
 
 
 @register_reader('fasta', SequenceCollection)
 def _fasta_to_sequence_collection(fh, qual=FileSentinel,
-                                  constructor=Sequence):
+                                  constructor=Sequence, **kwargs):
     return SequenceCollection(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
+        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
+                                 **kwargs)))
 
 
 @register_reader('fasta', Alignment)
-def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence):
+def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     return Alignment(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor)))
+        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
+                                 **kwargs)))
 
 
 @register_writer('fasta')
 def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' ', max_width=None):
+                        description_newline_replacement=' ', max_width=None,
+                        lowercase=None):
     if max_width is not None:
         if max_width < 1:
             raise ValueError(
@@ -709,7 +712,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
 
     formatted_records = _format_fasta_like_records(
         obj, id_whitespace_replacement, description_newline_replacement,
-        qual is not None)
+        qual is not None, lowercase)
     for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
@@ -736,44 +739,45 @@ def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
 def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
-                           max_width=None):
+                           max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', RNA)
 def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
-                           max_width=None):
+                           max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', Protein)
 def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',
-                               max_width=None):
+                               max_width=None, lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', SequenceCollection)
 def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
-                                  max_width=None):
+                                  max_width=None, lowercase=None):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @register_writer('fasta', Alignment)
 def _alignment_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
-                        description_newline_replacement=' ', max_width=None):
+                        description_newline_replacement=' ', max_width=None,
+                        lowercase=None):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 def _parse_fasta_raw(fh, data_parser, error_type):
@@ -839,7 +843,8 @@ def _parse_quality_scores(chunks):
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width):
+                        description_newline_replacement, max_width,
+                        lowercase=None):
     def seq_gen():
         for seq in obj:
             yield seq
@@ -848,4 +853,4 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
         seq_gen(), fh, qual=qual,
         id_whitespace_replacement=id_whitespace_replacement,
         description_newline_replacement=description_newline_replacement,
-        max_width=max_width)
+        max_width=max_width, lowercase=lowercase)
