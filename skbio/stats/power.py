@@ -149,7 +149,10 @@ import warnings
 import numpy as np
 import scipy.stats
 
+from skbio.util._decorator import experimental
 
+
+@experimental(as_of="0.4.0")
 def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
                     max_counts=50, counts_interval=10, min_counts=None,
                     num_iter=500, num_runs=10):
@@ -377,6 +380,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     return power, sample_counts
 
 
+@experimental(as_of="0.4.0")
 def subsample_paired_power(test, meta, cat, control_cats, order=None,
                            strict_match=True, alpha_pwr=0.05,
                            max_counts=50, counts_interval=10, min_counts=None,
@@ -562,6 +566,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     return power, sample_counts
 
 
+@experimental(as_of="0.4.0")
 def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     r"""Calculates a confidence bound assuming a normal distribution
 
@@ -609,6 +614,7 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     return bound
 
 
+@experimental(as_of="0.4.0")
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
                           alpha=0.05, mode='ind', num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
@@ -717,6 +723,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     return power_mean, power_bound
 
 
+@experimental(as_of="0.4.0")
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Draws a list of samples varied by `cat` and matched for `control_cats`
 

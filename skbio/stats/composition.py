@@ -92,7 +92,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import scipy.stats as ss
 
+from skbio.util._decorator import experimental
 
+
+@experimental(as_of="0.4.0")
 def closure(mat):
     """
     Performs closure to ensure that all elements add up to 1.
@@ -129,6 +132,7 @@ def closure(mat):
     return mat.squeeze()
 
 
+@experimental(as_of="0.4.0")
 def multiplicative_replacement(mat, delta=None):
     r"""Replace all zeros with small non-zero values
 
@@ -185,6 +189,7 @@ def multiplicative_replacement(mat, delta=None):
     return mat.squeeze()
 
 
+@experimental(as_of="0.4.0")
 def perturb(x, y):
     r"""
     Performs the perturbation operation.
@@ -228,6 +233,7 @@ def perturb(x, y):
     return closure(x * y)
 
 
+@experimental(as_of="0.4.0")
 def perturb_inv(x, y):
     r"""
     Performs the inverse perturbation operation.
@@ -271,6 +277,7 @@ def perturb_inv(x, y):
     return closure(x / y)
 
 
+@experimental(as_of="0.4.0")
 def power(x, a):
     r"""
     Performs the power operation.
@@ -311,6 +318,7 @@ def power(x, a):
     return closure(x**a).squeeze()
 
 
+@experimental(as_of="0.4.0")
 def clr(mat):
     r"""
     Performs centre log ratio transformation.
@@ -350,6 +358,7 @@ def clr(mat):
     return (lmat - gm).squeeze()
 
 
+@experimental(as_of="0.4.0")
 def centralize(mat):
     """Center data around its geometric average.
 
