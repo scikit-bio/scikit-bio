@@ -14,8 +14,10 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def pw_distances(counts, ids=None, metric="braycurtis"):
     """Compute distances between all pairs of columns in a counts matrix
 
@@ -59,6 +61,7 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
         squareform(distances, force='tomatrix', checks=False), ids)
 
 
+@experimental(as_of="0.4.0")
 def pw_distances_from_table(table, metric="braycurtis"):
     """Compute distances between all pairs of samples in table
 
