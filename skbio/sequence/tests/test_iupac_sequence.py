@@ -161,7 +161,16 @@ class TestIUPACSequence(TestCase):
         # upper. make sure `bytes` hasn't been mutated
         npt.assert_equal(bytes, np.array([97, 98, 97], dtype=np.uint8))
 
-    def test_init_lowercase_hashable_key(self):
+    def test_init_lowercase_invalid_keys(self):
+        for invalid_key in ((), [], 2):
+            invalid_type = type(invalid_key)
+            with self.assertRaisesRegexp(TypeError,
+                                         "lowercase keyword argument expected "
+                                         "a bool or string, but got %s" %
+                                         invalid_type):
+                ExampleIUPACSequence('ACGTacgt', lowercase=invalid_key)
+
+    def test_lowercase_mungeable_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
         # properly. If the internal implementation of the lowercase method
         # changes to no longer use _munge_to_index_array, this test may need
@@ -169,7 +178,7 @@ class TestIUPACSequence(TestCase):
         # _munge_to_index_array
         self.assertEquals('AAAAaaaa', self.lowercase_seq.lowercase('key'))
 
-    def test_init_lowercase_array_key(self):
+    def test_lowercase_array_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
         # properly. If the internal implementation of the lowercase method
         # changes to no longer use _munge_to_index_array, this test may need

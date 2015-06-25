@@ -13,6 +13,7 @@ from abc import ABCMeta, abstractproperty
 from itertools import product
 
 import numpy as np
+from six import string_types
 
 from skbio.util import classproperty, overrides
 from skbio.util._misc import MiniRegistry
@@ -171,13 +172,18 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         super(IUPACSequence, self).__init__(
             sequence, metadata, positional_metadata)
 
-        # Note we are checking identity against the False object here and not
-        # just falsiness
-        if lowercase is not False:
+        if lowercase is False:
+            pass
+        elif lowercase is True or isinstance(lowercase, string_types):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
             self._convert_to_uppercase(lowercase_mask)
-            if not isinstance(lowercase, bool):
+
+            # If it isn't True, it must be a string_type
+            if not (lowercase is True):
                 self.positional_metadata[lowercase] = lowercase_mask
+        else:
+            raise TypeError("lowercase keyword argument expected a bool or "
+                            "string, but got %s" % type(lowercase))
 
         if validate:
             self._validate()
