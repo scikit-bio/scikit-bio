@@ -1366,7 +1366,6 @@ class Alignment(SequenceCollection):
         else:
             return len(self._data[0])
 
-    @experimental(as_of="0.4.0")
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
         """
@@ -1607,9 +1606,6 @@ class StockholmAlignment(Alignment):
             out_f.write(self.__str__())
 
     @staticmethod
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="StockholmAlignment will be replaced by skbio.Alignment"
-                " objects of annotated sequences.")
     def _parse_gf_info(lines):
         """Takes care of parsing GF lines in stockholm plus special cases"""
         parsed = defaultdict(list)
@@ -1661,9 +1657,6 @@ class StockholmAlignment(Alignment):
         return parsed
 
     @staticmethod
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="StockholmAlignment will be replaced by skbio.Alignment"
-                " objects of annotated sequences.")
     def _parse_gc_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GC lines in stockholm format"""
         parsed = {}
@@ -1696,9 +1689,6 @@ class StockholmAlignment(Alignment):
         return parsed
 
     @staticmethod
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="StockholmAlignment will be replaced by skbio.Alignment"
-                " objects of annotated sequences.")
     def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GS and GR lines in stockholm format"""
         parsed = {}
