@@ -17,6 +17,7 @@ from six import string_types
 from skbio.alignment import Alignment
 from skbio.sequence import Sequence, IUPACSequence
 from skbio.util import EfficiencyWarning
+from skbio.util._decorator import experimental, deprecated
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
@@ -121,6 +122,7 @@ blosum50 = \
               'Y': -2, 'X': -1, 'Z': 5}}
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                     gap_extend_penalty=2,
                                     match_score=2, mismatch_score=-3,
@@ -189,6 +191,7 @@ def local_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                 gap_extend_penalty, substitution_matrix)
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  gap_extend_penalty=1,
                                  substitution_matrix=None):
@@ -248,6 +251,7 @@ def local_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                 gap_extend_penalty, substitution_matrix)
 
 
+@experimental(as_of="0.4.0")
 def local_pairwise_align(seq1, seq2, gap_open_penalty,
                          gap_extend_penalty, substitution_matrix):
     """Locally align exactly two seqs with Smith-Waterman
@@ -322,6 +326,7 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
                      start_end_positions=start_end_positions)
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                      gap_extend_penalty=2,
                                      match_score=1, mismatch_score=-2,
@@ -402,6 +407,7 @@ def global_pairwise_align_nucleotide(seq1, seq2, gap_open_penalty=5,
                                  penalize_terminal_gaps=penalize_terminal_gaps)
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                   gap_extend_penalty=1,
                                   substitution_matrix=None,
@@ -473,6 +479,7 @@ def global_pairwise_align_protein(seq1, seq2, gap_open_penalty=11,
                                  penalize_terminal_gaps=penalize_terminal_gaps)
 
 
+@experimental(as_of="0.4.0")
 def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                           substitution_matrix, penalize_terminal_gaps=False):
     """Globally align a pair of seqs or alignments with Needleman-Wunsch
@@ -567,6 +574,10 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
                      start_end_positions=start_end_positions)
 
 
+@deprecated(as_of="0.4.0", until="0.4.1",
+            reason="Will be replaced by a SubstitutionMatrix class. To track "
+                   "progress, see [#161]"
+                   "(https://github.com/biocore/scikit-bio/issues/161).")
 def make_identity_substitution_matrix(match_score, mismatch_score,
                                       alphabet='ACGTU'):
     """Generate substitution matrix where all matches are scored equally

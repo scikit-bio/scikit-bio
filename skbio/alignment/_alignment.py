@@ -22,6 +22,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.io.util import open_file
 from ._exception import (SequenceCollectionError, StockholmParseError,
                          AlignmentError)
+from skbio.util._decorator import experimental, deprecated
 
 
 class SequenceCollection(SkbioObject):
@@ -62,6 +63,7 @@ class SequenceCollection(SkbioObject):
     """
     default_write_format = 'fasta'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, seqs):
         # TODO: find a good way to support generic Sequence objects in
         # SequenceCollection and Alignment. The issue is that some methods
@@ -84,6 +86,7 @@ class SequenceCollection(SkbioObject):
             else:
                 self._id_to_index[id_] = i
 
+    @experimental(as_of="0.4.0")
     def __contains__(self, id):
         r"""The in operator.
 
@@ -101,6 +104,7 @@ class SequenceCollection(SkbioObject):
         """
         return id in self._id_to_index
 
+    @experimental(as_of="0.4.0")
     def __eq__(self, other):
         r"""The equality operator.
 
@@ -131,6 +135,7 @@ class SequenceCollection(SkbioObject):
                     return False
         return True
 
+    @experimental(as_of="0.4.0")
     def __getitem__(self, index):
         r"""The indexing operator.
 
@@ -166,6 +171,7 @@ class SequenceCollection(SkbioObject):
         else:
             return self._data[index]
 
+    @experimental(as_of="0.4.0")
     def __iter__(self):
         r"""The iter operator.
 
@@ -177,6 +183,7 @@ class SequenceCollection(SkbioObject):
         """
         return iter(self._data)
 
+    @experimental(as_of="0.4.0")
     def __len__(self):
         r"""The len operator.
 
@@ -188,6 +195,7 @@ class SequenceCollection(SkbioObject):
         """
         return self.sequence_count()
 
+    @experimental(as_of="0.4.0")
     def __ne__(self, other):
         r"""The inequality operator.
 
@@ -208,6 +216,7 @@ class SequenceCollection(SkbioObject):
         """
         return not self.__eq__(other)
 
+    @experimental(as_of="0.4.0")
     def __repr__(self):
         r"""The repr method.
 
@@ -238,6 +247,7 @@ class SequenceCollection(SkbioObject):
         return "<%s: n=%d; mean +/- std length=%.2f +/- %.2f>" \
             % (cn, count, center, spread)
 
+    @experimental(as_of="0.4.0")
     def __reversed__(self):
         """The reversed method.
 
@@ -250,6 +260,7 @@ class SequenceCollection(SkbioObject):
         """
         return reversed(self._data)
 
+    @experimental(as_of="0.4.0")
     def __str__(self):
         r"""The str method.
 
@@ -265,6 +276,7 @@ class SequenceCollection(SkbioObject):
         fh.close()
         return fasta_str
 
+    @experimental(as_of="0.4.0")
     def distances(self, distance_fn):
         """Compute distances between all pairs of sequences
 
@@ -314,6 +326,7 @@ class SequenceCollection(SkbioObject):
                 dm[i, j] = dm[j, i] = self_i.distance(self[j], distance_fn)
         return DistanceMatrix(dm, ids)
 
+    @experimental(as_of="0.4.0")
     def distribution_stats(self, center_f=np.mean, spread_f=np.std):
         r"""Return sequence count, and center and spread of sequence lengths
 
@@ -356,6 +369,7 @@ class SequenceCollection(SkbioObject):
             return (sequence_count, center_f(sequence_lengths),
                     spread_f(sequence_lengths))
 
+    @experimental(as_of="0.4.0")
     def degap(self):
         r"""Return a new `SequenceCollection` with all gap characters removed.
 
@@ -379,6 +393,7 @@ class SequenceCollection(SkbioObject):
         """
         return SequenceCollection([seq.degap() for seq in self])
 
+    @experimental(as_of="0.4.0")
     def get_seq(self, id):
         r"""Return a sequence from the `SequenceCollection` by its id.
 
@@ -410,6 +425,7 @@ class SequenceCollection(SkbioObject):
         """
         return self[self._id_to_index[id]]
 
+    @experimental(as_of="0.4.0")
     def ids(self):
         """Returns the `Sequence` ids
 
@@ -432,6 +448,7 @@ class SequenceCollection(SkbioObject):
         """
         return [seq.metadata['id'] for seq in self]
 
+    @experimental(as_of="0.4.0")
     def update_ids(self, ids=None, func=None, prefix=""):
         """Update sequence IDs on the sequence collection.
 
@@ -552,6 +569,7 @@ class SequenceCollection(SkbioObject):
 
         return self.__class__(new_seqs), new_to_old_ids
 
+    @experimental(as_of="0.4.0")
     def is_empty(self):
         """Return True if the SequenceCollection is empty
 
@@ -564,6 +582,7 @@ class SequenceCollection(SkbioObject):
         """
         return self.sequence_count() == 0
 
+    @experimental(as_of="0.4.0")
     def iteritems(self):
         """Generator of id, sequence tuples
 
@@ -577,6 +596,7 @@ class SequenceCollection(SkbioObject):
         for seq in self:
             yield seq.metadata['id'], seq
 
+    @experimental(as_of="0.4.0")
     def sequence_count(self):
         """Return the count of sequences in the `SequenceCollection`
 
@@ -603,6 +623,7 @@ class SequenceCollection(SkbioObject):
         """
         return len(self._data)
 
+    @experimental(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return k-word frequencies for sequences in ``SequenceCollection``.
 
@@ -647,6 +668,7 @@ class SequenceCollection(SkbioObject):
         return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
                 for s in self]
 
+    @experimental(as_of="0.4.0")
     def sequence_lengths(self):
         """Return lengths of the sequences in the `SequenceCollection`
 
@@ -729,6 +751,7 @@ class Alignment(SequenceCollection):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, seqs, score=None, start_end_positions=None):
         super(Alignment, self).__init__(seqs)
 
@@ -739,6 +762,7 @@ class Alignment(SequenceCollection):
             self._score = float(score)
         self._start_end_positions = start_end_positions
 
+    @experimental(as_of="0.4.0")
     def distances(self, distance_fn=None):
         """Compute distances between all pairs of sequences
 
@@ -779,6 +803,7 @@ class Alignment(SequenceCollection):
         """
         return super(Alignment, self).distances(distance_fn)
 
+    @experimental(as_of="0.4.0")
     def score(self):
         """Returns the score of the alignment.
 
@@ -797,6 +822,7 @@ class Alignment(SequenceCollection):
         """
         return self._score
 
+    @experimental(as_of="0.4.0")
     def start_end_positions(self):
         """Returns the (start, end) positions for each aligned sequence.
 
@@ -825,6 +851,7 @@ class Alignment(SequenceCollection):
         """
         return self._start_end_positions
 
+    @experimental(as_of="0.4.0")
     def subalignment(self, seqs_to_keep=None, positions_to_keep=None,
                      invert_seqs_to_keep=False,
                      invert_positions_to_keep=False):
@@ -950,6 +977,7 @@ class Alignment(SequenceCollection):
         # and return it
         return self.__class__(result)
 
+    @experimental(as_of="0.4.0")
     def iter_positions(self, constructor=None):
         """Generator of Alignment positions (i.e., columns)
 
@@ -1024,6 +1052,7 @@ class Alignment(SequenceCollection):
             position = [constructor(seq[i]) for seq in self]
             yield position
 
+    @experimental(as_of="0.4.0")
     def majority_consensus(self):
         """Return the majority consensus sequence for the alignment.
 
@@ -1067,6 +1096,7 @@ class Alignment(SequenceCollection):
         return seq_constructor(''.join(c.most_common(1)[0][0]
                                for c in self.position_counters()))
 
+    @experimental(as_of="0.4.0")
     def omit_gap_positions(self, maximum_gap_frequency):
         """Returns Alignment with positions filtered based on gap frequency
 
@@ -1117,6 +1147,7 @@ class Alignment(SequenceCollection):
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
 
+    @experimental(as_of="0.4.0")
     def omit_gap_sequences(self, maximum_gap_frequency):
         """Returns Alignment with sequences filtered based on gap frequency
 
@@ -1164,6 +1195,7 @@ class Alignment(SequenceCollection):
                 seqs_to_keep.append(seq.metadata['id'])
         return self.subalignment(seqs_to_keep=seqs_to_keep)
 
+    @experimental(as_of="0.4.0")
     def position_counters(self):
         """Return counts of characters at each position in the alignment
 
@@ -1196,6 +1228,7 @@ class Alignment(SequenceCollection):
         """
         return [Counter(p) for p in self.iter_positions(constructor=str)]
 
+    @experimental(as_of="0.4.0")
     def position_frequencies(self):
         """Return frequencies of characters for positions in Alignment
 
@@ -1236,6 +1269,7 @@ class Alignment(SequenceCollection):
             result.append(freqs)
         return result
 
+    @experimental(as_of="0.4.0")
     def position_entropies(self, base=None,
                            nan_on_non_standard_chars=True):
         """Return Shannon entropy of positions in Alignment
@@ -1300,6 +1334,7 @@ class Alignment(SequenceCollection):
                 result.append(entropy(list(f.values()), base=base))
         return result
 
+    @experimental(as_of="0.4.0")
     def sequence_length(self):
         """Return the number of positions in Alignment
 
@@ -1331,6 +1366,7 @@ class Alignment(SequenceCollection):
         else:
             return len(self._data[0])
 
+    @experimental(as_of="0.4.0")
     def _validate_lengths(self):
         """Return ``True`` if all sequences same length, ``False`` otherwise
         """
@@ -1431,6 +1467,10 @@ class StockholmAlignment(Alignment):
     seq2          UCC--G-GGGA
     //
     """
+
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def __init__(self, seqs, gf=None, gs=None, gr=None, gc=None):
         self.gf = gf if gf else {}
         self.gs = gs if gs else {}
@@ -1438,6 +1478,9 @@ class StockholmAlignment(Alignment):
         self.gc = gc if gc else {}
         super(StockholmAlignment, self).__init__(seqs)
 
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def __str__(self):
         """Parses StockholmAlignment into a string with stockholm format
 
@@ -1542,6 +1585,9 @@ class StockholmAlignment(Alignment):
 
         return '\n'.join(sto_lines)
 
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def to_file(self, out_f):
         r"""Save the alignment to file in text format.
 
@@ -1561,6 +1607,9 @@ class StockholmAlignment(Alignment):
             out_f.write(self.__str__())
 
     @staticmethod
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def _parse_gf_info(lines):
         """Takes care of parsing GF lines in stockholm plus special cases"""
         parsed = defaultdict(list)
@@ -1612,6 +1661,9 @@ class StockholmAlignment(Alignment):
         return parsed
 
     @staticmethod
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def _parse_gc_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GC lines in stockholm format"""
         parsed = {}
@@ -1644,6 +1696,9 @@ class StockholmAlignment(Alignment):
         return parsed
 
     @staticmethod
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def _parse_gs_gr_info(lines, strict=False, seqlen=-1):
         """Takes care of parsing GS and GR lines in stockholm format"""
         parsed = {}
@@ -1678,6 +1733,9 @@ class StockholmAlignment(Alignment):
         return parsed
 
     @classmethod
+    @deprecated(as_of="0.4.0", until="0.4.1",
+                reason="StockholmAlignment will be replaced by skbio.Alignment"
+                " objects of annotated sequences.")
     def from_file(cls, infile, seq_constructor, strict=False):
         r"""yields StockholmAlignment objects from a stockholm file.
 
