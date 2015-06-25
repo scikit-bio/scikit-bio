@@ -252,7 +252,7 @@ class deprecated(_state_decorator):
 
         def wrapped_f(*args, **kwargs):
             warnings.warn('%s is deprecated as of scikit-bio version %s, and '
-                          ' will be removed in version %s. %s' %
+                          'will be removed in version %s. %s' %
                           (func.__name__, self.as_of, self.until, self.reason),
                           DeprecationWarning)
             # args[0] is the function being wrapped when this is called
