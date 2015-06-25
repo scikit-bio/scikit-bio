@@ -186,7 +186,8 @@ Load the ordination results from the file:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import zip
 
 import numpy as np
@@ -379,11 +380,11 @@ def _write_vector_section(fh, header_id, vector):
         shape = 0
     else:
         shape = vector.shape[0]
-    fh.write(u"%s\t%d\n" % (header_id, shape))
+    fh.write("%s\t%d\n" % (header_id, shape))
 
     if vector is not None:
         fh.write(_format_vector(vector))
-    fh.write(u"\n")
+    fh.write("\n")
 
 
 def _write_array_section(fh, header_id, data, ids=None,
@@ -393,7 +394,7 @@ def _write_array_section(fh, header_id, data, ids=None,
         shape = (0, 0)
     else:
         shape = data.shape
-    fh.write(u"%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
+    fh.write("%s\t%d\t%d\n" % (header_id, shape[0], shape[1]))
 
     # write section data
     if data is not None:
@@ -405,13 +406,13 @@ def _write_array_section(fh, header_id, data, ids=None,
                 fh.write(_format_vector(vals, id_))
 
     if include_section_separator:
-        fh.write(u"\n")
+        fh.write("\n")
 
 
 def _format_vector(vector, id_=None):
     formatted_vector = '\t'.join(np.asarray(vector, dtype=np.str))
 
     if id_ is None:
-        return u"%s\n" % formatted_vector
+        return "%s\n" % formatted_vector
     else:
-        return u"%s\t%s\n" % (id_, formatted_vector)
+        return "%s\t%s\n" % (id_, formatted_vector)

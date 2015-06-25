@@ -135,8 +135,7 @@ output:
 
 >>> from io import StringIO
 >>> fh = StringIO()
->>> aln.write(fh, format='phylip')
->>> print(fh.getvalue())
+>>> print(aln.write(fh, format='phylip').getvalue())
 3 16
 seq1      ACCGTTGTA- GTAGCT
 sequence-2A--GTCGAA- GTACCT
@@ -178,8 +177,7 @@ remap each of the IDs to integer-based IDs:
 We can now write the new alignment in PHYLIP format:
 
 >>> fh = StringIO()
->>> short_id_aln.write(fh, format='phylip')
->>> print(fh.getvalue())
+>>> print(short_id_aln.write(fh, format='phylip').getvalue())
 3 5
 1         ACCGT
 2         A--GT
@@ -206,7 +204,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 from skbio.alignment import Alignment
 from skbio.io import create_format, PhylipFormatError
@@ -239,9 +238,9 @@ def _alignment_to_phylip(obj, fh):
                 (chunk_size, id_))
 
     sequence_count = obj.sequence_count()
-    fh.write(u'{0:d} {1:d}\n'.format(sequence_count, sequence_length))
+    fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
 
-    fmt = u'{0:%d}{1}\n' % chunk_size
+    fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
         chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.metadata['id'], chunked_seq))

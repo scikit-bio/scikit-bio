@@ -8,8 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
-from six import StringIO
 
+from io import StringIO
 from unittest import TestCase, main
 from functools import partial
 

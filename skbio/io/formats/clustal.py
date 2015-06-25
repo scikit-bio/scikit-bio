@@ -112,7 +112,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 from itertools import islice
 
@@ -261,12 +262,12 @@ def _alignment_to_clustal(obj, fh):
     names, seqs = zip(*[(s.metadata['id'], str(s)) for s in obj])
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
-    fh.write(u'CLUSTAL\n\n\n')
+    fh.write('CLUSTAL\n\n\n')
     for i in range(0, seqLen, clen):
         for label, seq in zip(names, seqs):
             name = ('{:<%d}' % (nameLen)).format(label)
-            fh.write(u"%s\t%s\n" % (name, seq[i:i+clen]))
-        fh.write(u"\n")
+            fh.write("%s\t%s\n" % (name, seq[i:i+clen]))
+        fh.write("\n")
 
 
 @clustal.reader(Alignment)

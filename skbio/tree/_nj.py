@@ -110,7 +110,6 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     if result_constructor is None:
         def result_constructor(x):
-            print(x)
             return TreeNode.read(StringIO(x), format='newick')
 
     # initialize variables

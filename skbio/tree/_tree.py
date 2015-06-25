@@ -654,7 +654,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> sorted(tree.subset())
-        ['a', 'b', 'c', 'f', 'g']
+        [u'a', u'b', u'c', u'f', u'g']
         """
         return frozenset({i.name for i in self.tips()})
 
@@ -680,9 +680,9 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)h)root;"])
         >>> for s in sorted(tree.subsets()):
         ...     print(sorted(s))
-        ['a', 'b']
-        ['d', 'e']
-        ['a', 'b', 'd', 'e']
+        [u'a', u'b']
+        [u'd', u'e']
+        [u'a', u'b', u'd', u'e']
         """
         sets = []
         for i in self.postorder(include_self=False):
@@ -1546,7 +1546,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
-        ['a', 'b']
+        [u'a', u'b']
         """
         for node in self.traverse(include_self=True):
             if func(node):
@@ -1568,7 +1568,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> [node.name for node in tree.find('a').ancestors()]
-        ['c', 'root']
+        [u'c', u'root']
 
         """
         result = []
@@ -1622,7 +1622,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e,f)g)root;"])
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
-        ['d', 'f']
+        [u'd', u'f']
 
         """
         if self.is_root():
@@ -1654,7 +1654,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
-        ['a', 'b', 'root']
+        [u'a', u'b', u'root']
 
         """
         nodes = [n for n in self.children + [self.parent] if n is not None]
@@ -2018,7 +2018,7 @@ class TreeNode(SkbioObject):
         >>> res['id']
         array([0, 1, 2, 3, 4, 5, 6, 7])
         >>> res['name']
-        array(['a', 'b', 'c', 'd', 'x', 'y', 'z', None], dtype=object)
+        array([u'a', u'b', u'c', u'd', u'x', u'y', u'z', None], dtype=object)
 
         """
         if attrs is None:
@@ -2271,7 +2271,7 @@ class TreeNode(SkbioObject):
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        ['b', 'e']
+        [u'b', u'e']
         """
         if not hasattr(self, 'MaxDistTips'):
             # _set_max_distance will throw a TreeError if a node with a single
@@ -2329,7 +2329,7 @@ class TreeNode(SkbioObject):
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        'a', 'b', 'd', 'e'
+        u'a', u'b', u'd', u'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]
@@ -2688,7 +2688,7 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tr = TreeNode.read([u"(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
-                                "(H:.4,I:.5)J:1.3)K;"])
+        ...                     "(H:.4,I:.5)J:1.3)K;"])
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print(tdbl, sdbl)
@@ -2753,16 +2753,16 @@ class TreeNode(SkbioObject):
         >>> tree.cache_attr(f, 'tip_names')
         >>> for n in tree.traverse(include_self=True):
         ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
-        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
-        Node name: f, cache: ['a', 'b', 'c', 'd']
-        Node name: a, cache: ['a']
-        Node name: b, cache: ['b']
-        Node name: e, cache: ['c', 'd']
-        Node name: c, cache: ['c']
-        Node name: d, cache: ['d']
-        Node name: i, cache: ['g', 'h']
-        Node name: g, cache: ['g']
-        Node name: h, cache: ['h']
+        Node name: root, cache: [u'a', u'b', u'c', u'd', u'g', u'h']
+        Node name: f, cache: [u'a', u'b', u'c', u'd']
+        Node name: a, cache: [u'a']
+        Node name: b, cache: [u'b']
+        Node name: e, cache: [u'c', u'd']
+        Node name: c, cache: [u'c']
+        Node name: d, cache: [u'd']
+        Node name: i, cache: [u'g', u'h']
+        Node name: g, cache: [u'g']
+        Node name: h, cache: [u'h']
 
         """
         if cache_type in [set, frozenset]:

@@ -220,7 +220,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import six
 
 from future.builtins import zip, range
@@ -343,34 +344,34 @@ def _tree_node_to_newick(obj, fh):
         entry = nodes_left.pop()
         node, node_depth = entry
         if node.children and node_depth >= current_depth:
-            fh.write(u'(')
+            fh.write('(')
             nodes_left.append(entry)
             nodes_left += ((child, node_depth + 1) for child in
                            reversed(node.children))
             current_depth = node_depth + 1
         else:
             if node_depth < current_depth:
-                fh.write(u')')
+                fh.write(')')
                 current_depth -= 1
 
             # Note we don't check for None because there is no way to represent
             # an empty string as a label in Newick. Therefore, both None and ''
             # are considered to be the absence of a label.
             if node.name:
-                escaped = six.u(node.name.replace("'", "''"))
+                escaped = "%s" % node.name.replace("'", "''")
                 if any(t in operators for t in node.name):
-                    fh.write(u"'")
+                    fh.write("'")
                     fh.write(escaped)
-                    fh.write(u"'")
+                    fh.write("'")
                 else:
                     fh.write(escaped.replace(" ", "_"))
             if node.length is not None:
-                fh.write(u':')
-                fh.write(six.u(str(node.length)))
+                fh.write(':')
+                fh.write("%s" % node.length)
             if nodes_left and nodes_left[-1][1] == current_depth:
-                fh.write(u',')
+                fh.write(',')
 
-    fh.write(u';\n')
+    fh.write(';\n')
 
 
 def _tokenize_newick(fh, convert_underscores=True):

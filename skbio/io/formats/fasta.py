@@ -346,7 +346,7 @@ Let's inspect the type of sequences stored in the ``Alignment``:
 Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
          has_positional_metadata=False)
 >>> aln[0].metadata
-{'id': u'seq1', 'description': u'Turkey'}
+{u'id': u'seq1', u'description': u'Turkey'}
 
 By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
@@ -413,7 +413,7 @@ controlled with ``seq_num``. For example, to read the fifth sequence:
 Sequence('AAACCC ... GCTTAA', length=42, has_metadata=True,
          has_positional_metadata=False)
 >>> seq.metadata
-{'id': 'seq5', 'description': 'Gorilla'}
+{u'id': u'seq5', u'description': u'Gorilla'}
 
 We can use the same API to read the fifth sequence into a ``DNA``:
 
@@ -422,11 +422,11 @@ We can use the same API to read the fifth sequence into a ``DNA``:
 DNA('AAACCC ... GCTTAA', length=42, has_metadata=True,
     has_positional_metadata=False)
 >>> dna_seq.metadata
-{'id': 'seq5', 'description': 'Gorilla'}
+{u'id': u'seq5', u'description': u'Gorilla'}
 
 Individual sequence objects can also be written in FASTA format:
 
->>> with StringIO as fh:
+>>> with StringIO() as fh:
 ...     print(dna_seq.write(fh).getvalue())
 >seq5 Gorilla
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
@@ -488,8 +488,8 @@ FASTA and QUAL files, respectively, we run:
 
 >>> new_fasta_fh = StringIO()
 >>> new_qual_fh = StringIO()
->>> with StringIO() as new_fasta_fh, StringIO() as new_qual_fh:
-...     print(sc.write(new_fasta_fh, qual=new_qual_fh).getvalue())
+>>> _ = sc.write(new_fasta_fh, qual=new_qual_fh)
+>>> print(new_fasta_fh.getvalue())
 >seq1 db-accession-149855
 CGATGTC
 >seq2 db-accession-34989
@@ -501,6 +501,8 @@ CATCG
 >seq2 db-accession-34989
 3 3 10 42 80
 <BLANKLINE>
+>>> new_fasta_fh.close()
+>>> new_qual_fh.close()
 
 References
 ----------
@@ -526,7 +528,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import range, zip
 from six.moves import zip_longest
 
@@ -617,11 +620,11 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence):
             if fasta_id != qual_id:
                 raise FASTAFormatError(
                     "IDs do not match between FASTA and QUAL records: %r != %r"
-                    % (fasta_id, qual_id))
+                    % (str(fasta_id), str(qual_id)))
             if fasta_desc != qual_desc:
                 raise FASTAFormatError(
                     "Descriptions do not match between FASTA and QUAL "
-                    "records: %r != %r" % (fasta_desc, qual_desc))
+                    "records: %r != %r" % (str(fasta_desc), str(qual_desc)))
 
             # sequence and quality scores lengths are checked in constructor
             yield constructor(
@@ -699,13 +702,13 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
         if max_width is not None:
             seq_str = _chunk_str(seq_str, max_width, '\n')
 
-        fh.write(u'>%s\n%s\n' % (header, seq_str))
+        fh.write('>%s\n%s\n' % (header, seq_str))
 
         if qual is not None:
             qual_str = ' '.join(np.asarray(qual_scores, dtype=np.str))
             if max_width is not None:
                 qual_str = qual_wrapper.fill(qual_str)
-            qual.write(u'>%s\n%s\n' % (header, qual_str))
+            qual.write('>%s\n%s\n' % (header, qual_str))
 
 
 @fasta.writer(Sequence)
@@ -814,7 +817,8 @@ def _parse_quality_scores(chunks):
         quality = np.asarray(qual_str.split(), dtype=int)
     except ValueError:
         raise QUALFormatError(
-            "Could not convert quality scores to integers:\n%s" % qual_str)
+            "Could not convert quality scores to integers:\n%s"
+            % str(qual_str))
 
     if (quality < 0).any():
         raise QUALFormatError(

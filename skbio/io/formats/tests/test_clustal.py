@@ -221,15 +221,12 @@ UGCUGCAUCA---------------- 33
     def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
         import os
         for valid_out in self.valid_clustal_out:
-            fname = "test.aln"
-            testfile = open(fname, 'w')
             result_before = _clustal_to_alignment(valid_out)
-            _alignment_to_clustal(result_before, testfile)
-            testfile.close()
-            testfile = open(fname, 'r')
-            result_after = _clustal_to_alignment(testfile)
+            with StringIO() as fh:
+                _alignment_to_clustal(result_before, fh)
+                fh.seek(0)
+                result_after = _clustal_to_alignment(fh)
             self.assertEquals(result_before, result_after)
-        os.remove(fname)
 
     def test_invalid_alignment_to_clustal_and_clustal_to_alignment(self):
         for invalid_out in self.invalid_clustal_out:

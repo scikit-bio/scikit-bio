@@ -105,37 +105,59 @@ class IORegistry(object):
         return matches
 
     def read(self, file, format=None, into=None, verify=True, **kwargs):
-        io_kwargs = {k:kwargs[k] for k in _open_kwargs if k in kwargs}
+        if into is None:
+            return self._read_gen(file, format, into, verify, kwargs)
+        else:
+            return self._read_ret(file, format, into, verify, kwargs)
+
+    def _read_ret(self, file, fmt, into, verify, kwargs):
+        io_kwargs = self._find_io_kwargs(kwargs)
         with resolve_file(file, **io_kwargs) as (file, _):
-            if format is None:
-                format, skwargs = self.sniff(file, **io_kwargs)
-            else:
-                if verify:
-                    sniffer = self.get_sniffer(format)
-                    if sniffer is not None:
-                        backup = file.tell()
-                        is_format, skwargs = sniffer(file, **io_kwargs)
-                        file.seek(backup)
-                        if not is_format:
-                            warn("%r does not look like a %s file"
-                                 % (file, format), FormatIdentificationWarning)
-
-                    for key in skwargs:
-                        if key not in kwargs:
-                            kwargs[key] = skwargs[key]
-                        elif kwargs[key] != skwargs[key]:
-                            warn('Best guess was: %s=%r, continuing with user'
-                                 ' supplied: %r' % (key, skwargs[key],
-                                                    kwargs[key]),
-                                 ArgumentOverrideWarning)
-
-            reader = self.get_reader(format, into)
-            if reader is None:
-                raise UnrecognizedFormatError(
-                    "Cannot read %s from %r, no %s reader found." %
-                    (format, file, into.__name__ if into else 'generator'))
-
+            reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
+                                               io_kwargs)
             return reader(file, **kwargs)
+
+    def _read_gen(self, file, fmt, into, verify, kwargs):
+        io_kwargs = self._find_io_kwargs(kwargs)
+        with resolve_file(file, **io_kwargs) as (file, _):
+            reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
+                                               io_kwargs)
+            generator = reader(file, **kwargs)
+            while True:
+                yield next(generator)
+
+    def _find_io_kwargs(self, kwargs):
+        return {k:kwargs[k] for k in _open_kwargs if k in kwargs}
+
+    def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
+        if fmt is None:
+            fmt, skwargs = self.sniff(file, **io_kwargs)
+        else:
+            if verify:
+                sniffer = self.get_sniffer(fmt)
+                if sniffer is not None:
+                    backup = file.tell()
+                    is_format, skwargs = sniffer(file, **io_kwargs)
+                    file.seek(backup)
+                    if not is_format:
+                        warn("%r does not look like a %s file"
+                             % (file, fmt), FormatIdentificationWarning)
+
+                for key in skwargs:
+                    if key not in kwargs:
+                        kwargs[key] = skwargs[key]
+                    elif kwargs[key] != skwargs[key]:
+                        warn('Best guess was: %s=%r, continuing with user'
+                             ' supplied: %r' % (key, skwargs[key],
+                                                kwargs[key]),
+                             ArgumentOverrideWarning)
+
+        reader = self.get_reader(fmt, into)
+        if reader is None:
+            raise UnrecognizedFormatError(
+                "Cannot read %s from %r, no %s reader found." %
+                (fmt, file, into.__name__ if into else 'generator'))
+        return reader, kwargs
 
     def write(self, obj, format, into, **kwargs):
         cls = None

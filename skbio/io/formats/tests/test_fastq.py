@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
-from six import StringIO
+from io import StringIO
 
 import unittest
 import warnings

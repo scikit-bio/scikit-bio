@@ -185,7 +185,7 @@ Let's define this file in-memory as a ``StringIO``, though this could be a real
 file path, file handle, or anything that's supported by scikit-bio's I/O
 registry in practice:
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> fs = '\n'.join([
 ...     r"@seq1 description 1",
 ...     r"AACACCAAACTTCTCCACC",
@@ -216,7 +216,7 @@ as a ``DNA``:
 DNA('TATGTA ... TACATA', length=35, has_metadata=True,
     has_positional_metadata=True)
 >>> seq.metadata
-{'id': 'seq2', 'description': 'description 2'}
+{u'id': u'seq2', u'description': u'description 2'}
 >>> seq.positional_metadata['quality'].values
 array([60, 42, 57, 58, 47, 56, 60, 62, 58, 56, 56, 61,  6,  6,  6, 32, 34,
        61, 59, 59,  6, 33, 51,  6,  6, 34,  6, 59, 32, 51,  6,  6, 33, 33,
@@ -226,8 +226,7 @@ To write our ``SequenceCollection`` to a FASTQ file with quality scores encoded
 using the ``illumina1.3`` variant:
 
 >>> new_fh = StringIO()
->>> sc.write(new_fh, format='fastq', variant='illumina1.3')
->>> print(new_fh.getvalue())
+>>> print(sc.write(new_fh, format='fastq', variant='illumina1.3').getvalue())
 @seq1 description 1
 AACACCAAACTTCTCCACCACGTGAGCTACAAAAGGGT
 +
@@ -265,7 +264,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import range, zip
 
 import re
@@ -315,7 +315,7 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
             "Expected sequence (@) header line at start of file: %r"
-            % seq_header)
+            % str(seq_header))
 
     while seq_header is not None:
         id_, desc = _parse_fasta_like_header(seq_header)
@@ -324,7 +324,7 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
         if qual_header != '+' and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
                 "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (seq_header[1:], qual_header[1:]))
+                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:])))
 
         phred_scores, seq_header = _parse_quality_scores(fh, len(seq),
                                                          variant,
@@ -394,7 +394,7 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
     for header, seq_str, qual_scores in formatted_records:
         qual_str = _encode_phred_to_qual(qual_scores, variant=variant,
                                          phred_offset=phred_offset)
-        fh.write(u'@')
+        fh.write('@')
         fh.write(header)
         fh.write('\n')
         fh.write(seq_str)
@@ -482,7 +482,7 @@ def _parse_sequence_data(fh, prev):
                 _blank_error("after header or within sequence")
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
-                    "Found whitespace in sequence data: %r" % chunk)
+                    "Found whitespace in sequence data: %r" % str(chunk))
             seq_chunks.append(chunk)
         prev = chunk
 

@@ -70,7 +70,8 @@ or writing to a file.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import six
 
 import csv
@@ -169,10 +170,10 @@ def _lsmat_to_matrix(cls, fh, delimiter):
         else:
             raise LSMatFormatError(
                 "Encountered mismatched IDs while parsing the "
-                "dissimilarity matrix file. Found '%s' but expected "
-                "'%s'. Please ensure that the IDs match between the "
+                "dissimilarity matrix file. Found %r but expected "
+                "%r. Please ensure that the IDs match between the "
                 "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (row_id, expected_id))
+                "labels (first column)." % (str(row_id), str(expected_id)))
 
     if row_idx != num_ids - 1:
         raise LSMatFormatError("Expected %d row(s) of data, but found %d." %
@@ -201,7 +202,7 @@ def _parse_header(header, delimiter):
 
     if tokens[0]:
         raise LSMatFormatError(
-            "Header must start with delimiter %r." % delimiter)
+            "Header must start with delimiter %r." % str(delimiter))
 
     return [e.strip() for e in tokens[1:]]
 
@@ -220,16 +221,16 @@ def _parse_data(fh, delimiter):
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):
-    delimiter = six.u(delimiter)
+    delimiter = "%s" % delimiter
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
-    fh.write(u'\n')
+    fh.write('\n')
 
     for id_, vals in zip(ids, obj.data):
-        fh.write(six.u(id_))
+        fh.write("%s" % id_)
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
-        fh.write(u'\n')
+        fh.write('\n')
 
 
 def _format_ids(ids, delimiter):

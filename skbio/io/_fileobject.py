@@ -11,6 +11,12 @@ def is_binary_file(file):
 def is_text_file(file):
     return isinstance(file, io.TextIOBase)
 
+class StringIO(io.StringIO):
+    def __init__(self, string=None, **kwargs):
+        if isinstance(string, bytes):
+            string = string.decode()
+        super(StringIO, self).__init__(string, **kwargs)
+
 class SaneTextIOWrapper(io.TextIOWrapper):
     def __init__(self, *args, **kwargs):
         super(SaneTextIOWrapper, self).__init__(*args, **kwargs)
