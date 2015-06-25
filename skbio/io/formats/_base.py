@@ -151,7 +151,8 @@ def _parse_fasta_like_header(line):
 
 
 def _format_fasta_like_records(generator, id_whitespace_replacement,
-                               description_newline_replacement, require_qual):
+                               description_newline_replacement, require_qual,
+                               lowercase=None):
     if ((id_whitespace_replacement is not None and
          '\n' in id_whitespace_replacement) or
         (description_newline_replacement is not None and
@@ -197,7 +198,17 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         qual = None
         if 'quality' in seq.positional_metadata:
             qual = seq.positional_metadata['quality'].values
-        yield header, "%s" % seq, qual
+
+        if lowercase is not None:
+            if hasattr(seq, 'lowercase'):
+                seq_str = seq.lowercase(lowercase)
+            else:
+                raise AttributeError("lowercase specified but class %s does "
+                                     "not support lowercase functionality" %
+                                     seq.__class__.__name__)
+        else:
+            seq_str = str(seq)
+        yield header, "%s" % seq_str, qual
 
 
 def _line_generator(fh, skip_blanks=False):
