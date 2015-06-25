@@ -543,22 +543,9 @@ class SequenceCollection(SkbioObject):
 
         new_seqs = []
         for new_id, seq in zip(new_ids, self):
-            # HACK: Sequence objects are currently immutable. We used to have a
-            # Sequence.copy/to method that created a new Sequence object,
-            # optionally with attribute(s) set to new values. Here we want to
-            # retain all state in the Sequence object and only update the ID.
-            # There is a private method `_to` that accomplishes this for us.
-            # This method used to be public and is fully tested and documented.
-            # In the future, Sequence objects will have a `copy` method and
-            # their attributes will be reassignable. When that happens, this
-            # code can be updated to something like:
-            #
-            #     new_seq = seq.copy()
-            #     new_seq.id = new_id
-            #     new_seqs.append(new_seq)
-            metadata = seq.metadata.copy()
-            metadata['id'] = new_id
-            new_seqs.append(seq._to(metadata=metadata))
+            new_seq = seq.copy()
+            new_seq.metadata['id'] = new_id
+            new_seqs.append(new_seq)
 
         return self.__class__(new_seqs), new_to_old_ids
 
