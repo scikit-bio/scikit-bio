@@ -2239,7 +2239,7 @@ class TestSequence(TestCase):
         for input_ in all_inputs:
             with self.assertRaisesRegexp(UnicodeEncodeError,
                                          "'ascii' codec can't encode character"
-                                         " u'.*' in position 0: ordinal not in"
+                                         ".*in position 0: ordinal not in"
                                          " range\(128\)"):
                 seq._munge_to_bytestring(u'\x80', 'dummy_method')
 
