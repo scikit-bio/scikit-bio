@@ -317,10 +317,12 @@ def find_duplicates(iterable):
     return repeated
 
 flatten_deprecation_reason = (
-       "Solutions to this problem exist in the python standarnd library. "
-       "Please refer to the following links for good alternatives:\n"
-       "http://stackoverflow.com/a/952952/3639023\n"
-       "http://stackoverflow.com/a/406199/3639023")
+    "Solutions to this problem exist in the python standarnd library. "
+    "Please refer to the following links for good alternatives:\n"
+    "http://stackoverflow.com/a/952952/3639023\n"
+    "http://stackoverflow.com/a/406199/3639023")
+
+
 @deprecated(as_of="0.2.3-dev", until="0.4.1",
             reason=flatten_deprecation_reason)
 def flatten(items):

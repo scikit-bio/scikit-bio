@@ -8,13 +8,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-from warnings import warn
-
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, deprecated
 
 
 @experimental(as_of="0.4.0")
@@ -60,8 +58,14 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
     return DistanceMatrix(
         squareform(distances, force='tomatrix', checks=False), ids)
 
+pw_distances_from_table_deprecation_reason = (
+    "In the future, pw_distance will take a biom.table.Table object "
+    "and this function will be removed. You will need to update your "
+    "code to call pw_distances at that time.")
 
-@experimental(as_of="0.4.0")
+
+@deprecated(as_of="0.4.0", until="0.4.1",
+            reason=pw_distances_from_table_deprecation_reason)
 def pw_distances_from_table(table, metric="braycurtis"):
     """Compute distances between all pairs of samples in table
 
@@ -88,10 +92,6 @@ def pw_distances_from_table(table, metric="braycurtis"):
     pw_distances
 
     """
-    warn("pw_distances_from_table is deprecated. In the future (tentatively "
-         "scikit-bio 0.3.0), pw_distance will take a biom.table.Table object "
-         "and this function will be removed. You will need to update your "
-         "code to call pw_distances at that time.", DeprecationWarning)
     sample_ids = table.ids(axis="sample")
     num_samples = len(sample_ids)
 
