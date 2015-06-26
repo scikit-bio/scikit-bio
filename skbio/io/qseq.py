@@ -152,7 +152,15 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
             phred = _decode_qual_to_phred(raw_qual, variant, phred_offset)
             seq_id = '%s_%s:%s:%s:%s:%s#%s/%s' % (
                 machine_name, run, lane, tile, x, y, index, read)
-            yield constructor(seq, metadata={'id': seq_id},
+            yield constructor(seq, metadata={'id': seq_id,
+                                             'machine_name': machine_name,
+                                             'run_number': int(run),
+                                             'lane_number': int(lane),
+                                             'tile_number': int(tile),
+                                             'x': int(x),
+                                             'y': int(y),
+                                             'index': int(index),
+                                             'read_number': int(read)},
                               positional_metadata={'quality': phred},
                               **kwargs)
 
