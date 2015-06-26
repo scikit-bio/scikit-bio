@@ -574,6 +574,7 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     return Alignment(aligned1 + aligned2, score=score,
                      start_end_positions=start_end_positions)
 
+
 @experimental(as_of="0.4.0")
 def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
                              **kwargs):
@@ -641,20 +642,21 @@ def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
     if kwargs.get('protein', False):
         seqs = [
             Protein(alignment.aligned_query_sequence,
-                    metadata={'id':'query'}),
+                    metadata={'id': 'query'}),
             Protein(alignment.aligned_target_sequence,
-                    metadata={'id':'target'})
+                    metadata={'id': 'target'})
         ]
     else:
         seqs = [
             constructor(alignment.aligned_query_sequence,
-                        metadata={'id':'query'}),
+                        metadata={'id': 'query'}),
             constructor(alignment.aligned_target_sequence,
-                        metadata={'id':'target'})
+                        metadata={'id': 'target'})
         ]
 
     return Alignment(seqs, score=alignment.optimal_alignment_score,
                      start_end_positions=start_end)
+
 
 @deprecated(as_of="0.4.0", until="0.4.1",
             reason="Will be replaced by a SubstitutionMatrix class. To track "
