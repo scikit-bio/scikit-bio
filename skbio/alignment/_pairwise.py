@@ -15,7 +15,8 @@ from future.builtins import range, zip
 from six import string_types
 
 from skbio.alignment import Alignment
-from skbio.sequence import Sequence, IUPACSequence
+from skbio.alignment._ssw_wrapper import StripedSmithWaterman
+from skbio.sequence import Sequence, IUPACSequence, Protein
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
@@ -573,6 +574,87 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
     return Alignment(aligned1 + aligned2, score=score,
                      start_end_positions=start_end_positions)
 
+@experimental(as_of="0.4.0")
+def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
+                             **kwargs):
+    """Align query and target sequences with Striped Smith-Waterman.
+
+    Parameters
+    ----------
+    sequence1 : str or Sequence
+        The first unaligned sequence
+    sequence2 : str or Sequence
+        The second unaligned sequence
+    constructor : Sequence subclass
+        A constructor to use if `protein` is not True.
+
+    Returns
+    -------
+    ``skbio.alignment.Alignment``
+        The resulting alignment as an Alignment object
+
+    Notes
+    -----
+    This is a wrapper for the SSW package [1]_.
+
+    For a complete list of optional keyword-arguments that can be provided,
+    see ``skbio.alignment.StripedSmithWaterman``.
+
+    The following kwargs will not have any effect: `suppress_sequences` and
+    `zero_index`
+
+    If an alignment does not meet a provided filter, `None` will be returned.
+
+    References
+    ----------
+    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
+       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
+       Applications". PLOS ONE (2013). Web. 11 July 2014.
+       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
+
+    See Also
+    --------
+    skbio.alignment.StripedSmithWaterman
+
+    """
+    # We need the sequences for `Alignment` to make sense, so don't let the
+    # user suppress them.
+    kwargs['suppress_sequences'] = False
+    kwargs['zero_index'] = True
+
+    if isinstance(sequence1, Protein):
+        kwargs['protein'] = True
+
+    query = StripedSmithWaterman(str(sequence1), **kwargs)
+    alignment = query(str(sequence2))
+
+    # If there is no cigar, then it has failed a filter. Return None.
+    if not alignment.cigar:
+        return None
+
+    start_end = None
+    if alignment.query_begin != -1:
+        start_end = [
+            (alignment.query_begin, alignment.query_end),
+            (alignment.target_begin, alignment.target_end_optimal)
+        ]
+    if kwargs.get('protein', False):
+        seqs = [
+            Protein(alignment.aligned_query_sequence,
+                    metadata={'id':'query'}),
+            Protein(alignment.aligned_target_sequence,
+                    metadata={'id':'target'})
+        ]
+    else:
+        seqs = [
+            constructor(alignment.aligned_query_sequence,
+                        metadata={'id':'query'}),
+            constructor(alignment.aligned_target_sequence,
+                        metadata={'id':'target'})
+        ]
+
+    return Alignment(seqs, score=alignment.optimal_alignment_score,
+                     start_end_positions=start_end)
 
 @deprecated(as_of="0.4.0", until="0.4.1",
             reason="Will be replaced by a SubstitutionMatrix class. To track "

@@ -230,10 +230,10 @@ from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
     local_pairwise_align, global_pairwise_align_nucleotide,
     global_pairwise_align_protein, global_pairwise_align,
-    make_identity_substitution_matrix
+    make_identity_substitution_matrix, local_pairwise_align_ssw
 )
 from skbio.alignment._ssw_wrapper import (
-    StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
+    StripedSmithWaterman, AlignmentStructure)
 from ._exception import (SequenceCollectionError, StockholmParseError,
                          AlignmentError)
 
