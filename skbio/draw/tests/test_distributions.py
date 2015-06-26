@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from unittest import TestCase, main
 
 import numpy as np
@@ -351,7 +352,11 @@ class DistributionsTests(TestCase):
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['^'], "x-axis label", "y-axis label", "Test")
 
-        npt.assert_warns(RuntimeWarning, grouped_distributions, *args)
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            grouped_distributions(*args)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
 
     def test_grouped_distributions_empty_marker_list(self):
         grouped_distributions('scatter', self.ValidTypicalData,
@@ -568,7 +573,12 @@ class DistributionsTests(TestCase):
                                          'oooooooooooooooooooooooooooooooo'
                                          'oooo', 'barbarbar'],
                           x_tick_labels_orientation='vertical')
-        npt.assert_warns(RuntimeWarning, _set_figure_size, fig, 3, 3)
+
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _set_figure_size(fig, 3, 3)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
         npt.assert_array_equal(fig.get_size_inches(), (3, 3))
 
 
