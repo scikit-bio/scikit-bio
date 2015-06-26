@@ -193,6 +193,27 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             with self._byte_ownership():
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
+    def _validate(self):
+        # This is the fastest way that we have found to identify the
+        # presence or absence of certain characters (numbers).
+        # It works by multiplying a mask where the numbers which are
+        # permitted have a zero at their index, and all others have a one.
+        # The result is a vector which will propogate counts of invalid
+        # numbers and remove counts of valid numbers, so that we need only
+        # see if the array is empty to determine validity.
+        invalid_characters = np.bincount(
+            self._bytes, minlength=self._number_of_extended_ascii_codes
+        ) * self._validation_mask
+        if np.any(invalid_characters):
+            bad = list(np.where(
+                invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
+            raise ValueError(
+                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
+                "%r" % ('s' if len(bad) > 1 else '',
+                        [str(b.tostring().decode("ascii")) for b in bad] if
+                        len(bad) > 1 else bad[0],
+                        list(self.alphabet)))
+
     def lowercase(self, lowercase):
         """Return a case-sensitive string representation of the sequence.
 
@@ -224,7 +245,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         'aCGt'
 
         Constructor automatically populates a column in positional metadata
-        when the lowercase keyword argument is provided:
+        when the ``lowercase`` keyword argument is provided with a column name:
 
         >>> s = DNA('ACgt', lowercase='introns')
         >>> s.lowercase('introns')
@@ -238,27 +259,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         outbytes = self._bytes.copy()
         outbytes[index] ^= self._ascii_invert_case_bit_offset
         return str(outbytes.tostring().decode('ascii'))
-
-    def _validate(self):
-        # This is the fastest way that we have found to identify the
-        # presence or absence of certain characters (numbers).
-        # It works by multiplying a mask where the numbers which are
-        # permitted have a zero at their index, and all others have a one.
-        # The result is a vector which will propogate counts of invalid
-        # numbers and remove counts of valid numbers, so that we need only
-        # see if the array is empty to determine validity.
-        invalid_characters = np.bincount(
-            self._bytes, minlength=self._number_of_extended_ascii_codes
-        ) * self._validation_mask
-        if np.any(invalid_characters):
-            bad = list(np.where(
-                invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
-            raise ValueError(
-                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
-                "%r" % ('s' if len(bad) > 1 else '',
-                        [str(b.tostring().decode("ascii")) for b in bad] if
-                        len(bad) > 1 else bad[0],
-                        list(self.alphabet)))
 
     def gaps(self):
         """Find positions containing gaps in the biological sequence.
@@ -483,6 +483,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
+        ...     print('')
         DNA
         -----------------------------
         Stats:
@@ -492,6 +493,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             has non-degenerates: True
         -----------------------------
         0 TAG
+        <BLANKLINE>
         DNA
         -----------------------------
         Stats:
@@ -501,6 +503,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             has non-degenerates: True
         -----------------------------
         0 TGG
+        <BLANKLINE>
 
         """
         degen_chars = self.degenerate_map

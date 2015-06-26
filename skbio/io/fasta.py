@@ -411,13 +411,58 @@ use the generator-based reader to process a single sequence at a time in a
 >>> import skbio.io
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> for seq in skbio.io.read(fh, format='fasta'):
-...     print(seq[0:6], len(seq), seq.metadata['id'],
-...           seq.metadata['description'])
-AAGCTN 42 seq1 Turkey
-AAGCCT 42 seq2 Salmo gair
-ACCGGT 42 seq3 H. Sapiens
-AAACCC 42 seq4 Chimp
-AAACCC 42 seq5 Gorilla
+...     seq
+...     print('')
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Salmo gair'
+    'id': 'seq2'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'H. Sapiens'
+    'id': 'seq3'
+Stats:
+    length: 42
+------------------------------------------------
+0 ACCGGTTGGC CGTTCAGGGT ACAGGTTGGC CGTTCAGGGT AA
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Chimp'
+    'id': 'seq4'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGTTACGCTT AAACCGAGGC CGGGACACTC AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Gorilla'
+    'id': 'seq5'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
+<BLANKLINE>
 
 A single sequence can also be read into a ``Sequence`` (or subclass):
 
@@ -516,14 +561,36 @@ To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
 >>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
-...     print(seq[0:7], len(seq), seq.metadata['id'],
-...           seq.metadata['description'],
-...           seq.positional_metadata['quality'].values)
-CGATGTC 7 seq1 db-accession-149855 [ 40  39  39   4  50   1 100]
-CATCG 5 seq2 db-accession-34989 [ 3  3 10 42 80]
+...     seq
+...     print('')
+Sequence
+----------------------------------------
+Metadata:
+    'description': 'db-accession-149855'
+    'id': 'seq1'
+Positional metadata:
+    'quality': <dtype: int64>
+Stats:
+    length: 7
+----------------------------------------
+0 CGATGTC
+<BLANKLINE>
+Sequence
+---------------------------------------
+Metadata:
+    'description': 'db-accession-34989'
+    'id': 'seq2'
+Positional metadata:
+    'quality': <dtype: int64>
+Stats:
+    length: 5
+---------------------------------------
+0 CATCG
+<BLANKLINE>
 
-Note that the sequence objects have quality scores since we provided a QUAL
-file. The other FASTA readers operate in a similar manner.
+Note that the sequence objects have quality scores stored as positional
+metadata since we provided a QUAL file. The other FASTA readers operate in a
+similar manner.
 
 Now let's load the sequences and their quality scores into a
 ``SequenceCollection``:

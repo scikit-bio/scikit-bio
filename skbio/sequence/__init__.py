@@ -126,6 +126,7 @@ Those slices can be used to extract the relevant subsequences.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2):
 ...     r5[motif]
+...     print('')
 RNA
 -----------------------------
 Stats:
@@ -135,6 +136,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 AGG
+<BLANKLINE>
 RNA
 -----------------------------
 Stats:
@@ -144,6 +146,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 GGA
+<BLANKLINE>
 RNA
 -----------------------------
 Stats:
@@ -153,12 +156,14 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 GAA
+<BLANKLINE>
 
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif]
+...     print('')
 RNA
 -----------------------------
 Stats:
@@ -168,6 +173,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 AGG-GGA
+<BLANKLINE>
 RNA
 -----------------------------
 Stats:
@@ -177,6 +183,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 GAA
+<BLANKLINE>
 
 In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
@@ -184,6 +191,7 @@ the input.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif].degap()
+...     print('')
 RNA
 -----------------------------
 Stats:
@@ -193,6 +201,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 AGGGGA
+<BLANKLINE>
 RNA
 -----------------------------
 Stats:
@@ -202,6 +211,7 @@ Stats:
     has non-degenerates: True
 -----------------------------
 0 GAA
+<BLANKLINE>
 
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
