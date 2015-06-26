@@ -2218,6 +2218,16 @@ class TestSequence(TestCase):
                                      "vector"):
             seq._munge_to_index_array('quality')
 
+    def test_munge_to_bytestring_return_bytes(self):
+        seq = Sequence('')
+        m = 'dummy_method'
+        possible_inputs = ('', 'a', 'acgt', u'', u'a', u'acgt', b'', b'a',
+                           b'acgt', Sequence(''), Sequence('a'),
+                           Sequence('acgt'))
+
+        for s in possible_inputs:
+            self.assertIs(type(seq._munge_to_bytestring(s, m)), bytes)
+
 
 if __name__ == "__main__":
     main()
