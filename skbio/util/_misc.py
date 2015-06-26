@@ -16,7 +16,7 @@ from functools import partial
 from warnings import warn
 from types import FunctionType
 
-from ._decorator import experimental
+from ._decorator import experimental, deprecated
 
 
 class MiniRegistry(dict):
@@ -316,18 +316,15 @@ def find_duplicates(iterable):
             seen.add(e)
     return repeated
 
-
-@experimental(as_of="0.4.0")
+flatten_deprecation_reason = (
+       "Solutions to this problem exist in the python standarnd library. "
+       "Please refer to the following links for good alternatives:\n"
+       "http://stackoverflow.com/a/952952/3639023\n"
+       "http://stackoverflow.com/a/406199/3639023")
+@deprecated(as_of="0.2.3-dev", until="0.4.1",
+            reason=flatten_deprecation_reason)
 def flatten(items):
     """Removes one level of nesting from items
-
-    .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``skbio.util.flatten`` will be removed in scikit-bio 0.3.1
-       it is being deprecated in favor of solutions present
-       in the standard python library.
-       Please refer to the following links for good alternatives:
-       http://stackoverflow.com/a/952952/3639023
-       http://stackoverflow.com/a/406199/3639023.
 
     Parameters
     ----------
