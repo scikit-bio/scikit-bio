@@ -168,6 +168,13 @@ class _CompressedNode(object):
                 return node.find(key[index:])
         return []
 
+trie_deprecation_p = {
+    'as_of': '0.4.0', 'until': '0.4.1', 'reason': (
+        "scikit-bio's trie functionality will be replaced with "
+        "with functionality from a dedicated package. To track "
+        "progress, see [#937]"
+        "(https://github.com/biocore/scikit-bio/issues/937).")}
+
 
 class CompressedTrie(object):
     """ A compressed Trie for a list of (key, value) pairs
@@ -179,49 +186,29 @@ class CompressedTrie(object):
 
     """
 
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def __init__(self, pair_list=None):
         self._root = _CompressedNode("")
         if pair_list:
             for key, value in pair_list:
                 self.insert(key, value)
 
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def __nonzero__(self):
         return bool(self._root)
 
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def __len__(self):
         return len(self._root)
 
     @property
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def size(self):
         """int with the number of nodes in the Trie"""
         return self._root.size
 
     @property
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def prefix_map(self):
         """Dict with the prefix map
 
@@ -229,11 +216,7 @@ class CompressedTrie(object):
         """
         return self._root.prefix_map
 
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def insert(self, key, value):
         """Inserts key with value in Trie
 
@@ -247,11 +230,7 @@ class CompressedTrie(object):
         """
         self._root.insert(key, value)
 
-    @deprecated(as_of="0.4.0", until="0.4.1",
-                reason="scikit-bio's trie functionality will be replaced with "
-                       "with functionality from a dedicated package. To track "
-                       "progress, see [#937]"
-                       "(https://github.com/biocore/scikit-bio/issues/937).")
+    @deprecated(**trie_deprecation_p)
     def find(self, key):
         """Searches for key and returns values stored for the key.
 
@@ -268,11 +247,7 @@ class CompressedTrie(object):
         return self._root.find(key)
 
 
-@deprecated(as_of="0.4.0", until="0.4.1",
-            reason="scikit-bio's trie functionality will be replaced with "
-                   "with functionality from a dedicated package. To track "
-                   "progress, see [#937]"
-                   "(https://github.com/biocore/scikit-bio/issues/937).")
+@deprecated(**trie_deprecation_p)
 def fasta_to_pairlist(seqs):
     """Yields (key, value) pairs, useful for populating a Trie object
 
