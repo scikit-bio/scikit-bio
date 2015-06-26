@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
-import six
 from six import string_types, text_type
 
 import re
