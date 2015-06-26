@@ -11,7 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import numpy.testing as npt
 
+from skbio.util._decorator import experimental
 
+
+@experimental(as_of="0.4.0")
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
                  ddof=0):
     """Compute the weighted average and standard deviation along the
@@ -78,6 +81,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True,
     return avg, std
 
 
+@experimental(as_of="0.4.0")
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     """Scale array by columns to have weighted average 0 and standard
     deviation 1.
@@ -124,6 +128,7 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     return a
 
 
+@experimental(as_of="0.4.0")
 def svd_rank(M_shape, S, tol=None):
     """Matrix rank of `M` given its singular values `S`.
 
@@ -135,6 +140,7 @@ def svd_rank(M_shape, S, tol=None):
     return np.sum(S > tol)
 
 
+@experimental(as_of="0.4.0")
 def corr(x, y=None):
     """Computes correlation between columns of `x`, or `x` and `y`.
 
@@ -173,6 +179,7 @@ def corr(x, y=None):
     return x.T.dot(y) / x.shape[0]
 
 
+@experimental(as_of="0.4.0")
 def assert_ordination_results_equal(left, right):
     """Assert that ordination results objects are equal.
 

@@ -17,7 +17,7 @@ Reading and writing files (I/O) can be a complicated task:
   your data.
 * A single object might be writeable to more than one file format. For example,
   an :mod:`skbio.alignment.Alignment` object could be written to FASTA, FASTQ,
-  QSEQ, PHYLIP, or Stockholm formats, just to name a few.
+  QSEQ, or PHYLIP formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
 * You might want to read multiple files into a single object, or write an

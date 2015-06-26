@@ -16,6 +16,8 @@ from functools import partial
 from warnings import warn
 from types import FunctionType
 
+from ._decorator import experimental, deprecated
+
 
 class MiniRegistry(dict):
     def __call__(self, name):
@@ -58,6 +60,7 @@ class MiniRegistry(dict):
         setattr(obj, name, f2)
 
 
+@experimental(as_of="0.4.0")
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.
 
@@ -101,6 +104,7 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
+@experimental(as_of="0.4.0")
 def is_casava_v180_or_later(header_line):
     """Check if the header looks like it is Illumina software post-casava v1.8
 
@@ -131,6 +135,7 @@ def is_casava_v180_or_later(header_line):
     return len(fields) == 10 and fields[7] in b'YN'
 
 
+@experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
@@ -172,6 +177,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
+@experimental(as_of="0.4.0")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -213,6 +219,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 
+@experimental(as_of="0.4.0")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 
@@ -282,6 +289,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     return error_code_lookup['NO_ERROR']
 
 
+@experimental(as_of="0.4.0")
 def find_duplicates(iterable):
     """Find duplicate elements in an iterable.
 
@@ -308,17 +316,17 @@ def find_duplicates(iterable):
             seen.add(e)
     return repeated
 
+flatten_deprecation_reason = (
+    "Solutions to this problem exist in the python standarnd library. "
+    "Please refer to the following links for good alternatives:\n"
+    "http://stackoverflow.com/a/952952/3639023\n"
+    "http://stackoverflow.com/a/406199/3639023")
 
+
+@deprecated(as_of="0.2.3-dev", until="0.4.1",
+            reason=flatten_deprecation_reason)
 def flatten(items):
     """Removes one level of nesting from items
-
-    .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``skbio.util.flatten`` will be removed in scikit-bio 0.3.1
-       it is being deprecated in favor of solutions present
-       in the standard python library.
-       Please refer to the following links for good alternatives:
-       http://stackoverflow.com/a/952952/3639023
-       http://stackoverflow.com/a/406199/3639023.
 
     Parameters
     ----------
@@ -353,6 +361,7 @@ def flatten(items):
     return result
 
 
+@experimental(as_of="0.4.0")
 def reprnator(start, tokens, end, separator=', '):
     """You have no instance, no methods, no properties, you are but a repr.
 
