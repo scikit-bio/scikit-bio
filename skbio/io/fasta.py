@@ -346,11 +346,16 @@ the correct file format for us!
 
 Let's inspect the type of sequences stored in the ``Alignment``:
 
->>> aln[0] # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-         has_positional_metadata=False)
->>> aln[0].metadata
-{'id': 'seq1', 'description': 'Turkey'}
+>>> aln[0]
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
@@ -358,9 +363,19 @@ change the type of sequence via the ``constructor`` parameter:
 >>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> aln = Alignment.read(fh, constructor=DNA)
->>> aln[0] # doctest: +NORMALIZE_WHITESPACE
-DNA('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-    has_positional_metadata=False)
+>>> aln[0]
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: True
+    has non-degenerates: True
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 We now have an ``Alignment`` of ``DNA`` objects instead of
 ``Sequence`` objects.
@@ -409,30 +424,50 @@ A single sequence can also be read into a ``Sequence`` (or subclass):
 >>> from skbio import Sequence
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> seq = Sequence.read(fh)
->>> seq # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-         has_positional_metadata=False)
+>>> seq
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Turkey'
+    'id': 'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> seq = Sequence.read(fh, seq_num=5)
->>> seq # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAACCC ... GCTTAA', length=42, has_metadata=True,
-         has_positional_metadata=False)
->>> seq.metadata
-{'id': 'seq5', 'description': 'Gorilla'}
+>>> seq
+Sequence
+------------------------------------------------
+Metadata:
+    'description': 'Gorilla'
+    'id': 'seq5'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
 We can use the same API to read the fifth sequence into a ``DNA``:
 
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> dna_seq = DNA.read(fh, seq_num=5)
->>> dna_seq # doctest: +NORMALIZE_WHITESPACE
-DNA('AAACCC ... GCTTAA', length=42, has_metadata=True,
-    has_positional_metadata=False)
->>> dna_seq.metadata
-{'id': 'seq5', 'description': 'Gorilla'}
+>>> dna_seq
+DNA
+------------------------------------------------
+Metadata:
+    'description': 'Gorilla'
+    'id': 'seq5'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
 Individual sequence objects can also be written in FASTA format:
 
@@ -554,10 +589,11 @@ import numpy as np
 
 from skbio.io import (register_reader, register_writer, register_sniffer,
                       FASTAFormatError, QUALFormatError, FileSentinel)
-from skbio.io._base import (_chunk_str, _get_nth_sequence,
+from skbio.io._base import (_get_nth_sequence,
                             _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
+from skbio.util._misc import chunk_str
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
@@ -715,7 +751,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
         qual is not None, lowercase)
     for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
-            seq_str = _chunk_str(seq_str, max_width, '\n')
+            seq_str = chunk_str(seq_str, max_width, '\n')
 
         fh.write('>%s\n%s\n' % (header, seq_str))
 

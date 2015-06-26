@@ -1268,29 +1268,50 @@ class TestSequence(TestCase):
         self.assertTrue(tested)
 
     def test_repr(self):
-        seq_simple = Sequence("ACGT")
-        seq_med = Sequence("ACGT", metadata={'id': 'id', 'desc': 'desc'},
-                           positional_metadata={'quality': [1, 2, 3, 4]})
-        seq_complex = Sequence(("ASDKJHDJHFGUGF*&@KFHKHSDGKASDHGKDUYGKFHJ#&*YJ"
-                                "FE&I@#JH@#ASJDHGF*&@#IG#*&IGUJKSADHAKSDJHI#*Y"
-                                "LFUFLIU#RHL*Y#HHFLI#*FHL@#(*HJ"),
-                               metadata={'id': "This is a long id",
-                                         'desc': "desc"},
-                               positional_metadata={'quality': ([1, 2, 3, 4,
-                                                                 5, 6, 7, 8,
-                                                                 9, 0, 1, 2] *
-                                                                10)
-                                                    })
-        self.assertEqual(repr(seq_simple), "Sequence('ACGT', length=4, "
-                                           "has_metadata=False, "
-                                           "has_positional_metadata=False)")
-        self.assertEqual(repr(seq_med), "Sequence('ACGT', length=4, "
-                                        "has_metadata=True, "
-                                        "has_positional_metadata=True)")
-        self.assertEqual(repr(seq_complex), "Sequence('ASDKJH ... @#(*HJ', "
-                                            "length=120, has_metadata=True, "
-                                            "\n         "
-                                            "has_positional_metadata=True)")
+        # basic sanity checks -- more extensive testing of formatting and
+        # special cases is performed in SequenceReprDoctests below. here we
+        # only test that pieces of the repr are present. these tests also
+        # exercise coverage for py2/3 since the doctests in
+        # SequenceReprDoctests only currently run in py2.
+
+        # minimal
+        obs = repr(Sequence(''))
+        self.assertEqual(obs.count('\n'), 4)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 0', obs)
+        self.assertTrue(obs.endswith('-'))
+
+        # no metadata
+        obs = repr(Sequence('ACGT'))
+        self.assertEqual(obs.count('\n'), 5)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
+
+        # metadata and positional metadata of mixed types
+        obs = repr(
+            Sequence(
+                'ACGT',
+                metadata={'foo': 42, u'bar': 33.33, None: True, False: {},
+                          (1, 2): 3, 'acb' * 100: "'"},
+                positional_metadata={'foo': range(4),
+                                     42: ['a', 'b', [], 'c']}))
+        self.assertEqual(obs.count('\n'), 15)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('None: True', obs)
+        self.assertIn('\'foo\': 42', obs)
+        self.assertIn('42: <dtype: object>', obs)
+        self.assertIn('\'foo\': <dtype: int64>', obs)
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
+
+        # sequence spanning > 5 lines
+        obs = repr(Sequence('A' * 301))
+        self.assertEqual(obs.count('\n'), 9)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 301', obs)
+        self.assertIn('...', obs)
+        self.assertTrue(obs.endswith('300 A'))
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
@@ -2217,6 +2238,266 @@ class TestSequence(TestCase):
                                      "does not correspond to a boolean "
                                      "vector"):
             seq._munge_to_index_array('quality')
+
+
+# NOTE: this must be a *separate* class for doctests only (no unit tests). nose
+# will not run the unit tests otherwise
+#
+# these doctests exercise the correct formatting of Sequence's repr in a
+# variety of situations. they are more extensive than the unit tests above
+# (TestSequence.test_repr) but are only currently run in py2. thus, they cannot
+# be relied upon for coverage (the unit tests take care of this)
+class SequenceReprDoctests(object):
+    r"""
+    >>> from skbio import Sequence
+
+    Empty (minimal) sequence:
+
+    >>> Sequence('')
+    Sequence
+    -------------
+    Stats:
+        length: 0
+    -------------
+
+    Single character sequence:
+
+    >>> Sequence('G')
+    Sequence
+    -------------
+    Stats:
+        length: 1
+    -------------
+    0 G
+
+    Multicharacter sequence:
+
+    >>> Sequence('ACGT')
+    Sequence
+    -------------
+    Stats:
+        length: 4
+    -------------
+    0 ACGT
+
+    Full single line:
+
+    >>> Sequence('A' * 60)
+    Sequence
+    -------------------------------------------------------------------
+    Stats:
+        length: 60
+    -------------------------------------------------------------------
+    0 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Full single line with 1 character overflow:
+
+    >>> Sequence('A' * 61)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 61
+    --------------------------------------------------------------------
+    0  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60 A
+
+    Two full lines:
+
+    >>> Sequence('T' * 120)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 120
+    --------------------------------------------------------------------
+    0  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60 TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+
+    Two full lines with 1 character overflow:
+
+    >>> Sequence('T' * 121)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 121
+    ---------------------------------------------------------------------
+    0   TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    120 T
+
+    Five full lines (maximum amount of information):
+
+    >>> Sequence('A' * 300)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 300
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    120 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    180 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Six lines starts "summarized" output:
+
+    >>> Sequence('A' * 301)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 301
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    300 A
+
+    A naive algorithm would assume the width of the first column (noting
+    position) based on the sequence's length alone. This can be off by one if
+    the last position (in the last line) has a shorter width than the width
+    calculated from the sequence's length. This test case ensures that only a
+    single space is inserted between position 99960 and the first sequence
+    chunk:
+
+    >>> Sequence('A' * 100000)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100000
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    The largest sequence that can be displayed using six chunks per line:
+
+    >>> Sequence('A' * 100020)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100020
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    A single character longer than the previous sequence causes the optimal
+    number of chunks per line to be 5:
+
+    >>> Sequence('A' * 100021)
+    Sequence
+    -------------------------------------------------------------
+    Stats:
+        length: 100021
+    -------------------------------------------------------------
+    0      AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    50     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99950  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    100000 AAAAAAAAAA AAAAAAAAAA A
+
+    Wide range of characters (locale-independent):
+
+    >>> import string
+    >>> Sequence((string.ascii_letters + string.punctuation + string.digits +
+    ...          'a space') * 567)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 57267
+    -----------------------------------------------------------------------
+    0     abcdefghij klmnopqrst uvwxyzABCD EFGHIJKLMN OPQRSTUVWX YZ!"#$%&'(
+    60    )*+,-./:;< =>?@[\]^_` {|}~012345 6789a spac eabcdefghi jklmnopqrs
+    ...
+    57180 opqrstuvwx yzABCDEFGH IJKLMNOPQR STUVWXYZ!" #$%&'()*+, -./:;<=>?@
+    57240 [\]^_`{|}~ 0123456789 a space
+
+    Supply horrendous metadata and positional metadata to exercise a variety of
+    metadata formatting cases and rules:
+
+    >>> metadata = {
+    ...     # str key, str value
+    ...     'abc': 'some description',
+    ...     # int value
+    ...     'foo': 42,
+    ...     # unsupported type (dict) value
+    ...     'bar': {},
+    ...     # int key, wrapped str (single line)
+    ...     42: 'some words to test text wrapping and such... yada yada yada '
+    ...         'yada yada yada yada yada.',
+    ...     # bool key, wrapped str (multi-line)
+    ...     True: 'abc ' * 34,
+    ...     # float key, truncated str (too long)
+    ...     42.5: 'abc ' * 200,
+    ...     # unsupported type (tuple) key, unsupported type (list) value
+    ...     ('foo', 'bar'): [1, 2, 3],
+    ...     # unicode key, single long word that wraps
+    ...     u'long word': 'abc' * 30,
+    ...     # truncated key (too long), None value
+    ...     'too long of a key name to display in repr': None,
+    ...     # wrapped unicode value (has u'' prefix)
+    ...     'unicode wrapped value': u'abcd' * 25,
+    ...     # float value
+    ...     'float': 99.9999,
+    ...     # bool value
+    ...     'bool': False,
+    ...     # None key, complex value
+    ...     None: complex(-1.0, 0.0),
+    ...     # nested quotes
+    ...     'quotes': '"\''}
+    ... }
+    >>> positional_metadata = {
+    ...     # str key, int list value
+    ...     'foo': [1, 2, 3, 4],
+    ...     # float key, float list value
+    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
+    ...     # int key, object list value
+    ...     42: [[], 4, 5, {}],
+    ...     # truncated key (too long), bool list value
+    ...     'abc' * 90: [True, False, False, True],
+    ...     # None key
+    ...     None: range(4)}
+    >>> Sequence('ACGT', metadata=metadata,
+    ...          positional_metadata=positional_metadata)
+    Sequence
+    -----------------------------------------------------------------------
+    Metadata:
+        None: (-1+0j)
+        True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc '
+        42: 'some words to test text wrapping and such... yada yada yada
+             yada yada yada yada yada.'
+        42.5: <type 'str'>
+        'abc': 'some description'
+        'bar': <type 'dict'>
+        'bool': False
+        'float': 99.9999
+        'foo': 42
+        u'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
+        'quotes': '"\''
+        <type 'str'>: None
+        'unicode wrapped value': u'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                   abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                   abcdabcdabcdabcdabcd'
+        <type 'tuple'>: <type 'list'>
+    Positional metadata:
+        None: <dtype: int64>
+        42: <dtype: object>
+        42.5: <dtype: float64>
+        <type 'str'>: <dtype: bool>
+        'foo': <dtype: int64>
+    Stats:
+        length: 4
+    -----------------------------------------------------------------------
+    0 ACGT
+    """
+    pass
 
 
 if __name__ == "__main__":

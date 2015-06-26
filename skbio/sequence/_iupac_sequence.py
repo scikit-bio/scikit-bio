@@ -304,6 +304,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use count, there aren't that many gap chars
+        # TODO: cache results
         return bool(self.gaps().any())
 
     def degenerates(self):
@@ -358,6 +359,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use bincount!
+        # TODO: cache results
         return bool(self.degenerates().any())
 
     def nondegenerates(self):
@@ -411,6 +413,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         True
 
         """
+        # TODO: cache results
         return bool(self.nondegenerates().any())
 
     def degap(self):
@@ -437,10 +440,18 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> from skbio import DNA
         >>> s = DNA('GGTC-C--ATT-C.',
         ...         positional_metadata={'quality':range(14)})
-        >>> t = s.degap()
-        >>> t # doctest: +NORMALIZE_WHITESPACE
-        DNA('GGTCCATTC', length=9, has_metadata=False,
-            has_positional_metadata=True)
+        >>> s.degap()
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 9
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 GGTCCATTC
 
         """
         return self[np.invert(self.gaps())]
@@ -472,8 +483,24 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
-        DNA('TAG', length=3, has_metadata=False, has_positional_metadata=False)
-        DNA('TGG', length=3, has_metadata=False, has_positional_metadata=False)
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 TAG
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 TGG
 
         """
         degen_chars = self.degenerate_map
@@ -552,6 +579,15 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def _constructor(self, **kwargs):
         return self.__class__(validate=False, lowercase=False, **kwargs)
+
+    @overrides(Sequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(IUPACSequence, self)._repr_stats()
+        stats.append(('has gaps', '%r' % self.has_gaps()))
+        stats.append(('has degenerates', '%r' % self.has_degenerates()))
+        stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
+        return stats
 
 
 _motifs = MiniRegistry()

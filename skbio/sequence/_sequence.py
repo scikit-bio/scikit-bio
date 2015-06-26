@@ -10,12 +10,13 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
 import six
-from six import string_types, text_type
 
+import math
 import re
 import collections
 import copy
 import numbers
+import textwrap
 from contextlib import contextmanager
 
 import numpy as np
@@ -24,37 +25,7 @@ from scipy.spatial.distance import hamming
 import pandas as pd
 
 from skbio._base import SkbioObject
-from skbio.util._misc import reprnator
-
-
-def _single_index_to_slice(start_index):
-    end_index = None if start_index == -1 else start_index+1
-    return slice(start_index, end_index)
-
-
-def _is_single_index(index):
-    return (isinstance(index, numbers.Integral) and
-            not isinstance(index, bool))
-
-
-def _as_slice_if_single_index(indexable):
-    if _is_single_index(indexable):
-        return _single_index_to_slice(indexable)
-    else:
-        return indexable
-
-
-def _slices_from_iter(array, indexables):
-    for i in indexables:
-        if isinstance(i, slice):
-            pass
-        elif _is_single_index(i):
-            i = _single_index_to_slice(i)
-        else:
-            raise IndexError("Cannot slice sequence from iterable "
-                             "containing %r." % i)
-
-        yield array[i]
+from skbio.util._misc import chunk_str
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -108,9 +79,13 @@ class Sequence(collections.Sequence, SkbioObject):
     Create a sequence without any metadata:
 
     >>> seq = Sequence('GGUCGUGAAGGA')
-    >>> seq # doctest: +NORMALIZE_WHITESPACE
-    Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
-             has_positional_metadata=False)
+    >>> seq
+    Sequence
+    ---------------
+    Stats:
+        length: 12
+    ---------------
+    0 GGUCGUGAAG GA
 
     Create a sequence with metadata and positional metadata:
 
@@ -119,9 +94,20 @@ class Sequence(collections.Sequence, SkbioObject):
     ...                        'exons': [True, True, False, True]}
     >>> seq = Sequence('ACGT', metadata=metadata,
     ...                positional_metadata=positional_metadata)
-    >>> seq # doctest: +NORMALIZE_WHITESPACE
-    Sequence('ACGT', length=4, has_metadata=True,
-             has_positional_metadata=True)
+    >>> seq
+    Sequence
+    -----------------------------
+    Metadata:
+        'authors': <type 'list'>
+        'desc': 'seq desc'
+        'id': 'seq-id'
+    Positional metadata:
+        'exons': <dtype: bool>
+        'quality': <dtype: int64>
+    Stats:
+        length: 4
+    -----------------------------
+    0 ACGT
 
     **Retrieving sequence metadata:**
 
@@ -179,7 +165,17 @@ class Sequence(collections.Sequence, SkbioObject):
 
     >>> subseq = seq[1:3]
     >>> subseq
-    Sequence('CG', length=2, has_metadata=True, has_positional_metadata=False)
+    Sequence
+    ----------------------------
+    Metadata:
+        'authors': <type 'list'>
+        'desc': 'seq desc'
+        'id': 'new-id'
+        'pubmed': 12345
+    Stats:
+        length: 2
+    ----------------------------
+    0 CG
     >>> pprint(subseq.metadata)
     {'authors': ['Alice', 'Bob'],
      'desc': 'seq desc',
@@ -205,9 +201,16 @@ class Sequence(collections.Sequence, SkbioObject):
     >>> positional_metadata = pd.DataFrame(
     ...     {'quality': [3, 3, 4, 10], 'list': [[], [], [], []]})
     >>> seq = Sequence('ACGT', positional_metadata=positional_metadata)
-    >>> seq # doctest: +NORMALIZE_WHITESPACE
-    Sequence('ACGT', length=4, has_metadata=False,
-             has_positional_metadata=True)
+    >>> seq
+    Sequence
+    -----------------------------
+    Positional metadata:
+        'list': <dtype: object>
+        'quality': <dtype: int64>
+    Stats:
+        length: 4
+    -----------------------------
+    0 ACGT
     >>> seq.positional_metadata
       list  quality
     0   []        3
@@ -243,7 +246,16 @@ class Sequence(collections.Sequence, SkbioObject):
 
     >>> subseq = seq[1:3]
     >>> subseq
-    Sequence('CG', length=2, has_metadata=False, has_positional_metadata=True)
+    Sequence
+    -----------------------------
+    Positional metadata:
+        'list': <dtype: object>
+        'quality': <dtype: int64>
+        'gaps': <dtype: bool>
+    Stats:
+        length: 2
+    -----------------------------
+    0 CG
     >>> subseq.positional_metadata
       list  quality   gaps
     0   []        3  False
@@ -313,9 +325,16 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> s = Sequence('ACGTACGTACGTACGT',
         ...              metadata={'id': 'seq-id',
         ...                        'description': 'seq description'})
-        >>> s # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGTACGTACGTACGT', length=16, has_metadata=True,
-                 has_positional_metadata=False)
+        >>> s
+        Sequence
+        ------------------------------------
+        Metadata:
+            'description': 'seq description'
+            'id': 'seq-id'
+        Stats:
+            length: 16
+        ------------------------------------
+        0 ACGTACGTAC GTACGT
 
         Retrieve metadata:
 
@@ -379,9 +398,19 @@ class Sequence(collections.Sequence, SkbioObject):
         ...     'ACGT',
         ...     positional_metadata={'quality': [3, 3, 20, 11],
         ...                          'exons': [True, True, False, True]})
-        >>> seq # doctest: +NORMALIZE_WHITESPACE
-        DNA('ACGT', length=4, has_metadata=False,
-            has_positional_metadata=True)
+        >>> seq
+        DNA
+        -----------------------------
+        Positional metadata:
+            'exons': <dtype: bool>
+            'quality': <dtype: int64>
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 ACGT
 
         Retrieve positional metadata:
 
@@ -513,7 +542,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             # Python 3 will not raise a UnicodeEncodeError so we force it by
             # encoding it as ascii
-            if isinstance(sequence, text_type):
+            if isinstance(sequence, six.text_type):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)
 
@@ -715,33 +744,49 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Obtain a single character from the biological sequence:
 
-        >>> s[1] # doctest: +NORMALIZE_WHITESPACE
-        Sequence('G', length=1, has_metadata=False,
-                 has_positional_metadata=False)
+        >>> s[1]
+        Sequence
+        -------------
+        Stats:
+            length: 1
+        -------------
+        0 G
 
         Obtain a slice:
 
-        >>> s[7:] # doctest: +NORMALIZE_WHITESPACE
-        Sequence('AAGGA', length=5, has_metadata=False,
-                 has_positional_metadata=False)
+        >>> s[7:]
+        Sequence
+        -------------
+        Stats:
+            length: 5
+        -------------
+        0 AAGGA
 
         Obtain characters at the following indices:
 
-        >>> s[[3, 4, 7, 0, 3]] # doctest: +NORMALIZE_WHITESPACE
-        Sequence('CGAGC', length=5, has_metadata=False,
-                 has_positional_metadata=False)
+        >>> s[[3, 4, 7, 0, 3]]
+        Sequence
+        -------------
+        Stats:
+            length: 5
+        -------------
+        0 CGAGC
 
         Obtain characters at positions evaluating to `True`:
 
         >>> s = Sequence('GGUCG')
         >>> index = [True, False, True, 'a' is 'a', False]
-        >>> s[index] # doctest: +NORMALIZE_WHITESPACE
-        Sequence('GUC', length=3, has_metadata=False,
-                 has_positional_metadata=False)
+        >>> s[index]
+        Sequence
+        -------------
+        Stats:
+            length: 3
+        -------------
+        0 GUC
 
         """
         if (not isinstance(indexable, np.ndarray) and
-            ((not isinstance(indexable, string_types)) and
+            ((not isinstance(indexable, six.string_types)) and
              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
@@ -766,7 +811,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
                     return self._to(sequence=seq,
                                     positional_metadata=positional_metadata)
-        elif (isinstance(indexable, string_types) or
+        elif (isinstance(indexable, six.string_types) or
                 isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
@@ -887,7 +932,22 @@ class Sequence(collections.Sequence, SkbioObject):
         return str(self._string.decode("ascii"))
 
     def __repr__(self):
-        """Return a string representation of the biological sequence object.
+        r"""Return a string representation of the biological sequence object.
+
+        Representation includes:
+
+        * sequence type
+        * metadata keys and values: will display key/value if it is an
+          understood type, otherwise just the type will be displayed. If it is
+          an understood type whose representation is too long, just the type
+          will be displayed. Keys are displayed in sorted order
+        * positional metadata: column names and column dtypes will be displayed
+          in the order they appear in the positional metadata ``pd.DataFrame``.
+          Column names (i.e., keys) follow the same display rules as metadata
+          keys
+        * sequence stats (e.g., length)
+        * up to five lines of chunked sequence data. Each line of chunked
+          sequence data displays the current position in the sequence
 
         Returns
         -------
@@ -896,54 +956,95 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Notes
         -----
-        String representation contains the class name, the first six characters
-        of the sequence, followed by ellipses, followed by the last six
-        characters of the sequence (or the full sequence without
-        ellipses, if the sequence is less than 21 characters long), followed by
-        the sequence length, followed by flags indicating whether the sequence
-        has metadata and/or positional metadata.
+        Subclasses can override Sequence._repr_stats to provide custom
+        statistics.
 
         Examples
         --------
+        Short sequence without metadata:
+
         >>> from skbio import Sequence
-        >>> s = Sequence('GGUCGUGAAGGA')
-        >>> s # doctest: +NORMALIZE_WHITESPACE
-        Sequence('GGUCGUGAAGGA', length=12, has_metadata=False,
-                 has_positional_metadata=False)
-        >>> t = Sequence('ACGT')
-        >>> t # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGT', length=4, has_metadata=False,
-                 has_positional_metadata=False)
-        >>> t # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGT', length=4, has_metadata=False,
-                 has_positional_metadata=False)
-        >>> Sequence('GGUCGUGAAAAAAAAAAAAGGA') # doctest: +NORMALIZE_WHITESPACE
-        Sequence('GGUCGU ... AAAGGA', length=22, has_metadata=False,
-                 has_positional_metadata=False)
-        >>> Sequence('ACGT',
-        ...          metadata={id:'seq1'}) # doctest: +NORMALIZE_WHITESPACE
-        Sequence('ACGT', length=4, has_metadata=True,
-                 has_positional_metadata=False)
+        >>> Sequence('ACGTAATGGATACGTAATGCA')
+        Sequence
+        -------------------------
+        Stats:
+            length: 21
+        -------------------------
+        0 ACGTAATGGA TACGTAATGC A
+
+        Longer sequence displays first two lines and last two lines:
+
+        >>> Sequence('ACGT' * 100)
+        Sequence
+        ---------------------------------------------------------------------
+        Stats:
+            length: 400
+        ---------------------------------------------------------------------
+        0   ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
+        60  ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
+        ...
+        300 ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
+        360 ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
+
+        Sequence with metadata and positional metadata:
+
+        >>> metadata = {
+        ...     'id': 'seq-id',
+        ...     'description': 'description of the sequence, wrapping across '
+        ...     'lines if it\'s too long',
+        ...     'authors': ['Alice', 'Bob', 'Carol'],
+        ...     'year': 2015,
+        ...     'published': True
+        ... }
+        >>> positional_metadata = {
+        ...     'quality': [3, 10, 11, 10],
+        ...     'exons': [True, True, False, True]
+        ... }
+        >>> Sequence('ACGT', metadata=metadata,
+        ...          positional_metadata=positional_metadata)
+        Sequence
+        ----------------------------------------------------------------------
+        Metadata:
+            'authors': <type 'list'>
+            'description': "description of the sequence, wrapping across lines
+                            if it's too long"
+            'id': 'seq-id'
+            'published': True
+            'year': 2015
+        Positional metadata:
+            'exons': <dtype: bool>
+            'quality': <dtype: int64>
+        Stats:
+            length: 4
+        ----------------------------------------------------------------------
+        0 ACGT
+
         """
+        return _SequenceReprBuilder(
+            seq=self,
+            width=71,  # 79 for pep8, 8 space indent for docstrings
+            indent=4,
+            chunk_size=10).build()
 
-        start = self.__class__.__name__ + "("
-        end = ")"
+    def _repr_stats(self):
+        """Define statistics to display in the sequence's repr.
 
-        tokens = []
+        Subclasses can override this method to provide type-specific
+        statistics.
 
-        tokens.append(self._format_str(self))
-        tokens.append("length=%d" % len(self))
-        tokens.append("has_metadata=%s" % self.has_metadata())
-        tokens.append("has_positional_metadata=%s" %
-                      self.has_positional_metadata())
+        This method computes a single statistic: length.
 
-        return reprnator(start, tokens, end)
+        Returns
+        -------
+        list
+            List of tuples where each tuple represents a statistic. Each tuple
+            contains exactly two ``str`` elements: the statistic's name/label,
+            and the str-formatted value of the statistic. Ordering of
+            statistics (i.e., list order) determines display order in the
+            sequence repr.
 
-    def _format_str(self, s):
-        s = repr(str(s))
-        if len(s) > 20:
-            return "%s ... %s" % (s[:7], s[-7:])
-        return s
+        """
+        return [('length', '%d' % len(self))]
 
     def __copy__(self):
         """Return a shallow copy of the biological sequence.
@@ -1629,7 +1730,7 @@ class Sequence(collections.Sequence, SkbioObject):
         'TATAA'
 
         """
-        if isinstance(regex, string_types):
+        if isinstance(regex, six.string_types):
             regex = re.compile(regex)
 
         lookup = np.arange(len(self))
@@ -1766,7 +1867,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """Return an index array from something isomorphic to a boolean vector.
 
         """
-        if isinstance(sliceable, string_types):
+        if isinstance(sliceable, six.string_types):
             if sliceable in self.positional_metadata:
                 if self.positional_metadata[sliceable].dtype == np.bool:
                     sliceable = self.positional_metadata[sliceable]
@@ -1830,7 +1931,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return Sequence(other)
 
     def _munge_to_bytestring(self, other, method):
-        if isinstance(other, string_types):
+        if isinstance(other, six.string_types):
             return six.b(other)
         return self._munge_to_sequence(other, method)._string
 
@@ -1843,3 +1944,273 @@ class Sequence(collections.Sequence, SkbioObject):
         self._bytes.flags.writeable = True
         yield
         self._bytes.flags.writeable = False
+
+
+def _single_index_to_slice(start_index):
+    end_index = None if start_index == -1 else start_index+1
+    return slice(start_index, end_index)
+
+
+def _is_single_index(index):
+    return (isinstance(index, numbers.Integral) and
+            not isinstance(index, bool))
+
+
+def _as_slice_if_single_index(indexable):
+    if _is_single_index(indexable):
+        return _single_index_to_slice(indexable)
+    else:
+        return indexable
+
+
+def _slices_from_iter(array, indexables):
+    for i in indexables:
+        if isinstance(i, slice):
+            pass
+        elif _is_single_index(i):
+            i = _single_index_to_slice(i)
+        else:
+            raise IndexError("Cannot slice sequence from iterable "
+                             "containing %r." % i)
+
+        yield array[i]
+
+
+class _SequenceReprBuilder(object):
+    """Build a ``Sequence`` repr.
+
+    Parameters
+    ----------
+    seq : Sequence
+        Sequence to repr.
+    width : int
+        Maximum width of the repr.
+    indent : int
+        Number of spaces to use for indented lines.
+    chunk_size: int
+        Number of characters in each chunk of a sequence.
+
+    """
+    def __init__(self, seq, width, indent, chunk_size):
+        self._seq = seq
+        self._width = width
+        self._indent = ' ' * indent
+        self._chunk_size = chunk_size
+
+    def build(self):
+        lines = _SeparatedLines()
+
+        cls_name = self._seq.__class__.__name__
+        lines.add_line(cls_name)
+        lines.add_separator()
+
+        if self._seq.has_metadata():
+            lines.add_line('Metadata:')
+            for key in sorted(self._seq.metadata):
+                value = self._seq.metadata[key]
+                lines.add_lines(self._format_metadata_key_value(key, value))
+
+        if self._seq.has_positional_metadata():
+            lines.add_line('Positional metadata:')
+            for key in self._seq.positional_metadata.columns.values.tolist():
+                dtype = self._seq.positional_metadata[key].dtype
+                lines.add_lines(
+                    self._format_positional_metadata_column(key, dtype))
+
+        lines.add_line('Stats:')
+        for label, value in self._seq._repr_stats():
+            lines.add_line('%s%s: %s' % (self._indent, label, value))
+        lines.add_separator()
+
+        num_lines, num_chars, column_width = self._find_optimal_seq_chunking()
+
+        # display entire sequence if we can, else display the first two and
+        # last two lines separated by ellipsis
+        if num_lines <= 5:
+            lines.add_lines(self._format_chunked_seq(
+                range(num_lines), num_chars, column_width))
+        else:
+            lines.add_lines(self._format_chunked_seq(
+                range(2), num_chars, column_width))
+            lines.add_line('...')
+            lines.add_lines(self._format_chunked_seq(
+                range(num_lines - 2, num_lines), num_chars, column_width))
+
+        return lines.to_str()
+
+    def _format_metadata_key_value(self, key, value):
+        """Format metadata key:value, wrapping across lines if necessary."""
+        key_fmt = self._format_key(key)
+
+        supported_type = True
+        if isinstance(value, (six.text_type, six.binary_type)):
+            # for stringy values, there may be u'' or b'' depending on the type
+            # of `value` and version of Python. find the starting quote
+            # character so that wrapped text will line up with that instead of
+            # the string literal prefix character. for example:
+            #
+            #     'foo': u'abc def ghi
+            #              jkl mno'
+            value_repr = repr(value)
+            single_quote_idx = value_repr.find("'")
+            double_quote_idx = value_repr.find('"')
+
+            if single_quote_idx != -1 and double_quote_idx != -1:
+                first_quote_idx = min(single_quote_idx, double_quote_idx)
+            elif single_quote_idx != -1:
+                first_quote_idx = single_quote_idx
+            elif double_quote_idx != -1:
+                first_quote_idx = double_quote_idx
+
+            extra_indent = first_quote_idx + 1
+        elif value is None or isinstance(value, (numbers.Number, bool)):
+            value_repr = repr(value)
+            extra_indent = 0
+        else:
+            supported_type = False
+
+        if not supported_type or len(value_repr) > 140:
+            value_repr = str(type(value))
+            # extra indent of 1 so that wrapped text lines up past the bracket:
+            #
+            #     'foo': <type
+            #             'dict'>
+            extra_indent = 1
+
+        return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
+
+    def _format_key(self, key):
+        """Format metadata key.
+
+        Includes initial indent and trailing colon and space:
+
+            <indent>'foo':<space>
+
+        """
+        default = self._indent + str(type(key))
+        supported_types = (six.text_type, six.binary_type, numbers.Number,
+                           bool)
+        if key is None or isinstance(key, supported_types):
+            key_fmt = self._indent + repr(key)
+
+            # if formatted key (including indent) is greater than 1/2 the max
+            # repr width, just show its type info
+            if len(key_fmt) > (self._width / 2):
+                key_fmt = default
+        else:
+            key_fmt = default
+        return '%s: ' % key_fmt
+
+    def _wrap_text_with_indent(self, text, initial_text, extra_indent):
+        """Wrap text across lines with an initial indentation.
+
+        For example:
+
+            'foo': 'abc def
+                    ghi jkl
+                    mno pqr'
+
+        <indent>'foo':<space> is `initial_text`. `extra_indent` is 1. Wrapped
+        lines are indented such that they line up with the start of the
+        previous line of wrapped text.
+
+        """
+        return textwrap.wrap(
+            text, width=self._width, expand_tabs=False,
+            initial_indent=initial_text,
+            subsequent_indent=' ' * (len(initial_text) + extra_indent))
+
+    def _format_positional_metadata_column(self, key, dtype):
+        key_fmt = self._format_key(key)
+        dtype_fmt = '<dtype: %s>' % str(dtype)
+        return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
+
+    def _find_optimal_seq_chunking(self):
+        """Find the optimal number of sequence chunks to fit on a single line.
+
+        Returns the number of lines the sequence will occupy, the number of
+        sequence characters displayed on each line, and the column width
+        necessary to display position info using the optimal number of sequence
+        chunks.
+
+        """
+        # strategy: use an iterative approach to find the optimal number of
+        # sequence chunks per line. start with a single chunk and increase
+        # until the max line width is exceeded. when this happens, the previous
+        # number of chunks is optimal
+        num_lines = 0
+        num_chars = 0
+        column_width = 0
+
+        num_chunks = 1
+        while True:
+            line_len, new_chunk_info = self._compute_chunked_seq_line_len(
+                num_chunks)
+
+            if line_len <= self._width:
+                num_lines, num_chars, column_width = new_chunk_info
+                num_chunks += 1
+            else:
+                break
+
+        return num_lines, num_chars, column_width
+
+    def _compute_chunked_seq_line_len(self, num_chunks):
+        """Compute line length based on a number of chunks."""
+        num_chars = num_chunks * self._chunk_size
+
+        # ceil to account for partial line
+        num_lines = int(math.ceil(len(self._seq) / num_chars))
+
+        # position column width is fixed width, based on the number of
+        # characters necessary to display the position of the final line (all
+        # previous positions will be left justified using this width)
+        column_width = len('%d ' % ((num_lines - 1) * num_chars))
+
+        # column width + number of sequence characters + spaces between chunks
+        line_len = column_width + num_chars + (num_chunks - 1)
+        return line_len, (num_lines, num_chars, column_width)
+
+    def _format_chunked_seq(self, line_idxs, num_chars, column_width):
+        """Format specified lines of chunked sequence data."""
+        lines = []
+        for line_idx in line_idxs:
+            seq_idx = line_idx * num_chars
+            chars = str(self._seq[seq_idx:seq_idx+num_chars])
+            chunked_chars = chunk_str(chars, self._chunk_size, ' ')
+            lines.append(('%d' % seq_idx).ljust(column_width) + chunked_chars)
+        return lines
+
+
+class _SeparatedLines(object):
+    """Store blocks of content separated by dashed lines.
+
+    Each dashed line (separator) is as long as the longest content
+    (non-separator) line.
+
+    """
+
+    def __init__(self):
+        self._lines = []
+        self._separator_idxs = []
+        self._max_line_len = -1
+
+    def add_line(self, line):
+        line_len = len(line)
+        if line_len > self._max_line_len:
+            self._max_line_len = line_len
+        self._lines.append(line)
+
+    def add_lines(self, lines):
+        for line in lines:
+            self.add_line(line)
+
+    def add_separator(self):
+        self._lines.append(None)
+        self._separator_idxs.append(len(self._lines) - 1)
+
+    def to_str(self):
+        separator = '-' * self._max_line_len
+        for idx in self._separator_idxs:
+            self._lines[idx] = separator
+        return '\n'.join(self._lines)

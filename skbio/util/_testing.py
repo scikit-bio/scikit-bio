@@ -55,7 +55,7 @@ class TestRunner(object):
         # list is, there just needs to be something there.
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
         if not PY3:
-            argv.append('--with-doctest')
+            argv.extend(['--with-doctest', '--doctest-tests'])
         if verbose:
             argv.append('-v')
         return core.run(argv=argv, defaultTest=self._test_dir)
