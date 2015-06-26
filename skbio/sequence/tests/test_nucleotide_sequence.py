@@ -12,11 +12,11 @@ import unittest
 
 import numpy as np
 
-from skbio.sequence import NucleotideSequence
+from skbio.sequence import IUPACSequence, NucleotideSequence
 from skbio.util import classproperty
 
 
-class ExampleNucleotideSequence(NucleotideSequence):
+class ExampleNucleotideSequence(IUPACSequence, NucleotideSequence):
     @classproperty
     def degenerate_map(cls):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
@@ -49,18 +49,6 @@ class TestNucelotideSequence(unittest.TestCase):
             ExampleNucleotideSequence,
             lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
-
-    def test_instantiation_with_no_implementation(self):
-        class NucleotideSequenceSubclassNoImplementation(NucleotideSequence):
-            pass
-
-        with self.assertRaises(TypeError) as cm:
-            NucleotideSequenceSubclassNoImplementation()
-
-        self.assertIn("abstract class", str(cm.exception))
-        self.assertIn("nondegenerate_chars", str(cm.exception))
-        self.assertIn("degenerate_map", str(cm.exception))
-        self.assertIn("complement_map", str(cm.exception))
 
     def test_complement_map(self):
         expected = {

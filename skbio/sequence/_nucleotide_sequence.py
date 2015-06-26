@@ -7,17 +7,15 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
-from abc import ABCMeta, abstractproperty
+from abc import abstractproperty
 
 import numpy as np
 
 from skbio.util import classproperty
-from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
+from ._iupac_sequence import _motifs as parent_motifs
 
 
-class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
+class NucleotideSequence(object):
     """Abstract base class for storing an IUPAC nucleotide sequence.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -217,6 +215,3 @@ def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
     return sequence.find_with_regex("([CTUY]{%d,})" % min_length,
                                     ignore=ignore)
-
-# Leave this at the bottom
-_motifs.interpolate(NucleotideSequence, "find_motifs")

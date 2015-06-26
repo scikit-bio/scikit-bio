@@ -9,11 +9,12 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
-from ._nucleotide_sequence import NucleotideSequence
+from ._nucleotide_sequence import (NucleotideSequence,
+                                   _motifs as _parent_motifs)
 from ._iupac_sequence import IUPACSequence
 
 
-class RNA(NucleotideSequence):
+class RNA(IUPACSequence, NucleotideSequence):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
@@ -104,3 +105,12 @@ class RNA(NucleotideSequence):
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+_motifs = _parent_motifs.copy()
+
+# Leave this at the bottom
+_motifs.interpolate(RNA, "find_motifs")
