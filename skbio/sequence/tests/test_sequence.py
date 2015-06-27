@@ -2218,6 +2218,31 @@ class TestSequence(TestCase):
                                      "vector"):
             seq._munge_to_index_array('quality')
 
+    def test_munge_to_bytestring_return_bytes(self):
+        seq = Sequence('')
+        m = 'dummy_method'
+        str_inputs = ('', 'a', 'acgt')
+        unicode_inputs = (u'', u'a', u'acgt')
+        byte_inputs = (b'', b'a', b'acgt')
+        seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
+        all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
+        all_expected = [b'', b'a', b'acgt'] * 4
+
+        for input_, expected in zip(all_inputs, all_expected):
+            observed = seq._munge_to_bytestring(input_, m)
+            self.assertEqual(observed, expected)
+            self.assertIs(type(observed), bytes)
+
+    def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
+        seq = Sequence('')
+        all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
+        for input_ in all_inputs:
+            with self.assertRaisesRegexp(UnicodeEncodeError,
+                                         "'ascii' codec can't encode character"
+                                         ".*in position.*: ordinal not in"
+                                         " range\(128\)"):
+                seq._munge_to_bytestring(input_, 'dummy_method')
+
 
 if __name__ == "__main__":
     main()

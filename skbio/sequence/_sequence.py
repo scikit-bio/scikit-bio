@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from future.utils import viewitems
-import six
 from six import string_types, text_type
 
 import re
@@ -1830,9 +1829,12 @@ class Sequence(collections.Sequence, SkbioObject):
         return Sequence(other)
 
     def _munge_to_bytestring(self, other, method):
-        if isinstance(other, string_types):
-            return six.b(other)
-        return self._munge_to_sequence(other, method)._string
+        if type(other) is bytes:
+            return other
+        elif isinstance(other, string_types):
+            return other.encode('ascii')
+        else:
+            return self._munge_to_sequence(other, method)._string
 
     @contextmanager
     def _byte_ownership(self):
