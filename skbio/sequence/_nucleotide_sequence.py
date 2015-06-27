@@ -7,7 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from abc import abstractproperty
+from future.utils import with_metaclass
+
+from abc import ABCMeta, abstractproperty
 
 import numpy as np
 
@@ -15,21 +17,13 @@ from skbio.util import classproperty
 from ._iupac_sequence import _motifs as parent_motifs
 
 
-class NucleotideMixin(object):
-    """Abstract base class for storing an IUPAC nucleotide sequence.
+class NucleotideMixin(with_metaclass(ABCMeta, object)):
+    """Mixin for adding funtionality for working with sequences of nucleotides.
 
     This is an abstract base class (ABC) that cannot be instantiated.
 
     Attributes
     ----------
-    values
-    metadata
-    positional_metadata
-    alphabet
-    gap_chars
-    nondegenerate_chars
-    degenerate_chars
-    degenerate_map
     complement_map
 
     See Also
