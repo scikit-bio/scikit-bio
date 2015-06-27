@@ -1999,7 +1999,7 @@ class _SequenceReprBuilder(object):
         self._chunk_size = chunk_size
 
     def build(self):
-        lines = _SeparatedLines()
+        lines = _ElasticLines()
 
         cls_name = self._seq.__class__.__name__
         lines.add_line(cls_name)
@@ -2067,18 +2067,11 @@ class _SequenceReprBuilder(object):
             #     'foo': u'abc def ghi
             #              jkl mno'
             value_repr = repr(value)
-            single_quote_idx = value_repr.find("'")
-            double_quote_idx = value_repr.find('"')
-
-            if single_quote_idx != -1 and double_quote_idx != -1:
-                first_quote_idx = min(single_quote_idx, double_quote_idx)
-            elif single_quote_idx != -1:
-                first_quote_idx = single_quote_idx
-            elif double_quote_idx != -1:
-                first_quote_idx = double_quote_idx
-
-            extra_indent = first_quote_idx + 1
-        elif value is None or isinstance(value, (numbers.Number, bool)):
+            extra_indent = 1
+            if not (value_repr.startswith("'") or value_repr.startswith('"')):
+                extra_indent = 2
+        # handles any number, this includes bool
+        elif value is None or isinstance(value, numbers.Number):
             value_repr = repr(value)
             extra_indent = 0
         else:
@@ -2102,18 +2095,12 @@ class _SequenceReprBuilder(object):
             <indent>'foo':<space>
 
         """
-        default = self._indent + str(type(key))
+        key_fmt = self._indent + repr(key)
         supported_types = (six.text_type, six.binary_type, numbers.Number,
-                           bool)
-        if key is None or isinstance(key, supported_types):
-            key_fmt = self._indent + repr(key)
-
-            # if formatted key (including indent) is greater than 1/2 the max
-            # repr width, just show its type info
-            if len(key_fmt) > (self._width / 2):
-                key_fmt = default
-        else:
-            key_fmt = default
+                           type(None))
+        if len(key_fmt) > (self._width / 2) or not isinstance(key,
+                                                              supported_types):
+            key_fmt = self._indent + str(type(key))
         return '%s: ' % key_fmt
 
     def _wrap_text_with_indent(self, text, initial_text, extra_indent):
@@ -2158,16 +2145,14 @@ class _SequenceReprBuilder(object):
         column_width = 0
 
         num_chunks = 1
-        while True:
+        not_exceeded = True
+        while not_exceeded:
             line_len, new_chunk_info = self._compute_chunked_seq_line_len(
                 num_chunks)
-
-            if line_len <= self._width:
+            not_exceeded = line_len <= self._width
+            if not_exceeded:
                 num_lines, num_chars, column_width = new_chunk_info
                 num_chunks += 1
-            else:
-                break
-
         return num_lines, num_chars, column_width
 
     def _compute_chunked_seq_line_len(self, num_chunks):
@@ -2197,7 +2182,7 @@ class _SequenceReprBuilder(object):
         return lines
 
 
-class _SeparatedLines(object):
+class _ElasticLines(object):
     """Store blocks of content separated by dashed lines.
 
     Each dashed line (separator) is as long as the longest content
