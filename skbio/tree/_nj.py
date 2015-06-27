@@ -13,8 +13,10 @@ from six import StringIO
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
     """ Apply neighbor joining for phylogenetic reconstruction.
 

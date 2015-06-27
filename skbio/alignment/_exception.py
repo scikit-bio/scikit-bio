@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.io import FileFormatError
-
 
 class SequenceCollectionError(Exception):
     """General error for sequence collection validation failures."""
@@ -18,9 +16,4 @@ class SequenceCollectionError(Exception):
 
 class AlignmentError(SequenceCollectionError):
     """General error for alignment validation failures."""
-    pass
-
-
-class StockholmParseError(FileFormatError):
-    """Exception raised when a Stockholm formatted file cannot be parsed."""
     pass

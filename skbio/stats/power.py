@@ -144,12 +144,14 @@ from future.builtins import range
 
 import collections
 import copy
-import warnings
 
 import numpy as np
 import scipy.stats
 
+from skbio.util._decorator import experimental, deprecated
 
+
+@experimental(as_of="0.4.0")
 def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
                     max_counts=50, counts_interval=10, min_counts=None,
                     num_iter=500, num_runs=10):
@@ -377,6 +379,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     return power, sample_counts
 
 
+@experimental(as_of="0.4.0")
 def subsample_paired_power(test, meta, cat, control_cats, order=None,
                            strict_match=True, alpha_pwr=0.05,
                            max_counts=50, counts_interval=10, min_counts=None,
@@ -562,6 +565,7 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     return power, sample_counts
 
 
+@experimental(as_of="0.4.0")
 def confidence_bound(vec, alpha=0.05, df=None, axis=None):
     r"""Calculates a confidence bound assuming a normal distribution
 
@@ -608,16 +612,17 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
 
     return bound
 
+bootstrap_power_curve_deprecation_reason = (
+    "Please use skbio.stats.power.subsample_power or "
+    "skbio.stats.power.subsample_paired_power followed by "
+    "confidence_bound.")
 
+
+@deprecated(as_of="0.2.3-dev", until="0.4.1",
+            reason=bootstrap_power_curve_deprecation_reason)
 def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
                           alpha=0.05, mode='ind', num_iter=500, num_runs=10):
     r"""Repeatedly calculates the power curve for a specified alpha level
-
-    .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``bootstrap_power_curve`` will be removed in scikit-bio 0.4.1. It is
-       Deprecated in favor of using ``subsample_power`` or
-       ``sample_paired_power`` to calculate a power array, and then using
-       ``confidence_bound`` to perform bootstrapping.
 
     Parameters
     ----------
@@ -693,11 +698,6 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     """
 
-    warnings.warn("skbio.stats.power.bootstrap_power_curve is deprecated. "
-                  "Please use skbio.stats.power.subsample_power or "
-                  "skbio.stats.power.subsample_paired_power followed by "
-                  "confidence_bound.", DeprecationWarning)
-
     # Corrects the alpha value into a matrix
     alpha = np.ones((num_runs)) * alpha
 
@@ -717,6 +717,7 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
     return power_mean, power_bound
 
 
+@experimental(as_of="0.4.0")
 def paired_subsamples(meta, cat, control_cats, order=None, strict_match=True):
     r"""Draws a list of samples varied by `cat` and matched for `control_cats`
 
