@@ -2417,7 +2417,8 @@ class SequenceReprDoctests(object):
     57240 [\]^_`{|}~ 0123456789 a space
 
     Supply horrendous metadata and positional metadata to exercise a variety of
-    metadata formatting cases and rules:
+    metadata formatting cases and rules. Sorting should be by type, then by
+    value within each type (Python 3 doesn't allow sorting of mixed types):
 
     >>> metadata = {
     ...     # str key, str value
@@ -2442,13 +2443,13 @@ class SequenceReprDoctests(object):
     ...     # wrapped unicode value (has u'' prefix)
     ...     'unicode wrapped value': u'abcd' * 25,
     ...     # float value
-    ...     'float': 99.9999,
+    ...     0.1: 99.9999,
     ...     # bool value
-    ...     'bool': False,
+    ...     43: False,
     ...     # None key, complex value
     ...     None: complex(-1.0, 0.0),
     ...     # nested quotes
-    ...     'quotes': '"\''}
+    ...     10: '"\''}
     ... }
     >>> positional_metadata = {
     ...     # str key, int list value
@@ -2470,22 +2471,22 @@ class SequenceReprDoctests(object):
         True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
                abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
                abc abc abc abc '
+        0.1: 99.9999
+        42.5: <type 'str'>
+        10: '"\''
         42: 'some words to test text wrapping and such... yada yada yada
              yada yada yada yada yada.'
-        42.5: <type 'str'>
+        43: False
         'abc': 'some description'
         'bar': <type 'dict'>
-        'bool': False
-        'float': 99.9999
         'foo': 42
-        u'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
-                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
-        'quotes': '"\''
         <type 'str'>: None
         'unicode wrapped value': u'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
                                    abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
                                    abcdabcdabcdabcdabcd'
         <type 'tuple'>: <type 'list'>
+        u'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
     Positional metadata:
         None: <dtype: int64>
         42: <dtype: object>

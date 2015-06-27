@@ -11,6 +11,7 @@ from future.builtins import range
 from future.utils import viewitems
 import six
 
+import itertools
 import math
 import re
 import collections
@@ -940,7 +941,7 @@ class Sequence(collections.Sequence, SkbioObject):
         * metadata keys and values: will display key/value if it is an
           understood type, otherwise just the type will be displayed. If it is
           an understood type whose representation is too long, just the type
-          will be displayed. Keys are displayed in sorted order
+          will be displayed
         * positional metadata: column names and column dtypes will be displayed
           in the order they appear in the positional metadata ``pd.DataFrame``.
           Column names (i.e., keys) follow the same display rules as metadata
@@ -2006,7 +2007,10 @@ class _SequenceReprBuilder(object):
 
         if self._seq.has_metadata():
             lines.add_line('Metadata:')
-            for key in sorted(self._seq.metadata):
+            # Python 3 doesn't allow sorting of mixed types so we can't just
+            # use sorted() on the metadata keys. Sort first by type then sort
+            # by value within each type.
+            for key in self._sorted_keys_grouped_by_type(self._seq.metadata):
                 value = self._seq.metadata[key]
                 lines.add_lines(self._format_metadata_key_value(key, value))
 
@@ -2037,6 +2041,17 @@ class _SequenceReprBuilder(object):
                 range(num_lines - 2, num_lines), num_chars, column_width))
 
         return lines.to_str()
+
+    def _sorted_keys_grouped_by_type(self, dict_):
+        """Group keys within a dict by their type and sort within type."""
+        type_sorted = sorted(dict_, key=self._type_sort_key)
+        type_and_value_sorted = []
+        for _, group in itertools.groupby(type_sorted, self._type_sort_key):
+            type_and_value_sorted.extend(sorted(group))
+        return type_and_value_sorted
+
+    def _type_sort_key(self, key):
+        return repr(type(key))
 
     def _format_metadata_key_value(self, key, value):
         """Format metadata key:value, wrapping across lines if necessary."""
