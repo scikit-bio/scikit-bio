@@ -1292,14 +1292,14 @@ class TestSequence(TestCase):
         obs = repr(
             Sequence(
                 'ACGT',
-                metadata={'foo': 42, u'bar': 33.33, None: True, False: {},
-                          (1, 2): 3, 'acb' * 100: "'"},
+                metadata={'foo': 'bar', u'bar': 33.33, None: True, False: {},
+                          (1, 2): 3, 'acb' * 100: "'", 10: 11},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))
-        self.assertEqual(obs.count('\n'), 15)
+        self.assertEqual(obs.count('\n'), 16)
         self.assertTrue(obs.startswith('Sequence'))
         self.assertIn('None: True', obs)
-        self.assertIn('\'foo\': 42', obs)
+        self.assertIn('\'foo\': \'bar\'', obs)
         self.assertIn('42: <dtype: object>', obs)
         self.assertIn('\'foo\': <dtype: int64>', obs)
         self.assertIn('length: 4', obs)
