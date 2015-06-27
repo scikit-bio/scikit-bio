@@ -18,8 +18,10 @@ import scipy.misc
 from scipy.stats import pearsonr, spearmanr
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
            strict=True, lookup=None):
     """Compute correlation between distance matrices using the Mantel test.
@@ -297,6 +299,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     return orig_stat, p_value, n
 
 
+@experimental(as_of="0.4.0")
 def pwmantel(dms, labels=None, method='pearson', permutations=999,
              alternative='two-sided', strict=True, lookup=None):
     """Run Mantel tests for every pair of given distance matrices.

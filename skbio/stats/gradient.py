@@ -103,6 +103,8 @@ import numpy as np
 from natsort import realsorted
 from scipy.stats import f_oneway
 
+from skbio.util._decorator import experimental
+
 
 def _weight_by_vector(trajectories, w_vector):
     r"""weights the values of `trajectories` given a weighting vector
@@ -218,6 +220,7 @@ class GroupResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, name, trajectory, mean, info, message):
         self.name = name
         self.trajectory = trajectory
@@ -225,6 +228,7 @@ class GroupResults(object):
         self.info = info
         self.message = message
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category group to files
         in text format.
@@ -270,12 +274,14 @@ class CategoryResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, category, probability, groups, message):
         self.category = category
         self.probability = probability
         self.groups = groups
         self.message = message
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results for a category to files in
         text format.
@@ -316,11 +322,13 @@ class GradientANOVAResults(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, algorithm, weighted, categories):
         self.algorithm = algorithm
         self.weighted = weighted
         self.categories = categories
 
+    @experimental(as_of="0.4.0")
     def to_files(self, out_f, raw_f):
         r"""Save the trajectory analysis results to files in text format.
 
@@ -392,6 +400,7 @@ class GradientANOVA(object):
     # Should be defined by the derived classes
     _alg_name = None
 
+    @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map,
                  trajectory_categories=None, sort_category=None, axes=3,
                  weighted=False):
@@ -448,6 +457,7 @@ class GradientANOVA(object):
         # Initialize the message buffer
         self._message_buffer = []
 
+    @experimental(as_of="0.4.0")
     def get_trajectories(self):
         r"""Compute the trajectories for each group in each category and run
         ANOVA over the results to test group independence.
@@ -781,6 +791,7 @@ class WindowDifferenceGradientANOVA(GradientANOVA):
 
     _alg_name = 'wdiff'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, coords, prop_expl, metadata_map, window_size, **kwargs):
         super(WindowDifferenceGradientANOVA, self).__init__(coords, prop_expl,
                                                             metadata_map,

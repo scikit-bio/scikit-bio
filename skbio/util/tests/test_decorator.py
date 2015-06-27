@@ -234,9 +234,9 @@ class TestDeprecated(TestStabilityState):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             f(1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertTrue(issubclass(w[0].category, DeprecationWarning))
             expected_str = "is deprecated as of scikit-bio version 0.1.0"
-            self.assertTrue(expected_str in str(w[-1].message))
+            self.assertTrue(expected_str in str(w[0].message))
 
     def test_function_docstring(self):
         f = self._get_f('0.1.0', until='0.1.4',

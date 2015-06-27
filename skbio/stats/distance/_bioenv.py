@@ -16,8 +16,10 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def bioenv(distance_matrix, data_frame, columns=None):
     """Find subset of variables maximally correlated with distances.
 

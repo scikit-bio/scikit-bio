@@ -11,8 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from ._base import _validate
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def lladser_pe(counts, r=10):
     """Calculate single point estimate of conditional uncovered probability.
 
@@ -59,6 +61,7 @@ def lladser_pe(counts, r=10):
     return pe
 
 
+@experimental(as_of="0.4.0")
 def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
     """Calculate single CI of the conditional uncovered probability.
 
