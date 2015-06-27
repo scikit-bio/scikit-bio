@@ -67,15 +67,29 @@ class RNA(IUPACSequence, NucleotideMixin):
     Examples
     --------
     >>> from skbio import RNA
-    >>> s = RNA('ACCGAAU')
-    >>> s
-    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> RNA('ACCGAAU')
+    RNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAU
 
     Convert lowercase characters to uppercase:
 
-    >>> s = RNA('AcCGaaU', lowercase=True)
-    >>> s
-    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> RNA('AcCGaaU', lowercase=True)
+    RNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAU
 
     """
 

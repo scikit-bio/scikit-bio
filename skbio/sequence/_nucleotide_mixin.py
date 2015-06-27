@@ -92,18 +92,45 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         Examples
         --------
         >>> from skbio import DNA
-        >>> seq = DNA('TTCATT',
-        ...           positional_metadata={'quality':range(6)}).complement()
-        >>> str(seq)
-        'AAGTAA'
-        >>> seq.positional_metadata['quality'].values
-        array([0, 1, 2, 3, 4, 5])
-        >>> seq = DNA('TTCATT',
-        ...           positional_metadata={'quality':range(6)})
-        >>> seq = seq.complement(reverse=True)
-        >>> str(seq)
-        'AATGAA'
-        >>> seq.positional_metadata['quality'].values
+        >>> seq = DNA('TTCATT', positional_metadata={'quality':range(6)})
+        >>> seq
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 6
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 TTCATT
+        >>> seq.complement()
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 6
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 AAGTAA
+        >>> rc = seq.complement(reverse=True)
+        >>> rc
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 6
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 AATGAA
+        >>> rc.positional_metadata['quality'].values
         array([5, 4, 3, 2, 1, 0])
 
         """
@@ -138,8 +165,18 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         >>> seq = DNA('TTCATT',
         ...           positional_metadata={'quality':range(6)})
         >>> seq = seq.reverse_complement()
-        >>> str(seq)
-        'AATGAA'
+        >>> seq
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 6
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 AATGAA
         >>> seq.positional_metadata['quality'].values
         array([5, 4, 3, 2, 1, 0])
 

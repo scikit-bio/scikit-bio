@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six.moves import zip_longest
 
 import hashlib
 from os import remove, makedirs
@@ -58,6 +57,19 @@ class MiniRegistry(dict):
         f2.__doc__ = "\n\n".join(t)
 
         setattr(obj, name, f2)
+
+
+def chunk_str(s, n, char):
+    """Insert `char` character every `n` characters in string `s`.
+
+    Canonically pronounced "chunkster".
+
+    """
+    # Modified from http://stackoverflow.com/a/312464/3776794
+    if n < 1:
+        raise ValueError(
+            "Cannot split string into chunks with n=%d. n must be >= 1." % n)
+    return char.join((s[i:i+n] for i in range(0, len(s), n)))
 
 
 @experimental(as_of="0.4.0")
@@ -359,58 +371,6 @@ def flatten(items):
         except TypeError:
             result.append(i)
     return result
-
-
-@experimental(as_of="0.4.0")
-def reprnator(start, tokens, end, separator=', '):
-    """You have no instance, no methods, no properties, you are but a repr.
-
-    Format components in PEP8 line-break style.
-
-    Parameters
-    ----------
-    start : str
-        A string to preprend to the result. New lines will be offset by the
-        width of `start`.
-    tokens : iterable (str)
-        An iterable of tokens to place between `start` and `end`. Tokens will
-        be put on a new line if they would exceed 79 characters on their
-        current line.
-    end : str
-        A string to append to the result.
-    seperator : str, optional
-        The seperator to place between each token. Default is `", "`.
-
-    Returns
-    -------
-    str
-        Tokens formatted in a PEP8 line-break style.
-
-    """
-    offset = len(start)
-    indent = '\n%s' % (' ' * offset)
-    remaining = 79 - offset
-
-    repr_ = [start]
-
-    for token, sep in zip_longest(tokens, [separator] * (len(tokens) - 1),
-                                  fillvalue=''):
-        token_len = len(token)
-        sep_len = len(sep)
-
-        if remaining - token_len - sep_len >= 0:
-            repr_.append(token + sep)
-            remaining -= token_len + sep_len
-        else:
-            repr_.append('%s%s' % (indent, token + sep))
-            remaining = 79 - offset - token_len - sep_len
-
-    if remaining - len(end) >= 0:
-        repr_.append(end)
-    else:
-        repr_.append('%s%s' % (indent, end))
-
-    return ''.join(repr_)
 
 
 def _get_create_dir_error_codes():

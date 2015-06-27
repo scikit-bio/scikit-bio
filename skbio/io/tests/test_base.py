@@ -15,37 +15,10 @@ import numpy.testing as npt
 import numpy as np
 
 from skbio import Sequence, DNA, RNA
-from skbio.io._base import (_chunk_str, _decode_qual_to_phred,
+from skbio.io._base import (_decode_qual_to_phred,
                             _encode_phred_to_qual, _get_nth_sequence,
                             _parse_fasta_like_header,
                             _format_fasta_like_records)
-
-
-class ChunkStrTests(unittest.TestCase):
-    def test_even_split(self):
-        self.assertEqual(_chunk_str('abcdef', 6, ' '), 'abcdef')
-        self.assertEqual(_chunk_str('abcdef', 3, ' '), 'abc def')
-        self.assertEqual(_chunk_str('abcdef', 2, ' '), 'ab cd ef')
-        self.assertEqual(_chunk_str('abcdef', 1, ' '), 'a b c d e f')
-        self.assertEqual(_chunk_str('a', 1, ' '), 'a')
-        self.assertEqual(_chunk_str('abcdef', 2, ''), 'abcdef')
-
-    def test_no_split(self):
-        self.assertEqual(_chunk_str('', 2, '\n'), '')
-        self.assertEqual(_chunk_str('a', 100, '\n'), 'a')
-        self.assertEqual(_chunk_str('abcdef', 42, '|'), 'abcdef')
-
-    def test_uneven_split(self):
-        self.assertEqual(_chunk_str('abcdef', 5, '|'), 'abcde|f')
-        self.assertEqual(_chunk_str('abcdef', 4, '|'), 'abcd|ef')
-        self.assertEqual(_chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
-
-    def test_invalid_n(self):
-        with self.assertRaisesRegexp(ValueError, 'n=0'):
-            _chunk_str('abcdef', 0, ' ')
-
-        with self.assertRaisesRegexp(ValueError, 'n=-42'):
-            _chunk_str('abcdef', -42, ' ')
 
 
 class PhredDecoderTests(unittest.TestCase):

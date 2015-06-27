@@ -777,7 +777,6 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_no_qual(self):
         # test writing standalone fasta (i.e., without a qual file)
         for obj, kwargs, fp, _ in self.objs_fps:
-            print(fp)
             fh = StringIO()
             _generator_to_fasta(obj, fh, **kwargs)
             obs = fh.getvalue()

@@ -265,8 +265,16 @@ class GeneticCode(SkbioObject):
         >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> print(sgc.translate('AUGCAUGACUUUUGA', 1))
-        CMTF
+        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 CMTF
 
         """
         if len(nucleotide_sequence) == 0:
@@ -338,14 +346,14 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> for e in results: print(e)
+        >>> for e in results:
+        ...     print(e)
         MLT*
         C*HK
         ANI
         FMLA
         LC*H
         YVS
-
 
         """
         rc_nucleotide_sequence = nucleotide_sequence.reverse_complement()

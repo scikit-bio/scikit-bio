@@ -67,15 +67,29 @@ class DNA(IUPACSequence, NucleotideMixin):
     Examples
     --------
     >>> from skbio import DNA
-    >>> s = DNA('ACCGAAT')
-    >>> s
-    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> DNA('ACCGAAT')
+    DNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAT
 
     Convert lowercase characters to uppercase:
 
-    >>> s = DNA('AcCGaaT', lowercase=True)
-    >>> s
-    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> DNA('AcCGaaT', lowercase=True)
+    DNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAT
 
     """
 
