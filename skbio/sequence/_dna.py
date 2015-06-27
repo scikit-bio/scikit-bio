@@ -9,8 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
-from ._nucleotide_sequence import (NucleotideMixin,
-                                   _motifs as _parent_motifs)
+from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
 
