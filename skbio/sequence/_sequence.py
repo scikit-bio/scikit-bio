@@ -1932,9 +1932,12 @@ class Sequence(collections.Sequence, SkbioObject):
         return Sequence(other)
 
     def _munge_to_bytestring(self, other, method):
-        if isinstance(other, six.string_types):
-            return six.b(other)
-        return self._munge_to_sequence(other, method)._string
+        if type(other) is bytes:
+            return other
+        elif isinstance(other, six.string_types):
+            return other.encode('ascii')
+        else:
+            return self._munge_to_sequence(other, method)._string
 
     @contextmanager
     def _byte_ownership(self):
