@@ -193,6 +193,27 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             with self._byte_ownership():
                 self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
+    def _validate(self):
+        # This is the fastest way that we have found to identify the
+        # presence or absence of certain characters (numbers).
+        # It works by multiplying a mask where the numbers which are
+        # permitted have a zero at their index, and all others have a one.
+        # The result is a vector which will propogate counts of invalid
+        # numbers and remove counts of valid numbers, so that we need only
+        # see if the array is empty to determine validity.
+        invalid_characters = np.bincount(
+            self._bytes, minlength=self._number_of_extended_ascii_codes
+        ) * self._validation_mask
+        if np.any(invalid_characters):
+            bad = list(np.where(
+                invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
+            raise ValueError(
+                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
+                "%r" % ('s' if len(bad) > 1 else '',
+                        [str(b.tostring().decode("ascii")) for b in bad] if
+                        len(bad) > 1 else bad[0],
+                        list(self.alphabet)))
+
     def lowercase(self, lowercase):
         """Return a case-sensitive string representation of the sequence.
 
@@ -224,7 +245,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         'aCGt'
 
         Constructor automatically populates a column in positional metadata
-        when the lowercase keyword argument is provided:
+        when the ``lowercase`` keyword argument is provided with a column name:
 
         >>> s = DNA('ACgt', lowercase='introns')
         >>> s.lowercase('introns')
@@ -238,27 +259,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         outbytes = self._bytes.copy()
         outbytes[index] ^= self._ascii_invert_case_bit_offset
         return str(outbytes.tostring().decode('ascii'))
-
-    def _validate(self):
-        # This is the fastest way that we have found to identify the
-        # presence or absence of certain characters (numbers).
-        # It works by multiplying a mask where the numbers which are
-        # permitted have a zero at their index, and all others have a one.
-        # The result is a vector which will propogate counts of invalid
-        # numbers and remove counts of valid numbers, so that we need only
-        # see if the array is empty to determine validity.
-        invalid_characters = np.bincount(
-            self._bytes, minlength=self._number_of_extended_ascii_codes
-        ) * self._validation_mask
-        if np.any(invalid_characters):
-            bad = list(np.where(
-                invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
-            raise ValueError(
-                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
-                "%r" % ('s' if len(bad) > 1 else '',
-                        [str(b.tostring().decode("ascii")) for b in bad] if
-                        len(bad) > 1 else bad[0],
-                        list(self.alphabet)))
 
     def gaps(self):
         """Find positions containing gaps in the biological sequence.
@@ -304,6 +304,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use count, there aren't that many gap chars
+        # TODO: cache results
         return bool(self.gaps().any())
 
     def degenerates(self):
@@ -358,6 +359,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use bincount!
+        # TODO: cache results
         return bool(self.degenerates().any())
 
     def nondegenerates(self):
@@ -411,6 +413,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         True
 
         """
+        # TODO: cache results
         return bool(self.nondegenerates().any())
 
     def degap(self):
@@ -437,10 +440,18 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> from skbio import DNA
         >>> s = DNA('GGTC-C--ATT-C.',
         ...         positional_metadata={'quality':range(14)})
-        >>> t = s.degap()
-        >>> t # doctest: +NORMALIZE_WHITESPACE
-        DNA('GGTCCATTC', length=9, has_metadata=False,
-            has_positional_metadata=True)
+        >>> s.degap()
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 9
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 GGTCCATTC
 
         """
         return self[np.invert(self.gaps())]
@@ -472,8 +483,27 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
-        DNA('TAG', length=3, has_metadata=False, has_positional_metadata=False)
-        DNA('TGG', length=3, has_metadata=False, has_positional_metadata=False)
+        ...     print('')
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 TAG
+        <BLANKLINE>
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 TGG
+        <BLANKLINE>
 
         """
         degen_chars = self.degenerate_map
@@ -552,6 +582,15 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def _constructor(self, **kwargs):
         return self.__class__(validate=False, lowercase=False, **kwargs)
+
+    @overrides(Sequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(IUPACSequence, self)._repr_stats()
+        stats.append(('has gaps', '%r' % self.has_gaps()))
+        stats.append(('has degenerates', '%r' % self.has_degenerates()))
+        stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
+        return stats
 
 
 _motifs = MiniRegistry()

@@ -448,5 +448,61 @@ class TestIUPACSequence(TestCase):
         self.assertEqual(seq.find_motifs("name1"), "ABC")
         self.assertEqual(seq.find_motifs("name2"), 3)
 
+    def test_repr(self):
+        # basic sanity checks for custom repr stats. more extensive testing is
+        # performed on Sequence.__repr__
+
+        # minimal
+        obs = repr(ExampleIUPACSequence(''))
+        self.assertEqual(obs.count('\n'), 7)
+        self.assertTrue(obs.startswith('ExampleIUPACSequence'))
+        self.assertIn('length: 0', obs)
+        self.assertIn('has gaps: False', obs)
+        self.assertIn('has degenerates: False', obs)
+        self.assertIn('has non-degenerates: False', obs)
+        self.assertTrue(obs.endswith('-'))
+
+        # no metadata, mix of gaps, degenerates, and non-degenerates
+        obs = repr(ExampleIUPACSequence('AY-B'))
+        self.assertEqual(obs.count('\n'), 8)
+        self.assertTrue(obs.startswith('ExampleIUPACSequence'))
+        self.assertIn('length: 4', obs)
+        self.assertIn('has gaps: True', obs)
+        self.assertIn('has degenerates: True', obs)
+        self.assertIn('has non-degenerates: True', obs)
+        self.assertTrue(obs.endswith('0 AY-B'))
+
+        # metadata and positional metadata of mixed types
+        obs = repr(
+            ExampleIUPACSequence(
+                'ABCA',
+                metadata={'foo': 42, u'bar': 33.33, None: True, False: {},
+                          (1, 2): 3, 'acb' * 100: "'"},
+                positional_metadata={'foo': range(4),
+                                     42: ['a', 'b', [], 'c']}))
+        self.assertEqual(obs.count('\n'), 18)
+        self.assertTrue(obs.startswith('ExampleIUPACSequence'))
+        self.assertIn('None: True', obs)
+        self.assertIn('\'foo\': 42', obs)
+        self.assertIn('42: <dtype: object>', obs)
+        self.assertIn('\'foo\': <dtype: int64>', obs)
+        self.assertIn('length: 4', obs)
+        self.assertIn('has gaps: False', obs)
+        self.assertIn('has degenerates: False', obs)
+        self.assertIn('has non-degenerates: True', obs)
+        self.assertTrue(obs.endswith('0 ABCA'))
+
+        # sequence spanning > 5 lines
+        obs = repr(ExampleIUPACSequence('A' * 301))
+        self.assertEqual(obs.count('\n'), 12)
+        self.assertTrue(obs.startswith('ExampleIUPACSequence'))
+        self.assertIn('length: 301', obs)
+        self.assertIn('has gaps: False', obs)
+        self.assertIn('has degenerates: False', obs)
+        self.assertIn('has non-degenerates: True', obs)
+        self.assertIn('...', obs)
+        self.assertTrue(obs.endswith('300 A'))
+
+
 if __name__ == "__main__":
     main()

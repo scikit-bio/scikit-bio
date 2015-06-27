@@ -151,17 +151,34 @@ class SequenceCollection(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import SequenceCollection
-        >>> from skbio import DNA
+        >>> from skbio import DNA, SequenceCollection
         >>> sequences = [DNA('ACCGT', metadata={'id': "seq1"}),
         ...              DNA('AACCGGT', metadata={'id': "seq2"})]
-        >>> s1 = SequenceCollection(sequences)
-        >>> print(s1[0])
-        ACCGT
-        >>> print(s1[0].metadata)
-        {'id': 'seq1'}
-        >>> print(s1["seq1"])
-        ACCGT
+        >>> sc = SequenceCollection(sequences)
+        >>> sc[0]
+        DNA
+        -----------------------------
+        Metadata:
+            'id': 'seq1'
+        Stats:
+            length: 5
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 ACCGT
+        >>> sc["seq1"]
+        DNA
+        -----------------------------
+        Metadata:
+            'id': 'seq1'
+        Stats:
+            length: 5
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 ACCGT
 
         """
         if isinstance(index, str):
@@ -1001,12 +1018,11 @@ class Alignment(SequenceCollection):
 
         Examples
         --------
-        >>> from skbio import Alignment
-        >>> from skbio import DNA
+        >>> from skbio import DNA, Alignment
         >>> sequences = [DNA('ACCGT--', metadata={'id': "seq1"}),
         ...              DNA('AACCGGT', metadata={'id': "seq2"})]
-        >>> a1 = Alignment(sequences)
-        >>> for position in a1.iter_positions():
+        >>> aln = Alignment(sequences)
+        >>> for position in aln.iter_positions():
         ...     for seq in position:
         ...         print(seq.metadata['id'], seq)
         ...     print('')
@@ -1032,8 +1048,8 @@ class Alignment(SequenceCollection):
         seq2 T
         <BLANKLINE>
 
-        >>> for position in a1.iter_positions(constructor=str):
-        ...     print(position)
+        >>> for position in aln.iter_positions(constructor=str):
+        ...     position
         ['A', 'A']
         ['C', 'A']
         ['C', 'C']
@@ -1079,8 +1095,16 @@ class Alignment(SequenceCollection):
         ...              DNA('AT-C', metadata={'id': "seq2"}),
         ...              DNA('TT-C', metadata={'id': "seq3"})]
         >>> a1 = Alignment(sequences)
-        >>> print(a1.majority_consensus())
-        AT-C
+        >>> a1.majority_consensus()
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 AT-C
 
         """
         if self.is_empty():

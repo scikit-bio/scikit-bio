@@ -61,15 +61,29 @@ class Protein(IUPACSequence):
     Examples
     --------
     >>> from skbio import Protein
-    >>> s = Protein('PAW')
-    >>> s
-    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
+    >>> Protein('PAW')
+    Protein
+    -----------------------------
+    Stats:
+        length: 3
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 PAW
 
     Convert lowercase characters to uppercase:
 
-    >>> s = Protein('paW', lowercase=True)
-    >>> s
-    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
+    >>> Protein('paW', lowercase=True)
+    Protein
+    -----------------------------
+    Stats:
+        length: 3
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 PAW
 
     """
 

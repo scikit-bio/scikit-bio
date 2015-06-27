@@ -10,19 +10,19 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import range
 from six import BytesIO
 
+import unittest
 from tempfile import NamedTemporaryFile, mkdtemp
 from os.path import exists, join
-from unittest import TestCase, main
 from shutil import rmtree
 from uuid import uuid4
 
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
                         create_dir, find_duplicates, flatten,
                         is_casava_v180_or_later)
-from skbio.util._misc import _handle_error_codes, MiniRegistry, reprnator
+from skbio.util._misc import _handle_error_codes, MiniRegistry, chunk_str
 
 
-class TestMiniRegistry(TestCase):
+class TestMiniRegistry(unittest.TestCase):
     def setUp(self):
         self.registry = MiniRegistry()
 
@@ -130,7 +130,34 @@ class TestMiniRegistry(TestCase):
                          " happening now.\n                ")
 
 
-class MiscTests(TestCase):
+class ChunkStrTests(unittest.TestCase):
+    def test_even_split(self):
+        self.assertEqual(chunk_str('abcdef', 6, ' '), 'abcdef')
+        self.assertEqual(chunk_str('abcdef', 3, ' '), 'abc def')
+        self.assertEqual(chunk_str('abcdef', 2, ' '), 'ab cd ef')
+        self.assertEqual(chunk_str('abcdef', 1, ' '), 'a b c d e f')
+        self.assertEqual(chunk_str('a', 1, ' '), 'a')
+        self.assertEqual(chunk_str('abcdef', 2, ''), 'abcdef')
+
+    def test_no_split(self):
+        self.assertEqual(chunk_str('', 2, '\n'), '')
+        self.assertEqual(chunk_str('a', 100, '\n'), 'a')
+        self.assertEqual(chunk_str('abcdef', 42, '|'), 'abcdef')
+
+    def test_uneven_split(self):
+        self.assertEqual(chunk_str('abcdef', 5, '|'), 'abcde|f')
+        self.assertEqual(chunk_str('abcdef', 4, '|'), 'abcd|ef')
+        self.assertEqual(chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
+
+    def test_invalid_n(self):
+        with self.assertRaisesRegexp(ValueError, 'n=0'):
+            chunk_str('abcdef', 0, ' ')
+
+        with self.assertRaisesRegexp(ValueError, 'n=-42'):
+            chunk_str('abcdef', -42, ' ')
+
+
+class MiscTests(unittest.TestCase):
     def setUp(self):
         self.dirs_to_remove = []
 
@@ -215,7 +242,7 @@ class MiscTests(TestCase):
         self.assertEqual(flatten([1, [2, 3], [[4, [5]]]]), [1, 2, 3, [4, [5]]])
 
 
-class CardinalToOrdinalTests(TestCase):
+class CardinalToOrdinalTests(unittest.TestCase):
     def test_valid_range(self):
         # taken and modified from http://stackoverflow.com/a/20007730/3776794
         exp = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th',
@@ -232,42 +259,7 @@ class CardinalToOrdinalTests(TestCase):
             cardinal_to_ordinal(-1)
 
 
-class TestReprnator(TestCase):
-    def test_no_tokens(self):
-        self.assertEqual(reprnator("$START$", [], "#END#"), "$START$#END#")
-
-    def test_one_line(self):
-        self.assertEqual(reprnator("$START$", ["bill"], "#END#"),
-                         "$START$bill#END#")
-
-        self.assertEqual(reprnator("$START$", ["bill", "bob"], "#END#"),
-                         "$START$bill, bob#END#")
-
-    def test_overflow(self):
-        tokens = [
-            "ABCDEF",
-            "HIGJKL",
-            "MNOPQR",
-            "STUVWX",
-            "YZ",
-        ]
-        self.assertEqual(reprnator("$START$", tokens * 4, "#END#"),
-                         '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, H'
-                         'IGJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, '
-                         'MNOPQR, STUVWX, YZ, ABCDEF, HIGJKL, MNOPQR, STUVWX, '
-                         'YZ\n       #END#')
-
-        self.assertEqual(reprnator("$START$", tokens * 3, "#END#"),
-                         '$START$ABCDEF, HIGJKL, MNOPQR, STUVWX, YZ, ABCDEF, H'
-                         'IGJKL, MNOPQR, STUVWX, YZ, \n       ABCDEF, HIGJKL, '
-                         'MNOPQR, STUVWX, YZ#END#')
-
-    def test_seperator(self):
-        self.assertEqual(reprnator("", list("abc"), "", separator='|'),
-                         "a|b|c")
-
-
-class TestFindDuplicates(TestCase):
+class TestFindDuplicates(unittest.TestCase):
     def test_empty_input(self):
         def empty_gen():
             raise StopIteration()
@@ -300,4 +292,4 @@ class TestFindDuplicates(TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    unittest.main()

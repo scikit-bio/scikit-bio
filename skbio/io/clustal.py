@@ -55,10 +55,9 @@ Assume we have a clustal-formatted file with the following contents::
     def   ---------------CGCGAUGCAUGCAU-CGAU
     xyz   -----------CAUGCAUCGUACGUACGCAUGAC
 
-We can use the following code to read a clustal file:
+We can use the following code to read a clustal file into an ``Alignment``:
 
 >>> from StringIO import StringIO
->>> from skbio import read
 >>> from skbio import Alignment
 >>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n'
 ...                      'def   -------------------------------\n'
@@ -67,25 +66,17 @@ We can use the following code to read a clustal file:
 ...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC\n'
 ...                      'def   ---------------CGUGCAUGCAU-CGAU\n'
 ...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
->>> for dna in read(clustal_f, format="clustal", into=Alignment):
-...     print(dna.metadata['id'])
-...     print(str(dna))
-abc
-GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
-def
-----------------------------------------------CGUGCAUGCAU-CGAU
-xyz
-------------------------------------------CAUUCGUACGUACGCAUGAC
+>>> Alignment.read(clustal_f, format="clustal")
+<Alignment: n=3; mean +/- std length=62.00 +/- 0.00>
 
-We can use the following code to write to a clustal-formatted file:
+We can use the following code to write an ``Alignment`` to a clustal-formatted
+file:
 
->>> from skbio import Alignment, DNA
->>> from skbio.io import write
+>>> from skbio import DNA
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id': 'seq1'}),
 ...         DNA('A--GTCGAA-GTACCT', metadata={'id': 'sequence-2'}),
 ...         DNA('AGAGTTGAAGGTATCT', metadata={'id': '3'})]
 >>> aln = Alignment(seqs)
->>> from StringIO import StringIO
 >>> fh = StringIO()
 >>> aln.write(fh, format='clustal')
 >>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE
@@ -102,6 +93,7 @@ References
 ----------
 .. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
 .. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
+
 """
 
 # ----------------------------------------------------------------------------
