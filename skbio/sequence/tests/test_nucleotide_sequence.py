@@ -50,6 +50,16 @@ class TestNucelotideSequence(unittest.TestCase):
             lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
 
+    def test_instantiation_with_no_implementation(self):
+        class NucleotideSequenceSubclassNoImplementation(NucleotideMixin):
+            pass
+
+        with self.assertRaises(TypeError) as cm:
+            NucleotideSequenceSubclassNoImplementation()
+
+        self.assertIn("abstract class", str(cm.exception))
+        self.assertIn("complement_map", str(cm.exception))
+
     def test_complement_map(self):
         expected = {
             'A': 'C', 'C': 'A',
