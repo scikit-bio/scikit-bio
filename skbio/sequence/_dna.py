@@ -9,12 +9,12 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
-from ._nucleotide_sequence import (NucleotideSequence,
+from ._nucleotide_sequence import (NucleotideMixin,
                                    _motifs as _parent_motifs)
 from ._iupac_sequence import IUPACSequence
 
 
-class DNA(IUPACSequence, NucleotideSequence):
+class DNA(IUPACSequence, NucleotideMixin):
     """Store DNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC DNA character set [1]_ are supported.
@@ -81,7 +81,7 @@ class DNA(IUPACSequence, NucleotideSequence):
     """
 
     @classproperty
-    @overrides(NucleotideSequence)
+    @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',

@@ -24,7 +24,7 @@ Classes
 
    Sequence
    IUPACSequence
-   NucleotideSequence
+   NucleotideMixin
    DNA
    RNA
    Protein
@@ -211,14 +211,14 @@ from ._exception import (GeneticCodeError, GeneticCodeInitError,
                          InvalidCodonError)
 from ._sequence import Sequence
 from ._iupac_sequence import IUPACSequence
-from ._nucleotide_sequence import NucleotideSequence
+from ._nucleotide_sequence import NucleotideMixin
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode, genetic_code
 
 __all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'IUPACSequence', 'NucleotideSequence',
+           'Sequence', 'IUPACSequence', 'NucleotideMixin',
            'Protein', 'DNA', 'RNA', 'GeneticCode',
            'genetic_code']
 

@@ -43,7 +43,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     See Also
     --------
-    NucleotideSequence
+    NucleotideMixin
     DNA
     RNA
     Protein

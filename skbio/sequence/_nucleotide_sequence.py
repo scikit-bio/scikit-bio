@@ -15,7 +15,7 @@ from skbio.util import classproperty
 from ._iupac_sequence import _motifs as parent_motifs
 
 
-class NucleotideSequence(object):
+class NucleotideMixin(object):
     """Abstract base class for storing an IUPAC nucleotide sequence.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -84,7 +84,7 @@ class NucleotideSequence(object):
 
         Returns
         -------
-        NucleotideSequence
+        NucleotideMixin
             The (reverse) complement of the nucleotide sequence. The type and
             metadata of the result will be the same as the nucleotide
             sequence. If `reverse` is ``True``, positional metadata
@@ -124,7 +124,7 @@ class NucleotideSequence(object):
 
         Returns
         -------
-        NucleotideSequence
+        NucleotideMixin
             The reverse complement of the nucleotide sequence. The type and
             metadata of the result will be the same as the nucleotide
             sequence. If positional metadata is present, it will be reversed.
