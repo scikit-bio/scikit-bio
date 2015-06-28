@@ -1,8 +1,8 @@
 r"""
-QSeq format (:mod:`skbio.io.formats.qseq`)
+QSeq format (:mod:`skbio.io.format.qseq`)
 ==========================================
 
-.. currentmodule:: skbio.io.formats.qseq
+.. currentmodule:: skbio.io.format.qseq
 
 The QSeq format (`qseq`) is a record-based, plain text output format produced
 by some DNA sequencers for storing biological sequence data, quality scores,
@@ -115,13 +115,13 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function, 
+from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from future.builtins import zip, range
 
 from skbio.io import create_format, QSeqFormatError
-from skbio.io.formats._base import _decode_qual_to_phred, _get_nth_sequence
+from skbio.io.format._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.alignment import SequenceCollection
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
@@ -131,7 +131,7 @@ _will_filter = True
 
 qseq = create_format('qseq')
 
-@qseq.sniffer
+@qseq.sniffer()
 def _qseq_sniffer(fh):
     empty = True
     try:

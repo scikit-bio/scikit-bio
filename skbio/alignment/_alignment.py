@@ -1555,7 +1555,7 @@ class StockholmAlignment(Alignment):
         from_file
         """
         with open_file(out_f, mode='w') as out_f:
-            out_f.write(six.u(str(self)))
+            out_f.write(u"%s" % str(self))
 
     @staticmethod
     def _parse_gf_info(lines):

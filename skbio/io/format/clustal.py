@@ -1,8 +1,8 @@
 r"""
-Clustal format (:mod:`skbio.io.formats.clustal`)
+Clustal format (:mod:`skbio.io.format.clustal`)
 ================================================
 
-.. currentmodule:: skbio.io.formats.clustal
+.. currentmodule:: skbio.io.format.clustal
 
 Clustal format (``clustal``) stores multiple sequence alignments. This format
 was originally introduced in the Clustal package [1]_.
@@ -219,7 +219,7 @@ def _check_length(data, labels, num_seqs_check=None):
     return True
 
 
-@clustal.sniffer
+@clustal.sniffer()
 def _clustal_sniffer(fh):
     # Strategy
     #   The following conditions preclude a file from being clustal

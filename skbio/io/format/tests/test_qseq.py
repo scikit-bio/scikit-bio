@@ -16,7 +16,7 @@ from skbio import SequenceCollection, Sequence, DNA, RNA, Protein
 from skbio import read
 from skbio.util import get_data_path
 from skbio.io import QSeqFormatError
-from skbio.io.formats.qseq import (
+from skbio.io.format.qseq import (
     _qseq_to_generator, _qseq_to_sequence_collection, _qseq_sniffer)
 import numpy as np
 

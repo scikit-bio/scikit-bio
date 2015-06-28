@@ -1,8 +1,8 @@
 r"""
-Ordination results format (:mod:`skbio.io.formats.ordination`)
+Ordination results format (:mod:`skbio.io.format.ordination`)
 ==============================================================
 
-.. currentmodule:: skbio.io.formats.ordination
+.. currentmodule:: skbio.io.format.ordination
 
 The ordination results file format (``ordination``) stores the results of an
 ordination method in a human-readable, text-based format. The format supports
@@ -197,7 +197,7 @@ from skbio.io import create_format, OrdinationFormatError
 
 ordination = create_format('ordination')
 
-@ordination.sniffer
+@ordination.sniffer()
 def _ordination_sniffer(fh):
     # Smells an ordination file if *all* of the following lines are present
     # *from the beginning* of the file:

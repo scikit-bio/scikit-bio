@@ -27,9 +27,6 @@ def make_sentinel(name):
     })()
 
 
-Inherit = make_sentinel('Inherit')
-
-
 def find_sentinels(function, sentinel):
     keys = []
     function_spec = inspect.getargspec(function)

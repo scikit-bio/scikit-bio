@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 import six
 
 import io
@@ -6,16 +14,17 @@ import tempfile
 import os
 
 def is_binary_file(file):
-    return isinstance(file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom))
+    return isinstance(file, (io.BufferedReader, io.BufferedWriter,
+                             io.BufferedRandom))
 
-def is_text_file(file):
-    return isinstance(file, io.TextIOBase)
 
 class StringIO(io.StringIO):
+    """Treat Bytes the same as Unicode by decoding ascii, for testing only."""
     def __init__(self, string=None, **kwargs):
         if isinstance(string, bytes):
             string = string.decode()
         super(StringIO, self).__init__(string, **kwargs)
+
 
 class SaneTextIOWrapper(io.TextIOWrapper):
     def __init__(self, *args, **kwargs):
@@ -39,7 +48,6 @@ class SaneTextIOWrapper(io.TextIOWrapper):
 
         # Based on:
         # https://github.com/python/cpython/blob/2.7/Lib/_pyio.py#L1586
-        # https://github.com/python/cpython/blob/3.4/Lib/_pyio.py#L1615
         if self.buffer is not None and not self.closed:
             try:
                 self.flush()
@@ -47,8 +55,48 @@ class SaneTextIOWrapper(io.TextIOWrapper):
                 if self._should_close_buffer:
                     self.buffer.close()
 
+class CompressedMixin(object):
+    """Act as a bridge between worlds"""
+    def __init__(self, before_file, *args, **kwargs):
+        super(CompressedMixin, self).__init__(*args, **kwargs)
+        self._should_close_raw = True
+        self._before_file = before_file
+
+    def __del__(self):
+        self._should_close_raw = False
+        self.close()
+
+    @property
+    def closed(self):
+        return self.raw.closed or self._before_file.closed
+
+    # Based on:
+    # https://github.com/python/cpython/blob/2.7/Lib/_pyio.py#L732
+    def close(self):
+        if self.raw is not None and not self.closed:
+            try:
+                # may raise BlockingIOError or BrokenPipeError etc
+                self.flush()
+            finally:
+                if self._should_close_raw:
+                    self.raw.close()
+                    # The above will not usually close the before_file
+                    # We want the decompression to be transparent, so we don't
+                    # want users to deal with this edge case. Instead we can
+                    # just close the original now that we are being closed.
+                    self._before_file.close()
+
+
+class CompressedBufferedReader(CompressedMixin, io.BufferedReader):
+    pass
+
+
+class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
+    pass
+
 
 class TemporaryFile(io.FileIO):
+    """This exists because tempfile.TemporaryFile is not composable with io"""
     def __init__(self, mode='r+'):
         fd, self._path = tempfile.mkstemp()
         super(TemporaryFile, self).__init__(fd, mode=mode, closefd=True)
@@ -63,11 +111,13 @@ class TemporaryFile(io.FileIO):
         finally:
             os.unlink(self._path)
 
+
 class IterableStringReaderIO(io.StringIO):
     def __init__(self, iterable, newline=None):
         self._iterable = iterable
         super(IterableStringReaderIO, self).__init__(u''.join(iterable),
                                                      newline=newline)
+
 
 class IterableStringWriterIO(IterableStringReaderIO):
     def close(self):
@@ -101,6 +151,7 @@ class ReadableBufferedIO(io.BufferedReader):
     def partial_close(self):
         super(ReadableBufferedIO, self).close()
 
+
 class ReadableTextIO(io.TextIOWrapper):
     def __init__(self, file, newline=None):
         self._file = ReadableBufferedIO(_InlineUTF8Decoder(file))
@@ -109,6 +160,7 @@ class ReadableTextIO(io.TextIOWrapper):
 
     def partial_close(self):
         self._file.partial_close()
+
 
 class _InlineUTF8Decoder(object):
     def __init__(self, file):

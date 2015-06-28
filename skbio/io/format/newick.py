@@ -1,8 +1,8 @@
 """
-Newick format (:mod:`skbio.io.formats.newick`)
+Newick format (:mod:`skbio.io.format.newick`)
 ==============================================
 
-.. currentmodule:: skbio.io.formats.newick
+.. currentmodule:: skbio.io.format.newick
 
 Newick format (``newick``) stores spanning-trees with weighted edges and node
 names in a minimal file format [1]_. This is useful for representing
@@ -231,7 +231,7 @@ from skbio.tree import TreeNode
 
 newick = create_format('newick')
 
-@newick.sniffer
+@newick.sniffer()
 def _newick_sniffer(fh):
     # Strategy:
     #   The following conditions preclude a file from being newick:

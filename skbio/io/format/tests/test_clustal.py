@@ -11,7 +11,7 @@ from io import StringIO
 
 from unittest import TestCase, main
 
-from skbio.io.formats.clustal import (
+from skbio.io.format.clustal import (
     _clustal_to_alignment, _alignment_to_clustal, _clustal_sniffer,
     _is_clustal_seq_line, _delete_trailing_number, _check_length,
     _label_line_parser)

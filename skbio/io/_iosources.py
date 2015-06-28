@@ -5,6 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from __future__ import absolute_import, division, print_function
 
 from six import string_types, text_type
@@ -27,7 +28,8 @@ from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
 
 def get_io_sources():
     return (
-        HTTPSource, # TODO: explain ordering
+        # The order of these source is significant as they will short-circuit
+        HTTPSource,
         FilePathSource,
         BytesIOSource,
         BufferedIOSource,
@@ -38,13 +40,14 @@ def get_io_sources():
 
 def _compressors():
     return (
-        AutoCompressor,
         GzipCompressor,
         BZ2Compressor
     )
 
 def get_compression_handler(name):
-    return {c.name: c for c in _compressors()}.get(name, False)
+    compressors = {c.name: c for c in _compressors()}
+    compressors['auto'] = AutoCompressor
+    return compressors.get(name, False)
 
 
 class IOSource(object):
@@ -66,7 +69,6 @@ class IOSource(object):
         return NotImplementedError()
 
 class Compressor(IOSource):
-    ext = ''
     name = ''
 
     def can_write(self):
@@ -99,17 +101,17 @@ class BytesIOSource(IOSource):
         return self.can_read()
 
     def get_reader(self):
-        return self.BufferedRandom(self.file)
+        return io.BufferedRandom(self.file)
 
     def get_writer(self):
-        return self.can_write()
+        return self.get_reader()
 
 
 class BufferedIOSource(IOSource):
     closeable = False
     def can_read(self):
         # `peek` is part of the API we want to guarantee, so we can't just look
-        # for io.BufferedIOBase. Despite the fact that the c implementation of
+        # for io.BufferedIOBase. Despite the fact that the C implementation of
         # io.BufferedRandom inherits io.BufferedReader/Writer it is not
         # reflected in an isinstance check, so we need to check for it manually
         return isinstance(self.file, (io.BufferedReader, io.BufferedRandom))
@@ -168,6 +170,7 @@ class IterableSource(IOSource):
 
 
 class ReadableSource(IOSource):
+    closeable = False
     def can_read(self):
         return hasattr(self.file, 'read')
 
@@ -204,56 +207,39 @@ class ReadableSource(IOSource):
 
 
 class GzipCompressor(Compressor):
-    ext = '.gz'
     name = 'gzip'
 
     def can_read(self):
         return self.file.peek(2)[:2] == b'\x1f\x8b'
 
     def get_reader(self):
-        # We don't have to worry about the io.BufferedReader getting GCed as
-        # when `close` is called on the `raw` (GzipFile) the GzipFile will not
-        # also close self.file as per the documentation.
-        return io.BufferedReader(self._get_gzip())
+        return gzip.GzipFile(fileobj=self.file)
 
     def get_writer(self):
-        # Same situation as get_reader
-        return io.BufferedWriter(self._get_gzip(
-            compresslevel=self.options['compresslevel']))
-
-    def _get_gzip(self, **kwargs):
-        if six.PY2:
-            return gzip.GzipFile(fileobj=self.file, **kwargs)
-        else:
-            return gzip.GzipFile(self.file, **kwargs)
+        return gzip.GzipFile(fileobj=self.file,
+                             compresslevel=self.options['compresslevel'])
 
 class BZ2Compressor(Compressor):
-    ext = '.bz2'
     name = 'bz2'
 
     def can_read(self):
         return self.file.peek(3)[:3] == b'BZh'
 
     def get_reader(self):
-        # We don't have to worry about self.file being closed when it is GC'ed
-        # as close won't close self.file.
         return bz2file.BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        # Same as above
         return bz2file.BZ2File(self.file, mode='wb',
                                compresslevel=self.options['compresslevel'])
 
 class AutoCompressor(Compressor):
-    ext = '.gz'
     name = 'auto'
 
     def get_reader(self):
         for compression_handler in _compressors():
-            if compression_handler is not self.__class__:
-                compressor = compression_handler(self.file, self.options)
-                if compressor.can_read():
-                    return self.compressor.get_reader()
+            compressor = compression_handler(self.file, self.options)
+            if compressor.can_read():
+                return compressor.get_reader()
 
         return self.file
 

@@ -1,8 +1,8 @@
 """
-PHYLIP multiple sequence alignment format (:mod:`skbio.io.formats.phylip`)
+PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
 ==========================================================================
 
-.. currentmodule:: skbio.io.formats.phylip
+.. currentmodule:: skbio.io.format.phylip
 
 The PHYLIP file format stores a multiple sequence alignment. The format was
 originally defined and used in Joe Felsenstein's PHYLIP package [1]_, and has
@@ -209,7 +209,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from skbio.alignment import Alignment
 from skbio.io import create_format, PhylipFormatError
-from skbio.io.formats._base import _chunk_str
+from skbio.io.format._base import _chunk_str
 
 phylip = create_format('phylip')
 

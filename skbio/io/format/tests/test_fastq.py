@@ -17,7 +17,7 @@ from functools import partial
 from skbio import (read, write, Sequence, DNA, RNA, Protein,
                    SequenceCollection, Alignment)
 from skbio.io import FASTQFormatError
-from skbio.io.formats.fastq import (
+from skbio.io.format.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
     _fastq_to_alignment, _generator_to_fastq, _sequence_collection_to_fastq,
     _alignment_to_fastq)

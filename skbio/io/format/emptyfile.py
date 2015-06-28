@@ -1,8 +1,8 @@
 r"""
-Empty Files (:mod:`skbio.io.formats.emptyfile`)
+Empty Files (:mod:`skbio.io.format.emptyfile`)
 ===============================================
 
-.. currentmodule:: skbio.io.formats.emptyfile
+.. currentmodule:: skbio.io.format.emptyfile
 
 This format exists to make debugging simpler, often an empty file is a mistake
 which can take an embarrasing amount of time to notice. This format has only
@@ -34,7 +34,7 @@ from skbio.io import create_format
 
 emptyfile = create_format('<emptyfile>')
 
-@emptyfile.sniffer
+@emptyfile.sniffer()
 def empty_file_sniffer(fh):
     for line in fh:
         if line.strip():

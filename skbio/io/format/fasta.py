@@ -1,8 +1,8 @@
 """
-FASTA/QUAL format (:mod:`skbio.io.formats.fasta`)
+FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
 =================================================
 
-.. currentmodule:: skbio.io.formats.fasta
+.. currentmodule:: skbio.io.format.fasta
 
 The FASTA file format (``fasta``) stores biological (i.e., nucleotide or
 protein) sequences in a simple plain text format that is both human-readable
@@ -539,7 +539,7 @@ import numpy as np
 
 from skbio.io import (create_format, FASTAFormatError, QUALFormatError)
 from skbio.io.registry import FileSentinel
-from skbio.io.formats._base import (_chunk_str, _get_nth_sequence,
+from skbio.io.format._base import (_chunk_str, _get_nth_sequence,
                             _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
@@ -550,7 +550,7 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 fasta = create_format('fasta')
 
 
-@fasta.sniffer
+@fasta.sniffer()
 def _fasta_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the

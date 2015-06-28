@@ -304,19 +304,19 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.formats.clustal')
-import_module('skbio.io.formats.fasta')
-import_module('skbio.io.formats.fastq')
-import_module('skbio.io.formats.lsmat')
-import_module('skbio.io.formats.newick')
-import_module('skbio.io.formats.ordination')
-import_module('skbio.io.formats.phylip')
-import_module('skbio.io.formats.qseq')
+import_module('skbio.io.format.clustal')
+import_module('skbio.io.format.fasta')
+import_module('skbio.io.format.fastq')
+import_module('skbio.io.format.lsmat')
+import_module('skbio.io.format.newick')
+import_module('skbio.io.format.ordination')
+import_module('skbio.io.format.phylip')
+import_module('skbio.io.format.qseq')
 
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
-import_module('skbio.io.formats.emptyfile')
+import_module('skbio.io.format.emptyfile')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.

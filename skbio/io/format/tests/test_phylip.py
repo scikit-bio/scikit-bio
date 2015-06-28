@@ -12,7 +12,7 @@ from io import StringIO
 from unittest import TestCase, main
 
 from skbio.io import PhylipFormatError
-from skbio.io.formats.phylip import _alignment_to_phylip
+from skbio.io.format.phylip import _alignment_to_phylip
 from skbio import Alignment, DNA, RNA
 from skbio.util import get_data_path
 

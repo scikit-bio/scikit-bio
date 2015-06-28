@@ -1,8 +1,8 @@
 r"""
-FASTQ format (:mod:`skbio.io.formats.fastq`)
+FASTQ format (:mod:`skbio.io.format.fastq`)
 ============================================
 
-.. currentmodule:: skbio.io.formats.fastq
+.. currentmodule:: skbio.io.format.fastq
 
 The FASTQ file format (``fastq``) stores biological (e.g., nucleotide)
 sequences and their quality scores in a simple plain text format that is both
@@ -273,7 +273,7 @@ import re
 import numpy as np
 
 from skbio.io import create_format, FASTQFormatError
-from skbio.io.formats._base import (_decode_qual_to_phred, _encode_phred_to_qual,
+from skbio.io.format._base import (_decode_qual_to_phred, _encode_phred_to_qual,
                             _get_nth_sequence, _parse_fasta_like_header,
                             _format_fasta_like_records, _line_generator,
                             _too_many_blanks)
@@ -286,7 +286,7 @@ _whitespace_regex = re.compile(r'\s')
 fastq = create_format('fastq')
 
 
-@fastq.sniffer
+@fastq.sniffer()
 def _fastq_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the

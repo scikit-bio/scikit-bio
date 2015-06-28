@@ -1,8 +1,8 @@
 """
-Labeled square matrix format (:mod:`skbio.io.formats.lsmat`)
+Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
 ============================================================
 
-.. currentmodule:: skbio.io.formats.lsmat
+.. currentmodule:: skbio.io.format.lsmat
 
 The labeled square matrix file format (``lsmat``) stores numeric square
 matrix data relating a set of objects along each axis. The format also stores
@@ -85,7 +85,7 @@ from skbio.io import create_format, LSMatFormatError
 lsmat = create_format('lsmat')
 
 
-@lsmat.sniffer
+@lsmat.sniffer()
 def _lsmat_sniffer(fh):
     header = _find_header(fh)
 
