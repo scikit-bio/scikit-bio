@@ -22,7 +22,7 @@ from skbio.io import ClustalFormatError
 class ClustalHelperTests(TestCase):
     def test_label_line_parser(self):
         self.assertEqual(_label_line_parser(StringIO('abc\tucag')),
-                          ({"abc": ["ucag"]}, ['abc']))
+                         ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
             _label_line_parser(StringIO('abctucag'))
