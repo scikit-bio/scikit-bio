@@ -125,7 +125,7 @@ class TestFilePathsOpening(unittest.TestCase):
             with open_files(['http://google.com/foo-seqs.fna']) as fhs:
                 for f in fhs:
                     f.read()
-        self.assertEquals(str(e.exception), '404 Client Error: Not Found')
+        self.assertEqual(str(e.exception), '404 Client Error: Not Found')
 
     def test_remote_fna(self):
         url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
