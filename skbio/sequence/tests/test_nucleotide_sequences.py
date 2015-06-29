@@ -12,7 +12,8 @@ import unittest
 
 import numpy as np
 
-from skbio.sequence import NucleotideMixin, DNA, RNA
+from skbio.sequence import DNA, RNA
+from skbio.sequence._nucleotide_mixin import NucleotideMixin
 
 
 # This file contains tests for functionality of sequence types which implement

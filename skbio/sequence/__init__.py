@@ -23,8 +23,6 @@ Classes
    :toctree: generated/
 
    Sequence
-   IUPACSequence
-   NucleotideMixin
    DNA
    RNA
    Protein
@@ -300,16 +298,12 @@ from skbio.util import TestRunner
 from ._exception import (GeneticCodeError, GeneticCodeInitError,
                          InvalidCodonError)
 from ._sequence import Sequence
-from ._iupac_sequence import IUPACSequence
-from ._nucleotide_mixin import NucleotideMixin
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode, genetic_code
 
 __all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'IUPACSequence', 'NucleotideMixin',
-           'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'genetic_code']
+           'Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode', 'genetic_code']
 
 test = TestRunner(__file__).test
