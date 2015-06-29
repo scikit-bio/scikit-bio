@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 from six import binary_type, text_type
 
 import warnings
@@ -18,7 +19,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from IPython.core.display import Image, SVG
-from nose.tools import assert_is_instance, assert_raises_regexp, assert_true
+from nose.tools import assert_is_instance, assert_true
 from scipy.spatial.distance import pdist
 
 from skbio import DistanceMatrix
@@ -737,7 +738,7 @@ class TestOrdinationResults(unittest.TestCase):
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
     def test_plot_with_invalid_axis_labels(self):
-        with assert_raises_regexp(ValueError, 'axis_labels.*4'):
+        with six.assertRaisesRegex(self, ValueError, 'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
                                       axis_labels=('a', 'b', 'c', 'd'))
 
@@ -749,27 +750,27 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
-        with assert_raises_regexp(ValueError, '2 dimension\(s\)'):
+        with six.assertRaisesRegex(self, ValueError, '2 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.site.T
 
         # wrong number of axes
-        with assert_raises_regexp(ValueError, 'exactly three.*found 0'):
+        with six.assertRaisesRegex(self, ValueError, 'exactly three.*found 0'):
             self.min_ord_results._validate_plot_axes(coord_matrix, [])
-        with assert_raises_regexp(ValueError, 'exactly three.*found 4'):
+        with six.assertRaisesRegex(self, ValueError, 'exactly three.*found 4'):
             self.min_ord_results._validate_plot_axes(coord_matrix,
                                                      (0, 1, 2, 3))
 
         # duplicate axes
-        with assert_raises_regexp(ValueError, 'must be unique'):
+        with six.assertRaisesRegex(self, ValueError, 'must be unique'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 1, 0))
 
         # out of range axes
-        with assert_raises_regexp(ValueError, 'axes\[1\].*3'):
+        with six.assertRaisesRegex(self, ValueError, 'axes\[1\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1, 2))
-        with assert_raises_regexp(ValueError, 'axes\[2\].*3'):
+        with six.assertRaisesRegex(self, ValueError, 'axes\[2\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
 
     def test_get_plot_point_colors_invalid_input(self):
@@ -784,17 +785,17 @@ class TestOrdinationResults(unittest.TestCase):
                                                         ['B', 'C'], 'jet')
 
         # column not in df
-        with assert_raises_regexp(ValueError, 'missingcol'):
+        with six.assertRaisesRegex(self, ValueError, 'missingcol'):
             self.min_ord_results._get_plot_point_colors(self.df, 'missingcol',
                                                         ['B', 'C'], 'jet')
 
         # id not in df
-        with assert_raises_regexp(ValueError, 'numeric'):
+        with six.assertRaisesRegex(self, ValueError, 'numeric'):
             self.min_ord_results._get_plot_point_colors(
                 self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
         # missing data in df
-        with assert_raises_regexp(ValueError, 'nancolumn'):
+        with six.assertRaisesRegex(self, ValueError, 'nancolumn'):
             self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
                                                         ['B', 'C', 'A'], 'jet')
 

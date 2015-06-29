@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
+import six
 from future.builtins import range, zip
 
 import unittest
@@ -297,11 +299,11 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
             npt.assert_equal(o, e)
 
     def test_newline_character_in_id_whitespace_replacement(self):
-        with self.assertRaisesRegexp(ValueError, 'Newline character'):
+        with six.assertRaisesRegex(self, ValueError, 'Newline character'):
             list(_format_fasta_like_records(self.gen, '-\n--', ' ', False))
 
     def test_newline_character_in_description_newline_replacement(self):
-        with self.assertRaisesRegexp(ValueError, 'Newline character'):
+        with six.assertRaisesRegex(self, ValueError, 'Newline character'):
             list(_format_fasta_like_records(self.gen, None, 'a\nb', False))
 
     def test_empty_sequence(self):
@@ -310,7 +312,7 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
                         RNA('GG')):
                 yield seq
 
-        with self.assertRaisesRegexp(ValueError, '2nd.*empty'):
+        with six.assertRaisesRegex(self, ValueError, '2nd.*empty'):
             list(_format_fasta_like_records(blank_seq_gen(), None, None,
                                             False))
 
@@ -321,8 +323,8 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
                         DNA('GG', positional_metadata={'quality': [41, 40]})):
                 yield seq
 
-        with self.assertRaisesRegexp(ValueError,
-                                     '2nd sequence.*quality scores'):
+        with six.assertRaisesRegex(self, ValueError,
+                                   '2nd sequence.*quality scores'):
             list(_format_fasta_like_records(missing_qual_gen(), '-', '-',
                                             True))
 
