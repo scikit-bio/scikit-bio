@@ -118,3 +118,18 @@ class DNA(NucleotideSequence):
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
+
+    def transcribe(self, coding=True):
+        """
+
+        """
+        if coding:
+            new_seq = self.copy()
+        else:
+            new_seq = new_seq.reverse_complement()
+        with new_seq._byte_ownership():
+            new_seq._bytes[new_seq._bytes == b'T'] = b'U'
+        return RNA(new_seq)
+
+    def translate(self, coding=True, *args, **kwargs):
+        return self.transcribe(coding=coding).translate(*args, **kwargs)

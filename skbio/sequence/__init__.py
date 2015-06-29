@@ -305,11 +305,10 @@ from ._nucleotide_sequence import NucleotideSequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
-from ._genetic_code import GeneticCode, genetic_code
+from ._genetic_code import GeneticCode
 
 __all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
            'Sequence', 'IUPACSequence', 'NucleotideSequence',
-           'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'genetic_code']
+           'Protein', 'DNA', 'RNA', 'GeneticCode']
 
 test = TestRunner(__file__).test
