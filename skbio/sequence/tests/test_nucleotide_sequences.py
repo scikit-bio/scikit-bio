@@ -12,7 +12,7 @@ import unittest
 
 import numpy as np
 
-from skbio.sequence import DNA, RNA
+from skbio import DNA, RNA
 from skbio.sequence._nucleotide_mixin import NucleotideMixin
 
 
