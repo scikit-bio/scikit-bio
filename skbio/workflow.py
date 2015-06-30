@@ -89,7 +89,7 @@ exciting on success.
 Now, lets process some data!
 
 >>> for result in wf(seqs, success_callback=success_f, fail_callback=fail_f):
-...     print result
+...     print(result)
 SUCCESS: AAAAAAATTTTTTT
 FAIL: ATAGACC
 SUCCESS: CCGGAC
@@ -110,9 +110,9 @@ to walk through an item at a time so we can examine the debug information.
 >>> gen = wf(seqs, fail_callback=lambda x: x.state)
 >>> gen.next()
 'TTTTTTTAAAAAAA'
->>> print wf.failed
+>>> print(wf.failed)
 False
->>> print wf.debug_trace
+>>> print(wf.debug_trace)
 set([('check_length', 0), ('reverse', 2)])
 
 The ``debug_trace`` specifies the methods executed, and the order of their
@@ -127,9 +127,9 @@ workflow was a failed item.
 
 >>> gen.next()
 'ATAGACC'
->>> print wf.failed
+>>> print(wf.failed)
 True
->>> print wf.debug_trace
+>>> print(wf.debug_trace)
 set([('check_length', 0)])
 
 What we can see is that the failed sequence only executed the check_length
@@ -143,7 +143,7 @@ truncation. Let's see what that looks like in the debug output.
 
 >>> gen.next() #
 'CAGGCC'
->>> print wf.failed
+>>> print(wf.failed)
 False
 >>> wf.debug_trace
 set([('check_length', 0), ('truncate', 1), ('reverse', 2)])
@@ -199,6 +199,8 @@ allow you to indicate ``anything`` as an option value, anything that is
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
+from __future__ import absolute_import, division, print_function
 
 from future.utils import viewitems
 

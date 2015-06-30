@@ -39,7 +39,7 @@ def main():
     root = 'skbio'
     validators = [InitValidator(), CopyrightHeadersValidator(),
                   ExecPermissionValidator(), GeneratedCythonValidator(),
-                  APIRegressionValidator()]
+                  APIRegressionValidator(), FluxCapacitorValidator()]
 
     return_code = 0
     for validator in validators:
@@ -93,7 +93,7 @@ class RepoValidator(object):
         msg = []
         if invalids:
             success = False
-            msg.append(self.reason + ':')
+            msg.append(self.reason)
 
             for invalid in invalids:
                 msg.append("    %s" % invalid)
@@ -161,8 +161,8 @@ class CopyrightHeadersValidator(RepoValidator):
 
     """
 
-    reason = ("Files non-conforming to standard headers as described in:\n"
-              "http://scikit-bio.org/docs/latest/development/new_module.html")
+    reason = ("Files non-conforming to standard headers as described in\n"
+              "http://scikit-bio.org/docs/latest/development/new_module.html:")
 
     COPYRIGHT_HEADER = """\
 # ----------------------------------------------------------------------------
@@ -228,7 +228,7 @@ class InitValidator(RepoValidator):
         contained within them).
 
     """
-    reason = "Directories missing init files"
+    reason = "Directories missing init files:"
 
     def __init__(self, skip_dirs=None):
         if skip_dirs is None:
@@ -260,7 +260,7 @@ class ExecPermissionValidator(RepoValidator):
         C files (header and source files).
 
     """
-    reason = "Library code with execute permissions"
+    reason = "Library code with execute permissions:"
 
     def __init__(self, extensions=None):
         if extensions is None:
@@ -297,7 +297,7 @@ class GeneratedCythonValidator(RepoValidator):
         File extension for generated C files.
 
     """
-    reason = "Cython code with missing or outdated generated C code"
+    reason = "Cython code with missing or outdated generated C code:"
 
     def __init__(self, cython_ext='.pyx', c_ext='.c'):
         self.cython_ext = cython_ext
@@ -354,7 +354,7 @@ class APIRegressionValidator(RepoValidator):
 
     """
     reason = ("The following tests import `A` but should import `B`"
-              " (file: A => B)")
+              " (file: A => B):")
 
     def __init__(self):
         self._imports = {}
@@ -448,6 +448,33 @@ class APIRegressionValidator(RepoValidator):
             if import_.split(".")[0] == "skbio":
                 skbio_imports.append(import_)
         return skbio_imports
+
+
+class FluxCapacitorValidator(RepoValidator):
+    """Ensure that the __future__ statements are fluxing correctly"""
+    reason = ("These files do not have the following import at the start:\n\n"
+              "from __future__ import absolute_import, division,"
+              " print_function\n")
+
+    def _validate(self, root, dirs, files):
+        failures = []
+        expected = {"absolute_import", "division", "print_function"}
+        for file in files:
+            if file.endswith(".py"):
+                filename = os.path.join(root, file)
+                failures.append(filename)
+                with open(filename) as f:
+                    source = ast.parse(f.read())
+                    for node, _ in zip(ast.iter_child_nodes(source), range(2)):
+                        if isinstance(node, ast.Expr):
+                            continue
+                        if isinstance(node, ast.ImportFrom):
+                            if node.module == "__future__":
+                                if expected.issubset(
+                                        {n.name for n in node.names}):
+                                    failures.pop()
+                            break
+        return failures
 
 
 if __name__ == '__main__':
