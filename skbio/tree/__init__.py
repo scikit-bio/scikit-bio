@@ -69,11 +69,11 @@ tips A and B.
 Now let's construct a simple tree and dump an ASCII representation:
 
 >>> tree = TreeNode.read(StringIO(u"((A, B)C, D)root;"))
->>> print tree.is_root()  # is this the root of the tree?
+>>> print(tree.is_root()) # is this the root of the tree?
 True
->>> print tree.is_tip()  # is this node a tip?
+>>> print(tree.is_tip()) # is this node a tip?
 False
->>> print tree.ascii_art()
+>>> print(tree.ascii_art())
                     /-A
           /C-------|
 -root----|          \-B
@@ -92,7 +92,7 @@ The first traversal we'll cover is a preorder traversal in which you evaluate
 from root to tips, looking at the left most child first. For instance:
 
 >>> for node in tree.preorder():
-...    print node.name
+...    print(node.name)
 root
 C
 A
@@ -103,7 +103,7 @@ The next method we'll look at is a postorder traveral which will evaluate the
 left subtree tips first before walking back up the tree:
 
 >>> for node in tree.postorder():
-...    print node.name
+...    print(node.name)
 A
 B
 C
@@ -114,13 +114,13 @@ root
 or for iterating over just the internal nodes.
 
 >>> for node in tree.tips():
-...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
+...    print("Node name: %s, Is a tip: %s" % (node.name, node.is_tip()))
 Node name: A, Is a tip: True
 Node name: B, Is a tip: True
 Node name: D, Is a tip: True
 
 >>> for node in tree.non_tips():
-...    print "Node name: %s, Is a tip: %s" % (node.name, node.is_tip())
+...    print("Node name: %s, Is a tip: %s" % (node.name, node.is_tip()))
 Node name: C, Is a tip: False
 
 Note, by default, `non_tips` will ignore `self` (which is the root in this
@@ -136,11 +136,11 @@ indicates the trees do not share any common clades:
 >>> tree1 = TreeNode.read(StringIO(u"((A, B)C, (D, E)F, (G, H)I)root;"))
 >>> tree2 = TreeNode.read(StringIO(u"((G, H)C, (D, E)F, (B, A)I)root;"))
 >>> tree3 = TreeNode.read(StringIO(u"((D, B)C, (A, E)F, (G, H)I)root;"))
->>> print tree1.compare_subsets(tree1)  # identity case
+>>> print(tree1.compare_subsets(tree1))  # identity case
 0.0
->>> print tree1.compare_subsets(tree2)  # same tree but different clade order
+>>> print(tree1.compare_subsets(tree2))  # same tree but different clade order
 0.0
->>> print tree1.compare_subsets(tree3)  # only 1 of 3 common subsets
+>>> print(tree1.compare_subsets(tree3))  # only 1 of 3 common subsets
 0.666666666667
 
 We can additionally take into account branch length when computing distances
@@ -156,7 +156,7 @@ In these two trees, we've added on a description of length from the node to
 its parent, so for instance:
 
 >>> for node in tree1.postorder():
-...     print node.name, node.length
+...     print(node.name, node.length)
 A 0.1
 B 0.2
 C 0.3
@@ -168,9 +168,9 @@ Now let's compare two trees using the distances computed pairwise between tips
 in the trees. The distance computed, by default, is the correlation of all
 pairwise tip-to-tip distances between trees:
 
->>> print tree1.compare_tip_distances(tree1)  # identity case
+>>> print(tree1.compare_tip_distances(tree1))  # identity case
 0.0
->>> print tree1.compare_tip_distances(tree2)
+>>> print(tree1.compare_tip_distances(tree2))
 0.120492524415
 
 Prefix trees (i.e., tries) examples

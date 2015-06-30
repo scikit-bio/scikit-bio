@@ -458,7 +458,7 @@ class FluxCapacitorValidator(RepoValidator):
 
     def _validate(self, root, dirs, files):
         failures = []
-        expected = set(("absolute_import", "division", "print_function"))
+        expected = {"absolute_import", "division", "print_function"}
         for file in files:
             if file.endswith(".py"):
                 filename = os.path.join(root, file)
@@ -470,7 +470,8 @@ class FluxCapacitorValidator(RepoValidator):
                             continue
                         if isinstance(node, ast.ImportFrom):
                             if node.module == "__future__":
-                                if expected <= set(n.name for n in node.names):
+                                if expected.issubset(
+                                        {n.name for n in node.names}):
                                     failures.pop()
                             break
         return failures

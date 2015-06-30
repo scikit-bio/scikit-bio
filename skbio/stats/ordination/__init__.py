@@ -88,7 +88,7 @@ Exploring the results we see that the first three axes explain about
 80% of all the variance.
 
 >>> sc_2 = ordination_result.scores(scaling=2)
->>> print sc_2.proportion_explained
+>>> print(sc_2.proportion_explained)
 [ 0.46691091  0.23832652  0.10054837  0.10493671  0.04480535  0.02974698
   0.01263112  0.00156168  0.00053235]
 

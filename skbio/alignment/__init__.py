@@ -96,7 +96,7 @@ Using the convenient ``local_pairwise_align_ssw`` function:
 ...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
 ...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
 ...             )
->>> print alignment
+>>> print(alignment)
 >query
 ACTAAGGCTCTC-TACCC----CTCTCAGA
 >target
@@ -108,7 +108,7 @@ Using the ``StripedSmithWaterman`` object:
 >>> from skbio.alignment import StripedSmithWaterman
 >>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
 >>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
->>> print alignment
+>>> print(alignment)
 ACTAAGGCTC...
 ACTAAGGCTC...
 Score: 49
@@ -131,14 +131,14 @@ way and finding the aligned sequence representations:
 ...     alignment = query(target_sequence)
 ...     alignments.append(alignment)
 ...
->>> print alignments[0]
+>>> print(alignments[0])
 ACTAAGGCT-...
 ACT-AGGCTC...
 Score: 38
 Length: 30
->>> print alignments[0].aligned_query_sequence
+>>> print(alignments[0].aligned_query_sequence)
 ACTAAGGCT---CTCTACCCCTCTCAGAGA
->>> print alignments[0].aligned_target_sequence
+>>> print(alignments[0].aligned_target_sequence)
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 Slow Alignment Algorithm Examples
