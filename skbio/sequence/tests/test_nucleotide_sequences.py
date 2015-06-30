@@ -321,7 +321,8 @@ class TestNucelotideSequence(unittest.TestCase):
         universal_sets = (('', 0, 0.0), ('ADDDH', 0, 0.0), ('ACGA', 2, 0.5),
                           ('ACGS', 3, 0.75), ('AAAAAAAG', 1, 0.125),
                           ('CCC', 3, 1.0), ('GGG', 3, 1.0), ('SSS', 3, 1.0),
-                          ('CGS', 3, 1.0))
+                          ('CGS', 3, 1.0), ('----....', 0, 0.0),
+                          ('G--..', 1, 1.0), ('ACGA', 2, 0.5))
         dna = (DNA, universal_sets + (('ATMRWYKVHDBN.-', 0, 0.0),))
         rna = (RNA, universal_sets + (('AUMRWYKVHDBN.-', 0, 0.0),))
         for constructor, current_set in (dna, rna):

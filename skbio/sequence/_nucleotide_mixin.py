@@ -231,12 +231,15 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             return self.reverse_complement()._string == other._string
 
     def gc_content(self):
-        """Calculate  the ratio of G's and C's in the sequence
+        """Calculate the relative frequency of G's and C's in the sequence.
+        
+        This includes G, C, and S characters. This is equivalent to calling
+        ``gc_frequency(relative=True)``.
 
         Returns
         -------
         float
-            Ratio of G's and C's in the sequence.
+            Relative frequency of G's and C's in the sequence.
 
         See Also
         --------
@@ -251,6 +254,10 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         0.5
         >>> DNA('ACTTAGTT').gc_content()
         0.25
+        >>> DNA('ACGT--..').gc_content()
+        0.5
+        >>> DNA('--..').gc_content()
+        0
 
         """
         return self.gc_frequency(relative=True)
@@ -263,14 +270,19 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        relative : bool
-            If False return GC count. If True return GC content, which is the
-            ratio of G's and C's in the sequence.
+        relative : bool, optional
+            If False return the frequency of G, C, and S characters (ie the
+            count). If True return the relative frequency, ie the proportion
+            of G, C, and S characters in the sequence. In this case the
+            sequence will also be degapped before the operation, so gap
+            characters will not be included when calculating the length of the
+            sequence.
 
         Returns
         -------
         int or float
-            Either count of GC occurrances or ratio, depending on input.
+            Either frequency (count) or relative frequency (proportion),
+            depending on `relative`.
 
         See Also
         --------
@@ -283,6 +295,10 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         2
         >>> DNA('ACGT').gc_frequency(relative=True)
         0.5
+        >>> DNA('ACGT--..').gc_frequency(relative=True)
+        0.5
+        >>> DNA('--..').gc_frequency(relative=True)
+        0
 
         """
 
@@ -290,8 +306,10 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
                              minlength=self._number_of_extended_ascii_codes)
         gc_ord = (ord(y) for y in 'CGS')
         gc = sum(counts[x] for x in gc_ord)
-        if relative and len(self) != 0:
-            gc /= len(self)
+        if relative:
+            seq = self.degap()
+            if len(seq) != 0:
+                gc /= len(seq)
         return gc
 
 _motifs = parent_motifs.copy()
