@@ -232,7 +232,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
 
     def gc_content(self):
         """Calculate the relative frequency of G's and C's in the sequence.
-        
+
         This includes G, C, and S characters. This is equivalent to calling
         ``gc_frequency(relative=True)``.
 
