@@ -33,6 +33,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
 
     """
     __complement_lookup = None
+    __gc_codes = None
 
     @classproperty
     def _complement_lookup(cls):
@@ -44,6 +45,13 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             lookup[ord(key)] = ord(value)
         cls.__complement_lookup = lookup
         return lookup
+
+    @classproperty
+    def _gc_codes(cls):
+        if cls.__gc_codes is None:
+            gc_iupac_chars = 'GCS'
+            cls.__gc_codes = np.asarray([ord(g) for g in gc_iupac_chars])
+        return cls.__gc_codes
 
     @property
     def _motifs(self):
@@ -234,7 +242,9 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         """Calculate the relative frequency of G's and C's in the sequence.
 
         This includes G, C, and S characters. This is equivalent to calling
-        ``gc_frequency(relative=True)``.
+        ``gc_frequency(relative=True)``. Note that the sequence will be
+        degapped before the operation, so gap characters will not be included
+        when calculating the length of the sequence.
 
         Returns
         -------
@@ -258,6 +268,16 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         0.5
         >>> DNA('--..').gc_content()
         0
+
+        `S` means `G` or `C`, so it counts:
+
+        >>> DNA('ASST').gc_content()
+        0.5
+
+        Other degenerates don't count:
+
+        >>> DNA('RYKMBDHVN').gc_content()
+        0.0
 
         """
         return self.gc_frequency(relative=True)
@@ -300,12 +320,21 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         >>> DNA('--..').gc_frequency(relative=True)
         0
 
+        `S` means `G` or `C`, so it counts:
+
+        >>> DNA('ASST').gc_frequency()
+        2
+
+        Other degenerates don't count:
+
+        >>> DNA('RYKMBDHVN').gc_frequency()
+        0
+
         """
 
         counts = np.bincount(self._bytes,
                              minlength=self._number_of_extended_ascii_codes)
-        gc_ord = (ord(y) for y in 'CGS')
-        gc = sum(counts[x] for x in gc_ord)
+        gc = counts[self._gc_codes].sum()
         if relative:
             seq = self.degap()
             if len(seq) != 0:
