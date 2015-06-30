@@ -59,6 +59,7 @@ described here [Making a flat list out of lists of lists](http://stackoverflow.c
 * Upgraded checklist.py to check source files non-conforming to [new header style](http://scikit-bio.org/docs/latest/development/new_module.html). ([#855](https://github.com/biocore/scikit-bio/issues/855))
 * Updated to use `natsort` >= 4.0.0.
 * The method of subsampling was changed for ``skbio.stats.power.subsample_paired_power``. Rather than drawing a paired sample for the run and then subsampling for each count, the subsample is now drawn for each sample and each run. In test data, this did not significantly alter the power results.
+* checklist.py now enforces `__future__` imports in .py files.
 
 ## Version 0.2.3 (2015-02-13)
 

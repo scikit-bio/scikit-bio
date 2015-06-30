@@ -6,8 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import re
+from __future__ import absolute_import, division, print_function
 
+import re
 from collections import defaultdict
 
 from skbio._base import SkbioObject
