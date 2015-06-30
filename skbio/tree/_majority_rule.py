@@ -14,6 +14,7 @@ from future.builtins import zip
 import numpy as np
 
 from skbio.tree import TreeNode
+from skbio.util._decorator import experimental
 
 
 def _walk_clades(trees, weights):
@@ -177,6 +178,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
     return list(nodes.values())
 
 
+@experimental(as_of="0.4.0")
 def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     r"""Determines consensus trees from a list of rooted trees
 

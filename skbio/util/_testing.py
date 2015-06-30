@@ -6,6 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import inspect
 
@@ -13,6 +15,8 @@ import pandas.util.testing as pdt
 from nose import core
 from nose.tools import nottest
 from future.utils import PY3
+
+from ._decorator import experimental
 
 
 @nottest
@@ -34,10 +38,12 @@ class TestRunner(object):
     and ugly. This class invokes nose with the required options.
 
     """
+    @experimental(as_of="0.4.0")
     def __init__(self, filename):
         self._filename = filename
         self._test_dir = os.path.dirname(filename)
 
+    @experimental(as_of="0.4.0")
     def test(self, verbose=False):
         """Performs the actual running of the tests.
 
@@ -55,12 +61,13 @@ class TestRunner(object):
         # list is, there just needs to be something there.
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
         if not PY3:
-            argv.append('--with-doctest')
+            argv.extend(['--with-doctest', '--doctest-tests'])
         if verbose:
             argv.append('-v')
         return core.run(argv=argv, defaultTest=self._test_dir)
 
 
+@experimental(as_of="0.4.0")
 def get_data_path(fn, subfolder='data'):
     """Return path to filename ``fn`` in the data folder.
 
@@ -98,6 +105,7 @@ def get_data_path(fn, subfolder='data'):
     return data_path
 
 
+@experimental(as_of="0.4.0")
 def assert_data_frame_almost_equal(left, right):
     """Raise AssertionError if ``pd.DataFrame`` objects are not "almost equal".
 

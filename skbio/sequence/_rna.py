@@ -9,11 +9,11 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
-from ._nucleotide_sequence import NucleotideSequence
+from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
 
-class RNA(NucleotideSequence):
+class RNA(IUPACSequence, NucleotideMixin):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
@@ -67,20 +67,34 @@ class RNA(NucleotideSequence):
     Examples
     --------
     >>> from skbio import RNA
-    >>> s = RNA('ACCGAAU')
-    >>> s
-    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> RNA('ACCGAAU')
+    RNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAU
 
     Convert lowercase characters to uppercase:
 
-    >>> s = RNA('AcCGaaU', lowercase=True)
-    >>> s
-    RNA('ACCGAAU', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> RNA('AcCGaaU', lowercase=True)
+    RNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ACCGAAU
 
     """
 
     @classproperty
-    @overrides(NucleotideSequence)
+    @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
             'A': 'U', 'U': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
@@ -104,3 +118,12 @@ class RNA(NucleotideSequence):
             "W": set("AU"), "S": set("GC"), "B": set("CGU"), "D": set("AGU"),
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+_motifs = _parent_motifs.copy()
+
+# Leave this at the bottom
+_motifs.interpolate(RNA, "find_motifs")

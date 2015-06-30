@@ -7,8 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from io import StringIO
+import six
 
+from io import StringIO
 from unittest import TestCase, main
 
 import numpy as np
@@ -176,8 +177,8 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:
-            with self.assertRaisesRegexp(OrdinationFormatError,
-                                         error_msg_regexp):
+            with six.assertRaisesRegex(self, OrdinationFormatError,
+                                       error_msg_regexp):
                 _ordination_to_ordination_results(invalid_fp)
 
     def test_write(self):

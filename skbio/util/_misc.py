@@ -7,14 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six.moves import zip_longest, range
 
 import hashlib
 import sys
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
-from warnings import warn
 from types import FunctionType
 import inspect
 
@@ -46,6 +44,8 @@ def ifpylt(hexversion, do_thing, alternative=None):
     else:
         if alternative:
             return alterantive()
+
+from ._decorator import experimental, deprecated
 
 
 class MiniRegistry(dict):
@@ -89,6 +89,20 @@ class MiniRegistry(dict):
         setattr(obj, name, f2)
 
 
+def chunk_str(s, n, char):
+    """Insert `char` character every `n` characters in string `s`.
+
+    Canonically pronounced "chunkster".
+
+    """
+    # Modified from http://stackoverflow.com/a/312464/3776794
+    if n < 1:
+        raise ValueError(
+            "Cannot split string into chunks with n=%d. n must be >= 1." % n)
+    return char.join((s[i:i+n] for i in range(0, len(s), n)))
+
+
+@experimental(as_of="0.4.0")
 def cardinal_to_ordinal(n):
     """Return ordinal string version of cardinal int `n`.
 
@@ -132,6 +146,7 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
+@experimental(as_of="0.4.0")
 def is_casava_v180_or_later(header_line):
     """Check if the header looks like it is Illumina software post-casava v1.8
 
@@ -162,6 +177,7 @@ def is_casava_v180_or_later(header_line):
     return len(fields) == 10 and fields[7] in b'YN'
 
 
+@experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
 
@@ -203,6 +219,7 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
+@experimental(as_of="0.4.0")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -244,6 +261,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 
+@experimental(as_of="0.4.0")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 
@@ -313,6 +331,7 @@ def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     return error_code_lookup['NO_ERROR']
 
 
+@experimental(as_of="0.4.0")
 def find_duplicates(iterable):
     """Find duplicate elements in an iterable.
 
@@ -339,17 +358,17 @@ def find_duplicates(iterable):
             seen.add(e)
     return repeated
 
+flatten_deprecation_reason = (
+    "Solutions to this problem exist in the python standarnd library. "
+    "Please refer to the following links for good alternatives:\n"
+    "http://stackoverflow.com/a/952952/3639023\n"
+    "http://stackoverflow.com/a/406199/3639023")
 
+
+@deprecated(as_of="0.2.3-dev", until="0.4.1",
+            reason=flatten_deprecation_reason)
 def flatten(items):
     """Removes one level of nesting from items
-
-    .. note:: Deprecated in scikit-bio 0.2.3-dev
-       ``skbio.util.flatten`` will be removed in scikit-bio 0.3.1
-       it is being deprecated in favor of solutions present
-       in the standard python library.
-       Please refer to the following links for good alternatives:
-       http://stackoverflow.com/a/952952/3639023
-       http://stackoverflow.com/a/406199/3639023.
 
     Parameters
     ----------
@@ -370,11 +389,6 @@ def flatten(items):
     ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
 
     """
-    warn("skbio.util.flatten is deprecated. Please refer to the following "
-         "links for solutions from the standard python library: "
-         "http://stackoverflow.com/a/952952/3639023 "
-         "http://stackoverflow.com/a/406199/3639023", DeprecationWarning)
-
     result = []
     for i in items:
         try:
@@ -382,57 +396,6 @@ def flatten(items):
         except TypeError:
             result.append(i)
     return result
-
-
-def reprnator(start, tokens, end, separator=', '):
-    """You have no instance, no methods, no properties, you are but a repr.
-
-    Format components in PEP8 line-break style.
-
-    Parameters
-    ----------
-    start : str
-        A string to preprend to the result. New lines will be offset by the
-        width of `start`.
-    tokens : iterable (str)
-        An iterable of tokens to place between `start` and `end`. Tokens will
-        be put on a new line if they would exceed 79 characters on their
-        current line.
-    end : str
-        A string to append to the result.
-    seperator : str, optional
-        The seperator to place between each token. Default is `", "`.
-
-    Returns
-    -------
-    str
-        Tokens formatted in a PEP8 line-break style.
-
-    """
-    offset = len(start)
-    indent = '\n%s' % (' ' * offset)
-    remaining = 79 - offset
-
-    repr_ = [start]
-
-    for token, sep in zip_longest(tokens, [separator] * (len(tokens) - 1),
-                                  fillvalue=''):
-        token_len = len(token)
-        sep_len = len(sep)
-
-        if remaining - token_len - sep_len >= 0:
-            repr_.append(token + sep)
-            remaining -= token_len + sep_len
-        else:
-            repr_.append('%s%s' % (indent, token + sep))
-            remaining = 79 - offset - token_len - sep_len
-
-    if remaining - len(end) >= 0:
-        repr_.append(end)
-    else:
-        repr_.append('%s%s' % (indent, end))
-
-    return ''.join(repr_)
 
 
 def _get_create_dir_error_codes():

@@ -209,7 +209,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from skbio.alignment import Alignment
 from skbio.io import create_format, PhylipFormatError
-from skbio.io.format._base import _chunk_str
+from skbio.util._misc import chunk_str
 
 phylip = create_format('phylip')
 
@@ -242,5 +242,5 @@ def _alignment_to_phylip(obj, fh):
 
     fmt = '{0:%d}{1}\n' % chunk_size
     for seq in obj:
-        chunked_seq = _chunk_str(str(seq), chunk_size, ' ')
+        chunked_seq = chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.metadata['id'], chunked_seq))

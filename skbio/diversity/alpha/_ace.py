@@ -11,8 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from ._base import _validate
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def ace(counts, rare_threshold=10):
     """Calculate the ACE metric (Abundance-based Coverage Estimator).
 

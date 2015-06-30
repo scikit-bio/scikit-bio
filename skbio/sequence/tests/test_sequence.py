@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 from six.moves import zip_longest
 
 import copy
@@ -392,23 +393,23 @@ class TestSequence(TestCase):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with self.assertRaisesRegexp(TypeError, 'tuple'):
+        with six.assertRaisesRegex(self, TypeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with self.assertRaisesRegexp(TypeError, 'list'):
+        with six.assertRaisesRegex(self, TypeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with self.assertRaisesRegexp(TypeError, 'set'):
+        with six.assertRaisesRegex(self, TypeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with self.assertRaisesRegexp(TypeError, 'dict'):
+        with six.assertRaisesRegex(self, TypeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with self.assertRaisesRegexp(TypeError, 'int'):
+        with six.assertRaisesRegex(self, TypeError, 'int'):
             Sequence(42)
-        with self.assertRaisesRegexp(TypeError, 'float'):
+        with six.assertRaisesRegex(self, TypeError, 'float'):
             Sequence(4.2)
-        with self.assertRaisesRegexp(TypeError, 'int64'):
+        with six.assertRaisesRegex(self, TypeError, 'int64'):
             Sequence(np.int_(50))
-        with self.assertRaisesRegexp(TypeError, 'float64'):
+        with six.assertRaisesRegex(self, TypeError, 'float64'):
             Sequence(np.float_(50))
-        with self.assertRaisesRegexp(TypeError, 'Foo'):
+        with six.assertRaisesRegex(self, TypeError, 'Foo'):
             class Foo(object):
                 pass
             Sequence(Foo())
@@ -419,38 +420,38 @@ class TestSequence(TestCase):
 
     def test_init_invalid_metadata(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
-            with self.assertRaisesRegexp(TypeError,
-                                         'metadata must be a dict'):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
                 Sequence('abc', metadata=md)
 
     def test_init_invalid_positional_metadata(self):
         # not consumable by Pandas
-        with self.assertRaisesRegexp(TypeError,
-                                     'Positional metadata invalid. Must be '
-                                     'consumable by pd.DataFrame. '
-                                     'Original pandas error message: '):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Positional metadata invalid. Must be '
+                                   'consumable by pd.DataFrame. '
+                                   'Original pandas error message: '):
             Sequence('ACGT', positional_metadata=2)
         # 0 elements
-        with self.assertRaisesRegexp(ValueError, '\(0\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[])
         # not enough elements
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4])
         # too many elements
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4, 5, 6])
         # Series not enough rows
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT', positional_metadata=pd.Series(range(3)))
         # Series too many rows
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=pd.Series(range(5)))
         # DataFrame not enough rows
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT',
                      positional_metadata=pd.DataFrame({'quality': range(3)}))
         # DataFrame too many rows
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT',
                      positional_metadata=pd.DataFrame({'quality': range(5)}))
 
@@ -519,8 +520,8 @@ class TestSequence(TestCase):
 
         for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
                    pd.DataFrame()):
-            with self.assertRaisesRegexp(TypeError,
-                                         'metadata must be a dict'):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
                 seq.metadata = md
 
             # object should still be usable and its original metadata shouldn't
@@ -632,10 +633,10 @@ class TestSequence(TestCase):
         seq = Sequence('abc', positional_metadata={'foo': [1, 2, 42]})
 
         # not consumable by Pandas
-        with self.assertRaisesRegexp(TypeError,
-                                     'Positional metadata invalid. Must be '
-                                     'consumable by pd.DataFrame. '
-                                     'Original pandas error message: '):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Positional metadata invalid. Must be '
+                                   'consumable by pd.DataFrame. '
+                                   'Original pandas error message: '):
             seq.positional_metadata = 2
 
         # object should still be usable and its original metadata shouldn't
@@ -644,14 +645,14 @@ class TestSequence(TestCase):
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
         # wrong length
-        with self.assertRaisesRegexp(ValueError, '\(2\).*\(3\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(2\).*\(3\)'):
             seq.positional_metadata = {'foo': [1, 2]}
 
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
         # None isn't valid when using setter (differs from constructor)
-        with self.assertRaisesRegexp(ValueError, '\(0\).*\(3\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(3\)'):
             seq.positional_metadata = None
 
         assert_data_frame_almost_equal(seq.positional_metadata,
@@ -759,9 +760,9 @@ class TestSequence(TestCase):
         # array-like objects will fail if wrong size
         for array_like in (np.array(range(l-1)), range(l-1),
                            np.array(range(l+1)), range(l+1)):
-            with self.assertRaisesRegexp(ValueError,
-                                         "Length of values does not match "
-                                         "length of index"):
+            with six.assertRaisesRegex(self, ValueError,
+                                       "Length of values does not match "
+                                       "length of index"):
                 seq.positional_metadata['bar'] = array_like
 
     def test_eq_and_ne(self):
@@ -941,49 +942,49 @@ class TestSequence(TestCase):
 
         eseq = Sequence("012", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': np.arange(3)})
-        self.assertEquals(seq[0:3], eseq)
-        self.assertEquals(seq[:3], eseq)
-        self.assertEquals(seq[:3:1], eseq)
+        self.assertEqual(seq[0:3], eseq)
+        self.assertEqual(seq[:3], eseq)
+        self.assertEqual(seq[:3:1], eseq)
 
         eseq = Sequence("def", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [13, 14, 15]})
-        self.assertEquals(seq[-3:], eseq)
-        self.assertEquals(seq[-3::1], eseq)
+        self.assertEqual(seq[-3:], eseq)
+        self.assertEqual(seq[-3::1], eseq)
 
         eseq = Sequence("02468ace",
                         metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [0, 2, 4, 6, 8, 10,
                                                          12, 14]})
-        self.assertEquals(seq[0:length:2], eseq)
-        self.assertEquals(seq[::2], eseq)
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
 
         eseq = Sequence(s[::-1], metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality':
                                              np.arange(length)[::-1]})
-        self.assertEquals(seq[length::-1], eseq)
-        self.assertEquals(seq[::-1], eseq)
+        self.assertEqual(seq[length::-1], eseq)
+        self.assertEqual(seq[::-1], eseq)
 
         eseq = Sequence('fdb97531',
                         metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [15, 13, 11, 9, 7, 5,
                                                          3, 1]})
-        self.assertEquals(seq[length::-2], eseq)
-        self.assertEquals(seq[::-2], eseq)
+        self.assertEqual(seq[length::-2], eseq)
+        self.assertEqual(seq[::-2], eseq)
 
-        self.assertEquals(seq[0:500:], seq)
+        self.assertEqual(seq[0:500:], seq)
 
         eseq = Sequence('', metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality':
                                              np.array([], dtype=np.int64)})
-        self.assertEquals(seq[length:0], eseq)
-        self.assertEquals(seq[-length:0], eseq)
-        self.assertEquals(seq[1:0], eseq)
+        self.assertEqual(seq[length:0], eseq)
+        self.assertEqual(seq[-length:0], eseq)
+        self.assertEqual(seq[1:0], eseq)
 
         eseq = Sequence("0", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [0]})
-        self.assertEquals(seq[0:1], eseq)
-        self.assertEquals(seq[0:1:1], eseq)
-        self.assertEquals(seq[-length::-1], eseq)
+        self.assertEqual(seq[0:1], eseq)
+        self.assertEqual(seq[0:1:1], eseq)
+        self.assertEqual(seq[-length::-1], eseq)
 
     def test_getitem_with_slice_no_positional_metadata(self):
         s = "0123456789abcdef"
@@ -992,8 +993,8 @@ class TestSequence(TestCase):
 
         eseq = Sequence("02468ace",
                         metadata={'id': 'id4', 'description': 'no_qual4'})
-        self.assertEquals(seq[0:length:2], eseq)
-        self.assertEquals(seq[::2], eseq)
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
 
     def test_getitem_with_tuple_of_mixed_with_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1003,30 +1004,30 @@ class TestSequence(TestCase):
 
         eseq = Sequence("00000", metadata={'id': 'id5', 'description': 'dsc5'},
                         positional_metadata={'quality': [0, 0, 0, 0, 0]})
-        self.assertEquals(seq[0, 0, 0, 0, 0], eseq)
-        self.assertEquals(seq[0, 0:1, 0, 0, 0], eseq)
-        self.assertEquals(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
-        self.assertEquals(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
-        self.assertEquals(seq[0:1, 0, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
+        self.assertEqual(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
+        self.assertEqual(seq[0:1, 0, 0, 0, 0], eseq)
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id5', 'description': 'dsc5'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
-        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9, 1:0], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9, 1:0], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
 
     def test_getitem_with_tuple_of_mixed_no_positional_metadata(self):
         seq = Sequence("0123456789abcdef",
                        metadata={'id': 'id6', 'description': 'no_qual6'})
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id6', 'description': 'no_qual6'})
-        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
-        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
 
     def test_getitem_with_iterable_of_mixed_has_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1045,10 +1046,10 @@ class TestSequence(TestCase):
                         metadata={'id': 'id7', 'description': 'dsc7'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
-        self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
-        self.assertEquals(seq[
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
             [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_iterable_of_mixed_no_positional_metadata(self):
@@ -1063,10 +1064,10 @@ class TestSequence(TestCase):
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id7', 'description': 'dsc7'})
-        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
-        self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
-        self.assertEquals(seq[
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
             [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_numpy_index_has_positional_metadata(self):
@@ -1079,7 +1080,7 @@ class TestSequence(TestCase):
                         metadata={'id': 'id9', 'description': 'dsc9'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
 
     def test_getitem_with_numpy_index_no_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1087,7 +1088,7 @@ class TestSequence(TestCase):
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id10', 'description': 'dsc10'})
-        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
 
     def test_getitem_with_empty_indices_empty_seq_no_pos_metadata(self):
         s = ""
@@ -1268,29 +1269,50 @@ class TestSequence(TestCase):
         self.assertTrue(tested)
 
     def test_repr(self):
-        seq_simple = Sequence("ACGT")
-        seq_med = Sequence("ACGT", metadata={'id': 'id', 'desc': 'desc'},
-                           positional_metadata={'quality': [1, 2, 3, 4]})
-        seq_complex = Sequence(("ASDKJHDJHFGUGF*&@KFHKHSDGKASDHGKDUYGKFHJ#&*YJ"
-                                "FE&I@#JH@#ASJDHGF*&@#IG#*&IGUJKSADHAKSDJHI#*Y"
-                                "LFUFLIU#RHL*Y#HHFLI#*FHL@#(*HJ"),
-                               metadata={'id': "This is a long id",
-                                         'desc': "desc"},
-                               positional_metadata={'quality': ([1, 2, 3, 4,
-                                                                 5, 6, 7, 8,
-                                                                 9, 0, 1, 2] *
-                                                                10)
-                                                    })
-        self.assertEqual(repr(seq_simple), "Sequence('ACGT', length=4, "
-                                           "has_metadata=False, "
-                                           "has_positional_metadata=False)")
-        self.assertEqual(repr(seq_med), "Sequence('ACGT', length=4, "
-                                        "has_metadata=True, "
-                                        "has_positional_metadata=True)")
-        self.assertEqual(repr(seq_complex), "Sequence('ASDKJH ... @#(*HJ', "
-                                            "length=120, has_metadata=True, "
-                                            "\n         "
-                                            "has_positional_metadata=True)")
+        # basic sanity checks -- more extensive testing of formatting and
+        # special cases is performed in SequenceReprDoctests below. here we
+        # only test that pieces of the repr are present. these tests also
+        # exercise coverage for py2/3 since the doctests in
+        # SequenceReprDoctests only currently run in py2.
+
+        # minimal
+        obs = repr(Sequence(''))
+        self.assertEqual(obs.count('\n'), 4)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 0', obs)
+        self.assertTrue(obs.endswith('-'))
+
+        # no metadata
+        obs = repr(Sequence('ACGT'))
+        self.assertEqual(obs.count('\n'), 5)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
+
+        # metadata and positional metadata of mixed types
+        obs = repr(
+            Sequence(
+                'ACGT',
+                metadata={'foo': 'bar', u'bar': 33.33, None: True, False: {},
+                          (1, 2): 3, 'acb' * 100: "'", 10: 11},
+                positional_metadata={'foo': range(4),
+                                     42: ['a', 'b', [], 'c']}))
+        self.assertEqual(obs.count('\n'), 16)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('None: True', obs)
+        self.assertIn('\'foo\': \'bar\'', obs)
+        self.assertIn('42: <dtype: object>', obs)
+        self.assertIn('\'foo\': <dtype: int64>', obs)
+        self.assertIn('length: 4', obs)
+        self.assertTrue(obs.endswith('0 ACGT'))
+
+        # sequence spanning > 5 lines
+        obs = repr(Sequence('A' * 301))
+        self.assertEqual(obs.count('\n'), 9)
+        self.assertTrue(obs.startswith('Sequence'))
+        self.assertIn('length: 301', obs)
+        self.assertIn('...', obs)
+        self.assertTrue(obs.endswith('300 A'))
 
     def test_str(self):
         self.assertEqual(str(Sequence("GATTACA")), "GATTACA")
@@ -1418,7 +1440,7 @@ class TestSequence(TestCase):
             with self.assertRaises(ValueError):
                 seq.count(c(''))
 
-        self.assertEquals(tested, 4)
+        self.assertEqual(tested, 4)
 
     def test_count_on_subclass(self):
         with self.assertRaises(TypeError) as cm:
@@ -2207,16 +2229,302 @@ class TestSequence(TestCase):
         seq = Sequence(seq_str,
                        positional_metadata={'quality': range(len(seq_str))})
 
-        with self.assertRaisesRegexp(ValueError,
-                                     "No positional metadata associated with "
-                                     "key 'introns'"):
+        with six.assertRaisesRegex(self, ValueError,
+                                   "No positional metadata associated with "
+                                   "key 'introns'"):
             seq._munge_to_index_array('introns')
 
-        with self.assertRaisesRegexp(TypeError,
-                                     "Column 'quality' in positional metadata "
-                                     "does not correspond to a boolean "
-                                     "vector"):
+        with six.assertRaisesRegex(self, TypeError,
+                                   "Column 'quality' in positional metadata "
+                                   "does not correspond to a boolean "
+                                   "vector"):
             seq._munge_to_index_array('quality')
+
+    def test_munge_to_bytestring_return_bytes(self):
+        seq = Sequence('')
+        m = 'dummy_method'
+        str_inputs = ('', 'a', 'acgt')
+        unicode_inputs = (u'', u'a', u'acgt')
+        byte_inputs = (b'', b'a', b'acgt')
+        seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
+        all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
+        all_expected = [b'', b'a', b'acgt'] * 4
+
+        for input_, expected in zip(all_inputs, all_expected):
+            observed = seq._munge_to_bytestring(input_, m)
+            self.assertEqual(observed, expected)
+            self.assertIs(type(observed), bytes)
+
+    def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
+        seq = Sequence('')
+        all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
+        for input_ in all_inputs:
+            with six.assertRaisesRegex(self, UnicodeEncodeError,
+                                       "'ascii' codec can't encode character"
+                                       ".*in position.*: ordinal not in"
+                                       " range\(128\)"):
+                seq._munge_to_bytestring(input_, 'dummy_method')
+
+
+# NOTE: this must be a *separate* class for doctests only (no unit tests). nose
+# will not run the unit tests otherwise
+#
+# these doctests exercise the correct formatting of Sequence's repr in a
+# variety of situations. they are more extensive than the unit tests above
+# (TestSequence.test_repr) but are only currently run in py2. thus, they cannot
+# be relied upon for coverage (the unit tests take care of this)
+class SequenceReprDoctests(object):
+    r"""
+    >>> from skbio import Sequence
+
+    Empty (minimal) sequence:
+
+    >>> Sequence('')
+    Sequence
+    -------------
+    Stats:
+        length: 0
+    -------------
+
+    Single character sequence:
+
+    >>> Sequence('G')
+    Sequence
+    -------------
+    Stats:
+        length: 1
+    -------------
+    0 G
+
+    Multicharacter sequence:
+
+    >>> Sequence('ACGT')
+    Sequence
+    -------------
+    Stats:
+        length: 4
+    -------------
+    0 ACGT
+
+    Full single line:
+
+    >>> Sequence('A' * 60)
+    Sequence
+    -------------------------------------------------------------------
+    Stats:
+        length: 60
+    -------------------------------------------------------------------
+    0 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Full single line with 1 character overflow:
+
+    >>> Sequence('A' * 61)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 61
+    --------------------------------------------------------------------
+    0  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60 A
+
+    Two full lines:
+
+    >>> Sequence('T' * 120)
+    Sequence
+    --------------------------------------------------------------------
+    Stats:
+        length: 120
+    --------------------------------------------------------------------
+    0  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60 TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+
+    Two full lines with 1 character overflow:
+
+    >>> Sequence('T' * 121)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 121
+    ---------------------------------------------------------------------
+    0   TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    60  TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT TTTTTTTTTT
+    120 T
+
+    Five full lines (maximum amount of information):
+
+    >>> Sequence('A' * 300)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 300
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    120 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    180 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    Six lines starts "summarized" output:
+
+    >>> Sequence('A' * 301)
+    Sequence
+    ---------------------------------------------------------------------
+    Stats:
+        length: 301
+    ---------------------------------------------------------------------
+    0   AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    240 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    300 A
+
+    A naive algorithm would assume the width of the first column (noting
+    position) based on the sequence's length alone. This can be off by one if
+    the last position (in the last line) has a shorter width than the width
+    calculated from the sequence's length. This test case ensures that only a
+    single space is inserted between position 99960 and the first sequence
+    chunk:
+
+    >>> Sequence('A' * 100000)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100000
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    The largest sequence that can be displayed using six chunks per line:
+
+    >>> Sequence('A' * 100020)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 100020
+    -----------------------------------------------------------------------
+    0     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    60    AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99900 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    99960 AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+
+    A single character longer than the previous sequence causes the optimal
+    number of chunks per line to be 5:
+
+    >>> Sequence('A' * 100021)
+    Sequence
+    -------------------------------------------------------------
+    Stats:
+        length: 100021
+    -------------------------------------------------------------
+    0      AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    50     AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    ...
+    99950  AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA
+    100000 AAAAAAAAAA AAAAAAAAAA A
+
+    Wide range of characters (locale-independent):
+
+    >>> import string
+    >>> Sequence((string.ascii_letters + string.punctuation + string.digits +
+    ...          'a space') * 567)
+    Sequence
+    -----------------------------------------------------------------------
+    Stats:
+        length: 57267
+    -----------------------------------------------------------------------
+    0     abcdefghij klmnopqrst uvwxyzABCD EFGHIJKLMN OPQRSTUVWX YZ!"#$%&'(
+    60    )*+,-./:;< =>?@[\]^_` {|}~012345 6789a spac eabcdefghi jklmnopqrs
+    ...
+    57180 opqrstuvwx yzABCDEFGH IJKLMNOPQR STUVWXYZ!" #$%&'()*+, -./:;<=>?@
+    57240 [\]^_`{|}~ 0123456789 a space
+
+    Supply horrendous metadata and positional metadata to exercise a variety of
+    metadata formatting cases and rules. Sorting should be by type, then by
+    value within each type (Python 3 doesn't allow sorting of mixed types):
+
+    >>> metadata = {
+    ...     # str key, str value
+    ...     'abc': 'some description',
+    ...     # int value
+    ...     'foo': 42,
+    ...     # unsupported type (dict) value
+    ...     'bar': {},
+    ...     # int key, wrapped str (single line)
+    ...     42: 'some words to test text wrapping and such... yada yada yada '
+    ...         'yada yada yada yada yada.',
+    ...     # bool key, wrapped str (multi-line)
+    ...     True: 'abc ' * 34,
+    ...     # float key, truncated str (too long)
+    ...     42.5: 'abc ' * 200,
+    ...     # unsupported type (tuple) key, unsupported type (list) value
+    ...     ('foo', 'bar'): [1, 2, 3],
+    ...     # unicode key, single long word that wraps
+    ...     u'long word': 'abc' * 30,
+    ...     # truncated key (too long), None value
+    ...     'too long of a key name to display in repr': None,
+    ...     # wrapped unicode value (has u'' prefix)
+    ...     'unicode wrapped value': u'abcd' * 25,
+    ...     # float value
+    ...     0.1: 99.9999,
+    ...     # bool value
+    ...     43: False,
+    ...     # None key, complex value
+    ...     None: complex(-1.0, 0.0),
+    ...     # nested quotes
+    ...     10: '"\''}
+    ... }
+    >>> positional_metadata = {
+    ...     # str key, int list value
+    ...     'foo': [1, 2, 3, 4],
+    ...     # float key, float list value
+    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
+    ...     # int key, object list value
+    ...     42: [[], 4, 5, {}],
+    ...     # truncated key (too long), bool list value
+    ...     'abc' * 90: [True, False, False, True],
+    ...     # None key
+    ...     None: range(4)}
+    >>> Sequence('ACGT', metadata=metadata,
+    ...          positional_metadata=positional_metadata)
+    Sequence
+    -----------------------------------------------------------------------
+    Metadata:
+        None: (-1+0j)
+        True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc '
+        0.1: 99.9999
+        42.5: <type 'str'>
+        10: '"\''
+        42: 'some words to test text wrapping and such... yada yada yada
+             yada yada yada yada yada.'
+        43: False
+        'abc': 'some description'
+        'bar': <type 'dict'>
+        'foo': 42
+        <type 'str'>: None
+        'unicode wrapped value': u'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                   abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                   abcdabcdabcdabcdabcd'
+        <type 'tuple'>: <type 'list'>
+        u'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
+    Positional metadata:
+        None: <dtype: int64>
+        42: <dtype: object>
+        42.5: <dtype: float64>
+        <type 'str'>: <dtype: bool>
+        'foo': <dtype: int64>
+    Stats:
+        length: 4
+    -----------------------------------------------------------------------
+    0 ACGT
+    """
+    pass
 
 
 if __name__ == "__main__":

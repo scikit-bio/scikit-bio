@@ -23,8 +23,6 @@ Classes
    :toctree: generated/
 
    Sequence
-   IUPACSequence
-   NucleotideSequence
    DNA
    RNA
    Protein
@@ -67,14 +65,30 @@ reverse complement or degapped (i.e., unaligned) version.
 >>> d1 = DNA('.ACC--GGG-TA...', metadata={'id':'my-sequence'})
 >>> d2 = d1.degap()
 >>> d2
-DNA('ACCGGGTA', length=8, has_metadata=True, has_positional_metadata=False)
->>> d2.metadata
-{'id': 'my-sequence'}
+DNA
+-----------------------------
+Metadata:
+    'id': 'my-sequence'
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 ACCGGGTA
 >>> d3 = d2.reverse_complement()
 >>> d3
-DNA('TACCCGGT', length=8, has_metadata=True, has_positional_metadata=False)
->>> d3.metadata
-{'id': 'my-sequence'}
+DNA
+-----------------------------
+Metadata:
+    'id': 'my-sequence'
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 TACCCGGT
 
 It's also straightforward to compute distances between sequences (optionally
 using user-defined distance metrics, the default is Hamming distance which
@@ -110,17 +124,64 @@ Those slices can be used to extract the relevant subsequences.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2):
 ...     r5[motif]
-RNA('AGG', length=3, has_metadata=False, has_positional_metadata=False)
-RNA('GGA', length=3, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 AGG
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 GGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif]
-RNA('AGG-GGA', length=7, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 7
+    has gaps: True
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 AGG-GGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
@@ -128,8 +189,27 @@ the input.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif].degap()
-RNA('AGGGGA', length=6, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 6
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 AGGGGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
@@ -193,7 +273,15 @@ Nucleotide sequences can be translated using a ``GeneticCode`` object.
 >>> from skbio.sequence import genetic_code
 >>> gc = genetic_code(11)
 >>> gc.translate(d6)
-Protein('MSK*', length=4, has_metadata=False, has_positional_metadata=False)
+Protein
+-----------------------------
+Stats:
+    length: 4
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+-----------------------------
+0 MSK*
 
 """
 
@@ -205,21 +293,19 @@ Protein('MSK*', length=4, has_metadata=False, has_positional_metadata=False)
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
 from ._exception import (GeneticCodeError, GeneticCodeInitError,
                          InvalidCodonError)
 from ._sequence import Sequence
-from ._iupac_sequence import IUPACSequence
-from ._nucleotide_sequence import NucleotideSequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode, genetic_code
 
 __all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'IUPACSequence', 'NucleotideSequence',
-           'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'genetic_code']
+           'Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode', 'genetic_code']
 
 test = TestRunner(__file__).test

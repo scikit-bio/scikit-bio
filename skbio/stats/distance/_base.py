@@ -21,6 +21,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
+from skbio.util._decorator import experimental
 
 
 class DissimilarityMatrixError(Exception):
@@ -36,6 +37,7 @@ class DistanceMatrixError(DissimilarityMatrixError):
 class MissingIDError(DissimilarityMatrixError):
     """Error for ID lookup that doesn't exist in the dissimilarity matrix."""
 
+    @experimental(as_of="0.4.0")
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
         self.args = ("The ID '%s' is not in the dissimilarity matrix." %
@@ -89,6 +91,7 @@ class DissimilarityMatrix(SkbioObject):
     # Used in __str__
     _matrix_element_name = 'dissimilarity'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
             data = data.data
@@ -105,6 +108,7 @@ class DissimilarityMatrix(SkbioObject):
         self._id_index = self._index_list(self._ids)
 
     @property
+    @experimental(as_of="0.4.0")
     def data(self):
         """Array of dissimilarities.
 
@@ -119,6 +123,7 @@ class DissimilarityMatrix(SkbioObject):
         return self._data
 
     @property
+    @experimental(as_of="0.4.0")
     def ids(self):
         """Tuple of object IDs.
 
@@ -133,6 +138,7 @@ class DissimilarityMatrix(SkbioObject):
         return self._ids
 
     @ids.setter
+    @experimental(as_of="0.4.0")
     def ids(self, ids_):
         ids_ = tuple(ids_)
         self._validate(self.data, ids_)
@@ -140,11 +146,13 @@ class DissimilarityMatrix(SkbioObject):
         self._id_index = self._index_list(self._ids)
 
     @property
+    @experimental(as_of="0.4.0")
     def dtype(self):
         """Data type of the dissimilarities."""
         return self.data.dtype
 
     @property
+    @experimental(as_of="0.4.0")
     def shape(self):
         """Two-element tuple containing the dissimilarity matrix dimensions.
 
@@ -157,6 +165,7 @@ class DissimilarityMatrix(SkbioObject):
         return self.data.shape
 
     @property
+    @experimental(as_of="0.4.0")
     def size(self):
         """Total number of elements in the dissimilarity matrix.
 
@@ -168,6 +177,7 @@ class DissimilarityMatrix(SkbioObject):
         return self.data.size
 
     @property
+    @experimental(as_of="0.4.0")
     def T(self):
         """Transpose of the dissimilarity matrix.
 
@@ -178,6 +188,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.transpose()
 
+    @experimental(as_of="0.4.0")
     def transpose(self):
         """Return the transpose of the dissimilarity matrix.
 
@@ -194,6 +205,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.__class__(self.data.T.copy(), deepcopy(self.ids))
 
+    @experimental(as_of="0.4.0")
     def index(self, lookup_id):
         """Return the index of the specified ID.
 
@@ -218,6 +230,7 @@ class DissimilarityMatrix(SkbioObject):
         else:
             raise MissingIDError(lookup_id)
 
+    @experimental(as_of="0.4.0")
     def redundant_form(self):
         """Return an array of dissimilarities in redundant format.
 
@@ -243,6 +256,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return self.data
 
+    @experimental(as_of="0.4.0")
     def copy(self):
         """Return a deep copy of the dissimilarity matrix.
 
@@ -257,6 +271,7 @@ class DissimilarityMatrix(SkbioObject):
         # point in the future.
         return self.__class__(self.data.copy(), deepcopy(self.ids))
 
+    @experimental(as_of="0.4.0")
     def filter(self, ids, strict=True):
         """Filter the dissimilarity matrix by IDs.
 
@@ -299,6 +314,7 @@ class DissimilarityMatrix(SkbioObject):
         filtered_data = self._data[idxs][:, idxs]
         return self.__class__(filtered_data, ids)
 
+    @experimental(as_of="0.4.0")
     def plot(self, cmap=None, title=""):
         """Creates a heatmap of the dissimilarity matrix
 
@@ -365,6 +381,7 @@ class DissimilarityMatrix(SkbioObject):
         return self._figure_data('svg')
 
     @property
+    @experimental(as_of="0.4.0")
     def png(self):
         """Display heatmap in IPython Notebook as PNG.
 
@@ -372,6 +389,7 @@ class DissimilarityMatrix(SkbioObject):
         return Image(self._repr_png_(), embed=True)
 
     @property
+    @experimental(as_of="0.4.0")
     def svg(self):
         """Display heatmap in IPython Notebook as SVG.
 
@@ -386,6 +404,7 @@ class DissimilarityMatrix(SkbioObject):
         plt.close(fig)
         return data
 
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
@@ -402,6 +421,7 @@ class DissimilarityMatrix(SkbioObject):
             self.shape[0], self.shape[1], self._matrix_element_name,
             _pprint_strs(self.ids)) + str(self.data)
 
+    @experimental(as_of="0.4.0")
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
 
@@ -442,6 +462,7 @@ class DissimilarityMatrix(SkbioObject):
 
         return equal
 
+    @experimental(as_of="0.4.0")
     def __ne__(self, other):
         """Determine whether two dissimilarity matrices are not equal.
 
@@ -462,6 +483,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return not self == other
 
+    @experimental(as_of="0.4.0")
     def __contains__(self, lookup_id):
         """Check if the specified ID is in the dissimilarity matrix.
 
@@ -483,6 +505,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return lookup_id in self._id_index
 
+    @experimental(as_of="0.4.0")
     def __getitem__(self, index):
         """Slice into dissimilarity data by object ID or numpy indexing.
 
@@ -626,6 +649,7 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
 
+    @experimental(as_of="0.4.0")
     def condensed_form(self):
         """Return an array of distances in condensed format.
 
@@ -648,6 +672,7 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force='tovector', checks=False)
 
+    @experimental(as_of="0.4.0")
     def permute(self, condensed=False):
         """Randomly permute both rows and columns in the matrix.
 
@@ -701,6 +726,7 @@ class DistanceMatrix(DissimilarityMatrix):
             raise DistanceMatrixError("Data must be symmetric.")
 
 
+@experimental(as_of="0.4.0")
 def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     """Generate a distance matrix populated with random distances.
 

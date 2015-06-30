@@ -22,19 +22,6 @@ _whitespace_regex = re.compile(r'\s')
 _newline_regex = re.compile(r'\n')
 
 
-def _chunk_str(s, n, char):
-    """Insert `char` character every `n` characters in string `s`.
-
-    Canonically pronounced "chunkster".
-
-    """
-    # Modified from http://stackoverflow.com/a/312464/3776794
-    if n < 1:
-        raise ValueError(
-            "Cannot split string into chunks with n=%d. n must be >= 1." % n)
-    return char.join((s[i:i+n] for i in range(0, len(s), n)))
-
-
 def _decode_qual_to_phred(qual_str, variant=None, phred_offset=None):
     phred_offset, phred_range = _get_phred_offset_and_range(
         variant, phred_offset,

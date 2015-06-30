@@ -19,7 +19,6 @@ Data Structures
 
    SequenceCollection
    Alignment
-   StockholmAlignment
 
 Optimized (i.e., production-ready) Alignment Algorithms
 -------------------------------------------------------
@@ -60,7 +59,6 @@ Exceptions
 
    SequenceCollectionError
    AlignmentError
-   StockholmParseError
 
 Data Structure Examples
 -----------------------
@@ -85,21 +83,6 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 
->>> from skbio.sequence import RNA
->>> from skbio.alignment import StockholmAlignment
->>> seqs = [RNA("ACC--G-GGGU", metadata={'id':"seq1"}),
-...         RNA("UCC--G-GGGA", metadata={'id':"seq2"})]
->>> gc = {'SS_cons': '(((.....)))'}
->>> sto = StockholmAlignment(seqs, gc=gc)
->>> print(sto)
-# STOCKHOLM 1.0
-seq1          ACC--G-GGGU
-seq2          UCC--G-GGGA
-#=GC SS_cons  (((.....)))
-//
->>> sto.gc
-{'SS_cons': '(((.....)))'}
-
 Alignment Algorithm Examples
 ----------------------------
 
@@ -112,7 +95,7 @@ Using the convenient ``local_pairwise_align_ssw`` function:
 ...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
 ...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
 ...             )
->>> print alignment
+>>> print(alignment)
 >query
 ACTAAGGCTCTC-TACCC----CTCTCAGA
 >target
@@ -124,7 +107,7 @@ Using the ``StripedSmithWaterman`` object:
 >>> from skbio.alignment import StripedSmithWaterman
 >>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
 >>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
->>> print alignment
+>>> print(alignment)
 ACTAAGGCTC...
 ACTAAGGCTC...
 Score: 49
@@ -147,14 +130,14 @@ way and finding the aligned sequence representations:
 ...     alignment = query(target_sequence)
 ...     alignments.append(alignment)
 ...
->>> print alignments[0]
+>>> print(alignments[0])
 ACTAAGGCT-...
 ACT-AGGCTC...
 Score: 38
 Length: 30
->>> print alignments[0].aligned_query_sequence
+>>> print(alignments[0].aligned_query_sequence)
 ACTAAGGCT---CTCTACCCCTCTCAGAGA
->>> print alignments[0].aligned_target_sequence
+>>> print(alignments[0].aligned_target_sequence)
 ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
 
 Slow Alignment Algorithm Examples
@@ -222,24 +205,25 @@ ACGTGCCTA-GGTACGCAAG
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
-from ._alignment import Alignment, SequenceCollection, StockholmAlignment
+from ._alignment import Alignment, SequenceCollection
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
     local_pairwise_align, global_pairwise_align_nucleotide,
     global_pairwise_align_protein, global_pairwise_align,
-    make_identity_substitution_matrix
+    make_identity_substitution_matrix, local_pairwise_align_ssw
 )
 from skbio.alignment._ssw_wrapper import (
-    StripedSmithWaterman, local_pairwise_align_ssw, AlignmentStructure)
-from ._exception import (SequenceCollectionError, StockholmParseError,
-                         AlignmentError)
+    StripedSmithWaterman, AlignmentStructure)
+from ._exception import (SequenceCollectionError, AlignmentError)
 
-__all__ = ['Alignment', 'SequenceCollection', 'StockholmAlignment',
+__all__ = ['Alignment', 'SequenceCollection',
            'StripedSmithWaterman', 'AlignmentStructure',
            'local_pairwise_align_ssw', 'SequenceCollectionError',
-           'StockholmParseError', 'AlignmentError', 'global_pairwise_align',
+           'AlignmentError', 'global_pairwise_align',
            'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
            'local_pairwise_align_protein', 'make_identity_substitution_matrix']

@@ -7,8 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from io import StringIO
+import six
 
+from io import StringIO
 from unittest import TestCase, main
 
 from skbio.io import PhylipFormatError
@@ -88,7 +89,8 @@ class AlignmentWriterTests(TestCase):
     def test_write_invalid_alignment(self):
         for invalid_obj, error_msg_regexp in self.invalid_objs:
             fh = StringIO()
-            with self.assertRaisesRegexp(PhylipFormatError, error_msg_regexp):
+            with six.assertRaisesRegex(self, PhylipFormatError,
+                                       error_msg_regexp):
                 _alignment_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was

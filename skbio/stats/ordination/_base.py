@@ -20,6 +20,7 @@ from IPython.core.display import Image, SVG
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
+from skbio.util._decorator import experimental
 
 # avoid flake8 unused import error
 Axes3D
@@ -57,6 +58,7 @@ class OrdinationResults(SkbioObject):
     """
     default_write_format = 'ordination'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, eigvals, species=None, site=None, biplot=None,
                  site_constraints=None, proportion_explained=None,
                  species_ids=None, site_ids=None):
@@ -69,6 +71,7 @@ class OrdinationResults(SkbioObject):
         self.species_ids = species_ids
         self.site_ids = site_ids
 
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the ordination results.
 
@@ -104,6 +107,7 @@ class OrdinationResults(SkbioObject):
 
         return '\n'.join(lines)
 
+    @experimental(as_of="0.4.0")
     def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
              title='', cmap=None, s=20):
         """Create a 3-D scatterplot of ordination results colored by metadata.
@@ -366,11 +370,13 @@ class OrdinationResults(SkbioObject):
     # directly (since otherwise the client dictates which one it shows by
     # default)
     @property
+    @experimental(as_of="0.4.0")
     def png(self):
         """Display basic 3-D scatterplot in IPython Notebook as PNG."""
         return Image(self._repr_png_(), embed=True)
 
     @property
+    @experimental(as_of="0.4.0")
     def svg(self):
         """Display basic 3-D scatterplot in IPython Notebook as SVG."""
         return SVG(self._repr_svg_())

@@ -8,8 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip
-from io import StringIO
+import six
 
+from io import StringIO
 import unittest
 import warnings
 from functools import partial
@@ -324,11 +325,11 @@ class TestReaders(unittest.TestCase):
         # phred offsets
         for fp, error_type, error_msg_regex in self.invalid_files:
             for variant in 'sanger', 'illumina1.3', 'illumina1.8':
-                with self.assertRaisesRegexp(error_type, error_msg_regex):
+                with six.assertRaisesRegex(self, error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, variant=variant))
 
             for offset in 33, 64, 40, 77:
-                with self.assertRaisesRegexp(error_type, error_msg_regex):
+                with six.assertRaisesRegex(self, error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
     def test_fastq_to_generator_invalid_files_illumina(self):
@@ -338,9 +339,11 @@ class TestReaders(unittest.TestCase):
                'solexa_full_range_original_solexa.fastq']]
 
         for fp in fps:
-            with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
+            with six.assertRaisesRegex(self, ValueError,
+                                       'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.3'))
-            with self.assertRaisesRegexp(ValueError, 'out of range \[0, 62\]'):
+            with six.assertRaisesRegex(self, ValueError,
+                                       'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.8'))
 
     def test_fastq_to_generator_solexa(self):
@@ -574,7 +577,7 @@ class TestWriters(unittest.TestCase):
                            positional_metadata={'quality': range(4)})
             yield Sequence('ACG', metadata={'id': 'foo', 'description': 'bar'})
 
-        with self.assertRaisesRegexp(ValueError, '2nd.*quality scores'):
+        with six.assertRaisesRegex(self, ValueError, '2nd.*quality scores'):
             _generator_to_fastq(gen(), StringIO(), variant='illumina1.8')
 
 

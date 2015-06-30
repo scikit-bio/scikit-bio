@@ -15,79 +15,6 @@ import decorator
 from ._exception import OverrideError
 
 
-# Adapted from http://stackoverflow.com/a/8313042/579416
-def overrides(interface_class):
-    """Decorator for class-level members.
-
-    Used to indicate that a member is being overridden from a specific parent
-    class. If the member does not have a docstring, it will pull one from the
-    parent class. When chaining decorators, this should be first as it is
-    relatively nondestructive.
-
-    Parameters
-    ----------
-    interface_class : class
-        The class which has a member overridden by the decorated member.
-
-    Returns
-    -------
-    function
-        The function is not changed or replaced.
-
-    Raises
-    ------
-    OverrideError
-        If the `interface_class` does not possess a member of the same name
-        as the decorated member.
-
-    """
-    def overrider(method):
-        if method.__name__ not in dir(interface_class):
-            raise OverrideError("%r is not present in parent class: %r." %
-                                (method.__name__, interface_class.__name__))
-        if method.__doc__ is None:
-            method.__doc__ = getattr(interface_class, method.__name__).__doc__
-        return method
-    return overrider
-
-
-class classproperty(property):
-    """Decorator for class-level properties.
-
-    Supports read access only. The property will be read-only within an
-    instance. However, the property can always be redefined on the class, since
-    Python classes are mutable.
-
-    Parameters
-    ----------
-    func : function
-        Method to make a class property.
-
-    Returns
-    -------
-    property
-        Decorated method.
-
-    Raises
-    ------
-    AttributeError
-        If the property is set on an instance.
-
-    """
-    def __init__(self, func):
-        name = func.__name__
-        doc = func.__doc__
-        super(classproperty, self).__init__(classmethod(func))
-        self.__name__ = name
-        self.__doc__ = doc
-
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
-
-    def __set__(self, obj, value):
-        raise AttributeError("can't set attribute")
-
-
 class _state_decorator(object):
     """ Base class for decorators of all public functionality.
     """
@@ -325,7 +252,7 @@ class deprecated(_state_decorator):
 
         def wrapped_f(*args, **kwargs):
             warnings.warn('%s is deprecated as of scikit-bio version %s, and '
-                          ' will be removed in version %s. %s' %
+                          'will be removed in version %s. %s' %
                           (func.__name__, self.as_of, self.until, self.reason),
                           DeprecationWarning)
             # args[0] is the function being wrapped when this is called
@@ -333,3 +260,80 @@ class deprecated(_state_decorator):
             return func(*args[1:], **kwargs)
 
         return decorator.decorator(wrapped_f, func)
+
+
+# Adapted from http://stackoverflow.com/a/8313042/579416
+@experimental(as_of="0.4.0")
+def overrides(interface_class):
+    """Decorator for class-level members.
+
+    Used to indicate that a member is being overridden from a specific parent
+    class. If the member does not have a docstring, it will pull one from the
+    parent class. When chaining decorators, this should be first as it is
+    relatively nondestructive.
+
+    Parameters
+    ----------
+    interface_class : class
+        The class which has a member overridden by the decorated member.
+
+    Returns
+    -------
+    function
+        The function is not changed or replaced.
+
+    Raises
+    ------
+    OverrideError
+        If the `interface_class` does not possess a member of the same name
+        as the decorated member.
+
+    """
+    def overrider(method):
+        if method.__name__ not in dir(interface_class):
+            raise OverrideError("%r is not present in parent class: %r." %
+                                (method.__name__, interface_class.__name__))
+        if method.__doc__ is None:
+            method.__doc__ = getattr(interface_class, method.__name__).__doc__
+        return method
+    return overrider
+
+
+class classproperty(property):
+    """Decorator for class-level properties.
+
+    Supports read access only. The property will be read-only within an
+    instance. However, the property can always be redefined on the class, since
+    Python classes are mutable.
+
+    Parameters
+    ----------
+    func : function
+        Method to make a class property.
+
+    Returns
+    -------
+    property
+        Decorated method.
+
+    Raises
+    ------
+    AttributeError
+        If the property is set on an instance.
+
+    """
+    @experimental(as_of="0.4.0")
+    def __init__(self, func):
+        name = func.__name__
+        doc = func.__doc__
+        super(classproperty, self).__init__(classmethod(func))
+        self.__name__ = name
+        self.__doc__ = doc
+
+    @experimental(as_of="0.4.0")
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+    @experimental(as_of="0.4.0")
+    def __set__(self, obj, value):
+        raise AttributeError("can't set attribute")

@@ -6,8 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import re
+from __future__ import absolute_import, division, print_function
 
+import re
 from collections import defaultdict
 
 from skbio._base import SkbioObject
@@ -239,7 +240,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : NucleotideSequence
+        nucleotide_sequence : DNA, RNA
             sequence to be translated
         start : int, optional
             position to begin translation
@@ -265,15 +266,23 @@ class GeneticCode(SkbioObject):
         >>> from skbio.sequence import GeneticCode
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
-        >>> print(sgc.translate('AUGCAUGACUUUUGA', 1))
-        CMTF
+        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+        -----------------------------
+        0 CMTF
 
         """
         if len(nucleotide_sequence) == 0:
             return Protein('')
         if start + 1 > len(nucleotide_sequence):
             raise ValueError("Translation starts after end of"
-                             "NucleotideSequence")
+                             "nucleotide sequence")
 
         translation = []
         for i in range(start, len(nucleotide_sequence) - 2, 3):
@@ -287,7 +296,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : str, NucleotideSequence
+        nucleotide_sequence : str, DNA, RNA
             sequence to be scanned for stop codons
         start : int, optional
             position where the search begins.
@@ -320,7 +329,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : NucleotideSequence
+        nucleotide_sequence : DNA, RNA
             sequence to be translated
 
         Returns
@@ -338,14 +347,14 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
         ...                   'RRVVVVAAAADDEEGGGG')
         >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> for e in results: print(e)
+        >>> for e in results:
+        ...     print(e)
         MLT*
         C*HK
         ANI
         FMLA
         LC*H
         YVS
-
 
         """
         rc_nucleotide_sequence = nucleotide_sequence.reverse_complement()

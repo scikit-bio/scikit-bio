@@ -349,7 +349,7 @@ class TestNewick(unittest.TestCase):
         tree = _newick_to_tree_node(fh, convert_underscores=False)
         fh2 = StringIO()
         _tree_node_to_newick(tree, fh2)
-        self.assertEquals(fh2.getvalue(), "('_':0.1,'_a','_b')'__';\n")
+        self.assertEqual(fh2.getvalue(), "('_':0.1,'_a','_b')'__';\n")
         fh2.close()
         fh.close()
 

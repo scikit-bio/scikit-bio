@@ -342,11 +342,16 @@ the correct file format for us!
 
 Let's inspect the type of sequences stored in the ``Alignment``:
 
->>> aln[0] # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-         has_positional_metadata=False)
->>> aln[0].metadata
-{u'id': u'seq1', u'description': u'Turkey'}
+>>> aln[0]
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Turkey'
+    u'id': u'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
@@ -354,8 +359,18 @@ change the type of sequence via the ``constructor`` parameter:
 >>> from skbio import DNA
 >>> aln = Alignment.read(fl, constructor=DNA)
 >>> aln[0] # doctest: +NORMALIZE_WHITESPACE
-DNA('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-    has_positional_metadata=False)
+DNA
+------------------------------------------------
+Metadata:
+    u'description': u'Turkey'
+    u'id': u'seq1'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: True
+    has non-degenerates: True
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 We now have an ``Alignment`` of ``DNA`` objects instead of
 ``Sequence`` objects.
@@ -389,40 +404,105 @@ use the generator-based reader to process a single sequence at a time in a
 
 >>> import skbio.io
 >>> for seq in skbio.io.read(fl, format='fasta'):
-...     print(seq[0:6], len(seq), seq.metadata['id'],
-...           seq.metadata['description'])
-AAGCTN 42 seq1 Turkey
-AAGCCT 42 seq2 Salmo gair
-ACCGGT 42 seq3 H. Sapiens
-AAACCC 42 seq4 Chimp
-AAACCC 42 seq5 Gorilla
+...     seq
+...     print('')
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Turkey'
+    u'id': u'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Salmo gair'
+    u'id': u'seq2'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCCTTGGC AGTGCAGGGT GAGCCGTGGC CGGGCACGGT AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'H. Sapiens'
+    u'id': u'seq3'
+Stats:
+    length: 42
+------------------------------------------------
+0 ACCGGTTGGC CGTTCAGGGT ACAGGTTGGC CGTTCAGGGT AA
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Chimp'
+    u'id': u'seq4'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGTTACGCTT AAACCGAGGC CGGGACACTC AT
+<BLANKLINE>
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Gorilla'
+    u'id': u'seq5'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
+<BLANKLINE>
 
 A single sequence can also be read into a ``Sequence`` (or subclass):
 
 >>> from skbio import Sequence
 >>> seq = Sequence.read(fl)
->>> seq # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAGCTN ... GGGTAT', length=42, has_metadata=True,
-         has_positional_metadata=False)
+>>> seq
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Turkey'
+    u'id': u'seq1'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
 >>> seq = Sequence.read(fl, seq_num=5)
->>> seq # doctest: +NORMALIZE_WHITESPACE
-Sequence('AAACCC ... GCTTAA', length=42, has_metadata=True,
-         has_positional_metadata=False)
->>> seq.metadata
-{u'id': u'seq5', u'description': u'Gorilla'}
+>>> seq
+Sequence
+------------------------------------------------
+Metadata:
+    u'description': u'Gorilla'
+    u'id': u'seq5'
+Stats:
+    length: 42
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
 We can use the same API to read the fifth sequence into a ``DNA``:
 
 >>> dna_seq = DNA.read(fl, seq_num=5)
->>> dna_seq # doctest: +NORMALIZE_WHITESPACE
-DNA('AAACCC ... GCTTAA', length=42, has_metadata=True,
-    has_positional_metadata=False)
->>> dna_seq.metadata
-{u'id': u'seq5', u'description': u'Gorilla'}
+>>> dna_seq
+DNA
+------------------------------------------------
+Metadata:
+    u'description': u'Gorilla'
+    u'id': u'seq5'
+Stats:
+    length: 42
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+------------------------------------------------
+0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
 Individual sequence objects can also be written in FASTA format:
 
@@ -467,14 +547,36 @@ To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
 >>> for seq in skbio.io.read(fasta_fl, qual=qual_fl, format='fasta'):
-...     print(seq[0:7], len(seq), seq.metadata['id'],
-...           seq.metadata['description'],
-...           seq.positional_metadata['quality'].values)
-CGATGTC 7 seq1 db-accession-149855 [ 40  39  39   4  50   1 100]
-CATCG 5 seq2 db-accession-34989 [ 3  3 10 42 80]
+...     seq
+...     print('')
+Sequence
+------------------------------------------
+Metadata:
+    u'description': u'db-accession-149855'
+    u'id': u'seq1'
+Positional metadata:
+    u'quality': <dtype: int64>
+Stats:
+    length: 7
+------------------------------------------
+0 CGATGTC
+<BLANKLINE>
+Sequence
+-----------------------------------------
+Metadata:
+    u'description': u'db-accession-34989'
+    u'id': u'seq2'
+Positional metadata:
+    u'quality': <dtype: int64>
+Stats:
+    length: 5
+-----------------------------------------
+0 CATCG
+<BLANKLINE>
 
-Note that the sequence objects have quality scores since we provided a QUAL
-file. The other FASTA readers operate in a similar manner.
+Note that the sequence objects have quality scores stored as positional
+metadata since we provided a QUAL file. The other FASTA readers operate in a
+similar manner.
 
 Now let's load the sequences and their quality scores into a
 ``SequenceCollection``:
@@ -537,12 +639,13 @@ import textwrap
 
 import numpy as np
 
-from skbio.io import (create_format, FASTAFormatError, QUALFormatError)
+from skbio.io import create_format, FASTAFormatError, QUALFormatError
 from skbio.io.registry import FileSentinel
-from skbio.io.format._base import (_chunk_str, _get_nth_sequence,
-                            _parse_fasta_like_header,
-                            _format_fasta_like_records, _line_generator,
-                            _too_many_blanks)
+from skbio.io.format._base import (_get_nth_sequence,
+                                   _parse_fasta_like_header,
+                                   _format_fasta_like_records, _line_generator,
+                                   _too_many_blanks)
+from skbio.util._misc import chunk_str
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
@@ -703,7 +806,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
         qual is not None, lowercase)
     for header, seq_str, qual_scores in formatted_records:
         if max_width is not None:
-            seq_str = _chunk_str(seq_str, max_width, '\n')
+            seq_str = chunk_str(seq_str, max_width, '\n')
 
         fh.write('>%s\n%s\n' % (header, seq_str))
 

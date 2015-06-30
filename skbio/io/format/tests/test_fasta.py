@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
+import six
 
 from io import StringIO
 from unittest import TestCase, main
@@ -441,7 +442,7 @@ class ReaderTests(TestCase):
 
     def test_fasta_to_generator_invalid_files(self):
         for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
-            with self.assertRaisesRegexp(error_type, error_msg_regex):
+            with six.assertRaisesRegex(self, error_type, error_msg_regex):
                 list(_fasta_to_generator(fp, **kwargs))
 
     # light testing of fasta -> object readers to ensure interface is present
@@ -468,9 +469,9 @@ class ReaderTests(TestCase):
 
             # empty file
             empty_fp = get_data_path('empty')
-            with self.assertRaisesRegexp(ValueError, '1st sequence'):
+            with six.assertRaisesRegex(self, ValueError, '1st sequence'):
                 reader_fn(empty_fp)
-            with self.assertRaisesRegexp(ValueError, '1st sequence'):
+            with six.assertRaisesRegex(self, ValueError, '1st sequence'):
                 reader_fn(empty_fp, qual=empty_fp)
 
             # the sequences in the following files don't necessarily make sense
@@ -560,17 +561,19 @@ class ReaderTests(TestCase):
                     self.assertEqual(obs, exp)
 
                 # seq_num too large
-                with self.assertRaisesRegexp(ValueError, '8th sequence'):
+                with six.assertRaisesRegex(self, ValueError, '8th sequence'):
                     reader_fn(fasta_fp, seq_num=8)
                 for qual_fp in qual_fps:
-                    with self.assertRaisesRegexp(ValueError, '8th sequence'):
+                    with six.assertRaisesRegex(self, ValueError,
+                                               '8th sequence'):
                         reader_fn(fasta_fp, seq_num=8, qual=qual_fp)
 
                 # seq_num too small
-                with self.assertRaisesRegexp(ValueError, '`seq_num`=0'):
+                with six.assertRaisesRegex(self, ValueError, '`seq_num`=0'):
                     reader_fn(fasta_fp, seq_num=0)
                 for qual_fp in qual_fps:
-                    with self.assertRaisesRegexp(ValueError, '`seq_num`=0'):
+                    with six.assertRaisesRegex(self, ValueError,
+                                               '`seq_num`=0'):
                         reader_fn(fasta_fp, seq_num=0, qual=qual_fp)
 
     def test_fasta_to_sequence_collection_and_alignment(self):
@@ -777,7 +780,6 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_no_qual(self):
         # test writing standalone fasta (i.e., without a qual file)
         for obj, kwargs, fp, _ in self.objs_fps:
-            print(fp)
             fh = StringIO()
             _generator_to_fasta(obj, fh, **kwargs)
             obs = fh.getvalue()
@@ -823,17 +825,17 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_invalid_input(self):
         for obj, kwargs, error_type, error_msg_regexp in self.invalid_objs:
             fh = StringIO()
-            with self.assertRaisesRegexp(error_type, error_msg_regexp):
+            with six.assertRaisesRegex(self, error_type, error_msg_regexp):
                 _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 
     def test_generator_to_fasta_sequence_lowercase_exception(self):
         seq = Sequence('ACgt', metadata={'id': ''})
         fh = StringIO()
-        with self.assertRaisesRegexp(AttributeError,
-                                     "lowercase specified but class Sequence "
-                                     "does not support lowercase "
-                                     "functionality"):
+        with six.assertRaisesRegex(self, AttributeError,
+                                   "lowercase specified but class Sequence "
+                                   "does not support lowercase "
+                                   "functionality"):
             _generator_to_fasta(SequenceCollection([seq]), fh,
                                 lowercase='introns')
 
@@ -941,19 +943,19 @@ class WriterTests(TestCase):
             self.assertEqual(obs_qual, exp_qual)
 
             fh2 = StringIO()
-            with self.assertRaisesRegexp(AttributeError,
-                                         "lowercase specified but class "
-                                         "Sequence does not support lowercase "
-                                         "functionality"):
+            with six.assertRaisesRegex(self, AttributeError,
+                                       "lowercase specified but class "
+                                       "Sequence does not support lowercase "
+                                       "functionality"):
                 fn(obj, fh2, lowercase='introns')
             fh2.close()
 
             fasta_fh2 = StringIO()
             qual_fh2 = StringIO()
-            with self.assertRaisesRegexp(AttributeError,
-                                         "lowercase specified but class "
-                                         "Sequence does not support lowercase "
-                                         "functionality"):
+            with six.assertRaisesRegex(self, AttributeError,
+                                       "lowercase specified but class "
+                                       "Sequence does not support lowercase "
+                                       "functionality"):
                 fn(obj, fasta_fh2, id_whitespace_replacement='*',
                    description_newline_replacement='+', max_width=3,
                    qual=qual_fh2, lowercase='introns')

@@ -34,27 +34,53 @@ class TestQSeqBase(unittest.TestCase):
                 {'variant': 'sanger'},
                 {'phred_offset': 33},
             ], [
-                ('sanger_1:3:34:-30:30#0/2',
-                 'ACGTACGTACGTACGTACGTACGTACTTTTTTTTTTACGTACGTACGTACGT'
-                 'ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC', [
-                     26, 26, 29, 31, 33, 34, 36, 37, 38, 39, 41, 42,
-                     43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
-                     55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
-                     67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
-                     79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
-                     91, 92, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
-                     93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
-                     93, 93, 93, 93, 93, 93, 93, 93, 93, 93])
+                {'id': 'sanger_1:3:34:-30:30#0/2',
+                 'sequence': 'ACGTACGTACGTACGTACGTACGTACTTTTTTTTTTACGTACGTACG'
+                             'TACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC',
+                 'quality': [26, 26, 29, 31, 33, 34, 36, 37, 38, 39, 41, 42,
+                             43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                             55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+                             67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
+                             79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+                             91, 92, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
+                             93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93, 93,
+                             93, 93, 93, 93, 93, 93, 93, 93, 93, 93],
+                 'machine_name': 'sanger',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 34,
+                 'x': -30,
+                 'y': 30,
+                 'index': 0,
+                 'read_number': 2}
             ]),
 
             (get_data_path('qseq_multi_seq_illumina1.3'), [
                 {'variant': 'illumina1.3'},
                 {'phred_offset': 64}
             ], [
-                ('illumina_1:3:34:-30:30#0/1', 'ACG....ACGTAC', [
-                    50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8]),
-                ('illumina_1:3:35:-30:30#0/2', 'ACGTA.AATAAAC', [
-                    39, 37, 20, 33, 1, 33, 38, 40, 55, 49, 1, 1, 38])
+                {'id': 'illumina_1:3:34:-30:30#0/1',
+                 'sequence': 'ACG....ACGTAC',
+                 'quality': [50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 34,
+                 'x': -30,
+                 'y': 30,
+                 'index': 0,
+                 'read_number': 1},
+                {'id': 'illumina_1:3:35:-30:30#0/2',
+                 'sequence': 'ACGTA.AATAAAC',
+                 'quality': [39, 37, 20, 33, 1, 33, 38, 40, 55, 49, 1, 1, 38],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 35,
+                 'x': -30,
+                 'y': 30,
+                 'index': 0,
+                 'read_number': 2}
             ]),
 
             (get_data_path('qseq_multi_seq_illumina1.3'), [
@@ -65,14 +91,51 @@ class TestQSeqBase(unittest.TestCase):
                 {'phred_offset': 64, 'filter': False, 'seq_num': 4,
                  'constructor': DNA},
             ], [
-                ('illumina_1:3:34:-30:30#0/1', 'ACG....ACGTAC', [
-                    50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8]),
-                ('illumina_1:3:34:30:-30#0/1', 'CGGGCATTGCA', [
-                    3, 7, 7, 7, 3, 33, 51, 36, 7, 3, 1]),
-                ('illumina_1:3:35:-30:30#0/2', 'ACGTA.AATAAAC', [
-                    39, 37, 20, 33, 1, 33, 38, 40, 55, 49, 1, 1, 38]),
-                ('illumina_1:3:35:30:-30#0/3', 'CATTTAGGA.TGCA', [
-                    52, 42, 38, 44, 43, 1, 6, 46, 43, 11, 39, 40, 54, 13])
+                {'id': 'illumina_1:3:34:-30:30#0/1',
+                 'sequence': 'ACG....ACGTAC',
+                 'quality': [50, 53, 2, 2, 2, 2, 50, 2, 3, 5, 6, 7, 8],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 34,
+                 'x': -30,
+                 'y': 30,
+                 'index': 0,
+                 'read_number': 1},
+                {'id': 'illumina_1:3:34:30:-30#0/1',
+                 'sequence': 'CGGGCATTGCA',
+                 'quality': [3, 7, 7, 7, 3, 33, 51, 36, 7, 3, 1],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 34,
+                 'x': 30,
+                 'y': -30,
+                 'index': 0,
+                 'read_number': 1},
+                {'id': 'illumina_1:3:35:-30:30#0/2',
+                 'sequence': 'ACGTA.AATAAAC',
+                 'quality': [39, 37, 20, 33, 1, 33, 38, 40, 55, 49, 1, 1, 38],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 35,
+                 'x': -30,
+                 'y': 30,
+                 'index': 0,
+                 'read_number': 2},
+                {'id': 'illumina_1:3:35:30:-30#0/3',
+                 'sequence': 'CATTTAGGA.TGCA',
+                 'quality': [52, 42, 38, 44, 43, 1, 6, 46, 43, 11, 39, 40, 54,
+                             13],
+                 'machine_name': 'illumina',
+                 'run_number': 1,
+                 'lane_number': 3,
+                 'tile_number': 35,
+                 'x': 30,
+                 'y': -30,
+                 'index': 0,
+                 'read_number': 3}
             ])
         ]
 
@@ -205,10 +268,18 @@ class TestQSeqToGenerator(TestQSeqBase):
                 constructor = kwarg.get('constructor', Sequence)
                 expected = [
                     constructor(
-                        c[1],
-                        metadata={'id': c[0]},
+                        c['sequence'],
+                        metadata={'id': c['id'],
+                                  'machine_name': c['machine_name'],
+                                  'run_number': c['run_number'],
+                                  'lane_number': c['lane_number'],
+                                  'tile_number': c['tile_number'],
+                                  'x': c['x'],
+                                  'y': c['y'],
+                                  'index': c['index'],
+                                  'read_number': c['read_number']},
                         positional_metadata={
-                            'quality': np.array(c[2], dtype=np.uint8)})
+                            'quality': np.array(c['quality'], dtype=np.uint8)})
                     for c in components]
 
                 observed = list(_qseq_to_generator(valid, **kwarg))
@@ -241,10 +312,18 @@ class TestQSeqToSequenceCollection(TestQSeqBase):
                 constructor = kwarg.get('constructor', Sequence)
                 expected = SequenceCollection([
                     constructor(
-                        c[1],
-                        metadata={'id': c[0]},
+                        c['sequence'],
+                        metadata={'id': c['id'],
+                                  'machine_name': c['machine_name'],
+                                  'run_number': c['run_number'],
+                                  'lane_number': c['lane_number'],
+                                  'tile_number': c['tile_number'],
+                                  'x': c['x'],
+                                  'y': c['y'],
+                                  'index': c['index'],
+                                  'read_number': c['read_number']},
                         positional_metadata={
-                            'quality': np.array(c[2], dtype=np.uint8)})
+                            'quality': np.array(c['quality'], dtype=np.uint8)})
                     for c in components])
 
                 observed = _qseq_to_sequence_collection(valid, **kwarg)
@@ -279,10 +358,18 @@ class TestQSeqToSequences(TestQSeqBase):
                     seq_num = observed_kwargs.get('seq_num', 1)
                     c = components[seq_num - 1]
                     expected = constructor(
-                        c[1],
-                        metadata={'id': c[0]},
+                        c['sequence'],
+                        metadata={'id': c['id'],
+                                  'machine_name': c['machine_name'],
+                                  'run_number': c['run_number'],
+                                  'lane_number': c['lane_number'],
+                                  'tile_number': c['tile_number'],
+                                  'x': c['x'],
+                                  'y': c['y'],
+                                  'index': c['index'],
+                                  'read_number': c['read_number']},
                         positional_metadata={
-                            'quality': np.array(c[2], np.uint8)},
+                            'quality': np.array(c['quality'], np.uint8)},
                         **expected_kwargs)
 
                     observed = read(valid, into=constructor,

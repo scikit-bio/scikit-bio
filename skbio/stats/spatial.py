@@ -28,7 +28,11 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from skbio.util._decorator import deprecated
 
+
+@deprecated(as_of="0.4.0", until="0.4.1",
+            reason="You should now use scipy.spatial.procrustes.")
 def procrustes(data1, data2):
     r"""Procrustes analysis, a similarity test for two data sets
 
