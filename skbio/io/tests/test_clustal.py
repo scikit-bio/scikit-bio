@@ -21,8 +21,8 @@ from skbio.io import ClustalFormatError
 
 class ClustalHelperTests(TestCase):
     def test_label_line_parser(self):
-        self.assertEquals(_label_line_parser(StringIO('abc\tucag')),
-                          ({"abc": ["ucag"]}, ['abc']))
+        self.assertEqual(_label_line_parser(StringIO('abc\tucag')),
+                         ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
             _label_line_parser(StringIO('abctucag'))
@@ -227,7 +227,7 @@ UGCUGCAUCA---------------- 33
             testfile.close()
             testfile = open(fname, 'r')
             result_after = _clustal_to_alignment(testfile)
-            self.assertEquals(result_before, result_after)
+            self.assertEqual(result_before, result_after)
         os.remove(fname)
 
     def test_invalid_alignment_to_clustal_and_clustal_to_alignment(self):

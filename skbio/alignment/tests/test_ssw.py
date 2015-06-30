@@ -601,8 +601,8 @@ class TestAlignStripedSmithWaterman(TestSSW):
         align2 = local_pairwise_align_ssw(query_sequence, target_sequence,
                                           constructor=DNA)
 
-        self.assertEquals(type(align1[0]), Sequence)
-        self.assertEquals(type(align2[0]), DNA)
+        self.assertEqual(type(align1[0]), Sequence)
+        self.assertEqual(type(align2[0]), DNA)
 
 
 class TestAlignmentStructure(TestSSW):

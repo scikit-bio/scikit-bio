@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import six
+
 from unittest import TestCase, main
 from collections import Counter, defaultdict
 
@@ -52,9 +54,9 @@ class SequenceCollectionTests(TestCase):
 
     def test_init_fail_no_id(self):
         seq = Sequence('ACGTACGT')
-        with self.assertRaisesRegexp(SequenceCollectionError,
-                                     "'id' must be included in the sequence "
-                                     "metadata"):
+        with six.assertRaisesRegex(self, SequenceCollectionError,
+                                   "'id' must be included in the sequence "
+                                   "metadata"):
             SequenceCollection([seq])
 
     def test_contains(self):
@@ -358,26 +360,27 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(obs_id_map, exp_id_map)
 
     def test_update_ids_invalid_parameter_combos(self):
-        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and func'):
+        with six.assertRaisesRegex(self, SequenceCollectionError,
+                                   'ids and func'):
             self.s1.update_ids(func=lambda e: e, ids=['foo', 'bar'])
 
-        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'prefix'):
             self.s1.update_ids(ids=['foo', 'bar'], prefix='abc')
 
-        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'prefix'):
             self.s1.update_ids(func=lambda e: e, prefix='abc')
 
     def test_update_ids_invalid_ids(self):
         # incorrect number of new ids
-        with self.assertRaisesRegexp(SequenceCollectionError, '3 != 2'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, '3 != 2'):
             self.s1.update_ids(ids=['foo', 'bar', 'baz'])
-        with self.assertRaisesRegexp(SequenceCollectionError, '4 != 2'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, '4 != 2'):
             self.s1.update_ids(func=lambda e: ['foo', 'bar', 'baz', 'abc'])
 
         # duplicates
-        with self.assertRaisesRegexp(SequenceCollectionError, 'foo'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'foo'):
             self.s2.update_ids(ids=['foo', 'bar', 'foo'])
-        with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'bar'):
             self.s2.update_ids(func=lambda e: ['foo', 'bar', 'bar'])
 
     def test_is_empty(self):
