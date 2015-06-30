@@ -1207,17 +1207,17 @@ class TestSequence(TestCase):
         self.assertFalse(Sequence(""))
         self.assertFalse(Sequence("",
                                   metadata={'id': 'foo'},
-                                  positional_metadata={'quality':range(0)}))
+                                  positional_metadata={'quality': range(0)}))
         # single
         self.assertTrue(Sequence("A"))
         self.assertTrue(Sequence("A",
                                  metadata={'id': 'foo'},
-                                 positional_metadata={'quality':range(1)}))
+                                 positional_metadata={'quality': range(1)}))
         # multi
         self.assertTrue(Sequence("ACGT"))
         self.assertTrue(Sequence("ACGT",
                                  metadata={'id': 'foo'},
-                                 positional_metadata={'quality':range(4)}))
+                                 positional_metadata={'quality': range(4)}))
 
     def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
