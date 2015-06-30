@@ -16,7 +16,8 @@ from six import string_types
 
 from skbio.alignment import Alignment
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
-from skbio.sequence import Sequence, IUPACSequence, Protein
+from skbio.sequence import Sequence, Protein
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 

@@ -14,24 +14,16 @@ from abc import ABCMeta, abstractproperty
 import numpy as np
 
 from skbio.util import classproperty
-from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
+from ._iupac_sequence import _motifs as parent_motifs
 
 
-class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
-    """Abstract base class for storing an IUPAC nucleotide sequence.
+class NucleotideMixin(with_metaclass(ABCMeta, object)):
+    """Mixin for adding funtionality for working with sequences of nucleotides.
 
     This is an abstract base class (ABC) that cannot be instantiated.
 
     Attributes
     ----------
-    values
-    metadata
-    positional_metadata
-    alphabet
-    gap_chars
-    nondegenerate_chars
-    degenerate_chars
-    degenerate_map
     complement_map
 
     See Also
@@ -86,7 +78,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Returns
         -------
-        NucleotideSequence
+        NucleotideMixin
             The (reverse) complement of the nucleotide sequence. The type and
             metadata of the result will be the same as the nucleotide
             sequence. If `reverse` is ``True``, positional metadata
@@ -153,7 +145,7 @@ class NucleotideSequence(with_metaclass(ABCMeta, IUPACSequence)):
 
         Returns
         -------
-        NucleotideSequence
+        NucleotideMixin
             The reverse complement of the nucleotide sequence. The type and
             metadata of the result will be the same as the nucleotide
             sequence. If positional metadata is present, it will be reversed.
@@ -254,6 +246,3 @@ def _motif_pyrimidine_run(sequence, min_length, ignore):
     """Identifies pyrimidine runs"""
     return sequence.find_with_regex("([CTUY]{%d,})" % min_length,
                                     ignore=ignore)
-
-# Leave this at the bottom
-_motifs.interpolate(NucleotideSequence, "find_motifs")

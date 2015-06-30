@@ -240,7 +240,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : NucleotideSequence
+        nucleotide_sequence : DNA, RNA
             sequence to be translated
         start : int, optional
             position to begin translation
@@ -282,7 +282,7 @@ class GeneticCode(SkbioObject):
             return Protein('')
         if start + 1 > len(nucleotide_sequence):
             raise ValueError("Translation starts after end of"
-                             "NucleotideSequence")
+                             "nucleotide sequence")
 
         translation = []
         for i in range(start, len(nucleotide_sequence) - 2, 3):
@@ -296,7 +296,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : str, NucleotideSequence
+        nucleotide_sequence : str, DNA, RNA
             sequence to be scanned for stop codons
         start : int, optional
             position where the search begins.
@@ -329,7 +329,7 @@ class GeneticCode(SkbioObject):
 
         Parameters
         ----------
-        nucleotide_sequence : NucleotideSequence
+        nucleotide_sequence : DNA, RNA
             sequence to be translated
 
         Returns
