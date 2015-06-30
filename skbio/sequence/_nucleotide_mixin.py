@@ -230,6 +230,69 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             # underlying sequence data
             return self.reverse_complement()._string == other._string
 
+    def gc_content(self):
+        """Calculate  the ratio of G's and C's in the sequence
+
+        Returns
+        -------
+        float
+            Ratio of G's and C's in the sequence.
+
+        See Also
+        --------
+        gc_frequency
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> DNA('ACGT').gc_content()
+        0.5
+        >>> DNA('ACGTACGT').gc_content()
+        0.5
+        >>> DNA('ACTTAGTT').gc_content()
+        0.25
+
+        """
+        return self.gc_frequency(relative=True)
+
+    def gc_frequency(self, relative=False):
+        """Calculate frequency of G's and C's in the sequence.
+
+        This calculates the minimum GC frequency, which corresponds to IUPAC
+        characters G, C, and S (which stands for G or C).
+
+        Parameters
+        ----------
+        relative : bool
+            If False return GC count. If True return GC content, which is the
+            ratio of G's and C's in the sequence.
+
+        Returns
+        -------
+        int or float
+            Either count of GC occurrances or ratio, depending on input.
+
+        See Also
+        --------
+        gc_content
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> DNA('ACGT').gc_frequency()
+        2
+        >>> DNA('ACGT').gc_frequency(relative=True)
+        0.5
+
+        """
+
+        counts = np.bincount(self._bytes,
+                             minlength=self._number_of_extended_ascii_codes)
+        gc_ord = (ord(y) for y in 'CGS')
+        gc = sum(counts[x] for x in gc_ord)
+        if relative and len(self) != 0:
+            gc /= len(self)
+        return gc
 
 _motifs = parent_motifs.copy()
 

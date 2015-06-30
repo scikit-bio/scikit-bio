@@ -317,5 +317,21 @@ class TestNucelotideSequence(unittest.TestCase):
                                                   ignore=seq.gaps())),
                              [slice(4, 9)])
 
+    def test_gc_frequency_and_gc_content(self):
+        universal_sets = (('', 0, 0.0), ('ADDDH', 0, 0.0), ('ACGA', 2, 0.5),
+                          ('ACGS', 3, 0.75), ('AAAAAAAG', 1, 0.125),
+                          ('CCC', 3, 1.0), ('GGG', 3, 1.0), ('SSS', 3, 1.0),
+                          ('CGS', 3, 1.0))
+        dna = (DNA, universal_sets + (('ATMRWYKVHDBN.-', 0, 0.0),))
+        rna = (RNA, universal_sets + (('AUMRWYKVHDBN.-', 0, 0.0),))
+        for constructor, current_set in (dna, rna):
+            for seq_str, count, ratio in current_set:
+                seq = constructor(seq_str)
+                self.assertEqual(count, seq.gc_frequency())
+                self.assertEqual(count, seq.gc_frequency(relative=False))
+                self.assertEqual(ratio, seq.gc_frequency(relative=True))
+                self.assertEqual(ratio, seq.gc_content())
+
+
 if __name__ == "__main__":
     unittest.main()
