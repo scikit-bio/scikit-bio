@@ -279,10 +279,10 @@ import re
 import numpy as np
 
 from skbio.io import create_format, FASTQFormatError
-from skbio.io.format._base import (_decode_qual_to_phred, _encode_phred_to_qual,
-                            _get_nth_sequence, _parse_fasta_like_header,
-                            _format_fasta_like_records, _line_generator,
-                            _too_many_blanks)
+from skbio.io.format._base import (
+    _decode_qual_to_phred, _encode_phred_to_qual, _get_nth_sequence,
+    _parse_fasta_like_header, _format_fasta_like_records, _line_generator,
+    _too_many_blanks)
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
 

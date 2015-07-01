@@ -33,8 +33,9 @@ from __future__ import absolute_import, division, print_function
 
 from warnings import warn
 import types
-import copy
 import traceback
+import itertools
+import inspect
 from functools import wraps
 
 from future.builtins import zip
@@ -44,7 +45,6 @@ from . import (UnrecognizedFormatError, InvalidRegistrationError,
                FormatIdentificationWarning)
 from .util import resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
-import skbio.io
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -67,6 +67,24 @@ class IORegistry(object):
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
 
+    def create_format(self, *args, **kwargs):
+        """A simple factory for creating new file formats for scikit-bio
+
+        This will automatically register the format with the scikit-bio
+        registry.
+
+        All arguments are passed through to the Format constructor.
+
+        Returns
+        -------
+        Format
+            A new format that is registered with the scikit-bio registry.
+
+        """
+        format = Format(*args, **kwargs)
+        self.add_format(format)
+        return format
+
     def add_format(self, format_object):
         """Add a format to the registry.
 
@@ -78,11 +96,15 @@ class IORegistry(object):
         """
         # See comment in the constructor for an explanation for why this split
         # occurs.
-        # TODO: check for uniqueness
+        name = format_object.name
+        if name in self._binary_formats or name in self._text_formats:
+            raise DuplicateRegistrationError("A format with already exists"
+                                             " with that name: %s" % name)
+
         if format_object.is_binary_format:
-            self._binary_formats[format_object.name] = format_object
+            self._binary_formats[name] = format_object
         else:
-            self._text_formats[format_object.name] = format_object
+            self._text_formats[name] = format_object
 
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
@@ -310,8 +332,13 @@ class IORegistry(object):
         # perspective).
         if into is None:
             if format is None:
-                raise Exception()
-            return self._read_gen(file, format, into, verify, kwargs)
+                raise ValueError("`into` and `format` cannot both be None")
+            gen = self._read_gen(file, format, into, verify, kwargs)
+            # This is done so that any errors occur immediately instead of
+            # on the first call from __iter__
+            # eta-reduction is possible, but we want to the type to be
+            # GeneratorType
+            return (x for x in itertools.chain([next(gen)], gen))
         else:
             return self._read_ret(file, format, into, verify, kwargs)
 
@@ -336,9 +363,10 @@ class IORegistry(object):
                 yield next(generator)
 
     def _find_io_kwargs(self, kwargs):
-        return {k:kwargs[k] for k in _open_kwargs if k in kwargs}
+        return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
 
     def _init_reader(self, file, fmt, into, verify, kwargs, io_kwargs):
+        skwargs = {}
         if fmt is None:
             fmt, skwargs = self.sniff(file, **io_kwargs)
         elif verify:
@@ -351,19 +379,19 @@ class IORegistry(object):
                     warn("%r does not look like a %s file"
                          % (file, fmt), FormatIdentificationWarning)
 
-                for key in skwargs:
-                    if key not in kwargs:
-                        kwargs[key] = skwargs[key]
-                    elif kwargs[key] != skwargs[key]:
-                        warn('Best guess was: %s=%r, continuing with user'
-                             ' supplied: %r' % (key, skwargs[key],
-                                                kwargs[key]),
-                             ArgumentOverrideWarning)
+        for key in skwargs:
+            if key not in kwargs:
+                kwargs[key] = skwargs[key]
+            elif kwargs[key] != skwargs[key]:
+                warn('Best guess was: %s=%r, continuing with user'
+                     ' supplied: %r' % (key, skwargs[key],
+                                        kwargs[key]),
+                     ArgumentOverrideWarning)
 
         reader = self.get_reader(fmt, into)
         if reader is None:
             raise UnrecognizedFormatError(
-                "Cannot read %s from %r, no %s reader found." %
+                "Cannot read %r from %r, no %s reader found." %
                 (fmt, file, into.__name__ if into else 'generator'))
         return reader, kwargs
 
@@ -408,7 +436,6 @@ class IORegistry(object):
         writer(obj, into, **kwargs)
         return into
 
-
     def monkey_patch(self):
         """Monkey-patch `read` and `write` methods onto registered classes.
 
@@ -432,7 +459,6 @@ class IORegistry(object):
         for cls in writes:
             self._apply_write(cls)
 
-
     def _apply_read(registry, cls):
         """Add read method if any formats have a reader for `cls`."""
         read_formats = registry.list_read_formats(cls)
@@ -450,7 +476,6 @@ class IORegistry(object):
             }
             cls.read = read
 
-
     def _apply_write(registry, cls):
         """Add write method if any formats have a writer for `cls`."""
         write_formats = registry.list_write_formats(cls)
@@ -464,7 +489,6 @@ class IORegistry(object):
             def write(self, file, format=cls.default_write_format, **kwargs):
                 return registry.write(self, into=file, format=format, **kwargs)
 
-
             imports = registry._import_paths(write_formats)
             doc_list = registry._formats_for_docs(write_formats, imports)
             write.__doc__ = _write_docstring % {
@@ -476,13 +500,11 @@ class IORegistry(object):
 
             cls.write = write
 
-
     def _import_paths(self, formats):
         lines = []
         for fmt in formats:
             lines.append("skbio.io.format." + fmt)
         return lines
-
 
     def _formats_for_docs(self, formats, imports):
         lines = []
@@ -622,7 +644,7 @@ class Format(object):
         self._sniffer_function = None
         self._readers = {}
         self._writers = {}
-        self._monkey_patch = {'read':set(), 'write': set()}
+        self._monkey_patch = {'read': set(), 'write': set()}
 
     def sniffer(self, override=False):
         """Decorate a function to act as the sniffer for this format.
@@ -665,6 +687,14 @@ class Format(object):
         (False, {})
 
         """
+        if not type(override) is bool:
+            raise InvalidRegistrationError("`override` must be a bool not %r"
+                                           % override)
+
+        if not override and self._sniffer_function is not None:
+            raise DuplicateRegistrationError("A sniffer is already registered"
+                                             " to format: %s" % self._name)
+
         def decorator(sniffer):
             @wraps(sniffer)
             def wrapped_sniffer(file, encoding=self._encoding, errors='ignore',
@@ -741,10 +771,13 @@ class Format(object):
         [u'some content here!\\n']
 
         """
+        self._check_registration(cls)
+
         def decorator(reader_function):
             file_params = find_sentinels(reader_function, FileSentinel)
             # This split has to occur for the same reason as in IORegistry.read
             if cls is not None:
+
                 @wraps(reader_function)
                 def wrapped_reader(file, encoding=self._encoding,
                                    newline=self._newline, **kwargs):
@@ -756,6 +789,7 @@ class Format(object):
                         kwargs.update(zip(file_keys, fhs[:-1]))
                         return reader_function(fhs[-1], **kwargs)
             else:
+
                 @wraps(reader_function)
                 def wrapped_reader(file, encoding=self._encoding,
                                    newline=self._newline, **kwargs):
@@ -767,7 +801,7 @@ class Format(object):
                         while True:
                             yield next(generator)
 
-            self._add_reader(cls, wrapped_reader, monkey_patch)
+            self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader
         return decorator
 
@@ -825,8 +859,11 @@ class Format(object):
         [u'myformat2\\n', u'some content here!\\n']
 
         """
+        self._check_registration(cls)
+
         def decorator(writer_function):
             file_params = find_sentinels(writer_function, FileSentinel)
+
             @wraps(writer_function)
             def wrapped_writer(obj, file, encoding=self._encoding,
                                newline=self._newline, **kwargs):
@@ -836,9 +873,14 @@ class Format(object):
                     kwargs.update(zip(file_keys, fhs[:-1]))
                     writer_function(obj, fhs[-1], **kwargs)
 
-            self._add_writer(cls, wrapped_writer, monkey_patch)
+            self._add_writer(cls, wrapped_writer, monkey_patch, override)
             return wrapped_writer
         return decorator
+
+    def _check_registration(self, cls):
+        if cls is not None and not inspect.isclass(cls):
+            raise InvalidRegistrationError("`cls` must be a class or None, not"
+                                           " %r" % cls)
 
     def _setup_locals(self, file_params, file, encoding, newline, kwargs):
         self._validate_encoding(encoding)
@@ -878,12 +920,20 @@ class Format(object):
 
         return file_keys, files
 
-    def _add_writer(self, cls, writer, monkey_patch):
+    def _add_writer(self, cls, writer, monkey_patch, override):
+        if cls in self._writers and not override:
+            raise DuplicateRegistrationError("There is already a writer"
+                                             "registered to %s in format: %s"
+                                             % (cls, self._name))
         self._writers[cls] = writer
         if monkey_patch and cls is not None:
             self._monkey_patch['write'].add(cls)
 
-    def _add_reader(self, cls, reader, monkey_patch):
+    def _add_reader(self, cls, reader, monkey_patch, override):
+        if cls in self._readers and not override:
+            raise DuplicateRegistrationError("There is already a reader"
+                                             "registered to %s in format: %s"
+                                             % (cls, self._name))
         self._readers[cls] = reader
         if monkey_patch and cls is not None:
             self._monkey_patch['read'].add(cls)
@@ -893,20 +943,4 @@ io_registry = IORegistry()
 sniff = io_registry.sniff
 read = io_registry.read
 write = io_registry.write
-
-def create_format(*args, **kwargs):
-    """A simple factory for creating new file formats for scikit-bio
-
-    This will automatically register the format with the scikit-bio registry.
-
-    All arguments are passed through to the Format constructor.
-
-    Returns
-    -------
-    Format
-        A new format that is registered with the scikit-bio registry.
-
-    """
-    format = Format(*args, **kwargs)
-    io_registry.add_format(format)
-    return format
+create_format = io_registry.create_format

@@ -6,12 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import six
+from __future__ import absolute_import, division, print_function
 
 import io
-import traceback
 import tempfile
 import os
+
 
 def is_binary_file(file):
     return isinstance(file, (io.BufferedReader, io.BufferedWriter,
@@ -36,11 +36,12 @@ class SaneTextIOWrapper(io.TextIOWrapper):
         # because of this line in Python 2.7:
         # https://github.com/python/cpython/blob/2.7/Modules/_io/iobase.c#L221
         self._should_close_buffer = False
-        self.close()  # Actually close for Python 3 because it is an override.
-                      # We can't call super because Python 2 doesn't actually
-                      # have a `__del__` method for IOBase (hence this
-                      # workaround). Close is idempotent so it won't matter
-                      # that Python 2 will end up calling this twice
+        # Actually close for Python 3 because it is an override.
+        # We can't call super because Python 2 doesn't actually
+        # have a `__del__` method for IOBase (hence this
+        # workaround). Close is idempotent so it won't matter
+        # that Python 2 will end up calling this twice
+        self.close()
 
     def close(self):
         # We can't stop Python 2.7 from calling close in the deconstructor
@@ -54,6 +55,7 @@ class SaneTextIOWrapper(io.TextIOWrapper):
             finally:
                 if self._should_close_buffer:
                     self.buffer.close()
+
 
 class CompressedMixin(object):
     """Act as a bridge between worlds"""

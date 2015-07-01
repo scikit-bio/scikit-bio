@@ -8,30 +8,41 @@
 
 from __future__ import absolute_import, division, print_function
 
-from six import StringIO, BytesIO
-from requests import HTTPError
-
 import unittest
 import tempfile
+import shutil
 import io
 
 import skbio.io
-from skbio.io.registry import open_file, open_files
+from skbio.io.registry import open_file
 from skbio.util import get_data_path
-from skbio.util._decorator import overrides
 
-class ReadableTextSourceTests(object):
+
+class TextSourceTests(object):
+    pass
+
+
+class WritableTextSourceTests(TextSourceTests):
+    pass
+
+
+class ReadableTextSourceTests(TextSourceTests):
     def test_open(self):
         pass
 
     def test_with_open(self):
         pass
 
-class WritableBinarySourceTests(object):
+
+class BinarySourceTests(object):
     pass
 
-class ReadableBinarySourceTests(object):
 
+class WritableBinarySourceTests(BinarySourceTests):
+    pass
+
+
+class ReadableBinarySourceTests(BinarySourceTests):
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -51,13 +62,14 @@ class ReadableBinarySourceTests(object):
         self.assertTrue(result.closed)
         self.check_closed(file, True)
 
-    def check_open_file_state_contents(self, file, contents, is_binary, **kwargs):
+    def check_open_file_state_contents(self, file, contents, is_binary,
+                                       **kwargs):
         with open_file(file, **kwargs) as f:
             if is_binary:
                 self.assertIsInstance(f, (io.BufferedReader,
                                           io.BufferedRandom))
             else:
-                 self.assertIsInstance(f, io.TextIOBase)
+                self.assertIsInstance(f, io.TextIOBase)
             self.assertTrue(f.readable())
             self.assertEqual(f.read(), contents)
         self.assertEqual(f.closed, self.expected_close)
@@ -89,7 +101,7 @@ class ReadableBinarySourceTests(object):
 
     def check_open_file_gc_behaviour(self, file, **kwargs):
         def mangle(file):
-            with open_file(file, **kwargs) as _:
+            with open_file(file, **kwargs):
                 pass
 
         with open_file(file, encoding='binary') as f:
@@ -155,7 +167,6 @@ class ReadableBinarySourceTests(object):
     def test_open_binary(self):
         self.check_open_state_contents(self.read_file, self.binary_contents,
                                        True, mode='r', encoding='binary')
-
 
     def test_open_binary_compression_none(self):
         self.check_open_state_contents(self.read_file, self.binary_contents,
@@ -248,7 +259,7 @@ class ReadableBinarySourceTests(object):
                                             mode='r', encoding=self.encoding)
 
 
-class SourceTest(unittest.TestCase):
+class ReadableSourceTest(unittest.TestCase):
     def setUp(self):
         self.read_file = self.get_fileobj(get_data_path("example_file"))
         self.gzip_file = \
@@ -263,7 +274,7 @@ class SourceTest(unittest.TestCase):
 
         self.binary_contents = (b"This is some content\n"
                                 b"It occurs on more than one line\n")
-        self.decoded_contents = u'\u4f60\u597d\n' # Ni Hau
+        self.decoded_contents = u'\u4f60\u597d\n'  # Ni Hau
         self.compression = 'gzip'
         self.encoding = "big5"
 
@@ -279,26 +290,45 @@ class SourceTest(unittest.TestCase):
         if hasattr(f, 'close'):
             f.close()
 
-class TestReadFilepath(ReadableBinarySourceTests, SourceTest):
+
+class WritableSourceTest(unittest.TestCase):
+    def setUp(self):
+        self._dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self._dir)
+
+
+class TestReadFilepath(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = True
 
     def get_fileobj(self, path):
         return path
 
-class TestReadBytesIO(ReadableBinarySourceTests, SourceTest):
+
+class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = True
+
+    def _(self):
+        pass
+
+
+class TestReadBytesIO(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = False
 
     def get_fileobj(self, path):
         with io.open(path, mode='rb') as f:
             return io.BytesIO(f.read())
 
-class TestReadBufferedReader(ReadableBinarySourceTests, SourceTest):
+
+class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = False
 
     def get_fileobj(self, path):
         return io.open(path, mode='rb')
 
-class TestReadReadable(ReadableBinarySourceTests, SourceTest):
+
+class TestReadReadable(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = False
 
     def get_fileobj(self, path):

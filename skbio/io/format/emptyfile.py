@@ -34,6 +34,7 @@ from skbio.io import create_format
 
 emptyfile = create_format('<emptyfile>')
 
+
 @emptyfile.sniffer()
 def empty_file_sniffer(fh):
     for line in fh:

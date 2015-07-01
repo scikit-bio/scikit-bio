@@ -20,9 +20,6 @@ from skbio import (Sequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
 from skbio.alignment import (SequenceCollectionError, AlignmentError)
 
-from skbio.io._fileobject import TemporaryFile
-import io
-
 
 class SequenceCollectionTests(TestCase):
     def setUp(self):

@@ -9,8 +9,6 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
-from io import StringIO
-import six
 
 from collections import Counter, defaultdict
 

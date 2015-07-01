@@ -213,6 +213,7 @@ from skbio.util._misc import chunk_str
 
 phylip = create_format('phylip')
 
+
 @phylip.writer(Alignment)
 def _alignment_to_phylip(obj, fh):
 

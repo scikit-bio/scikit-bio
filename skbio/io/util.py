@@ -33,7 +33,6 @@ from __future__ import absolute_import, division, print_function
 
 import io
 from contextlib2 import contextmanager, ExitStack
-from functools import wraps
 
 from skbio.io._iosources import get_io_sources, get_compression_handler
 from skbio.io._fileobject import (
@@ -43,6 +42,7 @@ from skbio.io._fileobject import (
 _d = dict(mode='r', buffer_size=io.DEFAULT_BUFFER_SIZE, encoding=None,
           errors=None, newline=None, compression='auto', compresslevel=9,
           is_binary_file=None)
+
 
 def resolve(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
             encoding=_d['encoding'], errors=_d['errors'],
@@ -94,7 +94,7 @@ def _munge_file(file, is_binary_file, arguments):
     if is_output_binary and (errors is not _d['errors'] or
                              newline is not _d['errors']):
         raise ValueError("Cannot use `errors` or `newline` with binary"
-                        " encoding.")
+                         " encoding.")
 
     if compression is not None and not compression_handler:
         raise ValueError("Unsupported compression: %r" % compression)
@@ -118,6 +118,7 @@ def _munge_file(file, is_binary_file, arguments):
 
     return newfile
 
+
 @contextmanager
 def resolve_file(file, **kwargs):
     file, source, is_binary_file = resolve(file, **kwargs)
@@ -131,10 +132,22 @@ def resolve_file(file, **kwargs):
             else:
                 file.close()
 
+
 @contextmanager
 def open_file(file, **kwargs):
     with resolve_file(file, **kwargs) as (file, is_binary_file):
-        yield _munge_file(file, is_binary_file, kwargs)
+        file = _munge_file(file, is_binary_file, kwargs)
+        try:
+            yield file
+        finally:
+            # As soon as we leave the above context manager file will be closed
+            # It is important to realize that because we are closing an inner
+            # buffer, the outer buffer will reflect that state, but it won't
+            # get flushed as the inner buffer is oblivious to the outer
+            # buffer's existence.
+            if not file.closed:
+                file.flush()
+
 
 @contextmanager
 def open_files(files, **kwargs):

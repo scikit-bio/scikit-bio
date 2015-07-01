@@ -197,6 +197,7 @@ from skbio.io import create_format, OrdinationFormatError
 
 ordination = create_format('ordination')
 
+
 @ordination.sniffer()
 def _ordination_sniffer(fh):
     # Smells an ordination file if *all* of the following lines are present

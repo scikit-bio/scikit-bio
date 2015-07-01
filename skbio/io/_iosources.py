@@ -9,22 +9,15 @@
 from __future__ import absolute_import, division, print_function
 
 from six import string_types, text_type
-import six
 
 import bz2file
-import requests
-import cachecontrol as cc
 
-import os
 import io
 import gzip
-import sys
-import tempfile
-from collections import defaultdict
 
-from skbio.util._misc import ifpylt
 from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
                           IterableStringWriterIO, IterableStringReaderIO)
+
 
 def get_io_sources():
     return (
@@ -38,11 +31,13 @@ def get_io_sources():
         IterableSource,
     )
 
+
 def _compressors():
     return (
         GzipCompressor,
         BZ2Compressor
     )
+
 
 def get_compression_handler(name):
     compressors = {c.name: c for c in _compressors()}
@@ -52,6 +47,7 @@ def get_compression_handler(name):
 
 class IOSource(object):
     closeable = True
+
     def __init__(self, file, options):
         self.file = file
         self.options = options
@@ -68,11 +64,13 @@ class IOSource(object):
     def get_writer(self):
         return NotImplementedError()
 
+
 class Compressor(IOSource):
     name = ''
 
     def can_write(self):
         return True
+
 
 class FilePathSource(IOSource):
     def can_read(self):
@@ -94,6 +92,7 @@ class HTTPSource(IOSource):
 
 class BytesIOSource(IOSource):
     closeable = False
+
     def can_read(self):
         return isinstance(self.file, io.BytesIO)
 
@@ -109,6 +108,7 @@ class BytesIOSource(IOSource):
 
 class BufferedIOSource(IOSource):
     closeable = False
+
     def can_read(self):
         # `peek` is part of the API we want to guarantee, so we can't just look
         # for io.BufferedIOBase. Despite the fact that the C implementation of
@@ -128,6 +128,7 @@ class BufferedIOSource(IOSource):
 
 class TextIOSource(IOSource):
     closeable = False
+
     def can_read(self):
         return isinstance(self.file, io.TextIOBase) and self.file.readable()
 
@@ -171,6 +172,7 @@ class IterableSource(IOSource):
 
 class ReadableSource(IOSource):
     closeable = False
+
     def can_read(self):
         return hasattr(self.file, 'read')
 
@@ -205,7 +207,6 @@ class ReadableSource(IOSource):
         return Readable()
 
 
-
 class GzipCompressor(Compressor):
     name = 'gzip'
 
@@ -219,6 +220,7 @@ class GzipCompressor(Compressor):
         return gzip.GzipFile(fileobj=self.file,
                              compresslevel=self.options['compresslevel'])
 
+
 class BZ2Compressor(Compressor):
     name = 'bz2'
 
@@ -231,6 +233,7 @@ class BZ2Compressor(Compressor):
     def get_writer(self):
         return bz2file.BZ2File(self.file, mode='wb',
                                compresslevel=self.options['compresslevel'])
+
 
 class AutoCompressor(Compressor):
     name = 'auto'
@@ -315,7 +318,8 @@ class AutoCompressor(Compressor):
 #
 #     def read(self, n):
 #         if self.iterator is None:
-#             # It is unfortunate that we cannot change the chunk_size each time,
+#             # It is unfortunate that we cannot change the chunk_size each
+#             # time,
 #             # but it shouldn't be needed in practice anyways.
 #             self.iterator = response.iter_content(chunk_size=n,
 #                                                   decode_unicode=False)

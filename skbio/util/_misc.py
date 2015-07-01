@@ -9,12 +9,12 @@
 from __future__ import absolute_import, division, print_function
 
 import hashlib
-import sys
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from types import FunctionType
 import inspect
+from ._decorator import experimental, deprecated
 
 
 def make_sentinel(name):
@@ -36,16 +36,6 @@ def find_sentinels(function, sentinel):
             if default is sentinel:
                 keys.append(key)
     return keys
-
-
-def ifpylt(hexversion, do_thing, alternative=None):
-    if sys.hexversion < int(hexversion, 16):
-        return do_thing()
-    else:
-        if alternative:
-            return alterantive()
-
-from ._decorator import experimental, deprecated
 
 
 class MiniRegistry(dict):

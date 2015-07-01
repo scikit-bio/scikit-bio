@@ -107,8 +107,6 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from itertools import islice
-
 from skbio.io import create_format, ClustalFormatError
 from skbio.sequence import Sequence
 from skbio.alignment import Alignment

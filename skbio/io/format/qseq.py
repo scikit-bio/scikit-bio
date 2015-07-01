@@ -131,6 +131,7 @@ _will_filter = True
 
 qseq = create_format('qseq')
 
+
 @qseq.sniffer()
 def _qseq_sniffer(fh):
     empty = True

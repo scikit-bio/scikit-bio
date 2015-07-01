@@ -22,7 +22,7 @@ from skbio.io import ClustalFormatError
 class ClustalHelperTests(TestCase):
     def test_label_line_parser(self):
         self.assertEqual(_label_line_parser(StringIO(u'abc\tucag')),
-                          ({"abc": ["ucag"]}, ['abc']))
+                         ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
             _label_line_parser(StringIO(u'abctucag'))
@@ -139,18 +139,18 @@ xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
             ]
         self.invalid_clustal_out = [StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
+                                                         'hfsdjksdfhjsdf'])),
                                     StringIO(u'\n'.join(['hfsdjksdfhjsdf'])),
                                     StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                        'dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
+                                                         'dshfjsdfhdfsj',
+                                                         'hfsdjksdfhjsdf'])),
                                     StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                        '\t',
-                                                        'hfsdjksdfhjsdf'])),
+                                                         '\t',
+                                                         'hfsdjksdfhjsdf'])),
                                     StringIO(u'\n'.join(['dshfj\tdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
+                                                         'hfsdjksdfhjsdf'])),
                                     StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjk\tdfhjsdf'])),
+                                                         'hfsdjk\tdfhjsdf'])),
                                     StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
@@ -219,7 +219,6 @@ UGCUGCAUCA---------------- 33
             dict(_clustal_to_alignment(BAD))
 
     def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
-        import os
         for valid_out in self.valid_clustal_out:
             result_before = _clustal_to_alignment(valid_out)
             with StringIO() as fh:
