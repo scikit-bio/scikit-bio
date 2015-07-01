@@ -109,6 +109,7 @@ Supported file formats
 For details on what objects are supported by each format,
 see the associated documentation.
 
+.. currentmodule:: skbio.io.format
 .. autosummary::
    :toctree: generated/
 
@@ -120,6 +121,8 @@ see the associated documentation.
    ordination
    phylip
    qseq
+
+.. currentmodule:: skbio.io
 
 Formats are considered to be names which represent a way of encoding a file.
 
@@ -234,20 +237,6 @@ manager like so:
 A good example to review when preparing to write your first I/O unit tests is
 the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
 
-Developer functions
-^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-    :toctree: generated/
-
-    register_writer
-    register_reader
-    register_sniffer
-    list_write_formats
-    list_read_formats
-    get_writer
-    get_reader
-    get_sniffer
 
 Developer exceptions
 ^^^^^^^^^^^^^^^^^^^^
@@ -277,7 +266,7 @@ from skbio.util import TestRunner
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
                          UnrecognizedFormatError, FileFormatError,
-                         ClustalFormatError, FASTAFormatError,
+                         ClustalFormatError, FASTAFormatError, IOSourceError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError)
@@ -291,6 +280,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'DuplicateRegistrationError', 'InvalidRegistrationError',
            'UnrecognizedFormatError',
 
+           'IOSourceError',
            'FileFormatError',
            'ClustalFormatError',
            'FASTAFormatError',
