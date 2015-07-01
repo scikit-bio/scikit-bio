@@ -1202,6 +1202,23 @@ class TestSequence(TestCase):
         self.assertEqual(len(Sequence("a")), 1)
         self.assertEqual(len(Sequence("abcdef")), 6)
 
+    def test_nonzero(self):
+        # blank
+        self.assertFalse(Sequence(""))
+        self.assertFalse(Sequence("",
+                                  metadata={'id': 'foo'},
+                                  positional_metadata={'quality': range(0)}))
+        # single
+        self.assertTrue(Sequence("A"))
+        self.assertTrue(Sequence("A",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(1)}))
+        # multi
+        self.assertTrue(Sequence("ACGT"))
+        self.assertTrue(Sequence("ACGT",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(4)}))
+
     def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
         tested = 0
