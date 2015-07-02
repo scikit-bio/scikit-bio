@@ -126,7 +126,7 @@ class RNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    def translate(self, genetic_code=1, *args, **kwargs):
+    def translate(self, genetic_code=1, **kwargs):
         """
 
         Parameters
@@ -141,8 +141,13 @@ class RNA(IUPACSequence, NucleotideMixin):
             Translated protein sequence.
         """
         if not isinstance(genetic_code, skbio.GeneticCode):
-            genetic_code = skbio.GeneticCode.from_id(genetic_code)
-        return genetic_code.translate(self, *args, **kwargs)
+            genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
+        return genetic_code.translate(self, **kwargs)
+
+    def translate_six_frames(self, genetic_code=1, **kwargs):
+        if not isinstance(genetic_code, skbio.GeneticCode):
+            genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
+        return genetic_code.translate_six_frames(self, **kwargs)
 
     @overrides(IUPACSequence)
     def _repr_stats(self):

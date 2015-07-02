@@ -138,6 +138,9 @@ class DNA(IUPACSequence, NucleotideMixin):
     def translate(self, coding=True, *args, **kwargs):
         return self.transcribe(coding=coding).translate(*args, **kwargs)
 
+    def translate_six_frames(self, coding=True, *args, **kwargs):
+        return self.transcribe(coding=coding).translate_six_frames(*args, **kwargs)
+
     @overrides(IUPACSequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
