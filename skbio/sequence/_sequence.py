@@ -506,8 +506,7 @@ class Sequence(collections.Sequence, SkbioObject):
     def __init__(self, sequence, metadata=None,
                  positional_metadata=None):
 
-        is_ndarray = isinstance(sequence, np.ndarray)
-        if is_ndarray: 
+        if isinstance(sequence, np.ndarray): 
             if sequence.dtype == np.uint8 or np.issubdtype(sequence.dtype, np.uint8):
                 self._set_bytes(sequence)
             elif sequence.dtype == '|S1':
@@ -548,23 +547,26 @@ class Sequence(collections.Sequence, SkbioObject):
 
     def _set_sequence(self, sequence):
         """Munge the sequence data into a numpy array of dtype uint8."""
-        # Python 3 will not raise a UnicodeEncodeError so we force it by
-        # encoding it as ascii
-        if isinstance(sequence, six.text_type):
-            #print("is text")
-            sequence = sequence.encode("ascii")
-        s = np.fromstring(sequence, dtype=np.uint8)
+        if isinstance(sequence, np.ndarray):
+            pass
+        else:
+            # Python 3 will not raise a UnicodeEncodeError so we force it by
+            # encoding it as ascii
+            if isinstance(sequence, six.text_type):
+                #print("is text")
+                sequence = sequence.encode("ascii")
+            s = np.fromstring(sequence, dtype=np.uint8)
 
-        # There are two possibilities (to our knowledge) at this point:
-        # Either the sequence we were given was something string-like,
-        # (else it would not have made it past fromstring), or it was a
-        # numpy scalar, and so our length must be 1.
-        if isinstance(sequence, np.generic) and len(s) != 1:
-            raise TypeError("Can cannot create a sequence with %r" %
-                            type(sequence).__name__)
+            # There are two possibilities (to our knowledge) at this point:
+            # Either the sequence we were given was something string-like,
+            # (else it would not have made it past fromstring), or it was a
+            # numpy scalar, and so our length must be 1.
+            if isinstance(sequence, np.generic) and len(s) != 1:
+                raise TypeError("Can cannot create a sequence with %r" %
+                                type(sequence).__name__)
 
-        sequence = s
-        self._owns_bytes = True
+            sequence = s
+            self._owns_bytes = True
 
         sequence.flags.writeable = False
         self._bytes = sequence
