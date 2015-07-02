@@ -16,8 +16,6 @@ Functions
     open
     open_file
     open_files
-    resolve
-    resolve_file
 
 """
 
@@ -44,10 +42,10 @@ _d = dict(mode='r', buffer_size=io.DEFAULT_BUFFER_SIZE, encoding=None,
           is_binary_file=None)
 
 
-def resolve(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
-            encoding=_d['encoding'], errors=_d['errors'],
-            newline=_d['newline'], compression=_d['compression'],
-            compresslevel=_d['compresslevel']):
+def _resolve(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
+             encoding=_d['encoding'], errors=_d['errors'],
+             newline=_d['newline'], compression=_d['compression'],
+             compresslevel=_d['compresslevel']):
     arguments = locals().copy()
 
     if mode not in {'r', 'w'}:
@@ -76,7 +74,7 @@ def open(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
     arguments = locals().copy()
     del arguments['file']
 
-    file, _, is_binary_file = resolve(file, **arguments)
+    file, _, is_binary_file = _resolve(file, **arguments)
     return _munge_file(file, is_binary_file, arguments)
 
 
@@ -120,10 +118,10 @@ def _munge_file(file, is_binary_file, arguments):
 
 
 @contextmanager
-def resolve_file(file, **kwargs):
-    file, source, is_binary_file = resolve(file, **kwargs)
+def _resolve_file(file, **kwargs):
+    file, source, is_binary_file = _resolve(file, **kwargs)
     try:
-        yield file, is_binary_file
+        yield file, source, is_binary_file
     finally:
         if source.closeable:
             # TODO: Add comment
@@ -135,8 +133,8 @@ def resolve_file(file, **kwargs):
 
 @contextmanager
 def open_file(file, **kwargs):
-    with resolve_file(file, **kwargs) as (file, is_binary_file):
-        file = _munge_file(file, is_binary_file, kwargs)
+    with _resolve_file(file, **kwargs) as (file, source, is_binary_file):
+        file = _munge_file(file, is_binary_file, source.options)
         try:
             yield file
         finally:

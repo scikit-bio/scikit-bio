@@ -12,10 +12,16 @@ import io
 import tempfile
 import os
 
+import bz2file
+
 
 def is_binary_file(file):
     return isinstance(file, (io.BufferedReader, io.BufferedWriter,
                              io.BufferedRandom))
+
+# Everything beyond this point will be some kind of hack needed to make
+# everything work. It's not pretty and it doesn't make great sense much
+# of the time. I am very sorry to the poor soul who has to read beyond.
 
 
 class StringIO(io.StringIO):
@@ -94,7 +100,20 @@ class CompressedBufferedReader(CompressedMixin, io.BufferedReader):
 
 
 class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
-    pass
+    def flush(self):
+        super(CompressedBufferedWriter, self).flush()
+        self.raw.flush()
+
+
+class BZ2File(bz2file.BZ2File):
+    def flush(self):
+        # HACK because flush does not actually work.
+        # based on
+        # https://github.com/nvawda/bz2file/blob/master/bz2file.py#L129
+        super(BZ2File, self).flush()
+        if self._mode == bz2file._MODE_WRITE:
+            with self._lock:
+                self._fp.write(self._compressor.flush())
 
 
 class TemporaryFile(io.FileIO):

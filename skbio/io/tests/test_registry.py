@@ -14,11 +14,13 @@ import io
 import os
 import unittest
 import warnings
+import types
 from tempfile import mkstemp
 
 from skbio.io import (DuplicateRegistrationError, FormatIdentificationWarning,
-                      UnrecognizedFormatError, ArgumentOverrideWarning)
-from skbio.io.registry import IORegistry, FileSentinel
+                      UnrecognizedFormatError, ArgumentOverrideWarning,
+                      InvalidRegistrationError)
+from skbio.io.registry import IORegistry, FileSentinel, Format
 from skbio.util import TestingUtilError, get_data_path
 
 
@@ -41,6 +43,15 @@ class TestClassA(TestClass):
 
 class TestClassB(TestClass):
     pass
+
+
+class TestFormatAndIORegistry(unittest.TestCase):
+    def test_add_duplicate_format(self):
+        f = Format('Example')
+        r = IORegistry()
+        r.add_format(f)
+        with self.assertRaises(DuplicateRegistrationError):
+            r.add_format(Format('Example'))
 
 
 class RegistryTest(unittest.TestCase):
@@ -132,7 +143,7 @@ class TestRegisterAndGetReader(RegistryTest):
 
         self.assertIs(None, self.registry.get_reader('format5', TestClassA))
 
-        self.assertIs(None, self.registry.get_reader('format5', TestClassA))
+        self.assertIs(None, self.registry.get_reader('format5', TestClassB))
 
     def test_register_reader_over_existing(self):
         format1 = self.registry.create_format('format1')
@@ -165,6 +176,14 @@ class TestRegisterAndGetReader(RegistryTest):
 
         self.assertIs(duplicate_format1_reader,
                       self.registry.get_reader('format1', TestClassA))
+
+    def test_mistype_reader_registration(self):
+        format1 = self.registry.create_format('format1')
+
+        with self.assertRaises(InvalidRegistrationError):
+            @format1.reader
+            def left_out_parens(fh):
+                return
 
 
 class TestRegisterAndGetWriter(RegistryTest):
@@ -235,17 +254,17 @@ class TestRegisterAndGetWriter(RegistryTest):
                          self.registry.get_writer('format3', TestClassB))
 
         self.assertIs(format4_writer,
-                     self.registry.get_writer('format4', TestClassA))
+                      self.registry.get_writer('format4', TestClassA))
 
         self.assertIs(format4_writer_b,
-                     self.registry.get_writer('format4', TestClassB))
+                      self.registry.get_writer('format4', TestClassB))
 
         self.assertIs(format5_writer,
-                     self.registry.get_writer('format5', None))
+                      self.registry.get_writer('format5', None))
 
         self.assertIs(None, self.registry.get_writer('format5', TestClassA))
 
-        self.assertIs(None, self.registry.get_writer('format5', TestClassA))
+        self.assertIs(None, self.registry.get_writer('format5', TestClassB))
 
     def test_register_writer_over_existing(self):
         format1 = self.registry.create_format('format1')
@@ -278,6 +297,14 @@ class TestRegisterAndGetWriter(RegistryTest):
 
         self.assertIs(duplicate_format1_writer,
                       self.registry.get_writer('format1', TestClassA))
+
+    def test_mistype_writer_registration(self):
+        format1 = self.registry.create_format('format1')
+
+        with self.assertRaises(InvalidRegistrationError):
+            @format1.writer
+            def left_out_parens(fh):
+                return
 
 
 class TestRegisterAndGetSniffer(RegistryTest):
@@ -361,6 +388,14 @@ class TestRegisterAndGetSniffer(RegistryTest):
             self.assertEqual({}, kwargs)
 
         fh.close()
+
+    def test_mistype_sniffer_registration(self):
+        format1 = self.registry.create_format('format1')
+
+        with self.assertRaises(InvalidRegistrationError):
+            @format1.sniffer
+            def left_out_parens(fh):
+                return
 
 
 class TestListReadFormats(RegistryTest):
@@ -489,6 +524,8 @@ class TestSniff(RegistryTest):
         format2 = self.registry.create_format('format2')
         format3 = self.registry.create_format('format3')
         format4 = self.registry.create_format('format4')
+        # No sniffer for this format:
+        self.registry.create_format('format5')
 
         @format1.sniffer()
         def format1_sniffer(fh):
@@ -537,17 +574,17 @@ class TestSniff(RegistryTest):
         fh.close()
 
     def test_that_encoding_is_used(self):
-       formatx = self.registry.create_format('formatx')
+        formatx = self.registry.create_format('formatx')
 
-       fp = get_data_path('big5_file')
+        fp = get_data_path('big5_file')
 
-       @formatx.sniffer()
-       def sniffer(fh):
-           self.assertEqual('big5', fh.encoding)
-           return True, {}
+        @formatx.sniffer()
+        def sniffer(fh):
+            self.assertEqual('big5', fh.encoding)
+            return True, {}
 
-       fmt, _ = self.registry.sniff(fp, encoding='big5')
-       self.assertEqual(fmt, 'formatx')
+        fmt, _ = self.registry.sniff(fp, encoding='big5')
+        self.assertEqual(fmt, 'formatx')
 
     def test_that_newline_is_used(self):
         formatx = self.registry.create_format('formatx')
@@ -592,7 +629,6 @@ class TestSniff(RegistryTest):
         self._expected_lines = ['a\nb\nc\nd\ne\n']
         fmt, _ = self.registry.sniff(fp)
         self.assertEqual(fmt, 'formatx')
-
 
         self._expected_lines = ['a\n', 'b\n', 'c\n', 'd\n', 'e\n']
         fmt, _ = self.registry.sniff(fp, newline=None)
@@ -643,6 +679,134 @@ class TestSniff(RegistryTest):
             fmt, _ = self.registry.sniff(fp)
             self.assertEqual(fmt, 'formatx')
 
+    def test_binary_sniffer(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+
+        @binf.sniffer()
+        def sniffer(fh):
+            self.assertIsInstance(fh, (io.BufferedReader, io.BufferedRandom))
+            return True, {}
+
+        fmt, _ = self.registry.sniff(self.fp1)
+        self.assertEqual(fmt, 'binf')
+
+    def test_text_sniffer(self):
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @textf.sniffer()
+        def sniffer(fh):
+            self.assertIsInstance(fh, io.TextIOBase)
+            return True, {}
+
+        fmt, _ = self.registry.sniff(self.fp1)
+        self.assertEqual(fmt, 'textf')
+
+    def test_sniff_with_illegal_encoding(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @binf.sniffer()
+        def binf_sniffer(fh):
+            return True, {}
+
+        @textf.sniffer()
+        def textf_sniffer(fh):
+            return True, {}
+
+        # Should skip binary sniffers
+        fmt, _ = self.registry.sniff(self.fp1, encoding=None)
+        self.assertEqual(fmt, 'textf')
+        # Should skip text sniffers
+        fmt, _ = self.registry.sniff(self.fp1, encoding='binary')
+        self.assertEqual(fmt, 'binf')
+
+        with self.assertRaises(ValueError):
+            self.registry.sniff([u'some content\n'], encoding='binary')
+
+        with self.assertRaises(ValueError):
+            binf_sniffer(self.fp1, encoding=None)
+
+        with self.assertRaises(ValueError):
+            textf_sniffer(self.fp1, encoding='binary')
+
+    def test_binary_fall_through(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @binf.sniffer()
+        def binf_sniffer(fh):
+            self._check_binf = True
+            return False, {}
+
+        @textf.sniffer()
+        def textf_sniffer(fh):
+            self._check_textf = True
+            return True, {}
+
+        self._check_binf = False
+        self._check_textf = False
+
+        fmt, _ = self.registry.sniff(self.fp1)
+        self.assertEqual(fmt, 'textf')
+
+        self.assertTrue(self._check_binf)
+        self.assertTrue(self._check_textf)
+
+    def test_text_skip_binary(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @binf.sniffer()
+        def binf_sniffer(fh):
+            self._check_binf = True
+            return True, {}
+
+        @textf.sniffer()
+        def textf_sniffer(fh):
+            self._check_textf = True
+            return True, {}
+
+        self._check_binf = False
+        self._check_textf = False
+
+        fmt, _ = self.registry.sniff([u'text'])
+        self.assertEqual(fmt, 'textf')
+
+        self.assertFalse(self._check_binf)
+        self.assertTrue(self._check_textf)
+
+        self._check_binf = False
+        self._check_textf = False
+
+        fmt, _ = self.registry.sniff(self.fp1, encoding=None)
+        self.assertEqual(fmt, 'textf')
+
+        self.assertFalse(self._check_binf)
+        self.assertTrue(self._check_textf)
+
+    def test_text_skip_text(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @binf.sniffer()
+        def binf_sniffer(fh):
+            self._check_binf = True
+            return True, {}
+
+        @textf.sniffer()
+        def textf_sniffer(fh):
+            self._check_textf = True
+            return True, {}
+
+        self._check_binf = False
+        self._check_textf = False
+
+        fmt, _ = self.registry.sniff(self.fp1, encoding='binary')
+        self.assertEqual(fmt, 'binf')
+
+        self.assertTrue(self._check_binf)
+        self.assertFalse(self._check_textf)
+
 
 class TestRead(RegistryTest):
     def test_format_and_into_are_none(self):
@@ -663,6 +827,7 @@ class TestRead(RegistryTest):
 
         @format1.reader(TestClass)
         def reader(fh):
+            self.assertIsInstance(fh, io.TextIOBase)
             return TestClass([int(x) for x in fh.read().split('\n')])
 
         instance = self.registry.read(fh, into=TestClass)
@@ -676,10 +841,12 @@ class TestRead(RegistryTest):
 
         @format1.reader(None)
         def reader(fh):
+            self.assertIsInstance(fh, io.TextIOBase)
             for value in [int(x) for x in fh.read().split('\n')]:
                 yield value
 
         generator = self.registry.read(fh, format='format1')
+        self.assertIsInstance(generator, types.GeneratorType)
         first_run = True
         for a, b in zip(generator, [1, 2, 3, 4]):
             if first_run:
@@ -722,23 +889,6 @@ class TestRead(RegistryTest):
 
         self.assertTrue('generator' in str(cm.exception))
         self.assertTrue('not_a_format2' in str(cm.exception))
-
-#    def test_reader_is_not_generator(self):
-#        fh = StringIO(u'1\n2\n3\n4')
-#
-#        @self.registry.register_sniffer('format')
-#        def sniffer(fh):
-#            return '1' in fh.readline(), {}
-#
-#        @self.registry.register_reader('format')
-#        def reader(fh):
-#            # Not a generator!
-#            return TestClass([int(x) for x in fh.read().split('\n')])
-#
-#        with self.assertRaises(InvalidRegistrationError):
-#            next(self.registry.read(fh, format='format'))
-#
-#        fh.close()
 
     def test_reader_exists_with_verify_true(self):
         format1 = self.registry.create_format('format1')
@@ -899,9 +1049,109 @@ class TestRead(RegistryTest):
             self.assertEqual(self._expected_enc, fh.encoding)
             return TestClass(fh.readlines())
 
+        @format1.reader(None)
+        def reader_gen(fh):
+            self.assertEqual(self._expected_enc, fh.encoding)
+            yield TestClass(fh.readlines())
+
         self._expected_enc = 'big5'
         instance = self.registry.read(fp, into=TestClass, encoding='big5')
         self.assertEqual(TestClass([u'\u4f60\u597d\n']), instance)
+
+        self._expected_enc = 'big5'
+        gen = self.registry.read(fp, format='format1', encoding='big5')
+        self.assertEqual(TestClass([u'\u4f60\u597d\n']), next(gen))
+
+    def test_non_default_encoding(self):
+        format1 = self.registry.create_format('format1', encoding='big5')
+
+        fp = get_data_path('big5_file')
+
+        @format1.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @format1.reader(TestClass)
+        def reader(fh):
+            self.assertEqual(self._expected_enc, fh.encoding)
+            return TestClass(fh.readlines())
+
+        @format1.reader(None)
+        def reader_gen(fh):
+            self.assertEqual(self._expected_enc, fh.encoding)
+            yield TestClass(fh.readlines())
+
+        self._expected_enc = 'big5'
+        instance = self.registry.read(fp, into=TestClass)
+        self.assertEqual(TestClass([u'\u4f60\u597d\n']), instance)
+
+        gen = self.registry.read(fp, format='format1')
+        self.assertEqual(TestClass([u'\u4f60\u597d\n']), next(gen))
+        gen.close()
+
+        self._expected_enc = 'utf8'
+        with self.assertRaises(UnicodeDecodeError):
+            self.registry.read(fp, into=TestClass, encoding='utf8')
+
+        with self.assertRaises(UnicodeDecodeError):
+            self.registry.read(fp, format='format1', encoding='utf8')
+
+    def test_that_newline_is_used(self):
+        formatx = self.registry.create_format('formatx')
+
+        fp = get_data_path('real_file')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @formatx.reader(TestClass)
+        def reader(fh):
+            return TestClass(fh.readlines())
+
+        @formatx.reader(None)
+        def reader_gen(fh):
+            yield TestClass(fh.readlines())
+
+        instance = self.registry.read(fp, into=TestClass, newline='\r')
+        self.assertEqual(instance, TestClass(['a\nb\nc\nd\ne\n']))
+
+        gen = self.registry.read(fp, format='formatx', newline='\r')
+        self.assertEqual(next(gen), TestClass(['a\nb\nc\nd\ne\n']))
+        gen.close()
+
+    def test_non_default_newline(self):
+        formatx = self.registry.create_format('formatx', newline='\r')
+
+        fp = get_data_path('real_file')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @formatx.reader(TestClass)
+        def reader(fh):
+            return TestClass(fh.readlines())
+
+        @formatx.reader(None)
+        def reader_gen(fh):
+            yield TestClass(fh.readlines())
+
+        instance = self.registry.read(fp, into=TestClass)
+        self.assertEqual(instance, TestClass(['a\nb\nc\nd\ne\n']))
+
+        gen = self.registry.read(fp, format='formatx')
+        self.assertEqual(next(gen), TestClass(['a\nb\nc\nd\ne\n']))
+        gen.close()
+
+        instance = self.registry.read(fp, into=TestClass, newline=None)
+        self.assertEqual(instance, TestClass(['a\n', 'b\n', 'c\n', 'd\n',
+                                              'e\n']))
+
+        gen = self.registry.read(fp, format='formatx', newline=None)
+        self.assertEqual(next(gen), TestClass(['a\n', 'b\n', 'c\n', 'd\n',
+                                               'e\n']))
+        gen.close()
 
     def test_file_sentinel_many(self):
         format1 = self.registry.create_format('format1')
@@ -1030,6 +1280,129 @@ class TestRead(RegistryTest):
 
         fh.close()
 
+    def test_read_with_illegal_encoding(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
+
+        @binf.sniffer()
+        def binf_sniffer(fh):
+            return True, {}
+
+        @binf.reader(TestClass)
+        def binf_reader(fh):
+            return TestClass(['bin'])
+
+        @binf.reader(None)
+        def binf_reader_gen(fh):
+            yield TestClass(['bin'])
+
+        @textf.sniffer()
+        def textf_sniffer(fh):
+            return True, {}
+
+        @textf.reader(TestClass)
+        def textf_reader(fh):
+            return TestClass(['text'])
+
+        @textf.reader(None)
+        def textf_reader_gen(fh):
+            yield TestClass(['text'])
+
+        # Should skip binary sniffers
+        instance = self.registry.read(self.fp1, encoding=None, into=TestClass)
+        self.assertEqual(instance, TestClass(['text']))
+        gen = self.registry.read(self.fp1, encoding=None, format='textf')
+        self.assertEqual(next(gen), TestClass(['text']))
+        gen.close()
+        # Should skip text sniffers
+        instance = self.registry.read(self.fp1, encoding='binary',
+                                      into=TestClass)
+        self.assertEqual(instance, TestClass(['bin']))
+        gen = self.registry.read(self.fp1, encoding='binary', format='binf')
+        self.assertEqual(next(gen), TestClass(['bin']))
+        gen.close()
+
+        with self.assertRaises(ValueError):
+            self.registry.read([u'some content\n'], encoding='binary',
+                               into=TestClass)
+
+        with self.assertRaises(ValueError):
+            self.registry.read([u'some content\n'], format='textf',
+                               encoding='binary', into=TestClass)
+
+        with self.assertRaises(ValueError):
+            self.registry.read([u'some content\n'], format='textf',
+                               encoding='binary', verify=False, into=TestClass)
+
+        with self.assertRaises(ValueError):
+            self.registry.read([u'some content\n'], format='textf',
+                               encoding='binary')
+
+        with self.assertRaises(ValueError):
+            self.registry.read([u'some content\n'], format='textf',
+                               encoding='binary', verify=False)
+
+        with self.assertRaises(ValueError):
+            self.registry.read(self.fp1, format='binf',
+                               encoding=None, into=TestClass)
+
+        with self.assertRaises(ValueError):
+            self.registry.read(self.fp1, format='binf',
+                               encoding=None, verify=False, into=TestClass)
+
+        with self.assertRaises(ValueError):
+            self.registry.read(self.fp1, format='binf',
+                               encoding=None)
+
+        with self.assertRaises(ValueError):
+            self.registry.read(self.fp1, format='binf',
+                               encoding=None, verify=False)
+
+    def test_read_with_binary_encoding(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+
+        @binf.reader(TestClass)
+        def reader1(fh):
+            self.assertIsInstance(fh, (io.BufferedReader, io.BufferedRandom))
+            return TestClass(['woo'])
+
+        @binf.reader(None)
+        def reader2(fh):
+            self.assertIsInstance(fh, (io.BufferedReader, io.BufferedRandom))
+            yield TestClass(['woo'])
+
+        instance = self.registry.read(self.fp1, format='binf', verify=False,
+                                      into=TestClass)
+        self.assertEqual(TestClass(['woo']), instance)
+
+        gen = self.registry.read(self.fp1, format='binf', verify=False,
+                                 into=None)
+        self.assertEqual(TestClass(['woo']), next(gen))
+        gen.close()
+
+    def test_io_kwargs_passed(self):
+        format1 = self.registry.create_format('format1')
+
+        @format1.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @format1.reader(TestClass)
+        def reader1(fh):
+            self.assertEqual(fh.errors, 'replace')
+            return TestClass(['woo'])
+
+        @format1.reader(None)
+        def reader1_gen(fh):
+            self.assertEqual(fh.errors, 'replace')
+            yield TestClass(['woo'])
+
+        obj = self.registry.read(self.fp1, into=TestClass, errors='replace')
+        self.assertEqual(obj, TestClass(['woo']))
+        gen = self.registry.read(self.fp1, format='format1', errors='replace')
+        self.assertEqual(next(gen), TestClass(['woo']))
+        gen.close()
+
 
 class TestWrite(RegistryTest):
     def test_writer_does_not_exist(self):
@@ -1049,6 +1422,7 @@ class TestWrite(RegistryTest):
 
         @format1.writer(TestClass)
         def writer(obj, fh):
+            self.assertIsInstance(fh, io.TextIOBase)
             fh.write(u'\n'.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fh)
@@ -1064,6 +1438,7 @@ class TestWrite(RegistryTest):
 
         @format1.writer(TestClass)
         def writer(obj, fh):
+            self.assertIsInstance(fh, io.TextIOBase)
             fh.write(u'\n'.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fp)
@@ -1103,6 +1478,64 @@ class TestWrite(RegistryTest):
         with io.open(fp, mode='rb') as fh:
             # This would have been b'\xe4\xbd\xa0\xe5\xa5\xbd\n' in utf8
             self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+
+    def test_non_default_encoding(self):
+        format1 = self.registry.create_format('format1', encoding='big5')
+
+        obj = TestClass([u'\u4f60\u597d\n'])  # Ni Hau
+        fp = self.fp1
+
+        @format1.writer(TestClass)
+        def writer(obj, fh):
+            fh.write(u''.join(obj.list))
+            self.assertEqual(self._expected_encoding, fh.encoding)
+
+        self._expected_encoding = 'big5'
+        self.registry.write(obj, format='format1', into=fp)
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'\xa7A\xa6n\n', fh.read())
+
+        self._expected_encoding = 'utf8'
+        self.registry.write(obj, format='format1', into=fp, encoding='utf8')
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'\xe4\xbd\xa0\xe5\xa5\xbd\n', fh.read())
+
+    def test_that_newline_is_used(self):
+        format1 = self.registry.create_format('format1')
+
+        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        fp = self.fp1
+
+        @format1.writer(TestClass)
+        def writer(obj, fh):
+            fh.write(u''.join(obj.list))
+
+        self.registry.write(obj, format='format1', into=fp, newline='\r')
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'a\rb\rc\r', fh.read())
+
+    def test_non_default_newline(self):
+        format1 = self.registry.create_format('format1', newline='\r')
+
+        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        fp = self.fp1
+
+        @format1.writer(TestClass)
+        def writer(obj, fh):
+            fh.write(u''.join(obj.list))
+
+        self.registry.write(obj, format='format1', into=fp)
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'a\rb\rc\r', fh.read())
+
+        self.registry.write(obj, format='format1', into=fp, newline='\n')
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'a\nb\nc\n', fh.read())
 
     def test_file_sentinel_many(self):
         format1 = self.registry.create_format('format1')
@@ -1153,175 +1586,259 @@ class TestWrite(RegistryTest):
 
         fh.close()
 
+    def test_write_with_illegal_encoding(self):
+        binf = self.registry.create_format('binf', encoding='binary')
+        textf = self.registry.create_format('textf', encoding=None)
 
-# class TestInitializeOOPInterface(RegistryTest):
-#    def setUp(self):
-#        super(TestInitializeOOPInterface, self).setUp()
-#
-#        class UnassumingClass(object):
-#            pass
-#
-#        class ClassWithDefault(object):
-#            default_write_format = 'favfmt'
-#
-#        self.unassuming_class = UnassumingClass
-#        self.class_with_default = ClassWithDefault
-#
-#    def test_no_readers_writers(self):
-#        self.registry.initialize_oop_interface()
-#        self.assertFalse(hasattr(self.unassuming_class, 'read'))
-#        self.assertFalse(hasattr(self.unassuming_class, 'write'))
-#        self.assertFalse(hasattr(self.class_with_default, 'read'))
-#        self.assertFalse(hasattr(self.class_with_default, 'write'))
-#
-#    def test_readers_only(self):
-#        @self.registry.register_reader('favfmt', self.unassuming_class)
-#        def fvfmt_to_unasumming_class(fh):
-#            return
-#
-#        @self.registry.register_reader('favfmt')
-#        def fvfmt_to_gen(fh):
-#            yield
-#
-#        @self.registry.register_reader('favfmt2', self.unassuming_class)
-#        def fvfmt2_to_unasumming_class(fh):
-#            return
-#
-#        self.registry.initialize_oop_interface()
-#
-#        self.assertTrue(hasattr(self.unassuming_class, 'read'))
-#        self.assertFalse(hasattr(self.unassuming_class, 'write'))
-#        self.assertFalse(hasattr(self.class_with_default, 'read'))
-#        self.assertFalse(hasattr(self.class_with_default, 'write'))
-#
-#        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
-#        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
-#
-#    def test_writers_only(self):
-#        @self.registry.register_writer('favfmt', self.class_with_default)
-#        def favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt')
-#        def gen_to_favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt2', self.class_with_default)
-#        def favfmt2(fh):
-#            pass
-#
-#        self.registry.initialize_oop_interface()
-#
-#        self.assertFalse(hasattr(self.unassuming_class, 'read'))
-#        self.assertFalse(hasattr(self.unassuming_class, 'write'))
-#        self.assertFalse(hasattr(self.class_with_default, 'read'))
-#        self.assertTrue(hasattr(self.class_with_default, 'write'))
-#
-#        self.assertIn('favfmt', self.class_with_default.write.__doc__)
-#        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
-#
-#    def test_writers_no_default_format(self):
-#        @self.registry.register_writer('favfmt', self.unassuming_class)
-#        def favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt')
-#        def gen_to_favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt2', self.unassuming_class)
-#        def favfmt2(fh):
-#            pass
-#        with self.assertRaises(NotImplementedError) as cm:
-#            self.registry.initialize_oop_interface()
-#
-#        self.assertIn('default_write_format', str(cm.exception))
-#
-#    def test_readers_writers(self):
-#        @self.registry.register_reader('favfmt', self.unassuming_class)
-#        def fvfmt_to_unasumming_class(fh):
-#            return
-#
-#        @self.registry.register_reader('favfmt', self.class_with_default)
-#        def fvfmt_to_class_w_default(fh):
-#            return
-#
-#        @self.registry.register_reader('favfmt')
-#        def fvfmt_to_gen(fh):
-#            yield
-#
-#        @self.registry.register_reader('favfmt2', self.unassuming_class)
-#        def fvfmt2_to_unasumming_class(fh):
-#            return
-#
-#        @self.registry.register_reader('favfmt2', self.class_with_default)
-#        def fvfmt2_to_class_w_default(fh):
-#            return
-#
-#        @self.registry.register_writer('favfmt', self.class_with_default)
-#        def favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt')
-#        def gen_to_favfmt(fh):
-#            pass
-#
-#        @self.registry.register_writer('favfmt2', self.class_with_default)
-#        def favfmt2(fh):
-#            pass
-#
-#        self.registry.initialize_oop_interface()
-#
-#        self.assertTrue(hasattr(self.unassuming_class, 'read'))
-#        self.assertFalse(hasattr(self.unassuming_class, 'write'))
-#
-#        self.assertTrue(hasattr(self.class_with_default, 'read'))
-#        self.assertTrue(hasattr(self.class_with_default, 'write'))
-#
-#        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
-#        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
-#
-#        self.assertIn('favfmt', self.class_with_default.read.__doc__)
-#        self.assertIn('favfmt2', self.class_with_default.read.__doc__)
-#
-#        self.assertIn('favfmt', self.class_with_default.write.__doc__)
-#        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
-#
-#    def test_read_kwargs_passed(self):
-#        self.was_called = False
-#
-#        @self.registry.register_sniffer('favfmt')
-#        def fvfmt_sniffer(fh):
-#            return True, {}
-#
-#        @self.registry.register_reader('favfmt', self.class_with_default)
-#        def fvfmt_to_class_w_default(fh, **kwargs):
-#            self.assertEqual('a', kwargs['a'])
-#            self.assertEqual(123, kwargs['b'])
-#            self.was_called = True
-#
-#        self.registry.initialize_oop_interface()
-#        fh = StringIO(u'notempty')
-#        self.class_with_default.read(fh, a='a', b=123)
-#
-#        self.assertTrue(self.was_called)
-#        fh.close()
-#
-#    def test_write_kwargs_passed(self):
-#        self.was_called = False
-#
-#        @self.registry.register_writer('favfmt', self.class_with_default)
-#        def favfmt(obj, fh, **kwargs):
-#            self.assertEqual('a', kwargs['a'])
-#            self.assertEqual(123, kwargs['b'])
-#            self.was_called = True
-#
-#        self.registry.initialize_oop_interface()
-#        fh = StringIO()
-#        self.class_with_default().write(fh, a='a', b=123)
-#
-#        self.assertTrue(self.was_called)
-#        fh.close()
+        @binf.writer(TestClass)
+        def writer(obj, fh):
+            pass
+
+        @textf.writer(TestClass)
+        def writer2(obj, fh):
+            pass
+
+        with self.assertRaises(ValueError):
+            self.registry.write(TestClass([]), into=self.fp1, format='binf',
+                                encoding=None)
+
+        with self.assertRaises(ValueError):
+            self.registry.write(TestClass([]), into=self.fp1, format='textf',
+                                encoding='binary')
+
+    def test_write_binary_format(self):
+        format1 = self.registry.create_format('format1', encoding='binary')
+
+        obj = TestClass([b'a\n', b'b\n', b'c\n'])
+        fp = self.fp1
+
+        @format1.writer(TestClass)
+        def writer(obj, fh):
+            self.assertIsInstance(fh, (io.BufferedWriter, io.BufferedRandom))
+            fh.write(b''.join(obj.list))
+
+        self.registry.write(obj, format='format1', into=fp)
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'a\nb\nc\n', fh.read())
+
+    def test_io_kwargs_passed(self):
+        format1 = self.registry.create_format('format1', encoding='ascii')
+
+        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        fp = self.fp1
+
+        @format1.writer(TestClass)
+        def writer(obj, fh):
+            fh.write(u''.join(obj.list))
+
+        self.registry.write(obj, format='format1', into=fp, compression='bz2')
+
+        with io.open(fp, mode='rb') as fh:
+            self.assertEqual(b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00'
+                             b'\x00\x108\x00 \x00!\x9ah3M\x1c\xb7\x8b\xb9"\x9c'
+                             b'(H\x01\xc4\x86S\x00', fh.read())
+
+
+class TestMonkeyPatch(RegistryTest):
+    def setUp(self):
+        super(TestMonkeyPatch, self).setUp()
+
+        class UnassumingClass(object):
+            pass
+
+        class ClassWithDefault(object):
+            default_write_format = 'favfmt'
+
+        class NoMonkeySee(object):
+            pass
+
+        self.unassuming_class = UnassumingClass
+        self.class_with_default = ClassWithDefault
+        self.no_monkey_see = NoMonkeySee
+
+    def test_no_readers_writers(self):
+        self.registry.monkey_patch()
+        self.assertFalse(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertFalse(hasattr(self.class_with_default, 'write'))
+
+    def test_readers_only(self):
+        favfmt = self.registry.create_format('favfmt')
+        favfmt2 = self.registry.create_format('favfmt2')
+
+        @favfmt.reader(self.unassuming_class)
+        def fvfmt_to_unasumming_class(fh):
+            return
+
+        @favfmt.reader(None)
+        def fvfmt_to_gen(fh):
+            yield
+
+        @favfmt2.reader(self.unassuming_class)
+        def fvfmt2_to_unasumming_class(fh):
+            return
+
+        self.registry.monkey_patch()
+
+        self.assertTrue(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertFalse(hasattr(self.class_with_default, 'write'))
+
+        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
+        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
+
+    def test_writers_only(self):
+        favfmt = self.registry.create_format('favfmt')
+        favfmt2 = self.registry.create_format('favfmt2')
+
+        @favfmt.writer(self.class_with_default)
+        def favfmt_writer(fh):
+            pass
+
+        @favfmt.writer(None)
+        def gen_to_favfmt(fh):
+            pass
+
+        @favfmt2.writer(self.class_with_default)
+        def favfmt2_writer(fh):
+            pass
+
+        self.registry.monkey_patch()
+
+        self.assertFalse(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+        self.assertFalse(hasattr(self.class_with_default, 'read'))
+        self.assertTrue(hasattr(self.class_with_default, 'write'))
+
+        self.assertIn('favfmt', self.class_with_default.write.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
+
+    def test_writers_no_default_format(self):
+        favfmt = self.registry.create_format('favfmt')
+        favfmt2 = self.registry.create_format('favfmt2')
+
+        @favfmt.writer(self.unassuming_class)
+        def favfmt_writer(fh):
+            pass
+
+        @favfmt.writer(None)
+        def gen_to_favfmt(fh):
+            pass
+
+        @favfmt2.writer(self.unassuming_class)
+        def favfmt2_writer(fh):
+            pass
+        with self.assertRaises(NotImplementedError) as cm:
+            self.registry.monkey_patch()
+
+        self.assertIn('default_write_format', str(cm.exception))
+
+    def test_readers_writers(self):
+        favfmt = self.registry.create_format('favfmt')
+        favfmt2 = self.registry.create_format('favfmt2')
+
+        @favfmt.reader(self.unassuming_class)
+        def fvfmt_to_unasumming_class(fh):
+            return
+
+        @favfmt.reader(self.class_with_default)
+        def fvfmt_to_class_w_default(fh):
+            return
+
+        @favfmt.reader(None)
+        def fvfmt_to_gen(fh):
+            yield
+
+        @favfmt2.reader(self.unassuming_class)
+        def fvfmt2_to_unasumming_class(fh):
+            return
+
+        @favfmt2.reader(self.class_with_default)
+        def fvfmt2_to_class_w_default(fh):
+            return
+
+        @favfmt.writer(self.class_with_default)
+        def favfmt_writer(fh):
+            pass
+
+        @favfmt.writer(None)
+        def gen_to_favfmt(fh):
+            pass
+
+        @favfmt2.writer(self.class_with_default)
+        def favfmt2_writer(fh):
+            pass
+
+        @favfmt2.reader(self.no_monkey_see, monkey_patch=True)
+        def favfmt2_to_monkey(fh):
+            pass
+
+        @favfmt2.writer(self.no_monkey_see, monkey_patch=False)
+        def monkey_to_favfmt2(fh):
+            pass
+
+        self.registry.monkey_patch()
+
+        self.assertTrue(hasattr(self.unassuming_class, 'read'))
+        self.assertFalse(hasattr(self.unassuming_class, 'write'))
+
+        self.assertTrue(hasattr(self.class_with_default, 'read'))
+        self.assertTrue(hasattr(self.class_with_default, 'write'))
+
+        self.assertTrue(hasattr(self.no_monkey_see, 'read'))
+        self.assertFalse(hasattr(self.no_monkey_see, 'write'))
+
+        self.assertIn('favfmt', self.unassuming_class.read.__doc__)
+        self.assertIn('favfmt2', self.unassuming_class.read.__doc__)
+
+        self.assertIn('favfmt', self.class_with_default.read.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.read.__doc__)
+
+        self.assertIn('favfmt', self.class_with_default.write.__doc__)
+        self.assertIn('favfmt2', self.class_with_default.write.__doc__)
+
+        self.assertIn('favfmt2', self.no_monkey_see.read.__doc__)
+
+    def test_read_kwargs_passed(self):
+        favfmt = self.registry.create_format('favfmt')
+        self.was_called = False
+
+        @favfmt.sniffer()
+        def fvfmt_sniffer(fh):
+            return True, {}
+
+        @favfmt.reader(self.class_with_default)
+        def fvfmt_to_class_w_default(fh, **kwargs):
+            self.assertEqual('a', kwargs['a'])
+            self.assertEqual(123, kwargs['b'])
+            self.was_called = True
+
+        self.registry.monkey_patch()
+        fh = StringIO(u'notempty')
+        self.class_with_default.read(fh, a='a', b=123)
+
+        self.assertTrue(self.was_called)
+        fh.close()
+
+    def test_write_kwargs_passed(self):
+        favfmt = self.registry.create_format('favfmt')
+        self.was_called = False
+
+        @favfmt.writer(self.class_with_default)
+        def favfmt_writer(obj, fh, **kwargs):
+            self.assertEqual('a', kwargs['a'])
+            self.assertEqual(123, kwargs['b'])
+            self.was_called = True
+
+        self.registry.monkey_patch()
+        fh = StringIO()
+        self.class_with_default().write(fh, a='a', b=123)
+
+        self.assertTrue(self.was_called)
+        fh.close()
 
 
 if __name__ == '__main__':

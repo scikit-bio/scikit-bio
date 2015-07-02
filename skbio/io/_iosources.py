@@ -10,12 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 from six import string_types, text_type
 
-import bz2file
-
 import io
 import gzip
 
-from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
+from ._fileobject import (ReadableBufferedIO, ReadableTextIO, BZ2File,
                           IterableStringWriterIO, IterableStringReaderIO)
 
 
@@ -228,11 +226,11 @@ class BZ2Compressor(Compressor):
         return self.file.peek(3)[:3] == b'BZh'
 
     def get_reader(self):
-        return bz2file.BZ2File(self.file, mode='rb')
+        return BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        return bz2file.BZ2File(self.file, mode='wb',
-                               compresslevel=self.options['compresslevel'])
+        return BZ2File(self.file, mode='wb',
+                       compresslevel=self.options['compresslevel'])
 
 
 class AutoCompressor(Compressor):

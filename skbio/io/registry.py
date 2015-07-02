@@ -13,11 +13,6 @@ Functions
 .. autosummary::
     :toctree: generated/
 
-    open
-    open_file
-    open_files
-    resolve
-    resolve_file
 
 """
 
@@ -43,7 +38,7 @@ from future.builtins import zip
 from . import (UnrecognizedFormatError, InvalidRegistrationError,
                DuplicateRegistrationError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
-from .util import resolve_file, open_file, open_files, _d as _open_kwargs
+from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
 
 FileSentinel = make_sentinel("FileSentinel")
@@ -248,24 +243,31 @@ class IORegistry(object):
         # garbage collected (using io.TextIOBase results in close being called
         # on our buffer by the deconstructor which we wanted to share with the
         # next sniffer)
-        with resolve_file(file, mode='r', **kwargs) as (fh, is_binary_file):
+        with _resolve_file(file, mode='r', **kwargs) as (fh, _,
+                                                         is_binary_file):
             # tell may fail noisily if the user provided a TextIOBase or
             # BufferedReader which has already been iterated over (via next()).
             matches = []
             backup = fh.tell()
-            if is_binary_file:
-                matches = self._find_matches(fh, self._binary_formats,
-                                             **kwargs)
+            if is_binary_file and kwargs.get('encoding', 'binary') == 'binary':
+                    matches = self._find_matches(fh, self._binary_formats,
+                                                 **kwargs)
 
-            # We can always turn a binary file into a text file, but the
-            # reverse doesn't make sense.
-            matches += self._find_matches(fh, self._text_formats, **kwargs)
-            fh.seek(backup)
+            if kwargs.get('encoding', None) != 'binary':
+                # We can always turn a binary file into a text file, but the
+                # reverse doesn't make sense.
+                matches += self._find_matches(fh, self._text_formats, **kwargs)
+                fh.seek(backup)
+            elif not is_binary_file:
+                raise ValueError("Cannot decode text source (%r) as binary."
+                                 % file)
+            # else we are a binary_file and our encoding did not exclude binary
+            # so we have already handled that condition
 
         if len(matches) > 1:
             raise UnrecognizedFormatError("File format for %r is ambiguous,"
                                           " may be one of: %r"
-                                          % (file, [m for m, _ in matches]))
+                                          % (file, [m for m, s in matches]))
         elif len(matches) == 0:
             raise UnrecognizedFormatError("Could not detect the format of %r"
                                           % file)
@@ -276,12 +278,7 @@ class IORegistry(object):
         matches = []
         for format in lookup.values():
             if format.sniffer_function is not None:
-                # Some formats may have headers which indicate their format
-                # sniffers should be able to rely on the filehandle to point
-                # at the beginning of the file.
-                file.seek(0)
                 is_format, skwargs = format.sniffer_function(file, **kwargs)
-
                 if is_format:
                     matches.append((format.name, skwargs))
         return matches
@@ -344,7 +341,7 @@ class IORegistry(object):
 
     def _read_ret(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
-        with resolve_file(file, **io_kwargs) as (file, _):
+        with _resolve_file(file, **io_kwargs) as (file, _, _):
             reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
                                                io_kwargs)
             return reader(file, **kwargs)
@@ -352,10 +349,10 @@ class IORegistry(object):
     def _read_gen(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
         # We needed to get the io_kwargs from kwargs for things like
-        # resolve_file and for verifying a format.
+        # _resolve_file and for verifying a format.
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
-        with resolve_file(file, **io_kwargs) as (file, _):
+        with _resolve_file(file, **io_kwargs) as (file, _, _):
             reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
                                                io_kwargs)
             generator = reader(file, **kwargs)
@@ -462,43 +459,42 @@ class IORegistry(object):
     def _apply_read(registry, cls):
         """Add read method if any formats have a reader for `cls`."""
         read_formats = registry.list_read_formats(cls)
-        if read_formats:
-            @classmethod
-            def read(cls, file, format=None, **kwargs):
-                return registry.read(file, into=cls, format=format, **kwargs)
 
-            imports = registry._import_paths(read_formats)
-            doc_list = registry._formats_for_docs(read_formats, imports)
-            read.__func__.__doc__ = _read_docstring % {
-                'name': cls.__name__,
-                'list': doc_list,
-                'see': '\n'.join(imports)
-            }
-            cls.read = read
+        @classmethod
+        def read(cls, file, format=None, **kwargs):
+            return registry.read(file, into=cls, format=format, **kwargs)
+
+        imports = registry._import_paths(read_formats)
+        doc_list = registry._formats_for_docs(read_formats, imports)
+        read.__func__.__doc__ = _read_docstring % {
+            'name': cls.__name__,
+            'list': doc_list,
+            'see': '\n'.join(imports)
+        }
+        cls.read = read
 
     def _apply_write(registry, cls):
         """Add write method if any formats have a writer for `cls`."""
         write_formats = registry.list_write_formats(cls)
-        if write_formats:
-            if not hasattr(cls, 'default_write_format'):
-                raise NotImplementedError(
-                    "Classes with registered writers must provide a "
-                    "`default_write_format`. Please add `default_write_format`"
-                    " to '%s'." % cls.__name__)
+        if not hasattr(cls, 'default_write_format'):
+            raise NotImplementedError(
+                "Classes with registered writers must provide a "
+                "`default_write_format`. Please add `default_write_format`"
+                " to '%s'." % cls.__name__)
 
-            def write(self, file, format=cls.default_write_format, **kwargs):
-                return registry.write(self, into=file, format=format, **kwargs)
+        def write(self, file, format=cls.default_write_format, **kwargs):
+            return registry.write(self, into=file, format=format, **kwargs)
 
-            imports = registry._import_paths(write_formats)
-            doc_list = registry._formats_for_docs(write_formats, imports)
-            write.__doc__ = _write_docstring % {
-                'name': cls.__name__,
-                'list': doc_list,
-                'see': '\n'.join(imports),
-                'default': cls.default_write_format
-            }
+        imports = registry._import_paths(write_formats)
+        doc_list = registry._formats_for_docs(write_formats, imports)
+        write.__doc__ = _write_docstring % {
+            'name': cls.__name__,
+            'list': doc_list,
+            'see': '\n'.join(imports),
+            'default': cls.default_write_format
+        }
 
-            cls.write = write
+        cls.write = write
 
     def _import_paths(self, formats):
         lines = []
@@ -707,6 +703,10 @@ class Format(object):
                 with open_file(file, mode='r', encoding=encoding,
                                newline=newline, errors=errors, **kwargs) as fh:
                     try:
+                        # Some formats may have headers which indicate their
+                        # format sniffers should be able to rely on the
+                        # filehandle to point at the beginning of the file.
+                        fh.seek(0)
                         return sniffer(fh)
                     except Exception:
                         warn("'%s' has encountered a problem.\nPlease"
