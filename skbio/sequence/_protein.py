@@ -72,6 +72,7 @@ class Protein(IUPACSequence):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        has stops: False
     -----------------------------
     0 PAW
 
@@ -85,6 +86,7 @@ class Protein(IUPACSequence):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        has stops: False
     -----------------------------
     0 PAW
 
@@ -99,8 +101,8 @@ class Protein(IUPACSequence):
         return cls.__stop_codes
 
     @classproperty
-    # TODO figure out why this doesn't work
-    #@overrides(IUPACSequence)
+    # TODO why doesn't this work?
+    # @overrides(IUPACSequence)
     def alphabet(cls):
         return (cls.degenerate_chars | cls.nondegenerate_chars |
                 cls.gap_chars | cls.stop_chars)

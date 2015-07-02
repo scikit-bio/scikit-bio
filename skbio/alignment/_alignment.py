@@ -165,6 +165,7 @@ class SequenceCollection(SkbioObject):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 60.00%
         -----------------------------
         0 ACCGT
         >>> sc["seq1"]
@@ -177,6 +178,7 @@ class SequenceCollection(SkbioObject):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 60.00%
         -----------------------------
         0 ACCGT
 
@@ -1103,6 +1105,7 @@ class Alignment(SequenceCollection):
             has gaps: True
             has degenerates: False
             has non-degenerates: True
+            GC-content: 33.33%
         -----------------------------
         0 AT-C
 

@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import numpy as np
-
 import skbio
 from skbio.util import classproperty, overrides
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
@@ -78,6 +76,7 @@ class RNA(IUPACSequence, NucleotideMixin):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        GC-content: 42.86%
     -----------------------------
     0 ACCGAAU
 
@@ -91,6 +90,7 @@ class RNA(IUPACSequence, NucleotideMixin):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        GC-content: 42.86%
     -----------------------------
     0 ACCGAAU
 

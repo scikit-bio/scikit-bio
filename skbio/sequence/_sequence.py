@@ -411,6 +411,7 @@ class Sequence(collections.Sequence, SkbioObject):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 50.00%
         -----------------------------
         0 ACGT
 

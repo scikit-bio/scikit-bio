@@ -10,8 +10,6 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-import six
-
 from skbio.sequence._base import ElasticLines
 
 

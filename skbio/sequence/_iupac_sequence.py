@@ -449,6 +449,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 55.56%
         -----------------------------
         0 GGTCCATTC
 
@@ -490,6 +491,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 33.33%
         -----------------------------
         0 TAG
         <BLANKLINE>
@@ -500,6 +502,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 66.67%
         -----------------------------
         0 TGG
         <BLANKLINE>

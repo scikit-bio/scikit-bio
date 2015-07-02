@@ -68,7 +68,7 @@ class GeneticCode(SkbioObject):
             raise ValueError("`starts` must be length 64, not %d"
                              % len(starts))
         if ((starts.values == b'M').sum() + (starts.values == b'-').sum() !=
-            len(starts)):
+                len(starts)):
             # to prevent the user from accidentally swapping `starts` and
             # `amino_acids` and getting a translation back
             raise ValueError("`starts` may only contain M and - characters")
