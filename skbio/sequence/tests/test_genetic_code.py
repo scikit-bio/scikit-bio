@@ -460,6 +460,22 @@ class TestGeneticCode(unittest.TestCase):
                                    'reading_frame=1.*start=\'require\''):
             gc.translate(seq, start='require', stop='require')
 
+    def test_translate_six_frames(self):
+        seq = RNA('AUGCUAACAUAAA')  # rc = UUUAUGUUAGCAU
+
+        # test default behavior
+        exp = [Protein('MLT*'), Protein('C*HK'), Protein('ANI'),
+               Protein('FMLA'), Protein('LC*H'), Protein('YVS')]
+        obs = list(self.sgc.translate_six_frames(seq))
+        self.assertEqual(obs, exp)
+
+        # test that start/stop are respected
+        exp = [Protein('MLT'), Protein('C'), Protein('ANI'),
+               Protein('MLA'), Protein('LC'), Protein('YVS')]
+        obs = list(self.sgc.translate_six_frames(seq, start='optional',
+                                                 stop='optional'))
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     unittest.main()

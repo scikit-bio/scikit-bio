@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+from future.builtins import range
 
 from skbio.util._decorator import classproperty
 from skbio._base import SkbioObject
@@ -228,6 +229,16 @@ class GeneticCode(SkbioObject):
             "current reading frame (`reading_frame=%d`). Presence "
             "of a %s codon is required with `%s='require'`"
             % (name, reading_frame, name, name))
+
+    def translate_six_frames(self, sequence, start='ignore', stop='ignore'):
+        rc = sequence.reverse_complement()
+
+        for reading_frame in range(1, 4):
+            yield self.translate(sequence, reading_frame=reading_frame,
+                                 start=start, stop=stop)
+        for reading_frame in range(1, 4):
+            yield self.translate(rc, reading_frame=reading_frame,
+                                 start=start, stop=stop)
 
 
 _ncbi_genetic_codes = {
