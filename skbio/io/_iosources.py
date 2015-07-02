@@ -12,9 +12,11 @@ from six import string_types, text_type
 
 import io
 import gzip
+import bz2file
 
-from ._fileobject import (ReadableBufferedIO, ReadableTextIO, BZ2File,
-                          IterableStringWriterIO, IterableStringReaderIO)
+from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
+                          IterableStringWriterIO, IterableStringReaderIO,
+                          WrappedBufferedRandom)
 
 
 def get_io_sources():
@@ -64,6 +66,7 @@ class IOSource(object):
 
 
 class Compressor(IOSource):
+    streamable = True
     name = ''
 
     def can_write(self):
@@ -98,7 +101,7 @@ class BytesIOSource(IOSource):
         return self.can_read()
 
     def get_reader(self):
-        return io.BufferedRandom(self.file)
+        return WrappedBufferedRandom(self.file)
 
     def get_writer(self):
         return self.get_reader()
@@ -207,6 +210,7 @@ class ReadableSource(IOSource):
 
 class GzipCompressor(Compressor):
     name = 'gzip'
+    streamable = True
 
     def can_read(self):
         return self.file.peek(2)[:2] == b'\x1f\x8b'
@@ -221,19 +225,21 @@ class GzipCompressor(Compressor):
 
 class BZ2Compressor(Compressor):
     name = 'bz2'
+    streamable = False
 
     def can_read(self):
         return self.file.peek(3)[:3] == b'BZh'
 
     def get_reader(self):
-        return BZ2File(self.file, mode='rb')
+        return bz2file.BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        return BZ2File(self.file, mode='wb',
-                       compresslevel=self.options['compresslevel'])
+        return bz2file.BZ2File(self.file, mode='wb',
+                               compresslevel=self.options['compresslevel'])
 
 
 class AutoCompressor(Compressor):
+    streamable = True  # We can' write so it doesn't matter
     name = 'auto'
 
     def get_reader(self):

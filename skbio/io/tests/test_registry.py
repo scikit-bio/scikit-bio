@@ -1627,6 +1627,7 @@ class TestWrite(RegistryTest):
 
         obj = TestClass([u'a\n', u'b\n', u'c\n'])
         fp = self.fp1
+        f = io.BytesIO()
 
         @format1.writer(TestClass)
         def writer(obj, fh):
@@ -1637,11 +1638,15 @@ class TestWrite(RegistryTest):
                 fh.write(l)
 
         self.registry.write(obj, format='format1', into=fp, compression='bz2')
+        self.registry.write(obj, format='format1', into=f, compression='bz2')
+        expected = (
+            b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00\x108\x00 \x00'
+            b'!\x9ah3M\x1c\xb7\x8b\xb9"\x9c(H\x01\xc4\x86S\x00')
 
         with io.open(fp, mode='rb') as fh:
-            self.assertEqual(b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00'
-                             b'\x00\x108\x00 \x00!\x9ah3M\x1c\xb7\x8b\xb9"\x9c'
-                             b'(H\x01\xc4\x86S\x00', fh.read())
+            self.assertEqual(expected, fh.read())
+
+        self.assertEqual(expected, f.getvalue())
 
 
 class TestMonkeyPatch(RegistryTest):

@@ -12,8 +12,6 @@ import io
 import tempfile
 import os
 
-import bz2file
-
 
 def is_binary_file(file):
     return isinstance(file, (io.BufferedReader, io.BufferedWriter,
@@ -63,12 +61,34 @@ class SaneTextIOWrapper(io.TextIOWrapper):
                     self.buffer.close()
 
 
+class WrappedBufferedRandom(io.BufferedRandom):
+    def __init__(self, *args, **kwargs):
+        super(WrappedBufferedRandom, self).__init__(*args, **kwargs)
+        self._should_close_raw = True
+
+    def __del__(self):
+        self._should_close_raw = False
+        self.close()
+
+    # Based on:
+    # https://github.com/python/cpython/blob/2.7/Lib/_pyio.py#L732
+    def close(self):
+        if self.raw is not None and not self.closed:
+            try:
+                # may raise BlockingIOError or BrokenPipeError etc
+                self.flush()
+            finally:
+                if self._should_close_raw:
+                    self.raw.close()
+
+
 class CompressedMixin(object):
     """Act as a bridge between worlds"""
     def __init__(self, before_file, *args, **kwargs):
-        super(CompressedMixin, self).__init__(*args, **kwargs)
+        self.streamable = kwargs.pop('streamable', True)
         self._should_close_raw = True
         self._before_file = before_file
+        super(CompressedMixin, self).__init__(*args, **kwargs)
 
     def __del__(self):
         self._should_close_raw = False
@@ -100,20 +120,7 @@ class CompressedBufferedReader(CompressedMixin, io.BufferedReader):
 
 
 class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
-    def flush(self):
-        super(CompressedBufferedWriter, self).flush()
-        self.raw.flush()
-
-
-class BZ2File(bz2file.BZ2File):
-    def flush(self):
-        # HACK because flush does not actually work.
-        # based on
-        # https://github.com/nvawda/bz2file/blob/master/bz2file.py#L129
-        super(BZ2File, self).flush()
-        if self._mode == bz2file._MODE_WRITE:
-            with self._lock:
-                self._fp.write(self._compressor.flush())
+    pass
 
 
 class TemporaryFile(io.FileIO):

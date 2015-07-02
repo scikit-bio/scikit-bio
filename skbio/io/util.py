@@ -101,7 +101,8 @@ def _munge_file(file, is_binary_file, arguments):
         if compression:
             c = compression_handler(newfile, arguments)
             if mode == 'w':
-                newfile = CompressedBufferedWriter(file, c.get_writer())
+                newfile = CompressedBufferedWriter(file, c.get_writer(),
+                                                   streamable=c.streamable)
             else:
                 newfile = CompressedBufferedReader(file, c.get_reader())
 
@@ -134,17 +135,25 @@ def _resolve_file(file, **kwargs):
 @contextmanager
 def open_file(file, **kwargs):
     with _resolve_file(file, **kwargs) as (file, source, is_binary_file):
-        file = _munge_file(file, is_binary_file, source.options)
+        newfile = _munge_file(file, is_binary_file, source.options)
         try:
-            yield file
+            yield newfile
         finally:
             # As soon as we leave the above context manager file will be closed
             # It is important to realize that because we are closing an inner
             # buffer, the outer buffer will reflect that state, but it won't
             # get flushed as the inner buffer is oblivious to the outer
             # buffer's existence.
-            if not file.closed:
-                file.flush()
+            if not newfile.closed:
+                newfile.flush()
+                _flush_compressor(newfile)
+
+
+def _flush_compressor(file):
+    if isinstance(file, io.TextIOBase) and hasattr(file, 'buffer'):
+        file = file.buffer
+    if isinstance(file, CompressedBufferedWriter) and not file.streamable:
+        file.raw.close()
 
 
 @contextmanager
