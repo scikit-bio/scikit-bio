@@ -26,6 +26,7 @@ from scipy.spatial.distance import hamming
 import pandas as pd
 
 from skbio._base import SkbioObject
+from skbio.sequence._base import ElasticLines
 from skbio.util._misc import chunk_str
 
 
@@ -2002,7 +2003,7 @@ class _SequenceReprBuilder(object):
         self._chunk_size = chunk_size
 
     def build(self):
-        lines = _ElasticLines()
+        lines = ElasticLines()
 
         cls_name = self._seq.__class__.__name__
         lines.add_line(cls_name)
@@ -2183,37 +2184,3 @@ class _SequenceReprBuilder(object):
             chunked_chars = chunk_str(chars, self._chunk_size, ' ')
             lines.append(('%d' % seq_idx).ljust(column_width) + chunked_chars)
         return lines
-
-
-class _ElasticLines(object):
-    """Store blocks of content separated by dashed lines.
-
-    Each dashed line (separator) is as long as the longest content
-    (non-separator) line.
-
-    """
-
-    def __init__(self):
-        self._lines = []
-        self._separator_idxs = []
-        self._max_line_len = -1
-
-    def add_line(self, line):
-        line_len = len(line)
-        if line_len > self._max_line_len:
-            self._max_line_len = line_len
-        self._lines.append(line)
-
-    def add_lines(self, lines):
-        for line in lines:
-            self.add_line(line)
-
-    def add_separator(self):
-        self._lines.append(None)
-        self._separator_idxs.append(len(self._lines) - 1)
-
-    def to_str(self):
-        separator = '-' * self._max_line_len
-        for idx in self._separator_idxs:
-            self._lines[idx] = separator
-        return '\n'.join(self._lines)

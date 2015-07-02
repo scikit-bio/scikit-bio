@@ -10,11 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+import skbio
 from skbio.util import classproperty, overrides
 from ._nucleotide_sequence import NucleotideSequence
 from ._iupac_sequence import IUPACSequence
-from ._protein import Protein
-from ._genetic_code import GeneticCode
 
 
 class RNA(NucleotideSequence):
@@ -123,52 +122,20 @@ class RNA(NucleotideSequence):
             "H": set("ACU"), "V": set("ACG"), "N": set("ACGU")
         }
 
-    def translate(self, genetic_code=1, reading_frame=1):
+    def translate(self, genetic_code=1, *args, **kwargs):
         """
+
         Parameters
         ----------
         genetic_code : int, GeneticCode, optional
             The genetic code to use, will lookup the GeneticCode by int id or
             will use the GeneticCode provided.
-        reading_frame : {1, 2, 3, -1, -2, -3}
-            The reading frame to use. The number indicates the base to start
-            translation on. If negative, will perform a reverse complement
-            first.
 
         Returns
         -------
         Protein
-            The translated protein.
+            Translated protein sequence.
         """
-        if self.has_degenerates():
-            raise NotImplementedError("scikit-bio does not currently support"
-                                      " translation of degenerate sequences.")
-
-        if reading_frame not in GeneticCode.reading_frames:
-            raise ValueError("`reading_frame` must be one of %r not %r" %
-                             (GeneticCode.reading_frames, reading_frame))
-
-        if not isinstance(genetic_code, GeneticCode):
-            genetic_code = GeneticCode.from_id(genetic_code)
-
-        data = self
-        offset = reading_frame - 1
-        if reading_frame < 0:
-            data = self.reverse_complement()
-            offset = 1 - reading_frame
-
-        data = data._bytes[offset:].copy()
-
-        data = data[:data.size // 3 * 3].reshape((-1, 3))
-        data[data == ord('U')] = 0
-        data[data == ord('C')] = 1
-        data[data == ord('A')] = 2
-        data[data == ord('G')] = 3
-
-
-        metadata = None
-        if self.has_metadata():
-            metadata = self.metadata
-
-        index = (data * np.asarray([16, 4, 1], dtype=np.uint8)).sum(axis=1)
-        return Protein(genetic_code.values[index], metadata=metadata)
+        if not isinstance(genetic_code, skbio.GeneticCode):
+            genetic_code = skbio.GeneticCode.from_id(genetic_code)
+        return genetic_code.translate(self, *args, **kwargs)

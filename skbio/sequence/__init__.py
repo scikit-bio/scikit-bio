@@ -30,24 +30,6 @@ Classes
    Protein
    GeneticCode
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   genetic_code
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   GeneticCodeError
-   GeneticCodeInitError
-   InvalidCodonError
-
 Examples
 --------
 >>> from skbio import DNA, RNA
@@ -297,8 +279,6 @@ Stats:
 
 from skbio.util import TestRunner
 
-from ._exception import (GeneticCodeError, GeneticCodeInitError,
-                         InvalidCodonError)
 from ._sequence import Sequence
 from ._iupac_sequence import IUPACSequence
 from ._nucleotide_sequence import NucleotideSequence
@@ -307,8 +287,7 @@ from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
 
-__all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'IUPACSequence', 'NucleotideSequence',
-           'Protein', 'DNA', 'RNA', 'GeneticCode']
+__all__ = ['Sequence', 'IUPACSequence', 'NucleotideSequence', 'Protein', 'DNA',
+           'RNA', 'GeneticCode']
 
 test = TestRunner(__file__).test
