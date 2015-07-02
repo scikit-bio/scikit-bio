@@ -197,8 +197,10 @@ class TestGeneticCode(unittest.TestCase):
             self.assertFalse(gc1 == gc2)
 
     def test_translate_preserves_metadata(self):
-        obs = self.sgc.translate(RNA('AUG',
-                                     metadata={'foo': 'bar', 'baz': 42}))
+        obs = self.sgc.translate(
+            RNA('AUG', metadata={'foo': 'bar', 'baz': 42},
+                positional_metadata={'foo': range(3)}))
+        # metadata retained, positional metadata dropped
         self.assertEqual(obs, Protein('M',
                                       metadata={'foo': 'bar', 'baz': 42}))
 
@@ -475,6 +477,16 @@ class TestGeneticCode(unittest.TestCase):
         obs = list(self.sgc.translate_six_frames(seq, start='optional',
                                                  stop='optional'))
         self.assertEqual(obs, exp)
+
+    def test_translate_six_frames_preserves_metadata(self):
+        seq = RNA('AUG', metadata={'foo': 'bar', 'baz': 42},
+                  positional_metadata={'foo': range(3)})
+        obs = list(self.sgc.translate_six_frames(seq))[:2]
+        # metadata retained, positional metadata dropped
+        self.assertEqual(
+            obs,
+            [Protein('M', metadata={'foo': 'bar', 'baz': 42}),
+             Protein('', metadata={'foo': 'bar', 'baz': 42})])
 
 
 if __name__ == '__main__':

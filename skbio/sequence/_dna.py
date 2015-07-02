@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
+from ._rna import RNA
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
@@ -123,23 +124,21 @@ class DNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    def transcribe(self, coding=True):
+    def transcribe(self):
         """
+        assumes coding strand
 
         """
-        if coding:
-            new_seq = self.copy()
-        else:
-            new_seq = new_seq.reverse_complement()
-        with new_seq._byte_ownership():
-            new_seq._bytes[new_seq._bytes == b'T'] = b'U'
-        return RNA(new_seq)
+        seq = self.copy()
+        with seq._byte_ownership():
+            seq._bytes[seq._bytes == ord(b'T')] = ord(b'U')
+        return RNA(seq)
 
-    def translate(self, coding=True, *args, **kwargs):
-        return self.transcribe(coding=coding).translate(*args, **kwargs)
+    def translate(self, *args, **kwargs):
+        return self.transcribe().translate(*args, **kwargs)
 
-    def translate_six_frames(self, coding=True, *args, **kwargs):
-        return self.transcribe(coding=coding).translate_six_frames(*args, **kwargs)
+    def translate_six_frames(self, *args, **kwargs):
+        return self.transcribe().translate_six_frames(*args, **kwargs)
 
     @overrides(IUPACSequence)
     def _repr_stats(self):
