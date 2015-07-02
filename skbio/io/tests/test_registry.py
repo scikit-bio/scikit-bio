@@ -74,6 +74,8 @@ class TestRegisterAndGetReader(RegistryTest):
         format1 = self.registry.create_format('format1')
         format2 = self.registry.create_format('format2')
         format3 = self.registry.create_format('format3')
+        format4 = self.registry.create_format('format4', encoding='binary')
+        format5 = self.registry.create_format('format5', encoding='binary')
 
         @format1.reader(TestClassA)
         def format1_reader(fh):
@@ -91,6 +93,18 @@ class TestRegisterAndGetReader(RegistryTest):
         def format3_reader(fh):
             return
 
+        @format4.reader(TestClassA)
+        def format4_reader(fh):
+            return
+
+        @format4.reader(TestClassB)
+        def format4_reader_b(fh):
+            return
+
+        @format5.reader(None)
+        def format5_reader(fh):
+            return
+
         self.assertIs(format1_reader,
                       self.registry.get_reader('format1', TestClassA))
 
@@ -106,6 +120,19 @@ class TestRegisterAndGetReader(RegistryTest):
 
         self.assertIs(format3_reader,
                       self.registry.get_reader('format3', TestClassB))
+
+        self.assertIs(format4_reader,
+                      self.registry.get_reader('format4', TestClassA))
+
+        self.assertIs(format4_reader_b,
+                      self.registry.get_reader('format4', TestClassB))
+
+        self.assertIs(format5_reader,
+                      self.registry.get_reader('format5', None))
+
+        self.assertIs(None, self.registry.get_reader('format5', TestClassA))
+
+        self.assertIs(None, self.registry.get_reader('format5', TestClassA))
 
     def test_register_reader_over_existing(self):
         format1 = self.registry.create_format('format1')
@@ -158,6 +185,8 @@ class TestRegisterAndGetWriter(RegistryTest):
         format1 = self.registry.create_format('format1')
         format2 = self.registry.create_format('format2')
         format3 = self.registry.create_format('format3')
+        format4 = self.registry.create_format('format4', encoding='binary')
+        format5 = self.registry.create_format('format5', encoding='binary')
 
         @format1.writer(TestClassA)
         def format1_writer(obj, fh):
@@ -173,6 +202,18 @@ class TestRegisterAndGetWriter(RegistryTest):
 
         @format3.writer(TestClassB)
         def format3_writer(obj, fh):
+            return
+
+        @format4.writer(TestClassA)
+        def format4_writer(fh):
+            return
+
+        @format4.writer(TestClassB)
+        def format4_writer_b(fh):
+            return
+
+        @format5.writer(None)
+        def format5_writer(fh):
             return
 
         self.assertEqual(format1_writer,
@@ -192,6 +233,19 @@ class TestRegisterAndGetWriter(RegistryTest):
 
         self.assertEqual(format3_writer,
                          self.registry.get_writer('format3', TestClassB))
+
+        self.assertIs(format4_writer,
+                     self.registry.get_writer('format4', TestClassA))
+
+        self.assertIs(format4_writer_b,
+                     self.registry.get_writer('format4', TestClassB))
+
+        self.assertIs(format5_writer,
+                     self.registry.get_writer('format5', None))
+
+        self.assertIs(None, self.registry.get_writer('format5', TestClassA))
+
+        self.assertIs(None, self.registry.get_writer('format5', TestClassA))
 
     def test_register_writer_over_existing(self):
         format1 = self.registry.create_format('format1')
@@ -233,7 +287,7 @@ class TestRegisterAndGetSniffer(RegistryTest):
     def test_register_sniffer_on_many(self):
         format1 = self.registry.create_format('format1')
         format2 = self.registry.create_format('format2')
-        format3 = self.registry.create_format('format3')
+        format3 = self.registry.create_format('format3', encoding='binary')
 
         @format1.sniffer()
         def format1_sniffer(fh):
@@ -332,9 +386,9 @@ class TestListReadFormats(RegistryTest):
     def test_many_read_formats(self):
         format1 = self.registry.create_format('format1')
         format2 = self.registry.create_format('format2')
-        format3 = self.registry.create_format('format3')
+        format3 = self.registry.create_format('format3', encoding='binary')
         format4 = self.registry.create_format('format4')
-        format5 = self.registry.create_format('format5')
+        format5 = self.registry.create_format('format5', encoding='binary')
 
         @format1.reader(TestClassA)
         def format1_clsA(fh):
@@ -391,9 +445,9 @@ class TestListWriteFormats(RegistryTest):
     def test_many_write_formats(self):
         format1 = self.registry.create_format('format1')
         format2 = self.registry.create_format('format2')
-        format3 = self.registry.create_format('format3')
+        format3 = self.registry.create_format('format3', encoding='binary')
         format4 = self.registry.create_format('format4')
-        format5 = self.registry.create_format('format5')
+        format5 = self.registry.create_format('format5', encoding='binary')
 
         @format1.writer(TestClassA)
         def format1_clsA(fh):
@@ -482,21 +536,67 @@ class TestSniff(RegistryTest):
         self.assertTrue("format4" in str(cm.exception))
         fh.close()
 
-#    def test_that_mode_is_used(self):
-#        fp = self.fp1
-#        with open(fp, 'w') as fh:
-#            fh.write('@\n#\n')
-#
-#        @self.registry.register_sniffer('format')
-#        def sniffer(fh):
-#            self.assertEqual(self.expected_mode, fh.mode)
-#            return '@' in fh.readline(), {}
-#
-#        self.expected_mode = 'U'
-#        self.registry.sniff(fp)
-#
-#        self.expected_mode = 'r'
-#        self.registry.sniff(fp, mode='r')
+    def test_that_encoding_is_used(self):
+       formatx = self.registry.create_format('formatx')
+
+       fp = get_data_path('big5_file')
+
+       @formatx.sniffer()
+       def sniffer(fh):
+           self.assertEqual('big5', fh.encoding)
+           return True, {}
+
+       fmt, _ = self.registry.sniff(fp, encoding='big5')
+       self.assertEqual(fmt, 'formatx')
+
+    def test_that_newline_is_used(self):
+        formatx = self.registry.create_format('formatx')
+
+        fp = get_data_path('real_file')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            self.assertEqual(fh.readlines(), ['a\nb\nc\nd\ne\n'])
+            return True, {}
+
+        fmt, _ = self.registry.sniff(fp, newline='\r')
+        self.assertEqual(fmt, 'formatx')
+
+    def test_non_default_encoding(self):
+        big5_format = self.registry.create_format('big5_format',
+                                                  encoding='big5')
+
+        @big5_format.sniffer()
+        def sniffer(fh):
+            self.assertEqual(self._expected_encoding, fh.encoding)
+            return True, {}
+
+        self._expected_encoding = 'big5'
+        fmt, _ = self.registry.sniff(self.fp1)
+        self.assertEqual(fmt, 'big5_format')
+
+        self._expected_encoding = 'UTF-8'
+        fmt, _ = self.registry.sniff(self.fp1, encoding='UTF-8')
+        self.assertEqual(fmt, 'big5_format')
+
+    def test_non_default_newline(self):
+        formatx = self.registry.create_format('formatx', newline='\r')
+
+        fp = get_data_path('real_file')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            self.assertEqual(fh.readlines(), self._expected_lines)
+            return True, {}
+
+        self._expected_lines = ['a\nb\nc\nd\ne\n']
+        fmt, _ = self.registry.sniff(fp)
+        self.assertEqual(fmt, 'formatx')
+
+
+        self._expected_lines = ['a\n', 'b\n', 'c\n', 'd\n', 'e\n']
+        fmt, _ = self.registry.sniff(fp, newline=None)
+        self.assertEqual(fmt, 'formatx')
 
     def test_position_not_mutated_real_file(self):
         formatx = self.registry.create_format('formatx')
@@ -522,6 +622,26 @@ class TestSniff(RegistryTest):
         fh.seek(2)
         self.registry.sniff(fh)
         self.assertEqual('b\n', fh.readline())
+
+    def test_sniff_with_encoding_errors(self):
+        formatx = self.registry.create_format('formatx', encoding='ascii')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            fh.read()
+            return True, {}
+
+        fp = get_data_path('big5_file')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error")
+            with self.assertRaises(FormatIdentificationWarning):
+                # Will result in a UnicodeException which will be caught and
+                # warned
+                fmt, _ = self.registry.sniff(fp, errors='strict')
+            # errors is set to ignore by default, so our sniffer will return
+            # true even though read() didn't entirely work for ascii
+            fmt, _ = self.registry.sniff(fp)
+            self.assertEqual(fmt, 'formatx')
 
 
 class TestRead(RegistryTest):

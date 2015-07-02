@@ -1,6 +1,6 @@
 r"""
 Clustal format (:mod:`skbio.io.format.clustal`)
-================================================
+===============================================
 
 .. currentmodule:: skbio.io.format.clustal
 

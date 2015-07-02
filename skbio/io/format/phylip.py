@@ -1,6 +1,6 @@
 """
 PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
-==========================================================================
+=========================================================================
 
 .. currentmodule:: skbio.io.format.phylip
 

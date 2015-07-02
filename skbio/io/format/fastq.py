@@ -1,6 +1,6 @@
 r"""
 FASTQ format (:mod:`skbio.io.format.fastq`)
-============================================
+===========================================
 
 .. currentmodule:: skbio.io.format.fastq
 

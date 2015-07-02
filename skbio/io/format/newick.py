@@ -1,6 +1,6 @@
 """
 Newick format (:mod:`skbio.io.format.newick`)
-==============================================
+=============================================
 
 .. currentmodule:: skbio.io.format.newick
 

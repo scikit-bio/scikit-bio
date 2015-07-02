@@ -1,6 +1,6 @@
 """
 FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
-=================================================
+================================================
 
 .. currentmodule:: skbio.io.format.fasta
 

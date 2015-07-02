@@ -1,6 +1,6 @@
 r"""
 QSeq format (:mod:`skbio.io.format.qseq`)
-==========================================
+=========================================
 
 .. currentmodule:: skbio.io.format.qseq
 
