@@ -1630,7 +1630,11 @@ class TestWrite(RegistryTest):
 
         @format1.writer(TestClass)
         def writer(obj, fh):
-            fh.write(u''.join(obj.list))
+            iterator = iter(obj.list)
+            fh.write(next(iterator))
+            fh.flush()  # Flush should be a noop for bz2
+            for l in iterator:
+                fh.write(l)
 
         self.registry.write(obj, format='format1', into=fp, compression='bz2')
 
