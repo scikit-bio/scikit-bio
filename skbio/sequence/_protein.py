@@ -49,6 +49,7 @@ class Protein(IUPACSequence):
     positional_metadata
     alphabet
     gap_chars
+    stop_chars
     nondegenerate_chars
     degenerate_chars
     degenerate_map
@@ -130,6 +131,13 @@ class Protein(IUPACSequence):
 
     def has_stops(self):
         return bool(self.stops().any())
+
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(Protein, self)._repr_stats()
+        stats.append(('has stops', '%r' % self.has_stops()))
+        return stats
 
 
 _motifs = parent_motifs.copy()

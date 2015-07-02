@@ -138,6 +138,13 @@ class DNA(IUPACSequence, NucleotideMixin):
     def translate(self, coding=True, *args, **kwargs):
         return self.transcribe(coding=coding).translate(*args, **kwargs)
 
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(DNA, self)._repr_stats()
+        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        return stats
+
 
 _motifs = _parent_motifs.copy()
 

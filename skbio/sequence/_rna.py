@@ -144,6 +144,13 @@ class RNA(IUPACSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_id(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(RNA, self)._repr_stats()
+        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        return stats
+
 
 _motifs = _parent_motifs.copy()
 

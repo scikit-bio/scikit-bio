@@ -97,6 +97,28 @@ class TestProtein(unittest.TestCase):
                                               ignore=seq.gaps())),
                          [slice(5, 10)])
 
+    def test_repr(self):
+        # basic sanity checks for custom repr stats. more extensive testing is
+        # performed on Sequence.__repr__
+
+        obs = repr(Protein(''))
+        # obtained from super()
+        self.assertIn('has gaps: False', obs)
+        # custom to Protein
+        self.assertIn('has stops: False', obs)
+
+        obs = repr(Protein('PAW'))
+        self.assertIn('has gaps: False', obs)
+        self.assertIn('has stops: False', obs)
+
+        obs = repr(Protein('PA*W-'))
+        self.assertIn('has gaps: True', obs)
+        self.assertIn('has stops: True', obs)
+
+        obs = repr(Protein('*****'))
+        self.assertIn('has gaps: False', obs)
+        self.assertIn('has stops: True', obs)
+
 
 if __name__ == "__main__":
     unittest.main()

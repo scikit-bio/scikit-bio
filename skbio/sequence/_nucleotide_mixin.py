@@ -341,6 +341,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
                 gc /= len(seq)
         return gc
 
+
 _motifs = parent_motifs.copy()
 
 

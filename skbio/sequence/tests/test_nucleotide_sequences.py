@@ -118,6 +118,37 @@ class TestNucelotideSequence(unittest.TestCase):
             with self.assertRaises(AttributeError):
                 constructor('').complement_map = {'W': 'X'}
 
+    def test_repr(self):
+        # basic sanity checks for custom repr stats. more extensive testing is
+        # performed on Sequence.__repr__
+
+        for seq in DNA(''), RNA(''):
+            obs = repr(seq)
+            # obtained from super()
+            self.assertIn('has gaps: False', obs)
+            # custom to Protein
+            self.assertIn('GC-content: 0.00%', obs)
+
+        for seq in DNA('ACGT'), RNA('ACGU'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 50.00%', obs)
+
+        for seq in DNA('CST'), RNA('CSU'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 66.67%', obs)
+
+        for seq in DNA('GCSSCG'), RNA('GCSSCG'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 100.00%', obs)
+
+        for seq in DNA('-GCSSCG.'), RNA('-GCSSCG.'):
+            obs = repr(seq)
+            self.assertIn('has gaps: True', obs)
+            self.assertIn('GC-content: 100.00%', obs)
+
     def test_complement_without_reverse_empty(self):
         for constructor in (DNA, RNA):
             # without optional attributes
