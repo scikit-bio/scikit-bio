@@ -82,6 +82,7 @@ class GeneticCode(SkbioObject):
         self._start_codons = codons
 
     def _index_to_codon(self, index):
+        """Convert AA index (0-63) to codon encoded in offsets (0-3)."""
         codon = np.empty(3, dtype=np.uint8)
         for i, multiplier in enumerate(self._radix_multiplier):
             offset, index = divmod(index, multiplier)
@@ -118,6 +119,8 @@ class GeneticCode(SkbioObject):
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
+        # convert Protein to str so that metadata is ignored in comparison. we
+        # only care about the sequence data defining the genetic code
         if str(self._amino_acids) != str(other._amino_acids):
             return False
         if str(self._starts) != str(other._starts):
@@ -159,6 +162,56 @@ class GeneticCode(SkbioObject):
             Translated protein sequence.
 
         """
+        self._validate_translate_inputs(sequence, reading_frame, start, stop)
+
+        offset = abs(reading_frame) - 1
+        if reading_frame < 0:
+            sequence = sequence.reverse_complement()
+
+        data = sequence.values[offset:].view(np.uint8).copy()
+        data = data[:data.size // 3 * 3].reshape((-1, 3))
+
+        # convert sequence data stored as bytes into offsets (0-3)
+        for byte in self._byte_to_offset_map:
+            data[data == byte] = self._byte_to_offset_map[byte]
+
+        if start in {'require', 'optional'}:
+            start_codon_index = data.shape[0]
+            for start_codon in self._start_codons:
+                indices = np.all(data == start_codon, axis=1).nonzero()[0]
+
+                if indices.size > 0:
+                    first_index = indices[0]
+                    if first_index < start_codon_index:
+                        start_codon_index = first_index
+
+            if start_codon_index != data.shape[0]:
+                # trim everything before start codon, replace start codon with
+                # codon coding for M
+                data = data[start_codon_index:]
+                data[0] = self._m_character_codon
+            elif start == 'require':
+                self._raise_require_error('start', reading_frame)
+
+        # convert offset-encoded codons into AA indices (0-64)
+        index = (data * self._radix_multiplier).sum(axis=1)
+        translated = self._amino_acids.values[index]
+
+        if stop in {'require', 'optional'}:
+            stop_codon_indices = (translated == b'*').nonzero()[0]
+            if stop_codon_indices.size > 0:
+                # trim first stop codon and everything following it
+                translated = translated[:stop_codon_indices[0]]
+            elif stop == 'require':
+                self._raise_require_error('stop', reading_frame)
+
+        metadata = None
+        if sequence.has_metadata():
+            metadata = sequence.metadata
+
+        return Protein(translated, metadata=metadata)
+
+    def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):
             raise TypeError("Sequence to translate must be RNA, not %s" %
                             type(sequence).__name__)
@@ -180,49 +233,6 @@ class GeneticCode(SkbioObject):
             raise NotImplementedError("scikit-bio does not currently support "
                                       "translation of degenerate sequences.")
 
-        offset = abs(reading_frame) - 1
-        if reading_frame < 0:
-            sequence = sequence.reverse_complement()
-
-        data = sequence.values[offset:].view(np.uint8).copy()
-        data = data[:data.size // 3 * 3].reshape((-1, 3))
-
-        for byte in self._byte_to_offset_map:
-            data[data == byte] = self._byte_to_offset_map[byte]
-
-        if start in {'require', 'optional'}:
-            start_codon_index = data.shape[0]
-            for start_codon in self._start_codons:
-                indices = np.all(data == start_codon, axis=1).nonzero()[0]
-
-                if indices.size > 0:
-                    first_index = indices[0]
-                    if first_index < start_codon_index:
-                        start_codon_index = first_index
-
-            if start_codon_index != data.shape[0]:
-                data = data[start_codon_index:]
-                # replace start codon with codon coding for M
-                data[0] = self._m_character_codon
-            elif start == 'require':
-                self._raise_require_error('start', reading_frame)
-
-        index = (data * self._radix_multiplier).sum(axis=1)
-        translated = self._amino_acids.values[index]
-
-        if stop in {'require', 'optional'}:
-            stop_codon_indices = (translated == b'*').nonzero()[0]
-            if stop_codon_indices.size > 0:
-                translated = translated[:stop_codon_indices[0]]
-            elif stop == 'require':
-                self._raise_require_error('stop', reading_frame)
-
-        metadata = None
-        if sequence.has_metadata():
-            metadata = sequence.metadata
-
-        return Protein(translated, metadata=metadata)
-
     def _raise_require_error(self, name, reading_frame):
         raise ValueError(
             "Sequence does not contain a %s codon in the "
@@ -241,6 +251,7 @@ class GeneticCode(SkbioObject):
                                  start=start, stop=stop)
 
 
+# defined at http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 _ncbi_genetic_codes = {
     1: GeneticCode(
         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
