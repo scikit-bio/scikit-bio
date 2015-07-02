@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
+
 from skbio.util import classproperty, overrides
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
@@ -86,15 +88,26 @@ class Protein(IUPACSequence):
     0 PAW
 
     """
+    __stop_codes = None
 
-    @property
-    def _motifs(self):
-        return _motifs
+    @classproperty
+    def _stop_codes(cls):
+        if cls.__stop_codes is None:
+            stops = cls.stop_chars
+            cls.__stop_codes = np.asarray([ord(s) for s in stops])
+        return cls.__stop_codes
+
+    @classproperty
+    # TODO figure out why this doesn't work
+    #@overrides(IUPACSequence)
+    def alphabet(cls):
+        return (cls.degenerate_chars | cls.nondegenerate_chars |
+                cls.gap_chars | cls.stop_chars)
 
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        return set("ACDEFGHIKLMNPQRSTVWY*")
+        return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
     @overrides(IUPACSequence)
@@ -103,6 +116,20 @@ class Protein(IUPACSequence):
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
+
+    @classproperty
+    def stop_chars(cls):
+        return set('*')
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+    def stops(self):
+        return np.in1d(self._bytes, self._stop_codes)
+
+    def has_stops(self):
+        return bool(self.stops().any())
 
 
 _motifs = parent_motifs.copy()
