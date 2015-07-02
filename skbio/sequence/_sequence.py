@@ -489,21 +489,52 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
+    def _set_bytes(self, sequence):
+        if not sequence.flags['C_CONTIGUOUS']:
+            # numpy doesn't support views of non-contiguous arrays. Since we're
+            # making heavy use of views internally, and users may also supply
+            # us with a view, make sure we *always* store a contiguous array to
+            # avoid hard-to-track bugs. See
+            # https://github.com/numpy/numpy/issues/5716
+            sequence = np.ascontiguousarray(sequence)
+            self._owns_bytes = True
+        else:
+            self._owns_bytes = False
+        sequence.flags.writeable = False
+        self._bytes = sequence
+
     def __init__(self, sequence, metadata=None,
                  positional_metadata=None):
-        if isinstance(sequence, Sequence):
-            # we're not simply accessing sequence.metadata in order to avoid
-            # creating "empty" metadata representations on both sequence
-            # objects if they don't have metadata. same strategy is used below
-            # for positional metadata
-            if metadata is None and sequence.has_metadata():
-                metadata = sequence.metadata
-            if (positional_metadata is None and
-                    sequence.has_positional_metadata()):
-                positional_metadata = sequence.positional_metadata
-            sequence = sequence._bytes
 
-        self._set_sequence(sequence)
+        is_ndarray = isinstance(sequence, np.ndarray)
+        if is_ndarray: 
+            if sequence.dtype == np.uint8 or np.issubdtype(sequence.dtype, np.uint8):
+                self._set_bytes(sequence)
+            elif sequence.dtype == '|S1':
+                sequence = sequence.view(np.uint8)
+                # TODO: This is effectively what was happening before, but is it necessary?
+                if sequence.shape == ():
+                    sequence = np.array([sequence], dtype=np.uint8)
+                self._set_bytes(sequence)
+            else:
+                raise TypeError(
+                    "Can only create sequence from numpy.ndarray of dtype "
+                    "np.uint8 or '|S1'. Invalid dtype: %s" %
+                    sequence.dtype)
+        else:
+            if isinstance(sequence, Sequence):
+                # we're not simply accessing sequence.metadata in order to avoid
+                # creating "empty" metadata representations on both sequence
+                # objects if they don't have metadata. same strategy is used below
+                # for positional metadata
+                if metadata is None and sequence.has_metadata():
+                    metadata = sequence.metadata
+                if (positional_metadata is None and
+                        sequence.has_positional_metadata()):
+                    positional_metadata = sequence.positional_metadata
+                sequence = sequence._bytes
+
+            self._set_sequence(sequence)
 
         if metadata is None:
             self._metadata = None
@@ -517,46 +548,23 @@ class Sequence(collections.Sequence, SkbioObject):
 
     def _set_sequence(self, sequence):
         """Munge the sequence data into a numpy array of dtype uint8."""
-        is_ndarray = isinstance(sequence, np.ndarray)
-        if is_ndarray:
-            if np.issubdtype(sequence.dtype, np.uint8):
-                pass
-            elif sequence.dtype == '|S1':
-                sequence = sequence.view(np.uint8)
-            else:
-                raise TypeError(
-                    "Can only create sequence from numpy.ndarray of dtype "
-                    "np.uint8 or '|S1'. Invalid dtype: %s" %
-                    sequence.dtype)
+        # Python 3 will not raise a UnicodeEncodeError so we force it by
+        # encoding it as ascii
+        if isinstance(sequence, six.text_type):
+            #print("is text")
+            sequence = sequence.encode("ascii")
+        s = np.fromstring(sequence, dtype=np.uint8)
 
-            # numpy doesn't support views of non-contiguous arrays. Since we're
-            # making heavy use of views internally, and users may also supply
-            # us with a view, make sure we *always* store a contiguous array to
-            # avoid hard-to-track bugs. See
-            # https://github.com/numpy/numpy/issues/5716
-            potential_copy = np.ascontiguousarray(sequence)
-            if potential_copy is not sequence:
-                self._owns_bytes = True
-            else:
-                self._owns_bytes = False
-            sequence = potential_copy
-        else:
-            # Python 3 will not raise a UnicodeEncodeError so we force it by
-            # encoding it as ascii
-            if isinstance(sequence, six.text_type):
-                sequence = sequence.encode("ascii")
-            s = np.fromstring(sequence, dtype=np.uint8)
+        # There are two possibilities (to our knowledge) at this point:
+        # Either the sequence we were given was something string-like,
+        # (else it would not have made it past fromstring), or it was a
+        # numpy scalar, and so our length must be 1.
+        if isinstance(sequence, np.generic) and len(s) != 1:
+            raise TypeError("Can cannot create a sequence with %r" %
+                            type(sequence).__name__)
 
-            # There are two possibilities (to our knowledge) at this point:
-            # Either the sequence we were given was something string-like,
-            # (else it would not have made it past fromstring), or it was a
-            # numpy scalar, and so our length must be 1.
-            if isinstance(sequence, np.generic) and len(s) != 1:
-                raise TypeError("Can cannot create a sequence with %r" %
-                                type(sequence).__name__)
-
-            sequence = s
-            self._owns_bytes = True
+        sequence = s
+        self._owns_bytes = True
 
         sequence.flags.writeable = False
         self._bytes = sequence
