@@ -178,6 +178,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
 from ._base import pw_distances, pw_distances_from_table

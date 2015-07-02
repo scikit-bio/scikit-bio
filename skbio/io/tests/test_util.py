@@ -6,6 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from six import StringIO, BytesIO
 from requests import HTTPError
 
@@ -125,7 +127,7 @@ class TestFilePathsOpening(unittest.TestCase):
             with open_files(['http://google.com/foo-seqs.fna']) as fhs:
                 for f in fhs:
                     f.read()
-        self.assertEquals(str(e.exception), '404 Client Error: Not Found')
+        self.assertEqual(str(e.exception), '404 Client Error: Not Found')
 
     def test_remote_fna(self):
         url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'

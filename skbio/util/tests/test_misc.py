@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import range
+import six
 from six import BytesIO
 
 import unittest
@@ -150,10 +151,10 @@ class ChunkStrTests(unittest.TestCase):
         self.assertEqual(chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
 
     def test_invalid_n(self):
-        with self.assertRaisesRegexp(ValueError, 'n=0'):
+        with six.assertRaisesRegex(self, ValueError, 'n=0'):
             chunk_str('abcdef', 0, ' ')
 
-        with self.assertRaisesRegexp(ValueError, 'n=-42'):
+        with six.assertRaisesRegex(self, ValueError, 'n=-42'):
             chunk_str('abcdef', -42, ' ')
 
 
@@ -255,7 +256,7 @@ class CardinalToOrdinalTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_invalid_n(self):
-        with self.assertRaisesRegexp(ValueError, '-1'):
+        with six.assertRaisesRegex(self, ValueError, '-1'):
             cardinal_to_ordinal(-1)
 
 

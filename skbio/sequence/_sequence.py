@@ -863,6 +863,25 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._bytes.size
 
+    def __nonzero__(self):
+        """Returns truth value (truthiness) of sequence.
+
+        Returns
+        -------
+        bool
+            True if length of sequence is greater than 0, else False.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> bool(Sequence(''))
+        False
+        >>> bool(Sequence('ACGT'))
+        True
+
+        """
+        return len(self) > 0
+
     def __iter__(self):
         """Iterate over positions in the biological sequence.
 

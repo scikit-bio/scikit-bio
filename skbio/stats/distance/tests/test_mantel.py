@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
+
 from unittest import TestCase, main
 
 import numpy as np
@@ -541,7 +543,7 @@ class OrderDistanceMatricesTests(MantelTestData):
         # for the first distance matrix.
         lookup = {'0': 'a', '2': 'c'}
 
-        with self.assertRaisesRegexp(KeyError, "first.*(x).*'1'\"$"):
+        with six.assertRaisesRegex(self, KeyError, "first.*(x).*'1'\"$"):
             _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
 
         # Mapping for 'bar' is missing. Should get an error while remapping IDs
@@ -550,7 +552,7 @@ class OrderDistanceMatricesTests(MantelTestData):
                   'foo': 'a', 'baz': 'c'}
         self.miny_dm.ids = ('foo', 'bar', 'baz')
 
-        with self.assertRaisesRegexp(KeyError, "second.*(y).*'bar'\"$"):
+        with six.assertRaisesRegex(self, KeyError, "second.*(y).*'bar'\"$"):
             _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
 
     def test_nonmatching_ids_strict_true(self):

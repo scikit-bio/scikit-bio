@@ -16,7 +16,8 @@ from six import string_types
 
 from skbio.alignment import Alignment
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
-from skbio.sequence import Sequence, IUPACSequence, Protein
+from skbio.sequence import Sequence, Protein
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
@@ -685,13 +686,6 @@ def make_identity_substitution_matrix(match_score, mismatch_score,
         score.
 
     """
-
-    warn("make_identity_substitution_matrix is deprecated and will soon be "
-         "replaced, though at the time of this writing the new name has not "
-         "been finalized. Updates will be posted to issue #161: "
-         "https://github.com/biocore/scikit-bio/issues/161",
-         DeprecationWarning)
-
     result = {}
     for c1 in alphabet:
         row = {}

@@ -71,6 +71,8 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from ._warning import EfficiencyWarning
 from ._exception import TestingUtilError
 from ._decorator import classproperty, overrides

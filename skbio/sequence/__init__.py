@@ -23,8 +23,6 @@ Classes
    :toctree: generated/
 
    Sequence
-   IUPACSequence
-   NucleotideSequence
    DNA
    RNA
    Protein
@@ -277,17 +275,16 @@ Stats:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
 from ._sequence import Sequence
-from ._iupac_sequence import IUPACSequence
-from ._nucleotide_sequence import NucleotideSequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
 
-__all__ = ['Sequence', 'IUPACSequence', 'NucleotideSequence', 'Protein', 'DNA',
-           'RNA', 'GeneticCode']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
 
 test = TestRunner(__file__).test

@@ -7,13 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
 
-from skbio.sequence import IUPACSequence
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import classproperty
 
 
@@ -98,7 +99,7 @@ class TestIUPACSequence(TestCase):
     def test_init_validate_parameter_single_character(self):
         seq = 'w'
 
-        with self.assertRaisesRegexp(ValueError, "character.*'w'"):
+        with six.assertRaisesRegex(self, ValueError, "character.*'w'"):
             ExampleIUPACSequence(seq)
 
         # test that we can instantiate an invalid sequence. we don't guarantee
@@ -110,7 +111,7 @@ class TestIUPACSequence(TestCase):
         # alphabet characters
         seq = 'CBCBBbawCbbwBXYZ-.x'
 
-        with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'w', 'x'\]"):
+        with six.assertRaisesRegex(self, ValueError, "\['a', 'b', 'w', 'x'\]"):
             ExampleIUPACSequence(seq)
 
         ExampleIUPACSequence(seq, validate=False)
@@ -118,8 +119,8 @@ class TestIUPACSequence(TestCase):
     def test_init_lowercase_all_lowercase(self):
         s = 'cbcbbbazcbbzbxyz-.x'
 
-        with self.assertRaisesRegexp(ValueError,
-                                     "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
+        with six.assertRaisesRegex(self, ValueError,
+                                   "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
             ExampleIUPACSequence(s)
 
         seq = ExampleIUPACSequence(s, lowercase=True)
@@ -128,7 +129,7 @@ class TestIUPACSequence(TestCase):
     def test_init_lowercase_mixed_case(self):
         s = 'CBCBBbazCbbzBXYZ-.x'
 
-        with self.assertRaisesRegexp(ValueError, "\['a', 'b', 'x', 'z'\]"):
+        with six.assertRaisesRegex(self, ValueError, "\['a', 'b', 'x', 'z'\]"):
             ExampleIUPACSequence(s)
 
         seq = ExampleIUPACSequence(s, lowercase=True)
@@ -137,10 +138,10 @@ class TestIUPACSequence(TestCase):
     def test_init_lowercase_no_validation(self):
         s = 'car'
 
-        with self.assertRaisesRegexp(ValueError, "\['a', 'c', 'r'\]"):
+        with six.assertRaisesRegex(self, ValueError, "\['a', 'c', 'r'\]"):
             ExampleIUPACSequence(s)
 
-        with self.assertRaisesRegexp(ValueError, "character.*'R'"):
+        with six.assertRaisesRegex(self, ValueError, "character.*'R'"):
             ExampleIUPACSequence(s, lowercase=True)
 
         ExampleIUPACSequence(s, lowercase=True, validate=False)
@@ -148,7 +149,7 @@ class TestIUPACSequence(TestCase):
     def test_init_lowercase_byte_ownership(self):
         bytes = np.array([97, 98, 97], dtype=np.uint8)
 
-        with self.assertRaisesRegexp(ValueError, "\['a', 'b'\]"):
+        with six.assertRaisesRegex(self, ValueError, "\['a', 'b'\]"):
             ExampleIUPACSequence(bytes)
 
         seq = ExampleIUPACSequence(bytes, lowercase=True)
@@ -164,10 +165,10 @@ class TestIUPACSequence(TestCase):
     def test_init_lowercase_invalid_keys(self):
         for invalid_key in ((), [], 2):
             invalid_type = type(invalid_key)
-            with self.assertRaisesRegexp(TypeError,
-                                         "lowercase keyword argument expected "
-                                         "a bool or string, but got %s" %
-                                         invalid_type):
+            with six.assertRaisesRegex(self, TypeError,
+                                       "lowercase keyword argument expected "
+                                       "a bool or string, but got %s" %
+                                       invalid_type):
                 ExampleIUPACSequence('ACGTacgt', lowercase=invalid_key)
 
     def test_lowercase_mungeable_key(self):
@@ -176,7 +177,7 @@ class TestIUPACSequence(TestCase):
         # changes to no longer use _munge_to_index_array, this test may need
         # to be updated to cover cases currently covered by
         # _munge_to_index_array
-        self.assertEquals('AAAAaaaa', self.lowercase_seq.lowercase('key'))
+        self.assertEqual('AAAAaaaa', self.lowercase_seq.lowercase('key'))
 
     def test_lowercase_array_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
@@ -184,12 +185,12 @@ class TestIUPACSequence(TestCase):
         # changes to no longer use _munge_to_index_array, this test may need
         # to be updated to cover cases currently covered by
         # _munge_to_index_array
-        self.assertEquals('aaAAaaaa',
-                          self.lowercase_seq.lowercase(
-                              np.array([True, True, False, False, True, True,
-                                        True, True])))
-        self.assertEquals('AaAAaAAA',
-                          self.lowercase_seq.lowercase([1, 4]))
+        self.assertEqual('aaAAaaaa',
+                         self.lowercase_seq.lowercase(
+                             np.array([True, True, False, False, True, True,
+                                       True, True])))
+        self.assertEqual('AaAAaAAA',
+                         self.lowercase_seq.lowercase([1, 4]))
 
     def test_degenerate_chars(self):
         expected = set("XYZ")
@@ -355,13 +356,13 @@ class TestIUPACSequence(TestCase):
             },
         }
 
-        self.assertEquals(
+        self.assertEqual(
             ExampleIUPACSequence("", positional_metadata={'qual': []},
                                  **kw).degap(),
             ExampleIUPACSequence("", positional_metadata={'qual': []},
                                  **kw))
 
-        self.assertEquals(
+        self.assertEqual(
             ExampleIUPACSequence(
                 "ABCXYZ",
                 positional_metadata={'qual': np.arange(6)},
@@ -371,7 +372,7 @@ class TestIUPACSequence(TestCase):
                 positional_metadata={'qual': np.arange(6)},
                 **kw))
 
-        self.assertEquals(
+        self.assertEqual(
             ExampleIUPACSequence(
                 "ABC-XYZ",
                 positional_metadata={'qual': np.arange(7)},
@@ -381,7 +382,7 @@ class TestIUPACSequence(TestCase):
                 positional_metadata={'qual': [0, 1, 2, 4, 5, 6]},
                 **kw))
 
-        self.assertEquals(
+        self.assertEqual(
             ExampleIUPACSequence(
                 ".-ABC-XYZ.",
                 positional_metadata={'qual': np.arange(10)},
@@ -391,7 +392,7 @@ class TestIUPACSequence(TestCase):
                 positional_metadata={'qual': [2, 3, 4, 6, 7, 8]},
                 **kw))
 
-        self.assertEquals(
+        self.assertEqual(
             ExampleIUPACSequence(
                 "---.-.-.-.-.",
                 positional_metadata={'quality': np.arange(12)},

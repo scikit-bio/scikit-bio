@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 from six.moves import zip_longest
 
 import copy
@@ -392,23 +393,23 @@ class TestSequence(TestCase):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with self.assertRaisesRegexp(TypeError, 'tuple'):
+        with six.assertRaisesRegex(self, TypeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with self.assertRaisesRegexp(TypeError, 'list'):
+        with six.assertRaisesRegex(self, TypeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with self.assertRaisesRegexp(TypeError, 'set'):
+        with six.assertRaisesRegex(self, TypeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with self.assertRaisesRegexp(TypeError, 'dict'):
+        with six.assertRaisesRegex(self, TypeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with self.assertRaisesRegexp(TypeError, 'int'):
+        with six.assertRaisesRegex(self, TypeError, 'int'):
             Sequence(42)
-        with self.assertRaisesRegexp(TypeError, 'float'):
+        with six.assertRaisesRegex(self, TypeError, 'float'):
             Sequence(4.2)
-        with self.assertRaisesRegexp(TypeError, 'int64'):
+        with six.assertRaisesRegex(self, TypeError, 'int64'):
             Sequence(np.int_(50))
-        with self.assertRaisesRegexp(TypeError, 'float64'):
+        with six.assertRaisesRegex(self, TypeError, 'float64'):
             Sequence(np.float_(50))
-        with self.assertRaisesRegexp(TypeError, 'Foo'):
+        with six.assertRaisesRegex(self, TypeError, 'Foo'):
             class Foo(object):
                 pass
             Sequence(Foo())
@@ -419,38 +420,38 @@ class TestSequence(TestCase):
 
     def test_init_invalid_metadata(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
-            with self.assertRaisesRegexp(TypeError,
-                                         'metadata must be a dict'):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
                 Sequence('abc', metadata=md)
 
     def test_init_invalid_positional_metadata(self):
         # not consumable by Pandas
-        with self.assertRaisesRegexp(TypeError,
-                                     'Positional metadata invalid. Must be '
-                                     'consumable by pd.DataFrame. '
-                                     'Original pandas error message: '):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Positional metadata invalid. Must be '
+                                   'consumable by pd.DataFrame. '
+                                   'Original pandas error message: '):
             Sequence('ACGT', positional_metadata=2)
         # 0 elements
-        with self.assertRaisesRegexp(ValueError, '\(0\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[])
         # not enough elements
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4])
         # too many elements
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=[2, 3, 4, 5, 6])
         # Series not enough rows
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT', positional_metadata=pd.Series(range(3)))
         # Series too many rows
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT', positional_metadata=pd.Series(range(5)))
         # DataFrame not enough rows
-        with self.assertRaisesRegexp(ValueError, '\(3\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
             Sequence('ACGT',
                      positional_metadata=pd.DataFrame({'quality': range(3)}))
         # DataFrame too many rows
-        with self.assertRaisesRegexp(ValueError, '\(5\).*\(4\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
             Sequence('ACGT',
                      positional_metadata=pd.DataFrame({'quality': range(5)}))
 
@@ -519,8 +520,8 @@ class TestSequence(TestCase):
 
         for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
                    pd.DataFrame()):
-            with self.assertRaisesRegexp(TypeError,
-                                         'metadata must be a dict'):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
                 seq.metadata = md
 
             # object should still be usable and its original metadata shouldn't
@@ -632,10 +633,10 @@ class TestSequence(TestCase):
         seq = Sequence('abc', positional_metadata={'foo': [1, 2, 42]})
 
         # not consumable by Pandas
-        with self.assertRaisesRegexp(TypeError,
-                                     'Positional metadata invalid. Must be '
-                                     'consumable by pd.DataFrame. '
-                                     'Original pandas error message: '):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Positional metadata invalid. Must be '
+                                   'consumable by pd.DataFrame. '
+                                   'Original pandas error message: '):
             seq.positional_metadata = 2
 
         # object should still be usable and its original metadata shouldn't
@@ -644,14 +645,14 @@ class TestSequence(TestCase):
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
         # wrong length
-        with self.assertRaisesRegexp(ValueError, '\(2\).*\(3\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(2\).*\(3\)'):
             seq.positional_metadata = {'foo': [1, 2]}
 
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
         # None isn't valid when using setter (differs from constructor)
-        with self.assertRaisesRegexp(ValueError, '\(0\).*\(3\)'):
+        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(3\)'):
             seq.positional_metadata = None
 
         assert_data_frame_almost_equal(seq.positional_metadata,
@@ -759,9 +760,9 @@ class TestSequence(TestCase):
         # array-like objects will fail if wrong size
         for array_like in (np.array(range(l-1)), range(l-1),
                            np.array(range(l+1)), range(l+1)):
-            with self.assertRaisesRegexp(ValueError,
-                                         "Length of values does not match "
-                                         "length of index"):
+            with six.assertRaisesRegex(self, ValueError,
+                                       "Length of values does not match "
+                                       "length of index"):
                 seq.positional_metadata['bar'] = array_like
 
     def test_eq_and_ne(self):
@@ -941,49 +942,49 @@ class TestSequence(TestCase):
 
         eseq = Sequence("012", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': np.arange(3)})
-        self.assertEquals(seq[0:3], eseq)
-        self.assertEquals(seq[:3], eseq)
-        self.assertEquals(seq[:3:1], eseq)
+        self.assertEqual(seq[0:3], eseq)
+        self.assertEqual(seq[:3], eseq)
+        self.assertEqual(seq[:3:1], eseq)
 
         eseq = Sequence("def", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [13, 14, 15]})
-        self.assertEquals(seq[-3:], eseq)
-        self.assertEquals(seq[-3::1], eseq)
+        self.assertEqual(seq[-3:], eseq)
+        self.assertEqual(seq[-3::1], eseq)
 
         eseq = Sequence("02468ace",
                         metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [0, 2, 4, 6, 8, 10,
                                                          12, 14]})
-        self.assertEquals(seq[0:length:2], eseq)
-        self.assertEquals(seq[::2], eseq)
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
 
         eseq = Sequence(s[::-1], metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality':
                                              np.arange(length)[::-1]})
-        self.assertEquals(seq[length::-1], eseq)
-        self.assertEquals(seq[::-1], eseq)
+        self.assertEqual(seq[length::-1], eseq)
+        self.assertEqual(seq[::-1], eseq)
 
         eseq = Sequence('fdb97531',
                         metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [15, 13, 11, 9, 7, 5,
                                                          3, 1]})
-        self.assertEquals(seq[length::-2], eseq)
-        self.assertEquals(seq[::-2], eseq)
+        self.assertEqual(seq[length::-2], eseq)
+        self.assertEqual(seq[::-2], eseq)
 
-        self.assertEquals(seq[0:500:], seq)
+        self.assertEqual(seq[0:500:], seq)
 
         eseq = Sequence('', metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality':
                                              np.array([], dtype=np.int64)})
-        self.assertEquals(seq[length:0], eseq)
-        self.assertEquals(seq[-length:0], eseq)
-        self.assertEquals(seq[1:0], eseq)
+        self.assertEqual(seq[length:0], eseq)
+        self.assertEqual(seq[-length:0], eseq)
+        self.assertEqual(seq[1:0], eseq)
 
         eseq = Sequence("0", metadata={'id': 'id3', 'description': 'dsc3'},
                         positional_metadata={'quality': [0]})
-        self.assertEquals(seq[0:1], eseq)
-        self.assertEquals(seq[0:1:1], eseq)
-        self.assertEquals(seq[-length::-1], eseq)
+        self.assertEqual(seq[0:1], eseq)
+        self.assertEqual(seq[0:1:1], eseq)
+        self.assertEqual(seq[-length::-1], eseq)
 
     def test_getitem_with_slice_no_positional_metadata(self):
         s = "0123456789abcdef"
@@ -992,8 +993,8 @@ class TestSequence(TestCase):
 
         eseq = Sequence("02468ace",
                         metadata={'id': 'id4', 'description': 'no_qual4'})
-        self.assertEquals(seq[0:length:2], eseq)
-        self.assertEquals(seq[::2], eseq)
+        self.assertEqual(seq[0:length:2], eseq)
+        self.assertEqual(seq[::2], eseq)
 
     def test_getitem_with_tuple_of_mixed_with_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1003,30 +1004,30 @@ class TestSequence(TestCase):
 
         eseq = Sequence("00000", metadata={'id': 'id5', 'description': 'dsc5'},
                         positional_metadata={'quality': [0, 0, 0, 0, 0]})
-        self.assertEquals(seq[0, 0, 0, 0, 0], eseq)
-        self.assertEquals(seq[0, 0:1, 0, 0, 0], eseq)
-        self.assertEquals(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
-        self.assertEquals(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
-        self.assertEquals(seq[0:1, 0, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, 0, 0], eseq)
+        self.assertEqual(seq[0, 0:1, 0, -length::-1, 0, 1:0], eseq)
+        self.assertEqual(seq[0:1, 0:1, 0:1, 0:1, 0:1], eseq)
+        self.assertEqual(seq[0:1, 0, 0, 0, 0], eseq)
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id5', 'description': 'dsc5'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
-        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9, 1:0], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9, 1:0], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
 
     def test_getitem_with_tuple_of_mixed_no_positional_metadata(self):
         seq = Sequence("0123456789abcdef",
                        metadata={'id': 'id6', 'description': 'no_qual6'})
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id6', 'description': 'no_qual6'})
-        self.assertEquals(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
-        self.assertEquals(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9], eseq)
-        self.assertEquals(seq[0:4, :-4:-1, 9:10], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
 
     def test_getitem_with_iterable_of_mixed_has_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1045,10 +1046,10 @@ class TestSequence(TestCase):
                         metadata={'id': 'id7', 'description': 'dsc7'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
-        self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
-        self.assertEquals(seq[
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
             [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_iterable_of_mixed_no_positional_metadata(self):
@@ -1063,10 +1064,10 @@ class TestSequence(TestCase):
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id7', 'description': 'dsc7'})
-        self.assertEquals(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
-        self.assertEquals(seq[generator()], eseq)
-        self.assertEquals(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
-        self.assertEquals(seq[
+        self.assertEqual(seq[[0, 1, 2, 3, 15, 14, 13, 9]], eseq)
+        self.assertEqual(seq[generator()], eseq)
+        self.assertEqual(seq[[slice(0, 4), slice(None, -4, -1), 9]], eseq)
+        self.assertEqual(seq[
             [slice(0, 4), slice(None, -4, -1), slice(9, 10)]], eseq)
 
     def test_getitem_with_numpy_index_has_positional_metadata(self):
@@ -1079,7 +1080,7 @@ class TestSequence(TestCase):
                         metadata={'id': 'id9', 'description': 'dsc9'},
                         positional_metadata={'quality': [0, 1, 2, 3, 15, 14,
                                                          13, 9]})
-        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
 
     def test_getitem_with_numpy_index_no_positional_metadata(self):
         s = "0123456789abcdef"
@@ -1087,7 +1088,7 @@ class TestSequence(TestCase):
 
         eseq = Sequence("0123fed9",
                         metadata={'id': 'id10', 'description': 'dsc10'})
-        self.assertEquals(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
+        self.assertEqual(seq[np.array([0, 1, 2, 3, 15, 14, 13, 9])], eseq)
 
     def test_getitem_with_empty_indices_empty_seq_no_pos_metadata(self):
         s = ""
@@ -1200,6 +1201,23 @@ class TestSequence(TestCase):
         self.assertEqual(len(Sequence("")), 0)
         self.assertEqual(len(Sequence("a")), 1)
         self.assertEqual(len(Sequence("abcdef")), 6)
+
+    def test_nonzero(self):
+        # blank
+        self.assertFalse(Sequence(""))
+        self.assertFalse(Sequence("",
+                                  metadata={'id': 'foo'},
+                                  positional_metadata={'quality': range(0)}))
+        # single
+        self.assertTrue(Sequence("A"))
+        self.assertTrue(Sequence("A",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(1)}))
+        # multi
+        self.assertTrue(Sequence("ACGT"))
+        self.assertTrue(Sequence("ACGT",
+                                 metadata={'id': 'foo'},
+                                 positional_metadata={'quality': range(4)}))
 
     def test_contains(self):
         seq = Sequence("#@ACGT,24.13**02")
@@ -1439,7 +1457,7 @@ class TestSequence(TestCase):
             with self.assertRaises(ValueError):
                 seq.count(c(''))
 
-        self.assertEquals(tested, 4)
+        self.assertEqual(tested, 4)
 
     def test_count_on_subclass(self):
         with self.assertRaises(TypeError) as cm:
@@ -2228,15 +2246,15 @@ class TestSequence(TestCase):
         seq = Sequence(seq_str,
                        positional_metadata={'quality': range(len(seq_str))})
 
-        with self.assertRaisesRegexp(ValueError,
-                                     "No positional metadata associated with "
-                                     "key 'introns'"):
+        with six.assertRaisesRegex(self, ValueError,
+                                   "No positional metadata associated with "
+                                   "key 'introns'"):
             seq._munge_to_index_array('introns')
 
-        with self.assertRaisesRegexp(TypeError,
-                                     "Column 'quality' in positional metadata "
-                                     "does not correspond to a boolean "
-                                     "vector"):
+        with six.assertRaisesRegex(self, TypeError,
+                                   "Column 'quality' in positional metadata "
+                                   "does not correspond to a boolean "
+                                   "vector"):
             seq._munge_to_index_array('quality')
 
     def test_munge_to_bytestring_return_bytes(self):
@@ -2258,10 +2276,10 @@ class TestSequence(TestCase):
         seq = Sequence('')
         all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
         for input_ in all_inputs:
-            with self.assertRaisesRegexp(UnicodeEncodeError,
-                                         "'ascii' codec can't encode character"
-                                         ".*in position.*: ordinal not in"
-                                         " range\(128\)"):
+            with six.assertRaisesRegex(self, UnicodeEncodeError,
+                                       "'ascii' codec can't encode character"
+                                       ".*in position.*: ordinal not in"
+                                       " range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
 
 
