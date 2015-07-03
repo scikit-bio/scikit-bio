@@ -122,6 +122,14 @@ class Protein(IUPACSequence):
 
     @classproperty
     def stop_chars(cls):
+        """Return characters representing translation stop codons.
+
+        Returns
+        -------
+        set
+            Characters representing translation stop codons.
+
+        """
         return set('*')
 
     @property
@@ -129,9 +137,51 @@ class Protein(IUPACSequence):
         return _motifs
 
     def stops(self):
+        """Find positions containing stop characters in the protein sequence.
+
+        Returns
+        -------
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` indicates a stop character is present
+            at that position in the protein sequence.
+
+        See Also
+        --------
+        has_stops
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.stops()
+        array([False, False, False], dtype=bool)
+        >>> s = Protein('PAW*E*')
+        >>> s.stops()
+        array([False, False, False,  True, False,  True], dtype=bool)
+
+        """
         return np.in1d(self._bytes, self._stop_codes)
 
     def has_stops(self):
+        """Determine if the sequence contains one or more stop characters.
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurrences of stop
+            characters in the protein sequence.
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.has_stops()
+        False
+        >>> s = Protein('PAW*E*')
+        >>> s.has_stops()
+        True
+
+        """
         return bool(self.stops().any())
 
     @overrides(IUPACSequence)
