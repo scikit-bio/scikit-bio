@@ -455,6 +455,14 @@ class TestSequence(TestCase):
             Sequence('ACGT',
                      positional_metadata=pd.DataFrame({'quality': range(5)}))
 
+    def test_init_from_ndarray_subtype(self):
+        class NdarraySub(np.ndarray):
+            pass
+        array_seq = np.array([1, 2, 3, 4], dtype=np.uint8)
+        array = NdarraySub(buffer=array_seq, dtype=np.uint8,
+                           shape=(4, 1))
+        self.assertEqual(Sequence(array_seq), Sequence(array))
+
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
         # provided by the property: that it can be accessed, can't be
