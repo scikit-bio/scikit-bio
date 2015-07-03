@@ -19,7 +19,7 @@ from skbio.sequence._base import ElasticLines
 
 class GeneticCode(SkbioObject):
     """Genetic code for translating codons to amino acids.
-    
+
     Parameters
     ----------
     amino_acids : consumable by ``skbio.Protein`` constructor
@@ -378,10 +378,10 @@ class GeneticCode(SkbioObject):
             reverse complement the sequence before translation.
         start : {'ignore', 'require', 'optional'}
             How to handle start codons:
-            
+
             * "ignore": translation will start from the beginning of the
               reading frame, regardless of the presence of a start codon.
-            
+
             * "require": translation will start at the first start codon in
               the reading frame, ignoring all prior positions. The first amino
               acid in the translated sequence will *always* be methionine
@@ -447,7 +447,7 @@ class GeneticCode(SkbioObject):
         presence of a start codon. If we specify "require", translation will
         start at the first start codon in the reading frame (in this example,
         CUG), ignoring all prior positions:
-        
+
         >>> sgc.translate(rna, start='require')
         Protein
         -----------------------------
@@ -459,10 +459,10 @@ class GeneticCode(SkbioObject):
             has stops: True
         -----------------------------
         0 MPL*E
-        
-        Notice that the codon coding for L (CUG) is an alternative start codon
-        in this genetic code. Since we specified "require" mode, methionine
-        (M) was used in place of the alternative start codon (L). This behavior
+
+        Note that the codon coding for L (CUG) is an alternative start codon in
+        this genetic code. Since we specified "require" mode, methionine (M)
+        was used in place of the alternative start codon (L). This behavior
         most closely matches the underlying biology.
 
         Translate the same RNA sequence, also specifying that translation
@@ -609,7 +609,7 @@ class GeneticCode(SkbioObject):
         This method is faster than (and equivalent to) performing six
         independent translations using, for example:
 
-        ``(gc.translate(reading_frame=rf)
+        ``(gc.translate(seq, reading_frame=rf)
         for rf in GeneticCode.reading_frames)``
 
         Input RNA sequence metadata are included in each translated protein
