@@ -21,6 +21,7 @@ import textwrap
 from contextlib import contextmanager
 
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import hamming
 
 import pandas as pd
@@ -1675,11 +1676,9 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield self[i:i+k]
         # Optimized path when no positional metadata
         else:
-            def _strided(vector):
-                return np.lib.stride_tricks.as_strided(vector, shape=(k, count),
-                                                       strides=(1, step)).T
-
-            for s in _strided(self._bytes):
+            kmers = as_strided(self._bytes, shape=(k, count),
+                               strides=(1, step)).T
+            for s in kmers:
                 yield self._constructor(sequence=s)
 
     def kmer_frequencies(self, k, overlap=True, relative=False):
