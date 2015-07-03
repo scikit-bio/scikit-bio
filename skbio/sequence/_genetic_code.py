@@ -18,6 +18,92 @@ from skbio.sequence._base import ElasticLines
 
 
 class GeneticCode(SkbioObject):
+    """Genetic code for translating codons to amino acids.
+    
+    Parameters
+    ----------
+    amino_acids : consumable by ``skbio.Protein`` constructor
+        64-character vector containing IUPAC amino acid characters, ordered
+        UUU -> GGG (NCBI's ordering). This is the "AAs" field in NCBI's genetic
+        code format.
+    starts : consumable by ``skbio.Protein`` constructor
+        64-character vector containing only M and - characters, with start
+        codons indicated with M. This is the "Starts" field in NCBI's genetic
+        code format.
+    name : str, optional
+        Genetic code name. This is simply metadata and does not affect the
+        functionality of the genetic code itself.
+
+    See Also
+    --------
+    RNA.translate
+    DNA.translate
+    GeneticCode.from_ncbi
+
+    Notes
+    -----
+    The genetic codes available via ``GeneticCode.from_ncbi`` and used
+    throughout the examples are defined in [1]_. The genetic code strings
+    defined there are directly compatible with the ``GeneticCode`` constructor.
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+    Examples
+    --------
+    Get NCBI's standard genetic code (table ID 1, the default genetic code
+    in scikit-bio):
+
+    >>> from skbio import GeneticCode
+    >>> GeneticCode.from_ncbi()
+    GeneticCode (Standard)
+    -------------------------------------------------------------------------
+      AAs  = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    Starts = ---M---------------M---------------M----------------------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Get a different NCBI genetic code (25):
+
+    >>> GeneticCode.from_ncbi(25)
+    GeneticCode (Candidate Division SR1 and Gracilibacteria)
+    -------------------------------------------------------------------------
+      AAs  = FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    Starts = ---M-------------------------------M---------------M------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Define a custom genetic code:
+
+    >>> GeneticCode('M' * 64, '-' * 64)
+    GeneticCode
+    -------------------------------------------------------------------------
+      AAs  = MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    Starts = ----------------------------------------------------------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Translate an RNA sequence to protein using NCBI's standard genetic code:
+
+    >>> from skbio import RNA
+    >>> rna = RNA('AUGCCACUUUAA')
+    >>> GeneticCode.from_ncbi().translate(rna)
+    Protein
+    -----------------------------
+    Stats:
+        length: 4
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        has stops: True
+    -----------------------------
+    0 MPL*
+
+    """
     _radix_multiplier = np.asarray([16, 4, 1], dtype=np.uint8)
     _byte_to_offset_map = {
         ord(b'U'): 0,
@@ -29,6 +115,36 @@ class GeneticCode(SkbioObject):
 
     @classmethod
     def from_ncbi(cls, table_id=1):
+        """Return NCBI genetic code specified by table ID.
+
+        Parameters
+        ----------
+        table_id : int, optional
+            Table ID of the NCBI genetic code to return.
+
+        Returns
+        -------
+        GeneticCode
+            NCBI genetic code specified by `table_id`.
+
+        Notes
+        -----
+        The table IDs and genetic codes available in this method and used
+        throughout the examples are defined in [1]_.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        Examples
+        --------
+        Get the NCBI thraustochytrium mitochondrial genetic code (23):
+
+        >>> tmgc = GeneticCode.from_ncbi(23)
+        >>> tmgc.name
+        'Thraustochytrium Mitochondrial'
+
+        """
         if table_id not in _ncbi_genetic_codes:
             raise ValueError(
                 "`table_id` must be one of %r, not %r"
@@ -37,10 +153,41 @@ class GeneticCode(SkbioObject):
 
     @classproperty
     def reading_frames(cls):
+        """Six possible reading frames.
+
+        Reading frames are ordered:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        This property can be passed into
+        ``GeneticCode.translate(reading_frame)``.
+
+        Returns
+        -------
+        list (int)
+            Six possible reading frames.
+
+        """
         return [1, 2, 3, -1, -2, -3]
 
     @property
     def name(self):
+        """Genetic code name.
+
+        This is simply metadata and does not affect the functionality of the
+        genetic code itself.
+
+        Returns
+        -------
+        str
+            Genetic code name.
+
+        """
         return self._name
 
     def __init__(self, amino_acids, starts, name=''):
@@ -90,9 +237,43 @@ class GeneticCode(SkbioObject):
         return codon
 
     def __str__(self):
+        """Return string representation of the genetic code.
+
+        Returns
+        -------
+        str
+            Genetic code in NCBI genetic code format.
+
+        Notes
+        -----
+        Representation uses NCBI genetic code format defined in [1]_.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        """
         return self._build_repr(include_name=False)
 
     def __repr__(self):
+        """Return string representation of the genetic code.
+
+        Returns
+        -------
+        str
+            Genetic code in NCBI genetic code format.
+
+        Notes
+        -----
+        Representation uses NCBI genetic code format defined in [1]_ preceded
+        by a header. If the genetic code has a name, it will be included in the
+        header.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        """
         return self._build_repr(include_name=True)
 
     def _build_repr(self, include_name):
@@ -117,6 +298,42 @@ class GeneticCode(SkbioObject):
         return lines.to_str()
 
     def __eq__(self, other):
+        """Determine if the genetic code is equal to another.
+
+        Genetic codes are equal if they are *exactly* the same type and
+        defined by the same `amino_acids` and `starts`. A genetic code's name
+        (accessed via ``name`` property) does not affect equality.
+
+        Parameters
+        ----------
+        other : GeneticCode
+            Genetic code to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether the genetic code is equal to `other`.
+
+        Examples
+        --------
+        NCBI genetic codes 1 and 2 are not equal:
+
+        >>> GeneticCode.from_ncbi(1) == GeneticCode.from_ncbi(2)
+        False
+
+        Define a custom genetic code:
+
+        >>> gc = GeneticCode('M' * 64, '-' * 64)
+
+        Define a second genetic code with the same `amino_acids` and `starts`.
+        Note that the presence of a name does not make the genetic codes
+        unequal:
+
+        >>> named_gc = GeneticCode('M' * 64, '-' * 64, name='example name')
+        >>> gc == named_gc
+        True
+
+        """
         if self.__class__ != other.__class__:
             return False
         # convert Protein to str so that metadata is ignored in comparison. we
@@ -128,6 +345,23 @@ class GeneticCode(SkbioObject):
         return True
 
     def __ne__(self, other):
+        """Determine if the genetic code is not equal to another.
+
+        Genetic codes are not equal if their type, `amino_acids`, or `starts`
+        differ. A genetic code's name (accessed via ``name`` property) does not
+        affect equality.
+
+        Parameters
+        ----------
+        other : GeneticCode
+            Genetic code to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether the genetic code is not equal to `other`.
+
+        """
         return not (self == other)
 
     def translate(self, sequence, reading_frame=1, start='ignore',
