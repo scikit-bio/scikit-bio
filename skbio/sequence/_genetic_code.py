@@ -28,7 +28,7 @@ class GeneticCode(SkbioObject):
     _start_stop_options = ['ignore', 'optional', 'require']
 
     @classmethod
-    def from_ncbi(cls, table_id):
+    def from_ncbi(cls, table_id=1):
         if table_id not in _ncbi_genetic_codes:
             raise ValueError(
                 "`table_id` must be one of %r, not %r"
@@ -132,34 +132,130 @@ class GeneticCode(SkbioObject):
 
     def translate(self, sequence, reading_frame=1, start='ignore',
                   stop='ignore'):
-        """
+        """Translate RNA sequence into protein sequence.
 
         Parameters
         ----------
         sequence : RNA
             RNA sequence to translate.
         reading_frame : {1, 2, 3, -1, -2, -3}
-            Reading frame to use. The number indicates the base to start
-            translation on. If negative, will perform a reverse complement
-            first.
-        start : {'ignore', 'optional', 'require'}
-            If ``True``, translation will begin at the first start codon in the
-            reading frame, ignoring all bases prior. 'M' will always be the
-            first amino acid in the translated sequence, even if the original
-            start codon coded for a different amino acid (this behavior most
-            closely matches what happens biologically). If ``False``,
-            translation will start from the position indicated by the reading
-            frame, regardless of the presence of a start codon.
-        stop : {'ignore', 'optional', 'require'}
-            If ``True``, translation will terminate at the first stop codon.
-            The stop codon will not be included in the translated sequence. If
-            ``False``, translation will terminate at the last codon in the
-            sequence, even if it is not a stop codon.
+            Reading frame to use in translation. 1, 2, and 3 are forward frames
+            and -1, -2, and -3 are reverse frames. If reverse (negative), will
+            reverse complement the sequence before translation.
+        start : {'ignore', 'require', 'optional'}
+            How to handle start codons:
+            
+            * "ignore": translation will start from the beginning of the
+              reading frame, regardless of the presence of a start codon.
+            
+            * "require": translation will start at the first start codon in
+              the reading frame, ignoring all prior positions. The first amino
+              acid in the translated sequence will *always* be methionine
+              (M character), even if an alternative start codon was used in
+              translation (this behavior most closely matches the underlying
+              biology). If a start codon does not exist, a ``ValueError`` is
+              raised.
+
+            * "optional": if a start codon exists in the reading frame, matches
+              the behavior of "require". If a start codon does not exist,
+              matches the behavior of "ignore".
+
+        stop : {'ignore', 'require', 'optional'}
+            How to handle stop codons:
+
+            * "ignore": translation will ignore the presence of stop codons and
+              translate to the end of the reading frame.
+
+            * "require": translation will terminate at the first stop codon.
+              The stop codon will not be included in the translated sequence.
+              If a stop codon does not exist, a ``ValueError`` is raised.
+
+            * "optional": if a stop codon exists in the reading frame, matches
+              the behavior of "require". If a stop codon does not exist,
+              matches the behavior of "ignore".
 
         Returns
         -------
         Protein
-            Translated protein sequence.
+            Translated sequence.
+
+        See Also
+        --------
+        translate_six_frames
+
+        Notes
+        -----
+        Input RNA sequence metadata are included in the translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate RNA into protein using NCBI's standard genetic code (table ID
+        1, the default genetic code in scikit-bio):
+
+        >>> from skbio import RNA, GeneticCode
+        >>> rna = RNA('AGUAUUCUGCCACUGUAAGAA')
+        >>> sgc = GeneticCode.from_ncbi()
+        >>> sgc.translate(rna)
+        Protein
+        -----------------------------
+        Stats:
+            length: 7
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 SILPL*E
+
+        In this command, we used the default ``start`` behavior, which starts
+        translation at the beginning of the reading frame, regardless of the
+        presence of a start codon. If we specify "require", translation will
+        start at the first start codon in the reading frame (in this example,
+        CUG), ignoring all prior positions:
+        
+        >>> sgc.translate(rna, start='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 5
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*E
+        
+        Notice that the codon coding for L (CUG) is an alternative start codon
+        in this genetic code. Since we specified "require" mode, methionine
+        (M) was used in place of the alternative start codon (L). This behavior
+        most closely matches the underlying biology.
+
+        Translate the same RNA sequence, also specifying that translation
+        terminate at the first stop codon in the reading frame:
+
+        >>> sgc.translate(rna, start='require', stop='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 MPL
+
+        Passing "require" to both ``start`` and ``stop`` trims the translation
+        to the CDS (and in fact requires that one is present in the reading
+        frame). Changing the reading frame to 2 causes an exception to be
+        raised because a start codon doesn't exist in the reading frame:
+
+        >>> sgc.translate(rna, start='require', stop='require',
+        ...               reading_frame=2) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        ValueError: ...
 
         """
         self._validate_translate_inputs(sequence, reading_frame, start, stop)
@@ -241,6 +337,130 @@ class GeneticCode(SkbioObject):
             % (name, reading_frame, name, name))
 
     def translate_six_frames(self, sequence, start='ignore', stop='ignore'):
+        """Translate RNA into protein using six possible reading frames.
+
+        The six possible reading frames are:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        Translated sequences are yielded in this order.
+
+        Parameters
+        ----------
+        sequence : RNA
+            RNA sequence to translate.
+        start : {'ignore', 'require', 'optional'}
+            How to handle start codons. See ``GeneticCode.translate`` for
+            details.
+        stop : {'ignore', 'require', 'optional'}
+            How to handle stop codons. See ``GeneticCode.translate`` for
+            details.
+
+        Yields
+        ------
+        Protein
+            Translated sequence in the current reading frame.
+
+        See Also
+        --------
+        translate
+
+        Notes
+        -----
+        This method is faster than (and equivalent to) performing six
+        independent translations using, for example:
+
+        ``(gc.translate(reading_frame=rf)
+        for rf in GeneticCode.reading_frames)``
+
+        Input RNA sequence metadata are included in each translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate RNA into protein using the six possible reading frames and
+        NCBI's standard genetic code (table ID 1, the default genetic code in
+        scikit-bio):
+
+        >>> from skbio import RNA, GeneticCode
+        >>> rna = RNA('AUGCCACUUUAA')
+        >>> sgc = GeneticCode.from_ncbi()
+        >>> for protein in sgc.translate_six_frames(rna):
+        ...     protein
+        ...     print('')
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 CHF
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 ATL
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 LKWH
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 *SG
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 KVA
+        <BLANKLINE>
+
+        """
         rc = sequence.reverse_complement()
 
         for reading_frame in range(1, 4):

@@ -176,7 +176,7 @@ class RNA(IUPACSequence, NucleotideMixin):
 
         Translate the same RNA sequence using a different NCBI genetic code
         (table ID 3, the yeast mitochondrial code) and specify that translation
-        should terminate at the first stop codon:
+        must terminate at the first stop codon:
 
         >>> rna.translate(3, stop='require')
         Protein

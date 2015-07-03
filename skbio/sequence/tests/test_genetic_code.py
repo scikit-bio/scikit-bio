@@ -25,6 +25,8 @@ class TestGeneticCode(unittest.TestCase):
 
     def test_from_ncbi_valid_table_ids(self):
         # spot check a few tables
+        self.assertEqual(GeneticCode.from_ncbi().name,
+                         'Standard')
         self.assertEqual(GeneticCode.from_ncbi(2).name,
                          'Vertebrate Mitochondrial')
         self.assertEqual(GeneticCode.from_ncbi(12).name,
