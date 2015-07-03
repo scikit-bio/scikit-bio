@@ -127,24 +127,200 @@ class RNA(IUPACSequence, NucleotideMixin):
         return _motifs
 
     def translate(self, genetic_code=1, *args, **kwargs):
-        """
+        """Translate RNA sequence into protein sequence.
 
         Parameters
         ----------
         genetic_code : int, GeneticCode, optional
-            The genetic code to use, will lookup the GeneticCode by int id or
-            will use the GeneticCode provided.
+            Genetic code to use in translation. If ``int``, used as a table ID
+            to look up the corresponding NCBI genetic code.
+        args : tuple
+            Positional arguments accepted by ``GeneticCode.translate``.
+        kwargs : dict
+            Keyword arguments accepted by ``GeneticCode.translate``.
 
         Returns
         -------
         Protein
-            Translated protein sequence.
+            Translated sequence.
+
+        See Also
+        --------
+        GeneticCode.translate
+        GeneticCode.from_ncbi
+        translate_six_frames
+
+        Notes
+        -----
+        RNA sequence's metadata are included in the translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate RNA into protein using NCBI's standard genetic code (table ID
+        1, the default genetic code in scikit-bio):
+
+        >>> from skbio import RNA
+        >>> rna = RNA('AUGCCACUUUAA')
+        >>> rna.translate()
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*
+
+        Translate the same RNA sequence using a different NCBI genetic code
+        (table ID 3, the yeast mitochondrial code) and specify that translation
+        should terminate at the first stop codon:
+
+        >>> rna.translate(3, stop='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 MPT
+
         """
         if not isinstance(genetic_code, skbio.GeneticCode):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
     def translate_six_frames(self, genetic_code=1, *args, **kwargs):
+        """Translate RNA into protein using six possible reading frames.
+
+        The six possible reading frames are:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        Translated sequences are yielded in this order.
+
+        Parameters
+        ----------
+        genetic_code : int, GeneticCode, optional
+            Genetic code to use in translation. If ``int``, used as a table ID
+            to look up the corresponding NCBI genetic code.
+        args : tuple
+            Positional arguments accepted by
+            ``GeneticCode.translate_six_frames``.
+        kwargs : dict
+            Keyword arguments accepted by ``GeneticCode.translate_six_frames``.
+
+        Yields
+        ------
+        Protein
+            Translated sequence in the current reading frame.
+
+        See Also
+        --------
+        GeneticCode.translate_six_frames
+        GeneticCode.from_ncbi
+        translate
+
+        Notes
+        -----
+        This method is faster than (and equivalent to) performing six
+        independent translations using, for example:
+
+        ``(seq.translate(reading_frame=rf)
+        for rf in GeneticCode.reading_frames)``
+
+        RNA sequence's metadata are included in each translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate RNA into protein using the six possible reading frames and
+        NCBI's standard genetic code (table ID 1, the default genetic code in
+        scikit-bio):
+
+        >>> from skbio import RNA
+        >>> rna = RNA('AUGCCACUUUAA')
+        >>> for protein in rna.translate_six_frames():
+        ...     protein
+        ...     print('')
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 CHF
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 ATL
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 LKWH
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 *SG
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 KVA
+        <BLANKLINE>
+
+        """
         if not isinstance(genetic_code, skbio.GeneticCode):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate_six_frames(self, *args, **kwargs)

@@ -193,7 +193,7 @@ class DNA(IUPACSequence, NucleotideMixin):
         args : tuple
             Positional arguments accepted by ``RNA.translate``.
         kwargs : dict
-            Keyword arguments accepts by ``RNA.translate``.
+            Keyword arguments accepted by ``RNA.translate``.
 
         Returns
         -------
@@ -218,17 +218,6 @@ class DNA(IUPACSequence, NucleotideMixin):
 
         >>> from skbio import DNA
         >>> dna = DNA('ATGCCACTTTAA')
-        >>> dna
-        DNA
-        -----------------------------
-        Stats:
-            length: 12
-            has gaps: False
-            has degenerates: False
-            has non-degenerates: True
-            GC-content: 33.33%
-        -----------------------------
-        0 ATGCCACTTT AA
         >>> dna.translate()
         Protein
         -----------------------------
@@ -281,7 +270,7 @@ class DNA(IUPACSequence, NucleotideMixin):
         args : tuple
             Positional arguments accepted by ``RNA.translate_six_frames``.
         kwargs : dict
-            Keyword arguments accepts by ``RNA.translate_six_frames``.
+            Keyword arguments accepted by ``RNA.translate_six_frames``.
 
         Yields
         ------
