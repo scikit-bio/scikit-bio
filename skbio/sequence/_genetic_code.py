@@ -580,7 +580,8 @@ class GeneticCode(SkbioObject):
         if sequence.has_metadata():
             metadata = sequence.metadata
 
-        return Protein(translated, metadata=metadata)
+        # turn off validation because `translated` is guaranteed to be valid
+        return Protein(translated, metadata=metadata, validate=False)
 
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):

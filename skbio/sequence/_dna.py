@@ -180,7 +180,8 @@ class DNA(IUPACSequence, NucleotideMixin):
         seq = self.copy()
         with seq._byte_ownership():
             seq._bytes[seq._bytes == ord(b'T')] = ord(b'U')
-        return RNA(seq)
+        # turn off validation because `seq` is guaranteed to be valid
+        return RNA(seq, validate=False)
 
     def translate(self, *args, **kwargs):
         """Translate DNA sequence into protein sequence.
