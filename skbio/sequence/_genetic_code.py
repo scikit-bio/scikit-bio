@@ -23,13 +23,15 @@ class GeneticCode(SkbioObject):
     Parameters
     ----------
     amino_acids : consumable by ``skbio.Protein`` constructor
-        64-character vector containing IUPAC amino acid characters, ordered
-        UUU -> GGG (NCBI's ordering). This is the "AAs" field in NCBI's genetic
-        code format.
+        64-character vector containing IUPAC amino acid characters. The order
+        of the amino acids should correspond to NCBI's codon order (see *Notes*
+        section below). `amino_acids` is the "AAs" field in NCBI's genetic
+        code format [1]_.
     starts : consumable by ``skbio.Protein`` constructor
         64-character vector containing only M and - characters, with start
-        codons indicated with M. This is the "Starts" field in NCBI's genetic
-        code format.
+        codons indicated by M. The order of the amino acids should correspond
+        to NCBI's codon order (see *Notes* section below). `starts` is the
+        "Starts" field in NCBI's genetic code format [1]_.
     name : str, optional
         Genetic code name. This is simply metadata and does not affect the
         functionality of the genetic code itself.
@@ -45,6 +47,17 @@ class GeneticCode(SkbioObject):
     The genetic codes available via ``GeneticCode.from_ncbi`` and used
     throughout the examples are defined in [1]_. The genetic code strings
     defined there are directly compatible with the ``GeneticCode`` constructor.
+
+    The order of `amino_acids` and `starts` should correspond to NCBI's codon
+    order, defined in [1]_::
+
+        UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+        UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+        UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Note that scikit-bio displays this ordering using the IUPAC RNA alphabet,
+    while NCBI displays this same ordering using the IUPAC DNA alphabet (for
+    historical purposes).
 
     References
     ----------
@@ -104,14 +117,29 @@ class GeneticCode(SkbioObject):
     0 MPL*
 
     """
+    _num_codons = 64
     _radix_multiplier = np.asarray([16, 4, 1], dtype=np.uint8)
-    _byte_to_offset_map = {
-        ord(b'U'): 0,
-        ord(b'C'): 1,
-        ord(b'A'): 2,
-        ord(b'G'): 3
-    }
     _start_stop_options = ['ignore', 'optional', 'require']
+    __offset_table = None
+
+    @classproperty
+    def _offset_table(cls):
+        if cls.__offset_table is None:
+            # create lookup table that is filled with 255 everywhere except for
+            # indices corresponding to U, C, A, and G. 255 was chosen to
+            # represent invalid character offsets because it will create an
+            # invalid (out of bounds) index into `amino_acids` which should
+            # error noisily. this is important in case the valid nondegenerate
+            # IUPAC RNA characters change in the future and the assumptions
+            # currently made by the code become invalid
+            table = np.empty(ord(b'U') + 1, dtype=np.uint8)
+            table.fill(255)
+            table[ord(b'U')] = 0
+            table[ord(b'C')] = 1
+            table[ord(b'A')] = 2
+            table[ord(b'G')] = 3
+            cls.__offset_table = table
+        return cls.__offset_table
 
     @classmethod
     def from_ncbi(cls, table_id=1):
@@ -198,9 +226,9 @@ class GeneticCode(SkbioObject):
     def _set_amino_acids(self, amino_acids):
         amino_acids = Protein(amino_acids)
 
-        if len(amino_acids) != 64:
-            raise ValueError("`amino_acids` must be length 64, not %d"
-                             % len(amino_acids))
+        if len(amino_acids) != self._num_codons:
+            raise ValueError("`amino_acids` must be length %d, not %d"
+                             % (self._num_codons, len(amino_acids)))
         indices = (amino_acids.values == b'M').nonzero()[0]
         if indices.size < 1:
             raise ValueError("`amino_acids` must contain at least one M "
@@ -211,9 +239,9 @@ class GeneticCode(SkbioObject):
     def _set_starts(self, starts):
         starts = Protein(starts)
 
-        if len(starts) != 64:
-            raise ValueError("`starts` must be length 64, not %d"
-                             % len(starts))
+        if len(starts) != self._num_codons:
+            raise ValueError("`starts` must be length %d, not %d"
+                             % (self._num_codons, len(starts)))
         if ((starts.values == b'M').sum() + (starts.values == b'-').sum() !=
                 len(starts)):
             # to prevent the user from accidentally swapping `starts` and
@@ -386,9 +414,9 @@ class GeneticCode(SkbioObject):
               the reading frame, ignoring all prior positions. The first amino
               acid in the translated sequence will *always* be methionine
               (M character), even if an alternative start codon was used in
-              translation (this behavior most closely matches the underlying
-              biology). If a start codon does not exist, a ``ValueError`` is
-              raised.
+              translation. This behavior most closely matches the underlying
+              biology since fMet doesn't have a corresponding IUPAC character.
+              If a start codon does not exist, a ``ValueError`` is raised.
 
             * "optional": if a start codon exists in the reading frame, matches
               the behavior of "require". If a start codon does not exist,
@@ -463,7 +491,8 @@ class GeneticCode(SkbioObject):
         Note that the codon coding for L (CUG) is an alternative start codon in
         this genetic code. Since we specified "require" mode, methionine (M)
         was used in place of the alternative start codon (L). This behavior
-        most closely matches the underlying biology.
+        most closely matches the underlying biology since fMet doesn't have a
+        corresponding IUPAC character.
 
         Translate the same RNA sequence, also specifying that translation
         terminate at the first stop codon in the reading frame:
@@ -498,12 +527,28 @@ class GeneticCode(SkbioObject):
         if reading_frame < 0:
             sequence = sequence.reverse_complement()
 
-        data = sequence.values[offset:].view(np.uint8).copy()
+        # Translation strategy:
+        #
+        #   1. Obtain view of underlying sequence bytes from the beginning of
+        #      the reading frame.
+        #   2. Convert bytes to offsets (0-3, base 4 since there are only 4
+        #      characters allowed: UCAG).
+        #   3. Reshape byte vector into (N, 3), where N is the number of codons
+        #      in the reading frame. Each row represents a codon in the
+        #      sequence.
+        #   4. (Optional) Find start codon in the reading frame and trim to
+        #      this position. Replace start codon with M codon.
+        #   5. Convert each codon (encoded as offsets) into an index
+        #      corresponding to an amino acid (0-63).
+        #   6. Obtain translated sequence by indexing into the amino acids
+        #      vector (`amino_acids`) using the indices defined in step 5.
+        #   7. (Optional) Find first stop codon and trim to this position.
+        data = sequence.values[offset:].view(np.uint8)
+        # since advanced indexing is used with an integer ndarray, a copy is
+        # always returned. thus, the in-place modification made below
+        # (replacing the start codon) is safe.
+        data = self._offset_table[data]
         data = data[:data.size // 3 * 3].reshape((-1, 3))
-
-        # convert sequence data stored as bytes into offsets (0-3)
-        for byte in self._byte_to_offset_map:
-            data[data == byte] = self._byte_to_offset_map[byte]
 
         if start in {'require', 'optional'}:
             start_codon_index = data.shape[0]
@@ -516,21 +561,17 @@ class GeneticCode(SkbioObject):
                         start_codon_index = first_index
 
             if start_codon_index != data.shape[0]:
-                # trim everything before start codon, replace start codon with
-                # codon coding for M
                 data = data[start_codon_index:]
                 data[0] = self._m_character_codon
             elif start == 'require':
                 self._raise_require_error('start', reading_frame)
 
-        # convert offset-encoded codons into AA indices (0-64)
-        index = (data * self._radix_multiplier).sum(axis=1)
-        translated = self._amino_acids.values[index]
+        indices = (data * self._radix_multiplier).sum(axis=1)
+        translated = self._amino_acids.values[indices]
 
         if stop in {'require', 'optional'}:
             stop_codon_indices = (translated == b'*').nonzero()[0]
             if stop_codon_indices.size > 0:
-                # trim first stop codon and everything following it
                 translated = translated[:stop_codon_indices[0]]
             elif stop == 'require':
                 self._raise_require_error('stop', reading_frame)

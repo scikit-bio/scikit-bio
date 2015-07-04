@@ -314,6 +314,20 @@ class TestGeneticCode(unittest.TestCase):
                                    'reading_frame=1.*start=\'require\''):
             self.sgc.translate(seq, start='require')
 
+    def test_translate_start_no_accidental_mutation(self):
+        # `start` mutates a vector in-place that is derived from
+        # GeneticCode._offset_table. the current code doesn't perform an
+        # explicit copy because numpy's advanced indexing is used, which always
+        # returns a copy. test this assumption here in case that behavior
+        # changes in the future
+        offset_table = self.sgc._offset_table.copy()
+
+        seq = RNA('CAUUUGCUGAAAUGA')
+        obs = self.sgc.translate(seq, start='require')
+        self.assertEqual(obs, Protein('MLK*'))
+
+        npt.assert_array_equal(self.sgc._offset_table, offset_table)
+
     def test_translate_stop_empty_translation(self):
         exp = Protein('')
         for seq in RNA(''), RNA('A'), RNA('AU'):
@@ -424,7 +438,7 @@ class TestGeneticCode(unittest.TestCase):
 
         # gapped sequence
         with six.assertRaisesRegex(self, ValueError, 'gapped'):
-            self.sgc.translate(RNA('AU-G'))
+            self.sgc.translate(RNA('UU-G'))
 
         # degenerate sequence
         with six.assertRaisesRegex(self, NotImplementedError, 'degenerate'):
