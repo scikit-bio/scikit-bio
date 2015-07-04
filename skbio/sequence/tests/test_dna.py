@@ -36,8 +36,6 @@ class TestDNA(unittest.TestCase):
         self.assertEqual(seq.transcribe(), exp)
 
     def test_transcribe_does_not_modify_input(self):
-        # test that use of copy and in-place byte modifications doesn't modify
-        # input sequence
         seq = DNA('ATAT')
         self.assertEqual(seq.transcribe(), RNA('AUAU'))
         self.assertEqual(seq, DNA('ATAT'))

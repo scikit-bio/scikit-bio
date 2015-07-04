@@ -177,11 +177,19 @@ class DNA(IUPACSequence, NucleotideMixin):
         0 UAACGUUA
 
         """
-        seq = self.copy()
-        with seq._byte_ownership():
-            seq._bytes[seq._bytes == ord(b'T')] = ord(b'U')
+        seq = self._string.replace(b'T', b'U')
+
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
         # turn off validation because `seq` is guaranteed to be valid
-        return RNA(seq, validate=False)
+        return RNA(seq, metadata=metadata,
+                   positional_metadata=positional_metadata, validate=False)
 
     def translate(self, *args, **kwargs):
         """Translate DNA sequence into protein sequence.
