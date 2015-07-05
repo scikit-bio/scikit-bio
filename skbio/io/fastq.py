@@ -225,6 +225,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 14.29%
 ----------------------------------------
 0 TATGTATATA TAACATATAC ATATATACAT ACATA
 

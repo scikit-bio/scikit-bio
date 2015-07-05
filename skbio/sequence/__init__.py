@@ -28,24 +28,6 @@ Classes
    Protein
    GeneticCode
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   genetic_code
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   GeneticCodeError
-   GeneticCodeInitError
-   InvalidCodonError
-
 Examples
 --------
 >>> from skbio import DNA, RNA
@@ -74,6 +56,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 62.50%
 -----------------------------
 0 ACCGGGTA
 >>> d3 = d2.reverse_complement()
@@ -87,6 +70,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 62.50%
 -----------------------------
 0 TACCCGGT
 
@@ -132,6 +116,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 66.67%
 -----------------------------
 0 AGG
 <BLANKLINE>
@@ -142,6 +127,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 66.67%
 -----------------------------
 0 GGA
 <BLANKLINE>
@@ -152,6 +138,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 33.33%
 -----------------------------
 0 GAA
 <BLANKLINE>
@@ -169,6 +156,7 @@ Stats:
     has gaps: True
     has degenerates: False
     has non-degenerates: True
+    GC-content: 66.67%
 -----------------------------
 0 AGG-GGA
 <BLANKLINE>
@@ -179,6 +167,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 33.33%
 -----------------------------
 0 GAA
 <BLANKLINE>
@@ -197,6 +186,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 66.67%
 -----------------------------
 0 AGGGGA
 <BLANKLINE>
@@ -207,6 +197,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 33.33%
 -----------------------------
 0 GAA
 <BLANKLINE>
@@ -218,61 +209,28 @@ expressions.
 ...     match
 slice(4, 9, None)
 
-Class-level methods contain information about the molecule types.
+DNA can be transcribed to RNA:
 
->>> DNA.degenerate_map['B']
-set(['C', 'T', 'G'])
+>>> dna = DNA('ATGTGTATTTGA')
+>>> rna = dna.transcribe()
+>>> rna
+RNA
+-----------------------------
+Stats:
+    length: 12
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 25.00%
+-----------------------------
+0 AUGUGUAUUU GA
 
->>> RNA.degenerate_map['B']
-set(['C', 'U', 'G'])
+Both DNA and RNA can be translated into a protein sequence. For example, let's
+translate our DNA and RNA sequences using NCBI's standard genetic code (table
+ID 1, the default genetic code in scikit-bio):
 
-Creating and using a ``GeneticCode`` object:
-
->>> from skbio.sequence import genetic_code
->>> from pprint import pprint
->>> sgc = genetic_code(1)
->>> sgc
-GeneticCode(FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG)
->>> sgc['UUU'] == 'F'
-True
->>> sgc['TTT'] == 'F'
-True
->>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
-True
->>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
-True
-
-Retrieving the anticodons of the object
-
->>> pprint(sgc.anticodons)
-{'*': ['TTA', 'CTA', 'TCA'],
- 'A': ['AGC', 'GGC', 'TGC', 'CGC'],
- 'C': ['ACA', 'GCA'],
- 'D': ['ATC', 'GTC'],
- 'E': ['TTC', 'CTC'],
- 'F': ['AAA', 'GAA'],
- 'G': ['ACC', 'GCC', 'TCC', 'CCC'],
- 'H': ['ATG', 'GTG'],
- 'I': ['AAT', 'GAT', 'TAT'],
- 'K': ['TTT', 'CTT'],
- 'L': ['TAA', 'CAA', 'AAG', 'GAG', 'TAG', 'CAG'],
- 'M': ['CAT'],
- 'N': ['ATT', 'GTT'],
- 'P': ['AGG', 'GGG', 'TGG', 'CGG'],
- 'Q': ['TTG', 'CTG'],
- 'R': ['ACG', 'GCG', 'TCG', 'CCG', 'TCT', 'CCT'],
- 'S': ['AGA', 'GGA', 'TGA', 'CGA', 'ACT', 'GCT'],
- 'T': ['AGT', 'GGT', 'TGT', 'CGT'],
- 'V': ['AAC', 'GAC', 'TAC', 'CAC'],
- 'W': ['CCA'],
- 'Y': ['ATA', 'GTA']}
-
-Nucleotide sequences can be translated using a ``GeneticCode`` object.
-
->>> d6 = DNA('ATGTCTAAATGA')
->>> from skbio.sequence import genetic_code
->>> gc = genetic_code(11)
->>> gc.translate(d6)
+>>> protein_from_dna = dna.translate()
+>>> protein_from_dna
 Protein
 -----------------------------
 Stats:
@@ -280,8 +238,34 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    has stops: True
 -----------------------------
-0 MSK*
+0 MCI*
+>>> protein_from_rna = rna.translate()
+>>> protein_from_rna
+Protein
+-----------------------------
+Stats:
+    length: 4
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    has stops: True
+-----------------------------
+0 MCI*
+
+The two translations are equivalent:
+
+>>> protein_from_dna == protein_from_rna
+True
+
+Class-level methods contain information about the molecule types.
+
+>>> DNA.degenerate_map['B']
+set(['C', 'T', 'G'])
+
+>>> RNA.degenerate_map['B']
+set(['C', 'U', 'G'])
 
 """
 
@@ -297,15 +281,12 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
-from ._exception import (GeneticCodeError, GeneticCodeInitError,
-                         InvalidCodonError)
 from ._sequence import Sequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
-from ._genetic_code import GeneticCode, genetic_code
+from ._genetic_code import GeneticCode
 
-__all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode', 'genetic_code']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
 
 test = TestRunner(__file__).test

@@ -111,6 +111,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 16.67%
         -----------------------------
         0 TTCATT
         >>> seq.complement()
@@ -123,6 +124,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 16.67%
         -----------------------------
         0 AAGTAA
         >>> rc = seq.complement(reverse=True)
@@ -136,6 +138,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 16.67%
         -----------------------------
         0 AATGAA
         >>> rc.positional_metadata['quality'].values
@@ -183,6 +186,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            GC-content: 16.67%
         -----------------------------
         0 AATGAA
         >>> seq.positional_metadata['quality'].values
@@ -340,6 +344,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             if len(seq) != 0:
                 gc /= len(seq)
         return gc
+
 
 _motifs = parent_motifs.copy()
 

@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
+
 from skbio.util import classproperty, overrides
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
@@ -47,6 +49,7 @@ class Protein(IUPACSequence):
     positional_metadata
     alphabet
     gap_chars
+    stop_chars
     nondegenerate_chars
     degenerate_chars
     degenerate_map
@@ -69,6 +72,7 @@ class Protein(IUPACSequence):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        has stops: False
     -----------------------------
     0 PAW
 
@@ -82,19 +86,29 @@ class Protein(IUPACSequence):
         has gaps: False
         has degenerates: False
         has non-degenerates: True
+        has stops: False
     -----------------------------
     0 PAW
 
     """
+    __stop_codes = None
 
-    @property
-    def _motifs(self):
-        return _motifs
+    @classproperty
+    def _stop_codes(cls):
+        if cls.__stop_codes is None:
+            stops = cls.stop_chars
+            cls.__stop_codes = np.asarray([ord(s) for s in stops])
+        return cls.__stop_codes
+
+    @classproperty
+    @overrides(IUPACSequence)
+    def alphabet(cls):
+        return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        return set("ACDEFGHIKLMNPQRSTVWY*")
+        return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
     @overrides(IUPACSequence)
@@ -103,6 +117,77 @@ class Protein(IUPACSequence):
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
+
+    @classproperty
+    def stop_chars(cls):
+        """Return characters representing translation stop codons.
+
+        Returns
+        -------
+        set
+            Characters representing translation stop codons.
+
+        """
+        return set('*')
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+    def stops(self):
+        """Find positions containing stop characters in the protein sequence.
+
+        Returns
+        -------
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` indicates a stop character is present
+            at that position in the protein sequence.
+
+        See Also
+        --------
+        has_stops
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.stops()
+        array([False, False, False], dtype=bool)
+        >>> s = Protein('PAW*E*')
+        >>> s.stops()
+        array([False, False, False,  True, False,  True], dtype=bool)
+
+        """
+        return np.in1d(self._bytes, self._stop_codes)
+
+    def has_stops(self):
+        """Determine if the sequence contains one or more stop characters.
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurrences of stop
+            characters in the protein sequence.
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.has_stops()
+        False
+        >>> s = Protein('PAW*E*')
+        >>> s.has_stops()
+        True
+
+        """
+        return bool(self.stops().any())
+
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(Protein, self)._repr_stats()
+        stats.append(('has stops', '%r' % self.has_stops()))
+        return stats
 
 
 _motifs = parent_motifs.copy()

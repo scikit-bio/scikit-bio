@@ -10,9 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
+import six
 import numpy as np
 
-from skbio import DNA, RNA
+from skbio import DNA, RNA, Protein, GeneticCode
 from skbio.sequence._nucleotide_mixin import NucleotideMixin
 
 
@@ -117,6 +118,141 @@ class TestNucelotideSequence(unittest.TestCase):
             self.assertEqual(constructor.complement_map, comp_map)
             with self.assertRaises(AttributeError):
                 constructor('').complement_map = {'W': 'X'}
+
+    def test_translate_ncbi_table_id(self):
+        for seq in RNA('AAAUUUAUGCAU'), DNA('AAATTTATGCAT'):
+            # default
+            obs = seq.translate()
+            self.assertEqual(obs, Protein('KFMH'))
+
+            obs = seq.translate(9)
+            self.assertEqual(obs, Protein('NFMH'))
+
+    def test_translate_genetic_code_object(self):
+        gc = GeneticCode('M' * 64, '-' * 64)
+        for seq in RNA('AAAUUUAUGCAU'), DNA('AAATTTATGCAT'):
+            obs = seq.translate(gc)
+            self.assertEqual(obs, Protein('MMMM'))
+
+    def test_translate_passes_parameters_through(self):
+        exp = Protein('MW')
+        for seq in RNA('UAAAUUGUGGUAA'), DNA('TAAATTGTGGTAA'):
+            # mix of args and kwargs
+            obs = seq.translate(13, reading_frame=2, start='require',
+                                stop='require')
+            self.assertEqual(obs, exp)
+
+            # kwargs only
+            obs = seq.translate(genetic_code=13, reading_frame=2,
+                                start='require', stop='require')
+            self.assertEqual(obs, exp)
+
+            # args only
+            obs = seq.translate(13, 2, 'require', 'require')
+            self.assertEqual(obs, exp)
+
+    def test_translate_preserves_metadata(self):
+        metadata = {'foo': 'bar', 'baz': 42}
+        positional_metadata = {'foo': range(3)}
+        for seq in (RNA('AUG', metadata=metadata,
+                        positional_metadata=positional_metadata),
+                    DNA('ATG', metadata=metadata,
+                        positional_metadata=positional_metadata)):
+            obs = seq.translate()
+            # metadata retained, positional metadata dropped
+            self.assertEqual(obs,
+                             Protein('M', metadata={'foo': 'bar', 'baz': 42}))
+
+    def test_translate_invalid_id(self):
+        for seq in RNA('AUG'), DNA('ATG'):
+            with six.assertRaisesRegex(self, ValueError, 'table_id.*42'):
+                seq.translate(42)
+
+    def test_translate_six_frames_ncbi_table_id(self):
+        # rc = CAAUUU
+        for seq in RNA('AAAUUG'), DNA('AAATTG'):
+            # default
+            obs = list(seq.translate_six_frames())
+            self.assertEqual(obs, [Protein('KL'), Protein('N'), Protein('I'),
+                                   Protein('QF'), Protein('N'), Protein('I')])
+
+            obs = list(seq.translate_six_frames(9))
+            self.assertEqual(obs, [Protein('NL'), Protein('N'), Protein('I'),
+                                   Protein('QF'), Protein('N'), Protein('I')])
+
+    def test_translate_six_frames_genetic_code_object(self):
+        gc = GeneticCode('M' * 64, '-' * 64)
+        for seq in RNA('AAAUUG'), DNA('AAATTG'):
+            obs = list(seq.translate_six_frames(gc))
+            self.assertEqual(obs, [Protein('MM'), Protein('M'), Protein('M'),
+                                   Protein('MM'), Protein('M'), Protein('M')])
+
+    def test_translate_six_frames_passes_parameters_through(self):
+        for seq in RNA('UUUAUGUGGUGA'), DNA('TTTATGTGGTGA'):
+            # mix of args and kwargs
+            obs = next(seq.translate_six_frames(11, start='require',
+                                                stop='require'))
+            self.assertEqual(obs, Protein('MW'))
+
+            # kwargs only
+            obs = next(seq.translate_six_frames(genetic_code=11,
+                                                start='require',
+                                                stop='require'))
+            self.assertEqual(obs, Protein('MW'))
+
+            # args only
+            obs = next(seq.translate_six_frames(11, 'require', 'require'))
+            self.assertEqual(obs, Protein('MW'))
+
+    def test_translate_six_frames_preserves_metadata(self):
+        metadata = {'foo': 'bar', 'baz': 42}
+        positional_metadata = {'foo': range(3)}
+        for seq in (RNA('AUG', metadata=metadata,
+                        positional_metadata=positional_metadata),
+                    DNA('ATG', metadata=metadata,
+                        positional_metadata=positional_metadata)):
+            obs = list(seq.translate_six_frames())[:2]
+            # metadata retained, positional metadata dropped
+            self.assertEqual(
+                obs,
+                [Protein('M', metadata={'foo': 'bar', 'baz': 42}),
+                 Protein('', metadata={'foo': 'bar', 'baz': 42})])
+
+    def test_translate_six_frames_invalid_id(self):
+        for seq in RNA('AUG'), DNA('ATG'):
+            with six.assertRaisesRegex(self, ValueError, 'table_id.*42'):
+                seq.translate_six_frames(42)
+
+    def test_repr(self):
+        # basic sanity checks for custom repr stats. more extensive testing is
+        # performed on Sequence.__repr__
+
+        for seq in DNA(''), RNA(''):
+            obs = repr(seq)
+            # obtained from super()
+            self.assertIn('has gaps: False', obs)
+            # custom to Protein
+            self.assertIn('GC-content: 0.00%', obs)
+
+        for seq in DNA('ACGT'), RNA('ACGU'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 50.00%', obs)
+
+        for seq in DNA('CST'), RNA('CSU'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 66.67%', obs)
+
+        for seq in DNA('GCSSCG'), RNA('GCSSCG'):
+            obs = repr(seq)
+            self.assertIn('has gaps: False', obs)
+            self.assertIn('GC-content: 100.00%', obs)
+
+        for seq in DNA('-GCSSCG.'), RNA('-GCSSCG.'):
+            obs = repr(seq)
+            self.assertIn('has gaps: True', obs)
+            self.assertIn('GC-content: 100.00%', obs)
 
     def test_complement_without_reverse_empty(self):
         for constructor in (DNA, RNA):

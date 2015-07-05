@@ -8,265 +8,670 @@
 
 from __future__ import absolute_import, division, print_function
 
-import re
-from collections import defaultdict
+import numpy as np
+from future.builtins import range
 
+from skbio.util._decorator import classproperty
 from skbio._base import SkbioObject
-from skbio.sequence import Protein, InvalidCodonError, GeneticCodeInitError
-
-# py3k compatibility
-try:
-    from string import maketrans
-except ImportError:
-    maketrans = str.maketrans
-
-_dna_trans = maketrans('TCAG', 'AGTC')
-
-
-def _simple_rc(seq):
-    """simple reverse-complement: works only on unambiguous uppercase DNA"""
-    return seq.translate(_dna_trans)[::-1]
+from skbio.sequence import Protein, RNA
+from skbio.sequence._base import ElasticLines
 
 
 class GeneticCode(SkbioObject):
-    """Class to hold codon to amino acid mapping, and vice versa.
+    """Genetic code for translating codons to amino acids.
 
     Parameters
     ----------
-    code_sequence : str
-        64-character string containing NCBI representation.
-    id : str, optional
-        identifier for the object.
+    amino_acids : consumable by ``skbio.Protein`` constructor
+        64-character vector containing IUPAC amino acid characters. The order
+        of the amino acids should correspond to NCBI's codon order (see *Notes*
+        section below). `amino_acids` is the "AAs" field in NCBI's genetic
+        code format [1]_.
+    starts : consumable by ``skbio.Protein`` constructor
+        64-character vector containing only M and - characters, with start
+        codons indicated by M. The order of the amino acids should correspond
+        to NCBI's codon order (see *Notes* section below). `starts` is the
+        "Starts" field in NCBI's genetic code format [1]_.
     name : str, optional
-        name for the object.
-    start_codon_sequence : str, optional
-        starting point for the codon sequence.
+        Genetic code name. This is simply metadata and does not affect the
+        functionality of the genetic code itself.
 
-    Returns
-    -------
-    GeneticCode
-        initialized ``GeneticCode`` object.
+    See Also
+    --------
+    RNA.translate
+    DNA.translate
+    GeneticCode.from_ncbi
 
-    Raises
-    ------
-    GeneticCodeInitError
-        If the length of `code_sequence` is different to `64`.
+    Notes
+    -----
+    The genetic codes available via ``GeneticCode.from_ncbi`` and used
+    throughout the examples are defined in [1]_. The genetic code strings
+    defined there are directly compatible with the ``GeneticCode`` constructor.
+
+    The order of `amino_acids` and `starts` should correspond to NCBI's codon
+    order, defined in [1]_::
+
+        UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+        UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+        UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Note that scikit-bio displays this ordering using the IUPAC RNA alphabet,
+    while NCBI displays this same ordering using the IUPAC DNA alphabet (for
+    historical purposes).
+
+    References
+    ----------
+    .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 
     Examples
     --------
-    >>> from skbio.sequence import GeneticCode
-    >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSR'
-    ...                   'RVVVVAAAADDEEGGGG')
+    Get NCBI's standard genetic code (table ID 1, the default genetic code
+    in scikit-bio):
 
-    .. note:: `*` is used to denote termination as per the NCBI standard.
-        Although the genetic code objects convert DNA to RNA and vice versa,
-        lists of codons that they produce will be provided in DNA format.
+    >>> from skbio import GeneticCode
+    >>> GeneticCode.from_ncbi()
+    GeneticCode (Standard)
+    -------------------------------------------------------------------------
+      AAs  = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    Starts = ---M---------------M---------------M----------------------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Get a different NCBI genetic code (25):
+
+    >>> GeneticCode.from_ncbi(25)
+    GeneticCode (Candidate Division SR1 and Gracilibacteria)
+    -------------------------------------------------------------------------
+      AAs  = FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    Starts = ---M-------------------------------M---------------M------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Define a custom genetic code:
+
+    >>> GeneticCode('M' * 64, '-' * 64)
+    GeneticCode
+    -------------------------------------------------------------------------
+      AAs  = MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    Starts = ----------------------------------------------------------------
+    Base1  = UUUUUUUUUUUUUUUUCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2  = UUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGGUUUUCCCCAAAAGGGG
+    Base3  = UCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAGUCAG
+
+    Translate an RNA sequence to protein using NCBI's standard genetic code:
+
+    >>> from skbio import RNA
+    >>> rna = RNA('AUGCCACUUUAA')
+    >>> GeneticCode.from_ncbi().translate(rna)
+    Protein
+    -----------------------------
+    Stats:
+        length: 4
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        has stops: True
+    -----------------------------
+    0 MPL*
 
     """
-    # class data: need the bases, the list of codons in UUU -> GGG order, and
-    # a mapping from positions in the list back to codons. These should be the
-    # same for all GeneticCode instances, and are immutable (therefore
-    # private).
-    _codons = [a + b + c for a in "TCAG" for b in "TCAG" for c in "TCAG"]
+    _num_codons = 64
+    _radix_multiplier = np.asarray([16, 4, 1], dtype=np.uint8)
+    _start_stop_options = ['ignore', 'optional', 'require']
+    __offset_table = None
 
-    def __init__(self, code_sequence, id=None, name=None,
-                 start_codon_sequence=None):
-        if len(code_sequence) != 64:
-            raise GeneticCodeInitError("code_sequence: %s has length %d, but "
-                                       "expected 64" % (code_sequence,
-                                                        len(code_sequence)))
+    @classproperty
+    def _offset_table(cls):
+        if cls.__offset_table is None:
+            # create lookup table that is filled with 255 everywhere except for
+            # indices corresponding to U, C, A, and G. 255 was chosen to
+            # represent invalid character offsets because it will create an
+            # invalid (out of bounds) index into `amino_acids` which should
+            # error noisily. this is important in case the valid nondegenerate
+            # IUPAC RNA characters change in the future and the assumptions
+            # currently made by the code become invalid
+            table = np.empty(ord(b'U') + 1, dtype=np.uint8)
+            table.fill(255)
+            table[ord(b'U')] = 0
+            table[ord(b'C')] = 1
+            table[ord(b'A')] = 2
+            table[ord(b'G')] = 3
+            cls.__offset_table = table
+        return cls.__offset_table
 
-        self.code_sequence = code_sequence
-        self.id = id
-        self.name = name
-        self.start_codon_sequence = start_codon_sequence
-        start_codons = {}
-        if start_codon_sequence is not None:
-            for codon, aa in zip(self._codons, start_codon_sequence):
-                if aa != '-':
-                    start_codons[codon] = aa
-        self.start_codons = start_codons
-        codon_lookup = {key: value for (key, value) in zip(self._codons,
-                                                           code_sequence)}
-        self.codons = codon_lookup
-
-        # create synonyms for each aa
-        aa_lookup = defaultdict(list)
-        for codon in self._codons:
-            aa = codon_lookup[codon]
-            aa_lookup[aa].append(codon)
-        self.synonyms = dict(aa_lookup)
-        sense_codons = codon_lookup.copy()
-
-        # create sense codons
-        stop_codons = self['*']
-        for c in stop_codons:
-            del sense_codons[c]
-        self.sense_codons = sense_codons
-
-        # create anticodons
-        ac = {}
-        for aa, codons in self.synonyms.items():
-            ac[aa] = [_simple_rc(element) for element in codons]
-        self.anticodons = ac
-
-    def _analyze_quartet(self, codons, aa):
-        """Analyzes a quartet of codons and amino acids: returns list of lists.
-
-        Each list contains one block, splitting at purine/pyrimidine boundary
-        if necessary.
-
-        codons should be a list of 4 codons.
-        aa should be a list of 4 amino acid symbols.
-
-        Possible states:
-            - All amino acids are the same: returns list of one quartet.
-            - Two groups of 2 aa: returns list of two doublets.
-            - One group of 2 and 2 groups of 1: list of one doublet, 2 singles.
-            - 4 groups of 1: four singles.
-
-        Note: codon blocks like Ile in the standard code (AUU, AUC, AUA) will
-        be split when they cross the R/Y boundary, so [[AUU, AUC], [AUA]]. This
-        would also apply to a block like AUC AUA AUG -> [[AUC],[AUA,AUG]],
-        although this latter pattern is not observed in the standard code.
-        """
-        if aa[0] == aa[1]:
-            first_doublet = True
-        else:
-            first_doublet = False
-        if aa[2] == aa[3]:
-            second_doublet = True
-        else:
-            second_doublet = False
-        if first_doublet and second_doublet and aa[1] == aa[2]:
-            return [codons]
-        else:
-            blocks = []
-            if first_doublet:
-                blocks.append(codons[:2])
-            else:
-                blocks.extend([[codons[0]], [codons[1]]])
-            if second_doublet:
-                blocks.append(codons[2:])
-            else:
-                blocks.extend([[codons[2]], [codons[3]]])
-            return blocks
-
-    def _get_blocks(self):
-        """Returns list of lists of codon blocks in the genetic code.
-
-        A codon block can be:
-            - a quartet, if all 4 XYn codons have the same amino acid.
-            - a doublet, if XYt and XYc or XYa and XYg have the same aa.
-            - a singlet, otherwise.
-
-        Returns
-        -------
-        list
-            Returns a list of the quartets, doublets, and singlets in the order
-            UUU -> GGG.
-
-        Notes
-        -----
-        A doublet cannot span the purine/pyrimidine boundary, and a quartet
-        cannot span the boundary between two codon blocks whose first two bases
-        differ.
-
-        """
-        if hasattr(self, '_blocks'):
-            return self._blocks
-        else:
-            blocks = []
-            curr_codons = []
-            curr_aa = []
-            for index, codon, aa in zip(range(64), self._codons,
-                                        self.code_sequence):
-                # we're in a new block if it's a new quartet or a different aa
-                new_quartet = not index % 4
-                if new_quartet and curr_codons:
-                    blocks.extend(self._analyze_quartet(curr_codons, curr_aa))
-                    curr_codons = []
-                    curr_aa = []
-                curr_codons.append(codon)
-                curr_aa.append(aa)
-            # don't forget to append last block
-            if curr_codons:
-                blocks.extend(self._analyze_quartet(curr_codons, curr_aa))
-            self._blocks = blocks
-            return self._blocks
-
-    blocks = property(_get_blocks)
-
-    def __str__(self):
-        """Returns code_sequence that constructs the GeneticCode
-        """
-        return self.code_sequence
-
-    def __repr__(self):
-        """Returns reconstructable representation of the GeneticCode
-        """
-        return 'GeneticCode(%s)' % str(self)
-
-    def __eq__(self, other):
-        """ Allows two GeneticCode objects to be compared to each other.
-
-        Two GeneticCode objects are equal if they have equal code_sequences.
-        """
-        if not isinstance(other, GeneticCode):
-            return False
-        return self.code_sequence == other.code_sequence
-
-    def __ne__(self, other):
-        """Required in Py2."""
-        return not self == other
-
-    def __getitem__(self, item):
-        """Returns amino acid corresponding to codon, or codons for an aa.
-
-        Returns [] for empty list of codons, 'X' for unknown amino acid.
-        """
-        item = str(item)
-        if len(item) == 1:  # amino acid
-            return self.synonyms.get(item, [])
-        elif len(item) == 3:  # codon
-            key = item.upper()
-            key = key.replace('U', 'T')
-            return self.codons.get(key, 'X')
-        else:
-            raise InvalidCodonError("Codon or aa %s has wrong length" % item)
-
-    def translate(self, nucleotide_sequence, start=0):
-        """Translate nucleotide to protein sequence
+    @classmethod
+    def from_ncbi(cls, table_id=1):
+        """Return NCBI genetic code specified by table ID.
 
         Parameters
         ----------
-        nucleotide_sequence : DNA, RNA
-            sequence to be translated
-        start : int, optional
-            position to begin translation
+        table_id : int, optional
+            Table ID of the NCBI genetic code to return.
 
         Returns
         -------
-        ProteinSequence
-            translation of nucleotide_sequence
+        GeneticCode
+            NCBI genetic code specified by `table_id`.
 
         Notes
         -----
-        ``translate`` returns the translation of the entire sequence, (i.e., of
-        ``nucleotide_sequence[start:]``). It is the user's responsibility to
-        trim to an open reading frame, either from the input or using the
-        output, if that is desired.
+        The table IDs and genetic codes available in this method and used
+        throughout the examples are defined in [1]_.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        Examples
+        --------
+        Get the NCBI thraustochytrium mitochondrial genetic code (23):
+
+        >>> tmgc = GeneticCode.from_ncbi(23)
+        >>> tmgc.name
+        'Thraustochytrium Mitochondrial'
+
+        """
+        if table_id not in _ncbi_genetic_codes:
+            raise ValueError(
+                "`table_id` must be one of %r, not %r"
+                % (sorted(_ncbi_genetic_codes), table_id))
+        return _ncbi_genetic_codes[table_id]
+
+    @classproperty
+    def reading_frames(cls):
+        """Six possible reading frames.
+
+        Reading frames are ordered:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        This property can be passed into
+        ``GeneticCode.translate(reading_frame)``.
+
+        Returns
+        -------
+        list (int)
+            Six possible reading frames.
+
+        """
+        return [1, 2, 3, -1, -2, -3]
+
+    @property
+    def name(self):
+        """Genetic code name.
+
+        This is simply metadata and does not affect the functionality of the
+        genetic code itself.
+
+        Returns
+        -------
+        str
+            Genetic code name.
+
+        """
+        return self._name
+
+    def __init__(self, amino_acids, starts, name=''):
+        self._set_amino_acids(amino_acids)
+        self._set_starts(starts)
+        self._name = name
+
+    def _set_amino_acids(self, amino_acids):
+        amino_acids = Protein(amino_acids)
+
+        if len(amino_acids) != self._num_codons:
+            raise ValueError("`amino_acids` must be length %d, not %d"
+                             % (self._num_codons, len(amino_acids)))
+        indices = (amino_acids.values == b'M').nonzero()[0]
+        if indices.size < 1:
+            raise ValueError("`amino_acids` must contain at least one M "
+                             "(methionine) character")
+        self._amino_acids = amino_acids
+        self._m_character_codon = self._index_to_codon(indices[0])
+
+    def _set_starts(self, starts):
+        starts = Protein(starts)
+
+        if len(starts) != self._num_codons:
+            raise ValueError("`starts` must be length %d, not %d"
+                             % (self._num_codons, len(starts)))
+        if ((starts.values == b'M').sum() + (starts.values == b'-').sum() !=
+                len(starts)):
+            # to prevent the user from accidentally swapping `starts` and
+            # `amino_acids` and getting a translation back
+            raise ValueError("`starts` may only contain M and - characters")
+
+        self._starts = starts
+
+        indices = (self._starts.values == b'M').nonzero()[0]
+        codons = np.empty((indices.size, 3), dtype=np.uint8)
+        for i, index in enumerate(indices):
+            codons[i] = self._index_to_codon(index)
+        self._start_codons = codons
+
+    def _index_to_codon(self, index):
+        """Convert AA index (0-63) to codon encoded in offsets (0-3)."""
+        codon = np.empty(3, dtype=np.uint8)
+        for i, multiplier in enumerate(self._radix_multiplier):
+            offset, index = divmod(index, multiplier)
+            codon[i] = offset
+        return codon
+
+    def __str__(self):
+        """Return string representation of the genetic code.
+
+        Returns
+        -------
+        str
+            Genetic code in NCBI genetic code format.
+
+        Notes
+        -----
+        Representation uses NCBI genetic code format defined in [1]_.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        """
+        return self._build_repr(include_name=False)
+
+    def __repr__(self):
+        """Return string representation of the genetic code.
+
+        Returns
+        -------
+        str
+            Genetic code in NCBI genetic code format.
+
+        Notes
+        -----
+        Representation uses NCBI genetic code format defined in [1]_ preceded
+        by a header. If the genetic code has a name, it will be included in the
+        header.
+
+        References
+        ----------
+        .. [1] http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+        """
+        return self._build_repr(include_name=True)
+
+    def _build_repr(self, include_name):
+        lines = ElasticLines()
+
+        if include_name:
+            name_line = self.__class__.__name__
+            if len(self.name) > 0:
+                name_line += ' (%s)' % self.name
+            lines.add_line(name_line)
+            lines.add_separator()
+
+        lines.add_line('  AAs  = %s' % str(self._amino_acids))
+        lines.add_line('Starts = %s' % str(self._starts))
+        base1 = 'U' * 16 + 'C' * 16 + 'A' * 16 + 'G' * 16
+        lines.add_line('Base1  = %s' % base1)
+        base2 = ('U' * 4 + 'C' * 4 + 'A' * 4 + 'G' * 4) * 4
+        lines.add_line('Base2  = %s' % base2)
+        base3 = 'UCAG' * 16
+        lines.add_line('Base3  = %s' % base3)
+
+        return lines.to_str()
+
+    def __eq__(self, other):
+        """Determine if the genetic code is equal to another.
+
+        Genetic codes are equal if they are *exactly* the same type and
+        defined by the same `amino_acids` and `starts`. A genetic code's name
+        (accessed via ``name`` property) does not affect equality.
+
+        Parameters
+        ----------
+        other : GeneticCode
+            Genetic code to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether the genetic code is equal to `other`.
+
+        Examples
+        --------
+        NCBI genetic codes 1 and 2 are not equal:
+
+        >>> GeneticCode.from_ncbi(1) == GeneticCode.from_ncbi(2)
+        False
+
+        Define a custom genetic code:
+
+        >>> gc = GeneticCode('M' * 64, '-' * 64)
+
+        Define a second genetic code with the same `amino_acids` and `starts`.
+        Note that the presence of a name does not make the genetic codes
+        unequal:
+
+        >>> named_gc = GeneticCode('M' * 64, '-' * 64, name='example name')
+        >>> gc == named_gc
+        True
+
+        """
+        if self.__class__ != other.__class__:
+            return False
+        # convert Protein to str so that metadata is ignored in comparison. we
+        # only care about the sequence data defining the genetic code
+        if str(self._amino_acids) != str(other._amino_acids):
+            return False
+        if str(self._starts) != str(other._starts):
+            return False
+        return True
+
+    def __ne__(self, other):
+        """Determine if the genetic code is not equal to another.
+
+        Genetic codes are not equal if their type, `amino_acids`, or `starts`
+        differ. A genetic code's name (accessed via ``name`` property) does not
+        affect equality.
+
+        Parameters
+        ----------
+        other : GeneticCode
+            Genetic code to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates whether the genetic code is not equal to `other`.
+
+        """
+        return not (self == other)
+
+    def translate(self, sequence, reading_frame=1, start='ignore',
+                  stop='ignore'):
+        """Translate RNA sequence into protein sequence.
+
+        Parameters
+        ----------
+        sequence : RNA
+            RNA sequence to translate.
+        reading_frame : {1, 2, 3, -1, -2, -3}
+            Reading frame to use in translation. 1, 2, and 3 are forward frames
+            and -1, -2, and -3 are reverse frames. If reverse (negative), will
+            reverse complement the sequence before translation.
+        start : {'ignore', 'require', 'optional'}
+            How to handle start codons:
+
+            * "ignore": translation will start from the beginning of the
+              reading frame, regardless of the presence of a start codon.
+
+            * "require": translation will start at the first start codon in
+              the reading frame, ignoring all prior positions. The first amino
+              acid in the translated sequence will *always* be methionine
+              (M character), even if an alternative start codon was used in
+              translation. This behavior most closely matches the underlying
+              biology since fMet doesn't have a corresponding IUPAC character.
+              If a start codon does not exist, a ``ValueError`` is raised.
+
+            * "optional": if a start codon exists in the reading frame, matches
+              the behavior of "require". If a start codon does not exist,
+              matches the behavior of "ignore".
+
+        stop : {'ignore', 'require', 'optional'}
+            How to handle stop codons:
+
+            * "ignore": translation will ignore the presence of stop codons and
+              translate to the end of the reading frame.
+
+            * "require": translation will terminate at the first stop codon.
+              The stop codon will not be included in the translated sequence.
+              If a stop codon does not exist, a ``ValueError`` is raised.
+
+            * "optional": if a stop codon exists in the reading frame, matches
+              the behavior of "require". If a stop codon does not exist,
+              matches the behavior of "ignore".
+
+        Returns
+        -------
+        Protein
+            Translated sequence.
 
         See Also
         --------
         translate_six_frames
 
+        Notes
+        -----
+        Input RNA sequence metadata are included in the translated protein
+        sequence. Positional metadata are not included.
+
         Examples
         --------
-        >>> from skbio.sequence import GeneticCode
-        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
-        ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.translate('AUGCAUGACUUUUGA', 1)
+        Translate RNA into protein using NCBI's standard genetic code (table ID
+        1, the default genetic code in scikit-bio):
+
+        >>> from skbio import RNA, GeneticCode
+        >>> rna = RNA('AGUAUUCUGCCACUGUAAGAA')
+        >>> sgc = GeneticCode.from_ncbi()
+        >>> sgc.translate(rna)
+        Protein
+        -----------------------------
+        Stats:
+            length: 7
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 SILPL*E
+
+        In this command, we used the default ``start`` behavior, which starts
+        translation at the beginning of the reading frame, regardless of the
+        presence of a start codon. If we specify "require", translation will
+        start at the first start codon in the reading frame (in this example,
+        CUG), ignoring all prior positions:
+
+        >>> sgc.translate(rna, start='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 5
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*E
+
+        Note that the codon coding for L (CUG) is an alternative start codon in
+        this genetic code. Since we specified "require" mode, methionine (M)
+        was used in place of the alternative start codon (L). This behavior
+        most closely matches the underlying biology since fMet doesn't have a
+        corresponding IUPAC character.
+
+        Translate the same RNA sequence, also specifying that translation
+        terminate at the first stop codon in the reading frame:
+
+        >>> sgc.translate(rna, start='require', stop='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 MPL
+
+        Passing "require" to both ``start`` and ``stop`` trims the translation
+        to the CDS (and in fact requires that one is present in the reading
+        frame). Changing the reading frame to 2 causes an exception to be
+        raised because a start codon doesn't exist in the reading frame:
+
+        >>> sgc.translate(rna, start='require', stop='require',
+        ...               reading_frame=2) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        ValueError: ...
+
+        """
+        self._validate_translate_inputs(sequence, reading_frame, start, stop)
+
+        offset = abs(reading_frame) - 1
+        if reading_frame < 0:
+            sequence = sequence.reverse_complement()
+
+        # Translation strategy:
+        #
+        #   1. Obtain view of underlying sequence bytes from the beginning of
+        #      the reading frame.
+        #   2. Convert bytes to offsets (0-3, base 4 since there are only 4
+        #      characters allowed: UCAG).
+        #   3. Reshape byte vector into (N, 3), where N is the number of codons
+        #      in the reading frame. Each row represents a codon in the
+        #      sequence.
+        #   4. (Optional) Find start codon in the reading frame and trim to
+        #      this position. Replace start codon with M codon.
+        #   5. Convert each codon (encoded as offsets) into an index
+        #      corresponding to an amino acid (0-63).
+        #   6. Obtain translated sequence by indexing into the amino acids
+        #      vector (`amino_acids`) using the indices defined in step 5.
+        #   7. (Optional) Find first stop codon and trim to this position.
+        data = sequence.values[offset:].view(np.uint8)
+        # since advanced indexing is used with an integer ndarray, a copy is
+        # always returned. thus, the in-place modification made below
+        # (replacing the start codon) is safe.
+        data = self._offset_table[data]
+        data = data[:data.size // 3 * 3].reshape((-1, 3))
+
+        if start in {'require', 'optional'}:
+            start_codon_index = data.shape[0]
+            for start_codon in self._start_codons:
+                indices = np.all(data == start_codon, axis=1).nonzero()[0]
+
+                if indices.size > 0:
+                    first_index = indices[0]
+                    if first_index < start_codon_index:
+                        start_codon_index = first_index
+
+            if start_codon_index != data.shape[0]:
+                data = data[start_codon_index:]
+                data[0] = self._m_character_codon
+            elif start == 'require':
+                self._raise_require_error('start', reading_frame)
+
+        indices = (data * self._radix_multiplier).sum(axis=1)
+        translated = self._amino_acids.values[indices]
+
+        if stop in {'require', 'optional'}:
+            stop_codon_indices = (translated == b'*').nonzero()[0]
+            if stop_codon_indices.size > 0:
+                translated = translated[:stop_codon_indices[0]]
+            elif stop == 'require':
+                self._raise_require_error('stop', reading_frame)
+
+        metadata = None
+        if sequence.has_metadata():
+            metadata = sequence.metadata
+
+        # turn off validation because `translated` is guaranteed to be valid
+        return Protein(translated, metadata=metadata, validate=False)
+
+    def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
+        if not isinstance(sequence, RNA):
+            raise TypeError("Sequence to translate must be RNA, not %s" %
+                            type(sequence).__name__)
+
+        if reading_frame not in self.reading_frames:
+            raise ValueError("`reading_frame` must be one of %r, not %r" %
+                             (self.reading_frames, reading_frame))
+
+        for name, value in ('start', start), ('stop', stop):
+            if value not in self._start_stop_options:
+                raise ValueError("`%s` must be one of %r, not %r" %
+                                 (name, self._start_stop_options, value))
+
+        if sequence.has_gaps():
+            raise ValueError("scikit-bio does not support translation of "
+                             "gapped sequences.")
+
+        if sequence.has_degenerates():
+            raise NotImplementedError("scikit-bio does not currently support "
+                                      "translation of degenerate sequences."
+                                      "`RNA.expand_degenerates` can be used "
+                                      "to obtain all non-degenerate versions "
+                                      "of a degenerate sequence.")
+
+    def _raise_require_error(self, name, reading_frame):
+        raise ValueError(
+            "Sequence does not contain a %s codon in the "
+            "current reading frame (`reading_frame=%d`). Presence "
+            "of a %s codon is required with `%s='require'`"
+            % (name, reading_frame, name, name))
+
+    def translate_six_frames(self, sequence, start='ignore', stop='ignore'):
+        """Translate RNA into protein using six possible reading frames.
+
+        The six possible reading frames are:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        Translated sequences are yielded in this order.
+
+        Parameters
+        ----------
+        sequence : RNA
+            RNA sequence to translate.
+        start : {'ignore', 'require', 'optional'}
+            How to handle start codons. See ``GeneticCode.translate`` for
+            details.
+        stop : {'ignore', 'require', 'optional'}
+            How to handle stop codons. See ``GeneticCode.translate`` for
+            details.
+
+        Yields
+        ------
+        Protein
+            Translated sequence in the current reading frame.
+
+        See Also
+        --------
+        translate
+
+        Notes
+        -----
+        This method is faster than (and equivalent to) performing six
+        independent translations using, for example:
+
+        ``(gc.translate(seq, reading_frame=rf)
+        for rf in GeneticCode.reading_frames)``
+
+        Input RNA sequence metadata are included in each translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate RNA into protein using the six possible reading frames and
+        NCBI's standard genetic code (table ID 1, the default genetic code in
+        scikit-bio):
+
+        >>> from skbio import RNA, GeneticCode
+        >>> rna = RNA('AUGCCACUUUAA')
+        >>> sgc = GeneticCode.from_ncbi()
+        >>> for protein in sgc.translate_six_frames(rna):
+        ...     protein
+        ...     print('')
         Protein
         -----------------------------
         Stats:
@@ -274,322 +679,150 @@ class GeneticCode(SkbioObject):
             has gaps: False
             has degenerates: False
             has non-degenerates: True
+            has stops: True
         -----------------------------
-        0 CMTF
+        0 MPL*
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 CHF
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 ATL
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 LKWH
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 *SG
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 KVA
+        <BLANKLINE>
 
         """
-        if len(nucleotide_sequence) == 0:
-            return Protein('')
-        if start + 1 > len(nucleotide_sequence):
-            raise ValueError("Translation starts after end of"
-                             "nucleotide sequence")
+        rc = sequence.reverse_complement()
 
-        translation = []
-        for i in range(start, len(nucleotide_sequence) - 2, 3):
-            translation.append(self[nucleotide_sequence[i:i + 3]])
-        translation = Protein(''.join(translation))
-
-        return translation
-
-    def get_stop_indices(self, nucleotide_sequence, start=0):
-        """returns indexes for stop codons in the specified frame
-
-        Parameters
-        ----------
-        nucleotide_sequence : str, DNA, RNA
-            sequence to be scanned for stop codons
-        start : int, optional
-            position where the search begins.
-
-        Returns
-        -------
-        list
-            indices of the stop codons.
-
-        Examples
-        --------
-        >>> from skbio.sequence import GeneticCode, DNA
-        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
-        ...                   'RRVVVVAAAADDEEGGGG')
-        >>> seq = DNA('ATGCTAACATAAA')
-        >>> sgc.get_stop_indices(seq, 0)
-        [9]
-
-        """
-        stops = self['*']
-        stop_pattern = '(%s)' % '|'.join(stops)
-        stop_pattern = re.compile(stop_pattern)
-        seq = str(nucleotide_sequence)
-        found = [hit.start() for hit in stop_pattern.finditer(seq)]
-        found = [index for index in found if index % 3 == start]
-        return found
-
-    def translate_six_frames(self, nucleotide_sequence):
-        """Translate nucleotide to protein sequences for all six reading frames
-
-        Parameters
-        ----------
-        nucleotide_sequence : DNA, RNA
-            sequence to be translated
-
-        Returns
-        -------
-        list
-            the six translated ProteinSequence objects
-
-        See Also
-        --------
-        translate
-
-        Examples
-        --------
-        >>> from skbio.sequence import GeneticCode, RNA
-        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
-        ...                   'RRVVVVAAAADDEEGGGG')
-        >>> results = sgc.translate_six_frames(RNA('AUGCUAACAUAAA'))
-        >>> for e in results:
-        ...     print(e)
-        MLT*
-        C*HK
-        ANI
-        FMLA
-        LC*H
-        YVS
-
-        """
-        rc_nucleotide_sequence = nucleotide_sequence.reverse_complement()
-        results = []
-        for start in range(3):
-            translation = self.translate(nucleotide_sequence, start)
-            results.append(translation)
-
-        for start in range(3):
-            translation = self.translate(rc_nucleotide_sequence, start)
-            results.append(translation)
-
-        return results
-
-    def is_start(self, codon):
-        """Checks if codon is a start codon
-
-        Parameters
-        ----------
-        codon : str
-            codon string
-
-        Returns
-        -------
-        bool
-            ``True`` if codon is a start codon, ``False`` otherwise
-
-        Examples
-        --------
-        >>> from skbio.sequence import GeneticCode
-        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
-        ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.is_start('ATG')
-        False
-        >>> sgc.is_start('AAA')
-        False
-
-        """
-        fixed_codon = codon.upper().replace('U', 'T')
-        return fixed_codon in self.start_codons
-
-    def is_stop(self, codon):
-        """Checks if codon is a stop codon
-
-        Parameters
-        ----------
-        codon : str
-            codon string
-
-        Returns
-        -------
-        bool
-            ``True`` if codon is a stop codon, ``False`` otherwise
-
-        Examples
-        --------
-        >>> from skbio.sequence import GeneticCode
-        >>> sgc = GeneticCode('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSS'
-        ...                   'RRVVVVAAAADDEEGGGG')
-        >>> sgc.is_stop('UAA')
-        True
-        >>> sgc.is_stop('AAA')
-        False
-
-        """
-        return self[codon] == '*'
-
-    def changes(self, other):
-        """Returns dictionary of codons that differ
-
-        Parameters
-        ----------
-        other : GeneticCode
-           genetic code object
-
-        Returns
-        -------
-        dict
-            Returns a dictionary of the form ``{codon:'XY'}`` for codons that
-            differ. X is the string representation of the amino acid in the
-            object calling this method, Y is the string representation of the
-            amino acid in `other`. Always returns a 2-character string.
-
-        Examples
-        --------
-        >>> from skbio.sequence import GeneticCode
-        >>> from pprint import pprint
-        >>> sgc = GeneticCode('FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS*'
-        ...                   '*VVVVAAAADDEEGGGG')
-        >>> pprint(sgc.changes('FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTT'
-        ...                    'TNNKKSSRRVVVVAAAADDEEGGGG'))
-        {'AGA': '*R', 'AGG': '*R', 'ATA': 'MI', 'TGA': 'W*'}
-
-        """
-        changes = {}
-        try:
-            other_code = other.code_sequence
-        except AttributeError:  # try using other directly as sequence
-            other_code = other
-        for codon, old, new in zip(self._codons, self.code_sequence,
-                                   other_code):
-            if old != new:
-                changes[codon] = old + new
-        return changes
+        for reading_frame in range(1, 4):
+            yield self.translate(sequence, reading_frame=reading_frame,
+                                 start=start, stop=stop)
+        for reading_frame in range(1, 4):
+            yield self.translate(rc, reading_frame=reading_frame,
+                                 start=start, stop=stop)
 
 
-_ncbi_genetic_code_data = [
-    [
+# defined at http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+_ncbi_genetic_codes = {
+    1: GeneticCode(
         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        1,
-        'Standard Nuclear',
         '---M---------------M---------------M----------------------------',
-    ],
-    [
+        'Standard'),
+    2: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG',
-        2,
-        'Vertebrate Mitochondrial',
         '--------------------------------MMMM---------------M------------',
-    ],
-    [
+        'Vertebrate Mitochondrial'),
+    3: GeneticCode(
         'FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        3,
-        'Yeast Mitochondrial',
         '----------------------------------MM----------------------------',
-    ],
-    [
+        'Yeast Mitochondrial'),
+    4: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        4,
-        'Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/'
-        'Spiroplasma Nuclear',
         '--MM---------------M------------MMMM---------------M------------',
-    ],
-    [
+        'Mold, Protozoan, and Coelenterate Mitochondrial, and '
+        'Mycoplasma/Spiroplasma'),
+    5: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG',
-        5,
-        'Invertebrate Mitochondrial',
         '---M----------------------------MMMM---------------M------------',
-    ],
-    [
+        'Invertebrate Mitochondrial'),
+    6: GeneticCode(
         'FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        6,
-        'Ciliate, Dasycladacean and Hexamita Nuclear',
         '-----------------------------------M----------------------------',
-    ],
-    [
+        'Ciliate, Dasycladacean and Hexamita Nuclear'),
+    9: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        9,
-        'Echinoderm and Flatworm Mitochondrial',
         '-----------------------------------M---------------M------------',
-    ],
-    [
+        'Echinoderm and Flatworm Mitochondrial'),
+    10: GeneticCode(
         'FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        10,
-        'Euplotid Nuclear',
         '-----------------------------------M----------------------------',
-    ],
-    [
+        'Euplotid Nuclear'),
+    11: GeneticCode(
         'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        11,
-        'Bacterial Nuclear and Plant Plastid',
         '---M---------------M------------MMMM---------------M------------',
-    ],
-    [
+        'Bacterial, Archaeal and Plant Plastid'),
+    12: GeneticCode(
         'FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        12,
-        'Alternative Yeast Nuclear',
         '-------------------M---------------M----------------------------',
-    ],
-    [
+        'Alternative Yeast Nuclear'),
+    13: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG',
-        13,
-        'Ascidian Mitochondrial',
-        '-----------------------------------M----------------------------',
-    ],
-    [
+        '---M------------------------------MM---------------M------------',
+        'Ascidian Mitochondrial'),
+    14: GeneticCode(
         'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        14,
-        'Alternative Flatworm Mitochondrial',
         '-----------------------------------M----------------------------',
-    ],
-    [
-        'FFLLSSSSYY*QCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        15,
-        'Blepharisma Nuclear',
-        '-----------------------------------M----------------------------',
-    ],
-    [
+        'Alternative Flatworm Mitochondrial'),
+    16: GeneticCode(
         'FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        16,
-        'Chlorophycean Mitochondrial',
         '-----------------------------------M----------------------------',
-    ],
-    [
+        'Chlorophycean Mitochondrial'),
+    21: GeneticCode(
         'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG',
-        20,
-        'Trematode Mitochondrial',
         '-----------------------------------M---------------M------------',
-    ],
-    [
+        'Trematode Mitochondrial'),
+    22: GeneticCode(
         'FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        22,
-        'Scenedesmus obliquus Mitochondrial',
         '-----------------------------------M----------------------------',
-    ],
-    [
+        'Scenedesmus obliquus Mitochondrial'),
+    23: GeneticCode(
         'FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
-        23,
-        'Thraustochytrium Mitochondrial',
-    ],
-]
-
-
-def genetic_code(*id):
-    """``skbio.sequence.GeneticCode`` factory given an optional id.
-
-    Parameters
-    ----------
-    id : int or str optional
-        Indicates the ``skbio.sequence.GeneticCode`` to return. Must be in the
-        range of [1, 23] inclusive. If `id` is not provided, the Standard
-        Nuclear genetic code will be returned.
-
-    Returns
-    -------
-    skbio.sequence.GeneticCode
-
-    """
-    key = 1
-    if len(id) == 1:
-        key = int(id[0])
-    if len(id) > 1:
-        raise TypeError('genetic_code takes 0 or 1 arguments (%d given)'
-                        % len(id))
-    for n in _ncbi_genetic_code_data:
-        if n[1] == key:
-            return GeneticCode(*n)
-
-    raise ValueError('Genetic code could not be found for %d.' % id)
+        '--------------------------------M--M---------------M------------',
+        'Thraustochytrium Mitochondrial'),
+    24: GeneticCode(
+        'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG',
+        '---M---------------M---------------M---------------M------------',
+        'Pterobranchia Mitochondrial'),
+    25: GeneticCode(
+        'FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG',
+        '---M-------------------------------M---------------M------------',
+        'Candidate Division SR1 and Gracilibacteria')
+}
