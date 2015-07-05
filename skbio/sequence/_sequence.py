@@ -519,6 +519,8 @@ class Sequence(collections.Sequence, SkbioObject):
                 positional_metadata = sequence.positional_metadata
             sequence = sequence._bytes
 
+            self._owns_bytes = False
+
             self._set_bytes(sequence)
 
         else:
