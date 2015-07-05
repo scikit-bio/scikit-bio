@@ -293,8 +293,11 @@ def overrides(interface_class):
         if method.__name__ not in dir(interface_class):
             raise OverrideError("%r is not present in parent class: %r." %
                                 (method.__name__, interface_class.__name__))
+        backup = classproperty.__get__
+        classproperty.__get__ = lambda x, y, z: x
         if method.__doc__ is None:
             method.__doc__ = getattr(interface_class, method.__name__).__doc__
+        classproperty.__get__ = backup
         return method
     return overrider
 
