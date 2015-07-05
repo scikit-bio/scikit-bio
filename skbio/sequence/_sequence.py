@@ -1678,7 +1678,7 @@ class Sequence(collections.Sequence, SkbioObject):
             kmers = np.lib.stride_tricks.as_strided(
                 self._bytes, shape=(k, count), strides=(1, step)).T
             for s in kmers:
-                yield self._constructor(sequence=s)
+                yield self._to(sequence=s)
 
     def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return counts of words of length `k` from the biological sequence.
