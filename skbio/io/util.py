@@ -37,15 +37,13 @@ from skbio.io._fileobject import (
     is_binary_file, SaneTextIOWrapper, CompressedBufferedReader,
     CompressedBufferedWriter)
 
-_d = dict(mode='r', buffer_size=io.DEFAULT_BUFFER_SIZE, encoding=None,
-          errors=None, newline=None, compression='auto', compresslevel=9,
-          is_binary_file=None)
+_d = dict(mode='r', encoding=None, errors=None, newline=None,
+          compression='auto', compresslevel=9)
 
 
-def _resolve(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
-             encoding=_d['encoding'], errors=_d['errors'],
-             newline=_d['newline'], compression=_d['compression'],
-             compresslevel=_d['compresslevel']):
+def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
+             errors=_d['errors'], newline=_d['newline'],
+             compression=_d['compression'], compresslevel=_d['compresslevel']):
     arguments = locals().copy()
 
     if mode not in {'r', 'w'}:
@@ -68,9 +66,84 @@ def _resolve(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
     return newfile, source, is_binary_file(newfile)
 
 
-def open(file, mode=_d['mode'], buffer_size=_d['buffer_size'],
-         encoding=_d['encoding'], errors=_d['errors'], newline=_d['newline'],
-         compression=_d['compression'], compresslevel=_d['compresslevel']):
+def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
+         newline=_d['newline'], compression=_d['compression'],
+         compresslevel=_d['compresslevel']):
+    r"""Convert input into a filehandle
+
+    Supported inputs:
+
+    +----------------------+---------+---------+
+    | type                 | reading | writing |
+    +======================+=========+=========+
+    | file path            | True    | True    |
+    +----------------------+---------+---------+
+    | URL                  | True    | False   |
+    +----------------------+---------+---------+
+    | [u"lines list\\n"]   | True    | True    |
+    +----------------------+---------+---------+
+    | "readable" file      | True    | False   |
+    +----------------------+---------+---------+
+    | io.StringIO          | True    | True    |
+    +----------------------+---------+---------+
+    | io.BytesIO           | True    | True    |
+    +----------------------+---------+---------+
+    | io.TextIOWrapper     | True    | True    |
+    +----------------------+---------+---------+
+    | io.BufferedReader    | True    | False   |
+    +----------------------+---------+---------+
+    | io.BufferedWriter    | False   | True    |
+    +----------------------+---------+---------+
+    | io.BufferedRandom    | True    | True    |
+    +----------------------+---------+---------+
+
+    .. note:: When reading a list of unicode (str) lines, the input for
+       `newline` is used to determine the number of lines in the resulting file
+       handle, not the number of elements in the list. This is to allow
+       composition with ``file.readlines()``.
+
+    Parameters
+    ----------
+    file : filepath, url, filehandle, list
+        The input to convert to a filehandle.
+    mode : {'r', 'w'}, optional
+        Whether to return a readable or writable file. Conversely, this does
+        not imply that the returned file will be unwritable or unreadable.
+        To geta binary filehandle set `encoding` to binary.
+    encoding : str, optional
+        The encoding scheme to use for the file. If set to 'binary', no bytes
+        will be translated. Otherwise this matches the behavior of
+        :func:`io.open`.
+    errors : str, optional
+        Specifies how encoding and decoding errors are to be handled. This has
+        no effect when `encoding` is binary (as there can be no errors).
+        Otherwise this matches the behavior of :func:`io.open`.
+    newline : {None, '', '\n', '\r\n', '\r'}, optional
+        Matches the behavior of :func:`io.open`.
+    compression : {'auto', 'gzip', 'bz2', None}, optional
+        Will compress or decompress `file` depending on `mode`. If 'auto' then
+        determining the compression of the file will be attempted and the
+        result will be transparently decompressed. 'auto' will do nothing
+        when writing. Other legal values will use their respective compression
+        schemes. `compression` cannot be used with a text source.
+    compresslevel : int 0-9 (inclusive), optional
+        The level of compression to use, will be passed to the appropriate
+        compression handler. This is only used when writing.
+
+    Returns
+    -------
+    io.TextIOBase or io.BufferedReader/Writer
+        When `encoding='binary'` an :class:`io.BufferedReader` or
+        :class:`io.BufferedWriter` will be returned depending on `mode`.
+        Otherwise an implementation of :class:`io.TextIOBase` will be returned.
+
+    .. note:: Any underlying filehandles needed to create this result are
+       handled transparently. If `file` was closeable, garbage collection of
+       our output will not close `file`, but calling `close` will. Conversely
+       calling `close` on `file` will cause this output to reflect a closed
+       state. **This does not mean that a `flush` has occured.**
+
+    """
     arguments = locals().copy()
     del arguments['file']
 
@@ -134,6 +207,35 @@ def _resolve_file(file, **kwargs):
 
 @contextmanager
 def open_file(file, **kwargs):
+    r"""Context manager for `skbio.io.open`; does not close foreign filehandles
+
+    Matches `skbio.io.open`.
+
+    Examples
+    --------
+    Here our input isn't a filehandle and so `f` will get closed.
+    >>> with open_file([u'a\n']) as f:
+    ...     f.read()
+    ...
+    u'a\n'
+    >>> f.closed
+    True
+
+    Here we provide an open file and so `f` will not get closed and neither
+    will `file`.
+    >>> file = io.BytesIO(b'BZh91AY&SY\x03\x89\x0c\xa6\x00\x00\x01\xc1\x00\x00'
+    ...                   b'\x108\x00 \x00!\x9ah3M\x1c\xb7\x8b\xb9"\x9c(H\x01'
+    ...                   b'\xc4\x86S\x00')
+    >>> with open_file(file) as f:
+    ...     f.read()
+    ...
+    u'a\nb\nc\n'
+    >>> f.closed
+    False
+    >>> file.closed
+    False
+
+    """
     with _resolve_file(file, **kwargs) as (file, source, is_binary_file):
         newfile = _munge_file(file, is_binary_file, source.options)
         try:
@@ -153,6 +255,9 @@ def _flush_compressor(file):
     if isinstance(file, io.TextIOBase) and hasattr(file, 'buffer'):
         file = file.buffer
     if isinstance(file, CompressedBufferedWriter) and not file.streamable:
+        # Some formats like BZ2 compress the entire file, and so they will
+        # only flush once they have been closed. These kinds of files do not
+        # close their underlying buffer, but only testing can prove that...
         file.raw.close()
 
 

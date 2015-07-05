@@ -12,6 +12,7 @@ import unittest
 import tempfile
 import shutil
 import io
+import os.path
 
 import skbio.io
 from skbio.io.registry import open_file
@@ -37,9 +38,6 @@ class ReadableTextSourceTests(TextSourceTests):
 class BinarySourceTests(object):
     pass
 
-
-class WritableBinarySourceTests(BinarySourceTests):
-    pass
 
 
 class ReadableBinarySourceTests(BinarySourceTests):
@@ -291,12 +289,74 @@ class ReadableSourceTest(unittest.TestCase):
             f.close()
 
 
+
+class WritableBinarySourceTests(BinarySourceTests):
+    def check_closed(self, file, expected):
+        if hasattr(file, 'closed'):
+            self.assertEqual(file.closed, expected)
+
+    def check_open_state_contents(self, file, contents, expected, is_binary, **kwargs):
+        result = skbio.io.open(file, mode='w', **kwargs)
+        if is_binary:
+            self.assertIsInstance(result, (io.BufferedWriter,
+                                           io.BufferedRandom))
+        else:
+            self.assertIsInstance(result, io.TextIOBase)
+        self.assertTrue(result.writeable())
+
+        result.write(contents)
+        self.assertFalse(result.closed)
+
+        self.assertEqual(self.get_contents(file), expected)
+
+        result.close()
+        self.assertTrue(result.closed)
+        self.check_closed(file, True)
+
+    def test_open_binary(self):
+        with skbio.io.open(self.binary_file, mode='w', encoding='binary') as fh:
+            fh.write(self.binary_contents)
+        result = self.get_contents(self.binary_file)
+        self.assertEqual(result, self.binary_contents)
+
 class WritableSourceTest(unittest.TestCase):
     def setUp(self):
         self._dir = tempfile.mkdtemp()
+        self.write_file = os.path.join(self._dir, "write_file")
+
+        with io.open(get_data_path('example_file'), mode='rb') as f:
+            self.binary_contents = f.read()
+        self.binary_file = self._make_file('example_file')
+
+        with io.open(get_data_path('big5_file'), mode='rb') as f:
+            self.encoded_contents = f.read()
+        self.encoded_file = self._make_file('big5_file')
+
+        with io.open(get_data_path('example_file.gz'), mode='rb') as f:
+            self.gzip_contents = f.read()
+        self.gzip_file = self._make_file('example_file.gz')
+
+        with io.open(get_data_path('example_file.bz2'), mode='rb') as f:
+            self.bz2_contents = f.read()
+        self.bz2_file = self._make_file('example_file.bz2')
+
+        with io.open(get_data_path('big5_file.gz'), mode='rb') as f:
+            self.gzip_encoded_contents = f.read()
+        self.gzip_encoded_file = self._make_file('big5_file.gz')
+
+        with io.open(get_data_path('big5_file.bz2'), mode='rb') as f:
+            self.bz2_encoded_contents = f.read()
+        self.bz2_encoded_file = self._make_file('big5_file.bz2')
+
+        self.decoded_contents = self.encoded_contents.decode('big5')
+        self.text_contents = self.binary_contents.decode('utf8')
+
 
     def tearDown(self):
         shutil.rmtree(self._dir)
+
+    def _make_file(self, name):
+        return self.get_fileobj(os.path.join(self._dir, name))
 
 
 class TestReadFilepath(ReadableBinarySourceTests, ReadableSourceTest):
@@ -305,12 +365,15 @@ class TestReadFilepath(ReadableBinarySourceTests, ReadableSourceTest):
     def get_fileobj(self, path):
         return path
 
-
 class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
     expected_close = True
 
-    def _(self):
-        pass
+    def get_fileobj(self, path):
+        return path
+
+    def get_contents(self, file):
+        with io.open(file, mode='rb') as f:
+            return f.read()
 
 
 class TestReadBytesIO(ReadableBinarySourceTests, ReadableSourceTest):

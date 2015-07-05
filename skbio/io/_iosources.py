@@ -13,6 +13,11 @@ from six import string_types, text_type
 import io
 import gzip
 import bz2file
+from tempfile import gettempdir
+
+import requests
+from cachecontrol import CacheControl
+from cachecontrol.caches import FileCache
 
 from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
                           IterableStringWriterIO, IterableStringReaderIO,
@@ -88,7 +93,20 @@ class FilePathSource(IOSource):
 
 
 class HTTPSource(IOSource):
-    pass
+    def can_read(self):
+        return (
+            isinstance(self.file, string_types) and
+            requests.compat.urlparse(self.file).scheme in {'http', 'https'})
+
+    def get_reader(self):
+        sess = CacheControl(requests.Session(),
+                            cache=FileCache(gettempdir()))
+        req = sess.get(self.file)
+
+        # if the response is not 200, an exception will be raised
+        req.raise_for_status()
+
+        return io.BufferedReader(io.BytesIO(req.content))
 
 
 class BytesIOSource(IOSource):
@@ -178,7 +196,7 @@ class ReadableSource(IOSource):
         return hasattr(self.file, 'read')
 
     def get_reader(self):
-        buffer_size = self.options['buffer_size']
+        buffer_size = io.DEFAULT_BUFFER_SIZE
 
         raw = self.file.read(buffer_size)
         file = self._repair_readable(raw, self.file)

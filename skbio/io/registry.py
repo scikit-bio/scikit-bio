@@ -4,15 +4,106 @@ I/O Registry (:mod:`skbio.io.registry`)
 
 .. currentmodule:: skbio.io.registry
 
-This module provides utility functions to deal with files and I/O in
-general.
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   IORegistry
+   Format
 
 Functions
 ---------
 
 .. autosummary::
-    :toctree: generated/
+   :toctree: generated/
 
+   create_format
+
+
+Developer Documentation
+-----------------------
+To extend I/O in skbio, developers should create a submodule in `skbio/io/`
+named after the file format it implements.
+
+For example, if you were to create readers and writers for a `fasta` file, you
+would create a submodule `skbio/io/fasta.py`.
+In this submodule you would use the following decorators:
+``register_writer``, ``register_reader``, and ``register_sniffer``.
+These associate your functionality to a format string and potentially an skbio
+class. Please see the relevant documenation for more information about these
+functions and the specifications for `readers`, `writers`, and `sniffers`.
+
+Once you are satisfied with the functionality, you will need to ensure that
+`skbio/io/__init__.py` contains an import of your new submodule so the
+decorators are executed on importing the user functions above. Use the function
+``import_module('skbio.io.my_new_format')``.
+
+The following keyword args may not be used when defining new `readers` or
+`writers` as they already have special meaning to the registry system:
+
+- `format`
+- `into`
+- `mode`
+- `verify`
+
+If a keyword argument is a file, such as in the case of `fasta` with `qual`,
+then you can set the default to a specific marker, or sentinel, to indicate to
+the registry that the kwarg should have special handling. For example:
+
+.. code-block:: python
+
+   from skbio.io import FileSentinel
+
+   @register_reader(fasta, object)
+   def fasta_to_object(fh, qual=FileSentinel):
+       ...
+
+After the registry reads your function, it will replace `FileSentinel` with
+`None` allowing you to perform normal checks for kwargs
+(e.g. `if my_kwarg is not None:`). If a user provides input for the kwarg, the
+registry will convert it to an open filehandle.
+
+.. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
+   raise exceptions; if an exception is thrown by a `sniffer`, the user will be
+   asked to report it on our `issue tracker
+   <https://github.com/biocore/scikit-bio/issues/>`_.
+
+When raising errors in readers and writers, the error should be a subclass of
+``FileFormatError`` specific to your new format.
+
+Writing unit tests
+^^^^^^^^^^^^^^^^^^
+Because scikit-bio handles all of the I/O boilerplate, you only need to test
+the actual business logic of your `readers`, `writers`, and `sniffers`. The
+easiest way to accomplish this is to create a list of files and their expected
+results when deserialized. Then you can iterate through the list ensuring the
+expected results occur and that the expected results can be reserialized into
+an equivalent file. This process is called 'roundtripping'.
+
+It is also important to test some invalid inputs and ensure that the correct
+error is raised by your `readers`. Consider using `assertRaises` as a context
+manager like so:
+
+.. code-block:: python
+
+   with self.assertRaises(SomeFileFormatErrorSubclass) as cm:
+       do_something_wrong()
+   self.assertIn('action verb or subject of an error', str(cm.exception))
+
+A good example to review when preparing to write your first I/O unit tests is
+the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
+
+
+Developer exceptions
+^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+
+   DuplicateRegistrationError
+   InvalidRegistrationError
 
 """
 
@@ -63,17 +154,16 @@ class IORegistry(object):
         self._lookups = (self._binary_formats, self._text_formats)
 
     def create_format(self, *args, **kwargs):
-        """A simple factory for creating new file formats for scikit-bio
+        """A simple factory for creating new file formats.
 
-        This will automatically register the format with the scikit-bio
-        registry.
+        This will automatically register the format with this regsistry.
 
         All arguments are passed through to the Format constructor.
 
         Returns
         -------
         Format
-            A new format that is registered with the scikit-bio registry.
+            A new format that is registered with the registry.
 
         """
         format = Format(*args, **kwargs)
@@ -663,8 +753,8 @@ class Format(object):
             When `override` is False and a sniffer is already registered for
             this format.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.io.registry import Format
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of this constructor.
@@ -749,8 +839,8 @@ class Format(object):
             When `override` is False and a reader is already registered to
             `cls` for this format.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.io.registry import Format, IORegistry
         >>> registry = IORegistry()
         >>> myformat = Format('myformat')
@@ -834,8 +924,8 @@ class Format(object):
             When `override` is False and a writer is already registered to
             `cls` for this format.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from skbio.io.registry import Format, IORegistry
         >>> registry = IORegistry()
         >>> myformat = Format('myformat')
@@ -940,7 +1030,24 @@ class Format(object):
 
 
 io_registry = IORegistry()
-sniff = io_registry.sniff
-read = io_registry.read
-write = io_registry.write
-create_format = io_registry.create_format
+
+
+@wraps(IORegistry.sniff)
+def sniff(file, **kwargs):
+    return io_registry.sniff(fill, **kwargs)
+
+
+@wraps(IORegistry.read)
+def read(file, format=None, into=None, verify=True, **kwargs):
+    return io_registry.read(file, format=format, into=into, verify=verify,
+                            **kwargs)
+
+
+@wraps(IORegistry.write)
+def write(obj, format, into, **kwargs):
+    return io_registry.write(obj, format, into, **kwargs)
+
+
+@wraps(IORegistry.create_format)
+def create_format(*args, **kwargs):
+    return io_registry.create_format(*args, **kwargs)
