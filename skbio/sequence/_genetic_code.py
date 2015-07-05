@@ -603,7 +603,10 @@ class GeneticCode(SkbioObject):
 
         if sequence.has_degenerates():
             raise NotImplementedError("scikit-bio does not currently support "
-                                      "translation of degenerate sequences.")
+                                      "translation of degenerate sequences."
+                                      "`RNA.expand_degenerates` can be used "
+                                      "to obtain all non-degenerate versions "
+                                      "of a degenerate sequence.")
 
     def _raise_require_error(self, name, reading_frame):
         raise ValueError(
