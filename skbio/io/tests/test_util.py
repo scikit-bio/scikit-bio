@@ -39,7 +39,6 @@ class BinarySourceTests(object):
     pass
 
 
-
 class ReadableBinarySourceTests(BinarySourceTests):
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
@@ -289,13 +288,13 @@ class ReadableSourceTest(unittest.TestCase):
             f.close()
 
 
-
 class WritableBinarySourceTests(BinarySourceTests):
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
 
-    def check_open_state_contents(self, file, contents, expected, is_binary, **kwargs):
+    def check_open_state_contents(self, file, contents, expected, is_binary,
+                                  **kwargs):
         result = skbio.io.open(file, mode='w', **kwargs)
         if is_binary:
             self.assertIsInstance(result, (io.BufferedWriter,
@@ -314,10 +313,12 @@ class WritableBinarySourceTests(BinarySourceTests):
         self.check_closed(file, True)
 
     def test_open_binary(self):
-        with skbio.io.open(self.binary_file, mode='w', encoding='binary') as fh:
+        with skbio.io.open(self.binary_file, mode='w',
+                           encoding='binary') as fh:
             fh.write(self.binary_contents)
         result = self.get_contents(self.binary_file)
         self.assertEqual(result, self.binary_contents)
+
 
 class WritableSourceTest(unittest.TestCase):
     def setUp(self):
@@ -351,7 +352,6 @@ class WritableSourceTest(unittest.TestCase):
         self.decoded_contents = self.encoded_contents.decode('big5')
         self.text_contents = self.binary_contents.decode('utf8')
 
-
     def tearDown(self):
         shutil.rmtree(self._dir)
 
@@ -364,6 +364,7 @@ class TestReadFilepath(ReadableBinarySourceTests, ReadableSourceTest):
 
     def get_fileobj(self, path):
         return path
+
 
 class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
     expected_close = True

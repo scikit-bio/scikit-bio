@@ -17,11 +17,14 @@ import warnings
 import types
 from tempfile import mkstemp
 
-from skbio.io import (DuplicateRegistrationError, FormatIdentificationWarning,
-                      UnrecognizedFormatError, ArgumentOverrideWarning,
-                      InvalidRegistrationError)
-from skbio.io.registry import IORegistry, FileSentinel, Format
+from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
+                      ArgumentOverrideWarning, io_registry, sniff,
+                      create_format)
+from skbio.io.registry import (IORegistry, FileSentinel, Format,
+                               DuplicateRegistrationError,
+                               InvalidRegistrationError)
 from skbio.util import TestingUtilError, get_data_path
+from skbio import DNA, read, write
 
 
 class TestClass(object):
@@ -1849,6 +1852,37 @@ class TestMonkeyPatch(RegistryTest):
         self.assertTrue(self.was_called)
         fh.close()
 
+
+class TestModuleFunctions(unittest.TestCase):
+
+    def test_sniff_matches(self):
+        exp = io_registry.sniff([u'(a, b);'])
+        result = sniff([u'(a, b);'])
+        self.assertEqual(exp, result)
+        self.assertEqual('newick', exp[0])
+        self.assertEqual({}, exp[1])
+
+    def test_read_matches(self):
+        input = [u'>\n', u'ACGT\n']
+        exp = io_registry.read(input, into=DNA)
+        result = read(input, into=DNA)
+        self.assertEqual(exp, result)
+        self.assertEqual(exp, DNA('ACGT', metadata={u'id': u'',
+                                                    u'description': u''}))
+
+    def test_write_matches(self):
+        input = DNA('ACGT')
+        exp = io_registry.write(input, format='fasta', into=[])
+        result = write(input, format='fasta', into=[])
+        self.assertEqual(exp, result)
+        self.assertEqual(exp, [u'>\n', u'ACGT\n'])
+
+    def test_create_format_matches(self):
+        with self.assertRaises(DuplicateRegistrationError):
+            io_registry.create_format('fasta')
+
+        with self.assertRaises(DuplicateRegistrationError):
+            create_format('fasta')
 
 if __name__ == '__main__':
     unittest.main()

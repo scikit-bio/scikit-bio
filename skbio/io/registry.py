@@ -21,89 +21,141 @@ Functions
 
    create_format
 
-
-Developer Documentation
------------------------
-To extend I/O in skbio, developers should create a submodule in `skbio/io/`
-named after the file format it implements.
-
-For example, if you were to create readers and writers for a `fasta` file, you
-would create a submodule `skbio/io/fasta.py`.
-In this submodule you would use the following decorators:
-``register_writer``, ``register_reader``, and ``register_sniffer``.
-These associate your functionality to a format string and potentially an skbio
-class. Please see the relevant documenation for more information about these
-functions and the specifications for `readers`, `writers`, and `sniffers`.
-
-Once you are satisfied with the functionality, you will need to ensure that
-`skbio/io/__init__.py` contains an import of your new submodule so the
-decorators are executed on importing the user functions above. Use the function
-``import_module('skbio.io.my_new_format')``.
-
-The following keyword args may not be used when defining new `readers` or
-`writers` as they already have special meaning to the registry system:
-
-- `format`
-- `into`
-- `mode`
-- `verify`
-
-If a keyword argument is a file, such as in the case of `fasta` with `qual`,
-then you can set the default to a specific marker, or sentinel, to indicate to
-the registry that the kwarg should have special handling. For example:
-
-.. code-block:: python
-
-   from skbio.io import FileSentinel
-
-   @register_reader(fasta, object)
-   def fasta_to_object(fh, qual=FileSentinel):
-       ...
-
-After the registry reads your function, it will replace `FileSentinel` with
-`None` allowing you to perform normal checks for kwargs
-(e.g. `if my_kwarg is not None:`). If a user provides input for the kwarg, the
-registry will convert it to an open filehandle.
-
-.. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
-   raise exceptions; if an exception is thrown by a `sniffer`, the user will be
-   asked to report it on our `issue tracker
-   <https://github.com/biocore/scikit-bio/issues/>`_.
-
-When raising errors in readers and writers, the error should be a subclass of
-``FileFormatError`` specific to your new format.
-
-Writing unit tests
-^^^^^^^^^^^^^^^^^^
-Because scikit-bio handles all of the I/O boilerplate, you only need to test
-the actual business logic of your `readers`, `writers`, and `sniffers`. The
-easiest way to accomplish this is to create a list of files and their expected
-results when deserialized. Then you can iterate through the list ensuring the
-expected results occur and that the expected results can be reserialized into
-an equivalent file. This process is called 'roundtripping'.
-
-It is also important to test some invalid inputs and ensure that the correct
-error is raised by your `readers`. Consider using `assertRaises` as a context
-manager like so:
-
-.. code-block:: python
-
-   with self.assertRaises(SomeFileFormatErrorSubclass) as cm:
-       do_something_wrong()
-   self.assertIn('action verb or subject of an error', str(cm.exception))
-
-A good example to review when preparing to write your first I/O unit tests is
-the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
-
-
-Developer exceptions
-^^^^^^^^^^^^^^^^^^^^
+Exceptions
+----------
 
 .. autosummary::
    :toctree: generated/
 
    DuplicateRegistrationError
    InvalidRegistrationError
+
+
+Creating a new format for scikit-bio
+------------------------------------
+scikit-bio makes it simple to add new file formats to its I/O registry.
+scikit-bio maintains a singleton of the :class:`IORegistry` class called
+`io_registry`. This is where all scikit-bio file formats are registered. One
+could also instantiate their own :class:`IORegistry`, but that is not the focus
+of this tutorial.
+
+The first step to creating a new format is to add a submodule in
+`skbio/io/format/` named after the file format you are implementing.
+For example, if the format you are implementing is called `myformat` then you
+would create a file called `skbio/io/format/myformat.py`.
+
+The next step is to import the :func:`create_format` factory from
+:mod:`skbio.io`. This will allow you to create a new :class:`Format` object
+that `io_registry` will know about.
+
+Ideally you should name the result of :func:`create_format` as your file name.
+For example:
+
+.. code-block:: python
+
+   from skbio.io import create_format
+
+   myformat = create_format('myformat')
+
+The `myformat` object is what we will use to register our new functionality.
+At this point you should evaulate whether your format is binary or text.
+If your format is binary, your :func:`create_format` call should look like
+this:
+
+.. code-block:: python
+
+   myformat = create_format('myformat', encoding='binary')
+
+Alternatively if your format is text and has a specific encoding or newline
+handling you can also specify that:
+
+.. code-block:: python
+
+   myformat = create_format('myformat', encoding='ascii', newline='\n')
+
+This will ensure that our registry will open files with a default encoding of
+`'ascii'` for `'myformat'` and expect all newlines to be `'\n'` characters.
+
+Having worked out these details, we are ready to register the actual
+functionality of our format (e.g., sniffer, readers, and writers).
+
+To create a sniffer simply decorate the following onto your sniffer function:
+
+.. code-block:: python
+
+   @myformat.sniffer()
+   def _myformat_sniffer(fh):
+       # do something with `fh` to determine the membership of the file
+
+For futher details on sniffer functions see :func:`Format.sniffer`.
+
+Creating a reader is very similar, but has one difference:
+
+.. code-block:: python
+
+   @myformat.reader(SomeSkbioClass)
+   def _myformat_to_some_skbio_class(fh, kwarg1='default', extra=FileSentinel):
+       # parse `fh` and return a SomeSkbioClass instance here
+       # `extra` will also be an open filehandle if provided else None
+
+Here we bound a function to a specific class. We also demonstrated using
+our FileSentinel object to indicate to the registry that this reader can take
+auxilary files that should be handled in the same way as the primary file.
+For futher details on reader functions see :func:`Format.reader`.
+
+Creating a writer is about the same:
+
+.. code-block:: python
+
+   @myformat.writer(SomeSkbioClass)
+   def _some_skbio_class_to_myformat(obj, fh, kwarg1='whatever',
+                                     extra=FileSentinel):
+       # write the contents of `obj` into `fh` and whatever else into `extra`
+       # do not return anything, it will be ignored
+
+This is exactly the same as the `reader` above just in reverse, we also
+receive the object we are writing as the first parameter instead of the file
+(which is the second one). For further details on writer functions see
+:func:`Format.writer`.
+
+.. note:: When raising errors in readers and writers, the error should be a
+   subclass of ``FileFormatError`` specific to your new format.
+
+Once you are satisfied with the functionality, you will need to ensure that
+`skbio/io/__init__.py` contains an import of your new submodule so the
+decorators are executed. Add the function
+``import_module('skbio.io.format.myformat')`` with your module name to the
+existing list.
+
+.. note:: Because scikit-bio handles all of the I/O boilerplate, you only need
+   to unit-test the actual business logic of your `readers`, `writers`, and
+   `sniffers`.
+
+Reserved Keyword Arguments
+--------------------------
+The following keyword args may not be used when defining new `readers` or
+`writers` as they already have special meaning to the registry system:
+
+- `format`
+- `into`
+- `verify`
+- `mode`
+- `encoding`
+- `errors`
+- `newline`
+- `compression`
+- `compresslevel`
+
+The following are not yet used but should be avoided as well:
+
+- `auth`
+- `user`
+- `password`
+- `buffering`
+- `buffer_size`
+- `closefd`
+- `exclusive`
+- `append`
 
 """
 
@@ -126,8 +178,8 @@ from functools import wraps
 
 from future.builtins import zip
 
-from . import (UnrecognizedFormatError, InvalidRegistrationError,
-               DuplicateRegistrationError, ArgumentOverrideWarning,
+from ._exception import DuplicateRegistrationError, InvalidRegistrationError
+from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
@@ -266,6 +318,7 @@ class IORegistry(object):
         cls : type
             The class which will be used to determine what read formats exist
             for an instance of `cls`.
+
         Returns
         -------
         list
@@ -283,6 +336,7 @@ class IORegistry(object):
         cls : type
             The class which will be used to determine what write formats exist
             for an instance of `cls`.
+
         Returns
         -------
         list
@@ -537,8 +591,8 @@ class IORegistry(object):
         writes = set()
         for lookup in self._lookups:
             for format in lookup.values():
-                reads |= format.monkey_patch['read']
-                writes |= format.monkey_patch['write']
+                reads |= format.monkey_patched_readers
+                writes |= format.monkey_patched_writers
 
         for cls in reads:
             self._apply_read(cls)
@@ -601,8 +655,8 @@ class IORegistry(object):
 
 _read_docstring = """Create a new ``%(name)s`` instance from a file.
 
-This is a convenience method for :mod:`skbio.io.read`. For more
-information about the I/O system in scikit-bio, please see
+This is a convenience method for :func:`skbio.io.registry.read`. For
+more information about the I/O system in scikit-bio, please see
 :mod:`skbio.io`.
 
 Supported file formats include:
@@ -613,15 +667,15 @@ Parameters
 ----------
 file : openable (filepath, URL, filehandle, etc.)
     The location to read the given `format`. Something that is
-    understood by `skbio.io.open`. Filehandles are not
+    understood by :func:`skbio.io.util.open`. Filehandles are not
     automatically closed, it is the responsibility of the caller.
 format : str, optional
     The format must be a format name with a reader for ``%(name)s``.
     If a `format` is not provided or is None, it will attempt to
     guess the format.
 kwargs : dict, optional
-    Keyword arguments passed to :mod:`skbio.io.read` and the file
-    format reader for ``%(name)s``.
+    Keyword arguments passed to :func:`skbio.io.registry.read` and
+    the file format reader for ``%(name)s``.
 
 Returns
 -------
@@ -631,17 +685,17 @@ Returns
 See Also
 --------
 write
-skbio.io.read
-skbio.io.open
+skbio.io.registry.read
+skbio.io.util.open
 %(see)s
 
 """
 
 _write_docstring = """Write an instance of ``%(name)s`` to a file.
 
-This is a convenience method for :mod:`skbio.io.write`. For more
-information about the I/O system in scikit-bio, please see
-:mod:`skbio.io`.
+This is a convenience method for :func:`skbio.io.registry.write`.
+For more information about the I/O system in scikit-bio, please
+see :mod:`skbio.io`.
 
 Supported file formats include:
 
@@ -651,21 +705,22 @@ Parameters
 ----------
 file : openable (filepath, URL, filehandle, etc.)
     The location to write the given `format` into.  Something
-    that is understood by `skbio.io.open`. Filehandles are not
-    automatically closed, it is the responsibility of the caller.
+    that is understood by :func:`skbio.io.util.open`. Filehandles
+    are not automatically closed, it is the responsibility of the
+    caller.
 format : str
     The format must be a registered format name with a writer for
     ``%(name)s``.
     Default is `'%(default)s'`.
 kwargs : dict, optional
-    Keyword arguments passed to :mod:`skbio.io.write` and the
-    file format writer.
+    Keyword arguments passed to :func:`skbio.io.registry.write`
+    and the file format writer.
 
 See Also
 --------
 read
-skbio.io.write
-skbio.io.open
+skbio.io.registry.write
+skbio.io.util.open
 %(see)s
 
 """
@@ -680,9 +735,9 @@ class Format(object):
         The name of this format.
     encoding : str, optional
         What the default encoding of this format is. If set to 'binary' then
-        all registered handlers will receive an io.BufferedReader/Writer
-        instead of an io.TextIOBase. The user will also be unable to override
-        the encoding in that case.
+        all registered handlers will receive an :class:`io.BufferedReader` or
+        :class:`io.BufferedWriter` instead of an :class:`io.TextIOBase`. The
+        user will also be unable to override the encoding in that case.
     newline : str, optional
         What the default newline handling of this format is. Default is to use
         universal newline handling.
@@ -714,13 +769,14 @@ class Format(object):
         return self._writers
 
     @property
-    def monkey_patch(self):
-        """Set of classes bound to readers and writers to monkey patch.
+    def monkey_patched_readers(self):
+        """Set of classes bound to readers to monkey patch."""
+        return self._monkey_patch['read']
 
-        {'read': set(), 'write': set()}
-
-        """
-        return self._monkey_patch
+    @property
+    def monkey_patched_writers(self):
+        """Set of classes bound to writers to monkey patch."""
+        return self._monkey_patch['write']
 
     def __init__(self, name, encoding=None, newline=None):
         self._encoding = encoding
@@ -736,11 +792,18 @@ class Format(object):
         """Decorate a function to act as the sniffer for this format.
 
         The function should take one argument which will be an implementation
-        of either io.TextIOBase or io.BufferedReader depending on if the
-        format is text or binary, respectively.
+        of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
+        depending on if the format is text or binary, respectively.
 
-        The sniffer will always recieve a filehandle which is pointing to the
-        beginning of the file.
+        The sniffer will always receive a filehandle which is pointing to the
+        beginning of the file. It must return a tuple of bool and a dict of
+        suggested keyword arguments (if any) to pass to the reader.
+
+        .. note:: Keyword arguments are not permitted in `sniffers`.
+           `Sniffers` may not raise exceptions; if an exception is thrown by a
+           `sniffer`, the user will be asked to report it on our `issue tracker
+           <https://github.com/biocore/scikit-bio/issues/>`_.
+
 
         Parameters
         ----------
@@ -815,11 +878,12 @@ class Format(object):
         """Decorate a function to act as the reader for a class in this format.
 
         The function should take an argument which will be an implementation
-        of either io.TextIOBase or io.BufferedReader depending on if the
-        format is text or binary, respectively. Any kwargs given by the user
-        which are not handled by `skbio.io.open` will be passed into the
-        function. Any kwarg with a default of FileSentinel will transform user
-        input for that parameter into a filehandle or None if not provided.
+        of either :class:`io.TextIOBase` or :class:`io.BufferedReader`
+        depending on if the format is text or binary, respectively. Any kwargs
+        given by the user which are not handled by :func:`skbio.io.util.open`
+        will be passed into the function. Any kwarg with a default of
+        `FileSentinel` will transform user input for that parameter into a
+        filehandle or `None` if not provided.
 
         Parameters
         ----------
@@ -900,11 +964,12 @@ class Format(object):
 
         The function should take an instance of `cls` as its first argument
         and the second argument is a filehandle which will be an implementation
-        of either io.TextIOBase or io.BufferedWriter depending on if the
-        format is text or binary, respectively. Any kwargs given by the user
-        which are not handled by `skbio.io.open` will be passed into the
-        function. Any kwarg with a default of FileSentinel will transform user
-        input for that parameter into a filehandle or None if not provided.
+        of either :class:`io.TextIOBase` or :class:`io.BufferedWriter`
+        depending on if the format is text or binary, respectively. Any kwargs
+        given by the user which are not handled by :func:`skbio.io.util.open`
+        will be passed into the function. Any kwarg with a default of
+        `FileSentinel` will transform user input for that parameter into a
+        filehandle or `None` if not provided.
 
         Parameters
         ----------
@@ -1034,7 +1099,7 @@ io_registry = IORegistry()
 
 @wraps(IORegistry.sniff)
 def sniff(file, **kwargs):
-    return io_registry.sniff(fill, **kwargs)
+    return io_registry.sniff(file, **kwargs)
 
 
 @wraps(IORegistry.read)

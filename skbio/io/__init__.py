@@ -7,7 +7,7 @@ File I/O (:mod:`skbio.io`)
 This package provides I/O functionality for skbio.
 
 Supported file formats
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 For details on what objects are supported by each format,
 see the associated documentation.
 
@@ -28,7 +28,7 @@ see the associated documentation.
 
 
 User functions
-^^^^^^^^^^^^^^
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -48,6 +48,8 @@ Subpackages
    registry
    util
 
+For developer documentation on extending I/O, see :mod:`skbio.io.registry`.
+
 Introduction to I/O
 -------------------
 Reading and writing files (I/O) can be a complicated task:
@@ -66,25 +68,31 @@ Reading and writing files (I/O) can be a complicated task:
   object to multiple files.
 * Instead of reading a file into an object, you might want to stream the file
   using a generator (e.g., if the file cannot be fully loaded into memory).
-* The file you are working with might be hosted in hosted in a remote server.
 
 To address these issues (and others), scikit-bio provides a simple, powerful
 interface for dealing with I/O. We accomplish this by using a single I/O
-registry. Below is a description of how to use the registry.
+registry.
+
+What kinds of files scikit-bio can use
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To see a complete list of file-like inputs that can be used for reading,
+writing, and sniffing, see the documentation for :func:`skbio.io.util.open`.
 
 Reading files into scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 There are two ways to read files. The first way is to use the
 procedural interface:
 
-``my_obj = skbio.io.read(<filehandle or filepath>, format='<format here>',
-into=<class to construct>)``
+.. code-block:: python
+
+   my_obj = skbio.io.read(file, format='someformat', into=SomeSkbioClass)
 
 The second is to use the object-oriented (OO) interface which is automatically
 constructed from the procedural interface:
 
-``my_obj = <class to construct>.read(<filehandle or filepath>,
-format='<format here>')``
+.. code-block:: python
+
+   my_obj = SomeSkbioClass.read(file, format='someformat')
 
 For example, to read a `newick` file using both interfaces you would type:
 
@@ -103,9 +111,9 @@ For the OO interface:
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
-In the case of ``skbio.io.read`` if `into` is not provided, then a generator
-will be returned. What the generator yields will depend on what format is being
-read.
+In the case of :func:`skbio.io.registry.read` if `into` is not provided, then a
+generator will be returned. What the generator yields will depend on what
+format is being read.
 
 When `into` is provided, format may be omitted and the registry will use its
 knowledge of the available formats for the requested class to infer the correct
@@ -119,11 +127,10 @@ As an example:
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
-We call format inference `sniffing`, much like the
-`csv <https://docs.python.org/2/library/csv.html#csv.Sniffer>`_ module of
-Python's standard library. The goal of a `sniffer` is twofold: to identify if a
-file is a specific format, and if it is, to provide `**kwargs` which can be
-used to better parse the file.
+We call format inference `sniffing`, much like the :class:`csv.Sniffer`
+class of Python's standard library. The goal of a `sniffer` is twofold: to
+identify if a file is a specific format, and if it is, to provide `**kwargs`
+which can be used to better parse the file.
 
 .. note:: There is a built-in `sniffer` which results in a useful error message
    if an empty file is provided as input and the format was omitted.
@@ -134,12 +141,15 @@ Just as when reading files, there are two ways to write files.
 
 Procedural Interface:
 
-``skbio.io.write(my_obj, format='<format here>',
-into=<filehandle or filepath>)``
+.. code-block:: python
+
+   skbio.io.write(my_obj, format='someformat', into=file)
 
 OO Interface:
 
-``my_obj.write(<filehandle or filepath>, format='<format here>')``
+.. code-block:: python
+
+   my_obj.write(file, format='someformat')
 
 In the procedural interface, `format` is required. Without it, scikit-bio does
 not know how you want to serialize an object. OO interfaces define a default
@@ -163,8 +173,7 @@ from importlib import import_module
 from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
-from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
-                         UnrecognizedFormatError, FileFormatError,
+from ._exception import (UnrecognizedFormatError, FileFormatError,
                          ClustalFormatError, FASTAFormatError, IOSourceError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
@@ -175,8 +184,6 @@ from .util import open
 __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
-
-           'DuplicateRegistrationError', 'InvalidRegistrationError',
            'UnrecognizedFormatError',
 
            'IOSourceError',
