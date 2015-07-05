@@ -492,7 +492,7 @@ class Sequence(collections.Sequence, SkbioObject):
     def __init__(self, sequence, metadata=None,
                  positional_metadata=None):
 
-        if type(sequence) == np.ndarray or isinstance(sequence, np.ndarray):
+        if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
             elif sequence.dtype == '|S1':
