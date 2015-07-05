@@ -1698,6 +1698,49 @@ class TestSequence(TestCase):
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
+    def test_iter_kmers_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
+
+        expected = [
+            Sequence('G'),
+            Sequence('A'),
+            Sequence('T'),
+            Sequence('T'),
+            Sequence('A'),
+            Sequence('C'),
+            Sequence('A')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=False), expected)
+
+        expected = [
+            Sequence('GA'),
+            Sequence('TT'),
+            Sequence('AC')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=False), expected)
+
+        expected = [
+            Sequence('GAT'),
+            Sequence('TAC')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=False), expected)
+
+        expected = [
+            Sequence('GATTACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=False), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=False), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+
     def test_iter_kmers_with_overlap(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
         expected = [
@@ -1746,8 +1789,65 @@ class TestSequence(TestCase):
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
+    def test_iter_kmers_with_overlap_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
+        expected = [
+            Sequence('G'),
+            Sequence('A'),
+            Sequence('T'),
+            Sequence('T'),
+            Sequence('A'),
+            Sequence('C'),
+            Sequence('A')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(1, overlap=True), expected)
+
+        expected = [
+            Sequence('GA'),
+            Sequence('AT'),
+            Sequence('TT'),
+            Sequence('TA'),
+            Sequence('AC'),
+            Sequence('CA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(2, overlap=True), expected)
+
+        expected = [
+            Sequence('GAT'),
+            Sequence('ATT'),
+            Sequence('TTA'),
+            Sequence('TAC'),
+            Sequence('ACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(3, overlap=True), expected)
+
+        expected = [
+            Sequence('GATTACA')
+        ]
+        self._compare_kmers_results(
+            seq.iter_kmers(7, overlap=True), expected)
+
+        expected = []
+        self._compare_kmers_results(
+            seq.iter_kmers(8, overlap=True), expected)
+
+        self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
+
+
     def test_iter_kmers_invalid_k(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(0))
+
+        with self.assertRaises(ValueError):
+            list(seq.iter_kmers(-42))
+
+    def test_iter_kmers_invalid_k_no_positional_metadata(self):
+        seq = Sequence('GATTACA')
 
         with self.assertRaises(ValueError):
             list(seq.iter_kmers(0))
@@ -1765,6 +1865,19 @@ class TestSequence(TestCase):
             Sequence('.--', positional_metadata={'quality': [3, 4, 5]},
                      metadata={'id': 'hello', 'desc': 'gapped hello'}),
             Sequence('..L', positional_metadata={'quality': [6, 7, 8]},
+                     metadata={'id': 'hello', 'desc': 'gapped hello'})
+        ]
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_iter_kmers_different_sequences_no_positional_metadata(self):
+        seq = Sequence('HE..--..LLO',
+                       metadata={'id': 'hello', 'desc': 'gapped hello'})
+        expected = [
+            Sequence('HE.',
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('.--',
+                     metadata={'id': 'hello', 'desc': 'gapped hello'}),
+            Sequence('..L',
                      metadata={'id': 'hello', 'desc': 'gapped hello'})
         ]
         self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
