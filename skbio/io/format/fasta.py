@@ -369,6 +369,7 @@ Stats:
     has gaps: False
     has degenerates: True
     has non-degenerates: True
+    GC-content: 54.76%
 ------------------------------------------------
 0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
 
@@ -501,6 +502,7 @@ Stats:
     has gaps: False
     has degenerates: False
     has non-degenerates: True
+    GC-content: 50.00%
 ------------------------------------------------
 0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
