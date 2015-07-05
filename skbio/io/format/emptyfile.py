@@ -36,7 +36,7 @@ emptyfile = create_format('<emptyfile>')
 
 
 @emptyfile.sniffer()
-def empty_file_sniffer(fh):
+def _empty_file_sniffer(fh):
     for line in fh:
         if line.strip():
             return False, {}
