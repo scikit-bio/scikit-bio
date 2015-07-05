@@ -104,8 +104,7 @@ class Protein(IUPACSequence):
     # TODO why doesn't this work?
     # @overrides(IUPACSequence)
     def alphabet(cls):
-        return (cls.degenerate_chars | cls.nondegenerate_chars |
-                cls.gap_chars | cls.stop_chars)
+        return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
     @overrides(IUPACSequence)
