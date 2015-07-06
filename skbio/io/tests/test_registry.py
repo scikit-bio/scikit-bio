@@ -662,6 +662,19 @@ class TestSniff(RegistryTest):
         self.registry.sniff(fh)
         self.assertEqual('b\n', fh.readline())
 
+    def test_sniff_with_errors_in_sniffer(self):
+        formatx = self.registry.create_format('formatx', encoding='ascii')
+
+        @formatx.sniffer()
+        def sniffer(fh):
+            raise Exception("OH NO!")
+
+        fp = get_data_path('big5_file')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error')
+            with self.assertRaises(FormatIdentificationWarning):
+                fmt, _ = self.registry.sniff(fp)
+
     def test_sniff_with_encoding_errors(self):
         formatx = self.registry.create_format('formatx', encoding='ascii')
 
@@ -671,16 +684,12 @@ class TestSniff(RegistryTest):
             return True, {}
 
         fp = get_data_path('big5_file')
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error")
-            with self.assertRaises(FormatIdentificationWarning):
-                # Will result in a UnicodeException which will be caught and
-                # warned
-                fmt, _ = self.registry.sniff(fp, errors='strict')
-            # errors is set to ignore by default, so our sniffer will return
-            # true even though read() didn't entirely work for ascii
-            fmt, _ = self.registry.sniff(fp)
-            self.assertEqual(fmt, 'formatx')
+        with self.assertRaises(UnrecognizedFormatError):
+            fmt, _ = self.registry.sniff(fp, errors='strict')
+        # errors is set to ignore by default, so our sniffer will return
+        # true even though read() didn't entirely work for ascii
+        fmt, _ = self.registry.sniff(fp)
+        self.assertEqual(fmt, 'formatx')
 
     def test_binary_sniffer(self):
         binf = self.registry.create_format('binf', encoding='binary')

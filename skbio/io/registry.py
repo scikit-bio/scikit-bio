@@ -861,6 +861,8 @@ class Format(object):
                         # filehandle to point at the beginning of the file.
                         fh.seek(0)
                         return sniffer(fh)
+                    except UnicodeDecodeError:
+                        pass
                     except Exception:
                         warn("'%s' has encountered a problem.\nPlease"
                              " send the following to our issue tracker at\n"
@@ -868,7 +870,7 @@ class Format(object):
                              "%s" % (sniffer.__name__, traceback.format_exc()),
                              FormatIdentificationWarning)
 
-                        return False, {}
+                    return False, {}
 
             self._sniffer_function = wrapped_sniffer
             return wrapped_sniffer
@@ -1078,7 +1080,7 @@ class Format(object):
     def _add_writer(self, cls, writer, monkey_patch, override):
         if cls in self._writers and not override:
             raise DuplicateRegistrationError("There is already a writer"
-                                             "registered to %s in format: %s"
+                                             " registered to %s in format: %s"
                                              % (cls, self._name))
         self._writers[cls] = writer
         if monkey_patch and cls is not None:
@@ -1087,7 +1089,7 @@ class Format(object):
     def _add_reader(self, cls, reader, monkey_patch, override):
         if cls in self._readers and not override:
             raise DuplicateRegistrationError("There is already a reader"
-                                             "registered to %s in format: %s"
+                                             " registered to %s in format: %s"
                                              % (cls, self._name))
         self._readers[cls] = reader
         if monkey_patch and cls is not None:
