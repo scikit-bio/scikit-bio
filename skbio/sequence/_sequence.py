@@ -376,7 +376,6 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._metadata
 
     @metadata.setter
-    @stable(as_of="0.4.0")
     def metadata(self, metadata):
         if not isinstance(metadata, dict):
             raise TypeError("metadata must be a dict")
@@ -384,7 +383,6 @@ class Sequence(collections.Sequence, SkbioObject):
         self._metadata = metadata.copy()
 
     @metadata.deleter
-    @stable(as_of="0.4.0")
     def metadata(self):
         self._metadata = None
 
