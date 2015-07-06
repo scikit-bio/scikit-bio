@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
 import six
 
-from io import StringIO
+import io
 from unittest import TestCase, main
 from functools import partial
 
@@ -770,7 +770,7 @@ class WriterTests(TestCase):
              ValueError, 'Newline character'),
             (multi_seq_gen(), {'description_newline_replacement': '-.-\n'},
              ValueError, 'Newline character'),
-            (mixed_qual_score_gen(), {'qual': StringIO()}, ValueError,
+            (mixed_qual_score_gen(), {'qual': io.StringIO()}, ValueError,
              '2nd sequence.*does not have quality scores')
         ]
 
@@ -780,24 +780,24 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_no_qual(self):
         # test writing standalone fasta (i.e., without a qual file)
         for obj, kwargs, fp, _ in self.objs_fps:
-            fh = StringIO()
+            fh = io.StringIO()
             _generator_to_fasta(obj, fh, **kwargs)
             obs = fh.getvalue()
             fh.close()
 
-            with open(fp, 'U') as fh:
+            with io.open(fp) as fh:
                 exp = fh.read()
             self.assertEqual(obs, exp)
 
     def test_generator_to_fasta_mixed_qual_scores(self):
         # test writing some sequences with qual scores and some without is
         # possible if no qual output file is specified
-        fh = StringIO()
+        fh = io.StringIO()
         _generator_to_fasta(self.mixed_qual_score_gen, fh, lowercase='introns')
         obs = fh.getvalue()
         fh.close()
 
-        with open(get_data_path('fasta_mixed_qual_scores'), 'U') as fh:
+        with io.open(get_data_path('fasta_mixed_qual_scores')) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
@@ -806,17 +806,17 @@ class WriterTests(TestCase):
         # test writing fasta and qual files
         for obj, kwargs, fasta_fp, qual_fp in self.objs_fps:
             if qual_fp is not None:
-                fasta_fh = StringIO()
-                qual_fh = StringIO()
+                fasta_fh = io.StringIO()
+                qual_fh = io.StringIO()
                 _generator_to_fasta(obj, fasta_fh, qual=qual_fh, **kwargs)
                 obs_fasta = fasta_fh.getvalue()
                 obs_qual = qual_fh.getvalue()
                 fasta_fh.close()
                 qual_fh.close()
 
-                with open(fasta_fp, 'U') as fh:
+                with io.open(fasta_fp) as fh:
                     exp_fasta = fh.read()
-                with open(qual_fp, 'U') as fh:
+                with io.open(qual_fp) as fh:
                     exp_qual = fh.read()
 
                 self.assertEqual(obs_fasta, exp_fasta)
@@ -824,25 +824,25 @@ class WriterTests(TestCase):
 
     def test_generator_to_fasta_invalid_input(self):
         for obj, kwargs, error_type, error_msg_regexp in self.invalid_objs:
-            fh = StringIO()
+            fh = io.StringIO()
             with six.assertRaisesRegex(self, error_type, error_msg_regexp):
                 _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 
     def test_generator_to_fasta_sequence_lowercase_exception(self):
         seq = Sequence('ACgt', metadata={'id': ''})
-        fh = StringIO()
+        fh = io.StringIO()
         with six.assertRaisesRegex(self, AttributeError,
                                    "lowercase specified but class Sequence "
                                    "does not support lowercase "
                                    "functionality"):
             _generator_to_fasta(SequenceCollection([seq]), fh,
                                 lowercase='introns')
+        fh.close()
 
     # light testing of object -> fasta writers to ensure interface is present
     # and kwargs are passed through. extensive testing of underlying writer is
     # performed above
-
     def test_any_sequence_to_fasta(self):
         # store writer function, sequence object to write, expected
         # fasta filepath for default parameters, expected fasta filepath for
@@ -882,19 +882,19 @@ class WriterTests(TestCase):
             defaults_fp, non_defaults_fasta_fp, non_defaults_qual_fp = fps
 
             # test writing with default parameters
-            fh = StringIO()
+            fh = io.StringIO()
             fn(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
-            with open(get_data_path(defaults_fp), 'U') as fh:
+            with io.open(get_data_path(defaults_fp)) as fh:
                 exp = fh.read()
 
             self.assertEqual(obs, exp)
 
             # test writing with non-defaults
-            fasta_fh = StringIO()
-            qual_fh = StringIO()
+            fasta_fh = io.StringIO()
+            qual_fh = io.StringIO()
             fn(obj, fasta_fh, id_whitespace_replacement='-',
                description_newline_replacement='_', max_width=1, qual=qual_fh)
             obs_fasta = fasta_fh.getvalue()
@@ -902,9 +902,9 @@ class WriterTests(TestCase):
             fasta_fh.close()
             qual_fh.close()
 
-            with open(get_data_path(non_defaults_fasta_fp), 'U') as fh:
+            with io.open(get_data_path(non_defaults_fasta_fp)) as fh:
                 exp_fasta = fh.read()
-            with open(get_data_path(non_defaults_qual_fp), 'U') as fh:
+            with io.open(get_data_path(non_defaults_qual_fp)) as fh:
                 exp_qual = fh.read()
 
             self.assertEqual(obs_fasta, exp_fasta)
@@ -914,19 +914,19 @@ class WriterTests(TestCase):
         for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
                         (_alignment_to_fasta, self.align)):
             # test writing with default parameters
-            fh = StringIO()
+            fh = io.StringIO()
             fn(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
-            with open(get_data_path('fasta_3_seqs_defaults'), 'U') as fh:
+            with io.open(get_data_path('fasta_3_seqs_defaults')) as fh:
                 exp = fh.read()
 
             self.assertEqual(obs, exp)
 
             # test writing with non-defaults
-            fasta_fh = StringIO()
-            qual_fh = StringIO()
+            fasta_fh = io.StringIO()
+            qual_fh = io.StringIO()
             fn(obj, fasta_fh, id_whitespace_replacement='*',
                description_newline_replacement='+', max_width=3, qual=qual_fh)
             obs_fasta = fasta_fh.getvalue()
@@ -934,15 +934,15 @@ class WriterTests(TestCase):
             fasta_fh.close()
             qual_fh.close()
 
-            with open(get_data_path('fasta_3_seqs_non_defaults'), 'U') as fh:
+            with io.open(get_data_path('fasta_3_seqs_non_defaults')) as fh:
                 exp_fasta = fh.read()
-            with open(get_data_path('qual_3_seqs_non_defaults'), 'U') as fh:
+            with io.open(get_data_path('qual_3_seqs_non_defaults')) as fh:
                 exp_qual = fh.read()
 
             self.assertEqual(obs_fasta, exp_fasta)
             self.assertEqual(obs_qual, exp_qual)
 
-            fh2 = StringIO()
+            fh2 = io.StringIO()
             with six.assertRaisesRegex(self, AttributeError,
                                        "lowercase specified but class "
                                        "Sequence does not support lowercase "
@@ -950,8 +950,8 @@ class WriterTests(TestCase):
                 fn(obj, fh2, lowercase='introns')
             fh2.close()
 
-            fasta_fh2 = StringIO()
-            qual_fh2 = StringIO()
+            fasta_fh2 = io.StringIO()
+            qual_fh2 = io.StringIO()
             with six.assertRaisesRegex(self, AttributeError,
                                        "lowercase specified but class "
                                        "Sequence does not support lowercase "
@@ -973,13 +973,13 @@ class RoundtripTests(TestCase):
                          'qual_multi_seq_roundtrip')]))
 
         for fasta_fp, qual_fp in fps:
-            with open(fasta_fp, 'U') as fh:
+            with io.open(fasta_fp) as fh:
                 exp_fasta = fh.read()
-            with open(qual_fp, 'U') as fh:
+            with io.open(qual_fp) as fh:
                 exp_qual = fh.read()
 
-            fasta_fh = StringIO()
-            qual_fh = StringIO()
+            fasta_fh = io.StringIO()
+            qual_fh = io.StringIO()
             _generator_to_fasta(_fasta_to_generator(fasta_fp, qual=qual_fp),
                                 fasta_fh, qual=qual_fh)
             obs_fasta = fasta_fh.getvalue()
@@ -1005,8 +1005,8 @@ class RoundtripTests(TestCase):
                 obj1 = reader(fasta_fp, qual=qual_fp)
 
                 # write
-                fasta_fh = StringIO()
-                qual_fh = StringIO()
+                fasta_fh = io.StringIO()
+                qual_fh = io.StringIO()
                 writer(obj1, fasta_fh, qual=qual_fh)
                 fasta_fh.seek(0)
                 qual_fh.seek(0)
@@ -1041,8 +1041,8 @@ class RoundtripTests(TestCase):
                 obj1 = reader(fasta_fp, qual=qual_fp)
 
                 # write
-                fasta_fh = StringIO()
-                qual_fh = StringIO()
+                fasta_fh = io.StringIO()
+                qual_fh = io.StringIO()
                 writer(obj1, fasta_fh, qual=qual_fh)
                 fasta_fh.seek(0)
                 qual_fh.seek(0)
