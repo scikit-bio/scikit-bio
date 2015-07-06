@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 from future.builtins import zip
 import six
 
-from io import StringIO
+import io
 import unittest
 import warnings
 from functools import partial
@@ -484,12 +484,12 @@ class TestWriters(unittest.TestCase):
                             c[2], metadata={'id': c[0], 'description': c[1]},
                             positional_metadata={'quality': c[3]})
 
-                fh = StringIO()
+                fh = io.StringIO()
                 _generator_to_fastq(gen(), fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
 
-                with open(expected_fp, 'U') as f:
+                with io.open(expected_fp) as f:
                     expected = f.read()
 
                 self.assertEqual(observed, expected)
@@ -513,7 +513,7 @@ class TestWriters(unittest.TestCase):
                         expected_kwargs['lowercase'] = 'introns'
                         observed_kwargs['lowercase'] = 'introns'
 
-                    fh = StringIO()
+                    fh = io.StringIO()
                     for c in components:
                         obj = constructor(
                             c[2],
@@ -525,7 +525,7 @@ class TestWriters(unittest.TestCase):
                     observed = fh.getvalue()
                     fh.close()
 
-                    with open(expected_fp, 'U') as f:
+                    with io.open(expected_fp) as f:
                         expected = f.read()
 
                     self.assertEqual(observed, expected)
@@ -539,13 +539,13 @@ class TestWriters(unittest.TestCase):
                         lowercase='introns')
                     for c in components])
 
-                fh = StringIO()
+                fh = io.StringIO()
                 kwargs['lowercase'] = 'introns'
                 _sequence_collection_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
 
-                with open(expected_fp, 'U') as f:
+                with io.open(expected_fp) as f:
                     expected = f.read()
 
                 self.assertEqual(observed, expected)
@@ -559,13 +559,13 @@ class TestWriters(unittest.TestCase):
                             lowercase='introns')
                     for c in components])
 
-                fh = StringIO()
+                fh = io.StringIO()
                 kwargs['lowercase'] = 'introns'
                 _alignment_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
 
-                with open(expected_fp, 'U') as f:
+                with io.open(expected_fp) as f:
                     expected = f.read()
 
                 self.assertEqual(observed, expected)
@@ -578,7 +578,7 @@ class TestWriters(unittest.TestCase):
             yield Sequence('ACG', metadata={'id': 'foo', 'description': 'bar'})
 
         with six.assertRaisesRegex(self, ValueError, '2nd.*quality scores'):
-            _generator_to_fastq(gen(), StringIO(), variant='illumina1.8')
+            _generator_to_fastq(gen(), io.StringIO(), variant='illumina1.8')
 
 
 class TestConversions(unittest.TestCase):
@@ -685,7 +685,7 @@ class TestConversions(unittest.TestCase):
         for from_fp, to_fp, kwargs in self.conversions:
             for from_kwargs, to_kwargs in kwargs:
                 read_gen = _fastq_to_generator(from_fp, **from_kwargs)
-                fh = StringIO()
+                fh = io.StringIO()
 
                 # will issue warning when truncating quality scores
                 with warnings.catch_warnings(record=True):
@@ -695,7 +695,7 @@ class TestConversions(unittest.TestCase):
                 obs = fh.getvalue()
                 fh.close()
 
-                with open(to_fp, 'U') as fh:
+                with io.open(to_fp) as fh:
                     exp = fh.read()
                 self.assertEqual(obs, exp)
 
