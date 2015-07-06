@@ -8,12 +8,12 @@
 
 from __future__ import absolute_import, division, print_function
 import six
-from six import StringIO
 
+import io
 from unittest import TestCase, main
 
 from skbio.io import PhylipFormatError
-from skbio.io.phylip import _alignment_to_phylip
+from skbio.io.format.phylip import _alignment_to_phylip
 from skbio import Alignment, DNA, RNA
 from skbio.util import get_data_path
 
@@ -76,19 +76,19 @@ class AlignmentWriterTests(TestCase):
 
     def test_write(self):
         for fp, obj in zip(self.fps, self.objs):
-            fh = StringIO()
+            fh = io.StringIO()
             _alignment_to_phylip(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
-            with open(fp, 'U') as fh:
+            with io.open(fp) as fh:
                 exp = fh.read()
 
             self.assertEqual(obs, exp)
 
     def test_write_invalid_alignment(self):
         for invalid_obj, error_msg_regexp in self.invalid_objs:
-            fh = StringIO()
+            fh = io.StringIO()
             with six.assertRaisesRegex(self, PhylipFormatError,
                                        error_msg_regexp):
                 _alignment_to_phylip(invalid_obj, fh)

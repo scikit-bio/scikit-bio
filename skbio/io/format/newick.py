@@ -1,8 +1,8 @@
 """
-Newick format (:mod:`skbio.io.newick`)
-======================================
+Newick format (:mod:`skbio.io.format.newick`)
+=============================================
 
-.. currentmodule:: skbio.io.newick
+.. currentmodule:: skbio.io.format.newick
 
 Newick format (``newick``) stores spanning-trees with weighted edges and node
 names in a minimal file format [1]_. This is useful for representing
@@ -220,16 +220,18 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 from future.builtins import zip, range
 
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      NewickFormatError)
+from skbio.io import create_format, NewickFormatError
 from skbio.tree import TreeNode
 
+newick = create_format('newick')
 
-@register_sniffer("newick")
+
+@newick.sniffer()
 def _newick_sniffer(fh):
     # Strategy:
     #   The following conditions preclude a file from being newick:
@@ -270,7 +272,7 @@ def _newick_sniffer(fh):
     return not empty, {}
 
 
-@register_reader('newick', TreeNode)
+@newick.reader(TreeNode)
 def _newick_to_tree_node(fh, convert_underscores=True):
     tree_stack = []
     current_depth = 0
@@ -332,7 +334,7 @@ def _newick_to_tree_node(fh, convert_underscores=True):
                             " missing its root.")
 
 
-@register_writer("newick", TreeNode)
+@newick.writer(TreeNode)
 def _tree_node_to_newick(obj, fh):
     operators = set(",:_;()[]")
     current_depth = 0
@@ -355,7 +357,7 @@ def _tree_node_to_newick(obj, fh):
             # an empty string as a label in Newick. Therefore, both None and ''
             # are considered to be the absence of a label.
             if node.name:
-                escaped = node.name.replace("'", "''")
+                escaped = "%s" % node.name.replace("'", "''")
                 if any(t in operators for t in node.name):
                     fh.write("'")
                     fh.write(escaped)
@@ -364,7 +366,7 @@ def _tree_node_to_newick(obj, fh):
                     fh.write(escaped.replace(" ", "_"))
             if node.length is not None:
                 fh.write(':')
-                fh.write(str(node.length))
+                fh.write("%s" % node.length)
             if nodes_left and nodes_left[-1][1] == current_depth:
                 fh.write(',')
 

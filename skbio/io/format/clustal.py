@@ -1,8 +1,8 @@
 r"""
-Clustal format (:mod:`skbio.io.clustal`)
-========================================
+Clustal format (:mod:`skbio.io.format.clustal`)
+===============================================
 
-.. currentmodule:: skbio.io.clustal
+.. currentmodule:: skbio.io.format.clustal
 
 Clustal format (``clustal``) stores multiple sequence alignments. This format
 was originally introduced in the Clustal package [1]_.
@@ -57,28 +57,30 @@ Assume we have a clustal-formatted file with the following contents::
 
 We can use the following code to read a clustal file into an ``Alignment``:
 
->>> from StringIO import StringIO
 >>> from skbio import Alignment
->>> clustal_f = StringIO('abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n'
-...                      'def   -------------------------------\n'
-...                      'xyz   -------------------------------\n'
-...                      '\n'
-...                      'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC\n'
-...                      'def   ---------------CGUGCAUGCAU-CGAU\n'
-...                      'xyz   -----------CAUUCGUACGUACGCAUGAC\n')
+>>> clustal_f = [u'CLUSTAL W (1.82) multiple sequence alignment\n',
+...              u'\n',
+...              u'abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n',
+...              u'def   -------------------------------\n',
+...              u'xyz   -------------------------------\n',
+...              u'\n',
+...              u'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC\n',
+...              u'def   ---------------CGUGCAUGCAU-CGAU\n',
+...              u'xyz   -----------CAUUCGUACGUACGCAUGAC\n']
 >>> Alignment.read(clustal_f, format="clustal")
 <Alignment: n=3; mean +/- std length=62.00 +/- 0.00>
 
 We can use the following code to write an ``Alignment`` to a clustal-formatted
 file:
 
+>>> from io import StringIO
 >>> from skbio import DNA
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id': 'seq1'}),
 ...         DNA('A--GTCGAA-GTACCT', metadata={'id': 'sequence-2'}),
 ...         DNA('AGAGTTGAAGGTATCT', metadata={'id': '3'})]
 >>> aln = Alignment(seqs)
 >>> fh = StringIO()
->>> aln.write(fh, format='clustal')
+>>> _ = aln.write(fh, format='clustal')
 >>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE
 CLUSTAL
 <BLANKLINE>
@@ -104,12 +106,15 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      ClustalFormatError)
+from skbio.io import create_format, ClustalFormatError
 from skbio.sequence import Sequence
 from skbio.alignment import Alignment
+
+
+clustal = create_format('clustal')
 
 
 def _label_line_parser(record, strict=True):
@@ -206,7 +211,7 @@ def _check_length(data, labels, num_seqs_check=None):
     return True
 
 
-@register_sniffer("clustal")
+@clustal.sniffer()
 def _clustal_sniffer(fh):
     # Strategy
     #   The following conditions preclude a file from being clustal
@@ -216,6 +221,9 @@ def _clustal_sniffer(fh):
     #       * One of the sequence ids is not immediately
     #         followed by a subsequence
     empty = True
+    if fh.read(7) != 'CLUSTAL':
+        return False, {}
+    fh.seek(0)
     try:
         records = map(_delete_trailing_number,
                       filter(_is_clustal_seq_line, fh))
@@ -231,7 +239,7 @@ def _clustal_sniffer(fh):
     return not empty, {}
 
 
-@register_writer('clustal', Alignment)
+@clustal.writer(Alignment)
 def _alignment_to_clustal(obj, fh):
     r"""writes aligned sequences to a specified file
     Parameters
@@ -254,7 +262,7 @@ def _alignment_to_clustal(obj, fh):
         fh.write("\n")
 
 
-@register_reader('clustal', Alignment)
+@clustal.reader(Alignment)
 def _clustal_to_alignment(fh, strict=True):
     r"""yields labels and sequences from msa (multiple sequence alignment)
 
