@@ -220,7 +220,7 @@ def _clustal_sniffer(fh):
     #       * The sub-sequences have differing lengths
     #       * One of the sequence ids is not immediately
     #         followed by a subsequence
-    # empty = True
+    empty = True
     if fh.read(7) != 'CLUSTAL':
         return False, {}
     fh.seek(0)

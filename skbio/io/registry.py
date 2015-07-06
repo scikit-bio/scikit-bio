@@ -235,8 +235,8 @@ class IORegistry(object):
         # occurs.
         name = format_object.name
         if name in self._binary_formats or name in self._text_formats:
-            raise DuplicateRegistrationError("A format with already exists"
-                                             " with that name: %s" % name)
+            raise DuplicateRegistrationError("A format already exists with"
+                                             " that name: %s" % name)
 
         if format_object.is_binary_format:
             self._binary_formats[name] = format_object

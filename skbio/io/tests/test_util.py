@@ -96,16 +96,18 @@ class ReadableBinarySourceTests(object):
 
     def check_open_gc_behaviour(self, file, **kwargs):
         def mangle(file):
-            skbio.io.open(file, **kwargs)
+            result = skbio.io.open(file, **kwargs)
+            self.assertIsInstance(result, io.TextIOBase)
 
         f = skbio.io.open(file, encoding='binary')
         mangle(f)
         self.assertFalse(f.closed)
+        f.close()
 
     def check_open_file_gc_behaviour(self, file, **kwargs):
         def mangle(file):
-            with open_file(file, **kwargs):
-                pass
+            with open_file(file, **kwargs) as result:
+                self.assertIsInstance(result, io.TextIOBase)
 
         with open_file(file, encoding='binary') as f:
             mangle(f)

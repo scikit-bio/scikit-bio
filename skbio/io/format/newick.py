@@ -328,7 +328,6 @@ def _newick_to_tree_node(fh, convert_underscores=True):
 
         last_token = token
 
-    fh.seek(0)
     raise NewickFormatError("Could not parse file as newick."
                             " `(Parenthesis)`, `'single-quotes'`,"
                             " `[comments]` may be unbalanced, or tree may be"
