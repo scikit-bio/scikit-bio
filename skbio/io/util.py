@@ -32,6 +32,7 @@ from __future__ import absolute_import, division, print_function
 import io
 from contextlib2 import contextmanager, ExitStack
 
+from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
 from skbio.io._fileobject import (
     is_binary_file, SaneTextIOWrapper, CompressedBufferedReader,
@@ -61,7 +62,8 @@ def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
             break
 
     if newfile is None:
-        raise Exception("Could not open source: %r (mode: %r)" % (file, mode))
+        raise IOSourceError(
+            "Could not open source: %r (mode: %r)" % (file, mode))
 
     return newfile, source, is_binary_file(newfile)
 
@@ -69,7 +71,7 @@ def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
 def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
          newline=_d['newline'], compression=_d['compression'],
          compresslevel=_d['compresslevel']):
-    r"""Convert input into a filehandle
+    r"""Convert input into a filehandle.
 
     Supported inputs:
 
@@ -81,8 +83,6 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
     | URL                        | True     | False     | Binary      |
     +----------------------------+----------+-----------+-------------+
     | ``[u"lines list\n"]``      | True     | True      | Text        |
-    +----------------------------+----------+-----------+-------------+
-    | file with ``read`` method  | True     | False     | Text/Binary |
     +----------------------------+----------+-----------+-------------+
     | :class:`io.StringIO`       | True     | True      | Text        |
     +----------------------------+----------+-----------+-------------+
@@ -96,6 +96,9 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
     +----------------------------+----------+-----------+-------------+
     | :class:`io.BufferedRandom` | True     | True      | Binary      |
     +----------------------------+----------+-----------+-------------+
+
+    .. note:: Filehandles opened with ``open`` in Python 2 are **not**
+       supported. Use ``io.open`` if you need to pass a filehandle.
 
     .. note:: When reading a list of unicode (str) lines, the input for
        `newline` is used to determine the number of lines in the resulting file
@@ -144,7 +147,9 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
            `filehandle` will close `file`. Conversely calling `close` on `file`
            will cause `filehandle` to reflect a closed state. **This does not
            mean that a `flush` has occured for `filehandle`, there may still
-           have been data in its buffer!**
+           have been data in its buffer! Additionally, resources may not have
+           been cleaned up properly, so ALWAYS call `close` on `filehandle` and
+           NOT on `file`.**
 
     """
     arguments = locals().copy()
@@ -165,10 +170,8 @@ def _munge_file(file, is_binary_file, arguments):
 
     compression_handler = get_compression_handler(compression)
 
-    if is_output_binary and (errors is not _d['errors'] or
-                             newline is not _d['errors']):
-        raise ValueError("Cannot use `errors` or `newline` with binary"
-                         " encoding.")
+    if is_output_binary and newline is not _d['newline']:
+        raise ValueError("Cannot use `newline` with binary encoding.")
 
     if compression is not None and not compression_handler:
         raise ValueError("Unsupported compression: %r" % compression)
@@ -201,11 +204,7 @@ def _resolve_file(file, **kwargs):
         yield file, source, is_binary_file
     finally:
         if source.closeable:
-            # TODO: Add comment
-            if hasattr(file, 'partial_close'):
-                file.partial_close()
-            else:
-                file.close()
+            file.close()
 
 
 @contextmanager

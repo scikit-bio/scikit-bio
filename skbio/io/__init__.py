@@ -39,6 +39,27 @@ User functions
 
 .. currentmodule:: skbio.io
 
+User exceptions and warnings
+----------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   FormatIdentificationWarning
+   ArgumentOverrideWarning
+   UnrecognizedFormatError
+   IOSourceError
+   FileFormatError
+   ClustalFormatError
+   FASTAFormatError
+   FASTQFormatError
+   LSMatFormatError
+   NewickFormatError
+   OrdinationFormatError
+   PhylipFormatError
+   QSeqFormatError
+   QUALFormatError
+
 Subpackages
 -----------
 
@@ -173,20 +194,19 @@ from importlib import import_module
 from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
-from ._exception import (UnrecognizedFormatError, FileFormatError,
-                         ClustalFormatError, FASTAFormatError, IOSourceError,
-                         FASTQFormatError, LSMatFormatError, NewickFormatError,
-                         OrdinationFormatError, PhylipFormatError,
-                         QSeqFormatError, QUALFormatError)
+from ._exception import (UnrecognizedFormatError, IOSourceError,
+                         FileFormatError, ClustalFormatError, FASTAFormatError,
+                         IOSourceError, FASTQFormatError, LSMatFormatError,
+                         NewickFormatError, OrdinationFormatError,
+                         PhylipFormatError, QSeqFormatError, QUALFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
 __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
-           'UnrecognizedFormatError',
+           'UnrecognizedFormatError', 'IOSourceError',
 
-           'IOSourceError',
            'FileFormatError',
            'ClustalFormatError',
            'FASTAFormatError',

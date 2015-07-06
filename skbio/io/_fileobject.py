@@ -123,25 +123,8 @@ class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
     pass
 
 
-class TemporaryFile(io.FileIO):
-    """This exists because tempfile.TemporaryFile is not composable with io"""
-    def __init__(self, mode='r+'):
-        fd, self._path = tempfile.mkstemp()
-        super(TemporaryFile, self).__init__(fd, mode=mode, closefd=True)
-
-    def __del__(self):
-        if not self.closed:
-            self.close()
-
-    def close(self):
-        try:
-            super(TemporaryFile, self).close()
-        finally:
-            os.unlink(self._path)
-
-
 class IterableStringReaderIO(io.StringIO):
-    def __init__(self, iterable, newline=None):
+    def __init__(self, iterable, newline):
         self._iterable = iterable
         super(IterableStringReaderIO, self).__init__(u''.join(iterable),
                                                      newline=newline)
@@ -156,47 +139,3 @@ class IterableStringWriterIO(IterableStringReaderIO):
                 self._iterable.append(line)
             self.seek(backup)
         super(IterableStringWriterIO, self).close()
-
-
-class ReadableBufferedIO(io.BufferedReader):
-    def __init__(self, file, buffer_size=io.DEFAULT_BUFFER_SIZE):
-        self._file = file
-        file = TemporaryFile()
-
-        has_content = True
-        while has_content:
-            raw = self._file.read(buffer_size)
-            file.write(raw)
-            has_content = len(raw) > 0
-        file.seek(0)
-        super(ReadableBufferedIO, self).__init__(file)
-
-    def close(self):
-        if hasattr(self._file, 'close'):
-            self._file.close()
-        self.partial_close()
-
-    def partial_close(self):
-        super(ReadableBufferedIO, self).close()
-
-
-class ReadableTextIO(io.TextIOWrapper):
-    def __init__(self, file, newline=None):
-        self._file = ReadableBufferedIO(_InlineUTF8Decoder(file))
-        super(ReadableTextIO, self).__init__(self._file, encoding='utf-8',
-                                             newline=newline)
-
-    def partial_close(self):
-        self._file.partial_close()
-
-
-class _InlineUTF8Decoder(object):
-    def __init__(self, file):
-        self.file = file
-
-    def read(self, b):
-        return self.file.read(b).encode('utf-8')
-
-    def close(self):
-        if hasattr(self.file, 'close'):
-            self.file.close()

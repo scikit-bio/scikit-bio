@@ -19,8 +19,8 @@ import requests
 from cachecontrol import CacheControl
 from cachecontrol.caches import FileCache
 
-from ._fileobject import (ReadableBufferedIO, ReadableTextIO,
-                          IterableStringWriterIO, IterableStringReaderIO,
+from skbio.io import IOSourceError
+from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
                           WrappedBufferedRandom)
 
 
@@ -32,8 +32,7 @@ def get_io_sources():
         BytesIOSource,
         BufferedIOSource,
         TextIOSource,
-        ReadableSource,
-        IterableSource,
+        IterableSource
     )
 
 
@@ -165,65 +164,35 @@ class IterableSource(IOSource):
     def can_read(self):
         if hasattr(self.file, '__iter__'):
             iterator = iter(self.file)
-            head = next(iterator)
+            head = next(iterator, None)
+            if head is None:
+                self.repaired = []
+                return True
             if isinstance(head, text_type):
                 self.repaired = self._repair_iterable(head, iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort
-                raise Exception()
+                raise IOSourceError(
+                    "Could not open source: %r (mode: %r)" %
+                    (self.file, self.options['mode']))
         return False
 
     def can_write(self):
         return hasattr(self.file, 'append') and hasattr(self.file, '__iter__')
 
     def get_reader(self):
-        return IterableStringReaderIO(self.repaired)
+        return IterableStringReaderIO(self.repaired,
+                                      newline=self.options['newline'])
 
     def get_writer(self):
-        return IterableStringWriterIO(self.file)
+        return IterableStringWriterIO(self.file,
+                                      newline=self.options['newline'])
 
     def _repair_iterable(self, head, tail):
         yield head
         for head in tail:
             yield head
-
-
-class ReadableSource(IOSource):
-    closeable = False
-
-    def can_read(self):
-        return hasattr(self.file, 'read')
-
-    def get_reader(self):
-        buffer_size = io.DEFAULT_BUFFER_SIZE
-
-        raw = self.file.read(buffer_size)
-        file = self._repair_readable(raw, self.file)
-        if isinstance(raw, text_type):
-            return ReadableTextIO(file, newline=self.options['newline'])
-        elif isinstance(raw, bytes):
-            return ReadableBufferedIO(file, buffer_size=buffer_size)
-        else:
-            raise Exception()
-
-    def _repair_readable(self, raw, file):
-        class Readable(object):
-            def __init__(self):
-                self._raw_read = False
-
-            def read(self, b):
-                if not self._raw_read:
-                    self._raw_read = True
-                    return raw
-                else:
-                    return file.read(b)
-
-            def close(self):
-                if hasattr(file, 'close'):
-                    file.close()
-
-        return Readable()
 
 
 class GzipCompressor(Compressor):

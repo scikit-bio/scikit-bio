@@ -19,27 +19,32 @@ from skbio.io.registry import open_file
 from skbio.util import get_data_path
 
 
-class TextSourceTests(object):
-    pass
+class TestOpen(unittest.TestCase):
+    def test_open_invalid_mode(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([], mode='a')
+
+    def test_open_invalid_source(self):
+        with self.assertRaises(skbio.io.IOSourceError):
+            skbio.io.open(42)
+
+    def test_open_invalid_source_compression(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], compression='gzip')
+
+    def test_open_invalid_source_encoding(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], encoding='binary')
+
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], encoding='binary', newline='\r')
+
+    def test_open_invalid_compression(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open(io.BytesIO(), compression='foo')
 
 
-class WritableTextSourceTests(TextSourceTests):
-    pass
-
-
-class ReadableTextSourceTests(TextSourceTests):
-    def test_open(self):
-        pass
-
-    def test_with_open(self):
-        pass
-
-
-class BinarySourceTests(object):
-    pass
-
-
-class ReadableBinarySourceTests(BinarySourceTests):
+class ReadableBinarySourceTests(object):
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -70,7 +75,6 @@ class ReadableBinarySourceTests(BinarySourceTests):
             self.assertTrue(f.readable())
             self.assertEqual(f.read(), contents)
         self.assertEqual(f.closed, self.expected_close)
-        self.check_closed(file, self.expected_close)
 
         f.close()
         self.assertTrue(f.closed)
@@ -288,7 +292,8 @@ class ReadableSourceTest(unittest.TestCase):
             f.close()
 
 
-class WritableBinarySourceTests(BinarySourceTests):
+class WritableBinarySourceTests(object):
+    # TODO
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -392,21 +397,49 @@ class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
         return io.open(path, mode='rb')
 
 
-class TestReadReadable(ReadableBinarySourceTests, ReadableSourceTest):
-    expected_close = False
+class TestIterableReaderWriter(unittest.TestCase):
+    def test_open(self):
+        def gen():
+            yield u'a'
+            yield u'b'
+            yield u'c'
+        list_ = list(gen())
 
-    def get_fileobj(self, path):
-        class Readable(object):
-            def __init__(self, file):
-                self._file = file
+        for input_ in gen(), list_:
+            with skbio.io.open(input_) as result:
+                self.assertIsInstance(result, io.TextIOBase)
+                self.assertEqual(result.read(), u'abc')
 
-            def __del__(self):
-                self._file.close()
+    def test_open_with_newline(self):
+        l = [u'a\r', u'b\r', u'c\r']
+        with skbio.io.open(l, newline='\r') as result:
+            self.assertIsInstance(result, io.TextIOBase)
+            self.assertEqual(result.readlines(), l)
 
-            def read(self, n):
-                return self._file.read(n)
+    def test_open_invalid_iterable(self):
+        with self.assertRaises(skbio.io.IOSourceError):
+            skbio.io.open([b'abc'])
 
-        return Readable(io.open(path, mode='rb'))
+    def test_open_empty_iterable(self):
+        with skbio.io.open([]) as result:
+            self.assertIsInstance(result, io.TextIOBase)
+            self.assertEqual(result.read(), u'')
+
+    def test_open_write_mode(self):
+        l = []
+        with skbio.io.open(l, mode='w') as fh:
+            fh.write(u'abc')
+        self.assertEqual(l, [u'abc'])
+
+        l = []
+        with skbio.io.open(l, mode='w', newline='\r') as fh:
+            fh.write(u'ab\nc\n')
+        self.assertEqual(l, [u'ab\r', u'c\r'])
+
+        self.assertTrue(fh.closed)
+        fh.close()
+        self.assertTrue(fh.closed)
+
 
 if __name__ == '__main__':
     unittest.main()
