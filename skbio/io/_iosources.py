@@ -14,6 +14,7 @@ import io
 import gzip
 import bz2file
 from tempfile import gettempdir
+import itertools
 
 import requests
 from cachecontrol import CacheControl
@@ -169,7 +170,7 @@ class IterableSource(IOSource):
                 self.repaired = []
                 return True
             if isinstance(head, text_type):
-                self.repaired = self._repair_iterable(head, iterator)
+                self.repaired = itertools.chain([head], iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort
@@ -188,11 +189,6 @@ class IterableSource(IOSource):
     def get_writer(self):
         return IterableStringWriterIO(self.file,
                                       newline=self.options['newline'])
-
-    def _repair_iterable(self, head, tail):
-        yield head
-        for head in tail:
-            yield head
 
 
 class GzipCompressor(Compressor):
