@@ -16,7 +16,6 @@ import numpy as np
 from six import string_types
 
 from skbio.util import classproperty, overrides
-from skbio.util._decorator import stable
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
