@@ -14,6 +14,7 @@ from abc import ABCMeta, abstractproperty
 import numpy as np
 
 from skbio.util import classproperty
+from skbio.util._decorator import stable
 from ._iupac_sequence import _motifs as parent_motifs
 
 
@@ -59,6 +60,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
 
     @abstractproperty
     @classproperty
+    @stable(as_of="0.4.0")
     def complement_map(cls):
         """Return mapping of nucleotide characters to their complements.
 
@@ -75,6 +77,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         """
         return set()  # pragma: no cover
 
+    @stable(as_of="0.4.0")
     def complement(self, reverse=False):
         """Return the complement of the nucleotide sequence.
 
@@ -151,6 +154,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             complement = complement[::-1]
         return complement
 
+    @stable(as_of="0.4.0")
     def reverse_complement(self):
         """Return the reverse complement of the nucleotide sequence.
 
@@ -196,6 +200,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         """
         return self.complement(reverse=True)
 
+    @stable(as_of="0.4.0")
     def is_reverse_complement(self, other):
         """Determine if a sequence is the reverse complement of this sequence.
 
@@ -242,6 +247,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
             # underlying sequence data
             return self.reverse_complement()._string == other._string
 
+    @stable(as_of="0.4.0")
     def gc_content(self):
         """Calculate the relative frequency of G's and C's in the sequence.
 
@@ -286,6 +292,7 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
         """
         return self.gc_frequency(relative=True)
 
+    @stable(as_of="0.4.0")
     def gc_frequency(self, relative=False):
         """Calculate frequency of G's and C's in the sequence.
 

@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 from skbio.util import classproperty, overrides
+from skbio.util._decorator import stable
 from ._rna import RNA
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
@@ -98,6 +99,7 @@ class DNA(IUPACSequence, NucleotideMixin):
 
     @classproperty
     @overrides(NucleotideMixin)
+    @stable(as_of="0.4.0")
     def complement_map(cls):
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
@@ -110,11 +112,13 @@ class DNA(IUPACSequence, NucleotideMixin):
 
     @classproperty
     @overrides(IUPACSequence)
+    @stable(as_of="0.4.0")
     def nondegenerate_chars(cls):
         return set("ACGT")
 
     @classproperty
     @overrides(IUPACSequence)
+    @stable(as_of="0.4.0")
     def degenerate_map(cls):
         return {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
@@ -126,6 +130,7 @@ class DNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
+    @stable(as_of="0.4.0")
     def transcribe(self):
         """Transcribe DNA into RNA.
 
@@ -191,6 +196,7 @@ class DNA(IUPACSequence, NucleotideMixin):
         return RNA(seq, metadata=metadata,
                    positional_metadata=positional_metadata, validate=False)
 
+    @stable(as_of="0.4.0")
     def translate(self, *args, **kwargs):
         """Translate DNA sequence into protein sequence.
 
@@ -258,6 +264,7 @@ class DNA(IUPACSequence, NucleotideMixin):
         """
         return self.transcribe().translate(*args, **kwargs)
 
+    @stable(as_of="0.4.0")
     def translate_six_frames(self, *args, **kwargs):
         """Translate DNA into protein using six possible reading frames.
 

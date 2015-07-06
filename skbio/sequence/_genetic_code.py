@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from future.builtins import range
 
-from skbio.util._decorator import classproperty
+from skbio.util._decorator import classproperty, stable
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
 from skbio.sequence._base import ElasticLines
@@ -142,6 +142,7 @@ class GeneticCode(SkbioObject):
         return cls.__offset_table
 
     @classmethod
+    @stable(as_of="0.4.0")
     def from_ncbi(cls, table_id=1):
         """Return NCBI genetic code specified by table ID.
 
@@ -180,6 +181,7 @@ class GeneticCode(SkbioObject):
         return _ncbi_genetic_codes[table_id]
 
     @classproperty
+    @stable(as_of="0.4.0")
     def reading_frames(cls):
         """Six possible reading frames.
 
@@ -204,6 +206,7 @@ class GeneticCode(SkbioObject):
         return [1, 2, 3, -1, -2, -3]
 
     @property
+    @stable(as_of="0.4.0")
     def name(self):
         """Genetic code name.
 
@@ -218,6 +221,7 @@ class GeneticCode(SkbioObject):
         """
         return self._name
 
+    @stable(as_of="0.4.0")
     def __init__(self, amino_acids, starts, name=''):
         self._set_amino_acids(amino_acids)
         self._set_starts(starts)
@@ -264,6 +268,7 @@ class GeneticCode(SkbioObject):
             codon[i] = offset
         return codon
 
+    @stable(as_of="0.4.0")
     def __str__(self):
         """Return string representation of the genetic code.
 
@@ -283,6 +288,7 @@ class GeneticCode(SkbioObject):
         """
         return self._build_repr(include_name=False)
 
+    @stable(as_of="0.4.0")
     def __repr__(self):
         """Return string representation of the genetic code.
 
@@ -325,6 +331,7 @@ class GeneticCode(SkbioObject):
 
         return lines.to_str()
 
+    @stable(as_of="0.4.0")
     def __eq__(self, other):
         """Determine if the genetic code is equal to another.
 
@@ -372,6 +379,7 @@ class GeneticCode(SkbioObject):
             return False
         return True
 
+    @stable(as_of="0.4.0")
     def __ne__(self, other):
         """Determine if the genetic code is not equal to another.
 
@@ -392,6 +400,7 @@ class GeneticCode(SkbioObject):
         """
         return not (self == other)
 
+    @stable(as_of="0.4.0")
     def translate(self, sequence, reading_frame=1, start='ignore',
                   stop='ignore'):
         """Translate RNA sequence into protein sequence.
@@ -615,6 +624,7 @@ class GeneticCode(SkbioObject):
             "of a %s codon is required with `%s='require'`"
             % (name, reading_frame, name, name))
 
+    @stable(as_of="0.4.0")
     def translate_six_frames(self, sequence, start='ignore', stop='ignore'):
         """Translate RNA into protein using six possible reading frames.
 

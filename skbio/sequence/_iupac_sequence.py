@@ -16,6 +16,7 @@ import numpy as np
 from six import string_types
 
 from skbio.util import classproperty, overrides
+from skbio.util._decorator import stable
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -97,6 +98,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return cls.__gap_codes
 
     @classproperty
+    @stable(as_of="0.4.0")
     def alphabet(cls):
         """Return valid IUPAC characters.
 
@@ -111,6 +113,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
     @classproperty
+    @stable(as_of="0.4.0")
     def gap_chars(cls):
         """Return characters defined as gaps.
 
@@ -123,6 +126,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return set('-.')
 
     @classproperty
+    @stable(as_of="0.4.0")
     def degenerate_chars(cls):
         """Return degenerate IUPAC characters.
 
@@ -136,6 +140,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @abstractproperty
     @classproperty
+    @stable(as_of="0.4.0")
     def nondegenerate_chars(cls):
         """Return non-degenerate IUPAC characters.
 
@@ -149,6 +154,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @abstractproperty
     @classproperty
+    @stable(as_of="0.4.0")
     def degenerate_map(cls):
         """Return mapping of degenerate to non-degenerate characters.
 
@@ -166,6 +172,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             return _motifs
 
     @overrides(Sequence)
+    @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  validate=True, lowercase=False):
         super(IUPACSequence, self).__init__(
@@ -213,6 +220,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         len(bad) > 1 else bad[0],
                         list(self.alphabet)))
 
+    @stable(as_of="0.4.0")
     def lowercase(self, lowercase):
         """Return a case-sensitive string representation of the sequence.
 
@@ -259,6 +267,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         outbytes[index] ^= self._ascii_invert_case_bit_offset
         return str(outbytes.tostring().decode('ascii'))
 
+    @stable(as_of="0.4.0")
     def gaps(self):
         """Find positions containing gaps in the biological sequence.
 
@@ -282,6 +291,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return np.in1d(self._bytes, self._gap_codes)
 
+    @stable(as_of="0.4.0")
     def has_gaps(self):
         """Determine if the sequence contains one or more gap characters.
 
@@ -306,6 +316,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         # TODO: cache results
         return bool(self.gaps().any())
 
+    @stable(as_of="0.4.0")
     def degenerates(self):
         """Find positions containing degenerate characters in the sequence.
 
@@ -331,6 +342,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return np.in1d(self._bytes, self._degenerate_codes)
 
+    @stable(as_of="0.4.0")
     def has_degenerates(self):
         """Determine if sequence contains one or more degenerate characters.
 
@@ -361,6 +373,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         # TODO: cache results
         return bool(self.degenerates().any())
 
+    @stable(as_of="0.4.0")
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
 
@@ -386,6 +399,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return np.in1d(self._bytes, self._nondegenerate_codes)
 
+    @stable(as_of="0.4.0")
     def has_nondegenerates(self):
         """Determine if sequence contains one or more non-degenerate characters
 
@@ -415,6 +429,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         # TODO: cache results
         return bool(self.nondegenerates().any())
 
+    @stable(as_of="0.4.0")
     def degap(self):
         """Return a new sequence with gap characters removed.
 
@@ -456,6 +471,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return self[np.invert(self.gaps())]
 
+    @stable(as_of="0.4.0")
     def expand_degenerates(self):
         """Yield all possible non-degenerate versions of the sequence.
 
@@ -523,6 +539,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
 
+    @stable(as_of="0.4.0")
     def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.
 
