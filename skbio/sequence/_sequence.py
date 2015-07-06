@@ -468,7 +468,6 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._positional_metadata
 
     @positional_metadata.setter
-    @stable(as_of="0.4.0")
     def positional_metadata(self, positional_metadata):
         try:
             # copy=True to copy underlying data buffer
@@ -489,7 +488,6 @@ class Sequence(collections.Sequence, SkbioObject):
         self._positional_metadata = positional_metadata
 
     @positional_metadata.deleter
-    @stable(as_of="0.4.0")
     def positional_metadata(self):
         self._positional_metadata = None
 
