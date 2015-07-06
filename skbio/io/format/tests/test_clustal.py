@@ -7,8 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from io import StringIO
 
+from io import StringIO
 from unittest import TestCase, main
 
 from skbio.io.format.clustal import (

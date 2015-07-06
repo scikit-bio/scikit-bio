@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from skbio.io._fileobject import StringIO
 
 import unittest
 
@@ -15,6 +14,7 @@ from skbio import TreeNode
 from skbio.io import NewickFormatError
 from skbio.io.format.newick import (
     _newick_to_tree_node, _tree_node_to_newick, _newick_sniffer)
+from skbio.io._fileobject import StringIO
 
 
 class TestNewick(unittest.TestCase):
