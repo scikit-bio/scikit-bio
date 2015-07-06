@@ -66,7 +66,7 @@ class IOSource(object):
         raise NotImplementedError()
 
     def get_writer(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
 class Compressor(IOSource):

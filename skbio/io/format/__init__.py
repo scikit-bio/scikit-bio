@@ -7,3 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
+from skbio.util import TestRunner
+
+test = TestRunner(__file__).test

@@ -14,6 +14,8 @@ import shutil
 import io
 import os.path
 
+import httpretty
+
 import skbio.io
 from skbio.io.registry import open_file
 from skbio.util import get_data_path
@@ -427,6 +429,33 @@ class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
     def get_contents(self, file):
         with io.open(file, mode='rb') as f:
             return f.read()
+
+
+class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = True
+
+    def setUp(self):
+        super(TestReadURL, self).setUp()
+        httpretty.enable()
+
+        for file in (get_data_path('example_file'),
+                     get_data_path('big5_file'),
+                     get_data_path('example_file.gz'),
+                     get_data_path('example_file.bz2'),
+                     get_data_path('big5_file.gz'),
+                     get_data_path('big5_file.bz2')):
+
+            with io.open(file, mode='rb') as f:
+                httpretty.register_uri(httpretty.GET, self.get_fileobj(file),
+                                       body=f.read(),
+                                       content_type="application/octet-stream")
+
+    def tearDown(self):
+        super(TestReadURL, self).setUp()
+        httpretty.disable()
+
+    def get_fileobj(self, path):
+        return "http://example.com/" + os.path.split(path)[1]
 
 
 class TestReadBytesIO(ReadableBinarySourceTests, ReadableSourceTest):
