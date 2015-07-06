@@ -180,8 +180,8 @@ class GeneticCode(SkbioObject):
                 % (sorted(_ncbi_genetic_codes), table_id))
         return _ncbi_genetic_codes[table_id]
 
-    @classproperty
     @stable(as_of="0.4.0")
+    @classproperty
     def reading_frames(cls):
         """Six possible reading frames.
 

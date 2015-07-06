@@ -97,9 +97,9 @@ class DNA(IUPACSequence, NucleotideMixin):
 
     """
 
-    @classproperty
     @overrides(NucleotideMixin)
     @stable(as_of="0.4.0")
+    @classproperty
     def complement_map(cls):
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
@@ -110,15 +110,15 @@ class DNA(IUPACSequence, NucleotideMixin):
         comp_map.update({c: c for c in cls.gap_chars})
         return comp_map
 
-    @classproperty
     @overrides(IUPACSequence)
     @stable(as_of="0.4.0")
+    @classproperty
     def nondegenerate_chars(cls):
         return set("ACGT")
 
-    @classproperty
     @overrides(IUPACSequence)
     @stable(as_of="0.4.0")
+    @classproperty
     def degenerate_map(cls):
         return {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),

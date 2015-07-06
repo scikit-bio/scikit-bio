@@ -101,29 +101,29 @@ class Protein(IUPACSequence):
             cls.__stop_codes = np.asarray([ord(s) for s in stops])
         return cls.__stop_codes
 
-    @classproperty
     @overrides(IUPACSequence)
     @stable(as_of="0.4.0")
+    @classproperty
     def alphabet(cls):
         return super(Protein, cls).alphabet | cls.stop_chars
 
-    @classproperty
     @overrides(IUPACSequence)
     @stable(as_of="0.4.0")
+    @classproperty
     def nondegenerate_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
-    @classproperty
     @overrides(IUPACSequence)
     @stable(as_of="0.4.0")
+    @classproperty
     def degenerate_map(cls):
         return {
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
 
-    @classproperty
     @stable(as_of="0.4.0")
+    @classproperty
     def stop_chars(cls):
         """Return characters representing translation stop codons.
 
