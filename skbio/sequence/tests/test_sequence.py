@@ -1740,7 +1740,6 @@ class TestSequence(TestCase):
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
 
-
     def test_iter_kmers_with_overlap(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
         expected = [
@@ -1835,7 +1834,6 @@ class TestSequence(TestCase):
             seq.iter_kmers(8, overlap=True), expected)
 
         self.assertIs(type(seq.iter_kmers(1)), GeneratorType)
-
 
     def test_iter_kmers_invalid_k(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
