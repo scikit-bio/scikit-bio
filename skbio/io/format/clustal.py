@@ -58,7 +58,9 @@ Assume we have a clustal-formatted file with the following contents::
 We can use the following code to read a clustal file into an ``Alignment``:
 
 >>> from skbio import Alignment
->>> clustal_f = [u'abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n',
+>>> clustal_f = [u'CLUSTAL W (1.82) multiple sequence alignment\n',
+...              u'\n',
+...              u'abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n',
 ...              u'def   -------------------------------\n',
 ...              u'xyz   -------------------------------\n',
 ...              u'\n',
