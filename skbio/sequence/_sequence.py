@@ -582,6 +582,7 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
         self._bytes = sequence
 
+    @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
         """Determine if a subsequence is contained in the biological sequence.
 
@@ -614,6 +615,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._munge_to_bytestring(subsequence, "in") in self._string
 
+    @stable(as_of="0.4.0")
     def __eq__(self, other):
         """Determine if the biological sequence is equal to another.
 
@@ -704,6 +706,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return True
 
+    @stable(as_of="0.4.0")
     def __ne__(self, other):
         """Determine if the biological sequence is not equal to another.
 
@@ -738,6 +741,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return not (self == other)
 
+    @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         """Slice the biological sequence.
 
@@ -865,6 +869,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return None
 
+    @stable(as_of="0.4.0")
     def __len__(self):
         """Return the number of characters in the biological sequence.
 
@@ -883,6 +888,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._bytes.size
 
+    @stable(as_of="0.4.0")
     def __nonzero__(self):
         """Returns truth value (truthiness) of sequence.
 
@@ -902,6 +908,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return len(self) > 0
 
+    @stable(as_of="0.4.0")
     def __iter__(self):
         """Iterate over positions in the biological sequence.
 
@@ -926,6 +933,7 @@ class Sequence(collections.Sequence, SkbioObject):
         for i in range(len(self)):
             yield self[i]
 
+    @stable(as_of="0.4.0")
     def __reversed__(self):
         """Iterate over positions in the biological sequence in reverse order.
 
@@ -949,6 +957,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return iter(self[::-1])
 
+    @stable(as_of="0.4.0")
     def __str__(self):
         """Return biological sequence characters as a string.
 
@@ -2064,14 +2073,12 @@ class _SequenceReprBuilder(object):
         Number of characters in each chunk of a sequence.
 
     """
-    @stable(as_of="0.4.0")
     def __init__(self, seq, width, indent, chunk_size):
         self._seq = seq
         self._width = width
         self._indent = ' ' * indent
         self._chunk_size = chunk_size
 
-    @stable(as_of="0.4.0")
     def build(self):
         lines = ElasticLines()
 
