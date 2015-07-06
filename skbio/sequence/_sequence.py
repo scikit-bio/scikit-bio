@@ -1675,10 +1675,22 @@ class Sequence(collections.Sequence, SkbioObject):
         if k < 1:
             raise ValueError("k must be greater than 0.")
 
-        step = 1 if overlap else k
+        if overlap:
+            step = 1
+            count = len(self) - k + 1
+        else:
+            step = k
+            count = len(self) // k
 
-        for i in range(0, len(self) - k + 1, step):
-            yield self[i:i+k]
+        if self.has_positional_metadata():
+            for i in range(0, len(self) - k + 1, step):
+                yield self[i:i+k]
+        # Optimized path when no positional metadata
+        else:
+            kmers = np.lib.stride_tricks.as_strided(
+                self._bytes, shape=(k, count), strides=(1, step)).T
+            for s in kmers:
+                yield self._to(sequence=s)
 
     def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return counts of words of length `k` from the biological sequence.
