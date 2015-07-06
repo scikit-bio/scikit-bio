@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 import six
 
-from io import StringIO
+import io
 from unittest import TestCase, main
 
 import numpy as np
@@ -183,12 +183,12 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
 
     def test_write(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
-            fh = StringIO()
+            fh = io.StringIO()
             _ordination_results_to_ordination(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
-            with open(fp, 'U') as fh:
+            with io.open(fp) as fh:
                 exp = fh.read()
 
             npt.assert_equal(obs, exp)
@@ -199,7 +199,7 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
             obj1 = _ordination_to_ordination_results(fp)
 
             # Write.
-            fh = StringIO()
+            fh = io.StringIO()
             _ordination_results_to_ordination(obj1, fh)
             fh.seek(0)
 
