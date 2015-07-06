@@ -194,8 +194,8 @@ from importlib import import_module
 from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
-from ._exception import (UnrecognizedFormatError, IOSourceError,
-                         FileFormatError, ClustalFormatError, FASTAFormatError,
+from ._exception import (UnrecognizedFormatError, FileFormatError,
+                         ClustalFormatError, FASTAFormatError,
                          IOSourceError, FASTQFormatError, LSMatFormatError,
                          NewickFormatError, OrdinationFormatError,
                          PhylipFormatError, QSeqFormatError, QUALFormatError)

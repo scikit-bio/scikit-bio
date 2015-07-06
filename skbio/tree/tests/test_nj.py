@@ -8,9 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-from six import StringIO
 from unittest import TestCase, main
 
+from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode, nj
 from skbio.tree._nj import (
     _compute_q, _compute_collapsed_dm, _lowest_index, _otu_to_new_node,

@@ -10,9 +10,9 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-from six import StringIO
 import numpy as np
 
+from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.tree import majority_rule
 from skbio.tree._majority_rule import (_walk_clades, _filter_clades,

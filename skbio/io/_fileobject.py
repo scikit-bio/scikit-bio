@@ -9,8 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 import io
-import tempfile
-import os
 
 
 def is_binary_file(file):
