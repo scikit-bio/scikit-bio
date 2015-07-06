@@ -206,7 +206,7 @@ class GzipCompressor(Compressor):
         return gzip.GzipFile(fileobj=self.file)
 
     def get_writer(self):
-        return gzip.GzipFile(fileobj=self.file,
+        return gzip.GzipFile(fileobj=self.file, mode='wb',
                              compresslevel=self.options['compresslevel'])
 
 

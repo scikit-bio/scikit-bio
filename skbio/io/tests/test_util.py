@@ -293,12 +293,11 @@ class ReadableSourceTest(unittest.TestCase):
 
 
 class WritableBinarySourceTests(object):
-    # TODO
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
 
-    def check_open_state_contents(self, file, contents, expected, is_binary,
+    def check_open_state_contents(self, file, contents, is_binary,
                                   **kwargs):
         result = skbio.io.open(file, mode='w', **kwargs)
         if is_binary:
@@ -306,29 +305,67 @@ class WritableBinarySourceTests(object):
                                            io.BufferedRandom))
         else:
             self.assertIsInstance(result, io.TextIOBase)
-        self.assertTrue(result.writeable())
+        self.assertTrue(result.writable())
 
         result.write(contents)
         self.assertFalse(result.closed)
 
-        self.assertEqual(self.get_contents(file), expected)
-
-        result.close()
-        self.assertTrue(result.closed)
-        self.check_closed(file, True)
+        if self.expected_close:
+            result.close()
+            self.assertTrue(result.closed)
+            self.check_closed(file, True)
 
     def test_open_binary(self):
-        with skbio.io.open(self.binary_file, mode='w',
-                           encoding='binary') as fh:
-            fh.write(self.binary_contents)
-        result = self.get_contents(self.binary_file)
-        self.assertEqual(result, self.binary_contents)
+        self.check_open_state_contents(self.binary_file, self.binary_contents,
+                                       True, encoding='binary',
+                                       compression=None)
+
+        self.assertEqual(self.get_contents(self.binary_file),
+                         self.binary_contents)
+
+    def test_open_gzip(self):
+        self.check_open_state_contents(self.gzip_file, self.text_contents,
+                                       False, compression='gzip')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_file)[10:],
+                         self.gzip_contents[10:])
+
+    def test_open_bz2(self):
+        self.check_open_state_contents(self.bz2_file, self.text_contents,
+                                       False, compression='bz2')
+
+        self.assertEqual(self.get_contents(self.bz2_file),
+                         self.bz2_contents)
+
+    def test_open_encoding(self):
+        self.check_open_state_contents(self.big5_file, self.decoded_contents,
+                                       False, encoding='big5')
+
+        self.assertEqual(self.get_contents(self.big5_file),
+                         self.encoded_contents)
+
+    def test_open_gzip_encoding(self):
+        self.check_open_state_contents(self.gzip_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='gzip', encoding='big5')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
+                         self.gzip_encoded_contents[10:])
+
+    def test_open_bz2_encoding(self):
+        self.check_open_state_contents(self.bz2_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='bz2', encoding='big5')
+
+        self.assertEqual(self.get_contents(self.bz2_encoded_file),
+                         self.bz2_encoded_contents)
 
 
 class WritableSourceTest(unittest.TestCase):
     def setUp(self):
         self._dir = tempfile.mkdtemp()
-        self.write_file = os.path.join(self._dir, "write_file")
 
         with io.open(get_data_path('example_file'), mode='rb') as f:
             self.binary_contents = f.read()
@@ -336,7 +373,7 @@ class WritableSourceTest(unittest.TestCase):
 
         with io.open(get_data_path('big5_file'), mode='rb') as f:
             self.encoded_contents = f.read()
-        self.encoded_file = self._make_file('big5_file')
+        self.big5_file = self._make_file('big5_file')
 
         with io.open(get_data_path('example_file.gz'), mode='rb') as f:
             self.gzip_contents = f.read()
@@ -359,6 +396,16 @@ class WritableSourceTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self._dir)
+        self.safe_close(self.binary_file)
+        self.safe_close(self.gzip_file)
+        self.safe_close(self.bz2_file)
+        self.safe_close(self.big5_file)
+        self.safe_close(self.gzip_encoded_file)
+        self.safe_close(self.bz2_encoded_file)
+
+    def safe_close(self, f):
+        if hasattr(f, 'close'):
+            f.close()
 
     def _make_file(self, name):
         return self.get_fileobj(os.path.join(self._dir, name))
@@ -390,11 +437,50 @@ class TestReadBytesIO(ReadableBinarySourceTests, ReadableSourceTest):
             return io.BytesIO(f.read())
 
 
+class TestWriteBytesIO(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return io.BytesIO()
+
+    def get_contents(self, file):
+        return file.getvalue()
+
+    def test_open_gzip(self):
+        self.check_open_state_contents(self.gzip_file, self.text_contents,
+                                       False, compression='gzip')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_file)[10:],
+                         self.gzip_contents[23:])
+
+    def test_open_gzip_encoding(self):
+        self.check_open_state_contents(self.gzip_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='gzip', encoding='big5')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
+                         self.gzip_encoded_contents[20:])
+
+
 class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = False
 
     def get_fileobj(self, path):
         return io.open(path, mode='rb')
+
+
+class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return io.open(path, mode='w+b')
+
+    def get_contents(self, file):
+        file.close()
+        with io.open(file.name, mode='rb') as f:
+            return f.read()
 
 
 class TestIterableReaderWriter(unittest.TestCase):
