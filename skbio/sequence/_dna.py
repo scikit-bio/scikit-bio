@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides
+from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._rna import RNA
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs

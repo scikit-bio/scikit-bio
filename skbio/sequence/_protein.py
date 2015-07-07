@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio.util import classproperty, overrides
+from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
