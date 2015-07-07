@@ -107,7 +107,7 @@ setup(name='scikit-bio',
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
           'bz2file >= 0.98',
-          'CacheControl[FileCache] >= 0.11.5'
+          'CacheControl[FileCache] >= 0.11.5',
           'contextlib2 >= 0.4.0',
           'decorator >= 3.4.2',
           'future >= 0.14.3',
@@ -117,7 +117,7 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 0.16.2',
           'scipy >= 0.15.1',
-          'six >= 1.9.0',
+          'six >= 1.9.0'
       ],
       extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
                                "python-dateutil"],
