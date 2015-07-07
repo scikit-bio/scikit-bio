@@ -20,15 +20,6 @@ Common functionality to support testing in skbio.
    TestRunner
    assert_data_frame_almost_equal
 
-Decorators
-----------
-
-.. autosummary::
-    :toctree: generated/
-
-    classproperty
-    overrides
-
 Miscellaneous functionality
 ---------------------------
 
