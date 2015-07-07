@@ -1401,39 +1401,6 @@ class TestSequence(TestCase):
         with self.assertRaises(TypeError):
             seq._to(metadata={'id': 'bar'}, unrecognized_kwarg='baz')
 
-    def test_to_extra_non_attribute_kwargs(self):
-        # test that we can pass through additional kwargs to the constructor
-        # that aren't related to biological sequence attributes (i.e., they
-        # aren't state that has to be copied)
-        class SequenceSubclassWithNewSignature(Sequence):
-            def __init__(self, sequence, metadata=None,
-                         positional_metadata=None, foo=False):
-                super(SequenceSubclassWithNewSignature, self).__init__(
-                    sequence, metadata=metadata,
-                    positional_metadata=positional_metadata)
-                self.foo = foo
-
-        seq = SequenceSubclassWithNewSignature('ACTG',
-                                               metadata={'description': 'foo'})
-
-        # _to() without specifying `foo`
-        to = seq._to()
-        self.assertEqual(seq, to)
-        self.assertIsNot(seq, to)
-        self.assertFalse(seq.foo)
-
-        # `foo` should default to False
-        self.assertFalse(to.foo)
-
-        # _to() with `foo` specified
-        to = seq._to(foo=True)
-        self.assertEqual(seq, to)
-        self.assertIsNot(seq, to)
-        self.assertFalse(seq.foo)
-
-        # `foo` should now be True
-        self.assertTrue(to.foo)
-
     def test_count(self):
         def construct_char_array(s):
             return np.fromstring(s, dtype='|S1')

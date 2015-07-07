@@ -1860,7 +1860,7 @@ class Sequence(collections.Sequence, SkbioObject):
             if len(r) >= min_length:
                 yield r
 
-    def _to(self, **kwargs):
+    def _to(self, sequence=None, metadata=None, positional_metadata=None):
         """Return a copy of the current biological sequence.
 
         Returns a copy of the current biological sequence, optionally with
@@ -1898,11 +1898,14 @@ class Sequence(collections.Sequence, SkbioObject):
         it's easy to forget to propagate attributes to the new instance).
 
         """
-        defaults = {'sequence': self._bytes,
-                    'metadata': self._metadata,
-                    'positional_metadata': self._positional_metadata}
-        defaults.update(kwargs)
-        return self._constructor(**defaults)
+        if sequence is None:
+            sequence = self._bytes
+        if metadata is None:
+            metadata = self._metadata
+        if positional_metadata is None:
+            positional_metadata = self._positional_metadata
+        return self._constructor(sequence=sequence, metadata=metadata,
+                                 positional_metadata=positional_metadata)
 
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
