@@ -115,6 +115,7 @@ setup(name='scikit-bio',
       classifiers=classifiers,
       package_data={
           'skbio.io.tests': ['data/*'],
+          'skbio.io.format.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
