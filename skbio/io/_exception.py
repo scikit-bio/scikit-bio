@@ -9,6 +9,11 @@
 from __future__ import absolute_import, division, print_function
 
 
+class IOSourceError(Exception):
+    """Raised when a file source cannot be resolved."""
+    pass
+
+
 class FileFormatError(Exception):
     """Raised when a file cannot be parsed."""
     pass
@@ -76,15 +81,4 @@ class InvalidRegistrationError(Exception):
 
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
-
-    def __init__(self, name=None, fmt=None, cls=None, msg=None):
-        super(DuplicateRegistrationError, self).__init__()
-        if msg:
-            self.args = (msg,)
-        else:
-            if hasattr(cls, '__name__'):
-                classname = cls.__name__
-            else:
-                classname = 'generator'
-            self.args = ("'%s' already has a %s for %s."
-                         % (fmt, name, classname),)
+    pass

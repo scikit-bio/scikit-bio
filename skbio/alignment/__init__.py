@@ -62,7 +62,6 @@ Exceptions
 
 Data Structure Examples
 -----------------------
->>> from StringIO import StringIO
 >>> from skbio import SequenceCollection, Alignment, DNA
 >>> seqs = [DNA("ACC--G-GGTA..", metadata={'id':"seq1"}),
 ...         DNA("TCC--G-GGCA..", metadata={'id':"seqs2"})]
@@ -76,11 +75,11 @@ Data Structure Examples
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
 
->>> fasta_fh = StringIO('>seq1\n'
-...                     'CGATGTCGATCGATCGATCGATCAG\n'
-...                     '>seq2\n'
-...                     'CATCGATCGATCGATGCATGCATGCATG\n')
->>> s1 = SequenceCollection.read(fasta_fh, constructor=DNA)
+>>> fasta_lines = [u'>seq1\n',
+...                u'CGATGTCGATCGATCGATCGATCAG\n',
+...                u'>seq2\n',
+...                u'CATCGATCGATCGATGCATGCATGCATG\n']
+>>> s1 = SequenceCollection.read(fasta_lines, constructor=DNA)
 >>> s1
 <SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
 

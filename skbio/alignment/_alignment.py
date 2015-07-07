@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import zip, range
 from future.utils import viewkeys, viewitems
-from six import StringIO
 
 from collections import Counter, defaultdict
 
@@ -287,11 +286,7 @@ class SequenceCollection(SkbioObject):
             Fasta-formatted string of all sequences in the object.
 
         """
-        fh = StringIO()
-        self.write(fh, format='fasta')
-        fasta_str = fh.getvalue()
-        fh.close()
-        return fasta_str
+        return str(''.join(self.write([], format='fasta')))
 
     @experimental(as_of="0.4.0")
     def distances(self, distance_fn):

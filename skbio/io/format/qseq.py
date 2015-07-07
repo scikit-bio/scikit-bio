@@ -1,8 +1,8 @@
 r"""
-QSeq format (:mod:`skbio.io.qseq`)
-==================================
+QSeq format (:mod:`skbio.io.format.qseq`)
+=========================================
 
-.. currentmodule:: skbio.io.qseq
+.. currentmodule:: skbio.io.format.qseq
 
 The QSeq format (`qseq`) is a record-based, plain text output format produced
 by some DNA sequencers for storing biological sequence data, quality scores,
@@ -115,12 +115,13 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 from future.builtins import zip, range
 
-from skbio.io import register_reader, register_sniffer, QSeqFormatError
-from skbio.io._base import _decode_qual_to_phred, _get_nth_sequence
+from skbio.io import create_format, QSeqFormatError
+from skbio.io.format._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.alignment import SequenceCollection
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
@@ -128,8 +129,10 @@ _default_phred_offset = None
 _default_variant = None
 _will_filter = True
 
+qseq = create_format('qseq')
 
-@register_sniffer('qseq')
+
+@qseq.sniffer()
 def _qseq_sniffer(fh):
     empty = True
     try:
@@ -141,7 +144,7 @@ def _qseq_sniffer(fh):
         return False, {}
 
 
-@register_reader('qseq')
+@qseq.reader(None)
 def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
                        phred_offset=_default_phred_offset,
                        variant=_default_variant, **kwargs):
@@ -165,7 +168,7 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
                               **kwargs)
 
 
-@register_reader('qseq', SequenceCollection)
+@qseq.reader(SequenceCollection)
 def _qseq_to_sequence_collection(fh, constructor=Sequence,
                                  filter=_will_filter,
                                  phred_offset=_default_phred_offset,
@@ -175,7 +178,7 @@ def _qseq_to_sequence_collection(fh, constructor=Sequence,
         variant=variant)))
 
 
-@register_reader('qseq', Sequence)
+@qseq.reader(Sequence)
 def _qseq_to_biological_sequence(fh, seq_num=1,
                                  phred_offset=_default_phred_offset,
                                  variant=_default_variant):
@@ -184,7 +187,7 @@ def _qseq_to_biological_sequence(fh, seq_num=1,
                              constructor=Sequence), seq_num)
 
 
-@register_reader('qseq', DNA)
+@qseq.reader(DNA)
 def _qseq_to_dna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
                           variant=_default_variant, **kwargs):
@@ -194,7 +197,7 @@ def _qseq_to_dna_sequence(fh, seq_num=1,
                              seq_num)
 
 
-@register_reader('qseq', RNA)
+@qseq.reader(RNA)
 def _qseq_to_rna_sequence(fh, seq_num=1,
                           phred_offset=_default_phred_offset,
                           variant=_default_variant, **kwargs):
@@ -204,7 +207,7 @@ def _qseq_to_rna_sequence(fh, seq_num=1,
                              seq_num)
 
 
-@register_reader('qseq', Protein)
+@qseq.reader(Protein)
 def _qseq_to_protein_sequence(fh, seq_num=1,
                               phred_offset=_default_phred_offset,
                               variant=_default_variant, **kwargs):

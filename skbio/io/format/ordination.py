@@ -1,8 +1,8 @@
 r"""
-Ordination results format (:mod:`skbio.io.ordination`)
-======================================================
+Ordination results format (:mod:`skbio.io.format.ordination`)
+=============================================================
 
-.. currentmodule:: skbio.io.ordination
+.. currentmodule:: skbio.io.format.ordination
 
 The ordination results file format (``ordination``) stores the results of an
 ordination method in a human-readable, text-based format. The format supports
@@ -186,17 +186,19 @@ Load the ordination results from the file:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import zip
 
 import numpy as np
 
 from skbio.stats.ordination import OrdinationResults
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      OrdinationFormatError)
+from skbio.io import create_format, OrdinationFormatError
+
+ordination = create_format('ordination')
 
 
-@register_sniffer('ordination')
+@ordination.sniffer()
 def _ordination_sniffer(fh):
     # Smells an ordination file if *all* of the following lines are present
     # *from the beginning* of the file:
@@ -218,7 +220,7 @@ def _ordination_sniffer(fh):
     return False, {}
 
 
-@register_reader('ordination', OrdinationResults)
+@ordination.reader(OrdinationResults)
 def _ordination_to_ordination_results(fh):
     eigvals = _parse_vector_section(fh, 'Eigvals')
     if eigvals is None:
@@ -363,7 +365,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
     return data, ids
 
 
-@register_writer('ordination', OrdinationResults)
+@ordination.writer(OrdinationResults)
 def _ordination_results_to_ordination(obj, fh):
     _write_vector_section(fh, 'Eigvals', obj.eigvals)
     _write_vector_section(fh, 'Proportion explained', obj.proportion_explained)

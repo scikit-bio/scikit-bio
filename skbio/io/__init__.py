@@ -6,6 +6,71 @@ File I/O (:mod:`skbio.io`)
 
 This package provides I/O functionality for skbio.
 
+Supported file formats
+----------------------
+For details on what objects are supported by each format,
+see the associated documentation.
+
+.. currentmodule:: skbio.io.format
+.. autosummary::
+   :toctree: generated/
+
+   clustal
+   fasta
+   fastq
+   lsmat
+   newick
+   ordination
+   phylip
+   qseq
+
+.. currentmodule:: skbio.io.registry
+
+
+User functions
+--------------
+
+.. autosummary::
+   :toctree: generated/
+
+   write
+   read
+   sniff
+
+.. currentmodule:: skbio.io
+
+User exceptions and warnings
+----------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+   FormatIdentificationWarning
+   ArgumentOverrideWarning
+   UnrecognizedFormatError
+   IOSourceError
+   FileFormatError
+   ClustalFormatError
+   FASTAFormatError
+   FASTQFormatError
+   LSMatFormatError
+   NewickFormatError
+   OrdinationFormatError
+   PhylipFormatError
+   QSeqFormatError
+   QUALFormatError
+
+Subpackages
+-----------
+
+.. autosummary::
+   :toctree: generated/
+
+   registry
+   util
+
+For developer documentation on extending I/O, see :mod:`skbio.io.registry`.
+
 Introduction to I/O
 -------------------
 Reading and writing files (I/O) can be a complicated task:
@@ -24,26 +89,31 @@ Reading and writing files (I/O) can be a complicated task:
   object to multiple files.
 * Instead of reading a file into an object, you might want to stream the file
   using a generator (e.g., if the file cannot be fully loaded into memory).
-* The file you are working with might be hosted in hosted in a remote server.
 
 To address these issues (and others), scikit-bio provides a simple, powerful
 interface for dealing with I/O. We accomplish this by using a single I/O
-registry. Below is a description of how to use the registry and how to extend
-it.
+registry.
+
+What kinds of files scikit-bio can use
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To see a complete list of file-like inputs that can be used for reading,
+writing, and sniffing, see the documentation for :func:`skbio.io.util.open`.
 
 Reading files into scikit-bio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 There are two ways to read files. The first way is to use the
 procedural interface:
 
-``my_obj = skbio.io.read(<filehandle or filepath>, format='<format here>',
-into=<class to construct>)``
+.. code-block:: python
+
+   my_obj = skbio.io.read(file, format='someformat', into=SomeSkbioClass)
 
 The second is to use the object-oriented (OO) interface which is automatically
 constructed from the procedural interface:
 
-``my_obj = <class to construct>.read(<filehandle or filepath>,
-format='<format here>')``
+.. code-block:: python
+
+   my_obj = SomeSkbioClass.read(file, format='someformat')
 
 For example, to read a `newick` file using both interfaces you would type:
 
@@ -62,9 +132,9 @@ For the OO interface:
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
-In the case of ``skbio.io.read`` if `into` is not provided, then a generator
-will be returned. What the generator yields will depend on what format is being
-read.
+In the case of :func:`skbio.io.registry.read` if `into` is not provided, then a
+generator will be returned. What the generator yields will depend on what
+format is being read.
 
 When `into` is provided, format may be omitted and the registry will use its
 knowledge of the available formats for the requested class to infer the correct
@@ -78,11 +148,10 @@ As an example:
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
-We call format inference `sniffing`, much like the
-`csv <https://docs.python.org/2/library/csv.html#csv.Sniffer>`_ module of
-Python's standard library. The goal of a `sniffer` is twofold: to identify if a
-file is a specific format, and if it is, to provide `**kwargs` which can be
-used to better parse the file.
+We call format inference `sniffing`, much like the :class:`csv.Sniffer`
+class of Python's standard library. The goal of a `sniffer` is twofold: to
+identify if a file is a specific format, and if it is, to provide `**kwargs`
+which can be used to better parse the file.
 
 .. note:: There is a built-in `sniffer` which results in a useful error message
    if an empty file is provided as input and the format was omitted.
@@ -93,169 +162,20 @@ Just as when reading files, there are two ways to write files.
 
 Procedural Interface:
 
-``skbio.io.write(my_obj, format='<format here>',
-into=<filehandle or filepath>)``
+.. code-block:: python
+
+   skbio.io.write(my_obj, format='someformat', into=file)
 
 OO Interface:
 
-``my_obj.write(<filehandle or filepath>, format='<format here>')``
+.. code-block:: python
+
+   my_obj.write(file, format='someformat')
 
 In the procedural interface, `format` is required. Without it, scikit-bio does
 not know how you want to serialize an object. OO interfaces define a default
 `format`, so it may not be necessary to include it.
 
-Supported file formats
-^^^^^^^^^^^^^^^^^^^^^^
-For details on what objects are supported by each format,
-see the associated documentation.
-
-.. autosummary::
-   :toctree: generated/
-
-   clustal
-   fasta
-   fastq
-   lsmat
-   newick
-   ordination
-   phylip
-   qseq
-
-Formats are considered to be names which represent a way of encoding a file.
-
-User functions
-^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: generated/
-
-   write
-   read
-   sniff
-
-User exceptions
-^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: generated/
-
-   UnrecognizedFormatError
-   FileFormatError
-   ClustalFormatError
-   FASTAFormatError
-   FASTQFormatError
-   LSMatFormatError
-   NewickFormatError
-   OrdinationFormatError
-   PhylipFormatError
-   QSeqFormatError
-   QUALFormatError
-
-User warnings
-^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: generated/
-
-   FormatIdentificationWarning
-   ArgumentOverrideWarning
-
-Developer Documentation
------------------------
-To extend I/O in skbio, developers should create a submodule in `skbio/io/`
-named after the file format it implements.
-
-For example, if you were to create readers and writers for a `fasta` file, you
-would create a submodule `skbio/io/fasta.py`.
-In this submodule you would use the following decorators:
-``register_writer``, ``register_reader``, and ``register_sniffer``.
-These associate your functionality to a format string and potentially an skbio
-class. Please see the relevant documenation for more information about these
-functions and the specifications for `readers`, `writers`, and `sniffers`.
-
-Once you are satisfied with the functionality, you will need to ensure that
-`skbio/io/__init__.py` contains an import of your new submodule so the
-decorators are executed on importing the user functions above. Use the function
-``import_module('skbio.io.my_new_format')``.
-
-The following keyword args may not be used when defining new `readers` or
-`writers` as they already have special meaning to the registry system:
-
-- `format`
-- `into`
-- `mode`
-- `verify`
-
-If a keyword argument is a file, such as in the case of `fasta` with `qual`,
-then you can set the default to a specific marker, or sentinel, to indicate to
-the registry that the kwarg should have special handling. For example:
-
-.. code-block:: python
-
-   from skbio.io import FileSentinel
-
-   @register_reader(fasta, object)
-   def fasta_to_object(fh, qual=FileSentinel):
-       ...
-
-After the registry reads your function, it will replace `FileSentinel` with
-`None` allowing you to perform normal checks for kwargs
-(e.g. `if my_kwarg is not None:`). If a user provides input for the kwarg, the
-registry will convert it to an open filehandle.
-
-.. note:: Keyword arguments are not permitted in `sniffers`. `Sniffers` may not
-   raise exceptions; if an exception is thrown by a `sniffer`, the user will be
-   asked to report it on our `issue tracker
-   <https://github.com/biocore/scikit-bio/issues/>`_.
-
-When raising errors in readers and writers, the error should be a subclass of
-``FileFormatError`` specific to your new format.
-
-Writing unit tests
-^^^^^^^^^^^^^^^^^^
-Because scikit-bio handles all of the I/O boilerplate, you only need to test
-the actual business logic of your `readers`, `writers`, and `sniffers`. The
-easiest way to accomplish this is to create a list of files and their expected
-results when deserialized. Then you can iterate through the list ensuring the
-expected results occur and that the expected results can be reserialized into
-an equivalent file. This process is called 'roundtripping'.
-
-It is also important to test some invalid inputs and ensure that the correct
-error is raised by your `readers`. Consider using `assertRaises` as a context
-manager like so:
-
-.. code-block:: python
-
-   with self.assertRaises(SomeFileFormatErrorSubclass) as cm:
-       do_something_wrong()
-   self.assertIn('action verb or subject of an error', str(cm.exception))
-
-A good example to review when preparing to write your first I/O unit tests is
-the ordination test code (see in ``skbio/io/tests/test_ordination.py``).
-
-Developer functions
-^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-    :toctree: generated/
-
-    register_writer
-    register_reader
-    register_sniffer
-    list_write_formats
-    list_read_formats
-    get_writer
-    get_reader
-    get_sniffer
-
-Developer exceptions
-^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: generated/
-
-   DuplicateRegistrationError
-   InvalidRegistrationError
 
 """
 
@@ -274,27 +194,18 @@ from importlib import import_module
 from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
-from ._exception import (DuplicateRegistrationError, InvalidRegistrationError,
-                         UnrecognizedFormatError, FileFormatError,
+from ._exception import (UnrecognizedFormatError, FileFormatError,
                          ClustalFormatError, FASTAFormatError,
-                         FASTQFormatError, LSMatFormatError, NewickFormatError,
-                         OrdinationFormatError, PhylipFormatError,
-                         QSeqFormatError, QUALFormatError)
-from ._registry import (write, read, sniff, get_writer, get_reader,
-                        get_sniffer, list_write_formats, list_read_formats,
-                        register_writer, register_reader, register_sniffer,
-                        initialize_oop_interface, FileSentinel)
+                         IOSourceError, FASTQFormatError, LSMatFormatError,
+                         NewickFormatError, OrdinationFormatError,
+                         PhylipFormatError, QSeqFormatError, QUALFormatError)
+from .registry import write, read, sniff, create_format, io_registry
+from .util import open
 
-__all__ = ['write', 'read', 'sniff',
-           'list_write_formats', 'list_read_formats',
-           'get_writer', 'get_reader', 'get_sniffer',
-           'register_writer', 'register_reader', 'register_sniffer',
-           'initialize_oop_interface', 'FileSentinel',
+__all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 
            'FormatIdentificationWarning', 'ArgumentOverrideWarning',
-
-           'DuplicateRegistrationError', 'InvalidRegistrationError',
-           'UnrecognizedFormatError',
+           'UnrecognizedFormatError', 'IOSourceError',
 
            'FileFormatError',
            'ClustalFormatError',
@@ -307,20 +218,26 @@ __all__ = ['write', 'read', 'sniff',
            'QSeqFormatError',
            'QUALFormatError']
 
+
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
-import_module('skbio.io.clustal')
-import_module('skbio.io.fasta')
-import_module('skbio.io.fastq')
-import_module('skbio.io.lsmat')
-import_module('skbio.io.newick')
-import_module('skbio.io.ordination')
-import_module('skbio.io.phylip')
-import_module('skbio.io.qseq')
+import_module('skbio.io.format.clustal')
+import_module('skbio.io.format.fasta')
+import_module('skbio.io.format.fastq')
+import_module('skbio.io.format.lsmat')
+import_module('skbio.io.format.newick')
+import_module('skbio.io.format.ordination')
+import_module('skbio.io.format.phylip')
+import_module('skbio.io.format.qseq')
+
+
+# This is meant to be a handy indicator to the user that they have done
+# something wrong.
+import_module('skbio.io.format.emptyfile')
 
 # Now that all of our I/O has loaded, we can add the object oriented methods
 # (read and write) to each class which has registered I/O operations.
-initialize_oop_interface()
+io_registry.monkey_patch()
 
 test = TestRunner(__file__).test

@@ -1,8 +1,8 @@
 """
-FASTA/QUAL format (:mod:`skbio.io.fasta`)
-=========================================
+FASTA/QUAL format (:mod:`skbio.io.format.fasta`)
+================================================
 
-.. currentmodule:: skbio.io.fasta
+.. currentmodule:: skbio.io.format.fasta
 
 The FASTA file format (``fasta``) stores biological (i.e., nucleotide or
 protein) sequences in a simple plain text format that is both human-readable
@@ -298,32 +298,29 @@ Let's define this file in-memory as a ``StringIO``, though this could be a real
 file path, file handle, or anything that's supported by scikit-bio's I/O
 registry in practice:
 
->>> from StringIO import StringIO
->>> fs = (
-...     ">seq1 Turkey\\n"
-...     "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n"
-...     ">seq2 Salmo gair\\n"
-...     "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n"
-...     "CCGGGCACGGTAT\\n"
-...     ">seq3 H. Sapiens\\n"
-...     "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n"
-...     ">seq4 Chimp\\n"
-...     "AAACCCTTGCCG\\n"
-...     "TTACGCTTAAAC\\n"
-...     "CGAGGCCGGGAC\\n"
-...     "ACTCAT\\n"
-...     ">seq5 Gorilla\\n"
-...     "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n")
->>> fh = StringIO(fs)
+>>> fl = [u">seq1 Turkey\\n",
+...       u"AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n",
+...       u">seq2 Salmo gair\\n",
+...       u"AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n",
+...       u"CCGGGCACGGTAT\\n",
+...       u">seq3 H. Sapiens\\n",
+...       u"ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n",
+...       u">seq4 Chimp\\n",
+...       u"AAACCCTTGCCG\\n",
+...       u"TTACGCTTAAAC\\n",
+...       u"CGAGGCCGGGAC\\n",
+...       u"ACTCAT\\n",
+...       u">seq5 Gorilla\\n",
+...       u"AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n"]
 
 Let's read the FASTA file into a ``SequenceCollection``:
 
 >>> from skbio import SequenceCollection
->>> sc = SequenceCollection.read(fh)
+>>> sc = SequenceCollection.read(fl)
 >>> sc.sequence_lengths()
 [42, 42, 42, 42, 42]
 >>> sc.ids()
-['seq1', 'seq2', 'seq3', 'seq4', 'seq5']
+[u'seq1', u'seq2', u'seq3', u'seq4', u'seq5']
 
 We see that all 5 sequences have 42 characters, and that each of the sequence
 IDs were successfully read into memory.
@@ -333,8 +330,7 @@ aligned), let's load the FASTA file into an ``Alignment`` object, which is a
 more appropriate data structure:
 
 >>> from skbio import Alignment
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> aln = Alignment.read(fh)
+>>> aln = Alignment.read(fl)
 >>> aln.sequence_length()
 42
 
@@ -350,8 +346,8 @@ Let's inspect the type of sequences stored in the ``Alignment``:
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
+    u'description': u'Turkey'
+    u'id': u'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -361,14 +357,13 @@ By default, sequences are loaded as ``Sequence`` objects. We can
 change the type of sequence via the ``constructor`` parameter:
 
 >>> from skbio import DNA
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> aln = Alignment.read(fh, constructor=DNA)
->>> aln[0]
+>>> aln = Alignment.read(fl, constructor=DNA)
+>>> aln[0] # doctest: +NORMALIZE_WHITESPACE
 DNA
 ------------------------------------------------
 Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
+    u'description': u'Turkey'
+    u'id': u'seq1'
 Stats:
     length: 42
     has gaps: False
@@ -383,9 +378,9 @@ We now have an ``Alignment`` of ``DNA`` objects instead of
 
 To write the alignment in FASTA format:
 
->>> new_fh = StringIO()
->>> aln.write(new_fh)
->>> print(new_fh.getvalue())
+>>> from io import StringIO
+>>> with StringIO() as fh:
+...     print(aln.write(fh).getvalue())
 >seq1 Turkey
 AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
 >seq2 Salmo gair
@@ -397,7 +392,6 @@ AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
 >seq5 Gorilla
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 <BLANKLINE>
->>> new_fh.close()
 
 Both ``SequenceCollection`` and ``Alignment`` load all of the sequences from
 the FASTA file into memory at once. If the FASTA file is large (which is often
@@ -410,15 +404,14 @@ use the generator-based reader to process a single sequence at a time in a
 ``for`` loop:
 
 >>> import skbio.io
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> for seq in skbio.io.read(fh, format='fasta'):
+>>> for seq in skbio.io.read(fl, format='fasta'):
 ...     seq
 ...     print('')
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
+    u'description': u'Turkey'
+    u'id': u'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -427,8 +420,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Salmo gair'
-    'id': 'seq2'
+    u'description': u'Salmo gair'
+    u'id': u'seq2'
 Stats:
     length: 42
 ------------------------------------------------
@@ -437,8 +430,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'H. Sapiens'
-    'id': 'seq3'
+    u'description': u'H. Sapiens'
+    u'id': u'seq3'
 Stats:
     length: 42
 ------------------------------------------------
@@ -447,8 +440,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Chimp'
-    'id': 'seq4'
+    u'description': u'Chimp'
+    u'id': u'seq4'
 Stats:
     length: 42
 ------------------------------------------------
@@ -457,8 +450,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Gorilla'
-    'id': 'seq5'
+    u'description': u'Gorilla'
+    u'id': u'seq5'
 Stats:
     length: 42
 ------------------------------------------------
@@ -468,14 +461,13 @@ Stats:
 A single sequence can also be read into a ``Sequence`` (or subclass):
 
 >>> from skbio import Sequence
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> seq = Sequence.read(fh)
+>>> seq = Sequence.read(fl)
 >>> seq
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
+    u'description': u'Turkey'
+    u'id': u'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -484,14 +476,13 @@ Stats:
 By default, the first sequence in the FASTA file is read. This can be
 controlled with ``seq_num``. For example, to read the fifth sequence:
 
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> seq = Sequence.read(fh, seq_num=5)
+>>> seq = Sequence.read(fl, seq_num=5)
 >>> seq
 Sequence
 ------------------------------------------------
 Metadata:
-    'description': 'Gorilla'
-    'id': 'seq5'
+    u'description': u'Gorilla'
+    u'id': u'seq5'
 Stats:
     length: 42
 ------------------------------------------------
@@ -499,14 +490,13 @@ Stats:
 
 We can use the same API to read the fifth sequence into a ``DNA``:
 
->>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
->>> dna_seq = DNA.read(fh, seq_num=5)
+>>> dna_seq = DNA.read(fl, seq_num=5)
 >>> dna_seq
 DNA
 ------------------------------------------------
 Metadata:
-    'description': 'Gorilla'
-    'id': 'seq5'
+    u'description': u'Gorilla'
+    u'id': u'seq5'
 Stats:
     length: 42
     has gaps: False
@@ -518,13 +508,11 @@ Stats:
 
 Individual sequence objects can also be written in FASTA format:
 
->>> new_fh = StringIO()
->>> dna_seq.write(new_fh)
->>> print(new_fh.getvalue())
+>>> with StringIO() as fh:
+...     print(dna_seq.write(fh).getvalue())
 >seq5 Gorilla
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 <BLANKLINE>
->>> new_fh.close()
 
 Reading and Writing FASTA/QUAL Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -545,48 +533,46 @@ Also suppose we have the following QUAL file::
     >seq2 db-accession-34989
     3 3 10 42 80
 
->>> fasta_fs = (
-...     ">seq1 db-accession-149855\\n"
-...     "CGATGTC\\n"
-...     ">seq2 db-accession-34989\\n"
-...     "CATCG\\n")
->>> fasta_fh = StringIO(fasta_fs)
->>> qual_fs = (
-...     ">seq1 db-accession-149855\\n"
-...     "40 39 39 4\\n"
-...     "50 1 100\\n"
-...     ">seq2 db-accession-34989\\n"
-...     "3 3 10 42 80\\n")
->>> qual_fh = StringIO(qual_fs)
+>>> fasta_fl = [
+...     u">seq1 db-accession-149855\\n",
+...     u"CGATGTC\\n",
+...     u">seq2 db-accession-34989\\n",
+...     u"CATCG\\n"]
+>>> qual_fl = [
+...     u">seq1 db-accession-149855\\n",
+...     u"40 39 39 4\\n",
+...     u"50 1 100\\n",
+...     u">seq2 db-accession-34989\\n",
+...     u"3 3 10 42 80\\n"]
 
 To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
 
->>> for seq in skbio.io.read(fasta_fh, qual=qual_fh, format='fasta'):
+>>> for seq in skbio.io.read(fasta_fl, qual=qual_fl, format='fasta'):
 ...     seq
 ...     print('')
 Sequence
-----------------------------------------
+------------------------------------------
 Metadata:
-    'description': 'db-accession-149855'
-    'id': 'seq1'
+    u'description': u'db-accession-149855'
+    u'id': u'seq1'
 Positional metadata:
-    'quality': <dtype: int64>
+    u'quality': <dtype: int64>
 Stats:
     length: 7
-----------------------------------------
+------------------------------------------
 0 CGATGTC
 <BLANKLINE>
 Sequence
----------------------------------------
+-----------------------------------------
 Metadata:
-    'description': 'db-accession-34989'
-    'id': 'seq2'
+    u'description': u'db-accession-34989'
+    u'id': u'seq2'
 Positional metadata:
-    'quality': <dtype: int64>
+    u'quality': <dtype: int64>
 Stats:
     length: 5
----------------------------------------
+-----------------------------------------
 0 CATCG
 <BLANKLINE>
 
@@ -597,9 +583,7 @@ similar manner.
 Now let's load the sequences and their quality scores into a
 ``SequenceCollection``:
 
->>> fasta_fh = StringIO(fasta_fs) # reload to read from the beginning again
->>> qual_fh = StringIO(qual_fs) # reload to read from the beginning again
->>> sc = SequenceCollection.read(fasta_fh, qual=qual_fh)
+>>> sc = SequenceCollection.read(fasta_fl, qual=qual_fl)
 >>> sc
 <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
@@ -608,7 +592,7 @@ FASTA and QUAL files, respectively, we run:
 
 >>> new_fasta_fh = StringIO()
 >>> new_qual_fh = StringIO()
->>> sc.write(new_fasta_fh, qual=new_qual_fh)
+>>> _ = sc.write(new_fasta_fh, qual=new_qual_fh)
 >>> print(new_fasta_fh.getvalue())
 >seq1 db-accession-149855
 CGATGTC
@@ -648,7 +632,8 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import range, zip
 from six.moves import zip_longest
 
@@ -656,18 +641,21 @@ import textwrap
 
 import numpy as np
 
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      FASTAFormatError, QUALFormatError, FileSentinel)
-from skbio.io._base import (_get_nth_sequence,
-                            _parse_fasta_like_header,
-                            _format_fasta_like_records, _line_generator,
-                            _too_many_blanks)
+from skbio.io import create_format, FASTAFormatError, QUALFormatError
+from skbio.io.registry import FileSentinel
+from skbio.io.format._base import (_get_nth_sequence,
+                                   _parse_fasta_like_header,
+                                   _format_fasta_like_records, _line_generator,
+                                   _too_many_blanks)
 from skbio.util._misc import chunk_str
 from skbio.alignment import SequenceCollection, Alignment
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
-@register_sniffer('fasta')
+fasta = create_format('fasta')
+
+
+@fasta.sniffer()
 def _fasta_sniffer(fh):
     # Strategy:
     #   Ignore up to 5 blank/whitespace-only lines at the beginning of the
@@ -709,7 +697,7 @@ def _sniffer_data_parser(chunks):
         raise FASTAFormatError('Data appear to be quality scores.')
 
 
-@register_reader('fasta')
+@fasta.reader(None)
 def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     if qual is None:
         for seq, id_, desc in _parse_fasta_raw(fh, _parse_sequence_data,
@@ -737,11 +725,11 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
             if fasta_id != qual_id:
                 raise FASTAFormatError(
                     "IDs do not match between FASTA and QUAL records: %r != %r"
-                    % (fasta_id, qual_id))
+                    % (str(fasta_id), str(qual_id)))
             if fasta_desc != qual_desc:
                 raise FASTAFormatError(
                     "Descriptions do not match between FASTA and QUAL "
-                    "records: %r != %r" % (fasta_desc, qual_desc))
+                    "records: %r != %r" % (str(fasta_desc), str(qual_desc)))
 
             # sequence and quality scores lengths are checked in constructor
             yield constructor(
@@ -750,14 +738,14 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
                 positional_metadata={'quality': qual_scores}, **kwargs)
 
 
-@register_reader('fasta', Sequence)
+@fasta.reader(Sequence)
 def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual, constructor=Sequence),
         seq_num)
 
 
-@register_reader('fasta', DNA)
+@fasta.reader(DNA)
 def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
@@ -765,7 +753,7 @@ def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
         seq_num)
 
 
-@register_reader('fasta', RNA)
+@fasta.reader(RNA)
 def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
@@ -773,7 +761,7 @@ def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
         seq_num)
 
 
-@register_reader('fasta', Protein)
+@fasta.reader(Protein)
 def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
@@ -781,7 +769,7 @@ def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
         seq_num)
 
 
-@register_reader('fasta', SequenceCollection)
+@fasta.reader(SequenceCollection)
 def _fasta_to_sequence_collection(fh, qual=FileSentinel,
                                   constructor=Sequence, **kwargs):
     return SequenceCollection(
@@ -789,14 +777,14 @@ def _fasta_to_sequence_collection(fh, qual=FileSentinel,
                                  **kwargs)))
 
 
-@register_reader('fasta', Alignment)
+@fasta.reader(Alignment)
 def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
     return Alignment(
         list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
                                  **kwargs)))
 
 
-@register_writer('fasta')
+@fasta.writer(None)
 def _generator_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None,
@@ -831,7 +819,7 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
             qual.write('>%s\n%s\n' % (header, qual_str))
 
 
-@register_writer('fasta', Sequence)
+@fasta.writer(Sequence)
 def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
@@ -840,7 +828,7 @@ def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width)
 
 
-@register_writer('fasta', DNA)
+@fasta.writer(DNA)
 def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
@@ -849,7 +837,7 @@ def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width, lowercase)
 
 
-@register_writer('fasta', RNA)
+@fasta.writer(RNA)
 def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                            id_whitespace_replacement='_',
                            description_newline_replacement=' ',
@@ -858,7 +846,7 @@ def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width, lowercase)
 
 
-@register_writer('fasta', Protein)
+@fasta.writer(Protein)
 def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                                id_whitespace_replacement='_',
                                description_newline_replacement=' ',
@@ -867,7 +855,7 @@ def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width, lowercase)
 
 
-@register_writer('fasta', SequenceCollection)
+@fasta.writer(SequenceCollection)
 def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                                   id_whitespace_replacement='_',
                                   description_newline_replacement=' ',
@@ -876,7 +864,7 @@ def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width, lowercase)
 
 
-@register_writer('fasta', Alignment)
+@fasta.writer(Alignment)
 def _alignment_to_fasta(obj, fh, qual=FileSentinel,
                         id_whitespace_replacement='_',
                         description_newline_replacement=' ', max_width=None,
@@ -938,7 +926,8 @@ def _parse_quality_scores(chunks):
         quality = np.asarray(qual_str.split(), dtype=int)
     except ValueError:
         raise QUALFormatError(
-            "Could not convert quality scores to integers:\n%s" % qual_str)
+            "Could not convert quality scores to integers:\n%s"
+            % str(qual_str))
 
     if (quality < 0).any():
         raise QUALFormatError(

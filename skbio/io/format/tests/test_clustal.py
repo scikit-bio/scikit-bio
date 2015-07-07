@@ -7,25 +7,25 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import StringIO
 
+from io import StringIO
 from unittest import TestCase, main
 
-from skbio.io.clustal import (_clustal_to_alignment, _alignment_to_clustal,
-                              _clustal_sniffer)
-from skbio.io.clustal import (_is_clustal_seq_line, _delete_trailing_number,
-                              _check_length, _label_line_parser)
+from skbio.io.format.clustal import (
+    _clustal_to_alignment, _alignment_to_clustal, _clustal_sniffer,
+    _is_clustal_seq_line, _delete_trailing_number, _check_length,
+    _label_line_parser)
 
 from skbio.io import ClustalFormatError
 
 
 class ClustalHelperTests(TestCase):
     def test_label_line_parser(self):
-        self.assertEqual(_label_line_parser(StringIO('abc\tucag')),
+        self.assertEqual(_label_line_parser(StringIO(u'abc\tucag')),
                          ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
-            _label_line_parser(StringIO('abctucag'))
+            _label_line_parser(StringIO(u'abctucag'))
 
     def test_is_clustal_seq_line(self):
         ic = _is_clustal_seq_line
@@ -78,11 +78,12 @@ class ClustalIOTests(TestCase):
 
     def setUp(self):
         self.valid_clustal_out = [
-            StringIO('abc\tucag'),
-            StringIO('abc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nabc\taaa\n'),
-            StringIO('\n'.join(['abc uca', 'def ggg ccc'])),
-            StringIO('\n'.join(['abc uca ggg', 'def ggg ccc'])),
-            StringIO("""CLUSTAL
+            StringIO(u'CLUSTAL\n\nabc\tucag'),
+            StringIO(u'CLUSTAL\n\nabc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nab'
+                     'c\taaa\n'),
+            StringIO(u'\n'.join(['CLUSTAL\n', 'abc uca', 'def ggg ccc'])),
+            StringIO(u'\n'.join(['CLUSTAL\n', 'abc uca ggg', 'def ggg ccc'])),
+            StringIO(u"""CLUSTAL
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -91,7 +92,7 @@ xyz             ------------------------------------------------------------
 
 
 """),
-            StringIO("""CLUSTAL
+            StringIO(u"""CLUSTAL
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -103,7 +104,7 @@ abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC
 def             -----------------------------------------CGCGAUGCAUGCAU-CGAU
 xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
 """),
-            StringIO("""CLUSTAL W (1.82) multiple sequence alignment
+            StringIO(u"""CLUSTAL W (1.82) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -119,7 +120,7 @@ xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
 abc             UGACUAGUCAGCUAGCAUCGAUCAGU
 def             CGAUCAGUCAGUCGAU----------
 xyz             UGCUGCAUCA----------------"""),
-            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
@@ -137,27 +138,27 @@ def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
             ]
-        self.invalid_clustal_out = [StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'dshfjsdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        '\t',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfj\tdfhdfsj',
-                                                        'hfsdjksdfhjsdf'])),
-                                    StringIO('\n'.join(['dshfjsdfhdfsj',
-                                                        'hfsdjk\tdfhjsdf'])),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+        self.invalid_clustal_out = [StringIO(u'\n'.join(['dshfjsdfhdfsj',
+                                                         'hfsdjksdfhjsdf'])),
+                                    StringIO(u'\n'.join(['hfsdjksdfhjsdf'])),
+                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
+                                                         'dshfjsdfhdfsj',
+                                                         'hfsdjksdfhjsdf'])),
+                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
+                                                         '\t',
+                                                         'hfsdjksdfhjsdf'])),
+                                    StringIO(u'\n'.join(['dshfj\tdfhdfsj',
+                                                         'hfsdjksdfhjsdf'])),
+                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
+                                                         'hfsdjk\tdfhjsdf'])),
+                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 ------------------------------------------------------------
 adk -----GGGGGGG------------------------------------------------
 """),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -167,7 +168,7 @@ adk -----GGGGGGG------------------------------------------------
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG---------------------------------------------
 """),
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -178,7 +179,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCA
 adk -----GGGGGGG---------------------------------------------
 """),
 
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -186,7 +187,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG------------------------------------------------
 """),
 
-                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
 
 
 GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -209,7 +210,7 @@ UGCUGCAUCA---------------- 33
         self.assertEqual(dict(result), {})
 
     def test_alignment_to_clustal_with_bad_input(self):
-        BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
+        BAD = StringIO(u'\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
         result = _clustal_to_alignment(BAD, strict=False)
         self.assertEqual(dict(result), {})
         # should fail unless we turned strict processing off
@@ -218,17 +219,13 @@ UGCUGCAUCA---------------- 33
             dict(_clustal_to_alignment(BAD))
 
     def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
-        import os
         for valid_out in self.valid_clustal_out:
-            fname = "test.aln"
-            testfile = open(fname, 'w')
             result_before = _clustal_to_alignment(valid_out)
-            _alignment_to_clustal(result_before, testfile)
-            testfile.close()
-            testfile = open(fname, 'r')
-            result_after = _clustal_to_alignment(testfile)
+            with StringIO() as fh:
+                _alignment_to_clustal(result_before, fh)
+                fh.seek(0)
+                result_after = _clustal_to_alignment(fh)
             self.assertEqual(result_before, result_after)
-        os.remove(fname)
 
     def test_invalid_alignment_to_clustal_and_clustal_to_alignment(self):
         for invalid_out in self.invalid_clustal_out:
