@@ -8,149 +8,554 @@
 
 from __future__ import absolute_import, division, print_function
 
-from six import StringIO, BytesIO
-from requests import HTTPError
-
 import unittest
 import tempfile
+import shutil
+import io
+import os.path
 
-from skbio.io.util import open_file, open_files, _is_string_or_bytes
+import httpretty
+
+import skbio.io
+from skbio.io.registry import open_file
+from skbio.util import get_data_path
 
 
-class TestFilePathOpening(unittest.TestCase):
-    def test_is_string_or_bytes(self):
-        self.assertTrue(_is_string_or_bytes('foo'))
-        self.assertTrue(_is_string_or_bytes(u'foo'))
-        self.assertTrue(_is_string_or_bytes(b'foo'))
-        self.assertFalse(_is_string_or_bytes(StringIO('bar')))
-        self.assertFalse(_is_string_or_bytes([1]))
+class TestOpen(unittest.TestCase):
+    def test_open_invalid_mode(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([], mode='a')
 
-    def test_file_closed(self):
-        """File gets closed in decorator"""
-        f = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        with open_file(filepath) as fh:
-            pass
+    def test_open_invalid_source(self):
+        with self.assertRaises(skbio.io.IOSourceError):
+            skbio.io.open(42)
+
+    def test_open_invalid_source_compression(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], compression='gzip')
+
+    def test_open_invalid_source_encoding(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], encoding='binary')
+
+        with self.assertRaises(ValueError):
+            skbio.io.open([u'foo'], encoding='binary', newline='\r')
+
+    def test_open_invalid_compression(self):
+        with self.assertRaises(ValueError):
+            skbio.io.open(io.BytesIO(), compression='foo')
+
+
+class ReadableBinarySourceTests(object):
+    def check_closed(self, file, expected):
+        if hasattr(file, 'closed'):
+            self.assertEqual(file.closed, expected)
+
+    def check_open_state_contents(self, file, contents, is_binary, **kwargs):
+        result = skbio.io.open(file, **kwargs)
+        if is_binary:
+            self.assertIsInstance(result, (io.BufferedReader,
+                                           io.BufferedRandom))
+        else:
+            self.assertIsInstance(result, io.TextIOBase)
+        self.assertTrue(result.readable())
+        self.assertEqual(result.read(), contents)
+        self.assertFalse(result.closed)
+
+        result.close()
+        self.assertTrue(result.closed)
+        self.check_closed(file, True)
+
+    def check_open_file_state_contents(self, file, contents, is_binary,
+                                       **kwargs):
+        with open_file(file, **kwargs) as f:
+            if is_binary:
+                self.assertIsInstance(f, (io.BufferedReader,
+                                          io.BufferedRandom))
+            else:
+                self.assertIsInstance(f, io.TextIOBase)
+            self.assertTrue(f.readable())
+            self.assertEqual(f.read(), contents)
+        self.assertEqual(f.closed, self.expected_close)
+
+        f.close()
+        self.assertTrue(f.closed)
+        self.check_closed(file, True)
+
+    def check_open_buffer_close_behaviour(self, file, **kwargs):
+        if hasattr(file, 'close'):
+            wrapped = skbio.io.open(file, **kwargs)
+            file.close()
+            self.assertTrue(wrapped.closed)
+
+    def check_open_file_buffer_close_behaviour(self, file, **kwargs):
+        if hasattr(file, 'close'):
+            with open_file(file, **kwargs) as wrapped:
+                file.close()
+                self.assertTrue(wrapped.closed)
+
+    def check_open_gc_behaviour(self, file, **kwargs):
+        def mangle(file):
+            result = skbio.io.open(file, **kwargs)
+            self.assertIsInstance(result, io.TextIOBase)
+
+        f = skbio.io.open(file, encoding='binary')
+        mangle(f)
+        self.assertFalse(f.closed)
+        f.close()
+
+    def check_open_file_gc_behaviour(self, file, **kwargs):
+        def mangle(file):
+            with open_file(file, **kwargs) as result:
+                self.assertIsInstance(result, io.TextIOBase)
+
+        with open_file(file, encoding='binary') as f:
+            mangle(f)
+            self.assertFalse(f.closed)
+
+    def test_open_gc_binary(self):
+        self.check_open_gc_behaviour(self.read_file)
+
+    def test_open_gc_encoding(self):
+        self.check_open_gc_behaviour(self.encoded_file)
+
+    def test_open_gc_compression(self):
+        self.check_open_gc_behaviour(self.gzip_file)
+        self.check_open_gc_behaviour(self.bz2_file)
+
+    def test_open_gc_compression_encoding(self):
+        self.check_open_gc_behaviour(self.gzip_encoded_file)
+        self.check_open_gc_behaviour(self.bz2_encoded_file)
+
+    def test_open_file_gc_binary(self):
+        self.check_open_file_gc_behaviour(self.read_file)
+
+    def test_open_file_gc_encoding(self):
+        self.check_open_file_gc_behaviour(self.encoded_file)
+
+    def test_open_file_gc_compression(self):
+        self.check_open_file_gc_behaviour(self.gzip_file)
+        self.check_open_file_gc_behaviour(self.bz2_file)
+
+    def test_open_file_gc_compression_encoding(self):
+        self.check_open_file_gc_behaviour(self.gzip_encoded_file)
+        self.check_open_file_gc_behaviour(self.bz2_encoded_file)
+
+    def test_open_underclose_binary(self):
+        self.check_open_buffer_close_behaviour(self.read_file)
+
+    def test_open_underclose_encoding(self):
+        self.check_open_buffer_close_behaviour(self.encoded_file)
+
+    def test_open_underclose_compression(self):
+        self.check_open_buffer_close_behaviour(self.gzip_file)
+        self.check_open_buffer_close_behaviour(self.bz2_file)
+
+    def test_open_underclose_compression_encoding(self):
+        self.check_open_buffer_close_behaviour(self.gzip_encoded_file)
+        self.check_open_buffer_close_behaviour(self.bz2_encoded_file)
+
+    def test_open_file_underclose_binary(self):
+        self.check_open_file_buffer_close_behaviour(self.read_file)
+
+    def test_open_file_underclose_encoding(self):
+        self.check_open_file_buffer_close_behaviour(self.encoded_file)
+
+    def test_open_file_underclose_compression(self):
+        self.check_open_file_buffer_close_behaviour(self.gzip_file)
+        self.check_open_file_buffer_close_behaviour(self.bz2_file)
+
+    def test_open_file_underclose_compression_encoding(self):
+        self.check_open_file_buffer_close_behaviour(self.gzip_encoded_file)
+        self.check_open_file_buffer_close_behaviour(self.bz2_encoded_file)
+
+    def test_open_binary(self):
+        self.check_open_state_contents(self.read_file, self.binary_contents,
+                                       True, mode='r', encoding='binary')
+
+    def test_open_binary_compression_none(self):
+        self.check_open_state_contents(self.read_file, self.binary_contents,
+                                       True, mode='r', encoding='binary',
+                                       compression=None)
+
+    def test_open_encoding(self):
+        self.check_open_state_contents(self.encoded_file,
+                                       self.decoded_contents, False,
+                                       mode='r', encoding=self.encoding)
+
+    def test_open_auto_compression_binary(self):
+        self.check_open_state_contents(self.gzip_file,
+                                       self.binary_contents, True,
+                                       mode='r', encoding='binary',
+                                       compression='auto')
+
+        self.check_open_state_contents(self.bz2_file,
+                                       self.binary_contents, True,
+                                       mode='r', encoding='binary',
+                                       compression='auto')
+
+    def test_open_gzip_compression_binary(self):
+        self.check_open_state_contents(self.gzip_file,
+                                       self.binary_contents, True,
+                                       mode='r', encoding='binary',
+                                       compression='gzip')
+
+    def test_open_bz2_compression_binary(self):
+        self.check_open_state_contents(self.bz2_file,
+                                       self.binary_contents, True,
+                                       mode='r', encoding='binary',
+                                       compression='bz2')
+
+    def test_open_default_compression_encoding(self):
+        self.check_open_state_contents(self.gzip_encoded_file,
+                                       self.decoded_contents, False,
+                                       mode='r', encoding=self.encoding)
+
+        self.check_open_state_contents(self.bz2_encoded_file,
+                                       self.decoded_contents, False,
+                                       mode='r', encoding=self.encoding)
+
+    def test_open_file_binary(self):
+        self.check_open_file_state_contents(self.read_file,
+                                            self.binary_contents,
+                                            True, mode='r', encoding='binary')
+
+    def test_open_file_binary_compression_none(self):
+        self.check_open_file_state_contents(self.read_file,
+                                            self.binary_contents,
+                                            True, mode='r', encoding='binary',
+                                            compression=None)
+
+    def test_open_file_encoding(self):
+        self.check_open_file_state_contents(self.encoded_file,
+                                            self.decoded_contents, False,
+                                            mode='r', encoding=self.encoding)
+
+    def test_open_file_auto_compression_binary(self):
+        self.check_open_file_state_contents(self.gzip_file,
+                                            self.binary_contents, True,
+                                            mode='r', encoding='binary',
+                                            compression='auto')
+
+        self.check_open_file_state_contents(self.bz2_file,
+                                            self.binary_contents, True,
+                                            mode='r', encoding='binary',
+                                            compression='auto')
+
+    def test_open_file_gzip_compression_binary(self):
+        self.check_open_file_state_contents(self.gzip_file,
+                                            self.binary_contents, True,
+                                            mode='r', encoding='binary',
+                                            compression='gzip')
+
+    def test_open_file_bz2_compression_binary(self):
+        self.check_open_file_state_contents(self.bz2_file,
+                                            self.binary_contents, True,
+                                            mode='r', encoding='binary',
+                                            compression='bz2')
+
+    def test_open_file_default_compression_encoding(self):
+        self.check_open_file_state_contents(self.gzip_encoded_file,
+                                            self.decoded_contents, False,
+                                            mode='r', encoding=self.encoding)
+
+        self.check_open_file_state_contents(self.bz2_encoded_file,
+                                            self.decoded_contents, False,
+                                            mode='r', encoding=self.encoding)
+
+
+class ReadableSourceTest(unittest.TestCase):
+    def setUp(self):
+        self.read_file = self.get_fileobj(get_data_path("example_file"))
+        self.gzip_file = \
+            self.get_fileobj(get_data_path("example_file.gz"))
+        self.bz2_file = \
+            self.get_fileobj(get_data_path("example_file.bz2"))
+        self.encoded_file = self.get_fileobj(get_data_path("big5_file"))
+        self.gzip_encoded_file = \
+            self.get_fileobj(get_data_path("big5_file.gz"))
+        self.bz2_encoded_file = \
+            self.get_fileobj(get_data_path("big5_file.bz2"))
+
+        self.binary_contents = (b"This is some content\n"
+                                b"It occurs on more than one line\n")
+        self.decoded_contents = u'\u4f60\u597d\n'  # Ni Hau
+        self.compression = 'gzip'
+        self.encoding = "big5"
+
+    def tearDown(self):
+        self.safe_close(self.read_file)
+        self.safe_close(self.gzip_file)
+        self.safe_close(self.bz2_file)
+        self.safe_close(self.encoded_file)
+        self.safe_close(self.gzip_encoded_file)
+        self.safe_close(self.bz2_encoded_file)
+
+    def safe_close(self, f):
+        if hasattr(f, 'close'):
+            f.close()
+
+
+class WritableBinarySourceTests(object):
+    def check_closed(self, file, expected):
+        if hasattr(file, 'closed'):
+            self.assertEqual(file.closed, expected)
+
+    def check_open_state_contents(self, file, contents, is_binary,
+                                  **kwargs):
+        result = skbio.io.open(file, mode='w', **kwargs)
+        if is_binary:
+            self.assertIsInstance(result, (io.BufferedWriter,
+                                           io.BufferedRandom))
+        else:
+            self.assertIsInstance(result, io.TextIOBase)
+        self.assertTrue(result.writable())
+
+        result.write(contents)
+        self.assertFalse(result.closed)
+
+        if self.expected_close:
+            result.close()
+            self.assertTrue(result.closed)
+            self.check_closed(file, True)
+
+    def test_open_binary(self):
+        self.check_open_state_contents(self.binary_file, self.binary_contents,
+                                       True, encoding='binary',
+                                       compression=None)
+
+        self.assertEqual(self.get_contents(self.binary_file),
+                         self.binary_contents)
+
+    def test_open_gzip(self):
+        self.check_open_state_contents(self.gzip_file, self.text_contents,
+                                       False, compression='gzip')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_file)[10:],
+                         self.gzip_contents[10:])
+
+    def test_open_bz2(self):
+        self.check_open_state_contents(self.bz2_file, self.text_contents,
+                                       False, compression='bz2')
+
+        self.assertEqual(self.get_contents(self.bz2_file),
+                         self.bz2_contents)
+
+    def test_open_encoding(self):
+        self.check_open_state_contents(self.big5_file, self.decoded_contents,
+                                       False, encoding='big5')
+
+        self.assertEqual(self.get_contents(self.big5_file),
+                         self.encoded_contents)
+
+    def test_open_gzip_encoding(self):
+        self.check_open_state_contents(self.gzip_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='gzip', encoding='big5')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
+                         self.gzip_encoded_contents[10:])
+
+    def test_open_bz2_encoding(self):
+        self.check_open_state_contents(self.bz2_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='bz2', encoding='big5')
+
+        self.assertEqual(self.get_contents(self.bz2_encoded_file),
+                         self.bz2_encoded_contents)
+
+
+class WritableSourceTest(unittest.TestCase):
+    def setUp(self):
+        self._dir = tempfile.mkdtemp()
+
+        with io.open(get_data_path('example_file'), mode='rb') as f:
+            self.binary_contents = f.read()
+        self.binary_file = self._make_file('example_file')
+
+        with io.open(get_data_path('big5_file'), mode='rb') as f:
+            self.encoded_contents = f.read()
+        self.big5_file = self._make_file('big5_file')
+
+        with io.open(get_data_path('example_file.gz'), mode='rb') as f:
+            self.gzip_contents = f.read()
+        self.gzip_file = self._make_file('example_file.gz')
+
+        with io.open(get_data_path('example_file.bz2'), mode='rb') as f:
+            self.bz2_contents = f.read()
+        self.bz2_file = self._make_file('example_file.bz2')
+
+        with io.open(get_data_path('big5_file.gz'), mode='rb') as f:
+            self.gzip_encoded_contents = f.read()
+        self.gzip_encoded_file = self._make_file('big5_file.gz')
+
+        with io.open(get_data_path('big5_file.bz2'), mode='rb') as f:
+            self.bz2_encoded_contents = f.read()
+        self.bz2_encoded_file = self._make_file('big5_file.bz2')
+
+        self.decoded_contents = self.encoded_contents.decode('big5')
+        self.text_contents = self.binary_contents.decode('utf8')
+
+    def tearDown(self):
+        shutil.rmtree(self._dir)
+        self.safe_close(self.binary_file)
+        self.safe_close(self.gzip_file)
+        self.safe_close(self.bz2_file)
+        self.safe_close(self.big5_file)
+        self.safe_close(self.gzip_encoded_file)
+        self.safe_close(self.bz2_encoded_file)
+
+    def safe_close(self, f):
+        if hasattr(f, 'close'):
+            f.close()
+
+    def _make_file(self, name):
+        return self.get_fileobj(os.path.join(self._dir, name))
+
+
+class TestReadFilepath(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = True
+
+    def get_fileobj(self, path):
+        return path
+
+
+class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = True
+
+    def get_fileobj(self, path):
+        return path
+
+    def get_contents(self, file):
+        with io.open(file, mode='rb') as f:
+            return f.read()
+
+
+class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = True
+
+    def setUp(self):
+        super(TestReadURL, self).setUp()
+        httpretty.enable()
+
+        for file in (get_data_path('example_file'),
+                     get_data_path('big5_file'),
+                     get_data_path('example_file.gz'),
+                     get_data_path('example_file.bz2'),
+                     get_data_path('big5_file.gz'),
+                     get_data_path('big5_file.bz2')):
+
+            with io.open(file, mode='rb') as f:
+                httpretty.register_uri(httpretty.GET, self.get_fileobj(file),
+                                       body=f.read(),
+                                       content_type="application/octet-stream")
+
+    def tearDown(self):
+        super(TestReadURL, self).setUp()
+        httpretty.disable()
+
+    def get_fileobj(self, path):
+        return "http://example.com/" + os.path.split(path)[1]
+
+
+class TestReadBytesIO(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        with io.open(path, mode='rb') as f:
+            return io.BytesIO(f.read())
+
+
+class TestWriteBytesIO(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return io.BytesIO()
+
+    def get_contents(self, file):
+        return file.getvalue()
+
+    def test_open_gzip(self):
+        self.check_open_state_contents(self.gzip_file, self.text_contents,
+                                       False, compression='gzip')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_file)[10:],
+                         self.gzip_contents[23:])
+
+    def test_open_gzip_encoding(self):
+        self.check_open_state_contents(self.gzip_encoded_file,
+                                       self.decoded_contents, False,
+                                       compression='gzip', encoding='big5')
+
+        # The first 10 bytes of a gzip header include a timestamp, so skip.
+        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
+                         self.gzip_encoded_contents[20:])
+
+
+class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return io.open(path, mode='rb')
+
+
+class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return io.open(path, mode='w+b')
+
+    def get_contents(self, file):
+        file.close()
+        with io.open(file.name, mode='rb') as f:
+            return f.read()
+
+
+class TestIterableReaderWriter(unittest.TestCase):
+    def test_open(self):
+        def gen():
+            yield u'a'
+            yield u'b'
+            yield u'c'
+        list_ = list(gen())
+
+        for input_ in gen(), list_:
+            with skbio.io.open(input_) as result:
+                self.assertIsInstance(result, io.TextIOBase)
+                self.assertEqual(result.read(), u'abc')
+
+    def test_open_with_newline(self):
+        l = [u'a\r', u'b\r', u'c\r']
+        with skbio.io.open(l, newline='\r') as result:
+            self.assertIsInstance(result, io.TextIOBase)
+            self.assertEqual(result.readlines(), l)
+
+    def test_open_invalid_iterable(self):
+        with self.assertRaises(skbio.io.IOSourceError):
+            skbio.io.open([b'abc'])
+
+    def test_open_empty_iterable(self):
+        with skbio.io.open([]) as result:
+            self.assertIsInstance(result, io.TextIOBase)
+            self.assertEqual(result.read(), u'')
+
+    def test_open_write_mode(self):
+        l = []
+        with skbio.io.open(l, mode='w') as fh:
+            fh.write(u'abc')
+        self.assertEqual(l, [u'abc'])
+
+        l = []
+        with skbio.io.open(l, mode='w', newline='\r') as fh:
+            fh.write(u'ab\nc\n')
+        self.assertEqual(l, [u'ab\r', u'c\r'])
+
         self.assertTrue(fh.closed)
-
-    def test_file_closed_harder(self):
-        """File gets closed in decorator, even if exceptions happen."""
-        f = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        try:
-            with open_file(filepath) as fh:
-                raise TypeError
-        except TypeError:
-            self.assertTrue(fh.closed)
-        else:
-            # If we're here, no exceptions have been raised inside the
-            # try clause, so the context manager swallowed them. No
-            # good.
-            raise Exception("`open_file` didn't propagate exceptions")
-
-    def test_filehandle(self):
-        """Filehandles slip through untouched"""
-        with tempfile.TemporaryFile('r') as fh:
-            with open_file(fh) as ffh:
-                self.assertTrue(fh is ffh)
-            # And it doesn't close the file-handle
-            self.assertFalse(fh.closed)
-
-    def test_StringIO(self):
-        """StringIO (useful e.g. for testing) slips through."""
-        f = StringIO("File contents")
-        with open_file(f) as fh:
-            self.assertTrue(fh is f)
-
-    def test_BytesIO(self):
-        """BytesIO (useful e.g. for testing) slips through."""
-        f = BytesIO(b"File contents")
-        with open_file(f) as fh:
-            self.assertTrue(fh is f)
-
-
-class TestFilePathsOpening(unittest.TestCase):
-    def test_files_closed(self):
-        """File gets closed in decorator"""
-        f = tempfile.NamedTemporaryFile('r')
-        f2 = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        filepath2 = f2.name
-        with open_files([filepath, filepath2]) as fhs:
-            pass
-        for fh in fhs:
-            self.assertTrue(fh.closed)
-
-    def test_files_closed_harder(self):
-        """File gets closed in decorator, even if exceptions happen."""
-        f = tempfile.NamedTemporaryFile('r')
-        f2 = tempfile.NamedTemporaryFile('r')
-        filepath = f.name
-        filepath2 = f2.name
-        try:
-            with open_files([filepath, filepath2]) as fhs:
-                raise TypeError
-        except TypeError:
-            for fh in fhs:
-                self.assertTrue(fh.closed)
-        else:
-            # If we're here, no exceptions have been raised inside the
-            # try clause, so the context manager swallowed them. No
-            # good.
-            raise Exception("`open_file` didn't propagate exceptions")
-
-    def test_filehandle(self):
-        """Filehandles slip through untouched"""
-        with tempfile.TemporaryFile('r') as fh:
-            with tempfile.TemporaryFile('r') as fh2:
-                with open_file([fh, fh2]) as fhs:
-                    self.assertTrue(fh is fhs[0])
-                    self.assertTrue(fh2 is fhs[1])
-                # And it doesn't close the file-handle
-                for fh in fhs:
-                    self.assertFalse(fh.closed)
-
-    def test_StringIO(self):
-        """StringIO (useful e.g. for testing) slips through."""
-        f = StringIO("File contents")
-        with open_files([f]) as fhs:
-            self.assertTrue(fhs[0] is f)
-
-    def test_BytesIO(self):
-        """BytesIO (useful e.g. for testing) slips through."""
-        f = BytesIO(b"File contents")
-        with open_files([f]) as fhs:
-            self.assertTrue(fhs[0] is f)
-
-    def test_remote_failing_fna(self):
-        with self.assertRaises(HTTPError) as e:
-            with open_files(['http://google.com/foo-seqs.fna']) as fhs:
-                for f in fhs:
-                    f.read()
-        self.assertEqual(str(e.exception), '404 Client Error: Not Found')
-
-    def test_remote_fna(self):
-        url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
-               '00&retmode=text&tool=skbio&db=nucleotide&id=459567&rettype=fas'
-               'ta&retstart=0&email=foo@bar.com')
-        with open_files([url]) as fhs:
-            for f in fhs:
-                self.assertEqual(f.read(), FASTA)
-
-    def test_remote_fna_kwargs(self):
-        url = ('http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmax=1'
-               '00&retmode=text&tool=skbio&db=nucleotide&id=459567&rettype=fas'
-               'ta&retstart=0&email=foo@bar.com')
-        with open_files([url], stream=True) as fhs:
-            for f in fhs:
-                self.assertEqual(f.read(), FASTA)
-
-FASTA = (b'>gi|459567|dbj|D28543.1|HPCNS5PC Hepatitis C virus gene for NS5 pr'
-         b'otein, partial cds, isolate: B4/92\nGAGCACGACATCTACCAATGTTGCCAACTG'
-         b'AACCCAGAGGCCAAGAAAGCCATAACATCCTTGACAGAGA\nGGCTTTACCTTGGTGGTCCCATGT'
-         b'TTAACTCGCGAGGTCAGCTCTGCGGGACACGCAGATGCCGGGCGAG\nCGGGGTTCTTCCAACCAG'
-         b'CATGGGCAATACCCTCACATGTTACCTGAAAGCACAGGCAGCTTGCCGTGCA\nGCAGGCCTCACC'
-         b'AATTCTGACATGTTGGTTTGCGGAGATGATTTGGTAGTCATCACTGAGAGTGCCGGAG\nTC\n\n')
+        fh.close()
+        self.assertTrue(fh.closed)
 
 
 if __name__ == '__main__':

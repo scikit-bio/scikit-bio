@@ -1,8 +1,8 @@
 """
-PHYLIP multiple sequence alignment format (:mod:`skbio.io.phylip`)
-==================================================================
+PHYLIP multiple sequence alignment format (:mod:`skbio.io.format.phylip`)
+=========================================================================
 
-.. currentmodule:: skbio.io.phylip
+.. currentmodule:: skbio.io.format.phylip
 
 The PHYLIP file format stores a multiple sequence alignment. The format was
 originally defined and used in Joe Felsenstein's PHYLIP package [1]_, and has
@@ -133,10 +133,9 @@ Let's create an alignment with three DNA sequences of equal length:
 Now let's write the alignment to file in PHYLIP format, and take a look at the
 output:
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> fh = StringIO()
->>> aln.write(fh, format='phylip')
->>> print(fh.getvalue())
+>>> print(aln.write(fh, format='phylip').getvalue())
 3 16
 seq1      ACCGTTGTA- GTAGCT
 sequence-2A--GTCGAA- GTACCT
@@ -178,8 +177,7 @@ remap each of the IDs to integer-based IDs:
 We can now write the new alignment in PHYLIP format:
 
 >>> fh = StringIO()
->>> short_id_aln.write(fh, format='phylip')
->>> print(fh.getvalue())
+>>> print(short_id_aln.write(fh, format='phylip').getvalue())
 3 5
 1         ACCGT
 2         A--GT
@@ -206,14 +204,17 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 from skbio.alignment import Alignment
-from skbio.io import register_writer, PhylipFormatError
+from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
 
+phylip = create_format('phylip')
 
-@register_writer('phylip', Alignment)
+
+@phylip.writer(Alignment)
 def _alignment_to_phylip(obj, fh):
 
     if obj.is_empty():

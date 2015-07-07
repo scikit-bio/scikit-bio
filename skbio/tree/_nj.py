@@ -9,11 +9,11 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from six import StringIO
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
 from skbio.util._decorator import experimental
+from skbio.io._fileobject import StringIO
 
 
 @experimental(as_of="0.4.0")

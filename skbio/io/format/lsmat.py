@@ -1,8 +1,8 @@
 """
-Labeled square matrix format (:mod:`skbio.io.lsmat`)
-====================================================
+Labeled square matrix format (:mod:`skbio.io.format.lsmat`)
+===========================================================
 
-.. currentmodule:: skbio.io.lsmat
+.. currentmodule:: skbio.io.format.lsmat
 
 The labeled square matrix file format (``lsmat``) stores numeric square
 matrix data relating a set of objects along each axis. The format also stores
@@ -70,18 +70,21 @@ or writing to a file.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 import csv
 
 import numpy as np
 
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
-from skbio.io import (register_reader, register_writer, register_sniffer,
-                      LSMatFormatError)
+from skbio.io import create_format, LSMatFormatError
 
 
-@register_sniffer('lsmat')
+lsmat = create_format('lsmat')
+
+
+@lsmat.sniffer()
 def _lsmat_sniffer(fh):
     header = _find_header(fh)
 
@@ -101,22 +104,22 @@ def _lsmat_sniffer(fh):
     return False, {}
 
 
-@register_reader('lsmat', DissimilarityMatrix)
+@lsmat.reader(DissimilarityMatrix)
 def _lsmat_to_dissimilarity_matrix(fh, delimiter='\t'):
     return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
 
 
-@register_reader('lsmat', DistanceMatrix)
+@lsmat.reader(DistanceMatrix)
 def _lsmat_to_distance_matrix(fh, delimiter='\t'):
     return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
 
 
-@register_writer('lsmat', DissimilarityMatrix)
+@lsmat.writer(DissimilarityMatrix)
 def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter='\t'):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
-@register_writer('lsmat', DistanceMatrix)
+@lsmat.writer(DistanceMatrix)
 def _distance_matrix_to_lsmat(obj, fh, delimiter='\t'):
     _matrix_to_lsmat(obj, fh, delimiter)
 
@@ -166,10 +169,10 @@ def _lsmat_to_matrix(cls, fh, delimiter):
         else:
             raise LSMatFormatError(
                 "Encountered mismatched IDs while parsing the "
-                "dissimilarity matrix file. Found '%s' but expected "
-                "'%s'. Please ensure that the IDs match between the "
+                "dissimilarity matrix file. Found %r but expected "
+                "%r. Please ensure that the IDs match between the "
                 "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (row_id, expected_id))
+                "labels (first column)." % (str(row_id), str(expected_id)))
 
     if row_idx != num_ids - 1:
         raise LSMatFormatError("Expected %d row(s) of data, but found %d." %
@@ -198,7 +201,7 @@ def _parse_header(header, delimiter):
 
     if tokens[0]:
         raise LSMatFormatError(
-            "Header must start with delimiter %r." % delimiter)
+            "Header must start with delimiter %r." % str(delimiter))
 
     return [e.strip() for e in tokens[1:]]
 
@@ -217,12 +220,13 @@ def _parse_data(fh, delimiter):
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):
+    delimiter = "%s" % delimiter
     ids = obj.ids
     fh.write(_format_ids(ids, delimiter))
     fh.write('\n')
 
     for id_, vals in zip(ids, obj.data):
-        fh.write(id_)
+        fh.write("%s" % id_)
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=np.str)))
         fh.write('\n')

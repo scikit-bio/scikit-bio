@@ -6,7 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from future.builtins import range
 
 import re
@@ -155,7 +156,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
                 "supported." % cardinal_to_ordinal(idx + 1))
 
         if 'id' in seq.metadata:
-            id_ = seq.metadata['id']
+            id_ = '%s' % seq.metadata['id']
         else:
             id_ = ''
 
@@ -193,7 +194,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
                                      seq.__class__.__name__)
         else:
             seq_str = str(seq)
-        yield header, seq_str, qual
+        yield header, "%s" % seq_str, qual
 
 
 def _line_generator(fh, skip_blanks=False):

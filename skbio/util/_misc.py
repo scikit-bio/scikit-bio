@@ -13,8 +13,29 @@ from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from types import FunctionType
-
+import inspect
 from ._decorator import experimental, deprecated
+
+
+def make_sentinel(name):
+    return type(name, (object, ), {
+        '__repr__': lambda s: name,
+        '__str__': lambda s: name,
+        '__class__': None
+    })()
+
+
+def find_sentinels(function, sentinel):
+    keys = []
+    function_spec = inspect.getargspec(function)
+    if function_spec.defaults is not None:
+        # Concept from http://stackoverflow.com/a/12627202/579416
+        keywords_start = -len(function_spec.defaults)
+        for key, default in zip(function_spec.args[keywords_start:],
+                                function_spec.defaults):
+            if default is sentinel:
+                keys.append(key)
+    return keys
 
 
 class MiniRegistry(dict):
