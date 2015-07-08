@@ -16,6 +16,12 @@ degenerate character definitions. Additionally this module defines the
 ``GeneticCode`` class, which represents an immutable object that translates DNA
 or RNA sequences into protein sequences.
 
+The primary information stored for each different type of sequence object is
+the underlying sequence data itself. This is stored as an immutable Numpy
+array. Additionally, each type of sequence may include optional metadata
+and positional metadata. Note that metadata and positional metadata are
+mutable.
+
 Classes
 -------
 
