@@ -17,6 +17,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
+import six
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -753,7 +754,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if isinstance(node, str):
+        if isinstance(node, six.string_types):
             node = self.find(node)
 
         if not node.children:

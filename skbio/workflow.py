@@ -211,6 +211,8 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
+import six
+
 from skbio.util._decorator import experimental
 
 
@@ -505,7 +507,7 @@ class requires(object):
         elif isinstance(values, set):
             self.values = values
         else:
-            if isinstance(values, str):
+            if isinstance(values, six.string_types):
                 self.values = values
             elif isinstance(values, Iterable):
                 self.values = set(values)
