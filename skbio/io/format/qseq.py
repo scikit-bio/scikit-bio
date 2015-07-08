@@ -47,19 +47,27 @@ A QSeq file is composed of single-line records, delimited by tabs. There are
 
 For more details please refer to the CASAVA documentation [1]_.
 
+.. note:: When a QSeq file is read in to a scikit-bio object, the object's
+   `metadata` attribute is automatically populated with data corresponding
+   to the names above.
+
+.. note:: `lowercase` functionality is supported when reading QSeq files,
+   depending on the object type the file is being read in to. Refer to
+   specific object constructor documentation for details.
+
 .. note:: scikit-bio allows for the filter field to be ommitted, but it is not
    clear if this is part of the original format specification.
 
 Format Parameters
 -----------------
 The following parameters are the same as in FASTQ format
-(:mod:`skbio.io.fastq`):
+(:mod:`skbio.io.format.fastq`):
 
 - ``variant``: see ``variant`` parameter in FASTQ format
 - ``phred_offset``: see ``phred_offset`` parameter in FASTQ format
 
 The following additional parameters are the same as in FASTA format
-(:mod:`skbio.io.fasta`):
+(:mod:`skbio.io.format.fasta`):
 
 - ``constructor``: see ``constructor`` parameter in FASTA format
 - ``seq_num``: see ``seq_num`` parameter in FASTA format
