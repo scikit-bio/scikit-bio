@@ -797,7 +797,6 @@ class TestSniff(RegistryTest):
         self.assertTrue(self._check_f2)
         self.assertTrue(self._check_f3)
 
-
     def test_text_skip_binary(self):
         binf = self.registry.create_format('binf', encoding='binary')
         textf = self.registry.create_format('textf', encoding=None)
