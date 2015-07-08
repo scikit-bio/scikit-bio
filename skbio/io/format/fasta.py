@@ -132,8 +132,8 @@ the standard IUPAC lexicon (single-letter codes).
    This functionality depends on the type of object the data is
    being read into. For ``Sequence``
    objects, sciki-bio doesn't care about the case. However, for other object
-   types, such as :class:`skbio.DNA`, :class:`skbio.RNA`, and
-   :class:`skbio.Protein`, the `lowercase` parameter
+   types, such as :class:`skbio.sequence.DNA`, :class:`skbio.sequence.RNA`,
+   and :class:`skbio.sequence.Protein`, the `lowercase` parameter
    must be used to control case functionality. Refer to the documentation for
    the constructors for details.
 .. note:: Both ``-`` and ``.`` are supported as gap characters. See
