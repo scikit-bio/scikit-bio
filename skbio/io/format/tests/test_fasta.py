@@ -14,6 +14,8 @@ import io
 from unittest import TestCase, main
 from functools import partial
 
+import numpy as np
+
 from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.fasta import (
@@ -56,7 +58,8 @@ class SnifferTests(TestCase):
             'fasta_single_prot_seq_defaults',
             'fasta_10_seqs',
             'fasta_invalid_after_10_seqs',
-            'fasta_mixed_qual_scores'
+            'fasta_mixed_qual_scores',
+            'qual_3_seqs_non_defaults'
         ]))
 
         self.negative_fps = list(map(get_data_path, [
@@ -83,7 +86,6 @@ class SnifferTests(TestCase):
             'qual_3_seqs_defaults_extra',
             'qual_3_seqs_defaults_id_mismatch',
             'qual_3_seqs_defaults_length_mismatch',
-            'qual_3_seqs_non_defaults',
             'qual_description_newline_replacement_empty_str',
             'qual_description_newline_replacement_multi_char',
             'qual_description_newline_replacement_none',
@@ -149,8 +151,9 @@ class ReaderTests(TestCase):
         self.single = (
             [Sequence(
                 'ACGT-acgt.', metadata={'id': 'seq1', 'description': 'desc1'},
-                positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
-                                                 88888, 1, 3456]})],
+                positional_metadata={'quality':
+                                     np.asarray([10, 20, 30, 10, 0, 0, 0, 255,
+                                                 1, 255], dtype=np.uint8)})],
             {},
             list(map(get_data_path, ['fasta_single_seq',
                                      'fasta_max_width_1'])),
@@ -161,28 +164,38 @@ class ReaderTests(TestCase):
         self.multi = (
             [Sequence(
                 'ACGT-acgt.', metadata={'id': 'seq1', 'description': 'desc1'},
-                positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0,
-                                                 88888, 1, 3456]}),
+                positional_metadata={'quality':
+                                     np.asarray([10, 20, 30, 10, 0, 0, 0, 255,
+                                                 1, 255], dtype=np.uint8)}),
              Sequence('A', metadata={'id': '_____seq__2_', 'description': ''},
-                      positional_metadata={'quality': [42]}),
+                      positional_metadata={'quality':
+                                           np.asarray([42], dtype=np.uint8)}),
              Sequence(
                 'AACGGuA', metadata={'id': '', 'description': 'desc3'},
-                positional_metadata={'quality': [0, 0, 0, 0, 0, 0, 0]}),
+                positional_metadata={'quality':
+                                     np.asarray([0, 0, 0, 0, 0, 0, 0],
+                                                dtype=np.uint8)}),
              Sequence(
                 'ACGTTGCAccGG',
                 metadata={'id': '', 'description': ''},
-                positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775,
-                                                 40, 10, 10, 0]}),
+                positional_metadata={'quality':
+                                     np.asarray([55, 10, 0, 99, 1, 1, 8, 77,
+                                                 40, 10, 10, 0],
+                                                dtype=np.uint8)}),
              Sequence('ACGUU',
                       metadata={'id': '', 'description': ''},
-                      positional_metadata={'quality': [10, 9, 8, 7, 6]}),
+                      positional_metadata={'quality':
+                                           np.asarray([10, 9, 8, 7, 6],
+                                                      dtype=np.uint8)}),
              Sequence(
                  'pQqqqPPQQQ',
                  metadata={'id': 'proteinseq',
                            'description':
                                'detailed description \t\twith  new  lines'},
-                 positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42,
-                                                  42, 42, 43]})],
+                 positional_metadata={'quality':
+                                      np.asarray([42, 42, 255, 255, 42, 42, 42,
+                                                  42, 42, 43],
+                                                 dtype=np.uint8)})],
             {},
             list(map(get_data_path, ['fasta_multi_seq', 'fasta_max_width_5',
                                      'fasta_blank_lines_between_records',
@@ -216,11 +229,15 @@ class ReaderTests(TestCase):
         self.odd_labels_different_type = (
             [Protein('DEFQfp',
                      metadata={'id': '', 'description': ''},
-                     positional_metadata={'quality': [0, 0, 1, 5, 44, 0]},
+                     positional_metadata={'quality':
+                                          np.asarray([0, 0, 1, 5, 44, 0],
+                                                     dtype=np.uint8)},
                      validate=False),
              Protein(
                  'SKBI', metadata={'id': '', 'description': 'skbio'},
-                 positional_metadata={'quality': [1, 2, 33, 123456789]})],
+                 positional_metadata={'quality':
+                                      np.asarray([1, 2, 33, 123],
+                                                 dtype=np.uint8)})],
             {'constructor': partial(Protein, validate=False)},
             list(map(get_data_path, ['fasta_prot_seqs_odd_labels'])),
             list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
@@ -232,15 +249,19 @@ class ReaderTests(TestCase):
         self.sequence_collection_different_type = (
             [RNA('aUG',
                  metadata={'id': '', 'description': ''},
-                 positional_metadata={'quality': [20, 20, 21]},
+                 positional_metadata={'quality':
+                                      np.asarray([20, 20, 21],
+                                                 dtype=np.uint8)},
                  lowercase='introns'),
              RNA('AuC',
                  metadata={'id': 'rnaseq-1', 'description': 'rnaseq desc 1'},
-                 positional_metadata={'quality': [10, 9, 10]},
+                 positional_metadata={'quality':
+                                      np.asarray([10, 9, 10], dtype=np.uint8)},
                  lowercase='introns'),
              RNA('AUg',
                  metadata={'id': 'rnaseq-2', 'description': 'rnaseq desc 2'},
-                 positional_metadata={'quality': [9, 99, 999]},
+                 positional_metadata={'quality':
+                                      np.asarray([9, 99, 99], dtype=np.uint8)},
                  lowercase='introns')],
             {'constructor': partial(RNA, lowercase='introns')},
             list(map(get_data_path,
@@ -252,7 +273,9 @@ class ReaderTests(TestCase):
         self.lowercase_seqs = (
             [DNA('TAcg',
                  metadata={'id': 'f-o-o', 'description': 'b_a_r'},
-                 positional_metadata={'quality': [0, 1, 2, 3]},
+                 positional_metadata={'quality':
+                                      np.asarray([0, 1, 2, 3],
+                                                 dtype=np.uint8)},
                  lowercase='introns')],
             {'constructor': DNA, 'lowercase': 'introns'},
             list(map(get_data_path,
@@ -397,6 +420,12 @@ class ReaderTests(TestCase):
              QUALFormatError,
              'Quality scores must be greater than or equal to zero\.'),
 
+            # invalid qual scores (over 255)
+            ('fasta_3_seqs_defaults',
+             {'qual': get_data_path('qual_invalid_qual_scores_over_255')},
+             QUALFormatError,
+             'quality score\(s\) greater than 255'),
+
             # misc. invalid files used elsewhere in the tests
             ('fasta_invalid_after_10_seqs', {}, FASTAFormatError,
              'without sequence data'),
@@ -495,10 +524,10 @@ class ReaderTests(TestCase):
                 obs = reader_fn(fasta_fp)
                 self.assertEqual(obs, exp)
 
-                exp.positional_metadata.insert(0,
-                                               'quality',
-                                               [10, 20, 30, 10, 0, 0, 0,
-                                                88888, 1, 3456])
+                exp.positional_metadata.insert(
+                    0, 'quality',
+                    np.asarray([10, 20, 30, 10, 0, 0, 0, 255, 1, 255],
+                               dtype=np.uint8))
                 qual_fps = list(map(get_data_path,
                                     ['qual_single_seq', 'qual_max_width_1']))
                 for qual_fp in qual_fps:
@@ -519,10 +548,10 @@ class ReaderTests(TestCase):
                 obs = reader_fn(fasta_fp)
                 self.assertEqual(obs, exp)
 
-                exp.positional_metadata.insert(0,
-                                               'quality',
-                                               [10, 20, 30, 10, 0, 0, 0,
-                                                88888, 1, 3456])
+                exp.positional_metadata.insert(
+                    0, 'quality',
+                    np.asarray([10, 20, 30, 10, 0, 0, 0, 255, 1, 255],
+                               dtype=np.uint8))
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, qual=qual_fp)
                     self.assertEqual(obs, exp)
@@ -534,10 +563,10 @@ class ReaderTests(TestCase):
                 obs = reader_fn(fasta_fp, seq_num=4)
                 self.assertEqual(obs, exp)
 
-                exp.positional_metadata.insert(0,
-                                               'quality',
-                                               [55, 10, 0, 999, 1, 1, 8, 775,
-                                                40, 10, 10, 0])
+                exp.positional_metadata.insert(
+                    0, 'quality',
+                    np.asarray([55, 10, 0, 99, 1, 1, 8, 77, 40, 10, 10, 0],
+                               dtype=np.uint8))
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=4, qual=qual_fp)
                     self.assertEqual(obs, exp)
@@ -552,10 +581,10 @@ class ReaderTests(TestCase):
                 obs = reader_fn(fasta_fp, seq_num=6)
                 self.assertEqual(obs, exp)
 
-                exp.positional_metadata.insert(0,
-                                               'quality',
-                                               [42, 42, 442, 442, 42, 42, 42,
-                                                42, 42, 43])
+                exp.positional_metadata.insert(
+                    0, 'quality',
+                    np.asarray([42, 42, 255, 255, 42, 42, 42, 42, 42, 43],
+                               dtype=np.uint8))
                 for qual_fp in qual_fps:
                     obs = reader_fn(fasta_fp, seq_num=6, qual=qual_fp)
                     self.assertEqual(obs, exp)
@@ -609,8 +638,8 @@ class WriterTests(TestCase):
         self.bio_seq1 = DNA(
             'ACGT-acgt.',
             metadata={'id': 'seq1', 'description': 'desc1'},
-            positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0, 88888,
-                                             1, 3456]},
+            positional_metadata={'quality': [10, 20, 30, 10, 0, 0, 0, 255,
+                                             1, 255]},
             lowercase='introns')
         self.bio_seq2 = DNA(
             'A',
@@ -624,7 +653,7 @@ class WriterTests(TestCase):
             lowercase='introns')
         self.dna_seq = DNA(
             'ACGTTGCAccGG',
-            positional_metadata={'quality': [55, 10, 0, 999, 1, 1, 8, 775, 40,
+            positional_metadata={'quality': [55, 10, 0, 99, 1, 1, 8, 77, 40,
                                              10, 10, 0]},
             lowercase='introns')
         self.rna_seq = RNA('ACGUU',
@@ -635,7 +664,7 @@ class WriterTests(TestCase):
             metadata={'id': 'proteinseq',
                       'description': "\ndetailed\ndescription \t\twith "
                                      " new\n\nlines\n\n\n"},
-            positional_metadata={'quality': [42, 42, 442, 442, 42, 42, 42, 42,
+            positional_metadata={'quality': [42, 42, 255, 255, 42, 42, 42, 42,
                                              42, 43]},
             lowercase='introns')
 
