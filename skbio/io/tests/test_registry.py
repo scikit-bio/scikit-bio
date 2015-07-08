@@ -764,6 +764,39 @@ class TestSniff(RegistryTest):
         self.assertTrue(self._check_binf)
         self.assertTrue(self._check_textf)
 
+    def test_sniff_gzip(self):
+        expected = u"This is some content\nIt occurs on more than one line\n"
+
+        formata = self.registry.create_format('formata', encoding='binary')
+        formatb = self.registry.create_format('formatb')
+        formatc = self.registry.create_format('formatc')
+
+        @formata.sniffer()
+        def formata_sniffer(fh):
+            self._check_f1 = True
+            self.assertEqual(fh.read(), expected.encode('ascii'))
+            return False, {}
+
+        @formatb.sniffer()
+        def formatb_sniffer(fh):
+            self._check_f2 = True
+            self.assertEqual(fh.read(), expected)
+            return True, {}
+
+        @formatc.sniffer()
+        def formatc_sniffer(fh):
+            self._check_f3 = True
+            self.assertEqual(fh.read(), expected)
+            return False, {}
+
+        self._check_f1 = False
+        self._check_f2 = False
+        self._check_f3 = False
+        self.registry.sniff(get_data_path('example_file.gz'))
+        self.assertTrue(self._check_f1)
+        self.assertTrue(self._check_f2)
+        self.assertTrue(self._check_f3)
+
     def test_text_skip_binary(self):
         binf = self.registry.create_format('binf', encoding='binary')
         textf = self.registry.create_format('textf', encoding=None)

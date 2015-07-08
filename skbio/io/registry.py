@@ -394,8 +394,8 @@ class IORegistry(object):
             matches = []
             backup = fh.tell()
             if is_binary_file and kwargs.get('encoding', 'binary') == 'binary':
-                    matches = self._find_matches(fh, self._binary_formats,
-                                                 **kwargs)
+                matches = self._find_matches(fh, self._binary_formats,
+                                             **kwargs)
 
             if kwargs.get('encoding', None) != 'binary':
                 # We can always turn a binary file into a text file, but the
@@ -423,6 +423,7 @@ class IORegistry(object):
         for format in lookup.values():
             if format.sniffer_function is not None:
                 is_format, skwargs = format.sniffer_function(file, **kwargs)
+                file.seek(0)
                 if is_format:
                     matches.append((format.name, skwargs))
         return matches
