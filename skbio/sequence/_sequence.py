@@ -28,7 +28,7 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.sequence._base import ElasticLines
 from skbio.util._misc import chunk_str
-from skbio.util._decorator import stable
+from skbio.util._decorator import stable, experimental
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -1412,7 +1412,7 @@ class Sequence(collections.Sequence, SkbioObject):
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))
 
-    @stable(as_of="0.4.0")
+    @experimental(as_of="0.4.0")
     def distance(self, other, metric=None):
         """Compute the distance to another sequence.
 
@@ -1423,7 +1423,8 @@ class Sequence(collections.Sequence, SkbioObject):
         metric : function, optional
             Function used to compute the distance between the biological
             sequence and `other`. If ``None`` (the default),
-            ``scipy.spatial.distance.hamming`` will be used.
+            ``scipy.spatial.distance.hamming`` will be used. This function
+            should take two ``skbio.Sequence`` objects and return a ``float``.
 
         Returns
         -------
@@ -1469,15 +1470,18 @@ class Sequence(collections.Sequence, SkbioObject):
         # metric to apply and accept **kwargs
         other = self._munge_to_sequence(other, 'distance')
         if metric is None:
-            # Hamming requires equal length sequences. We are checking this
-            # here because the error you would get otherwise is cryptic.
-            if len(self) != len(other):
-                raise ValueError(
-                    "Sequences do not have equal length. "
-                    "Hamming distances can only be computed between "
-                    "sequences of equal length.")
-            metric = hamming
-        return float(metric(self.values, other.values))
+            return self._hamming(other)
+        return float(metric(self, other))
+
+    def _hamming(self, other):
+        # Hamming requires equal length sequences. We are checking this
+        # here because the error you would get otherwise is cryptic.
+        if len(self) != len(other):
+            raise ValueError(
+                "Sequences do not have equal length. "
+                "Hamming distances can only be computed between "
+                "sequences of equal length.")
+        return float(hamming(self.values, other.values))
 
     @stable(as_of="0.4.0")
     def matches(self, other):

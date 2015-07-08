@@ -199,7 +199,10 @@ class SequenceCollectionTests(TestCase):
         expected = [[0, 0.25],
                     [0.25, 0]]
         expected = DistanceMatrix(expected, ['d1', 'd2'])
-        actual = s1.distances(hamming)
+
+        def h(s1, s2):
+            return hamming(s1.values, s2.values)
+        actual = s1.distances(h)
         self.assertEqual(actual, expected)
 
         # alt distance function provided

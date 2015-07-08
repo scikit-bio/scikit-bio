@@ -147,6 +147,7 @@ import copy
 
 import numpy as np
 import scipy.stats
+import six
 
 from skbio.util._decorator import experimental, deprecated
 
@@ -827,7 +828,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 def _check_nans(x, switch=False):
     r"""Returns False if x is a nan and True is x is a string or number
     """
-    if isinstance(x, str):
+    if isinstance(x, six.string_types):
         return True
     elif isinstance(x, (float, int)):
         return not np.isnan(x)

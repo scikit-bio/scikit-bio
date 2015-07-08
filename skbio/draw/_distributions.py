@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
-from six import string_types
 
 from itertools import cycle
 import warnings
@@ -17,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Rectangle
+import six
 
 from skbio.util._decorator import deprecated
 
@@ -365,7 +365,7 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     Validates plotting options to make sure they are valid with the supplied
     data.
     """
-    if data is None or not data or isinstance(data, string_types):
+    if data is None or not data or isinstance(data, six.string_types):
         raise ValueError("The data must be a list type, and it cannot be "
                          "None or empty.")
 
@@ -562,7 +562,7 @@ def _is_single_matplotlib_color(color):
     """Returns True if color is a single (not a list) mpl color."""
     single_color = False
 
-    if (isinstance(color, str)):
+    if (isinstance(color, six.string_types)):
         single_color = True
     elif len(color) == 3 or len(color) == 4:
         single_color = True
