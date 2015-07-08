@@ -128,7 +128,8 @@ lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
 
 .. note:: scikit-bio supports both upper and lower case characters,
-   depending on the type of object the file is read in to. For ``Sequence``
+   For reading, this functionality depends on the type of object the data is
+   being read in to. For ``Sequence``
    objects, sciki-bio doesn't care about the case. However, for other object
    types, such as ``DNA``, ``RNA``, and ``Protein``, the `lowercase` parameter
    must be used to control case functionality. Refer to the documentation for
@@ -248,6 +249,10 @@ The following parameters are available to all FASTA format writers:
   even if ``max_width=3``. Thus, a 5-character line would be written. Default
   behavior is to not split sequence data or quality scores across multiple
   lines.
+
+- ``lowercase``: Boolean array of the same length as the sequence, which
+  indicates characters to write in lowercase. Characters in the sequence
+  corresponding to `True` values will be written in lowercase.
 
 .. note:: The FASTA format writers will have noticeably better runtime
    performance if ``id_whitespace_replacement`` and/or

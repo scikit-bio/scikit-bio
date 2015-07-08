@@ -93,9 +93,7 @@ files provided in the publication's supplementary data.
    *exactly* four lines. The quality header line won't have the sequence ID and
    description repeated.
 
-.. note:: `lowercase` functionality is supported by some scikit-bio objects,
-   the same as with FASTA. Refer to the specific object constructors for
-   details.
+.. note:: `lowercase` functionality is supported the same as with FASTA.
 
 Quality Score Variants
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -155,7 +153,7 @@ The following parameters are available to all FASTQ format readers and writers:
    provided at the same time.
 
 The following additional parameters are the same as in FASTA format
-(:mod:`skbio.io.fasta`):
+(:mod:`skbio.io.format.fasta`):
 
 - ``constructor``: see ``constructor`` parameter in FASTA format
 
@@ -166,6 +164,8 @@ The following additional parameters are the same as in FASTA format
 
 - ``description_newline_replacement``: see ``description_newline_replacement``
   parameter in FASTA format
+
+- ``lowercase``: see ``lowercase`` parameter in FASTA format
 
 Examples
 --------
