@@ -39,6 +39,10 @@ class Sequence(collections.Sequence, SkbioObject):
     ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ for, and
     provide operations specific to, each respective molecule type.
 
+    ``Sequence`` objects consist of the underlying sequence data, as well
+    as optional metadata and positional metadata. The underlying sequence
+    is immutable, while the metdata and positional metadata are mutable.
+
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
@@ -111,6 +115,26 @@ class Sequence(collections.Sequence, SkbioObject):
         length: 4
     -----------------------------
     0 ACGT
+
+    **Retrieving underlying sequence data:**
+
+    Retrieve underlying sequence:
+
+    >>> seq.values # doctest: +NORMALIZE_WHITESPACE
+    array(['A', 'C', 'G', 'T'],
+          dtype='|S1')
+
+    Underlying sequence immutable:
+
+    >>> seq.values = np.array(['T', 'C', 'G', 'A'], dtype='|S1')
+    Traceback (most recent call last):
+        ...
+    AttributeError: can't set attribute
+
+    >>> seq.values[0] = 'T'
+    Traceback (most recent call last):
+        ...
+    ValueError: assignment destination is read-only
 
     **Retrieving sequence metadata:**
 

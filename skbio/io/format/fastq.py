@@ -73,7 +73,9 @@ publication, including validating the implementation against the FASTQ example
 files provided in the publication's supplementary data.
 
 .. note:: IDs and descriptions will be parsed from sequence header lines in
-   exactly the same way as FASTA headers (:mod:`skbio.io.fasta`).
+   exactly the same way as FASTA headers (:mod:`skbio.io.format.fasta`). IDs,
+   descriptions, and quality scores are also stored automatically on the
+   object in the same way as with FASTA.
 
 .. note:: Blank or whitespace-only lines are only allowed at the beginning of
    the file, between FASTQ records, or at the end of the file. A blank or
@@ -83,13 +85,15 @@ files provided in the publication's supplementary data.
    scikit-bio will ignore leading and trailing whitespace characters on each
    line while reading.
 
-   Whitespace characters are not allowed within sequence data or quality
-   scores.
+.. note:: Validation may be performed depending on the type of object the data
+   is being read into. This behavior matches that of FASTA files.
 
 .. note:: scikit-bio will write FASTQ files in a normalized format, with each
    record section on a single line. Thus, each record will be composed of
    *exactly* four lines. The quality header line won't have the sequence ID and
    description repeated.
+
+.. note:: `lowercase` functionality is supported the same as with FASTA.
 
 Quality Score Variants
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -149,7 +153,7 @@ The following parameters are available to all FASTQ format readers and writers:
    provided at the same time.
 
 The following additional parameters are the same as in FASTA format
-(:mod:`skbio.io.fasta`):
+(:mod:`skbio.io.format.fasta`):
 
 - ``constructor``: see ``constructor`` parameter in FASTA format
 
@@ -160,6 +164,8 @@ The following additional parameters are the same as in FASTA format
 
 - ``description_newline_replacement``: see ``description_newline_replacement``
   parameter in FASTA format
+
+- ``lowercase``: see ``lowercase`` parameter in FASTA format
 
 Examples
 --------
