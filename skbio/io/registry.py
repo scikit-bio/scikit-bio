@@ -1123,26 +1123,22 @@ class Format(object):
 io_registry = IORegistry()
 
 
-@stable(as_of="0.4.0")
 @wraps(IORegistry.sniff)
 def sniff(file, **kwargs):
     return io_registry.sniff(file, **kwargs)
 
 
-@stable(as_of="0.4.0")
 @wraps(IORegistry.read)
 def read(file, format=None, into=None, verify=True, **kwargs):
     return io_registry.read(file, format=format, into=into, verify=verify,
                             **kwargs)
 
 
-@stable(as_of="0.4.0")
 @wraps(IORegistry.write)
 def write(obj, format, into, **kwargs):
     return io_registry.write(obj, format, into, **kwargs)
 
 
-@stable(as_of="0.4.0")
 @wraps(IORegistry.create_format)
 def create_format(*args, **kwargs):
     return io_registry.create_format(*args, **kwargs)
