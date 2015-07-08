@@ -557,7 +557,7 @@ Metadata:
     u'description': u'db-accession-149855'
     u'id': u'seq1'
 Positional metadata:
-    u'quality': <dtype: int64>
+    u'quality': <dtype: uint8>
 Stats:
     length: 7
 ------------------------------------------
@@ -569,7 +569,7 @@ Metadata:
     u'description': u'db-accession-34989'
     u'id': u'seq2'
 Positional metadata:
-    u'quality': <dtype: int64>
+    u'quality': <dtype: uint8>
 Stats:
     length: 5
 -----------------------------------------
