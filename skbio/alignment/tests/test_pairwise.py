@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from skbio import Protein, DNA, Sequence, Alignment
+from skbio import Protein, DNA, Alignment
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
@@ -530,8 +530,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-", metadata={'id': '0'})],
-                    [Sequence("ACGT", metadata={'id': '1'})], 1, 0, 0)
+        expected = ([DNA("ACG-", metadata={'id': '0'})],
+                    [DNA("ACGT", metadata={'id': '1'})], 1, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', metadata={'id': ''})]),
                             Alignment([DNA('ACGT', metadata={'id': ''})]),
@@ -552,10 +552,10 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([Sequence("ACG-", metadata={'id': 's1'}),
-                     Sequence("ACG-", metadata={'id': 's2'})],
-                    [Sequence("ACGT", metadata={'id': 's3'}),
-                     Sequence("ACGT", metadata={'id': 's4'})],
+        expected = ([DNA("ACG-", metadata={'id': 's1'}),
+                     DNA("ACG-", metadata={'id': 's2'})],
+                    [DNA("ACGT", metadata={'id': 's3'}),
+                     DNA("ACGT", metadata={'id': 's4'})],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', metadata={'id': 's1'}),
@@ -566,8 +566,8 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([Sequence("ACG", metadata={'id': '0'})],
-                    [Sequence("ACG", metadata={'id': '1'})], 6, 0, 0)
+        expected = ([DNA("ACG", metadata={'id': '0'})],
+                    [DNA("ACG", metadata={'id': '1'})], 6, 0, 0)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', metadata={'id': ''})]),
                             Alignment([DNA('ACGT', metadata={'id': ''})]),
@@ -582,8 +582,8 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         expected = ("G", "G", 6, 2, 2)
-        expected = ([Sequence("G", metadata={'id': '0'})],
-                    [Sequence("G", metadata={'id': '1'})], 6, 2, 2)
+        expected = ([DNA("G", metadata={'id': '0'})],
+                    [DNA("G", metadata={'id': '1'})], 6, 2, 2)
         actual = _traceback(tback_m, score_m,
                             Alignment([DNA('ACG', metadata={'id': ''})]),
                             Alignment([DNA('ACGT', metadata={'id': ''})]),

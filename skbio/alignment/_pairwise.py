@@ -967,12 +967,14 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
     for i in range(aln1_sequence_count):
         aligned_seq = ''.join(aligned_seqs1[i][::-1])
         seq_id = _get_seq_id(aln1[i], str(i))
-        aligned_seqs1[i] = Sequence(aligned_seq, metadata={'id': seq_id})
+        kls = aln1[i].__class__
+        aligned_seqs1[i] = kls(aligned_seq, metadata={'id': seq_id})
 
     for i in range(aln2_sequence_count):
         aligned_seq = ''.join(aligned_seqs2[i][::-1])
         seq_id = _get_seq_id(aln2[i], str(i + aln1_sequence_count))
-        aligned_seqs2[i] = Sequence(aligned_seq, metadata={'id': seq_id})
+        kls = aln2[i].__class__
+        aligned_seqs2[i] = kls(aligned_seq, metadata={'id': seq_id})
 
     return (aligned_seqs1, aligned_seqs2, best_score,
             current_col, current_row)
