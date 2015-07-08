@@ -37,7 +37,7 @@ with open('skbio/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(hit))
 
 classes = """
-    Development Status :: 1 - Planning
+    Development Status :: 4 - Beta
     License :: OSI Approved :: BSD License
     Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
