@@ -12,6 +12,11 @@ be in the *Extended Summary* section of the docstring, or in the case of
 deprecation, this information will appear as a note following the *Short
 Summary*.
 
+The following diagram illustrates the API lifecycle in scikit-bio:
+
+.. image:: assets/api-lifecycle.png
+   :align: center
+
 Definitions of the stability states and the information associated with each
 follow.
 
@@ -56,4 +61,9 @@ deprecation of the code (for example, because a function was determined to
 be scientifically invalid, or because the API was adapted, and users should
 be using a different version of the function).
 
-Using deprecated functionality will raise a DeprecationWarning.
+Using deprecated functionality will raise a ``DeprecationWarning``. Since
+Python 2.7, these types of warnings are **silenced by default**. When
+developing a tool that uses scikit-bio, we recommend enabling the display of
+deprecation warnings to be informed of upcoming API changes. For details on how
+to display deprecation warnings, see `Python's deprecation warning docs
+<https://docs.python.org/3/whatsnew/2.7.html#changes-to-the-handling-of-deprecation-warnings>`_.
