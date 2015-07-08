@@ -1891,29 +1891,31 @@ class Sequence(collections.Sequence, SkbioObject):
             if len(r) >= min_length:
                 yield r
 
-    def _to(self, **kwargs):
+    def _to(self, sequence=None, metadata=None, positional_metadata=None):
         """Return a copy of the current biological sequence.
 
         Returns a copy of the current biological sequence, optionally with
         updated attributes specified as keyword arguments.
 
+        Arguments are the same as those passed to the ``Sequence`` constructor.
+        The returned copy will have its attributes updated based on the
+        arguments. If an attribute is missing, the copy will keep the same
+        attribute as the current biological sequence. Valid attribute names
+        are `'sequence'`, `'metadata'`, and `'positional_metadata'`. Default
+        behavior is to return a copy of the current biological sequence
+        without changing any attributes.
+
         Parameters
         ----------
-        kwargs : dict, optional
-            Keyword arguments passed to the ``Sequence`` (or
-            subclass) constructor. The returned copy will have its attributes
-            updated based on the values in `kwargs`. If an attribute is
-            missing, the copy will keep the same attribute as the current
-            biological sequence. Valid attribute names are `'sequence'`,
-            `'metadata'`, `'positional_metadata'`. Default behavior is to
-            return a copy of the current biological sequence without changing
-            any attributes.
+        sequence : optional
+        metadata : optional
+        positional_metadata : optional
 
         Returns
         -------
         Sequence
             Copy of the current biological sequence, optionally with updated
-            attributes based on `kwargs`. Will be the same type as the current
+            attributes based on arguments. Will be the same type as the current
             biological sequence (`self`).
 
         Notes
@@ -1929,11 +1931,14 @@ class Sequence(collections.Sequence, SkbioObject):
         it's easy to forget to propagate attributes to the new instance).
 
         """
-        defaults = {'sequence': self._bytes,
-                    'metadata': self._metadata,
-                    'positional_metadata': self._positional_metadata}
-        defaults.update(kwargs)
-        return self._constructor(**defaults)
+        if sequence is None:
+            sequence = self._bytes
+        if metadata is None:
+            metadata = self._metadata
+        if positional_metadata is None:
+            positional_metadata = self._positional_metadata
+        return self._constructor(sequence=sequence, metadata=metadata,
+                                 positional_metadata=positional_metadata)
 
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
