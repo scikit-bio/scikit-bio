@@ -933,7 +933,12 @@ def _parse_quality_scores(chunks):
         raise QUALFormatError(
             "Encountered negative quality score(s). Quality scores must be "
             "greater than or equal to zero.")
-    return quality
+    if (quality > 255).any():
+        raise QUALFormatError(
+            "Encountered quality score(s) greater than 255. scikit-bio only "
+            "supports quality scores in the range 0-255 (inclusive) when "
+            "reading QUAL files.")
+    return quality.astype(np.uint8, casting='unsafe', copy=False)
 
 
 def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
