@@ -22,6 +22,7 @@ cite, code {
     white-space: nowrap !important;
     border-radius: 4px !important;
     border: 1px solid #CCC !important;
+    font-style: normal !important;
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace !important;
 }
 

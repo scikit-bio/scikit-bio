@@ -11,14 +11,14 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
-   alignment
+   io
    sequence
+   alignment
    tree
    workflow
    draw
    diversity
    stats
-   io
    util
 
 User Documentation

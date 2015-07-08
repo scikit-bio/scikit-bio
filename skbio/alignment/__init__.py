@@ -1,5 +1,5 @@
 r"""
-Sequence collections and alignments (:mod:`skbio.alignment`)
+Alignments and Sequence collections (:mod:`skbio.alignment`)
 ============================================================
 
 .. currentmodule:: skbio.alignment
