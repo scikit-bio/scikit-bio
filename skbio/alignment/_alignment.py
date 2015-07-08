@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 
 import numpy as np
 from scipy.stats import entropy
+import six
 
 from skbio._base import SkbioObject
 from skbio.sequence import Sequence
@@ -182,7 +183,7 @@ class SequenceCollection(SkbioObject):
         0 ACCGT
 
         """
-        if isinstance(index, str):
+        if isinstance(index, six.string_types):
             return self.get_seq(index)
         else:
             return self._data[index]
