@@ -47,12 +47,12 @@ A QSeq file is composed of single-line records, delimited by tabs. There are
 
 For more details please refer to the CASAVA documentation [1]_.
 
-.. note:: When a QSeq file is read in to a scikit-bio object, the object's
+.. note:: When a QSeq file is read into a scikit-bio object, the object's
    `metadata` attribute is automatically populated with data corresponding
    to the names above.
 
 .. note:: `lowercase` functionality is supported when reading QSeq files,
-   depending on the object type the file is being read in to. Refer to
+   depending on the object type the file is being read into. Refer to
    specific object constructor documentation for details.
 
 .. note:: scikit-bio allows for the filter field to be ommitted, but it is not

@@ -85,9 +85,10 @@ Sequence Header
 Each sequence header consists of a single line beginning with a greater-than
 (``>``) symbol. Immediately following this is a sequence identifier (ID) and
 description separated by one or more whitespace characters. The sequence ID and
-description are stored in the sequence metadata attribute. Both are optional.
-Each will be represented as the empty string (``''``) in the metadata if it is
-not present in the header.
+description are stored in the sequence `metadata` attribute, under the `'id'`
+and `'description'` keys, repectively. Both are optional. Each will be
+represented as the empty string (``''``) in `metadata` if it is not present
+in the header.
 
 A sequence ID consists of a single *word*: all characters after the greater-
 than symbol and before the first whitespace character (if any) are taken as the
@@ -127,16 +128,17 @@ Biological sequence data follows the header, and can be split over multiple
 lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
 
-.. note:: scikit-bio supports both upper and lower case characters,
-   For reading, this functionality depends on the type of object the data is
-   being read in to. For ``Sequence``
+.. note:: scikit-bio supports both upper and lower case characters.
+   This functionality depends on the type of object the data is
+   being read into. For ``Sequence``
    objects, sciki-bio doesn't care about the case. However, for other object
-   types, such as ``DNA``, ``RNA``, and ``Protein``, the `lowercase` parameter
+   types, such as :class:`skbio.DNA`, :class:`skbio.RNA`, and
+   :class:`skbio.Protein`, the `lowercase` parameter
    must be used to control case functionality. Refer to the documentation for
-   the constructors for details. Both ``-``
-   and ``.`` are supported as gap characters. See :mod:`skbio.sequence` for
-   more details on how scikit-bio interprets sequence data in its in-memory
-   objects.
+   the constructors for details.
+.. note:: Both ``-`` and ``.`` are supported as gap characters. See
+   :mod:`skbio.sequence` for more details on how scikit-bio interprets
+   sequence data in its in-memory objects.
 
    Validation is performed for all scikit-bio objects which support it. This
    consists of all objects which enforce usage of IUPAC characters. If any
@@ -250,9 +252,11 @@ The following parameters are available to all FASTA format writers:
   behavior is to not split sequence data or quality scores across multiple
   lines.
 
-- ``lowercase``: Boolean array of the same length as the sequence, which
+- ``lowercase``: String or boolean array. If a string, it is treated as a key
+  into the positional metadata of the object. If a boolean array, it
   indicates characters to write in lowercase. Characters in the sequence
-  corresponding to `True` values will be written in lowercase.
+  corresponding to `True` values will be written in lowercase. The boolean
+  array must be the same length as the sequence.
 
 .. note:: The FASTA format writers will have noticeably better runtime
    performance if ``id_whitespace_replacement`` and/or

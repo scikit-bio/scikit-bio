@@ -86,7 +86,7 @@ files provided in the publication's supplementary data.
    line while reading.
 
 .. note:: Validation may be performed depending on the type of object the data
-   is being read in to. This behavior matches that of FASTA files.
+   is being read into. This behavior matches that of FASTA files.
 
 .. note:: scikit-bio will write FASTQ files in a normalized format, with each
    record section on a single line. Thus, each record will be composed of
