@@ -305,29 +305,6 @@ class SequenceCollection(SkbioObject):
         skbio.DistanceMatrix
             Matrix containing the distances between all pairs of sequences.
 
-        See Also
-        --------
-        skbio.DistanceMatrix
-        scipy.spatial.distance.hamming
-
-        Examples
-        --------
-        >>> from scipy.spatial.distance import hamming
-        >>> from skbio import SequenceCollection
-        >>> from skbio import DNA
-        >>> seqs = [DNA("ACCGGGTT", metadata={'id': "s1"}),
-        ...         DNA("ACTTGGTT", metadata={'id': "s2"}),
-        ...         DNA("ACTAGGTT", metadata={'id': "s3"})]
-        >>> a1 = SequenceCollection(seqs)
-        >>> print(a1.distances(hamming))
-        3x3 distance matrix
-        IDs:
-        's1', 's2', 's3'
-        Data:
-        [[ 0.     0.25   0.25 ]
-         [ 0.25   0.     0.125]
-         [ 0.25   0.125  0.   ]]
-
         """
         sequence_count = self.sequence_count()
         dm = np.zeros((sequence_count, sequence_count))
