@@ -84,9 +84,10 @@ Sequence Header
 ~~~~~~~~~~~~~~~
 Each sequence header consists of a single line beginning with a greater-than
 (``>``) symbol. Immediately following this is a sequence identifier (ID) and
-description separated by one or more whitespace characters. Both sequence ID
-and description are optional and are represented as the empty string (``''``)
-in scikit-bio's objects if they are not present in the header.
+description separated by one or more whitespace characters. The sequence ID and
+description are stored in the sequence metadata attribute. Both are optional.
+Each will be represented as the empty string (``''``) in the metadata if it is
+not present in the header.
 
 A sequence ID consists of a single *word*: all characters after the greater-
 than symbol and before the first whitespace character (if any) are taken as the
@@ -126,23 +127,20 @@ Biological sequence data follows the header, and can be split over multiple
 lines. The sequence data (i.e., nucleotides or amino acids) are stored using
 the standard IUPAC lexicon (single-letter codes).
 
-.. note:: scikit-bio supports both upper and lower case characters. Both ``-``
+.. note:: scikit-bio supports both upper and lower case characters,
+   depending on the type of object the file is read in to. For ``Sequence``
+   objects, sciki-bio doesn't care about the case. However, for other object
+   types, such as ``DNA``, ``RNA``, and ``Protein``, the `lowercase` parameter
+   must be used to control case functionality. Refer to the documentation for
+   the constructors for details. Both ``-``
    and ``.`` are supported as gap characters. See :mod:`skbio.sequence` for
    more details on how scikit-bio interprets sequence data in its in-memory
    objects.
 
-   Whitespace characters are **not** removed from the middle of the sequence
-   data. Likewise, other invalid IUPAC characters are **not** removed from
-   the sequence data as it is read. Thus, it is possible to create an invalid
-   in-memory sequence object (see warning below).
-
-.. warning:: In an effort to maintain reasonable performance while reading
-   FASTA files (which can be quite large), validation of sequence data is
-   **not** performed during reading. It is the responsibility of the user to
-   validate their in-memory representation of the data if desired (e.g., by
-   calling ``is_valid`` on the returned object). Thus, it is possible to read
-   invalid characters into objects (e.g. whitespace occurring in the middle of
-   a sequence, or invalid IUPAC DNA characters in a DNA sequence).
+   Validation is performed for all scikit-bio objects which support it. This
+   consists of all objects which enforce usage of IUPAC characters. If any
+   invalid IUPAC characters are found in the sequence while reading from the
+   FASTA file, an exception is raised.
 
 QUAL Format
 ^^^^^^^^^^^
@@ -152,6 +150,9 @@ stores records sequentially, with each record beginning with a header line
 containing a sequence ID and description. The same rules apply to QUAL headers
 as FASTA headers (see the above sections for details). scikit-bio processes
 FASTA and QUAL headers in exactly the same way.
+
+Quality scores are automatically stored in the object's `positional_metadata`
+attribute, under the `'quality'` column.
 
 Instead of storing biological sequence data in each record, a QUAL file stores
 a Phred quality score for each base in the corresponding sequence. Quality
