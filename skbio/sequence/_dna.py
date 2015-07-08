@@ -39,9 +39,14 @@ class DNA(IUPACSequence, NucleotideMixin):
         work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
-    case_insensitive : bool, optional
+    lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC DNA characters.
+        uppercase characters in order to be valid IUPAC DNA characters. If
+        ``False``, no characters will be converted. If a str, it will be
+        treated as a key into the positional metadata of the object. All
+        lowercase characters will be converted to uppercase, and a ``True``
+        value will be stored in a boolean array in the positional metadata
+        under the key.
 
     Attributes
     ----------
