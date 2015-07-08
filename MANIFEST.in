@@ -1,6 +1,7 @@
 include CHANGELOG.md
-include COPYING.txt
 include CONTRIBUTING.md
+include COPYING.txt
+include Makefile
 include README.rst
 include RELEASE.md
 include checklist.py
