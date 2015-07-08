@@ -10,7 +10,7 @@ scikit-bio is an open-source, BSD-licensed Python package providing data structu
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
 
-scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the [API stability docs](https://github.com/biocore/scikit-bio/tree/0.4.0/doc/source/user/api_stability.rst) for more details, including what we mean by *stable* and *experimental* in this context.
+scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/biocore/scikit-bio/tree/0.4.0/doc/source/user/api_stability.rst>`_) for more details, including what we mean by *stable* and *experimental* in this context.
 
 Installing
 ----------
