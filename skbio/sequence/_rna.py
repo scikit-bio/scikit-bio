@@ -9,7 +9,8 @@
 from __future__ import absolute_import, division, print_function
 
 import skbio
-from skbio.util import classproperty, overrides
+from skbio.util._decorator import classproperty, overrides
+from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
@@ -97,6 +98,7 @@ class RNA(IUPACSequence, NucleotideMixin):
     """
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
@@ -109,11 +111,13 @@ class RNA(IUPACSequence, NucleotideMixin):
         return comp_map
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         return set("ACGU")
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def degenerate_map(cls):
         return {
@@ -126,6 +130,7 @@ class RNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
+    @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.
 
@@ -195,6 +200,7 @@ class RNA(IUPACSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate(self, *args, **kwargs)
 
+    @stable(as_of="0.4.0")
     def translate_six_frames(self, genetic_code=1, *args, **kwargs):
         """Translate RNA into protein using six possible reading frames.
 

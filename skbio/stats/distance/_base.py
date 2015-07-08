@@ -138,7 +138,6 @@ class DissimilarityMatrix(SkbioObject):
         return self._ids
 
     @ids.setter
-    @experimental(as_of="0.4.0")
     def ids(self, ids_):
         ids_ = tuple(ids_)
         self._validate(self.data, ids_)

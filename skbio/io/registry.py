@@ -183,6 +183,7 @@ from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
+from skbio.util._decorator import stable
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -191,6 +192,8 @@ class IORegistry(object):
     """Create a registry of formats and implementations which map to classes.
 
     """
+
+    @stable(as_of="0.4.0")
     def __init__(self):
         # This seperation of binary and text formats is useful because there
         # are many situations where we may have recieved a text-file. When this
@@ -205,6 +208,7 @@ class IORegistry(object):
         self._text_formats = {}
         self._lookups = (self._binary_formats, self._text_formats)
 
+    @stable(as_of="0.4.0")
     def create_format(self, *args, **kwargs):
         """A simple factory for creating new file formats.
 
@@ -222,6 +226,7 @@ class IORegistry(object):
         self.add_format(format)
         return format
 
+    @stable(as_of="0.4.0")
     def add_format(self, format_object):
         """Add a format to the registry.
 
@@ -243,6 +248,7 @@ class IORegistry(object):
         else:
             self._text_formats[name] = format_object
 
+    @stable(as_of="0.4.0")
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
 
@@ -262,6 +268,7 @@ class IORegistry(object):
                 return lookup[format_name].sniffer_function
         return None
 
+    @stable(as_of="0.4.0")
     def get_reader(self, format_name, cls):
         """Locate the reader for a format and class.
 
@@ -282,6 +289,7 @@ class IORegistry(object):
         """
         return self._get_rw(format_name, cls, 'readers')
 
+    @stable(as_of="0.4.0")
     def get_writer(self, format_name, cls):
         """Locate the writer for a format and class.
 
@@ -310,6 +318,7 @@ class IORegistry(object):
                     return format_lookup[cls]
         return None
 
+    @stable(as_of="0.4.0")
     def list_read_formats(self, cls):
         """Return a list of available read formats for a given `cls` type.
 
@@ -328,6 +337,7 @@ class IORegistry(object):
         """
         return list(self._iter_rw_formats(cls, 'readers'))
 
+    @stable(as_of="0.4.0")
     def list_write_formats(self, cls):
         """Return a list of available write formats for a given `cls` type.
 
@@ -352,6 +362,7 @@ class IORegistry(object):
                 if cls in getattr(format, lookup_name):
                     yield format.name
 
+    @stable(as_of="0.4.0")
     def sniff(self, file, **kwargs):
         """Detect the format of a given `file` and suggest kwargs for reading.
 
@@ -428,6 +439,7 @@ class IORegistry(object):
                     matches.append((format.name, skwargs))
         return matches
 
+    @stable(as_of="0.4.0")
     def read(self, file, format=None, into=None, verify=True, **kwargs):
         """Read `file` as `format` into an object.
 
@@ -537,6 +549,7 @@ class IORegistry(object):
                 (fmt, file, into.__name__ if into else 'generator'))
         return reader, kwargs
 
+    @stable(as_of="0.4.0")
     def write(self, obj, format, into, **kwargs):
         """Write `obj` as `format` into a file.
 
@@ -578,6 +591,7 @@ class IORegistry(object):
         writer(obj, into, **kwargs)
         return into
 
+    @stable(as_of="0.4.0")
     def monkey_patch(self):
         """Monkey-patch `read` and `write` methods onto registered classes.
 
@@ -745,36 +759,43 @@ class Format(object):
 
     """
     @property
+    @stable(as_of="0.4.0")
     def name(self):
         """The name of this format."""
         return self._name
 
     @property
+    @stable(as_of="0.4.0")
     def is_binary_format(self):
         """Return True if this is a binary format."""
         return self._encoding == 'binary'
 
     @property
+    @stable(as_of="0.4.0")
     def sniffer_function(self):
         """The sniffer function associated with this format."""
         return self._sniffer_function
 
     @property
+    @stable(as_of="0.4.0")
     def readers(self):
         """Dictionary that maps classes to their writers for this format."""
         return self._readers
 
     @property
+    @stable(as_of="0.4.0")
     def writers(self):
         """Dictionary that maps classes to their writers for this format."""
         return self._writers
 
     @property
+    @stable(as_of="0.4.0")
     def monkey_patched_readers(self):
         """Set of classes bound to readers to monkey patch."""
         return self._monkey_patch['read']
 
     @property
+    @stable(as_of="0.4.0")
     def monkey_patched_writers(self):
         """Set of classes bound to writers to monkey patch."""
         return self._monkey_patch['write']
@@ -789,6 +810,7 @@ class Format(object):
         self._writers = {}
         self._monkey_patch = {'read': set(), 'write': set()}
 
+    @stable(as_of="0.4.0")
     def sniffer(self, override=False):
         """Decorate a function to act as the sniffer for this format.
 
@@ -877,6 +899,7 @@ class Format(object):
             return wrapped_sniffer
         return decorator
 
+    @stable(as_of="0.4.0")
     def reader(self, cls, monkey_patch=True, override=False):
         """Decorate a function to act as the reader for a class in this format.
 
@@ -962,6 +985,7 @@ class Format(object):
             return wrapped_reader
         return decorator
 
+    @stable(as_of="0.4.0")
     def writer(self, cls, monkey_patch=True, override=False):
         """Decorate a function to act as the writer for a class in this format.
 

@@ -25,7 +25,6 @@ from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of="0.4.0")
 def distance_from_r(m1, m2):
     r"""Estimates distance as (1-r)/2: neg correl = max distance
 

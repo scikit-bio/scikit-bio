@@ -28,6 +28,7 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.sequence._base import ElasticLines
 from skbio.util._misc import chunk_str
+from skbio.util._decorator import stable
 
 
 class Sequence(collections.Sequence, SkbioObject):
@@ -291,6 +292,7 @@ class Sequence(collections.Sequence, SkbioObject):
     __hash__ = None
 
     @property
+    @stable(as_of="0.4.0")
     def values(self):
         """Array containing underlying sequence characters.
 
@@ -310,6 +312,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
+    @stable(as_of="0.4.0")
     def metadata(self):
         """``dict`` containing metadata which applies to the entire sequence.
 
@@ -384,6 +387,7 @@ class Sequence(collections.Sequence, SkbioObject):
         self._metadata = None
 
     @property
+    @stable(as_of="0.4.0")
     def positional_metadata(self):
         """``pd.DataFrame`` containing metadata on a per-character basis.
 
@@ -491,6 +495,7 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
+    @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None,
                  positional_metadata=None):
 
@@ -573,6 +578,7 @@ class Sequence(collections.Sequence, SkbioObject):
         sequence.flags.writeable = False
         self._bytes = sequence
 
+    @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
         """Determine if a subsequence is contained in the biological sequence.
 
@@ -605,6 +611,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._munge_to_bytestring(subsequence, "in") in self._string
 
+    @stable(as_of="0.4.0")
     def __eq__(self, other):
         """Determine if the biological sequence is equal to another.
 
@@ -695,6 +702,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return True
 
+    @stable(as_of="0.4.0")
     def __ne__(self, other):
         """Determine if the biological sequence is not equal to another.
 
@@ -729,6 +737,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return not (self == other)
 
+    @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         """Slice the biological sequence.
 
@@ -856,6 +865,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return None
 
+    @stable(as_of="0.4.0")
     def __len__(self):
         """Return the number of characters in the biological sequence.
 
@@ -874,6 +884,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._bytes.size
 
+    @stable(as_of="0.4.0")
     def __nonzero__(self):
         """Returns truth value (truthiness) of sequence.
 
@@ -893,6 +904,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return len(self) > 0
 
+    @stable(as_of="0.4.0")
     def __iter__(self):
         """Iterate over positions in the biological sequence.
 
@@ -917,6 +929,7 @@ class Sequence(collections.Sequence, SkbioObject):
         for i in range(len(self)):
             yield self[i]
 
+    @stable(as_of="0.4.0")
     def __reversed__(self):
         """Iterate over positions in the biological sequence in reverse order.
 
@@ -940,6 +953,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return iter(self[::-1])
 
+    @stable(as_of="0.4.0")
     def __str__(self):
         """Return biological sequence characters as a string.
 
@@ -963,6 +977,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return str(self._string.decode("ascii"))
 
+    @stable(as_of="0.4.0")
     def __repr__(self):
         r"""Return a string representation of the biological sequence object.
 
@@ -1078,6 +1093,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return [('length', '%d' % len(self))]
 
+    @stable(as_of="0.4.0")
     def __copy__(self):
         """Return a shallow copy of the biological sequence.
 
@@ -1092,6 +1108,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self.copy(deep=False)
 
+    @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
         """Return a deep copy of the biological sequence.
 
@@ -1106,6 +1123,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._copy(True, memo)
 
+    @stable(as_of="0.4.0")
     def has_metadata(self):
         """Determine if the sequence contains metadata.
 
@@ -1127,6 +1145,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._metadata is not None and bool(self.metadata)
 
+    @stable(as_of="0.4.0")
     def has_positional_metadata(self):
         """Determine if the sequence contains positional metadata.
 
@@ -1149,6 +1168,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return (self._positional_metadata is not None and
                 len(self.positional_metadata.columns) > 0)
 
+    @stable(as_of="0.4.0")
     def copy(self, deep=False):
         """Return a copy of the biological sequence.
 
@@ -1304,6 +1324,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return seq_copy
 
+    @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
         """Count occurrences of a subsequence in the biological sequence.
 
@@ -1349,6 +1370,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._string.count(
             self._munge_to_bytestring(subsequence, "count"), start, end)
 
+    @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         """Find position where subsequence first occurs in the sequence.
 
@@ -1390,6 +1412,7 @@ class Sequence(collections.Sequence, SkbioObject):
             raise ValueError(
                 "%r is not present in %r." % (subsequence, self))
 
+    @stable(as_of="0.4.0")
     def distance(self, other, metric=None):
         """Compute the distance to another sequence.
 
@@ -1456,6 +1479,7 @@ class Sequence(collections.Sequence, SkbioObject):
             metric = hamming
         return float(metric(self.values, other.values))
 
+    @stable(as_of="0.4.0")
     def matches(self, other):
         """Find positions that match with another sequence.
 
@@ -1497,6 +1521,7 @@ class Sequence(collections.Sequence, SkbioObject):
                              "generated from equal length sequences.")
         return self._bytes == other._bytes
 
+    @stable(as_of="0.4.0")
     def mismatches(self, other):
         """Find positions that do not match with another sequence.
 
@@ -1534,6 +1559,7 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return np.invert(self.matches(other))
 
+    @stable(as_of="0.4.0")
     def match_frequency(self, other, relative=False):
         """Return count of positions that are the same between two sequences.
 
@@ -1583,6 +1609,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.matches(other).sum())
 
+    @stable(as_of="0.4.0")
     def mismatch_frequency(self, other, relative=False):
         """Return count of positions that differ between two sequences.
 
@@ -1632,6 +1659,7 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.mismatches(other).sum())
 
+    @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
         """Generate kmers of length `k` from the biological sequence.
 
@@ -1692,6 +1720,7 @@ class Sequence(collections.Sequence, SkbioObject):
             for s in kmers:
                 yield self._to(sequence=s)
 
+    @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
         """Return counts of words of length `k` from the biological sequence.
 
@@ -1744,6 +1773,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
         return freqs
 
+    @stable(as_of="0.4.0")
     def find_with_regex(self, regex, ignore=None):
         """Generate slices for patterns matched by a regular expression.
 
@@ -1792,6 +1822,7 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield slice(lookup[match.start(g)],
                             lookup[match.end(g) - 1] + 1)
 
+    @stable(as_of="0.4.0")
     def iter_contiguous(self, included, min_length=1, invert=False):
         """Yield contiguous subsequences based on `included`.
 

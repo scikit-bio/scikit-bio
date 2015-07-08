@@ -263,7 +263,6 @@ class deprecated(_state_decorator):
 
 
 # Adapted from http://stackoverflow.com/a/8313042/579416
-@experimental(as_of="0.4.0")
 def overrides(interface_class):
     """Decorator for class-level members.
 
@@ -325,7 +324,6 @@ class classproperty(property):
         If the property is set on an instance.
 
     """
-    @experimental(as_of="0.4.0")
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
@@ -333,10 +331,8 @@ class classproperty(property):
         self.__name__ = name
         self.__doc__ = doc
 
-    @experimental(as_of="0.4.0")
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
 
-    @experimental(as_of="0.4.0")
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")

@@ -211,12 +211,16 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
+from skbio.util._decorator import experimental
+
 
 class NotExecuted(object):
     """Helper object to track if a method was executed"""
+    @experimental(as_of="0.4.0")
     def __init__(self):
         self.msg = None
 
+    @experimental(as_of="0.4.0")
     def __call__(self, msg):
         self.msg = msg
         return self
@@ -225,12 +229,14 @@ _not_executed = NotExecuted()
 
 class Exists(object):
     """Stub object to assist with ``requires`` when a value exists"""
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone(object):
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         if item is None:
             return False
@@ -272,6 +278,7 @@ class Workflow(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None,
                  **kwargs):
         r"""Build thy workflow of self"""
@@ -294,6 +301,7 @@ class Workflow(object):
         if self.debug:
             self._setup_debug()
 
+    @experimental(as_of="0.4.0")
     def initialize_state(self, item):
         """Initialize state
 
@@ -368,6 +376,7 @@ class Workflow(object):
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
+    @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
@@ -450,9 +459,11 @@ class method(object):
     """
     highest_priority = sys.maxsize
 
+    @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
         self.priority = priority
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         func.priority = self.priority
         return func
@@ -481,6 +492,7 @@ class requires(object):
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
     """
+    @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         # self here is the requires object
         self.option = option
@@ -500,6 +512,7 @@ class requires(object):
             else:
                 self.values = set([values])
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Wrap a function
 

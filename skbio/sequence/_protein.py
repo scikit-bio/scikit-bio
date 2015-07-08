@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from skbio.util import classproperty, overrides
+from skbio.util._decorator import classproperty, overrides
+from skbio.util._decorator import stable
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
@@ -101,16 +102,19 @@ class Protein(IUPACSequence):
         return cls.__stop_codes
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def alphabet(cls):
         return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def degenerate_map(cls):
         return {
@@ -119,6 +123,7 @@ class Protein(IUPACSequence):
         }
 
     @classproperty
+    @stable(as_of="0.4.0")
     def stop_chars(cls):
         """Return characters representing translation stop codons.
 
@@ -134,6 +139,7 @@ class Protein(IUPACSequence):
     def _motifs(self):
         return _motifs
 
+    @stable(as_of="0.4.0")
     def stops(self):
         """Find positions containing stop characters in the protein sequence.
 
@@ -160,6 +166,7 @@ class Protein(IUPACSequence):
         """
         return np.in1d(self._bytes, self._stop_codes)
 
+    @stable(as_of="0.4.0")
     def has_stops(self):
         """Determine if the sequence contains one or more stop characters.
 

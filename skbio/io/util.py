@@ -37,6 +37,7 @@ from skbio.io._iosources import get_io_sources, get_compression_handler
 from skbio.io._fileobject import (
     is_binary_file, SaneTextIOWrapper, CompressedBufferedReader,
     CompressedBufferedWriter)
+from skbio.util._decorator import stable
 
 _d = dict(mode='r', encoding=None, errors=None, newline=None,
           compression='auto', compresslevel=9)
@@ -68,6 +69,7 @@ def _resolve(file, mode=_d['mode'], encoding=_d['encoding'],
     return newfile, source, is_binary_file(newfile)
 
 
+@stable(as_of="0.4.0")
 def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
          newline=_d['newline'], compression=_d['compression'],
          compresslevel=_d['compresslevel']):
@@ -208,6 +210,7 @@ def _resolve_file(file, **kwargs):
 
 
 @contextmanager
+@stable(as_of="0.4.0")
 def open_file(file, **kwargs):
     r"""Context manager for :func:`skbio.io.util.open`.
 
@@ -267,6 +270,7 @@ def _flush_compressor(file):
 
 
 @contextmanager
+@stable(as_of="0.4.0")
 def open_files(files, **kwargs):
     """A plural form of :func:`open_file`."""
     with ExitStack() as stack:

@@ -15,7 +15,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence._iupac_sequence import IUPACSequence
-from skbio.util import classproperty
+from skbio.util._decorator import classproperty
 
 
 class ExampleIUPACSequence(IUPACSequence):
