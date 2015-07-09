@@ -1,0 +1,8 @@
+sphinx-bootstrap-theme
+HTTPretty
+bz2file
+contextlib2
+coveralls
+natsort
+CacheControl[FileCache]
+git+git://github.com/numpy/numpydoc.git
