@@ -1,5 +1,6 @@
 # Check on http://lint.travis-ci.org/ after modifying it!  Originally
 # modified from https://gist.github.com/dan-blanchard/7045057
+sudo: false
 language: python
 env:
   - PYTHON_VERSION=3.4
