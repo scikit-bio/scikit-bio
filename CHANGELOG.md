@@ -1,5 +1,7 @@
 # scikit-bio changelog
 
+## Version 0.4.0-dev (changes since 0.4.0 release go here)
+
 ## Version 0.4.0 (2015-07-08)
 
 Initial beta release. In addition to the changes detailed below, the following
