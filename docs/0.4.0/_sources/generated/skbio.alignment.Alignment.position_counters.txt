@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.position_counters
+===========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.position_counters

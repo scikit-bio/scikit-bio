@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.is_reverse_complement
-================================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNASequence.is_reverse_complement

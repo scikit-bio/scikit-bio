@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.rc
-====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.rc

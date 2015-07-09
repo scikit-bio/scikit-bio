@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.OrdinationResults.from_file
-==================================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: OrdinationResults.from_file

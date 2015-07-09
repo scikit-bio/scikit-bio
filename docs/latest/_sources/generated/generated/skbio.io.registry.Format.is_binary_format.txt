@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.is_binary_format
+=========================================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoattribute:: Format.is_binary_format

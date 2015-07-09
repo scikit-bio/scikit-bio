@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DissimilarityMatrix._is_id_pair
-====================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DissimilarityMatrix._is_id_pair

@@ -1,6 +1,0 @@
-skbio.io.get_reader
-===================
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: get_reader

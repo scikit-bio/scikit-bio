@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.gap_maps
-=======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence.gap_maps

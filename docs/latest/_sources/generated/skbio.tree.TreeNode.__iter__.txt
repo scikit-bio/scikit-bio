@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.TreeNode.__iter__
-============================
-
-.. currentmodule:: skbio.tree
-
-.. automethod:: TreeNode.__iter__

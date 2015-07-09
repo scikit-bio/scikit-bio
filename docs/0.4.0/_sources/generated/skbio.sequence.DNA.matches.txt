@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.matches
+==========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.matches

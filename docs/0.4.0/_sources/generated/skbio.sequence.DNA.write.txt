@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.write
+========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.write

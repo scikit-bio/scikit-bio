@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.OrdinationResults._plot_categorical_legend
-=================================================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: OrdinationResults._plot_categorical_legend

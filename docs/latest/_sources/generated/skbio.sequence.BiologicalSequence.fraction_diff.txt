@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.fraction_diff
-===============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.fraction_diff

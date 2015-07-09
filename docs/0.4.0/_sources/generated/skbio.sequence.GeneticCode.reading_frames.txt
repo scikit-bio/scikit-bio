@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GeneticCode.reading_frames
+=========================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GeneticCode.reading_frames

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.has_positional_metadata
+==============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.has_positional_metadata

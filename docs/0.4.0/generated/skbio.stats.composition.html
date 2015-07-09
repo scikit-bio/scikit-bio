@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Composition Statistics (skbio.stats.composition) &mdash; scikit-bio 0.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.0 documentation" href="../index.html" />
+    <link rel="up" title="Statistics (skbio.stats)" href="../stats.html" />
+    <link rel="next" title="skbio.stats.composition.closure" href="generated/skbio.stats.composition.closure.html" />
+    <link rel="prev" title="skbio.stats.power.bootstrap_power_curve" href="generated/skbio.stats.power.bootstrap_power_curve.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments and Sequence collections (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Composition Statistics (<tt class="docutils literal"><span class="pre">skbio.stats.composition</span></tt>)</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.stats.composition"></span><div class="section" id="composition-statistics-skbio-stats-composition">
+<h1>Composition Statistics (<a class="reference internal" href="#module-skbio.stats.composition" title="skbio.stats.composition"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.stats.composition</span></tt></a>)<a class="headerlink" href="#composition-statistics-skbio-stats-composition" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functions for compositional data analysis.</p>
+<p>Many &#8216;omics datasets are inherently compositional - meaning that they
+are best interpreted as proportions or percentages rather than
+absolute counts.</p>
+<p>Formally, <span class="math">\(x\)</span> is a composition if <span class="math">\(\sum_{i=0}^D x_{i} = c\)</span>
+and <span class="math">\(x_{i} &gt; 0\)</span>, <span class="math">\(1 \leq i \leq D\)</span> and <span class="math">\(c\)</span> is a real
+valued constant and there are <span class="math">\(D\)</span> components for each
+composition. In this module <span class="math">\(c=1\)</span>. Compositional data can be
+analyzed using Aitchison geometry. <a class="reference internal" href="#r206" id="id1">[R206]</a></p>
+<p>However, in this framework, standard real Euclidean operations such as
+addition and multiplication no longer apply. Only operations such as
+perturbation and power can be used to manipulate this data. <a class="reference internal" href="#r206" id="id2">[R206]</a></p>
+<p>This module allows two styles of manipulation of compositional data.
+Compositional data can be analyzed using perturbation and power
+operations, which can be useful for simulation studies. The
+alternative strategy is to transform compositional data into the real
+space.  Right now, the centre log ratio transform (clr) <a class="reference internal" href="#r206" id="id3">[R206]</a> can be
+used to accomplish this.  This transform can be useful for performing
+standard statistical tools such as parametric hypothesis testing,
+regressions and more.</p>
+<p>The major caveat of using this framework is dealing with zeros.  In
+the Aitchison geometry, only compositions with nonzero components can
+be considered. The multiplicative replacement technique <a class="reference internal" href="#r207" id="id4">[R207]</a> can be
+used to substitute these zeros with small pseudocounts without
+introducing major distortions to the data.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.composition.closure.html#skbio.stats.composition.closure" title="skbio.stats.composition.closure"><tt class="xref py py-obj docutils literal"><span class="pre">closure</span></tt></a>(mat)</td>
+<td>State: Experimental as of 0.4.0.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.composition.multiplicative_replacement.html#skbio.stats.composition.multiplicative_replacement" title="skbio.stats.composition.multiplicative_replacement"><tt class="xref py py-obj docutils literal"><span class="pre">multiplicative_replacement</span></tt></a>(mat[,&nbsp;delta])</td>
+<td>Replace all zeros with small non-zero values</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.composition.perturb.html#skbio.stats.composition.perturb" title="skbio.stats.composition.perturb"><tt class="xref py py-obj docutils literal"><span class="pre">perturb</span></tt></a>(x,&nbsp;y)</td>
+<td>State: Experimental as of 0.4.0.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.composition.perturb_inv.html#skbio.stats.composition.perturb_inv" title="skbio.stats.composition.perturb_inv"><tt class="xref py py-obj docutils literal"><span class="pre">perturb_inv</span></tt></a>(x,&nbsp;y)</td>
+<td>State: Experimental as of 0.4.0.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.composition.power.html#skbio.stats.composition.power" title="skbio.stats.composition.power"><tt class="xref py py-obj docutils literal"><span class="pre">power</span></tt></a>(x,&nbsp;a)</td>
+<td>State: Experimental as of 0.4.0.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/skbio.stats.composition.clr.html#skbio.stats.composition.clr" title="skbio.stats.composition.clr"><tt class="xref py py-obj docutils literal"><span class="pre">clr</span></tt></a>(mat)</td>
+<td>State: Experimental as of 0.4.0.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/skbio.stats.composition.centralize.html#skbio.stats.composition.centralize" title="skbio.stats.composition.centralize"><tt class="xref py py-obj docutils literal"><span class="pre">centralize</span></tt></a>(mat)</td>
+<td>Center data around its geometric average.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r206" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R206]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>)</em> <ol class="last upperalpha simple" start="22">
+<li>Pawlowsky-Glahn. &#8220;Lecture Notes on Compositional Data Analysis&#8221;</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r207" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R207]</a></td><td>J. A. Martin-Fernandez. &#8220;Dealing With Zeros and Missing Values in
+Compositional Data Sets Using Nonparametric Imputation&#8221;</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+<p>Consider a very simple environment with only 3 species. The species
+in the environment are equally distributed and their proportions are
+equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">otus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Suppose that an antibiotic kills off half of the population for the
+first two species, but doesn&#8217;t harm the third species. Then the
+perturbation vector would be as follows</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">antibiotic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>And the resulting perturbation would be</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">perturb</span><span class="p">(</span><span class="n">otus</span><span class="p">,</span> <span class="n">antibiotic</span><span class="p">)</span>
+<span class="go">array([ 0.25,  0.25,  0.5 ])</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

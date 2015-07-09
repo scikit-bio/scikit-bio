@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.has_gaps
+===========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.has_gaps

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.AlignmentStructure._tuples_from_cigar
-=====================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: AlignmentStructure._tuples_from_cigar

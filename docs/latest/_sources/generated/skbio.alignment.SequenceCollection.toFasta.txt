@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.toFasta
-==========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.toFasta

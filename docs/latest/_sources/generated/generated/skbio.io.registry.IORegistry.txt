@@ -1,0 +1,29 @@
+skbio.io.registry.IORegistry
+============================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoclass:: IORegistry
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IORegistry.add_format
+         IORegistry.create_format
+         IORegistry.get_reader
+         IORegistry.get_sniffer
+         IORegistry.get_writer
+         IORegistry.list_read_formats
+         IORegistry.list_write_formats
+         IORegistry.monkey_patch
+         IORegistry.read
+         IORegistry.sniff
+         IORegistry.write
+
+
+
+   
+

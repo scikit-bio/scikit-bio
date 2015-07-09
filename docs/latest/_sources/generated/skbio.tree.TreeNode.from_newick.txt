@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.TreeNode.from_newick
-===============================
-
-.. currentmodule:: skbio.tree
-
-.. automethod:: TreeNode.from_newick

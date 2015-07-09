@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.degenerate_map
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: DNA.degenerate_map

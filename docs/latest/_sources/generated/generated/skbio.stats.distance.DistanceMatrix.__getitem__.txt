@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix.__getitem__
-===============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix.__getitem__

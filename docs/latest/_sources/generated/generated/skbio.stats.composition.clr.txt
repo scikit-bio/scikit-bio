@@ -1,0 +1,6 @@
+skbio.stats.composition.clr
+===========================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: clr

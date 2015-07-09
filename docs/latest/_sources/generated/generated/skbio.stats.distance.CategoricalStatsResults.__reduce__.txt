@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.CategoricalStatsResults.__reduce__
-=======================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: CategoricalStatsResults.__reduce__

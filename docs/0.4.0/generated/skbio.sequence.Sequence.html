@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.sequence.Sequence &mdash; scikit-bio 0.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.0 documentation" href="../index.html" />
+    <link rel="up" title="Sequences (skbio.sequence)" href="../sequence.html" />
+    <link rel="next" title="skbio.sequence.DNA" href="skbio.sequence.DNA.html" />
+    <link rel="prev" title="skbio.sequence.GeneticCode" href="skbio.sequence.GeneticCode.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../sequence.html">Sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments and Sequence collections (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.sequence.Sequence</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-sequence-sequence">
+<h1>skbio.sequence.Sequence<a class="headerlink" href="#skbio-sequence-sequence" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.sequence.Sequence">
+<em class="property">class </em><tt class="descclassname">skbio.sequence.</tt><tt class="descname">Sequence</tt><big>(</big><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.4.0/skbio/sequence/_sequence.py#L34"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store biological sequence data and optional associated metadata.</p>
+<p><tt class="docutils literal"><span class="pre">Sequence</span></tt> objects do not enforce an alphabet and are thus the most
+generic objects for storing biological sequence data. Subclasses <tt class="docutils literal"><span class="pre">DNA</span></tt>,
+<tt class="docutils literal"><span class="pre">RNA</span></tt>, and <tt class="docutils literal"><span class="pre">Protein</span></tt> enforce the IUPAC character set <a class="reference internal" href="#r196" id="id1">[R196]</a> for, and
+provide operations specific to, each respective molecule type.</p>
+<p><tt class="docutils literal"><span class="pre">Sequence</span></tt> objects consist of the underlying sequence data, as well
+as optional metadata and positional metadata. The underlying sequence
+is immutable, while the metdata and positional metadata are mutable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong> : str, Sequence, or 1D np.ndarray (np.uint8 or &#8216;|S1&#8217;)</p>
+<blockquote>
+<div><p>Characters representing the biological sequence itself.</p>
+</div></blockquote>
+<p><strong>metadata</strong> : dict, optional</p>
+<blockquote>
+<div><p>Arbitrary metadata which applies to the entire sequence. A shallow copy
+of the <tt class="docutils literal"><span class="pre">dict</span></tt> will be made (see Examples section below for details).</p>
+</div></blockquote>
+<p><strong>positional_metadata</strong> : pd.DataFrame consumable, optional</p>
+<blockquote class="last">
+<div><p>Arbitrary per-character metadata (e.g., sequence read quality
+scores). Must be able to be passed directly to <tt class="docutils literal"><span class="pre">pd.DataFrame</span></tt>
+constructor. Each column of metadata must be the same length as the
+biological sequence. A shallow copy of the positional metadata will be
+made if necessary (see Examples section below for details).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><tt class="xref py py-obj docutils literal"><span class="pre">DNA</span></tt></a>, <a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><tt class="xref py py-obj docutils literal"><span class="pre">RNA</span></tt></a>, <a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><tt class="xref py py-obj docutils literal"><span class="pre">Protein</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r196" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R196]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
+sequences: recommendations 1984.
+Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+A Cornish-Bowden</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">Sequence</span>
+</pre></div>
+</div>
+<p><strong>Creating sequences:</strong></p>
+<p>Create a sequence without any metadata:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;GGUCGUGAAGGA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">---------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 12</span>
+<span class="go">---------------</span>
+<span class="go">0 GGUCGUGAAG GA</span>
+</pre></div>
+</div>
+<p>Create a sequence with metadata and positional metadata:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="s">&#39;seq-id&#39;</span><span class="p">,</span> <span class="s">&#39;desc&#39;</span><span class="p">:</span><span class="s">&#39;seq desc&#39;</span><span class="p">,</span> <span class="s">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Alice&#39;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;quality&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="s">&#39;exons&#39;</span><span class="p">:</span> <span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;ACGT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="n">positional_metadata</span><span class="o">=</span><span class="n">positional_metadata</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">-----------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;authors&#39;: &lt;type &#39;list&#39;&gt;</span>
+<span class="go">    &#39;desc&#39;: &#39;seq desc&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;seq-id&#39;</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;exons&#39;: &lt;dtype: bool&gt;</span>
+<span class="go">    &#39;quality&#39;: &lt;dtype: int64&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 4</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 ACGT</span>
+</pre></div>
+</div>
+<p><strong>Retrieving underlying sequence data:</strong></p>
+<p>Retrieve underlying sequence:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span> 
+<span class="go">array([&#39;A&#39;, &#39;C&#39;, &#39;G&#39;, &#39;T&#39;],</span>
+<span class="go">      dtype=&#39;|S1&#39;)</span>
+</pre></div>
+</div>
+<p>Underlying sequence immutable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s">&#39;T&#39;</span><span class="p">,</span> <span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;G&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;|S1&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">AttributeError</span>: <span class="n">can&#39;t set attribute</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;T&#39;</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">assignment destination is read-only</span>
+</pre></div>
+</div>
+<p><strong>Retrieving sequence metadata:</strong></p>
+<p>Retrieve metadata:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span> <span class="c"># using pprint to display dict in sorted order</span>
+<span class="go">{&#39;authors&#39;: [&#39;Alice&#39;], &#39;desc&#39;: &#39;seq desc&#39;, &#39;id&#39;: &#39;seq-id&#39;}</span>
+</pre></div>
+</div>
+<p>Retrieve positional metadata:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">   exons  quality</span>
+<span class="go">0   True        3</span>
+<span class="go">1   True        3</span>
+<span class="go">2  False        4</span>
+<span class="go">3   True       10</span>
+</pre></div>
+</div>
+<p><strong>Updating sequence metadata:</strong></p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Be aware that a shallow copy of <tt class="docutils literal"><span class="pre">metadata</span></tt> and
+<tt class="docutils literal"><span class="pre">positional_metadata</span></tt> is made for performance. Since a deep copy is
+not made, changes made to mutable Python objects stored as metadata may
+affect the metadata of other <tt class="docutils literal"><span class="pre">Sequence</span></tt> objects or anything else that
+shares a reference to the object. The following examples illustrate this
+behavior.</p>
+</div>
+<p>First, let&#8217;s create a sequence and update its metadata:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span><span class="s">&#39;seq-id&#39;</span><span class="p">,</span> <span class="s">&#39;desc&#39;</span><span class="p">:</span><span class="s">&#39;seq desc&#39;</span><span class="p">,</span> <span class="s">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;Alice&#39;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;ACGT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;new-id&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;pubmed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12345</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+<span class="go">{&#39;authors&#39;: [&#39;Alice&#39;], &#39;desc&#39;: &#39;seq desc&#39;, &#39;id&#39;: &#39;new-id&#39;, &#39;pubmed&#39;: 12345}</span>
+</pre></div>
+</div>
+<p>Note that the original metadata dictionary (stored in variable
+<tt class="docutils literal"><span class="pre">metadata</span></tt>) hasn&#8217;t changed because a shallow copy was made:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+<span class="go">{&#39;authors&#39;: [&#39;Alice&#39;], &#39;desc&#39;: &#39;seq desc&#39;, &#39;id&#39;: &#39;seq-id&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span> <span class="o">==</span> <span class="n">metadata</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Note however that since only a <em>shallow</em> copy was made, updates to mutable
+objects will also change the original metadata dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;Bob&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span>
+<span class="go">[&#39;Alice&#39;, &#39;Bob&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span>
+<span class="go">[&#39;Alice&#39;, &#39;Bob&#39;]</span>
+</pre></div>
+</div>
+<p>This behavior can also occur when manipulating a sequence that has been
+derived from another sequence:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span>
+<span class="go">Sequence</span>
+<span class="go">----------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    &#39;authors&#39;: &lt;type &#39;list&#39;&gt;</span>
+<span class="go">    &#39;desc&#39;: &#39;seq desc&#39;</span>
+<span class="go">    &#39;id&#39;: &#39;new-id&#39;</span>
+<span class="go">    &#39;pubmed&#39;: 12345</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 2</span>
+<span class="go">----------------------------</span>
+<span class="go">0 CG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">subseq</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+<span class="go">{&#39;authors&#39;: [&#39;Alice&#39;, &#39;Bob&#39;],</span>
+<span class="go"> &#39;desc&#39;: &#39;seq desc&#39;,</span>
+<span class="go"> &#39;id&#39;: &#39;new-id&#39;,</span>
+<span class="go"> &#39;pubmed&#39;: 12345}</span>
+</pre></div>
+</div>
+<p>The subsequence has inherited the metadata of its parent sequence. If we
+update the subsequence&#8217;s author list, we see the changes propagated in the
+parent sequence and original metadata dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;Carol&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span>
+<span class="go">[&#39;Alice&#39;, &#39;Bob&#39;, &#39;Carol&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span>
+<span class="go">[&#39;Alice&#39;, &#39;Bob&#39;, &#39;Carol&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;authors&#39;</span><span class="p">]</span>
+<span class="go">[&#39;Alice&#39;, &#39;Bob&#39;, &#39;Carol&#39;]</span>
+</pre></div>
+</div>
+<p>The behavior for updating positional metadata is similar. Let&#8217;s create a
+new sequence with positional metadata that is already stored in a
+<tt class="docutils literal"><span class="pre">pd.DataFrame</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s">&#39;quality&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="s">&#39;list&#39;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;ACGT&#39;</span><span class="p">,</span> <span class="n">positional_metadata</span><span class="o">=</span><span class="n">positional_metadata</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">Sequence</span>
+<span class="go">-----------------------------</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;list&#39;: &lt;dtype: object&gt;</span>
+<span class="go">    &#39;quality&#39;: &lt;dtype: int64&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 4</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 ACGT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">  list  quality</span>
+<span class="go">0   []        3</span>
+<span class="go">1   []        3</span>
+<span class="go">2   []        4</span>
+<span class="go">3   []       10</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s update the sequence&#8217;s positional metadata by adding a new column
+and changing a value in another column:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="p">[</span><span class="s">&#39;gaps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;quality&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">999</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">  list  quality   gaps</span>
+<span class="go">0   []      999  False</span>
+<span class="go">1   []        3  False</span>
+<span class="go">2   []        4  False</span>
+<span class="go">3   []       10  False</span>
+</pre></div>
+</div>
+<p>Note that the original positional metadata (stored in variable
+<tt class="docutils literal"><span class="pre">positional_metadata</span></tt>) hasn&#8217;t changed because a shallow copy was made:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span>
+<span class="go">  list  quality</span>
+<span class="go">0   []        3</span>
+<span class="go">1   []        3</span>
+<span class="go">2   []        4</span>
+<span class="go">3   []       10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">positional_metadata</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Next let&#8217;s create a sequence that has been derived from another sequence:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span>
+<span class="go">Sequence</span>
+<span class="go">-----------------------------</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    &#39;list&#39;: &lt;dtype: object&gt;</span>
+<span class="go">    &#39;quality&#39;: &lt;dtype: int64&gt;</span>
+<span class="go">    &#39;gaps&#39;: &lt;dtype: bool&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 2</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 CG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">  list  quality   gaps</span>
+<span class="go">0   []        3  False</span>
+<span class="go">1   []        4  False</span>
+</pre></div>
+</div>
+<p>As described above for metadata, since only a <em>shallow</em> copy was made of
+the positional metadata, updates to mutable objects will also change the
+parent sequence&#8217;s positional metadata and the original positional metadata
+<tt class="docutils literal"><span class="pre">pd.DataFrame</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">positional_metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;list&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;item&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subseq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">     list  quality   gaps</span>
+<span class="go">0  [item]        3  False</span>
+<span class="go">1      []        4  False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span><span class="o">.</span><span class="n">positional_metadata</span>
+<span class="go">     list  quality   gaps</span>
+<span class="go">0      []      999  False</span>
+<span class="go">1  [item]        3  False</span>
+<span class="go">2      []        4  False</span>
+<span class="go">3      []       10  False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">positional_metadata</span>
+<span class="go">     list  quality</span>
+<span class="go">0      []        3</span>
+<span class="go">1  [item]        3</span>
+<span class="go">2      []        4</span>
+<span class="go">3      []       10</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.values.html#skbio.sequence.Sequence.values" title="skbio.sequence.Sequence.values"><tt class="xref py py-obj docutils literal"><span class="pre">values</span></tt></a></td>
+<td>Array containing underlying sequence characters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.metadata.html#skbio.sequence.Sequence.metadata" title="skbio.sequence.Sequence.metadata"><tt class="xref py py-obj docutils literal"><span class="pre">metadata</span></tt></a></td>
+<td><tt class="docutils literal"><span class="pre">dict</span></tt> containing metadata which applies to the entire sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.positional_metadata.html#skbio.sequence.Sequence.positional_metadata" title="skbio.sequence.Sequence.positional_metadata"><tt class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></tt></a></td>
+<td><tt class="docutils literal"><span class="pre">pd.DataFrame</span></tt> containing metadata on a per-character basis.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.copy.html#skbio.sequence.Sequence.copy" title="skbio.sequence.Sequence.copy"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a>([deep])</td>
+<td>Return a copy of the biological sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.count.html#skbio.sequence.Sequence.count" title="skbio.sequence.Sequence.count"><tt class="xref py py-obj docutils literal"><span class="pre">count</span></tt></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Count occurrences of a subsequence in the biological sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.distance.html#skbio.sequence.Sequence.distance" title="skbio.sequence.Sequence.distance"><tt class="xref py py-obj docutils literal"><span class="pre">distance</span></tt></a>(other[,&nbsp;metric])</td>
+<td>Compute the distance to another sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.find_with_regex.html#skbio.sequence.Sequence.find_with_regex" title="skbio.sequence.Sequence.find_with_regex"><tt class="xref py py-obj docutils literal"><span class="pre">find_with_regex</span></tt></a>(regex[,&nbsp;ignore])</td>
+<td>Generate slices for patterns matched by a regular expression.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.has_metadata.html#skbio.sequence.Sequence.has_metadata" title="skbio.sequence.Sequence.has_metadata"><tt class="xref py py-obj docutils literal"><span class="pre">has_metadata</span></tt></a>()</td>
+<td>Determine if the sequence contains metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.has_positional_metadata.html#skbio.sequence.Sequence.has_positional_metadata" title="skbio.sequence.Sequence.has_positional_metadata"><tt class="xref py py-obj docutils literal"><span class="pre">has_positional_metadata</span></tt></a>()</td>
+<td>Determine if the sequence contains positional metadata.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.index.html#skbio.sequence.Sequence.index" title="skbio.sequence.Sequence.index"><tt class="xref py py-obj docutils literal"><span class="pre">index</span></tt></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Find position where subsequence first occurs in the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.iter_contiguous.html#skbio.sequence.Sequence.iter_contiguous" title="skbio.sequence.Sequence.iter_contiguous"><tt class="xref py py-obj docutils literal"><span class="pre">iter_contiguous</span></tt></a>(included[,&nbsp;min_length,&nbsp;invert])</td>
+<td>Yield contiguous subsequences based on <cite>included</cite>.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.iter_kmers.html#skbio.sequence.Sequence.iter_kmers" title="skbio.sequence.Sequence.iter_kmers"><tt class="xref py py-obj docutils literal"><span class="pre">iter_kmers</span></tt></a>(k[,&nbsp;overlap])</td>
+<td>Generate kmers of length <cite>k</cite> from the biological sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.kmer_frequencies.html#skbio.sequence.Sequence.kmer_frequencies" title="skbio.sequence.Sequence.kmer_frequencies"><tt class="xref py py-obj docutils literal"><span class="pre">kmer_frequencies</span></tt></a>(k[,&nbsp;overlap,&nbsp;relative])</td>
+<td>Return counts of words of length <cite>k</cite> from the biological sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.match_frequency.html#skbio.sequence.Sequence.match_frequency" title="skbio.sequence.Sequence.match_frequency"><tt class="xref py py-obj docutils literal"><span class="pre">match_frequency</span></tt></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that are the same between two sequences.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.matches.html#skbio.sequence.Sequence.matches" title="skbio.sequence.Sequence.matches"><tt class="xref py py-obj docutils literal"><span class="pre">matches</span></tt></a>(other)</td>
+<td>Find positions that match with another sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.mismatch_frequency.html#skbio.sequence.Sequence.mismatch_frequency" title="skbio.sequence.Sequence.mismatch_frequency"><tt class="xref py py-obj docutils literal"><span class="pre">mismatch_frequency</span></tt></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that differ between two sequences.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.mismatches.html#skbio.sequence.Sequence.mismatches" title="skbio.sequence.Sequence.mismatches"><tt class="xref py py-obj docutils literal"><span class="pre">mismatches</span></tt></a>(other)</td>
+<td>Find positions that do not match with another sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.Sequence.read.html#skbio.sequence.Sequence.read" title="skbio.sequence.Sequence.read"><tt class="xref py py-obj docutils literal"><span class="pre">read</span></tt></a>(file[,&nbsp;format])</td>
+<td>Create a new <tt class="docutils literal"><span class="pre">Sequence</span></tt> instance from a file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.Sequence.write.html#skbio.sequence.Sequence.write" title="skbio.sequence.Sequence.write"><tt class="xref py py-obj docutils literal"><span class="pre">write</span></tt></a>(file[,&nbsp;format])</td>
+<td>Write an instance of <tt class="docutils literal"><span class="pre">Sequence</span></tt> to a file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

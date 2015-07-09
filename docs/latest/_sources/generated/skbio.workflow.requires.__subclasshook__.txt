@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.requires.__subclasshook__
-========================================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: requires.__subclasshook__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.id
-=================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: ProteinSequence.id

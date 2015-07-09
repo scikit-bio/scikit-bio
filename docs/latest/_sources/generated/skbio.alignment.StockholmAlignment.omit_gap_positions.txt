@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.omit_gap_positions
-=====================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.omit_gap_positions

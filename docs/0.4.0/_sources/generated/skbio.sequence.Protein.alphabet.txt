@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.alphabet
+===============================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: Protein.alphabet

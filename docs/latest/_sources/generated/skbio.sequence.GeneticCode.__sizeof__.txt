@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode.__sizeof__
-=====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode.__sizeof__

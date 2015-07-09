@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.k_word_frequencies
-=====================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.k_word_frequencies

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.int_map
-=================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.int_map

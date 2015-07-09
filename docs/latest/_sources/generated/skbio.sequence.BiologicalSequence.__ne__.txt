@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.__ne__
-========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.__ne__

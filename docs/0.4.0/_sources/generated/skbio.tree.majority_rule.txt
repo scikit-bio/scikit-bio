@@ -1,0 +1,6 @@
+skbio.tree.majority_rule
+========================
+
+.. currentmodule:: skbio.tree
+
+.. autofunction:: majority_rule

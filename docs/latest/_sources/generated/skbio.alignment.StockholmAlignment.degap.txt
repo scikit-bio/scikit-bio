@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.degap
-========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.degap

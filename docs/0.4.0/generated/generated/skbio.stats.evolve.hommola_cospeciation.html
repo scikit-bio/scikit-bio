@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.stats.evolve.hommola_cospeciation &mdash; scikit-bio 0.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.0 documentation" href="../../index.html" />
+    <link rel="up" title="Evolutionary statistics (skbio.stats.evolve)" href="../skbio.stats.evolve.html" />
+    <link rel="next" title="Ordination methods (skbio.stats.ordination)" href="../skbio.stats.ordination.html" />
+    <link rel="prev" title="skbio.stats.evolve.hommola_cospeciation" href="" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sequence.html">Sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../alignment.html">Alignments and Sequence collections (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.stats.evolve.hommola_cospeciation</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-stats-evolve-hommola-cospeciation">
+<h1>skbio.stats.evolve.hommola_cospeciation<a class="headerlink" href="#skbio-stats-evolve-hommola-cospeciation" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="skbio.stats.evolve.hommola_cospeciation">
+<tt class="descclassname">skbio.stats.evolve.</tt><tt class="descname">hommola_cospeciation</tt><big>(</big><em>host_dist</em>, <em>par_dist</em>, <em>interaction</em>, <em>permutations=999</em><big>)</big><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.4.0/skbio/stats/evolve/_hommola.py#L19"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.stats.evolve.hommola_cospeciation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform Hommola et al (2009) host/parasite cospeciation test.</p>
+<p>State: Experimental as of 0.4.0.</p>
+<p>This test for host/parasite cospeciation is as described in <a class="reference internal" href="#r69" id="id1">[R69]</a>. This test
+is a modification of a Mantel test, expanded to accept the case where
+multiple hosts map to a single parasite (and vice versa).</p>
+<p>For a basic Mantel test, the distance matrices being compared must have the
+same number of values. To determine the significance of the correlations
+between distances in the two matrices, the correlation coefficient of those
+distances is calculated and compared to the correlation coefficients
+calculated from a set of matrices in which rows and columns have been
+permuted.</p>
+<p>In this test, rather than comparing host-host to parasite-parasite
+distances directly (requiring one host per parasite), the distances are
+compared for each interaction edge between host and parasite. Thus, a host
+interacting with two different parasites will be represented in two
+different edges, with the host-host distance for the comparison between
+those edges equal to zero, and the parasite-parasite distance equal to the
+distance between those two parasites. Like in the Mantel test, significance
+of the interaction is assessed by permutation, in this case permutation of
+the host-symbiont interaction links.</p>
+<p>Note that the null hypothesis being tested here is that the hosts and
+parasites have evolved independently of one another. The alternative to
+this is a somewhat weaker case than what is often implied with the term
+&#8216;cospeciation,&#8217; which is that each incidence of host speciation is
+recapitulated in an incidence of symbiont speciation (strict
+co-cladogenesis). Although there may be many factors that could contribute
+to non-independence of host and symbiont phylogenies, this loss of
+explanatory specificity comes with increased robustness to phylogenetic
+uncertainty. Thus, this test may be especially useful for cases where host
+and/or symbiont phylogenies are poorly resolved, or when simple correlation
+between host and symbiont evolution is of more interest than strict
+co-cladogenesis.</p>
+<p>This test requires pairwise distance matrices for hosts and symbionts, as
+well as an interaction matrix specifying links between hosts (in columns)
+and symbionts (in rows). This interaction matrix should have the same
+number of columns as the host distance matrix, and the same number of rows
+as the symbiont distance matrix. Interactions between hosts and symbionts
+should be indicated by values of <tt class="docutils literal"><span class="pre">1</span></tt> or <tt class="docutils literal"><span class="pre">True</span></tt>, with non-interactions
+indicated by values of <tt class="docutils literal"><span class="pre">0</span></tt> or <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>host_dist</strong> : 2-D array_like or DistanceMatrix</p>
+<blockquote>
+<div><p>Symmetric matrix of m x m pairwise distances between hosts.</p>
+</div></blockquote>
+<p><strong>par_dist</strong> : 2-D array_like or DistanceMatrix</p>
+<blockquote>
+<div><p>Symmetric matrix of n x n pairwise distances between parasites.</p>
+</div></blockquote>
+<p><strong>interaction</strong> : 2-D array_like, bool</p>
+<blockquote>
+<div><p>n x m binary matrix of parasite x host interactions. Order of hosts
+(columns) should be identical to order of hosts in <cite>host_dist</cite>, as
+should order of parasites (rows) be identical to order of parasites in
+<cite>par_dist</cite>.</p>
+</div></blockquote>
+<p><strong>permutations</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of permutations used to compute p-value. Must be greater than or
+equal to zero. If zero, statistical significance calculations will be
+skipped and the p-value will be <tt class="docutils literal"><span class="pre">np.nan</span></tt>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>corr_coeff</strong> : float</p>
+<blockquote>
+<div><p>Pearson correlation coefficient of host : parasite association.</p>
+</div></blockquote>
+<p><strong>p_value</strong> : float</p>
+<blockquote>
+<div><p>Significance of host : parasite association computed using
+<cite>permutations</cite> and a one-sided (greater) alternative hypothesis.</p>
+</div></blockquote>
+<p><strong>perm_stats</strong> : 1-D numpy.ndarray, float</p>
+<blockquote class="last">
+<div><p>Correlation coefficients observed using permuted host : parasite
+interactions. Length will be equal to the number of permutations used
+to compute p-value (see <cite>permutations</cite> parameter above).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.stats.distance.mantel.html#skbio.stats.distance.mantel" title="skbio.stats.distance.mantel"><tt class="xref py py-obj docutils literal"><span class="pre">skbio.stats.distance.mantel</span></tt></a>, <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr" title="(in SciPy v0.15.1)"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>It is assumed that the ordering of parasites in <cite>par_dist</cite> and hosts in
+<cite>host_dist</cite> are identical to their ordering in the rows and columns,
+respectively, of the interaction matrix.</p>
+<p>This code is loosely based on the original R code from <a class="reference internal" href="#r69" id="id2">[R69]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r69" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R69]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id3">3</a>, <a class="fn-backref" href="#id4">4</a>)</em> Hommola K, Smith JE, Qiu Y, Gilks WR (2009) A Permutation Test of
+Host-Parasite Cospeciation. Molecular Biology and Evolution, 26,
+1457-1468.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.stats.evolve</span> <span class="kn">import</span> <span class="n">hommola_cospeciation</span>
+</pre></div>
+</div>
+<p>Create arrays for host distances, parasite distances, and their
+interactions (data taken from example in <a class="reference internal" href="#r69" id="id4">[R69]</a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">hdist</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>         <span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdist</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>         <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interaction</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>               <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Run the cospeciation test with 99 permutations. Note that the correlation
+coefficient for the observed values counts against the final reported
+p-value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corr_coeff</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">perm_stats</span> <span class="o">=</span> <span class="n">hommola_cospeciation</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">hdist</span><span class="p">,</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">interaction</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="mi">99</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corr_coeff</span>
+<span class="go">0.83170965463247903</span>
+</pre></div>
+</div>
+<p>In this case, the host distances have a fairly strong positive correlation
+with the symbiont distances. However, this may also reflect structure
+inherent in the phylogeny, and is not itself indicative of significance.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p_value</span> <span class="o">&lt;=</span> <span class="mf">0.05</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>After permuting host : parasite interactions, we find that the observed
+correlation is indeed greater than we would expect by chance.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

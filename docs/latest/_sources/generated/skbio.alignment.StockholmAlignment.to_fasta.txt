@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.to_fasta
-===========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.to_fasta

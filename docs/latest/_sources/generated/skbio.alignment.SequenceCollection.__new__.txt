@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.__new__
-==========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.__new__

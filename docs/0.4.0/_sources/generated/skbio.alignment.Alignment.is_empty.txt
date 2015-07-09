@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.is_empty
+==================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.is_empty

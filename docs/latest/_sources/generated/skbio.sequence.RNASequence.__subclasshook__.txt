@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.__subclasshook__
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.__subclasshook__

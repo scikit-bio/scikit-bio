@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence._set_quality
-=======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence._set_quality

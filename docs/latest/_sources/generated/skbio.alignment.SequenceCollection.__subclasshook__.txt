@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.__subclasshook__
-===================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.__subclasshook__

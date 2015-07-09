@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.has_metadata
+===============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.has_metadata

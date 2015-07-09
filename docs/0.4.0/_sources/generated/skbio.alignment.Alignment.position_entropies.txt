@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.Alignment.position_entropies
+============================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: Alignment.position_entropies

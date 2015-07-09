@@ -13,6 +13,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="docs/latest/index.html">Latest</a></li>
                         <li class="divider"></li>
+                        <li><a href="docs/0.4.0/index.html">0.4.0</a></li>
                         <li><a href="docs/0.2.3/index.html">0.2.3</a></li>
                         <li><a href="docs/0.2.2/index.html">0.2.2</a></li>
                         <li><a href="docs/0.2.1/index.html">0.2.1</a></li>
@@ -45,78 +46,48 @@
                     </div>
                     <div id="content">
                         <article class="markdown-body entry-content" itemprop="mainContentOfPage">
-<p>scikit-bio is currently in alpha. We are very actively developing it, and <strong>backwards-incompatible interface changes can and will arise</strong>. Once the API has started to solidify, we will strive to maintain backwards compatibility. We will provide deprecation warnings wherever possible in the scikit-bio code, documentation, and CHANGELOG.md.</p>
-<p><strong>Note:</strong> Deprecation warnings will be issued using Python's <tt>DeprecationWarning</tt> class. Since Python 2.7, these types of warnings are <strong>silenced by default</strong>. When developing a tool that uses scikit-bio, we recommend enabling the display of deprecation warnings to be informed of upcoming API changes. For details on how to display deprecation warnings, see <a href="https://docs.python.org/3/whatsnew/2.7.html#changes-to-the-handling-of-deprecation-warnings">Python's deprecation warning docs</a>.</p>
-<h2>
-<a id="user-content-installation-of-release-version-recommended-for-most-users" class="anchor" href="#installation-of-release-version-recommended-for-most-users" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation of release version (recommended for most users)</h2>
-<p>To install the latest release version of scikit-bio you should run:</p>
-<pre>
-pip install numpy
-pip install scikit-bio
+<p>scikit-bio is currently in beta. We are very actively developing it, and <strong>backward-incompatible interface changes can and will arise</strong>. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the <a href="docs/0.4.0/user/api_stability.html">API stability docs</a> for more details, including what we mean by <em>stable</em> and <em>experimental</em> in this context.</p>
+<a name="user-content-installing"></a>
+<h2><a id="user-content-installing" class="anchor" href="#installing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing</h2>
+<p>To install the latest release of scikit-bio:</p>
+<pre>pip install scikit-bio
 </pre>
-<p>Equivalently, you can use the <tt>conda</tt> package manager available in <a href="http://continuum.io/downloads">Anaconda</a> or <a href="http://conda.pydata.org/miniconda.html">miniconda</a> to install scikit-bio and all its dependencies, without having to compile them:</p>
-<pre>
-conda install scikit-bio
+<p>Equivalently, you can use the <code>conda</code> package manager available in <a href="http://continuum.io/downloads">Anaconda</a> or <a href="http://conda.pydata.org/miniconda.html">miniconda</a> to install scikit-bio and its dependencies without having to compile them:</p>
+<pre>conda install scikit-bio
 </pre>
-<p>Finally, most scikit-bio's dependencies (in particular, the ones that are trickier to build) are also available, albeit only for Python 2, in <a href="https://www.enthought.com/canopy-express/">Canopy Express</a>.</p>
-<p>You can verify your installation by running the scikit-bio unit tests as follows:</p>
-<pre>
-nosetests --with-doctest skbio
+<p>Finally, most of scikit-bio's dependencies (in particular, the ones that are trickier to build) are also available, albeit only for Python 2, in <a href="https://www.enthought.com/canopy-express/">Canopy Express</a>.</p>
+<p>You can verify your installation by running the scikit-bio unit tests:</p>
+<pre>python -m skbio.test
 </pre>
-<h2>
-<a id="user-content-installation-of-development-version" class="anchor" href="#installation-of-development-version" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation of development version</h2>
-<p>If you're interested in working with the latest development release of scikit-bio (recommended for developers only, as the development code can be unstable and less documented than the release code), you can clone the repository and install as follows. This will require that you have <tt>git</tt> installed.</p>
-<pre>
-git clone git@github.com:biocore/scikit-bio.git
-cd scikit-bio
-pip install .
-</pre>
-<p>After this completes, you can run the scikit-bio unit tests as follows. You must first <tt>cd</tt> out of the <tt>scikit-bio</tt> directory for the tests to pass (here we <tt>cd</tt> to the home directory).</p>
-<pre>
-cd
-nosetests --with-doctest skbio
-</pre>
-<p>For developers of scikit-bio, if you don't want to be forced to re-install after every change, you can modify the above <tt>pip install</tt> command to:</p>
-<pre>
-pip install -e .
-</pre>
-<p>This will build scikit-bio's Cython extensions, and will create a link in the <tt>site-packages</tt> directory to the scikit-bio source directory. When you then make changes to code in the source directory, those will be used (e.g., by the unit tests) without re-installing.</p>
-<p>Finally, if you don't want to use <tt>pip</tt> to install scikit-bio, and prefer to just put <tt>scikit-bio</tt> in your <tt>$PYTHONPATH</tt>, at the minimum you should run:</p>
-<pre>
-python setup.py build_ext --inplace
-</pre>
-<p>This will build scikit-bio's Cython extensions, but not create a link to the scikit-bio source directory in <tt>site-packages</tt>. If this isn't done, using certain components of scikit-bio will be inefficient and will produce an <tt>EfficiencyWarning</tt>.</p>
-<h2>
-<a id="user-content-getting-help" class="anchor" href="#getting-help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting help</h2>
-<p>To get help with scikit-bio, you should use the <a href="http://stackoverflow.com/questions/tagged/skbio">skbio</a> tag on StackOverflow (SO). Before posting a question, check out SO's guide on how to <a href="http://stackoverflow.com/questions/how-to-ask">ask a question</a>. The scikit-bio developers regularly monitor the skbio SO tag.</p>
-<h2>
-<a id="user-content-licensing" class="anchor" href="#licensing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licensing</h2>
-<p>scikit-bio is available under the new BSD license. See
-<a href="https://github.com/biocore/scikit-bio/blob/master/COPYING.txt">COPYING.txt</a> for scikit-bio's license, and the
-<a href="https://github.com/biocore/scikit-bio/tree/master/licenses">licenses directory</a> for the licenses of third-party software that is
-(either partially or entirely) distributed with scikit-bio.</p>
-<h2>
-<a id="user-content-projects-using-scikit-bio" class="anchor" href="#projects-using-scikit-bio" aria-hidden="true"><span class="octicon octicon-link"></span></a>Projects using scikit-bio</h2>
+<a name="user-content-getting-help"></a>
+<h2><a id="user-content-getting-help" class="anchor" href="#getting-help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting help</h2>
+<p>To get help with scikit-bio, you should use the <a href="http://stackoverflow.com/questions/tagged/skbio">skbio</a> tag on StackOverflow (SO). Before posting a question, check out SO's guide on how to <a href="http://stackoverflow.com/questions/how-to-ask">ask a question</a>. The scikit-bio developers regularly monitor the <code>skbio</code> SO tag.</p>
+<a name="user-content-projects-using-scikit-bio"></a>
+<h2><a id="user-content-projects-using-scikit-bio" class="anchor" href="#projects-using-scikit-bio" aria-hidden="true"><span class="octicon octicon-link"></span></a>Projects using scikit-bio</h2>
 <p>Some of the projects that we know of that are using scikit-bio are:</p>
 <ul>
 <li><a href="http://qiime.org/">QIIME</a></li>
 <li><a href="http://biocore.github.io/emperor/">Emperor</a></li>
-<li><a href="http://caporasolab.us/An-Introduction-To-Applied-Bioinformatics/">An Introduction to Applied
+<li><a href="http://readIAB.org">An Introduction to Applied
 Bioinformatics</a></li>
 <li><a href="https://github.com/biocore/tax2tree">tax2tree</a></li>
+<li><a href="http://qiita.microbio.me">Qiita</a></li>
+<li><a href="https://github.com/JTFouquier/ghost-tree">ghost-tree</a></li>
+<li><a href="https://github.com/biocore/Platypus-Conquistador">Platypus-Conquistador</a></li>
 </ul>
-<p>If you're using scikit-bio in your own projects, you can issue a
-pull request to add them to this list.</p>
-<h2>
-<a id="user-content-scikit-bio-development" class="anchor" href="#scikit-bio-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>scikit-bio development</h2>
-<p>If you're interested in getting involved in or learning about
-scikit-bio development, see <a href="https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
-<p>See the <a href="https://github.com/biocore/scikit-bio/graphs/contributors">list of all of scikit-bio's contributors</a>.</p>
-<p>Summaries of our weekly developer meetings are posted on
-HackPad. Click <a href="https://hackpad.com/2014-scikit-bio-developer-meeting-notes-1S2RbMqy0iM">here</a>
-to view the meeting notes for 2014.</p>
-<h2>
-<a id="user-content-the-pre-history-of-scikit-bio" class="anchor" href="#the-pre-history-of-scikit-bio" aria-hidden="true"><span class="octicon octicon-link"></span></a>The pre-history of scikit-bio</h2>
+<p>If you're using scikit-bio in your own projects, feel free to issue a pull request to add them to this list.</p>
+<a name="user-content-scikit-bio-development"></a>
+<h2><a id="user-content-scikit-bio-development" class="anchor" href="#scikit-bio-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>scikit-bio development</h2>
+<p>If you're interested in getting involved in scikit-bio development, see <a href="https://github.com/biocore/scikit-bio/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+<p>See the list of <a href="https://github.com/biocore/scikit-bio/graphs/contributors">scikit-bio's contributors</a>.</p>
+<a name="user-content-licensing"></a>
+<h2><a id="user-content-licensing" class="anchor" href="#licensing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licensing</h2>
+<p>scikit-bio is available under the new BSD license. See
+<a href="https://github.com/biocore/scikit-bio/blob/master/COPYING.txt">COPYING.txt</a> for scikit-bio's license, and the
+<a href="https://github.com/biocore/scikit-bio/tree/master/licenses">licenses directory</a> for the licenses of third-party software that is
+(either partially or entirely) distributed with scikit-bio.</p>
+<a name="user-content-the-pre-history-of-scikit-bio"></a>
+<h2><a id="user-content-the-pre-history-of-scikit-bio" class="anchor" href="#the-pre-history-of-scikit-bio" aria-hidden="true"><span class="octicon octicon-link"></span></a>The pre-history of scikit-bio</h2>
 <p>scikit-bio began from code derived from <a href="http://www.pycogent.org">PyCogent</a> and <a href="http://www.qiime.org">QIIME</a>, and
 the contributors and/or copyright holders have agreed to make the code
 they wrote for PyCogent and/or QIIME available under the BSD
@@ -124,7 +95,7 @@ license. The contributors to PyCogent and/or QIIME modules that have
 been ported to scikit-bio are: Rob Knight (<a href="https://github.com/rob-knight">@rob-knight</a>), Gavin Huttley (<a href="https://github.com/gavin-huttley">@gavin-huttley</a>), Daniel McDonald (<a href="https://github.com/wasade">@wasade</a>), Micah Hamady, Antonio Gonzalez
 (<a href="https://github.com/antgonza">@antgonza</a>), Sandra Smit, Greg
 Caporaso (<a href="https://github.com/gregcaporaso">@gregcaporaso</a>), Jai
-Ram Rideout (<a href="https://github.com/ElBrogrammer">@ElBrogrammer</a>),
+Ram Rideout (<a href="https://github.com/jairideout">@jairideout</a>),
 Cathy Lozupone (<a href="https://github.com/clozupone">@clozupone</a>), Mike Robeson
 (<a href="https://github.com/mikerobeson">@mikerobeson</a>), Marcin Cieslik,
 Peter Maxwell, Jeremy Widmann, Zongzhi Liu, Michael Dwan, Logan Knecht
@@ -134,10 +105,9 @@ Coy, Levi McCracken, Andrew Butterfield, Will Van Treuren (<a href="https://gith
 (<a href="https://github.com/josenavas">@josenavas</a>), Matthew Wakefield
 (<a href="https://github.com/genomematt">@genomematt</a>) and Jens Reeder
 (<a href="https://github.com/jensreeder">@jensreeder</a>).</p>
-<h2>
-<a id="user-content-logo" class="anchor" href="#logo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Logo</h2>
-<p>scikit-bio's logo was created by <a href="http://cargocollective.com/alinaprassas">Alina Prassas</a>.
-scikit-bio's ASCII art tree was created by <a href="https://github.com/gregcaporaso">@gregcaporaso</a>. Our text logo was created at <a href="http://patorjk.com/software/taag/">patorjk.com</a>.</p>
+<a name="user-content-logo"></a>
+<h2><a id="user-content-logo" class="anchor" href="#logo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Logo</h2>
+<p>scikit-bio's logo was created by <a href="http://cargocollective.com/alinaprassas">Alina Prassas</a>.</p>
 
 </article>
                     </div>

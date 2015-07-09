@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix.__subclasshook__
-====================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix.__subclasshook__

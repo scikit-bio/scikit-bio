@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.alphabet
-==========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.alphabet

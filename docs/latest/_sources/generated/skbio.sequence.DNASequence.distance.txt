@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.distance
-===================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNASequence.distance

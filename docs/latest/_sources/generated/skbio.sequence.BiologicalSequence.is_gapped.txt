@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.is_gapped
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.is_gapped

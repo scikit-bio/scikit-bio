@@ -1,0 +1,6 @@
+skbio.io.registry.write
+=======================
+
+.. currentmodule:: skbio.io.registry
+
+.. autofunction:: write

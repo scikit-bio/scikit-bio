@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.count
-=======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.count

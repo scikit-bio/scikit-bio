@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.TreeNode.__repr__
-============================
-
-.. currentmodule:: skbio.tree
-
-.. automethod:: TreeNode.__repr__

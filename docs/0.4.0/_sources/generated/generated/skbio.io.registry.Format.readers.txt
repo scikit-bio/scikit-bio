@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.readers
+================================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoattribute:: Format.readers

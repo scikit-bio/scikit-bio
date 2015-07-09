@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.CA._ca
-=============================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: CA._ca

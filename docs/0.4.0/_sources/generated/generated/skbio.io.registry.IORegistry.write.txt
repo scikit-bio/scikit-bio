@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.write
+==================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.write

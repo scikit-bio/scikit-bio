@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clustal format (skbio.io.format.clustal) &mdash; scikit-bio 0.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.0 documentation" href="../index.html" />
+    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
+    <link rel="next" title="FASTA/QUAL format (skbio.io.format.fasta)" href="skbio.io.format.fasta.html" />
+    <link rel="prev" title="skbio.io.util.open_files" href="generated/skbio.io.util.open_files.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments and Sequence collections (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Clustal format (<tt class="docutils literal"><span class="pre">skbio.io.format.clustal</span></tt>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#alignment-section">Alignment Section</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.io.format.clustal"></span><div class="section" id="clustal-format-skbio-io-format-clustal">
+<h1>Clustal format (<a class="reference internal" href="#module-skbio.io.format.clustal" title="skbio.io.format.clustal"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.clustal</span></tt></a>)<a class="headerlink" href="#clustal-format-skbio-io-format-clustal" title="Permalink to this headline">¶</a></h1>
+<p>Clustal format (<tt class="docutils literal"><span class="pre">clustal</span></tt>) stores multiple sequence alignments. This format
+was originally introduced in the Clustal package <a class="reference internal" href="#r143" id="id1">[R143]</a>.</p>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.alignment.Alignment.html#skbio.alignment.Alignment" title="skbio.alignment.Alignment"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>A clustal-formatted file is a plain text format. It can optionally have a
+header, which states the clustal version number. This is followed by the
+multiple sequence alignment, and optional information about the degree of
+conservation at each position in the alignment <a class="reference internal" href="#r144" id="id2">[R144]</a>.</p>
+<div class="section" id="alignment-section">
+<h3>Alignment Section<a class="headerlink" href="#alignment-section" title="Permalink to this headline">¶</a></h3>
+<p>Each sequence in the alignment is divided into subsequences each at most
+60 characters long. The sequence identifier for each sequence precedes each
+subsequence. Each subsequence can optionally be followed by the cumulative
+number of non-gap characters up to that point in the full sequence (not
+included in the examples below). A line containing conservation information
+about each position in the alignment can optionally follow all of the
+subsequences (not included in the examples below).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio does not support writing conservation information</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio will only write a clustal-formatted file if the
+alignment&#8217;s sequence characters are valid IUPAC characters, as defined in
+<a class="reference internal" href="../sequence.html#module-skbio.sequence" title="skbio.sequence"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence</span></tt></a>. The specific lexicon that is validated against
+depends on the type of sequences stored in the alignment.</p>
+</div>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Assume we have a clustal-formatted file with the following contents:</p>
+<div class="highlight-python"><div class="highlight"><pre>CLUSTAL W (1.82) multiple sequence alignment
+
+abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCAUCA
+def   ----------------------------------
+xyz   ----------------------------------
+
+abc   GUCGAUACAUACGUACGUCGUACGUACGU-CGAC
+def   ---------------CGCGAUGCAUGCAU-CGAU
+xyz   -----------CAUGCAUCGUACGUACGCAUGAC
+</pre></div>
+</div>
+<p>We can use the following code to read a clustal file into an <tt class="docutils literal"><span class="pre">Alignment</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">Alignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">clustal_f</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;CLUSTAL W (1.82) multiple sequence alignment</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;def   -------------------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;xyz   -------------------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;def   ---------------CGUGCAUGCAU-CGAU</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="s">u&#39;xyz   -----------CAUUCGUACGUACGCAUGAC</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Alignment</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">clustal_f</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&quot;clustal&quot;</span><span class="p">)</span>
+<span class="go">&lt;Alignment: n=3; mean +/- std length=62.00 +/- 0.00&gt;</span>
+</pre></div>
+</div>
+<p>We can use the following code to write an <tt class="docutils literal"><span class="pre">Alignment</span></tt> to a clustal-formatted
+file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">DNA</span><span class="p">(</span><span class="s">&#39;ACCGTTGTA-GTAGCT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;seq1&#39;</span><span class="p">}),</span>
+<span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;A--GTCGAA-GTACCT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;sequence-2&#39;</span><span class="p">}),</span>
+<span class="gp">... </span>        <span class="n">DNA</span><span class="p">(</span><span class="s">&#39;AGAGTTGAAGGTATCT&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span><span class="p">})]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aln</span> <span class="o">=</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">aln</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;clustal&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span> 
+<span class="go">CLUSTAL</span>
+
+
+<span class="go">seq1        ACCGTTGTA-GTAGCT</span>
+<span class="go">sequence-2  A--GTCGAA-GTACCT</span>
+<span class="go">3           AGAGTTGAAGGTATCT</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r143" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R143]</a></td><td><a class="reference external" href="http://www.sciencedirect.com/science/article/pii/0378111988903307">http://www.sciencedirect.com/science/article/pii/0378111988903307</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r144" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R144]</a></td><td><a class="reference external" href="http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html">http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

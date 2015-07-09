@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.__reduce__
-=====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNASequence.__reduce__

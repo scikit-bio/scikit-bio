@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode.is_stop
-==================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode.is_stop

@@ -1,6 +1,0 @@
-skbio.sequence.GeneticCodeError
-===============================
-
-.. currentmodule:: skbio.sequence
-
-.. autoexception:: GeneticCodeError

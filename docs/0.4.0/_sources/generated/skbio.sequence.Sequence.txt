@@ -1,0 +1,43 @@
+skbio.sequence.Sequence
+=======================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: Sequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Sequence.copy
+         Sequence.count
+         Sequence.distance
+         Sequence.find_with_regex
+         Sequence.has_metadata
+         Sequence.has_positional_metadata
+         Sequence.index
+         Sequence.iter_contiguous
+         Sequence.iter_kmers
+         Sequence.kmer_frequencies
+         Sequence.match_frequency
+         Sequence.matches
+         Sequence.mismatch_frequency
+         Sequence.mismatches
+         Sequence.read
+         Sequence.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Sequence.default_write_format
+         Sequence.metadata
+         Sequence.positional_metadata
+         Sequence.values
+

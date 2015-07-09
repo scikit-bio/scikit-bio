@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.__reduce__
-=====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.__reduce__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.copy
-===================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence.copy

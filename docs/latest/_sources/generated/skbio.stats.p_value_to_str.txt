@@ -1,6 +1,0 @@
-skbio.stats.p_value_to_str
-==========================
-
-.. currentmodule:: skbio.stats
-
-.. autofunction:: p_value_to_str

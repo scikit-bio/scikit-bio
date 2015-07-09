@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.k_word_frequencies
-=============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.k_word_frequencies

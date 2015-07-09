@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.gap_chars
+================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: Protein.gap_chars

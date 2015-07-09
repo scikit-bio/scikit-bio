@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment._validate_character_set
-=================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment._validate_character_set
