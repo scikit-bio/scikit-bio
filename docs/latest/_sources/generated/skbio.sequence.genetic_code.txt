@@ -1,6 +1,0 @@
-skbio.sequence.genetic_code
-===========================
-
-.. currentmodule:: skbio.sequence
-
-.. autofunction:: genetic_code

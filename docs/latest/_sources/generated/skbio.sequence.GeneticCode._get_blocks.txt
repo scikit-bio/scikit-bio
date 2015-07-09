@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode._get_blocks
-======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode._get_blocks

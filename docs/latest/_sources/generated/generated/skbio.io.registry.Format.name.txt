@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.name
+=============================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoattribute:: Format.name

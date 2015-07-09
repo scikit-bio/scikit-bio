@@ -1,0 +1,6 @@
+skbio.util.flatten
+==================
+
+.. currentmodule:: skbio.util
+
+.. autofunction:: flatten

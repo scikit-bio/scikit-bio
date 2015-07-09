@@ -1,6 +1,0 @@
-skbio.io.sniff
-==============
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: sniff

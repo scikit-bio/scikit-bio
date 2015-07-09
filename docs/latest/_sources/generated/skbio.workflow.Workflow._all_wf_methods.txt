@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.Workflow._all_wf_methods
-=======================================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: Workflow._all_wf_methods

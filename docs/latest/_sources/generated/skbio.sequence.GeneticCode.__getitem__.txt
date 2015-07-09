@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode.__getitem__
-======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode.__getitem__

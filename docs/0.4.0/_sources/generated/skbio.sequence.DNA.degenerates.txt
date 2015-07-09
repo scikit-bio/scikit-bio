@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.degenerates
+==============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.degenerates

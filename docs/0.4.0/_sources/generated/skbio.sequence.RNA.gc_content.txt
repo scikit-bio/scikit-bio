@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.gc_content
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.gc_content

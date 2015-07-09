@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.read
+=================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.read

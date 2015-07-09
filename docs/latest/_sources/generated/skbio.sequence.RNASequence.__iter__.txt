@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.__iter__
-===================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.__iter__

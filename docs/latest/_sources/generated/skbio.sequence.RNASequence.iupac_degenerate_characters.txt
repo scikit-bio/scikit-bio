@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.iupac_degenerate_characters
-======================================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.iupac_degenerate_characters

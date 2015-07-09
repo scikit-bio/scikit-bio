@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence._set_quality
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence._set_quality

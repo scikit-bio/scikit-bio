@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.kmer_frequencies
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.kmer_frequencies

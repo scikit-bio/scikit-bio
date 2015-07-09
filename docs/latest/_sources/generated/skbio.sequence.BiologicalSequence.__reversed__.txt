@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.__reversed__
-==============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.__reversed__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.fraction_diff
-========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.fraction_diff

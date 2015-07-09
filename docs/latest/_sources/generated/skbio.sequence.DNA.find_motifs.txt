@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.find_motifs
+==============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.find_motifs

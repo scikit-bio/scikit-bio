@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.to_fasta
-=======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence.to_fasta

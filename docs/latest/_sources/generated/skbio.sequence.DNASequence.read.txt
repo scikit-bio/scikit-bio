@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.read
-===============================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNASequence.read

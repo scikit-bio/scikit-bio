@@ -1,0 +1,6 @@
+skbio.diversity.alpha.margalef
+==============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: margalef

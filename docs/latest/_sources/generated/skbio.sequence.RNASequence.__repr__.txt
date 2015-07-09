@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.__repr__
-===================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.__repr__

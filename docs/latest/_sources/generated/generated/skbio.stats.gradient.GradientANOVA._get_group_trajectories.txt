@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.gradient.GradientANOVA._get_group_trajectories
-==========================================================
-
-.. currentmodule:: skbio.stats.gradient
-
-.. automethod:: GradientANOVA._get_group_trajectories

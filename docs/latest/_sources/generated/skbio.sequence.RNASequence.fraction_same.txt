@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.RNASequence.fraction_same
-========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: RNASequence.fraction_same

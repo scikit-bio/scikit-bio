@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.find_with_regex
+==================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.find_with_regex

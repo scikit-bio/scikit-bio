@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DissimilarityMatrix._figure_data
-=====================================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DissimilarityMatrix._figure_data

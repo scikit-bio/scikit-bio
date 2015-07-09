@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.count
+========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.count

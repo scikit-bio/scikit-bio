@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.ids
-======================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.ids

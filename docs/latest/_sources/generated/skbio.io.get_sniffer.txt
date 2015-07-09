@@ -1,6 +1,0 @@
-skbio.io.get_sniffer
-====================
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: get_sniffer

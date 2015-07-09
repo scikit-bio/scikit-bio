@@ -1,6 +1,0 @@
-skbio.sequence.BiologicalSequenceError
-======================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoexception:: BiologicalSequenceError

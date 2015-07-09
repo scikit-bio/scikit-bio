@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.get_writer
+=======================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.get_writer

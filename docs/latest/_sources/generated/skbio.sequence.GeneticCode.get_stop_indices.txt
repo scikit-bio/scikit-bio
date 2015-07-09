@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GeneticCode.get_stop_indices
-===========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GeneticCode.get_stop_indices

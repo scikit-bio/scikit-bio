@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.IORegistry.add_format
+=======================================
+
+.. currentmodule:: skbio.io.registry
+
+.. automethod:: IORegistry.add_format

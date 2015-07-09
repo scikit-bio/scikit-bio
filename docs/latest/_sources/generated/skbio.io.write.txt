@@ -1,6 +1,0 @@
-skbio.io.write
-==============
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: write

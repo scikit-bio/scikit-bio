@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNASequence.iupac_degeneracies
-=============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNASequence.iupac_degeneracies

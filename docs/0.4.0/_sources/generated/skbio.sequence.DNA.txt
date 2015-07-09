@@ -1,0 +1,67 @@
+skbio.sequence.DNA
+==================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: DNA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNA.complement
+         DNA.copy
+         DNA.count
+         DNA.degap
+         DNA.degenerates
+         DNA.distance
+         DNA.expand_degenerates
+         DNA.find_motifs
+         DNA.find_with_regex
+         DNA.gaps
+         DNA.gc_content
+         DNA.gc_frequency
+         DNA.has_degenerates
+         DNA.has_gaps
+         DNA.has_metadata
+         DNA.has_nondegenerates
+         DNA.has_positional_metadata
+         DNA.index
+         DNA.is_reverse_complement
+         DNA.iter_contiguous
+         DNA.iter_kmers
+         DNA.kmer_frequencies
+         DNA.lowercase
+         DNA.match_frequency
+         DNA.matches
+         DNA.mismatch_frequency
+         DNA.mismatches
+         DNA.nondegenerates
+         DNA.read
+         DNA.reverse_complement
+         DNA.transcribe
+         DNA.translate
+         DNA.translate_six_frames
+         DNA.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DNA.alphabet
+         DNA.complement_map
+         DNA.default_write_format
+         DNA.degenerate_chars
+         DNA.degenerate_map
+         DNA.gap_chars
+         DNA.metadata
+         DNA.nondegenerate_chars
+         DNA.positional_metadata
+         DNA.values
+

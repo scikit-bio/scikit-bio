@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.default_write_format
-=======================================================
-
-.. currentmodule:: skbio.alignment
-
-.. autoattribute:: StockholmAlignment.default_write_format

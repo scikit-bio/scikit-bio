@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.method.__reduce__
-================================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: method.__reduce__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.__hash__
-=======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence.__hash__

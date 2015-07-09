@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.find_features
-===============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.find_features

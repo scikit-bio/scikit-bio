@@ -1,6 +1,0 @@
-skbio.io.register_sniffer
-=========================
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: register_sniffer

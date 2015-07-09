@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.workflow.Workflow.__new__
-===============================
-
-.. currentmodule:: skbio.workflow
-
-.. automethod:: Workflow.__new__

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.position_counters
-====================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.position_counters

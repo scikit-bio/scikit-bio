@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.read
+===========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.read

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.is_valid
-==================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.is_valid

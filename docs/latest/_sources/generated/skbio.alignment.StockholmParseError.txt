@@ -1,6 +1,0 @@
-skbio.alignment.StockholmParseError
-===================================
-
-.. currentmodule:: skbio.alignment
-
-.. autoexception:: StockholmParseError

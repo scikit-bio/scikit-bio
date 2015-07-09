@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.equals
-========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.equals

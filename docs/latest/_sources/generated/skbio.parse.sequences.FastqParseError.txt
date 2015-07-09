@@ -1,6 +1,0 @@
-skbio.parse.sequences.FastqParseError
-=====================================
-
-.. currentmodule:: skbio.parse.sequences
-
-.. autoexception:: FastqParseError

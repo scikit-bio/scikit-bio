@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.stop_chars
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: Protein.stop_chars

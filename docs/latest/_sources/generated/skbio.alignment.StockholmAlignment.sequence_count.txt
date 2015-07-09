@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.sequence_count
-=================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.sequence_count

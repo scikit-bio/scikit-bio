@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.quality
-=========================================
-
-.. currentmodule:: skbio.sequence
-
-.. autoattribute:: BiologicalSequence.quality

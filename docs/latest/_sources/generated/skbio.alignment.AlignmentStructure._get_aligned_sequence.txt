@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.AlignmentStructure._get_aligned_sequence
-========================================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: AlignmentStructure._get_aligned_sequence

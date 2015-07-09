@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.__ne__
-================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.__ne__

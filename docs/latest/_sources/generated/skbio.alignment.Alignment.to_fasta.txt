@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.to_fasta
-==================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.to_fasta

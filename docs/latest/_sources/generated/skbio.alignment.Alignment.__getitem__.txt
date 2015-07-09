@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.__getitem__
-=====================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.__getitem__

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>FASTQ format (skbio.io.format.fastq) &mdash; scikit-bio 0.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.0 documentation" href="../index.html" />
+    <link rel="up" title="File I/O (skbio.io)" href="../io.html" />
+    <link rel="next" title="Labeled square matrix format (skbio.io.format.lsmat)" href="skbio.io.format.lsmat.html" />
+    <link rel="prev" title="FASTA/QUAL format (skbio.io.format.fasta)" href="skbio.io.format.fasta.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../io.html">File I/O (<tt class="docutils literal"><span class="pre">skbio.io</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<tt class="docutils literal"><span class="pre">skbio.sequence</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments and Sequence collections (<tt class="docutils literal"><span class="pre">skbio.alignment</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<tt class="docutils literal"><span class="pre">skbio.tree</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<tt class="docutils literal"><span class="pre">skbio.workflow</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../draw.html">Visualizations (<tt class="docutils literal"><span class="pre">skbio.draw</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<tt class="docutils literal"><span class="pre">skbio.diversity</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<tt class="docutils literal"><span class="pre">skbio.stats</span></tt>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<tt class="docutils literal"><span class="pre">skbio.util</span></tt>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">FASTQ format (<tt class="docutils literal"><span class="pre">skbio.io.format.fastq</span></tt>)</a><ul>
+<li><a class="reference internal" href="#format-support">Format Support</a></li>
+<li><a class="reference internal" href="#format-specification">Format Specification</a><ul>
+<li><a class="reference internal" href="#quality-score-variants">Quality Score Variants</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#format-parameters">Format Parameters</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <span class="target" id="module-skbio.io.format.fastq"></span><div class="section" id="fastq-format-skbio-io-format-fastq">
+<h1>FASTQ format (<a class="reference internal" href="#module-skbio.io.format.fastq" title="skbio.io.format.fastq"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fastq</span></tt></a>)<a class="headerlink" href="#fastq-format-skbio-io-format-fastq" title="Permalink to this headline">¶</a></h1>
+<p>The FASTQ file format (<tt class="docutils literal"><span class="pre">fastq</span></tt>) stores biological (e.g., nucleotide)
+sequences and their quality scores in a simple plain text format that is both
+human-readable and easy to parse. The file format was invented by Jim Mullikin
+at the Wellcome Trust Sanger Institute but wasn&#8217;t given a formal definition,
+though it has informally become a standard file format for storing
+high-throughput sequence data. More information about the format and its
+variants can be found in <a class="reference internal" href="#r152" id="id1">[R152]</a> and <a class="reference internal" href="#r153" id="id2">[R153]</a>.</p>
+<p>Conceptually, a FASTQ file is similar to paired FASTA and QUAL files in that it
+stores both biological sequences and their quality scores. FASTQ differs from
+FASTA/QUAL because the quality scores are stored in the same file as the
+biological sequence data.</p>
+<p>An example FASTQ-formatted file containing two DNA sequences and their quality
+scores:</p>
+<div class="highlight-python"><div class="highlight"><pre>@seq1 description 1
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
++
+````Y^T]`]c^cabcacc`^Lb^ccYT\T\Y\WF
+@seq2 description 2
+TATGTATATATAACATATACATATATACATACATA
++
+]KZ[PY]_[YY^```ac^\\`bT``c`\aT``bbb
+</pre></div>
+</div>
+<div class="section" id="format-support">
+<h2>Format Support<a class="headerlink" href="#format-support" title="Permalink to this headline">¶</a></h2>
+<p><strong>Has Sniffer: Yes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reader</th>
+<th class="head">Writer</th>
+<th class="head">Object Class</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>generator of <a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></tt></a> objects</td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.alignment.SequenceCollection.html#skbio.alignment.SequenceCollection" title="skbio.alignment.SequenceCollection"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.SequenceCollection</span></tt></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.alignment.Alignment.html#skbio.alignment.Alignment" title="skbio.alignment.Alignment"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.alignment.Alignment</span></tt></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Sequence</span></tt></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.DNA</span></tt></a></td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.RNA</span></tt></a></td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td><a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.sequence.Protein</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="format-specification">
+<h2>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this headline">¶</a></h2>
+<p>A FASTQ file contains one or more biological sequences and their corresponding
+quality scores stored sequentially as <em>records</em>. Each <em>record</em> consists of four
+sections:</p>
+<ol class="arabic simple">
+<li>Sequence header line consisting of a sequence identifier (ID) and
+description (both optional)</li>
+<li>Biological sequence data (typically stored using the standard IUPAC
+lexicon), optionally split over multiple lines</li>
+<li>Quality header line separating sequence data from quality scores (optionally
+repeating the ID and description from the sequence header line)</li>
+<li>Quality scores as printable ASCII characters, optionally split over multiple
+lines. Decoding of quality scores will depend on the specified FASTQ variant
+(see below for more details)</li>
+</ol>
+<p>For the complete FASTQ format specification, see <a class="reference internal" href="#r152" id="id3">[R152]</a>. scikit-bio&#8217;s FASTQ
+implementation follows the format specification described in this excellent
+publication, including validating the implementation against the FASTQ example
+files provided in the publication&#8217;s supplementary data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">IDs and descriptions will be parsed from sequence header lines in
+exactly the same way as FASTA headers (<a class="reference internal" href="skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fasta</span></tt></a>). IDs,
+descriptions, and quality scores are also stored automatically on the
+object in the same way as with FASTA.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Blank or whitespace-only lines are only allowed at the beginning of
+the file, between FASTQ records, or at the end of the file. A blank or
+whitespace-only line after the header line, within the sequence, or within
+quality scores will raise an error.</p>
+<p class="last">scikit-bio will ignore leading and trailing whitespace characters on each
+line while reading.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Validation may be performed depending on the type of object the data
+is being read into. This behavior matches that of FASTA files.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">scikit-bio will write FASTQ files in a normalized format, with each
+record section on a single line. Thus, each record will be composed of
+<em>exactly</em> four lines. The quality header line won&#8217;t have the sequence ID and
+description repeated.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><cite>lowercase</cite> functionality is supported the same as with FASTA.</p>
+</div>
+<div class="section" id="quality-score-variants">
+<h3>Quality Score Variants<a class="headerlink" href="#quality-score-variants" title="Permalink to this headline">¶</a></h3>
+<p>FASTQ associates quality scores with sequence data, with each quality score
+encoded as a single printable ASCII character. In scikit-bio, all quality
+scores are decoded as Phred quality scores. This is the most common quality
+score metric, though there are others (e.g., Solexa quality scores).
+Unfortunately, different sequencers have different ways of encoding quality
+scores as ASCII characters, notably Sanger and Illumina. Below is a table
+highlighting the different encoding variants supported by scikit-bio, as well
+as listing the equivalent variant names used in the Open Bioinformatics
+Foundation (OBF) <a class="reference internal" href="#r154" id="id4">[R154]</a> projects (e.g., Biopython, BioPerl, etc.).</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="12%" />
+<col width="5%" />
+<col width="11%" />
+<col width="56%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variant</th>
+<th class="head">ASCII
+Range</th>
+<th class="head">Offset</th>
+<th class="head">Quality
+Range</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>sanger</td>
+<td>33 to 126</td>
+<td>33</td>
+<td>0 to 93</td>
+<td>Equivalent to OBF&#8217;s fastq-sanger.</td>
+</tr>
+<tr class="row-odd"><td>illumina1.3</td>
+<td>64 to 126</td>
+<td>64</td>
+<td>0 to 62</td>
+<td>Equivalent to OBF&#8217;s fastq-illumina. Use
+this if your data was generated using
+Illumina 1.3-1.7 software.</td>
+</tr>
+<tr class="row-even"><td>illumina1.8</td>
+<td>33 to 95</td>
+<td>33</td>
+<td>0 to 62</td>
+<td>Equivalent to sanger but with 0 to 62
+quality score range check. Use this if
+your data was generated using Illumina
+1.8 software or later.</td>
+</tr>
+<tr class="row-odd"><td>solexa</td>
+<td>59 to 126</td>
+<td>64</td>
+<td>-5 to 62</td>
+<td>Not currently implemented.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>When writing, Phred quality scores will be truncated to the maximum
+value in the variant&#8217;s range and a warning will be issued. This is
+consistent with the OBF projects.</p>
+<p class="last">When reading, an error will be raised if a decoded quality score is outside
+the variant&#8217;s range.</p>
+</div>
+</div>
+</div>
+<div class="section" id="format-parameters">
+<h2>Format Parameters<a class="headerlink" href="#format-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The following parameters are available to all FASTQ format readers and writers:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">variant</span></tt>: A string indicating the quality score variant used to
+decode/encode Phred quality scores. Must be one of <tt class="docutils literal"><span class="pre">sanger</span></tt>,
+<tt class="docutils literal"><span class="pre">illumina1.3</span></tt>, <tt class="docutils literal"><span class="pre">illumina1.8</span></tt>, or <tt class="docutils literal"><span class="pre">solexa</span></tt>. This parameter is preferred
+over <tt class="docutils literal"><span class="pre">phred_offset</span></tt> because additional quality score range checks and
+conversions can be performed. It is also more explicit.</li>
+<li><tt class="docutils literal"><span class="pre">phred_offset</span></tt>: An integer indicating the ASCII code offset used to
+decode/encode Phred quality scores. Must be in the range <tt class="docutils literal"><span class="pre">[33,</span> <span class="pre">126]</span></tt>. All
+decoded scores will be assumed to be Phred scores (i.e., no additional
+conversions are performed). Prefer using <tt class="docutils literal"><span class="pre">variant</span></tt> over this parameter
+whenever possible.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must provide <tt class="docutils literal"><span class="pre">variant</span></tt> or <tt class="docutils literal"><span class="pre">phred_offset</span></tt> when reading or
+writing a FASTQ file. <tt class="docutils literal"><span class="pre">variant</span></tt> and <tt class="docutils literal"><span class="pre">phred_offset</span></tt> cannot both be
+provided at the same time.</p>
+</div>
+<p>The following additional parameters are the same as in FASTA format
+(<a class="reference internal" href="skbio.io.format.fasta.html#module-skbio.io.format.fasta" title="skbio.io.format.fasta"><tt class="xref py py-mod docutils literal"><span class="pre">skbio.io.format.fasta</span></tt></a>):</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">constructor</span></tt>: see <tt class="docutils literal"><span class="pre">constructor</span></tt> parameter in FASTA format</li>
+<li><tt class="docutils literal"><span class="pre">seq_num</span></tt>: see <tt class="docutils literal"><span class="pre">seq_num</span></tt> parameter in FASTA format</li>
+<li><tt class="docutils literal"><span class="pre">id_whitespace_replacement</span></tt>: see <tt class="docutils literal"><span class="pre">id_whitespace_replacement</span></tt> parameter in
+FASTA format</li>
+<li><tt class="docutils literal"><span class="pre">description_newline_replacement</span></tt>: see <tt class="docutils literal"><span class="pre">description_newline_replacement</span></tt>
+parameter in FASTA format</li>
+<li><tt class="docutils literal"><span class="pre">lowercase</span></tt>: see <tt class="docutils literal"><span class="pre">lowercase</span></tt> parameter in FASTA format</li>
+</ul>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Suppose we have the following FASTQ file with two DNA sequences:</p>
+<div class="highlight-python"><div class="highlight"><pre>@seq1 description 1
+AACACCAAACTTCTCCACC
+ACGTGAGCTACAAAAGGGT
++seq1 description 1
+&#39;&#39;&#39;&#39;Y^T]&#39;]C^CABCACC
+`^LB^CCYT\T\Y\WF^^^
+@seq2 description 2
+TATGTATATATAACATATACATATATACATACATA
++
+]KZ[PY]_[YY^&#39;&#39;&#39;AC^\\&#39;BT&#39;&#39;C&#39;\AT&#39;&#39;BBB
+</pre></div>
+</div>
+<p>Note that the first sequence and its quality scores are split across multiple
+lines, while the second sequence and its quality scores are each on a single
+line. Also note that the first sequence has a duplicate ID and description on
+the quality header line, while the second sequence does not.</p>
+<p>Let&#8217;s define this file in-memory as a <tt class="docutils literal"><span class="pre">StringIO</span></tt>, though this could be a real
+file path, file handle, or anything that&#8217;s supported by scikit-bio&#8217;s I/O
+registry in practice:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="s">r&quot;@seq1 description 1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;AACACCAAACTTCTCCACC&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;ACGTGAGCTACAAAAGGGT&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;+seq1 description 1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;&#39;&#39;&#39;&#39;Y^T]&#39;]C^CABCACC&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;&#39;^LB^CCYT\T\Y\WF^^^&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;@seq2 description 2&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;TATGTATATATAACATATACATATATACATACATA&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;+&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s">r&quot;]KZ[PY]_[YY^&#39;&#39;&#39;AC^</span><span class="se">\\</span><span class="s">&#39;BT&#39;&#39;C&#39;\AT&#39;&#39;BBB&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To load the sequences into a <tt class="docutils literal"><span class="pre">SequenceCollection</span></tt>, we run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">SequenceCollection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">SequenceCollection</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s">&#39;sanger&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span>
+<span class="go">&lt;SequenceCollection: n=2; mean +/- std length=36.50 +/- 1.50&gt;</span>
+</pre></div>
+</div>
+<p>Note that quality scores are decoded from Sanger. To load the second sequence
+as a <tt class="docutils literal"><span class="pre">DNA</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span> <span class="c"># reload the StringIO to read from the beginning again</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">DNA</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s">&#39;sanger&#39;</span><span class="p">,</span> <span class="n">seq_num</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">DNA</span>
+<span class="go">----------------------------------------</span>
+<span class="go">Metadata:</span>
+<span class="go">    u&#39;description&#39;: u&#39;description 2&#39;</span>
+<span class="go">    u&#39;id&#39;: u&#39;seq2&#39;</span>
+<span class="go">Positional metadata:</span>
+<span class="go">    u&#39;quality&#39;: &lt;dtype: uint8&gt;</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 35</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has non-degenerates: True</span>
+<span class="go">    GC-content: 14.29%</span>
+<span class="go">----------------------------------------</span>
+<span class="go">0 TATGTATATA TAACATATAC ATATATACAT ACATA</span>
+</pre></div>
+</div>
+<p>To write our <tt class="docutils literal"><span class="pre">SequenceCollection</span></tt> to a FASTQ file with quality scores encoded
+using the <tt class="docutils literal"><span class="pre">illumina1.3</span></tt> variant:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_fh</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_fh</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;fastq&#39;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s">&#39;illumina1.3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="go">@seq1 description 1</span>
+<span class="go">AACACCAAACTTCTCCACCACGTGAGCTACAAAAGGGT</span>
+<span class="go">+</span>
+<span class="go">FFFFx}s|F|b}b`ab`bbF}ka}bbxs{s{x{ve}}}</span>
+<span class="go">@seq2 description 2</span>
+<span class="go">TATGTATATATAACATATACATATATACATACATA</span>
+<span class="go">+</span>
+<span class="go">|jyzox|~zxx}FFF`b}{{FasFFbF{`sFFaaa</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that the file has been written in normalized format: sequence and quality
+scores each only occur on a single line and the sequence header line is
+not repeated in the quality header line. Note also that the quality scores are
+different because they have been encoded using a different variant.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="r152" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R152]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> Peter J. A. Cock, Christopher J. Fields, Naohisa Goto, Michael L. Heuer,
+and Peter M. Rice. The Sanger FASTQ file format for sequences with quality
+scores, and the Solexa/Illumina FASTQ variants. Nucl. Acids Res. (2010) 38
+(6): 1767-1771. first published online December 16, 2009.
+doi:10.1093/nar/gkp1137
+http://nar.oxfordjournals.org/content/38/6/1767</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r153" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R153]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/FASTQ_format">http://en.wikipedia.org/wiki/FASTQ_format</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r154" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R154]</a></td><td><a class="reference external" href="http://www.open-bio.org/">http://www.open-bio.org/</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

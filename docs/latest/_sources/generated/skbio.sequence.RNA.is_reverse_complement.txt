@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.is_reverse_complement
+========================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.is_reverse_complement

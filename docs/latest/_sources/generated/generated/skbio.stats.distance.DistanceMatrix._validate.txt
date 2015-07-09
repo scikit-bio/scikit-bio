@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.distance.DistanceMatrix._validate
-=============================================
-
-.. currentmodule:: skbio.stats.distance
-
-.. automethod:: DistanceMatrix._validate

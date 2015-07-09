@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.regex_iter
-============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.regex_iter

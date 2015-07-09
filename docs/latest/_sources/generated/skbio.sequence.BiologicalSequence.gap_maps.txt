@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.gap_maps
-==========================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.gap_maps

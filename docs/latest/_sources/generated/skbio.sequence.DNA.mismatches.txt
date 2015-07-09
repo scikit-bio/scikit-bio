@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.mismatches
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.mismatches

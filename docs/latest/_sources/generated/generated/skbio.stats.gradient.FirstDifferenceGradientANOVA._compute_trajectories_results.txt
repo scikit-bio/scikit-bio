@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.gradient.FirstDifferenceGradientANOVA._compute_trajectories_results
-===============================================================================
-
-.. currentmodule:: skbio.stats.gradient
-
-.. automethod:: FirstDifferenceGradientANOVA._compute_trajectories_results

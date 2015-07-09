@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.count
+============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.count

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.BiologicalSequence.regex_iter
-============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: BiologicalSequence.regex_iter

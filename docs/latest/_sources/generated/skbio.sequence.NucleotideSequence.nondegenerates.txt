@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.nondegenerates
-================================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.nondegenerates

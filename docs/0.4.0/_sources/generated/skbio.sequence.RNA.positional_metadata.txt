@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.positional_metadata
+======================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.positional_metadata

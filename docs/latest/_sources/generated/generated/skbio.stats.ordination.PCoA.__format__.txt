@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.PCoA.__format__
-======================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: PCoA.__format__

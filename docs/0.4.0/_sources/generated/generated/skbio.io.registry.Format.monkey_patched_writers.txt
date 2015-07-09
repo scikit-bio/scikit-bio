@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.io.registry.Format.monkey_patched_writers
+===============================================
+
+.. currentmodule:: skbio.io.registry
+
+.. autoattribute:: Format.monkey_patched_writers

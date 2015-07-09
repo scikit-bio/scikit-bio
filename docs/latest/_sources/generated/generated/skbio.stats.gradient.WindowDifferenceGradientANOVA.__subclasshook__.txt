@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.gradient.WindowDifferenceGradientANOVA.__subclasshook__
-===================================================================
-
-.. currentmodule:: skbio.stats.gradient
-
-.. automethod:: WindowDifferenceGradientANOVA.__subclasshook__

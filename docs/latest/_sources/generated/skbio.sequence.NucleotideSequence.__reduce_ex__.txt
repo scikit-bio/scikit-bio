@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.__reduce_ex__
-===============================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.__reduce_ex__

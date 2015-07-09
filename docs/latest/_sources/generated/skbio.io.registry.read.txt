@@ -1,0 +1,6 @@
+skbio.io.registry.read
+======================
+
+.. currentmodule:: skbio.io.registry
+
+.. autofunction:: read

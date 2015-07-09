@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.transcribe
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.transcribe

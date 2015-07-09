@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.complement_map
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.complement_map

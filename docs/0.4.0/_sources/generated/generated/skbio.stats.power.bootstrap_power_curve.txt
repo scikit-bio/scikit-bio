@@ -1,0 +1,6 @@
+skbio.stats.power.bootstrap_power_curve
+=======================================
+
+.. currentmodule:: skbio.stats.power
+
+.. autofunction:: bootstrap_power_curve

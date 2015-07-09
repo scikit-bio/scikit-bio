@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.to_phylip
-===================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.to_phylip

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.ordination.OrdinationResults.default_write_format
+=============================================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autoattribute:: OrdinationResults.default_write_format

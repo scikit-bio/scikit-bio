@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.StockholmAlignment.subalignment
-===============================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: StockholmAlignment.subalignment

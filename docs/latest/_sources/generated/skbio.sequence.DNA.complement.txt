@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.complement
+=============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: DNA.complement

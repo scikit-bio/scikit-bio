@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.__reversed__
-===============================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.__reversed__

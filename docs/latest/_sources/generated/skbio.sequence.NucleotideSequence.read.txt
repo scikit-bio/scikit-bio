@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.NucleotideSequence.read
-======================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: NucleotideSequence.read

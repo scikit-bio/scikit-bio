@@ -1,0 +1,6 @@
+skbio.stats.composition.perturb_inv
+===================================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: perturb_inv

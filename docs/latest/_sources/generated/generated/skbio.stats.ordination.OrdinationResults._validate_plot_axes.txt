@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.stats.ordination.OrdinationResults._validate_plot_axes
-============================================================
-
-.. currentmodule:: skbio.stats.ordination
-
-.. automethod:: OrdinationResults._validate_plot_axes

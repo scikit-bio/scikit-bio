@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.ProteinSequence.is_gap
-=====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: ProteinSequence.is_gap

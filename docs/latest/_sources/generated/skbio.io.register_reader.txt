@@ -1,6 +1,0 @@
-skbio.io.register_reader
-========================
-
-.. currentmodule:: skbio.io
-
-.. autofunction:: register_reader
