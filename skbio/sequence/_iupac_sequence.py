@@ -543,7 +543,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     def to_regex(self):
         """Return a regex object that accounts for degenerate chars.
 
-        Yields
+        Returns
         ------
         regex
             Pre-compiled regular expression object (as from ``re.compile``)
