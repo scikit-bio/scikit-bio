@@ -56,9 +56,8 @@ class _state_decorator(object):
         # line, return the corresponding default
         return default_existing_docstring
 
-    def _update_docstring(self, function, state_desc,
+    def _update_docstring(self, docstring, state_desc,
                           state_desc_prefix='State: '):
-        docstring = function.__doc__
         # Hande the case of no initial docstring
         if docstring is None:
             return "%s%s" % (state_desc_prefix, state_desc)
@@ -140,7 +139,7 @@ class stable(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Stable as of %s.' % self.as_of
-        func.__doc__ = self._update_docstring(func, state_desc)
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
@@ -189,7 +188,7 @@ class experimental(_state_decorator):
 
     def __call__(self, func):
         state_desc = 'Experimental as of %s.' % self.as_of
-        func.__doc__ = self._update_docstring(func, state_desc)
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc)
         return func
 
 
@@ -248,7 +247,7 @@ class deprecated(_state_decorator):
     def __call__(self, func, *args, **kwargs):
         state_desc = 'Deprecated as of %s for removal in %s. %s' %\
             (self.as_of, self.until, self.reason)
-        func.__doc__ = self._update_docstring(func, state_desc,
+        func.__doc__ = self._update_docstring(func.__doc__, state_desc,
                                               state_desc_prefix='.. note:: ')
 
         def wrapped_f(*args, **kwargs):
