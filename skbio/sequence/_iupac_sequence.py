@@ -541,7 +541,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @stable(as_of='0.4.0-dev')
     def to_regex(self):
-        """Return a regex object that accounts for degenerate chars.
+        """Return a regular expression object that accounts for degenerate chars.
 
         Returns
         ------
