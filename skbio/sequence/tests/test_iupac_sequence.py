@@ -436,7 +436,7 @@ class TestIUPACSequence(TestCase):
     def test_to_regex_no_degens(self):
         seq = ExampleIUPACSequence('ABC')
         regex = seq.to_regex()
-        self.assertEquals(regex.pattern, str(seq))
+        self.assertEqual(regex.pattern, str(seq))
 
     def test_to_regex_with_degens(self):
         seq = ExampleIUPACSequence('AYZ')
