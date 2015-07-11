@@ -12,15 +12,16 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import numpy.testing as npt
 
-from skbio import OrdinationResults
-from skbio.stats.ordination import rda, corr, mean_and_std, e_matrix, f_matrix
-from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix
 
 
 class TestUtils(object):
     def setup(self):
         self.x = np.array([[1, 2, 3], [4, 5, 6]])
         self.y = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+        self.matrix = np.arange(1, 7).reshape(2, 3)
+        self.matrix2 = np.arange(1, 10).reshape(3, 3)
 
     def test_mean_and_std_no_mean_no_std(self):
         with npt.assert_raises(ValueError):
