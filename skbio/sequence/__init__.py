@@ -267,11 +267,11 @@ True
 
 Class-level methods contain information about the molecule types.
 
->>> DNA.degenerate_map['B']
-set(['C', 'T', 'G'])
+>>> sorted(DNA.degenerate_map['B'])
+['C', 'G', 'T']
 
->>> RNA.degenerate_map['B']
-set(['C', 'U', 'G'])
+>>> sorted(RNA.degenerate_map['B'])
+['C', 'G', 'U']
 
 """
 
