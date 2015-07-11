@@ -1,0 +1,15 @@
+pip
+numpy
+scipy
+matplotlib
+pandas
+nose
+pep8
+sphinx=1.2.2
+ipython
+future
+six
+pyflakes
+flake8
+python-dateutil
+decorator
