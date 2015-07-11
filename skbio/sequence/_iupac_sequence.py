@@ -544,7 +544,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """Return a regular expression object that accounts for degenerate chars.
 
         Returns
-        ------
+        -------
         regex
             Pre-compiled regular expression object (as from ``re.compile``)
             that matches all non-degenerate versions of this sequence, and
