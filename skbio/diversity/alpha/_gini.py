@@ -11,8 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from ._base import _validate
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def gini_index(data, method='rectangles'):
     """Calculate the Gini index.
 

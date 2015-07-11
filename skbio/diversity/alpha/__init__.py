@@ -138,6 +138,8 @@ Let's see how many singletons and doubletons there are in the sample:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
 from ._ace import ace

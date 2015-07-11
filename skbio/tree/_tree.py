@@ -17,12 +17,13 @@ from collections import defaultdict
 import numpy as np
 from scipy.stats import pearsonr
 from future.builtins import zip
-from six import StringIO
+import six
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
+from skbio.util._decorator import experimental
 
 
 def distance_from_r(m1, m2):
@@ -81,6 +82,7 @@ class TreeNode(SkbioObject):
     _exclude_from_copy = set(['parent', 'children', '_tip_cache',
                               '_non_tip_cache'])
 
+    @experimental(as_of="0.4.0")
     def __init__(self, name=None, length=None, parent=None, children=None):
         self.name = name
         self.length = length
@@ -95,6 +97,7 @@ class TreeNode(SkbioObject):
         if children is not None:
             self.extend(children)
 
+    @experimental(as_of="0.4.0")
     def __repr__(self):
         r"""Returns summary of the tree
 
@@ -110,9 +113,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c, d)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c, d)root;"])
         >>> repr(tree)
         '<TreeNode, name: root, internal node count: 1, tips count: 3>'
 
@@ -126,6 +128,7 @@ class TreeNode(SkbioObject):
         return "<%s, name: %s, internal node count: %d, tips count: %d>" % \
                (classname, name, n_nontips, n_tips)
 
+    @experimental(as_of="0.4.0")
     def __str__(self):
         r"""Returns string version of self, with names and distances
 
@@ -141,31 +144,29 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> str(tree)
         '((a,b)c);\n'
 
         """
+        return str(''.join(self.write([])))
 
-        fh = StringIO()
-        self.write(fh)
-        string = fh.getvalue()
-        fh.close()
-        return string
-
+    @experimental(as_of="0.4.0")
     def __iter__(self):
         r"""Node iter iterates over the `children`."""
         return iter(self.children)
 
+    @experimental(as_of="0.4.0")
     def __len__(self):
         return len(self.children)
 
+    @experimental(as_of="0.4.0")
     def __getitem__(self, i):
         r"""Node delegates slicing to `children`."""
         return self.children[i]
 
+    @experimental(as_of="0.4.0")
     def _adopt(self, node):
         r"""Update `parent` references but does NOT update `children`."""
         self.invalidate_caches()
@@ -174,6 +175,7 @@ class TreeNode(SkbioObject):
         node.parent = self
         return node
 
+    @experimental(as_of="0.4.0")
     def append(self, node):
         r"""Appends a node to `children`, in-place, cleaning up refs
 
@@ -205,6 +207,7 @@ class TreeNode(SkbioObject):
         """
         self.children.append(self._adopt(node))
 
+    @experimental(as_of="0.4.0")
     def extend(self, nodes):
         r"""Append a `list` of `TreeNode` to `self`.
 
@@ -233,6 +236,7 @@ class TreeNode(SkbioObject):
         """
         self.children.extend([self._adopt(n) for n in nodes[:]])
 
+    @experimental(as_of="0.4.0")
     def pop(self, index=-1):
         r"""Remove a `TreeNode` from `self`.
 
@@ -257,9 +261,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(a,b)c;"))
+        >>> tree = TreeNode.read([u"(a,b)c;"])
         >>> print(tree.pop(0))
         a;
         <BLANKLINE>
@@ -274,6 +277,7 @@ class TreeNode(SkbioObject):
         node.parent = None
         return node
 
+    @experimental(as_of="0.4.0")
     def remove(self, node):
         r"""Remove a node from self
 
@@ -296,9 +300,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(a,b)c;"))
+        >>> tree = TreeNode.read([u"(a,b)c;"])
         >>> tree.remove(tree.children[0])
         True
 
@@ -309,6 +312,7 @@ class TreeNode(SkbioObject):
                 return True
         return False
 
+    @experimental(as_of="0.4.0")
     def remove_deleted(self, func):
         r"""Delete nodes in which `func(node)` evaluates `True`.
 
@@ -327,9 +331,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(a,b)c;"))
+        >>> tree = TreeNode.read([u"(a,b)c;"])
         >>> tree.remove_deleted(lambda x: x.name == 'b')
         >>> print(tree)
         (a)c;
@@ -339,6 +342,7 @@ class TreeNode(SkbioObject):
             if func(node):
                 node.parent.remove(node)
 
+    @experimental(as_of="0.4.0")
     def prune(self):
         r"""Reconstructs correct topology after nodes have been removed.
 
@@ -361,9 +365,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> to_delete = tree.find('b')
         >>> tree.remove_deleted(lambda x: x == to_delete)
         >>> print(tree)
@@ -394,6 +397,7 @@ class TreeNode(SkbioObject):
             node.parent.append(child)
             node.parent.remove(node)
 
+    @experimental(as_of="0.4.0")
     def shear(self, names):
         """Lop off tips until the tree just has the desired tip names.
 
@@ -421,9 +425,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> t = TreeNode.read(StringIO('((H:1,G:1):2,(R:0.5,M:0.7):3);'))
+        >>> t = TreeNode.read([u'((H:1,G:1):2,(R:0.5,M:0.7):3);'])
         >>> sheared = t.shear(['G', 'M'])
         >>> print(sheared)
         (G:3.0,M:3.7);
@@ -446,6 +449,7 @@ class TreeNode(SkbioObject):
 
         return tcopy
 
+    @experimental(as_of="0.4.0")
     def copy(self):
         r"""Returns a copy of self using an iterative approach
 
@@ -465,9 +469,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> tree_copy = tree.copy()
         >>> tree_nodes = set([id(n) for n in tree.traverse()])
         >>> tree_copy_nodes = set([id(n) for n in tree_copy.traverse()])
@@ -510,6 +513,7 @@ class TreeNode(SkbioObject):
     __copy__ = copy
     __deepcopy__ = deepcopy = copy
 
+    @experimental(as_of="0.4.0")
     def unrooted_deepcopy(self, parent=None):
         r"""Walks the tree unrooted-style and returns a new copy
 
@@ -537,9 +541,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
+        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_deepcopy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
@@ -555,6 +558,7 @@ class TreeNode(SkbioObject):
         new_tree_self = new_tree.find_by_id(self.id)
         return new_tree_self.unrooted_copy(parent)
 
+    @experimental(as_of="0.4.0")
     def unrooted_copy(self, parent=None):
         r"""Walks the tree unrooted-style and returns a copy
 
@@ -584,9 +588,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
+        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
@@ -618,6 +621,7 @@ class TreeNode(SkbioObject):
 
         return result
 
+    @experimental(as_of="0.4.0")
     def count(self, tips=False):
         """Get the count of nodes in the tree
 
@@ -633,9 +637,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
+        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> print(tree.count())
         9
         >>> print(tree.count(tips=True))
@@ -647,10 +650,12 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
+    @experimental(as_of="0.4.0")
     def subtree(self, tip_list=None):
         r"""Make a copy of the subtree"""
         raise NotImplementedError()
 
+    @experimental(as_of="0.4.0")
     def subset(self):
         r"""Returns set of names that descend from specified node
 
@@ -668,14 +673,14 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,(b,c)d)e,(f,g)h)i;"))
+        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> sorted(tree.subset())
-        ['a', 'b', 'c', 'f', 'g']
+        [u'a', u'b', u'c', u'f', u'g']
         """
         return frozenset({i.name for i in self.tips()})
 
+    @experimental(as_of="0.4.0")
     def subsets(self):
         r"""Return all sets of names that come from self and its descendants
 
@@ -694,14 +699,13 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(((a,b)c,(d,e)f)h)root;"))
+        >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)h)root;"])
         >>> for s in sorted(tree.subsets()):
         ...     print(sorted(s))
-        ['a', 'b']
-        ['d', 'e']
-        ['a', 'b', 'd', 'e']
+        [u'a', u'b']
+        [u'd', u'e']
+        [u'a', u'b', u'd', u'e']
         """
         sets = []
         for i in self.postorder(include_self=False):
@@ -714,6 +718,7 @@ class TreeNode(SkbioObject):
                 i.__leaf_set = leaf_set
         return frozenset(sets)
 
+    @experimental(as_of="0.4.0")
     def root_at(self, node):
         r"""Return a new tree rooted at the provided node.
 
@@ -742,15 +747,14 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(((a,b)c,(d,e)f)g,h)i;"))
+        >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)g,h)i;"])
         >>> print(tree.root_at('c'))
         (a,b,((d,e)f,(h)g)c)root;
         <BLANKLINE>
 
         """
-        if isinstance(node, str):
+        if isinstance(node, six.string_types):
             node = self.find(node)
 
         if not node.children:
@@ -758,6 +762,7 @@ class TreeNode(SkbioObject):
                             repr(node.name))
         return node.unrooted_deepcopy()
 
+    @experimental(as_of="0.4.0")
     def root_at_midpoint(self):
         r"""Return a new tree rooted at midpoint of the two tips farthest apart
 
@@ -785,10 +790,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)"
-        ...                               "a:1;"))
+        >>> tree = TreeNode.read([u"(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;"])
         >>> print(tree.root_at_midpoint())
         ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
         <BLANKLINE>
@@ -838,6 +841,7 @@ class TreeNode(SkbioObject):
 
             return new_root.unrooted_copy()
 
+    @experimental(as_of="0.4.0")
     def is_tip(self):
         r"""Returns `True` if the current node has no `children`.
 
@@ -853,9 +857,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> print(tree.is_tip())
         False
         >>> print(tree.find('a').is_tip())
@@ -864,6 +867,7 @@ class TreeNode(SkbioObject):
         """
         return not self.children
 
+    @experimental(as_of="0.4.0")
     def is_root(self):
         r"""Returns `True` if the current is a root, i.e. has no `parent`.
 
@@ -879,9 +883,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> print(tree.is_root())
         True
         >>> print(tree.find('a').is_root())
@@ -890,6 +893,7 @@ class TreeNode(SkbioObject):
         """
         return self.parent is None
 
+    @experimental(as_of="0.4.0")
     def has_children(self):
         r"""Returns `True` if the node has `children`.
 
@@ -905,9 +909,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> print(tree.has_children())
         True
         >>> print(tree.find('a').has_children())
@@ -916,6 +919,7 @@ class TreeNode(SkbioObject):
         """
         return not self.is_tip()
 
+    @experimental(as_of="0.4.0")
     def traverse(self, self_before=True, self_after=False, include_self=True):
         r"""Returns iterator over descendants
 
@@ -954,9 +958,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> for node in tree.traverse():
         ...     print(node.name)
         None
@@ -976,6 +979,7 @@ class TreeNode(SkbioObject):
             else:
                 return self.tips(include_self=include_self)
 
+    @experimental(as_of="0.4.0")
     def preorder(self, include_self=True):
         r"""Performs preorder iteration over tree
 
@@ -1000,9 +1004,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> for node in tree.preorder():
         ...     print(node.name)
         None
@@ -1019,6 +1022,7 @@ class TreeNode(SkbioObject):
             if curr.children:
                 stack.extend(curr.children[::-1])
 
+    @experimental(as_of="0.4.0")
     def postorder(self, include_self=True):
         r"""Performs postorder iteration over tree.
 
@@ -1047,9 +1051,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> for node in tree.postorder():
         ...     print(node.name)
         a
@@ -1091,6 +1094,7 @@ class TreeNode(SkbioObject):
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
 
+    @experimental(as_of="0.4.0")
     def pre_and_postorder(self, include_self=True):
         r"""Performs iteration over tree, visiting node before and after
 
@@ -1115,9 +1119,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c);"])
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
         None
@@ -1166,6 +1169,7 @@ class TreeNode(SkbioObject):
                 child_index_stack.pop()
                 child_index_stack[-1] += 1
 
+    @experimental(as_of="0.4.0")
     def levelorder(self, include_self=True):
         r"""Performs levelorder iteration over tree
 
@@ -1190,9 +1194,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> for node in tree.levelorder():
         ...     print(node.name)
         None
@@ -1212,6 +1215,7 @@ class TreeNode(SkbioObject):
             if curr.children:
                 queue.extend(curr.children)
 
+    @experimental(as_of="0.4.0")
     def tips(self, include_self=False):
         r"""Iterates over tips descended from `self`.
 
@@ -1239,9 +1243,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> for node in tree.tips():
         ...     print(node.name)
         a
@@ -1254,6 +1257,7 @@ class TreeNode(SkbioObject):
             if n.is_tip():
                 yield n
 
+    @experimental(as_of="0.4.0")
     def non_tips(self, include_self=False):
         r"""Iterates over nontips descended from self
 
@@ -1283,9 +1287,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> for node in tree.non_tips():
         ...     print(node.name)
         c
@@ -1296,6 +1299,7 @@ class TreeNode(SkbioObject):
             if not n.is_tip():
                 yield n
 
+    @experimental(as_of="0.4.0")
     def invalidate_caches(self, attr=True):
         r"""Delete lookup and attribute caches
 
@@ -1324,6 +1328,7 @@ class TreeNode(SkbioObject):
                         if hasattr(n, cache):
                             delattr(n, cache)
 
+    @experimental(as_of="0.4.0")
     def create_caches(self):
         r"""Construct an internal lookups to facilitate searching by name
 
@@ -1375,6 +1380,7 @@ class TreeNode(SkbioObject):
             self._tip_cache = tip_cache
             self._non_tip_cache = non_tip_cache
 
+    @experimental(as_of="0.4.0")
     def find_all(self, name):
         r"""Find all nodes that match `name`
 
@@ -1405,9 +1411,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio.tree import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)d,(f,g)c);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)d,(f,g)c);"])
         >>> for node in tree.find_all('c'):
         ...     print(node.name, node.children[0].name, node.children[1].name)
         c a b
@@ -1437,6 +1442,7 @@ class TreeNode(SkbioObject):
         else:
             return nodes
 
+    @experimental(as_of="0.4.0")
     def find(self, name):
         r"""Find a node by `name`.
 
@@ -1474,9 +1480,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> print(tree.find('c').name)
         c
         """
@@ -1497,6 +1502,7 @@ class TreeNode(SkbioObject):
         else:
             return node
 
+    @experimental(as_of="0.4.0")
     def find_by_id(self, node_id):
         r"""Find a node by `id`.
 
@@ -1530,9 +1536,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> print(tree.find_by_id(2).name)
         d
 
@@ -1553,6 +1558,7 @@ class TreeNode(SkbioObject):
         else:
             return node
 
+    @experimental(as_of="0.4.0")
     def find_by_func(self, func):
         r"""Find all nodes given a function
 
@@ -1577,17 +1583,17 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f);"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
-        ['a', 'b']
+        [u'a', u'b']
         """
         for node in self.traverse(include_self=True):
             if func(node):
                 yield node
 
+    @experimental(as_of="0.4.0")
     def ancestors(self):
         r"""Returns all ancestors back to the root
 
@@ -1601,11 +1607,10 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> [node.name for node in tree.find('a').ancestors()]
-        ['c', 'root']
+        [u'c', u'root']
 
         """
         result = []
@@ -1616,6 +1621,7 @@ class TreeNode(SkbioObject):
 
         return result
 
+    @experimental(as_of="0.4.0")
     def root(self):
         r"""Returns root of the tree `self` is in
 
@@ -1626,9 +1632,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> tip_a = tree.find('a')
         >>> root = tip_a.root()
         >>> root == tree
@@ -1640,6 +1645,7 @@ class TreeNode(SkbioObject):
             curr = curr.parent
         return curr
 
+    @experimental(as_of="0.4.0")
     def siblings(self):
         r"""Returns all nodes that are `children` of `self` `parent`.
 
@@ -1656,12 +1662,11 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e,f)g)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e,f)g)root;"])
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
-        ['d', 'f']
+        [u'd', u'f']
 
         """
         if self.is_root():
@@ -1672,6 +1677,7 @@ class TreeNode(SkbioObject):
 
         return result
 
+    @experimental(as_of="0.4.0")
     def neighbors(self, ignore=None):
         r"""Returns all nodes that are connected to self
 
@@ -1689,12 +1695,11 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
-        ['a', 'b', 'root']
+        [u'a', u'b', u'root']
 
         """
         nodes = [n for n in self.children + [self.parent] if n is not None]
@@ -1703,6 +1708,7 @@ class TreeNode(SkbioObject):
         else:
             return [n for n in nodes if n is not ignore]
 
+    @experimental(as_of="0.4.0")
     def lowest_common_ancestor(self, tipnames):
         r"""Lowest common ancestor for a list of tips
 
@@ -1723,9 +1729,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> nodes = [tree.find('a'), tree.find('b')]
         >>> lca = tree.lowest_common_ancestor(nodes)
         >>> print(lca.name)
@@ -1777,6 +1782,7 @@ class TreeNode(SkbioObject):
     lca = lowest_common_ancestor  # for convenience
 
     @classmethod
+    @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
         """Construct a tree from a taxonomy
 
@@ -1869,6 +1875,7 @@ class TreeNode(SkbioObject):
         return distance
 
     @classmethod
+    @experimental(as_of="0.4.0")
     def from_linkage_matrix(cls, linkage_matrix, id_list):
         """Return tree from SciPy linkage matrix.
 
@@ -1918,6 +1925,7 @@ class TreeNode(SkbioObject):
 
         return node_lookup[-1]
 
+    @experimental(as_of="0.4.0")
     def to_taxonomy(self, allow_empty=False, filter_f=None):
         """Returns a taxonomy representation of self
 
@@ -2001,6 +2009,7 @@ class TreeNode(SkbioObject):
                     lineage.append(node.name)
                     seen.add(node.id)
 
+    @experimental(as_of="0.4.0")
     def to_array(self, attrs=None):
         """Return an array representation of self
 
@@ -2030,9 +2039,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> t = TreeNode.read(StringIO('(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'))
+        >>> t = TreeNode.read([u'(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
         >>> res = t.to_array()
         >>> res.keys()
         ['child_index', 'length', 'name', 'id_index', 'id']
@@ -2060,7 +2068,7 @@ class TreeNode(SkbioObject):
         >>> res['id']
         array([0, 1, 2, 3, 4, 5, 6, 7])
         >>> res['name']
-        array(['a', 'b', 'c', 'd', 'x', 'y', 'z', None], dtype=object)
+        array([u'a', u'b', u'c', u'd', u'x', u'y', u'z', None], dtype=object)
 
         """
         if attrs is None:
@@ -2118,6 +2126,7 @@ class TreeNode(SkbioObject):
         else:
             return ([char1 + '-' + namestr], 0)
 
+    @experimental(as_of="0.4.0")
     def ascii_art(self, show_internal=True, compact=False):
         r"""Returns a string containing an ascii drawing of the tree
 
@@ -2138,9 +2147,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b)c,(d,e)f)root;"))
+        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> print(tree.ascii_art())
                             /-a
                   /c-------|
@@ -2154,6 +2162,7 @@ class TreeNode(SkbioObject):
                                        compact=compact)
         return '\n'.join(lines)
 
+    @experimental(as_of="0.4.0")
     def accumulate_to_ancestor(self, ancestor):
         r"""Return the sum of the distance between self and ancestor
 
@@ -2182,9 +2191,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
+        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> root = tree
         >>> tree.find('a').accumulate_to_ancestor(root)
         4.0
@@ -2204,6 +2212,7 @@ class TreeNode(SkbioObject):
 
         return accum
 
+    @experimental(as_of="0.4.0")
     def distance(self, other):
         """Return the distance between self and other
 
@@ -2235,9 +2244,8 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
+        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> tip_a = tree.find('a')
         >>> tip_d = tree.find('d')
         >>> tip_a.distance(tip_d)
@@ -2286,6 +2294,7 @@ class TreeNode(SkbioObject):
         max_pair = (distmtx.ids[idx_max[0]], distmtx.ids[idx_max[1]])
         return distmtx[idx_max], max_pair
 
+    @experimental(as_of="0.4.0")
     def get_max_distance(self):
         """Returns the max tip tip distance between any pair of tips
 
@@ -2310,14 +2319,13 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
+        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> dist, tips = tree.get_max_distance()
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        ['b', 'e']
+        [u'b', u'e']
         """
         if not hasattr(self, 'MaxDistTips'):
             # _set_max_distance will throw a TreeError if a node with a single
@@ -2338,6 +2346,7 @@ class TreeNode(SkbioObject):
                 tips = [tip_a[1], tip_b[1]]
         return longest, tips
 
+    @experimental(as_of="0.4.0")
     def tip_tip_distances(self, endpoints=None):
         """Returns distance matrix between pairs of tips, and a tip order.
 
@@ -2369,14 +2378,13 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a:1,b:2)c:3,(d:4,e:5)f:6)root;"))
+        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> mat = tree.tip_tip_distances()
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        'a', 'b', 'd', 'e'
+        u'a', u'b', u'd', u'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]
@@ -2443,6 +2451,7 @@ class TreeNode(SkbioObject):
 
         return DistanceMatrix(result + result.T, [n.name for n in tip_order])
 
+    @experimental(as_of="0.4.0")
     def compare_rfd(self, other, proportion=False):
         """Calculates the Robinson and Foulds symmetric difference
 
@@ -2480,10 +2489,9 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read(StringIO("((a,b),(c,d));"))
-        >>> tree2 = TreeNode.read(StringIO("(((a,b),c),d);"))
+        >>> tree1 = TreeNode.read([u"((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read([u"(((a,b),c),d);"])
         >>> tree1.compare_rfd(tree2)
         2.0
 
@@ -2515,6 +2523,7 @@ class TreeNode(SkbioObject):
 
         return dist
 
+    @experimental(as_of="0.4.0")
     def compare_subsets(self, other, exclude_absent_taxa=False):
         """Returns fraction of overlapping subsets where self and other differ.
 
@@ -2541,10 +2550,9 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read(StringIO("((a,b),(c,d));"))
-        >>> tree2 = TreeNode.read(StringIO("(((a,b),c),d);"))
+        >>> tree1 = TreeNode.read([u"((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read([u"(((a,b),c),d);"])
         >>> tree1.compare_subsets(tree2)
         0.5
 
@@ -2566,6 +2574,7 @@ class TreeNode(SkbioObject):
 
         return 1 - (2 * intersection_length / float(total_subsets))
 
+    @experimental(as_of="0.4.0")
     def compare_tip_distances(self, other, sample=None, dist_f=distance_from_r,
                               shuffle_f=np.random.shuffle):
         """Compares self to other using tip-to-tip distance matrices.
@@ -2614,11 +2623,10 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
         >>> # note, only three common taxa between the trees
-        >>> tree1 = TreeNode.read(StringIO("((a:1,b:1):2,(c:0.5,X:0.7):3);"))
-        >>> tree2 = TreeNode.read(StringIO("(((a:1,b:1,Y:1):2,c:3):1,Z:4);"))
+        >>> tree1 = TreeNode.read([u"((a:1,b:1):2,(c:0.5,X:0.7):3);"])
+        >>> tree2 = TreeNode.read([u"(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
         >>> dist = tree1.compare_tip_distances(tree2)
         >>> print("%.9f" % dist)
         0.000133446
@@ -2647,6 +2655,7 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
+    @experimental(as_of="0.4.0")
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
 
@@ -2687,6 +2696,7 @@ class TreeNode(SkbioObject):
 
         return id_index, child_index
 
+    @experimental(as_of="0.4.0")
     def assign_ids(self):
         """Assign topologically stable unique ids to self
 
@@ -2701,6 +2711,7 @@ class TreeNode(SkbioObject):
 
         self.id = curr_index
 
+    @experimental(as_of="0.4.0")
     def descending_branch_length(self, tip_subset=None):
         """Find total descending branch length from self or subset of self tips
 
@@ -2736,10 +2747,9 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tr = TreeNode.read(StringIO("(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G"
-        ...                             ":2.4,(H:.4,I:.5)J:1.3)K;"))
+        >>> tr = TreeNode.read([u"(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
+        ...                     "(H:.4,I:.5)J:1.3)K;"])
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
         >>> print(tdbl, sdbl)
@@ -2766,6 +2776,7 @@ class TreeNode(SkbioObject):
             return sum(n.length for n in self.postorder(include_self=True) if
                        n.length is not None)
 
+    @experimental(as_of="0.4.0")
     def cache_attr(self, func, cache_attrname, cache_type=list):
         """Cache attributes on internal nodes of the tree
 
@@ -2798,23 +2809,22 @@ class TreeNode(SkbioObject):
         --------
         Cache the tip names of the tree on its internal nodes
 
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b,(c,d)e)f,(g,h)i)root;"))
+        >>> tree = TreeNode.read([u"((a,b,(c,d)e)f,(g,h)i)root;"])
         >>> f = lambda n: [n.name] if n.is_tip() else []
         >>> tree.cache_attr(f, 'tip_names')
         >>> for n in tree.traverse(include_self=True):
         ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
-        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
-        Node name: f, cache: ['a', 'b', 'c', 'd']
-        Node name: a, cache: ['a']
-        Node name: b, cache: ['b']
-        Node name: e, cache: ['c', 'd']
-        Node name: c, cache: ['c']
-        Node name: d, cache: ['d']
-        Node name: i, cache: ['g', 'h']
-        Node name: g, cache: ['g']
-        Node name: h, cache: ['h']
+        Node name: root, cache: [u'a', u'b', u'c', u'd', u'g', u'h']
+        Node name: f, cache: [u'a', u'b', u'c', u'd']
+        Node name: a, cache: [u'a']
+        Node name: b, cache: [u'b']
+        Node name: e, cache: [u'c', u'd']
+        Node name: c, cache: [u'c']
+        Node name: d, cache: [u'd']
+        Node name: i, cache: [u'g', u'h']
+        Node name: g, cache: [u'g']
+        Node name: h, cache: [u'h']
 
         """
         if cache_type in [set, frozenset]:
@@ -2835,6 +2845,7 @@ class TreeNode(SkbioObject):
             cached.append(cache_type(func(node)))
             setattr(node, cache_attrname, reduce(reduce_f, cached))
 
+    @experimental(as_of="0.4.0")
     def shuffle(self, k=None, names=None, shuffle_f=np.random.shuffle, n=1):
         """Yield trees with shuffled tip names
 
@@ -2878,9 +2889,8 @@ class TreeNode(SkbioObject):
         Alternate the names on two of the tips, 'a', and 'b', and do this 5
         times.
 
-        >>> from six import StringIO
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        >>> tree = TreeNode.read([u"((a,b),(c,d));"])
         >>> rev = lambda items: items.reverse()
         >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
         >>> for shuffled_tree in shuffler:

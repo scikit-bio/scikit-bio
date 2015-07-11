@@ -17,6 +17,7 @@ from scipy.linalg import eigh
 from skbio import OrdinationResults
 from skbio.stats.distance import DistanceMatrix
 from ._utils import e_matrix, f_matrix
+from skbio.util._decorator import experimental
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -27,6 +28,7 @@ from ._utils import e_matrix, f_matrix
 #   so, so I'm not doing that.
 
 
+@experimental(as_of="0.4.0")
 def pcoa(distance_matrix):
     r"""Perform Principal Coordinate Analysis.
 

@@ -16,8 +16,10 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def bioenv(distance_matrix, data_frame, columns=None):
     """Find subset of variables maximally correlated with distances.
 
@@ -104,19 +106,11 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     Examples
     --------
-    Import the functionality we'll use in the following examples. The call to
-    ``pd.set_option`` ensures consistent data frame formatting across
-    different versions of pandas. This call is not necessary for normal
-    use; it is only included here so that the doctests will pass.
+    Import the functionality we'll use in the following examples:
 
     >>> import pandas as pd
     >>> from skbio import DistanceMatrix
     >>> from skbio.stats.distance import bioenv
-    >>> try:
-    ...     # not necessary for normal use
-    ...     pd.set_option('show_dimensions', True)
-    ... except KeyError:
-    ...     pass
 
     Load a 4x4 community distance matrix:
 
@@ -150,8 +144,6 @@ def bioenv(distance_matrix, data_frame, columns=None):
     vars
     pH                1     0.771517
     pH, Elevation     2     0.714286
-    <BLANKLINE>
-    [2 rows x 2 columns]
 
     We see that in this simple example, pH alone is maximally rank-correlated
     with the community distances (:math:`\\rho=0.771517`).

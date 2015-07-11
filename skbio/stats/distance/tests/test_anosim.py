@@ -75,7 +75,8 @@ class TestANOSIM(TestCase):
         # inputs. Also ensure we get the same results if we run the method
         # using a grouping vector or a data frame with equivalent groupings.
         exp = pd.Series(index=self.exp_index,
-                        data=['ANOSIM', 'R', 4, 2, 0.25, 0.671, 999])
+                        data=['ANOSIM', 'R', 4, 2, 0.25, 0.671, 999],
+                        name='ANOSIM results')
 
         for _ in range(2):
             np.random.seed(0)
@@ -89,20 +90,23 @@ class TestANOSIM(TestCase):
 
     def test_no_ties(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['ANOSIM', 'R', 4, 2, 0.625, 0.332, 999])
+                        data=['ANOSIM', 'R', 4, 2, 0.625, 0.332, 999],
+                        name='ANOSIM results')
         np.random.seed(0)
         obs = anosim(self.dm_no_ties, self.grouping_equal)
         self.assert_series_equal(obs, exp)
 
     def test_no_permutations(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['ANOSIM', 'R', 4, 2, 0.625, np.nan, 0])
+                        data=['ANOSIM', 'R', 4, 2, 0.625, np.nan, 0],
+                        name='ANOSIM results')
         obs = anosim(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
 
     def test_unequal_group_sizes(self):
         exp = pd.Series(index=self.exp_index,
-                        data=['ANOSIM', 'R', 6, 3, -0.363636, 0.878, 999])
+                        data=['ANOSIM', 'R', 6, 3, -0.363636, 0.878, 999],
+                        name='ANOSIM results')
 
         np.random.seed(0)
         obs = anosim(self.dm_unequal, self.grouping_unequal)

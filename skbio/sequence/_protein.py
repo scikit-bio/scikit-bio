@@ -8,7 +8,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides
+import numpy as np
+
+from skbio.util._decorator import classproperty, overrides
+from skbio.util._decorator import stable
 from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
 
 
@@ -36,9 +39,15 @@ class Protein(IUPACSequence):
         will work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
-    case_insenstive : bool, optional
+    lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC protein characters.
+        uppercase characters in order to be valid IUPAC Protein characters. If
+        ``False``, no characters will be converted. If a str, it will be
+        treated as a key into the positional metadata of the object. All
+        lowercase characters will be converted to uppercase, and a ``True``
+        value will be stored in a boolean array in the positional metadata
+        under the key.
+
 
     Attributes
     ----------
@@ -47,6 +56,7 @@ class Protein(IUPACSequence):
     positional_metadata
     alphabet
     gap_chars
+    stop_chars
     nondegenerate_chars
     degenerate_chars
     degenerate_map
@@ -61,34 +71,136 @@ class Protein(IUPACSequence):
     Examples
     --------
     >>> from skbio import Protein
-    >>> s = Protein('PAW')
-    >>> s
-    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
+    >>> Protein('PAW')
+    Protein
+    -----------------------------
+    Stats:
+        length: 3
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        has stops: False
+    -----------------------------
+    0 PAW
 
     Convert lowercase characters to uppercase:
 
-    >>> s = Protein('paW', case_insensitive=True)
-    >>> s
-    Protein('PAW', length=3, has_metadata=False, has_positional_metadata=False)
+    >>> Protein('paW', lowercase=True)
+    Protein
+    -----------------------------
+    Stats:
+        length: 3
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        has stops: False
+    -----------------------------
+    0 PAW
 
     """
-
-    @property
-    def _motifs(self):
-        return _motifs
+    __stop_codes = None
 
     @classproperty
+    def _stop_codes(cls):
+        if cls.__stop_codes is None:
+            stops = cls.stop_chars
+            cls.__stop_codes = np.asarray([ord(s) for s in stops])
+        return cls.__stop_codes
+
+    @classproperty
+    @stable(as_of="0.4.0")
+    @overrides(IUPACSequence)
+    def alphabet(cls):
+        return super(Protein, cls).alphabet | cls.stop_chars
+
+    @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
-        return set("ACDEFGHIKLMNPQRSTVWY*")
+        return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def degenerate_map(cls):
         return {
             "B": set("DN"), "Z": set("EQ"),
             "X": set("ACDEFGHIKLMNPQRSTVWY")
         }
+
+    @classproperty
+    @stable(as_of="0.4.0")
+    def stop_chars(cls):
+        """Return characters representing translation stop codons.
+
+        Returns
+        -------
+        set
+            Characters representing translation stop codons.
+
+        """
+        return set('*')
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+    @stable(as_of="0.4.0")
+    def stops(self):
+        """Find positions containing stop characters in the protein sequence.
+
+        Returns
+        -------
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` indicates a stop character is present
+            at that position in the protein sequence.
+
+        See Also
+        --------
+        has_stops
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.stops()
+        array([False, False, False], dtype=bool)
+        >>> s = Protein('PAW*E*')
+        >>> s.stops()
+        array([False, False, False,  True, False,  True], dtype=bool)
+
+        """
+        return np.in1d(self._bytes, self._stop_codes)
+
+    @stable(as_of="0.4.0")
+    def has_stops(self):
+        """Determine if the sequence contains one or more stop characters.
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurrences of stop
+            characters in the protein sequence.
+
+        Examples
+        --------
+        >>> from skbio import Protein
+        >>> s = Protein('PAW')
+        >>> s.has_stops()
+        False
+        >>> s = Protein('PAW*E*')
+        >>> s.has_stops()
+        True
+
+        """
+        return bool(self.stops().any())
+
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(Protein, self)._repr_stats()
+        stats.append(('has stops', '%r' % self.has_stops()))
+        return stats
 
 
 _motifs = parent_motifs.copy()

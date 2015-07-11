@@ -11,15 +11,25 @@ API Reference
 .. toctree::
    :maxdepth: 1
 
-   alignment
+   io
    sequence
+   alignment
    tree
    workflow
    draw
    diversity
    stats
-   io
    util
+
+User Documentation
+------------------
+
+The user documentation contains high-level information for users of scikit-bio.
+
+.. toctree::
+   :maxdepth: 1
+
+   user/api_stability
 
 Developer Documentation
 -----------------------

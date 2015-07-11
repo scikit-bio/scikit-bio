@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from unittest import TestCase, main
 
 import numpy as np
@@ -130,14 +131,21 @@ class DistributionsTests(TestCase):
                          ['b', 'g', 'r', 'c'])
 
     def test_get_distribution_markers_insufficient_markers(self):
-        self.assertEqual(npt.assert_warns(RuntimeWarning,
-                                          _get_distribution_markers,
-                                          'colors', None, 10),
-                         ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b', 'g', 'r'])
-        self.assertEqual(npt.assert_warns(RuntimeWarning,
-                                          _get_distribution_markers,
-                                          'symbols', ['^', '>', '<'], 5),
-                         ['^', '>', '<', '^', '>'])
+
+        expected = ['b', 'g', 'r', 'c', 'm', 'y', 'w', 'b', 'g', 'r']
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            actual = _get_distribution_markers('colors', None, 10)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
+            self.assertEqual(actual, expected)
+
+        expected = ['^', '>', '<', '^', '>']
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            actual = _get_distribution_markers('symbols', ['^', '>', '<'], 5)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
+            self.assertEqual(actual, expected)
 
     def test_get_distribution_markers_bad_marker_type(self):
         with npt.assert_raises(ValueError):
@@ -328,9 +336,11 @@ class DistributionsTests(TestCase):
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['b', 'r'], "x-axis label", "y-axis label", "Test")
 
-        npt.assert_warns(RuntimeWarning,
-                         grouped_distributions,
-                         *args)
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            grouped_distributions(*args)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
 
     def test_grouped_distributions_scatter(self):
         fig = grouped_distributions('scatter', self.ValidTypicalData,
@@ -351,7 +361,11 @@ class DistributionsTests(TestCase):
                 ["T0", "T1", "T2", "T3"], ["Infants", "Children", "Teens"],
                 ['^'], "x-axis label", "y-axis label", "Test")
 
-        npt.assert_warns(RuntimeWarning, grouped_distributions, *args)
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            grouped_distributions(*args)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
 
     def test_grouped_distributions_empty_marker_list(self):
         grouped_distributions('scatter', self.ValidTypicalData,
@@ -568,7 +582,12 @@ class DistributionsTests(TestCase):
                                          'oooooooooooooooooooooooooooooooo'
                                          'oooo', 'barbarbar'],
                           x_tick_labels_orientation='vertical')
-        npt.assert_warns(RuntimeWarning, _set_figure_size, fig, 3, 3)
+
+        # adapted from SO example here: http://stackoverflow.com/a/3892301
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _set_figure_size(fig, 3, 3)
+            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
         npt.assert_array_equal(fig.get_size_inches(), (3, 3))
 
 

@@ -8,12 +8,14 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util import classproperty, overrides
-from ._nucleotide_sequence import NucleotideSequence
+from skbio.util._decorator import classproperty, overrides
+from skbio.util._decorator import stable
+from ._rna import RNA
+from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
 
-class DNA(NucleotideSequence):
+class DNA(IUPACSequence, NucleotideMixin):
     """Store DNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC DNA character set [1]_ are supported.
@@ -37,9 +39,14 @@ class DNA(NucleotideSequence):
         work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
-    case_insensitive : bool, optional
+    lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC DNA characters.
+        uppercase characters in order to be valid IUPAC DNA characters. If
+        ``False``, no characters will be converted. If a str, it will be
+        treated as a key into the positional metadata of the object. All
+        lowercase characters will be converted to uppercase, and a ``True``
+        value will be stored in a boolean array in the positional metadata
+        under the key.
 
     Attributes
     ----------
@@ -67,20 +74,37 @@ class DNA(NucleotideSequence):
     Examples
     --------
     >>> from skbio import DNA
-    >>> s = DNA('ACCGAAT')
-    >>> s
-    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> DNA('ACCGAAT')
+    DNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        GC-content: 42.86%
+    -----------------------------
+    0 ACCGAAT
 
     Convert lowercase characters to uppercase:
 
-    >>> s = DNA('AcCGaaT', case_insensitive=True)
-    >>> s
-    DNA('ACCGAAT', length=7, has_metadata=False, has_positional_metadata=False)
+    >>> DNA('AcCGaaT', lowercase=True)
+    DNA
+    -----------------------------
+    Stats:
+        length: 7
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        GC-content: 42.86%
+    -----------------------------
+    0 ACCGAAT
 
     """
 
     @classproperty
-    @overrides(NucleotideSequence)
+    @stable(as_of="0.4.0")
+    @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
             'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'Y': 'R', 'R': 'Y',
@@ -92,11 +116,13 @@ class DNA(NucleotideSequence):
         return comp_map
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def nondegenerate_chars(cls):
         return set("ACGT")
 
     @classproperty
+    @stable(as_of="0.4.0")
     @overrides(IUPACSequence)
     def degenerate_map(cls):
         return {
@@ -104,3 +130,281 @@ class DNA(NucleotideSequence):
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
+
+    @property
+    def _motifs(self):
+        return _motifs
+
+    @stable(as_of="0.4.0")
+    def transcribe(self):
+        """Transcribe DNA into RNA.
+
+        DNA sequence is assumed to be the coding strand. Thymine (T) is
+        replaced with uracil (U) in the transcribed sequence.
+
+        Returns
+        -------
+        RNA
+            Transcribed sequence.
+
+        See Also
+        --------
+        translate
+        translate_six_frames
+
+        Notes
+        -----
+        DNA sequence's metadata and positional metadata are included in the
+        transcribed RNA sequence.
+
+        Examples
+        --------
+        Transcribe DNA into RNA:
+
+        >>> from skbio import DNA
+        >>> dna = DNA('TAACGTTA')
+        >>> dna
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 TAACGTTA
+        >>> dna.transcribe()
+        RNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 UAACGUUA
+
+        """
+        seq = self._string.replace(b'T', b'U')
+
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
+        # turn off validation because `seq` is guaranteed to be valid
+        return RNA(seq, metadata=metadata,
+                   positional_metadata=positional_metadata, validate=False)
+
+    @stable(as_of="0.4.0")
+    def translate(self, *args, **kwargs):
+        """Translate DNA sequence into protein sequence.
+
+        DNA sequence is assumed to be the coding strand. DNA sequence is first
+        transcribed into RNA and then translated into protein.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional arguments accepted by ``RNA.translate``.
+        kwargs : dict
+            Keyword arguments accepted by ``RNA.translate``.
+
+        Returns
+        -------
+        Protein
+            Translated sequence.
+
+        See Also
+        --------
+        RNA.translate
+        translate_six_frames
+        transcribe
+
+        Notes
+        -----
+        DNA sequence's metadata are included in the translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate DNA into protein using NCBI's standard genetic code (table ID
+        1, the default genetic code in scikit-bio):
+
+        >>> from skbio import DNA
+        >>> dna = DNA('ATGCCACTTTAA')
+        >>> dna.translate()
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*
+
+        Translate the same DNA sequence using a different NCBI genetic code
+        (table ID 3, the yeast mitochondrial code) and specify that translation
+        must terminate at the first stop codon:
+
+        >>> dna.translate(3, stop='require')
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 MPT
+
+        """
+        return self.transcribe().translate(*args, **kwargs)
+
+    @stable(as_of="0.4.0")
+    def translate_six_frames(self, *args, **kwargs):
+        """Translate DNA into protein using six possible reading frames.
+
+        DNA sequence is assumed to be the coding strand. DNA sequence is first
+        transcribed into RNA and then translated into protein. The six possible
+        reading frames are:
+
+        * 1 (forward)
+        * 2 (forward)
+        * 3 (forward)
+        * -1 (reverse)
+        * -2 (reverse)
+        * -3 (reverse)
+
+        Translated sequences are yielded in this order.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional arguments accepted by ``RNA.translate_six_frames``.
+        kwargs : dict
+            Keyword arguments accepted by ``RNA.translate_six_frames``.
+
+        Yields
+        ------
+        Protein
+            Translated sequence in the current reading frame.
+
+        See Also
+        --------
+        RNA.translate_six_frames
+        translate
+        transcribe
+
+        Notes
+        -----
+        This method is faster than (and equivalent to) performing six
+        independent translations using, for example:
+
+        ``(seq.translate(reading_frame=rf)
+        for rf in GeneticCode.reading_frames)``
+
+        DNA sequence's metadata are included in each translated protein
+        sequence. Positional metadata are not included.
+
+        Examples
+        --------
+        Translate DNA into protein using the six possible reading frames and
+        NCBI's standard genetic code (table ID 1, the default genetic code in
+        scikit-bio):
+
+        >>> from skbio import DNA
+        >>> dna = DNA('ATGCCACTTTAA')
+        >>> for protein in dna.translate_six_frames():
+        ...     protein
+        ...     print('')
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 MPL*
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 CHF
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 ATL
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 LKWH
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: True
+        -----------------------------
+        0 *SG
+        <BLANKLINE>
+        Protein
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            has stops: False
+        -----------------------------
+        0 KVA
+        <BLANKLINE>
+
+        """
+        return self.transcribe().translate_six_frames(*args, **kwargs)
+
+    @overrides(IUPACSequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(DNA, self)._repr_stats()
+        stats.append(('GC-content', '{:.2%}'.format(self.gc_content())))
+        return stats
+
+
+_motifs = _parent_motifs.copy()
+
+# Leave this at the bottom
+_motifs.interpolate(DNA, "find_motifs")

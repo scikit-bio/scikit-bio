@@ -16,6 +16,8 @@
 # the resulting alignments are verified by hand. Creating tests from the base
 # C API is impractical at this time.
 
+from __future__ import absolute_import, division, print_function
+
 from unittest import TestCase, main
 
 from skbio import local_pairwise_align_ssw, Sequence, DNA
@@ -601,8 +603,8 @@ class TestAlignStripedSmithWaterman(TestSSW):
         align2 = local_pairwise_align_ssw(query_sequence, target_sequence,
                                           constructor=DNA)
 
-        self.assertEquals(type(align1[0]), Sequence)
-        self.assertEquals(type(align2[0]), DNA)
+        self.assertEqual(type(align1[0]), Sequence)
+        self.assertEqual(type(align2[0]), DNA)
 
 
 class TestAlignmentStructure(TestSSW):

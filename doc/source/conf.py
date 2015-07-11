@@ -27,7 +27,7 @@ except ImportError:
         "  pip install git+git://github.com/numpy/numpydoc.git")
 
 import skbio
-from skbio.util import classproperty
+from skbio.util._decorator import classproperty
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

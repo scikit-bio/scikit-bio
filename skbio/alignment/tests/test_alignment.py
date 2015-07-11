@@ -8,21 +8,17 @@
 
 from __future__ import absolute_import, division, print_function
 
+import six
+
 from unittest import TestCase, main
-from collections import Counter, defaultdict, OrderedDict
-try:
-    from StringIO import StringIO
-except ImportError:  # python3 system
-    from io import StringIO
-import tempfile
+from collections import Counter, defaultdict
 
 import numpy as np
 from scipy.spatial.distance import hamming
 
 from skbio import (Sequence, DNA, RNA,
                    DistanceMatrix, Alignment, SequenceCollection)
-from skbio.alignment import (StockholmAlignment, SequenceCollectionError,
-                             StockholmParseError, AlignmentError)
+from skbio.alignment import (SequenceCollectionError, AlignmentError)
 
 
 class SequenceCollectionTests(TestCase):
@@ -58,9 +54,9 @@ class SequenceCollectionTests(TestCase):
 
     def test_init_fail_no_id(self):
         seq = Sequence('ACGTACGT')
-        with self.assertRaisesRegexp(SequenceCollectionError,
-                                     "'id' must be included in the sequence "
-                                     "metadata"):
+        with six.assertRaisesRegex(self, SequenceCollectionError,
+                                   "'id' must be included in the sequence "
+                                   "metadata"):
             SequenceCollection([seq])
 
     def test_contains(self):
@@ -203,7 +199,10 @@ class SequenceCollectionTests(TestCase):
         expected = [[0, 0.25],
                     [0.25, 0]]
         expected = DistanceMatrix(expected, ['d1', 'd2'])
-        actual = s1.distances(hamming)
+
+        def h(s1, s2):
+            return hamming(s1.values, s2.values)
+        actual = s1.distances(h)
         self.assertEqual(actual, expected)
 
         # alt distance function provided
@@ -255,15 +254,6 @@ class SequenceCollectionTests(TestCase):
                          ['d1', 'd2', 'r1', 'r2', 'r3'])
         self.assertEqual(self.empty.ids(), [])
 
-    def _assert_sequence_collections_equal(self, observed, expected):
-        """Compare SequenceCollections strictly."""
-        # TODO remove this custom equality testing code when SequenceCollection
-        # has an equals method (part of #656). We need this method to include
-        # IDs in the comparison (not part of SequenceCollection.__eq__).
-        self.assertEqual(observed, expected)
-        for obs_seq, exp_seq in zip(observed, expected):
-            self.assertTrue(obs_seq.equals(exp_seq))
-
     def test_update_ids_default_behavior(self):
         # 3 seqs
         exp_sc = SequenceCollection([
@@ -273,12 +263,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'1': 'r1', '2': 'r2', '3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids()
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids()
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_prefix(self):
@@ -290,12 +280,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'abc1': 'r1', 'abc2': 'r2', 'abc3': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(prefix='abc')
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(prefix='abc')
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_func_parameter(self):
@@ -310,12 +300,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'r1-42': 'r1', 'r2-42': 'r2', 'r3-42': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(func=append_42)
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(func=append_42)
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_ids_parameter(self):
@@ -327,12 +317,12 @@ class SequenceCollectionTests(TestCase):
         ])
         exp_id_map = {'abc': 'r1', 'def': 'r2', 'ghi': 'r3'}
         obs_sc, obs_id_map = self.s2.update_ids(ids=('abc', 'def', 'ghi'))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # empty
         obs_sc, obs_id_map = self.empty.update_ids(ids=[])
-        self._assert_sequence_collections_equal(obs_sc, self.empty)
+        self.assertEqual(obs_sc, self.empty)
         self.assertEqual(obs_id_map, {})
 
     def test_update_ids_sequence_attributes_propagated(self):
@@ -349,7 +339,7 @@ class SequenceCollectionTests(TestCase):
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc',))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
         # 2 seqs
@@ -369,30 +359,31 @@ class SequenceCollectionTests(TestCase):
         ])
 
         obs_sc, obs_id_map = obj.update_ids(ids=('abc', 'def'))
-        self._assert_sequence_collections_equal(obs_sc, exp_sc)
+        self.assertEqual(obs_sc, exp_sc)
         self.assertEqual(obs_id_map, exp_id_map)
 
     def test_update_ids_invalid_parameter_combos(self):
-        with self.assertRaisesRegexp(SequenceCollectionError, 'ids and func'):
+        with six.assertRaisesRegex(self, SequenceCollectionError,
+                                   'ids and func'):
             self.s1.update_ids(func=lambda e: e, ids=['foo', 'bar'])
 
-        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'prefix'):
             self.s1.update_ids(ids=['foo', 'bar'], prefix='abc')
 
-        with self.assertRaisesRegexp(SequenceCollectionError, 'prefix'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'prefix'):
             self.s1.update_ids(func=lambda e: e, prefix='abc')
 
     def test_update_ids_invalid_ids(self):
         # incorrect number of new ids
-        with self.assertRaisesRegexp(SequenceCollectionError, '3 != 2'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, '3 != 2'):
             self.s1.update_ids(ids=['foo', 'bar', 'baz'])
-        with self.assertRaisesRegexp(SequenceCollectionError, '4 != 2'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, '4 != 2'):
             self.s1.update_ids(func=lambda e: ['foo', 'bar', 'baz', 'abc'])
 
         # duplicates
-        with self.assertRaisesRegexp(SequenceCollectionError, 'foo'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'foo'):
             self.s2.update_ids(ids=['foo', 'bar', 'foo'])
-        with self.assertRaisesRegexp(SequenceCollectionError, 'bar'):
+        with six.assertRaisesRegex(self, SequenceCollectionError, 'bar'):
             self.s2.update_ids(func=lambda e: ['foo', 'bar', 'bar'])
 
     def test_is_empty(self):
@@ -586,22 +577,22 @@ class AlignmentTests(TestCase):
 
     def test_majority_consensus(self):
         # empty cases
-        self.assertTrue(
-            self.empty.majority_consensus().equals(Sequence('')))
-        self.assertTrue(
-            self.no_positions.majority_consensus().equals(RNA('')))
+        self.assertEqual(
+            self.empty.majority_consensus(), Sequence(''))
+        self.assertEqual(
+            self.no_positions.majority_consensus(), RNA(''))
 
         # alignment where all sequences are the same
         aln = Alignment([DNA('AG', metadata={'id': 'a'}),
                          DNA('AG', metadata={'id': 'b'})])
-        self.assertTrue(aln.majority_consensus().equals(DNA('AG')))
+        self.assertEqual(aln.majority_consensus(), DNA('AG'))
 
         # no ties
         d1 = DNA('TTT', metadata={'id': "d1"})
         d2 = DNA('TT-', metadata={'id': "d2"})
         d3 = DNA('TC-', metadata={'id': "d3"})
         a1 = Alignment([d1, d2, d3])
-        self.assertTrue(a1.majority_consensus().equals(DNA('TT-')))
+        self.assertEqual(a1.majority_consensus(), DNA('TT-'))
 
         # ties
         d1 = DNA('T', metadata={'id': "d1"})
@@ -739,296 +730,6 @@ class AlignmentTests(TestCase):
 
         self.assertTrue(Alignment([
             DNA('TTT', metadata={'id': "d1"})])._validate_lengths())
-
-
-class StockholmAlignmentTests(TestCase):
-    def setUp(self):
-        self.seqs = [DNA("ACC-G-GGTA", metadata={'id': "seq1"}),
-                     DNA("TCC-G-GGCA", metadata={'id': "seq2"})]
-        self.GF = OrderedDict([
-            ("AC", "RF00360"),
-            ("BM", ["cmbuild  -F CM SEED",
-                    "cmsearch  -Z 274931 -E 1000000"]),
-            ("SQ", "9"),
-            ("RT", ["TITLE1",  "TITLE2"]),
-            ("RN", ["[1]", "[2]"]),
-            ("RA", ["Auth1;", "Auth2;"]),
-            ("RL", ["J Mol Biol", "Cell"]),
-            ("RM", ["11469857", "12007400"]),
-            ('RN', ['[1]', '[2]'])
-        ])
-        self.GS = {"AC": OrderedDict([("seq1", "111"), ("seq2", "222")])}
-        self.GR = {"SS": OrderedDict([("seq1", "1110101111"),
-                                      ("seq2", "0110101110")])}
-        self.GC = {"SS_cons": "(((....)))"}
-        self.st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF,
-                                     gs=self.GS, gr=self.GR)
-
-    def test_retrieve_metadata(self):
-        self.assertEqual(self.st.gc, self.GC)
-        self.assertEqual(self.st.gf, self.GF)
-        self.assertEqual(self.st.gs, self.GS)
-        self.assertEqual(self.st.gr, self.GR)
-
-    def test_from_file_alignment(self):
-        # test that a basic stockholm file with interleaved alignment can be
-        # parsed
-        sto = StringIO("# STOCKHOLM 1.0\n"
-                       "seq1      ACC-G\n"
-                       "seq2      TCC-G\n\n"
-                       "seq1      -GGTA\n"
-                       "seq2      -GGCA\n//")
-        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
-        exp_sto = StockholmAlignment(self.seqs)
-        self.assertEqual(obs_sto, exp_sto)
-
-    def test_from_file_GF(self):
-        # remove rn line to make sure auto-added
-        self.GF.pop("RN")
-        sto = StringIO("# STOCKHOLM 1.0\n#=GF RN [1]\n#=GF RM 11469857\n"
-                       "#=GF RT TITLE1\n#=GF RA Auth1;\n#=GF RL J Mol Biol\n"
-                       "#=GF RN [2]\n#=GF RM 12007400\n#=GF RT TITLE2\n"
-                       "#=GF RA Auth2;\n#=GF RL Cell\n#=GF AC RF00360\n"
-                       "#=GF BM cmbuild  -F CM SEED\n"
-                       "#=GF BM cmsearch  -Z 274931 -E 1000000\n#=GF SQ 9\n"
-                       "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n//")
-        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
-        exp_sto = StockholmAlignment(self.seqs, self.GF, {}, {}, {})
-        self.assertEqual(obs_sto, exp_sto)
-
-    def test_from_file_GC(self):
-        sto = StringIO("# STOCKHOLM 1.0\n"
-                       "seq1         ACC-G-GGTA\nseq2         TCC-G-GGCA\n"
-                       "#=GC SS_cons (((....)))\n//")
-        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
-        exp_sto = StockholmAlignment(self.seqs, {}, {}, {}, self.GC)
-        self.assertEqual(obs_sto, exp_sto)
-
-    def test_from_file_GS(self):
-        sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
-                       "seq1          ACC-G-GGTA\n"
-                       "seq2          TCC-G-GGCA\n//")
-        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
-        exp_sto = StockholmAlignment(self.seqs, {}, self.GS, {}, {})
-        self.assertEqual(obs_sto, exp_sto)
-
-    def test_from_file_GR(self):
-        sto = StringIO("# STOCKHOLM 1.0\nseq1          ACC-G\n"
-                       "#=GR seq1 SS  11101\nseq2          TCC-G\n"
-                       "#=GR seq2 SS  01101\n\nseq1          -GGTA\n"
-                       "#=GR seq1 SS  01111\nseq2          -GGCA\n"
-                       "#=GR seq2 SS  01110\n//")
-        obs_sto = next(StockholmAlignment.from_file(sto, DNA))
-        exp_sto = StockholmAlignment(self.seqs, {}, {}, self.GR, {})
-        self.assertEqual(obs_sto, exp_sto)
-
-    def test_from_file_multi(self):
-        sto = StringIO("# STOCKHOLM 1.0\n#=GS seq2 AC 222\n#=GS seq1 AC 111\n"
-                       "seq1          ACC-G-GGTA\n"
-                       "seq2          TCC-G-GGCA\n//\n"
-                       "# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
-                       "#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n"
-                       "#=GR seq2 SS  0110101110\n//")
-        obs_sto = StockholmAlignment.from_file(sto, DNA)
-        count = 0
-        for obs in obs_sto:
-            if count == 0:
-                exp_sto = StockholmAlignment(self.seqs, {}, self.GS, {}, {})
-                self.assertEqual(obs, exp_sto)
-            elif count == 1:
-                exp_sto = StockholmAlignment(self.seqs, {}, {}, self.GR, {})
-                self.assertEqual(obs, exp_sto)
-            else:
-                raise AssertionError("More than 2 sto alignments parsed!")
-            count += 1
-
-    def test_parse_gf_multiline_nh(self):
-        sto = ["#=GF TN MULTILINE TREE",
-               "#=GF NH THIS IS FIRST", "#=GF NH THIS IS SECOND",
-               "#=GF AC 1283394"]
-        exp = {'TN': 'MULTILINE TREE',
-               'NH': 'THIS IS FIRST THIS IS SECOND',
-               'AC': '1283394'}
-        self.assertEqual(self.st._parse_gf_info(sto), exp)
-
-    def test_parse_gf_multiline_cc(self):
-        sto = ["#=GF CC THIS IS FIRST", "#=GF CC THIS IS SECOND"]
-        exp = {'CC': 'THIS IS FIRST THIS IS SECOND'}
-        self.assertEqual(self.st._parse_gf_info(sto), exp)
-
-    def test_parse_gf_info_nongf(self):
-        sto = ["#=GF AC BLAAAAAAAHHH", "#=GC HUH THIS SHOULD NOT BE HERE"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gf_info(sto)
-
-    def test_parse_gf_info_malformed(self):
-        # too short of a line
-        sto = ["#=GF AC", "#=GF"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gf_info(sto)
-
-    def test_parse_gc_info_nongf(self):
-        sto = ["#=GC AC BLAAAAAAAHHH", "#=GF HUH THIS SHOULD NOT BE HERE"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gf_info(sto)
-
-    def test_parse_gc_info_strict_len(self):
-        sto = ["#=GC SS_cons (((..)))"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gc_info(sto, seqlen=20, strict=True)
-
-    def test_parse_gc_info_strict_duplicate(self):
-        sto = ["#=GC SS_cons (((..)))", "#=GC SS_cons (((..)))"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gc_info(sto, seqlen=8, strict=True)
-
-    def test_parse_gc_info_malformed(self):
-        # too short of a line
-        sto = ["#=GC AC BLAAAAAAAHHH", "#=GC"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gc_info(sto)
-
-    def test_parse_gs_gr_info_mixed(self):
-        sto = ["#=GS seq1 AC BLAAA", "#=GR seq2 HUH THIS SHOULD NOT BE HERE"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gs_gr_info(sto)
-
-    def test_parse_gs_gr_info_malformed(self):
-        # too short of a line
-        sto = ["#=GS AC BLAAAAAAAHHH", "#=GS"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gs_gr_info(sto)
-
-    def test_parse_gs_gr_info_strict(self):
-        sto = ["#=GR seq1 SS  10101111", "#=GR seq2 SS  01101"]
-        with self.assertRaises(StockholmParseError):
-            self.st._parse_gs_gr_info(sto, seqlen=20, strict=True)
-
-    def test_str(self):
-        st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
-                                gr=self.GR)
-        obs = str(st)
-        exp = ('# STOCKHOLM 1.0\n'
-               '#=GF AC RF00360\n'
-               '#=GF BM cmbuild  -F CM SEED\n'
-               '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
-               '#=GF SQ 9\n'
-               '#=GF RN [1]\n'
-               '#=GF RM 11469857\n'
-               '#=GF RT TITLE1\n'
-               '#=GF RA Auth1;\n'
-               '#=GF RL J Mol Biol\n'
-               '#=GF RN [2]\n'
-               '#=GF RM 12007400\n'
-               '#=GF RT TITLE2\n'
-               '#=GF RA Auth2;\n'
-               '#=GF RL Cell\n'
-               '#=GS seq1 AC 111\n'
-               '#=GS seq2 AC 222\n'
-               'seq1          ACC-G-GGTA\n'
-               '#=GR seq1 SS  1110101111\n'
-               'seq2          TCC-G-GGCA\n'
-               '#=GR seq2 SS  0110101110\n'
-               '#=GC SS_cons  (((....)))\n//')
-        self.assertEqual(obs, exp)
-
-    def test_to_file(self):
-        st = StockholmAlignment(self.seqs, gc=self.GC, gf=self.GF, gs=self.GS,
-                                gr=self.GR)
-
-        with tempfile.NamedTemporaryFile('r+') as temp_file:
-            st.to_file(temp_file)
-            temp_file.flush()
-            temp_file.seek(0)
-            obs = temp_file.read()
-            exp = ('# STOCKHOLM 1.0\n'
-                   '#=GF AC RF00360\n'
-                   '#=GF BM cmbuild  -F CM SEED\n'
-                   '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
-                   '#=GF SQ 9\n'
-                   '#=GF RN [1]\n'
-                   '#=GF RM 11469857\n'
-                   '#=GF RT TITLE1\n'
-                   '#=GF RA Auth1;\n'
-                   '#=GF RL J Mol Biol\n'
-                   '#=GF RN [2]\n'
-                   '#=GF RM 12007400\n'
-                   '#=GF RT TITLE2\n'
-                   '#=GF RA Auth2;\n'
-                   '#=GF RL Cell\n'
-                   '#=GS seq1 AC 111\n'
-                   '#=GS seq2 AC 222\n'
-                   'seq1          ACC-G-GGTA\n'
-                   '#=GR seq1 SS  1110101111\n'
-                   'seq2          TCC-G-GGCA\n'
-                   '#=GR seq2 SS  0110101110\n'
-                   '#=GC SS_cons  (((....)))\n//')
-        self.assertEqual(obs, exp)
-
-    def test_str_gc(self):
-        st = StockholmAlignment(self.seqs, gc=self.GC, gf=None, gs=None,
-                                gr=None)
-        obs = str(st)
-        exp = ("# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
-               "seq2          TCC-G-GGCA\n"
-               "#=GC SS_cons  (((....)))\n//")
-        self.assertEqual(obs, exp)
-
-    def test_str_gf(self):
-        st = StockholmAlignment(self.seqs, gc=None, gf=self.GF, gs=None,
-                                gr=None)
-        obs = str(st)
-        exp = ('# STOCKHOLM 1.0\n'
-               '#=GF AC RF00360\n'
-               '#=GF BM cmbuild  -F CM SEED\n'
-               '#=GF BM cmsearch  -Z 274931 -E 1000000\n'
-               '#=GF SQ 9\n'
-               '#=GF RN [1]\n'
-               '#=GF RM 11469857\n'
-               '#=GF RT TITLE1\n'
-               '#=GF RA Auth1;\n'
-               '#=GF RL J Mol Biol\n'
-               '#=GF RN [2]\n'
-               '#=GF RM 12007400\n'
-               '#=GF RT TITLE2\n'
-               '#=GF RA Auth2;\n'
-               '#=GF RL Cell\n'
-               'seq1          ACC-G-GGTA\n'
-               'seq2          TCC-G-GGCA\n//')
-        self.assertEqual(obs, exp)
-
-    def test_str_gs(self):
-        st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=self.GS,
-                                gr=None)
-        obs = str(st)
-        exp = ('# STOCKHOLM 1.0\n'
-               '#=GS seq1 AC 111\n'
-               '#=GS seq2 AC 222\n'
-               'seq1          ACC-G-GGTA\n'
-               'seq2          TCC-G-GGCA\n//')
-        self.assertEqual(obs, exp)
-
-    def test_str_gr(self):
-        st = StockholmAlignment(self.seqs, gc=None, gf=None, gs=None,
-                                gr=self.GR)
-        obs = str(st)
-        exp = ("# STOCKHOLM 1.0\nseq1          ACC-G-GGTA\n"
-               "#=GR seq1 SS  1110101111\nseq2          TCC-G-GGCA\n"
-               "#=GR seq2 SS  0110101110\n//")
-        self.assertEqual(obs, exp)
-
-    def test_str_trees(self):
-        GF = OrderedDict({"NH": ["IMATREE", "IMATREETOO"],
-                          "TN": ["Tree2", "Tree1"]})
-        st = StockholmAlignment(self.seqs, gc=None, gf=GF, gs=None,
-                                gr=None)
-        obs = str(st)
-        exp = ("# STOCKHOLM 1.0\n#=GF TN Tree2\n#=GF NH IMATREE\n#=GF TN Tree1"
-               "\n#=GF NH IMATREETOO\nseq1          ACC-G-GGTA\n"
-               "seq2          TCC-G-GGCA\n//")
-
-        self.assertEqual(obs, exp)
-
 
 if __name__ == "__main__":
     main()

@@ -89,7 +89,7 @@ exciting on success.
 Now, lets process some data!
 
 >>> for result in wf(seqs, success_callback=success_f, fail_callback=fail_f):
-...     print result
+...     print(result)
 SUCCESS: AAAAAAATTTTTTT
 FAIL: ATAGACC
 SUCCESS: CCGGAC
@@ -110,9 +110,9 @@ to walk through an item at a time so we can examine the debug information.
 >>> gen = wf(seqs, fail_callback=lambda x: x.state)
 >>> gen.next()
 'TTTTTTTAAAAAAA'
->>> print wf.failed
+>>> print(wf.failed)
 False
->>> print wf.debug_trace
+>>> print(wf.debug_trace)
 set([('check_length', 0), ('reverse', 2)])
 
 The ``debug_trace`` specifies the methods executed, and the order of their
@@ -127,9 +127,9 @@ workflow was a failed item.
 
 >>> gen.next()
 'ATAGACC'
->>> print wf.failed
+>>> print(wf.failed)
 True
->>> print wf.debug_trace
+>>> print(wf.debug_trace)
 set([('check_length', 0)])
 
 What we can see is that the failed sequence only executed the check_length
@@ -143,7 +143,7 @@ truncation. Let's see what that looks like in the debug output.
 
 >>> gen.next() #
 'CAGGCC'
->>> print wf.failed
+>>> print(wf.failed)
 False
 >>> wf.debug_trace
 set([('check_length', 0), ('truncate', 1), ('reverse', 2)])
@@ -200,6 +200,8 @@ allow you to indicate ``anything`` as an option value, anything that is
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from future.utils import viewitems
 
 import sys
@@ -209,12 +211,18 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
+import six
+
+from skbio.util._decorator import experimental
+
 
 class NotExecuted(object):
     """Helper object to track if a method was executed"""
+    @experimental(as_of="0.4.0")
     def __init__(self):
         self.msg = None
 
+    @experimental(as_of="0.4.0")
     def __call__(self, msg):
         self.msg = msg
         return self
@@ -223,12 +231,14 @@ _not_executed = NotExecuted()
 
 class Exists(object):
     """Stub object to assist with ``requires`` when a value exists"""
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         return True
 anything = Exists()  # external, for when a value can be anything
 
 
 class NotNone(object):
+    @experimental(as_of="0.4.0")
     def __contains__(self, item):
         if item is None:
             return False
@@ -270,6 +280,7 @@ class Workflow(object):
 
     """
 
+    @experimental(as_of="0.4.0")
     def __init__(self, state, short_circuit=True, debug=False, options=None,
                  **kwargs):
         r"""Build thy workflow of self"""
@@ -292,6 +303,7 @@ class Workflow(object):
         if self.debug:
             self._setup_debug()
 
+    @experimental(as_of="0.4.0")
     def initialize_state(self, item):
         """Initialize state
 
@@ -366,6 +378,7 @@ class Workflow(object):
         self.debug_pre_state = {}
         self.debug_post_state = {}
 
+    @experimental(as_of="0.4.0")
     def __call__(self, iter_, success_callback=None, fail_callback=None):
         """Operate on all the data
 
@@ -448,9 +461,11 @@ class method(object):
     """
     highest_priority = sys.maxsize
 
+    @experimental(as_of="0.4.0")
     def __init__(self, priority=0):
         self.priority = priority
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         func.priority = self.priority
         return func
@@ -479,6 +494,7 @@ class requires(object):
         requirement is not satisfied. This method will be passed the
         containing ``Workflow``s' ``state`` member variable.
     """
+    @experimental(as_of="0.4.0")
     def __init__(self, option=None, values=anything, state=None):
         # self here is the requires object
         self.option = option
@@ -491,13 +507,14 @@ class requires(object):
         elif isinstance(values, set):
             self.values = values
         else:
-            if isinstance(values, str):
+            if isinstance(values, six.string_types):
                 self.values = values
             elif isinstance(values, Iterable):
                 self.values = set(values)
             else:
                 self.values = set([values])
 
+    @experimental(as_of="0.4.0")
     def __call__(self, func):
         """Wrap a function
 

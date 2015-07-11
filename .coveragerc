@@ -11,10 +11,8 @@ include = */skbio/*
 [report]
 exclude_lines =
     pragma: no cover
-    def __repr__
     raise NotImplementedError
     if __name__ == .__main__.:
 omit =
     */tests*
     */__init__.py
-

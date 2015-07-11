@@ -11,12 +11,11 @@ from unittest import TestCase, main
 
 import numpy as np
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import bioenv
 from skbio.stats.distance._bioenv import _scale
-from skbio.util import get_data_path
+from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 
 class BIOENVTests(TestCase):
@@ -91,34 +90,36 @@ class BIOENVTests(TestCase):
     def test_bioenv_all_columns_implicit(self):
         # Test with all columns in data frame (implicitly).
         obs = bioenv(self.dm, self.df)
-        assert_frame_equal(obs, self.exp_results)
+        assert_data_frame_almost_equal(obs, self.exp_results)
 
         # Should get the same results if order of rows/cols in distance matrix
         # is changed.
         obs = bioenv(self.dm_reordered, self.df)
-        assert_frame_equal(obs, self.exp_results)
+        assert_data_frame_almost_equal(obs, self.exp_results)
 
     def test_bioenv_all_columns_explicit(self):
         # Test with all columns being specified.
         obs = bioenv(self.dm, self.df, columns=self.cols)
-        assert_frame_equal(obs, self.exp_results)
+        assert_data_frame_almost_equal(obs, self.exp_results)
 
         # Test against a data frame that has an extra non-numeric column and
         # some of the rows and columns reordered (we should get the same
         # result since we're specifying the same columns in the same order).
         obs = bioenv(self.dm, self.df_extra_column, columns=self.cols)
-        assert_frame_equal(obs, self.exp_results)
+        assert_data_frame_almost_equal(obs, self.exp_results)
 
     def test_bioenv_single_column(self):
         obs = bioenv(self.dm, self.df, columns=['PH'])
-        assert_frame_equal(obs, self.exp_results_single_column)
+        assert_data_frame_almost_equal(obs, self.exp_results_single_column)
 
     def test_bioenv_different_column_order(self):
         # Specifying columns in a different order will change the row labels in
         # the results data frame as the column subsets will be reordered, but
         # the actual results (e.g., correlation coefficients) shouldn't change.
         obs = bioenv(self.dm, self.df, columns=self.cols[::-1])
-        assert_frame_equal(obs, self.exp_results_different_column_order)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_different_column_order)
 
     def test_bioenv_no_side_effects(self):
         # Deep copies of both primary inputs.
@@ -130,7 +131,7 @@ class BIOENVTests(TestCase):
         # Make sure we haven't modified the primary input in some way (e.g.,
         # with scaling, type conversions, etc.).
         self.assertEqual(self.dm, dm_copy)
-        assert_frame_equal(self.df, df_copy)
+        assert_data_frame_almost_equal(self.df, df_copy)
 
     def test_bioenv_vegan_example(self):
         # The correlation coefficient in the first row of the
@@ -146,7 +147,7 @@ class BIOENVTests(TestCase):
         # same distances yields *very* similar results. Thus, the discrepancy
         # seems to stem from differences when computing ranks/ties.
         obs = bioenv(self.dm_vegan, self.df_vegan)
-        assert_frame_equal(obs, self.exp_results_vegan)
+        assert_data_frame_almost_equal(obs, self.exp_results_vegan)
 
     def test_bioenv_no_distance_matrix(self):
         with self.assertRaises(TypeError):
@@ -192,7 +193,7 @@ class BIOENVTests(TestCase):
         exp = pd.DataFrame([[0.0], [-1.0], [1.0]], index=['A', 'B', 'C'],
                            columns=['foo'])
         obs = _scale(df)
-        assert_frame_equal(obs, exp)
+        assert_data_frame_almost_equal(obs, exp)
 
     def test_scale_multiple_columns(self):
         # Floats and ints, including positives and negatives.
@@ -209,7 +210,7 @@ class BIOENVTests(TestCase):
                            index=['A', 'B', 'C', 'D'],
                            columns=['pH', 'Elevation', 'negatives'])
         obs = _scale(df)
-        assert_frame_equal(obs, exp)
+        assert_data_frame_almost_equal(obs, exp)
 
     def test_scale_no_variance(self):
         df = pd.DataFrame([[-7.0, -1.2], [6.2, -1.2], [2.9, -1.2]],

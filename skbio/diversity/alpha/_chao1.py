@@ -11,8 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from ._base import _validate, osd
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def chao1(counts, bias_corrected=True):
     """Calculate chao1 richness estimator.
 
@@ -70,6 +72,7 @@ def chao1(counts, bias_corrected=True):
         return o + s * (s - 1) / (2 * (d + 1))
 
 
+@experimental(as_of="0.4.0")
 def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     """Calculate chao1 confidence interval.
 

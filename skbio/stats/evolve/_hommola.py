@@ -13,8 +13,10 @@ import numpy as np
 from scipy.stats import pearsonr
 
 from skbio import DistanceMatrix
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999):
     """Perform Hommola et al (2009) host/parasite cospeciation test.
 

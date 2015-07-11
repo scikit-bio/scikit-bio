@@ -14,8 +14,10 @@ from functools import partial
 import numpy as np
 
 from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def permanova(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using PERMANOVA.
 

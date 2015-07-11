@@ -7,18 +7,19 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
+
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import (DissimilarityMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
-from skbio.util import get_data_path
+from skbio.util import get_data_path, assert_data_frame_almost_equal
 
 
 class MantelTestData(TestCase):
@@ -355,31 +356,33 @@ class PairwiseMantelTests(MantelTestData):
 
         # input as DistanceMatrix instances
         obs = pwmantel(self.min_dms, alternative='greater')
-        assert_frame_equal(obs, self.exp_results_minimal)
+        assert_data_frame_almost_equal(obs, self.exp_results_minimal)
 
         np.random.seed(0)
 
         # input as array_like
         obs = pwmantel((self.minx, self.miny, self.minz),
                        alternative='greater')
-        assert_frame_equal(obs, self.exp_results_minimal)
+        assert_data_frame_almost_equal(obs, self.exp_results_minimal)
 
     def test_minimal_compatible_input_with_labels(self):
         np.random.seed(0)
 
         obs = pwmantel(self.min_dms, alternative='greater',
                        labels=('minx', 'miny', 'minz'))
-        assert_frame_equal(obs, self.exp_results_minimal_with_labels)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_minimal_with_labels)
 
     def test_duplicate_dms(self):
         obs = pwmantel((self.minx_dm, self.minx_dm, self.minx_dm),
                        alternative='less')
-        assert_frame_equal(obs, self.exp_results_duplicate_dms)
+        assert_data_frame_almost_equal(obs, self.exp_results_duplicate_dms)
 
     def test_na_p_value(self):
         obs = pwmantel((self.miny_dm, self.minx_dm), method='spearman',
                        permutations=0)
-        assert_frame_equal(obs, self.exp_results_na_p_value)
+        assert_data_frame_almost_equal(obs, self.exp_results_na_p_value)
 
     def test_reordered_distance_matrices(self):
         # Matrices have matching IDs but they all have different ordering.
@@ -390,7 +393,9 @@ class PairwiseMantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = pwmantel((x, y, z), alternative='greater')
-        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_reordered_distance_matrices)
 
     def test_strict(self):
         # Matrices have some matching and nonmatching IDs, with different
@@ -403,7 +408,9 @@ class PairwiseMantelTests(MantelTestData):
 
         # strict=False should discard IDs that aren't found in both matrices
         obs = pwmantel((x, y, z), alternative='greater', strict=False)
-        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_reordered_distance_matrices)
 
     def test_id_lookup(self):
         # Matrices have mismatched IDs but a lookup is provided.
@@ -425,7 +432,9 @@ class PairwiseMantelTests(MantelTestData):
 
         obs = pwmantel((x, y, z), alternative='greater', strict=False,
                        lookup=lookup)
-        assert_frame_equal(obs, self.exp_results_reordered_distance_matrices)
+        assert_data_frame_almost_equal(
+            obs,
+            self.exp_results_reordered_distance_matrices)
 
         # Make sure the inputs aren't modified.
         self.assertEqual(x, x_copy)
@@ -457,7 +466,7 @@ class PairwiseMantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = pwmantel(dms)
-        assert_frame_equal(obs, self.exp_results_dm_dm2)
+        assert_data_frame_almost_equal(obs, self.exp_results_dm_dm2)
 
     def test_many_filepaths_as_input(self):
         dms = [
@@ -469,7 +478,7 @@ class PairwiseMantelTests(MantelTestData):
         np.random.seed(0)
 
         obs = pwmantel(dms)
-        assert_frame_equal(obs, self.exp_results_all_dms)
+        assert_data_frame_almost_equal(obs, self.exp_results_all_dms)
 
 
 class OrderDistanceMatricesTests(MantelTestData):
@@ -534,7 +543,7 @@ class OrderDistanceMatricesTests(MantelTestData):
         # for the first distance matrix.
         lookup = {'0': 'a', '2': 'c'}
 
-        with self.assertRaisesRegexp(KeyError, "first.*(x).*'1'\"$"):
+        with six.assertRaisesRegex(self, KeyError, "first.*(x).*'1'\"$"):
             _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
 
         # Mapping for 'bar' is missing. Should get an error while remapping IDs
@@ -543,7 +552,7 @@ class OrderDistanceMatricesTests(MantelTestData):
                   'foo': 'a', 'baz': 'c'}
         self.miny_dm.ids = ('foo', 'bar', 'baz')
 
-        with self.assertRaisesRegexp(KeyError, "second.*(y).*'bar'\"$"):
+        with six.assertRaisesRegex(self, KeyError, "second.*(y).*'bar'\"$"):
             _order_dms(self.minx_dm, self.miny_dm, lookup=lookup)
 
     def test_nonmatching_ids_strict_true(self):

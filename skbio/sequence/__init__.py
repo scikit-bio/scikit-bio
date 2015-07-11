@@ -16,6 +16,12 @@ degenerate character definitions. Additionally this module defines the
 ``GeneticCode`` class, which represents an immutable object that translates DNA
 or RNA sequences into protein sequences.
 
+The primary information stored for each different type of sequence object is
+the underlying sequence data itself. This is stored as an immutable Numpy
+array. Additionally, each type of sequence may include optional metadata
+and positional metadata. Note that metadata and positional metadata are
+mutable.
+
 Classes
 -------
 
@@ -23,30 +29,10 @@ Classes
    :toctree: generated/
 
    Sequence
-   IUPACSequence
-   NucleotideSequence
    DNA
    RNA
    Protein
    GeneticCode
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   genetic_code
-
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   GeneticCodeError
-   GeneticCodeInitError
-   InvalidCodonError
 
 Examples
 --------
@@ -67,14 +53,32 @@ reverse complement or degapped (i.e., unaligned) version.
 >>> d1 = DNA('.ACC--GGG-TA...', metadata={'id':'my-sequence'})
 >>> d2 = d1.degap()
 >>> d2
-DNA('ACCGGGTA', length=8, has_metadata=True, has_positional_metadata=False)
->>> d2.metadata
-{'id': 'my-sequence'}
+DNA
+-----------------------------
+Metadata:
+    'id': 'my-sequence'
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 62.50%
+-----------------------------
+0 ACCGGGTA
 >>> d3 = d2.reverse_complement()
 >>> d3
-DNA('TACCCGGT', length=8, has_metadata=True, has_positional_metadata=False)
->>> d3.metadata
-{'id': 'my-sequence'}
+DNA
+-----------------------------
+Metadata:
+    'id': 'my-sequence'
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 62.50%
+-----------------------------
+0 TACCCGGT
 
 It's also straightforward to compute distances between sequences (optionally
 using user-defined distance metrics, the default is Hamming distance which
@@ -110,17 +114,69 @@ Those slices can be used to extract the relevant subsequences.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2):
 ...     r5[motif]
-RNA('AGG', length=3, has_metadata=False, has_positional_metadata=False)
-RNA('GGA', length=3, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 66.67%
+-----------------------------
+0 AGG
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 66.67%
+-----------------------------
+0 GGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 33.33%
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 And gaps or other features can be ignored while searching, as these may disrupt
 otherwise meaningful motifs.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif]
-RNA('AGG-GGA', length=7, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 7
+    has gaps: True
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 66.67%
+-----------------------------
+0 AGG-GGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 33.33%
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 In the above example, removing gaps from the resulting motif matches is easily
 achieved, as the sliced matches themselves are sequences of the same type as
@@ -128,8 +184,29 @@ the input.
 
 >>> for motif in r5.find_motifs('purine-run', min_length=2, ignore=r5.gaps()):
 ...     r5[motif].degap()
-RNA('AGGGGA', length=6, has_metadata=False, has_positional_metadata=False)
-RNA('GAA', length=3, has_metadata=False, has_positional_metadata=False)
+...     print('')
+RNA
+-----------------------------
+Stats:
+    length: 6
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 66.67%
+-----------------------------
+0 AGGGGA
+<BLANKLINE>
+RNA
+-----------------------------
+Stats:
+    length: 3
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 33.33%
+-----------------------------
+0 GAA
+<BLANKLINE>
 
 Sequences can similarly be searched for arbitrary patterns using regular
 expressions.
@@ -138,6 +215,56 @@ expressions.
 ...     match
 slice(4, 9, None)
 
+DNA can be transcribed to RNA:
+
+>>> dna = DNA('ATGTGTATTTGA')
+>>> rna = dna.transcribe()
+>>> rna
+RNA
+-----------------------------
+Stats:
+    length: 12
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 25.00%
+-----------------------------
+0 AUGUGUAUUU GA
+
+Both DNA and RNA can be translated into a protein sequence. For example, let's
+translate our DNA and RNA sequences using NCBI's standard genetic code (table
+ID 1, the default genetic code in scikit-bio):
+
+>>> protein_from_dna = dna.translate()
+>>> protein_from_dna
+Protein
+-----------------------------
+Stats:
+    length: 4
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    has stops: True
+-----------------------------
+0 MCI*
+>>> protein_from_rna = rna.translate()
+>>> protein_from_rna
+Protein
+-----------------------------
+Stats:
+    length: 4
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    has stops: True
+-----------------------------
+0 MCI*
+
+The two translations are equivalent:
+
+>>> protein_from_dna == protein_from_rna
+True
+
 Class-level methods contain information about the molecule types.
 
 >>> DNA.degenerate_map['B']
@@ -145,55 +272,6 @@ set(['C', 'T', 'G'])
 
 >>> RNA.degenerate_map['B']
 set(['C', 'U', 'G'])
-
-Creating and using a ``GeneticCode`` object:
-
->>> from skbio.sequence import genetic_code
->>> from pprint import pprint
->>> sgc = genetic_code(1)
->>> sgc
-GeneticCode(FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG)
->>> sgc['UUU'] == 'F'
-True
->>> sgc['TTT'] == 'F'
-True
->>> sgc['F'] == ['TTT', 'TTC']          #in arbitrary order
-True
->>> sgc['*'] == ['TAA', 'TAG', 'TGA']   #in arbitrary order
-True
-
-Retrieving the anticodons of the object
-
->>> pprint(sgc.anticodons)
-{'*': ['TTA', 'CTA', 'TCA'],
- 'A': ['AGC', 'GGC', 'TGC', 'CGC'],
- 'C': ['ACA', 'GCA'],
- 'D': ['ATC', 'GTC'],
- 'E': ['TTC', 'CTC'],
- 'F': ['AAA', 'GAA'],
- 'G': ['ACC', 'GCC', 'TCC', 'CCC'],
- 'H': ['ATG', 'GTG'],
- 'I': ['AAT', 'GAT', 'TAT'],
- 'K': ['TTT', 'CTT'],
- 'L': ['TAA', 'CAA', 'AAG', 'GAG', 'TAG', 'CAG'],
- 'M': ['CAT'],
- 'N': ['ATT', 'GTT'],
- 'P': ['AGG', 'GGG', 'TGG', 'CGG'],
- 'Q': ['TTG', 'CTG'],
- 'R': ['ACG', 'GCG', 'TCG', 'CCG', 'TCT', 'CCT'],
- 'S': ['AGA', 'GGA', 'TGA', 'CGA', 'ACT', 'GCT'],
- 'T': ['AGT', 'GGT', 'TGT', 'CGT'],
- 'V': ['AAC', 'GAC', 'TAC', 'CAC'],
- 'W': ['CCA'],
- 'Y': ['ATA', 'GTA']}
-
-Nucleotide sequences can be translated using a ``GeneticCode`` object.
-
->>> d6 = DNA('ATGTCTAAATGA')
->>> from skbio.sequence import genetic_code
->>> gc = genetic_code(11)
->>> gc.translate(d6)
-Protein('MSK*', length=4, has_metadata=False, has_positional_metadata=False)
 
 """
 
@@ -205,21 +283,16 @@ Protein('MSK*', length=4, has_metadata=False, has_positional_metadata=False)
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from skbio.util import TestRunner
 
-from ._exception import (GeneticCodeError, GeneticCodeInitError,
-                         InvalidCodonError)
 from ._sequence import Sequence
-from ._iupac_sequence import IUPACSequence
-from ._nucleotide_sequence import NucleotideSequence
 from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
-from ._genetic_code import GeneticCode, genetic_code
+from ._genetic_code import GeneticCode
 
-__all__ = ['GeneticCodeError', 'GeneticCodeInitError', 'InvalidCodonError',
-           'Sequence', 'IUPACSequence', 'NucleotideSequence',
-           'Protein', 'DNA', 'RNA', 'GeneticCode',
-           'genetic_code']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
 
 test = TestRunner(__file__).test

@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
-from six import string_types
 
 from itertools import cycle
 import warnings
@@ -17,8 +16,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Rectangle
+import six
+
+from skbio.util._decorator import deprecated
+
+distribution_plot_deprecation_p = {
+    'as_of': '0.4.0', 'until': '0.4.1', 'reason': (
+        "Plots that are not specific to bioinformatics should be generated "
+        "with seaborn or another general-purpose plotting package."
+    )}
 
 
+@deprecated(**distribution_plot_deprecation_p)
 def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
              x_label=None, y_label=None, x_tick_labels_orientation='vertical',
              y_min=None, y_max=None, whisker_length=1.5, box_width=0.5,
@@ -140,6 +149,7 @@ def boxplots(distributions, x_values=None, x_tick_labels=None, title=None,
     return fig
 
 
+@deprecated(**distribution_plot_deprecation_p)
 def grouped_distributions(plot_type, data, x_values=None,
                           data_point_labels=None, distribution_labels=None,
                           distribution_markers=None, x_label=None,
@@ -355,7 +365,7 @@ def _validate_input(data, x_values, data_point_labels, distribution_labels):
     Validates plotting options to make sure they are valid with the supplied
     data.
     """
-    if data is None or not data or isinstance(data, string_types):
+    if data is None or not data or isinstance(data, six.string_types):
         raise ValueError("The data must be a list type, and it cannot be "
                          "None or empty.")
 
@@ -552,7 +562,7 @@ def _is_single_matplotlib_color(color):
     """Returns True if color is a single (not a list) mpl color."""
     single_color = False
 
-    if (isinstance(color, str)):
+    if (isinstance(color, six.string_types)):
         single_color = True
     elif len(color) == 3 or len(color) == 4:
         single_color = True

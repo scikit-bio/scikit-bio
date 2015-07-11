@@ -14,8 +14,10 @@ import numpy as np
 from scipy.stats import rankdata
 
 from ._base import (_preprocess_input, _run_monte_carlo_stats, _build_results)
+from skbio.util._decorator import experimental
 
 
+@experimental(as_of="0.4.0")
 def anosim(distance_matrix, grouping, column=None, permutations=999):
     """Test for significant differences between groups using ANOSIM.
 

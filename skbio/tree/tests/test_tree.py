@@ -13,8 +13,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as nptest
 from scipy.stats import pearsonr
-from six import StringIO
 
+from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode
 from skbio.tree import (DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)

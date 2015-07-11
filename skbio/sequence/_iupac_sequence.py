@@ -13,8 +13,9 @@ from abc import ABCMeta, abstractproperty
 from itertools import product
 
 import numpy as np
+from six import string_types
 
-from skbio.util import classproperty, overrides
+from skbio.util._decorator import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -42,7 +43,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     See Also
     --------
-    NucleotideSequence
     DNA
     RNA
     Protein
@@ -55,6 +55,9 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
+    # ASCII is built such that the difference between uppercase and lowercase
+    # is the 6th bit.
+    _ascii_invert_case_bit_offset = 32
     _number_of_extended_ascii_codes = 256
     _ascii_lowercase_boundary = 90
     __validation_mask = None
@@ -164,23 +167,30 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 validate=True, case_insensitive=False):
+                 validate=True, lowercase=False):
         super(IUPACSequence, self).__init__(
             sequence, metadata, positional_metadata)
 
-        if case_insensitive:
-            self._convert_to_uppercase()
+        if lowercase is False:
+            pass
+        elif lowercase is True or isinstance(lowercase, string_types):
+            lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            self._convert_to_uppercase(lowercase_mask)
+
+            # If it isn't True, it must be a string_type
+            if not (lowercase is True):
+                self.positional_metadata[lowercase] = lowercase_mask
+        else:
+            raise TypeError("lowercase keyword argument expected a bool or "
+                            "string, but got %s" % type(lowercase))
 
         if validate:
             self._validate()
 
-    def _convert_to_uppercase(self):
-        lowercase = self._bytes > self._ascii_lowercase_boundary
+    def _convert_to_uppercase(self, lowercase):
         if np.any(lowercase):
             with self._byte_ownership():
-                # ASCII is built such that the difference between uppercase and
-                # lowercase is the 6th bit.
-                self._bytes[lowercase] ^= 32
+                self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
     def _validate(self):
         # This is the fastest way that we have found to identify the
@@ -202,6 +212,52 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         [str(b.tostring().decode("ascii")) for b in bad] if
                         len(bad) > 1 else bad[0],
                         list(self.alphabet)))
+
+    def lowercase(self, lowercase):
+        """Return a case-sensitive string representation of the sequence.
+
+        Parameters
+        ----------
+        lowercase: str or boolean vector
+            If lowercase is a boolean vector, it is used to set sequence
+            characters to lowercase in the output string. True values in the
+            boolean vector correspond to lowercase characters. If lowercase
+            is a str, it is treated like a key into the positional metadata,
+            pointing to a column which must be a boolean vector.
+            That boolean vector is then used as described previously.
+
+        Returns
+        -------
+        str
+            String representation of sequence with specified characters set to
+            lowercase.
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACGT')
+        >>> s.lowercase([True, True, False, False])
+        'acGT'
+        >>> s = DNA('ACGT',
+        ...         positional_metadata={'exons': [True, False, False, True]})
+        >>> s.lowercase('exons')
+        'aCGt'
+
+        Constructor automatically populates a column in positional metadata
+        when the ``lowercase`` keyword argument is provided with a column name:
+
+        >>> s = DNA('ACgt', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACgt'
+        >>> s = DNA('ACGT', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACGT'
+
+        """
+        index = self._munge_to_index_array(lowercase)
+        outbytes = self._bytes.copy()
+        outbytes[index] ^= self._ascii_invert_case_bit_offset
+        return str(outbytes.tostring().decode('ascii'))
 
     def gaps(self):
         """Find positions containing gaps in the biological sequence.
@@ -247,6 +303,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use count, there aren't that many gap chars
+        # TODO: cache results
         return bool(self.gaps().any())
 
     def degenerates(self):
@@ -301,6 +358,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         # TODO use bincount!
+        # TODO: cache results
         return bool(self.degenerates().any())
 
     def nondegenerates(self):
@@ -354,6 +412,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         True
 
         """
+        # TODO: cache results
         return bool(self.nondegenerates().any())
 
     def degap(self):
@@ -380,10 +439,19 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> from skbio import DNA
         >>> s = DNA('GGTC-C--ATT-C.',
         ...         positional_metadata={'quality':range(14)})
-        >>> t = s.degap()
-        >>> t # doctest: +NORMALIZE_WHITESPACE
-        DNA('GGTCCATTC', length=9, has_metadata=False,
-            has_positional_metadata=True)
+        >>> s.degap()
+        DNA
+        -----------------------------
+        Positional metadata:
+            'quality': <dtype: int64>
+        Stats:
+            length: 9
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 55.56%
+        -----------------------------
+        0 GGTCCATTC
 
         """
         return self[np.invert(self.gaps())]
@@ -415,8 +483,29 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
         ...     s
-        DNA('TAG', length=3, has_metadata=False, has_positional_metadata=False)
-        DNA('TGG', length=3, has_metadata=False, has_positional_metadata=False)
+        ...     print('')
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 TAG
+        <BLANKLINE>
+        DNA
+        -----------------------------
+        Stats:
+            length: 3
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 66.67%
+        -----------------------------
+        0 TGG
+        <BLANKLINE>
 
         """
         degen_chars = self.degenerate_map
@@ -494,7 +583,16 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):
-        return self.__class__(validate=False, case_insensitive=False, **kwargs)
+        return self.__class__(validate=False, lowercase=False, **kwargs)
+
+    @overrides(Sequence)
+    def _repr_stats(self):
+        """Define custom statistics to display in the sequence's repr."""
+        stats = super(IUPACSequence, self)._repr_stats()
+        stats.append(('has gaps', '%r' % self.has_gaps()))
+        stats.append(('has degenerates', '%r' % self.has_degenerates()))
+        stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
+        return stats
 
 
 _motifs = MiniRegistry()

@@ -37,7 +37,7 @@ with open('skbio/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(hit))
 
 classes = """
-    Development Status :: 1 - Planning
+    Development Status :: 4 - Beta
     License :: OSI Approved :: BSD License
     Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
@@ -104,17 +104,28 @@ setup(name='scikit-bio',
       packages=find_packages(),
       ext_modules=extensions,
       cmdclass={'build_ext': build_ext},
-      setup_requires=['numpy'],
-      install_requires=['numpy', 'matplotlib >= 1.1.0',
-                        'scipy >= 0.13.0', 'pandas >= 0.14.0', 'future', 'six',
-                        'natsort >= 4.0.0', 'IPython',
-                        'CacheControl[FileCache]'],
-      extras_require={'test': ["nose >= 0.10.1", "pep8", "flake8",
+      setup_requires=['numpy >= 1.9.2'],
+      install_requires=[
+          'bz2file >= 0.98',
+          'CacheControl[FileCache] >= 0.11.5',
+          'contextlib2 >= 0.4.0',
+          'decorator >= 3.4.2',
+          'future >= 0.14.3',
+          'IPython >= 3.2.0',
+          'matplotlib >= 1.4.3',
+          'natsort >= 4.0.3',
+          'numpy >= 1.9.2',
+          'pandas >= 0.16.2',
+          'scipy >= 0.15.1',
+          'six >= 1.9.0'
+      ],
+      extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
                                "python-dateutil"],
                       'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
           'skbio.io.tests': ['data/*'],
+          'skbio.io.format.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
