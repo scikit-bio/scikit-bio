@@ -15,6 +15,8 @@ from itertools import product
 import numpy as np
 from six import string_types
 
+import re
+
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
@@ -522,6 +524,37 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         result = product(*expansions)
         return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
+
+    def to_regex(self):
+        """Return a regex object that accounts for degenerate chars.
+
+        Yields
+        ------
+        regex
+            Pre-compiled regular expression object (as from ``re.compile``)
+            that matches all non-degenerate versions of this sequence, and
+            nothing else.
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> seq = DNA('TRG')
+        >>> regex = seq.to_regex()
+        >>> regex.pattern
+        'T[AG]G'
+        >>> regex.match('TAG').string
+        'TAG'
+        >>> regex.match('TCG') is None
+        True
+        """
+        regex_string = []
+        for base in str(self):
+            if base in self.degenerate_chars:
+                regex_string.append('[{0}]'.format(
+                    ''.join(self.degenerate_map[base])))
+            else:
+                regex_string.append(base)
+        return re.compile(''.join(regex_string))
 
     def find_motifs(self, motif_type, min_length=1, ignore=None):
         """Search the biological sequence for motifs.

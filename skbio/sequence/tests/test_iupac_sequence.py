@@ -433,6 +433,19 @@ class TestIUPACSequence(TestCase):
                      key=str)
         self.assertEqual(obs, exp)
 
+    def test_to_regex_no_degens(self):
+        seq = ExampleIUPACSequence('ABC')
+        regex = seq.to_regex()
+        self.assertEquals(regex.pattern, str(seq))
+
+    def test_to_regex_with_degens(self):
+        seq = ExampleIUPACSequence('AYZ')
+        regex = seq.to_regex()
+        self.assertFalse(any(regex.match(s) is None
+                             for s in 'ABA ABC ACA ACC'.split()))
+        self.assertTrue(all(regex.match(s) is None
+                            for s in 'CBA BBA ABB AAA'.split()))
+
     def test_find_motifs_no_motif(self):
         seq = ExampleMotifsTester("ABCABCABC")
         with self.assertRaises(ValueError) as cm:
