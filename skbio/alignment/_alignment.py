@@ -643,11 +643,10 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AT', metadata={'id': "seq2"}),
         ...              DNA('TTTT', metadata={'id': "seq3"})]
         >>> s1 = SequenceCollection(sequences)
-        >>> for freqs in s1.kmer_frequencies(1):
-        ...     print(freqs)
-        Counter({'A': 1})
-        Counter({'A': 1, 'T': 1})
-        Counter({'T': 4})
+        >>> kmer_freqs = list(s1.kmer_frequencies(1))
+        >>> kmer_freqs == [Counter({'A': 1}), Counter({'A': 1, 'T': 1}),
+        ...                Counter({'T': 4})]
+        True
         >>> for freqs in s1.kmer_frequencies(2):
         ...     print(freqs)
         Counter()
