@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 from scipy.linalg import eigh
 
-from skbio import OrdinationResults
+from skbio._base import OrdinationResults
 from skbio.stats.distance import DistanceMatrix
 from ._utils import e_matrix, f_matrix
 from skbio.util._decorator import experimental

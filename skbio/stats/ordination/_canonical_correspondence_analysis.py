@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import svd, lstsq
 
-from skbio import OrdinationResults
+from skbio._base import OrdinationResults
 from ._utils import corr, svd_rank, scale
 from skbio.util._decorator import experimental
 
