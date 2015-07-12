@@ -20,6 +20,9 @@ from skbio.util import get_data_path, assert_ordination_results_equal
 
 
 class TestRDAErrors(TestCase):
+    def setUp(self):
+        pass
+
     def test_shape(self):
         for n, p, n_, m in [(3, 4, 2, 1), (3, 4, 3, 10)]:
             Y = pd.DataFrame(np.random.randn(n, p))

@@ -181,6 +181,9 @@ class TestCAResults(TestCase):
 
 
 class TestCAErrors(TestCase):
+    def setUp(self):
+        pass
+
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
