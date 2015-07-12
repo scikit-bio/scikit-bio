@@ -300,8 +300,8 @@ def _validate_line(line, seq_len):
     seq = line[10:].replace(' ', '')
     if len(seq) != seq_len:
         raise PhylipFormatError(
-            "The length of sequence %s is not %s " % (ID, seq_len)
-            + "as specified in the header.")
+            "The length of sequence %s is not %s as specified in the header."
+            % (ID, seq_len))
     return (seq, ID)
 
 
@@ -329,8 +329,8 @@ def _parse_phylip_raw(fh):
         data.append(_validate_line(line, seq_len))
     if len(data) != n_seqs:
         raise PhylipFormatError(
-            "The number of sequences is not %s " % n_seqs
-            + "as specified in the header.")
+            "The number of sequences is not %s " % n_seqs +
+            "as specified in the header.")
     return data
 
 
