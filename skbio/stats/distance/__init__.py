@@ -85,7 +85,7 @@ Load a distance matrix from the file:
 >>> print(dm)
 3x3 distance matrix
 IDs:
-u'a', u'b', u'c'
+'a', 'b', 'c'
 Data:
 [[ 0.    0.5   1.  ]
  [ 0.5   0.    0.75]
