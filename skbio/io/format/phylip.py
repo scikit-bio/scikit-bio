@@ -225,16 +225,10 @@ def _phylip_sniffer(fh):
     #   the whole file.
     try:
         header = next(_line_generator(fh))
-    except StopIteration:
-        return False, {}
-    try:
         _, seq_len = _validate_header(header)
-    except PhylipFormatError:
-        return False, {}
-    line = next(_line_generator(fh))
-    try:
+        line = next(_line_generator(fh))
         _validate_line(line, seq_len)
-    except PhylipFormatError:
+    except (StopIteration, PhylipFormatError):
         return False, {}
     return True, {}
 
