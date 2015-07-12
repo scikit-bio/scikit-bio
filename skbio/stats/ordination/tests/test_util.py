@@ -23,9 +23,25 @@ class TestUtils(object):
         self.matrix = np.arange(1, 7).reshape(2, 3)
         self.matrix2 = np.arange(1, 10).reshape(3, 3)
 
+        self.small_mat = np.array([[7, 5, 5], [4, 4, 9], [7, 5, 3]])
+
+    def test_mean_and_std(self):
+        obs = mean_and_std(self.x)
+        npt.assert_almost_equal((3.5, 1.707825127), obs)
+
+        obs = mean_and_std(self.x, ddof=2)
+        npt.assert_almost_equal((3.5, 2.091650066), obs)
+
     def test_mean_and_std_no_mean_no_std(self):
         with npt.assert_raises(ValueError):
             mean_and_std(self.x, with_mean=False, with_std=False)
+
+    def test_corr(self):
+        obs = corr(self.small_mat)
+        npt.assert_almost_equal(np.array([[0.33333333, 0, -0.33333333],
+                                          [0, 0, 0],
+                                          [-0.33333333, 0, 0.33333333]]),
+                                obs)
 
     def test_corr_shape_mismatch(self):
         with npt.assert_raises(ValueError):

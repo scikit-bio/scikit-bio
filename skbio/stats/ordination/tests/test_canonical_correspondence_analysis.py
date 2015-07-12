@@ -43,6 +43,11 @@ class TestCCAErrors(object):
         with npt.assert_raises(NotImplementedError):
             cca(Y, X, 3)
 
+    def test_all_zero_row(self):
+        X, Y = pd.DataFrame(np.zeros((3, 3))), pd.DataFrame(np.zeros((3, 3)))
+        with npt.assert_raises(ValueError):
+            cca(X, Y)
+
 
 class TestCCAResults1(object):
     def setup(self):
