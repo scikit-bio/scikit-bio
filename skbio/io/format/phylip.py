@@ -240,8 +240,8 @@ def _phylip_sniffer(fh):
 
 
 @phylip.reader(Alignment)
-def _phylip_to_alignment(fh):
-    return Alignment([Sequence(seq, metadata={'id': ID})
+def _phylip_to_alignment(fh, constructor=Sequence):
+    return Alignment([constructor(seq, metadata={'id': ID})
                       for (seq, ID) in _parse_phylip_raw(fh)])
 
 
