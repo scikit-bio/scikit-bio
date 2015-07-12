@@ -12,14 +12,15 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+from unittest import TestCase, main
 
 from skbio import OrdinationResults
 from skbio.stats.ordination import cca
 from skbio.util import get_data_path, assert_ordination_results_equal
 
 
-class TestCCAErrors(object):
-    def setup(self):
+class TestCCAErrors(TestCase):
+    def setUp(self):
         """Data from table 11.3 in Legendre & Legendre 1998."""
         self.Y = pd.DataFrame(np.loadtxt(get_data_path('example3_Y')))
         self.X = pd.DataFrame(np.loadtxt(get_data_path('example3_X')))
@@ -49,8 +50,8 @@ class TestCCAErrors(object):
             cca(X, Y)
 
 
-class TestCCAResults1(object):
-    def setup(self):
+class TestCCAResults1(TestCase):
+    def setUp(self):
         """Data from table 11.3 in Legendre & Legendre 1998
         (p. 590). Loaded results as computed with vegan 2.0-8 and
         compared with table 11.5 if also there."""
@@ -170,5 +171,4 @@ class TestCCAResults1(object):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule()
+    main()

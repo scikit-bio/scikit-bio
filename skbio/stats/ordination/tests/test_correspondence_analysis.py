@@ -12,6 +12,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.spatial.distance import pdist
+from unittest import TestCase, main
 
 from skbio import OrdinationResults
 from skbio.stats.ordination import ca
@@ -69,7 +70,7 @@ def chi_square_distance(data_table, between_rows=True):
     return pdist(scaled_F, 'euclidean')
 
 
-class TestChiSquareDistance(object):
+class TestChiSquareDistance(TestCase):
     def test_errors(self):
         a = np.array([[-0.5, 0],
                       [1, 0.5]])
@@ -106,8 +107,8 @@ class TestChiSquareDistance(object):
         npt.assert_almost_equal(dist, expected)
 
 
-class TestCAResults(object):
-    def setup(self):
+class TestCAResults(TestCase):
+    def setUp(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
         self.X = np.loadtxt(get_data_path('L&L_CA_data'))
         self.sample_ids = ['Site1', 'Site2', 'Site3']
@@ -179,7 +180,7 @@ class TestCAResults(object):
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
 
-class TestCAErrors(object):
+class TestCAErrors(TestCase):
     def test_negative(self):
         X = np.array([[1, 2], [-0.1, -2]])
         with npt.assert_raises(ValueError):
@@ -187,5 +188,4 @@ class TestCAErrors(object):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule()
+    main()

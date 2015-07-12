@@ -12,11 +12,13 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import numpy.testing as npt
 
+from unittest import TestCase, main
+
 from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix
 
 
-class TestUtils(object):
-    def setup(self):
+class TestUtils(TestCase):
+    def setUp(self):
         self.x = np.array([[1, 2, 3], [4, 5, 6]])
         self.y = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
@@ -28,6 +30,9 @@ class TestUtils(object):
     def test_mean_and_std(self):
         obs = mean_and_std(self.x)
         npt.assert_almost_equal((3.5, 1.707825127), obs)
+
+        obs = mean_and_std(self.x, with_std=False)
+        self.assertEquals((3.5, None), obs)
 
         obs = mean_and_std(self.x, ddof=2)
         npt.assert_almost_equal((3.5, 2.091650066), obs)
@@ -61,5 +66,4 @@ class TestUtils(object):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule()
+    main()

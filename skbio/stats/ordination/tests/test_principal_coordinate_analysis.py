@@ -8,11 +8,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-import unittest
-
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import DissimilarityMatrixError
@@ -20,7 +19,7 @@ from skbio.stats.ordination import pcoa
 from skbio.util import get_data_path, assert_ordination_results_equal
 
 
-class TestPCoA(unittest.TestCase):
+class TestPCoA(TestCase):
     def setUp(self):
         # Sample data set from page 111 of W.J Krzanowski. Principles
         # of multivariate analysis, 2000, Oxford University Press.
@@ -130,4 +129,4 @@ class TestPCoA(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
