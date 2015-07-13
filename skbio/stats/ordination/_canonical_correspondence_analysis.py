@@ -26,9 +26,8 @@ def cca(y, x, scaling=1):
     multivariate ordination technique. It appeared in community
     ecology [1]_ and relates community composition to the variation in
     the environment (or in other factors). It works from data on
-    abundances or counts of samples and constrains variables,
-    and outputs ordination axes that maximize samples separation among
-    species.
+    abundances or counts of samples and constraints variables,
+    and outputs ordination axes that maximize sample separation among species.
 
     It is better suited to extract the niches of taxa than linear
     multivariate methods because it assumes unimodal response curves

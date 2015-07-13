@@ -37,8 +37,8 @@ def ca(X, scaling=1):
     Parameters
     ----------
     X : pd.DataFrame
-        Contingency table. It can be applied to different kinds of
-        data tables but data must be non-negative and dimensionally
+        Samples by features table (n, m). It can be applied to different kinds
+        of data tables but data must be non-negative and dimensionally
         homogeneous (quantitative or binary). The rows correspond to the
         samples and the columns correspond to the features.
     scaling : {1, 2}
