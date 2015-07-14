@@ -2,6 +2,10 @@
 
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
+### Features
+* Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
+
+### Backward-incompatible changes
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
 * Change ``OrdinationResults`` to have its attributes based on ``pd.DataFrame`` and ``pd.Series`` objects, instead of pairs of identifiers and values. The changes are as follows:
     - ``species`` and ``species_ids`` have been replaced by a ``pd.DataFrame`` named ``features``.
