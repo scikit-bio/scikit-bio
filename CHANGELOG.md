@@ -2,7 +2,15 @@
 
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
-* Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``.
+* Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
+* Change ``OrdinationResults`` to have its attributes based on ``pd.DataFrame`` and ``pd.Series`` objects, instead of pairs of identifiers and values. The changes are as follows:
+    - ``species`` and ``species_ids`` have been replaced by a ``pd.DataFrame`` named ``features``.
+    - ``site`` and ``site_ids`` have been replaced by a ``pd.DataFrame`` named ``samples``.
+    - ``eigvals`` is now a ``pd.Series`` object.
+    - ``proportion_explained`` is now a ``pd.Series`` object.
+    - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
+    - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
+* ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
 
 ## Version 0.4.0 (2015-07-08)
