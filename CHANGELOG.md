@@ -2,6 +2,9 @@
 
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
+* Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``.
+* Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
+
 ## Version 0.4.0 (2015-07-08)
 
 Initial beta release. In addition to the changes detailed below, the following
