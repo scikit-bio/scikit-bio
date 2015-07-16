@@ -27,12 +27,12 @@ An example PHYLIP-formatted file taken from [3]_::
 
 Format Support
 --------------
-**Has Sniffer: No**
+**Has Sniffer: Yes**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|No    |Yes   |:mod:`skbio.alignment.Alignment`                               |
+|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -208,10 +208,35 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from skbio.alignment import Alignment
+from skbio.sequence import Sequence
 from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
 
+
 phylip = create_format('phylip')
+
+
+@phylip.sniffer()
+def _phylip_sniffer(fh):
+    # Strategy:
+    #   Read the header and a single sequence; verify that the sequence length
+    #   matches the header information.  Do not verify that the total number of
+    #   lines matches the header information, since that would require reading
+    #   the whole file.
+    try:
+        header = next(_line_generator(fh))
+        _, seq_len = _validate_header(header)
+        line = next(_line_generator(fh))
+        _validate_line(line, seq_len)
+    except (StopIteration, PhylipFormatError):
+        return False, {}
+    return True, {}
+
+
+@phylip.reader(Alignment)
+def _phylip_to_alignment(fh, constructor=Sequence):
+    return Alignment([constructor(seq, metadata={'id': ID})
+                      for (seq, ID) in _parse_phylip_raw(fh)])
 
 
 @phylip.writer(Alignment)
@@ -245,3 +270,66 @@ def _alignment_to_phylip(obj, fh):
     for seq in obj:
         chunked_seq = chunk_str(str(seq), chunk_size, ' ')
         fh.write(fmt.format(seq.metadata['id'], chunked_seq))
+
+
+def _validate_header(header):
+    header_vals = header.split()
+    try:
+        n_seqs, seq_len = [int(x) for x in header_vals]
+        if n_seqs < 1 or seq_len < 1:
+            raise PhylipFormatError(
+                'The number of sequences and the length must be positive.')
+    except ValueError:
+        raise PhylipFormatError(
+            'Found non-header line when attempting to read the 1st record '
+            '(header line should have two space-separated integers): '
+            '"%s"' % header)
+    return n_seqs, seq_len
+
+
+def _validate_line(line, seq_len):
+    if not line:
+        raise PhylipFormatError("Empty lines are not allowed.")
+    ID = line[:10].strip()
+    seq = line[10:].replace(' ', '')
+    if len(seq) != seq_len:
+        raise PhylipFormatError(
+            "The length of sequence %s is not %s as specified in the header."
+            % (ID, seq_len))
+    return (seq, ID)
+
+
+def _parse_phylip_raw(fh):
+    """Raw parser for PHYLIP files.
+
+    Returns a list of raw (seq, id) values.  It is the responsibility of the
+    caller to construct the correct in-memory object to hold the data.
+
+    """
+    # Note: this returns the full data instead of yielding each sequence,
+    # because the header specifies the number of sequences, so the file cannot
+    # be validated until it's read completely.
+
+    # File should have a single header on the first line.
+    try:
+        header = next(_line_generator(fh))
+    except StopIteration:
+        raise PhylipFormatError("This file is empty.")
+    n_seqs, seq_len = _validate_header(header)
+
+    # All following lines should be ID+sequence. No blank lines are allowed.
+    data = []
+    for line in _line_generator(fh):
+        data.append(_validate_line(line, seq_len))
+    if len(data) != n_seqs:
+        raise PhylipFormatError(
+            "The number of sequences is not %s " % n_seqs +
+            "as specified in the header.")
+    return data
+
+
+def _line_generator(fh):
+    """Just remove linebreak characters and yield lines.
+    """
+    for line in fh:
+        yield line[:-1]
