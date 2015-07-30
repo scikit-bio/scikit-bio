@@ -676,7 +676,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
         >>> sorted(tree.subset())
-        [u'a', u'b', u'c', u'f', u'g']
+        ['a', 'b', 'c', 'f', 'g']
         """
         return frozenset({i.name for i in self.tips()})
 
@@ -701,11 +701,10 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)h)root;"])
-        >>> for s in sorted(tree.subsets()):
-        ...     print(sorted(s))
-        [u'a', u'b']
-        [u'd', u'e']
-        [u'a', u'b', u'd', u'e']
+        >>> subsets = tree.subsets()
+        >>> len(subsets)
+        3
+
         """
         sets = []
         for i in self.postorder(include_self=False):
@@ -1587,7 +1586,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
-        [u'a', u'b']
+        ['a', 'b']
         """
         for node in self.traverse(include_self=True):
             if func(node):
@@ -1610,7 +1609,7 @@ class TreeNode(SkbioObject):
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> [node.name for node in tree.find('a').ancestors()]
-        [u'c', u'root']
+        ['c', 'root']
 
         """
         result = []
@@ -1666,7 +1665,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e,f)g)root;"])
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
-        [u'd', u'f']
+        ['d', 'f']
 
         """
         if self.is_root():
@@ -1699,7 +1698,7 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
-        [u'a', u'b', u'root']
+        ['a', 'b', 'root']
 
         """
         nodes = [n for n in self.children + [self.parent] if n is not None]
@@ -1800,16 +1799,17 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio.tree import TreeNode
-        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
-        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
-        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
-        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
-        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
-        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
-        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
-        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
-        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
-        >>> tree = TreeNode.from_taxonomy(lineages.items())
+        >>> lineages = [
+        ...     ('1', ['Bacteria', 'Firmicutes', 'Clostridia']),
+        ...     ('2', ['Bacteria', 'Firmicutes', 'Bacilli']),
+        ...     ('3', ['Bacteria', 'Bacteroidetes', 'Sphingobacteria']),
+        ...     ('4', ['Archaea', 'Euryarchaeota', 'Thermoplasmata']),
+        ...     ('5', ['Archaea', 'Euryarchaeota', 'Thermoplasmata']),
+        ...     ('6', ['Archaea', 'Euryarchaeota', 'Halobacteria']),
+        ...     ('7', ['Archaea', 'Euryarchaeota', 'Halobacteria']),
+        ...     ('8', ['Bacteria', 'Bacteroidetes', 'Sphingobacteria']),
+        ...     ('9', ['Bacteria', 'Bacteroidetes', 'Cytophagia'])]
+        >>> tree = TreeNode.from_taxonomy(lineages)
         >>> print(tree.ascii_art())
                                       /Clostridia-1
                             /Firmicutes
@@ -1821,13 +1821,13 @@ class TreeNode(SkbioObject):
                  |                   |
         ---------|                    \Cytophagia-9
                  |
-                 |                              /-5
+                 |                              /-4
                  |                    /Thermoplasmata
-                 |                   |          \-4
+                 |                   |          \-5
                   \Archaea- /Euryarchaeota
-                                     |          /-7
+                                     |          /-6
                                       \Halobacteria
-                                                \-6
+                                                \-7
 
         """
         root = cls(name=None)
@@ -2039,11 +2039,12 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
+        >>> from pprint import pprint
         >>> from skbio import TreeNode
         >>> t = TreeNode.read([u'(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
         >>> res = t.to_array()
-        >>> res.keys()
-        ['child_index', 'length', 'name', 'id_index', 'id']
+        >>> sorted(res.keys())
+        ['child_index', 'id', 'id_index', 'length', 'name']
         >>> res['child_index']
         [(4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6)]
         >>> for k, v in res['id_index'].items():
@@ -2068,7 +2069,7 @@ class TreeNode(SkbioObject):
         >>> res['id']
         array([0, 1, 2, 3, 4, 5, 6, 7])
         >>> res['name']
-        array([u'a', u'b', u'c', u'd', u'x', u'y', u'z', None], dtype=object)
+        array(['a', 'b', 'c', 'd', 'x', 'y', 'z', None], dtype=object)
 
         """
         if attrs is None:
@@ -2325,7 +2326,7 @@ class TreeNode(SkbioObject):
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        [u'b', u'e']
+        ['b', 'e']
         """
         if not hasattr(self, 'MaxDistTips'):
             # _set_max_distance will throw a TreeError if a node with a single
@@ -2384,7 +2385,7 @@ class TreeNode(SkbioObject):
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        u'a', u'b', u'd', u'e'
+        'a', 'b', 'd', 'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]
@@ -2752,14 +2753,14 @@ class TreeNode(SkbioObject):
         ...                     "(H:.4,I:.5)J:1.3)K;"])
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
-        >>> print(tdbl, sdbl)
+        >>> print(round(tdbl, 1), round(sdbl, 1))
         8.9 2.2
         """
         self.assign_ids()
         if tip_subset is not None:
             all_tips = self.subset()
             if not set(tip_subset).issubset(all_tips):
-                raise ValueError('tip_subset contains ids that arent tip '
+                raise ValueError('tip_subset contains ids that aren\'t tip '
                                  'names.')
 
             lca = self.lowest_common_ancestor(tip_subset)
@@ -2815,16 +2816,16 @@ class TreeNode(SkbioObject):
         >>> tree.cache_attr(f, 'tip_names')
         >>> for n in tree.traverse(include_self=True):
         ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
-        Node name: root, cache: [u'a', u'b', u'c', u'd', u'g', u'h']
-        Node name: f, cache: [u'a', u'b', u'c', u'd']
-        Node name: a, cache: [u'a']
-        Node name: b, cache: [u'b']
-        Node name: e, cache: [u'c', u'd']
-        Node name: c, cache: [u'c']
-        Node name: d, cache: [u'd']
-        Node name: i, cache: [u'g', u'h']
-        Node name: g, cache: [u'g']
-        Node name: h, cache: [u'h']
+        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
+        Node name: f, cache: ['a', 'b', 'c', 'd']
+        Node name: a, cache: ['a']
+        Node name: b, cache: ['b']
+        Node name: e, cache: ['c', 'd']
+        Node name: c, cache: ['c']
+        Node name: d, cache: ['d']
+        Node name: i, cache: ['g', 'h']
+        Node name: g, cache: ['g']
+        Node name: h, cache: ['h']
 
         """
         if cache_type in [set, frozenset]:

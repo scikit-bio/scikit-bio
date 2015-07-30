@@ -141,7 +141,7 @@ indicates the trees do not share any common clades:
 >>> print(tree1.compare_subsets(tree2))  # same tree but different clade order
 0.0
 >>> print(tree1.compare_subsets(tree3))  # only 1 of 3 common subsets
-0.666666666667
+0.6666666666666667
 
 We can additionally take into account branch length when computing distances
 between trees. First, we're going to construct two new trees with described
@@ -200,11 +200,6 @@ Get the number of nodes in the trie
 >>> t.size
 10
 
-Get the trie's prefix map
-
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '8': ['7'], '3': [], '4': []}
-
 Find the value attached to a given key
 
 >>> t.find("ababaa")
@@ -215,13 +210,10 @@ Add a new (key, value) pair to the Trie
 >>> t.insert("bac", "9")
 >>> t.find("bac")
 ['9']
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '9': [], '3': [], '4': [], '8': ['7']}
 
 Create a new trie with a list of sequences
 
 >>> from skbio.tree import fasta_to_pairlist
-
 >>> seqs = [("s0", "ACA"),
 ...         ("s1", "ACAGTC"),
 ...         ("s2", "ACTA"),
@@ -230,11 +222,7 @@ Create a new trie with a list of sequences
 ...         ("s5", "A"),
 ...         ("s6", "CATGTA"),
 ...         ("s7", "CACCA")]
-
 >>> t = CompressedTrie(fasta_to_pairlist(seqs))
-
->>> t.prefix_map
-{'s3': [], 's2': [], 's1': ['s0', 's5'], 's7': [], 's6': [], 's4': []}
 
 """
 

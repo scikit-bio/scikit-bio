@@ -241,36 +241,16 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
     ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
     >>> consensus = majority_rule(trees, cutoff=0.5)[0]
-    >>> print(consensus.ascii_art())
-                                  /-E
-                                 |
-                                 |          /-G
-                        /--------|         |
-                       |         |         |          /-F
-                       |         |         |---------|
-                       |          \--------|          \-I
-                       |                   |
-                       |                   |          /-C
-              /--------|                   |         |
-             |         |                    \--------|          /-D
-             |         |                             |         |
-             |         |                              \--------|--J
-    ---------|         |                                       |
-             |         |                                        \-H
-             |         |
-             |          \-B
-             |
-              \-A
-    >>> for node in consensus.non_tips():
+    >>> for node in sorted(consensus.non_tips(), key=lambda k: k.count(tips=True)):
     ...     support_value = node.support
-    ...     names = ' '.join([n.name for n in node.tips()])
+    ...     names = ' '.join(sorted(n.name for n in node.tips()))
     ...     print("Tips: %s, support: %s" % (names, support_value))
     Tips: F I, support: 9.0
-    Tips: D J H, support: 6.0
-    Tips: C D J H, support: 6.0
-    Tips: G F I C D J H, support: 6.0
-    Tips: E G F I C D J H, support: 9.0
-    Tips: E G F I C D J H B, support: 9.0
+    Tips: D H J, support: 6.0
+    Tips: C D H J, support: 6.0
+    Tips: C D F G H I J, support: 6.0
+    Tips: C D E F G H I J, support: 9.0
+    Tips: B C D E F G H I J, support: 9.0
 
     In the next example, multiple trees will be returned which can happen if
     clades are not well supported across the trees. In addition, this can arise
@@ -282,18 +262,8 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     ...     TreeNode.read(StringIO(u"((c,d),(e,f),b);")),
     ...     TreeNode.read(StringIO(u"(a,(c,d),(e,f));"))]
     >>> consensus_trees = majority_rule(trees)
-    >>> print(len(consensus_trees))
+    >>> len(consensus_trees)
     4
-    >>> for tree in consensus_trees:
-    ...     print(tree.ascii_art())
-    --b
-    --a
-              /-f
-    ---------|
-              \-e
-              /-d
-    ---------|
-              \-c
 
     """
     if weights is None:
@@ -301,7 +271,7 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     else:
         weights = np.asarray(weights)
         if len(weights) != len(trees):
-            raise ValueError("Number of weights and trees differ!")
+            raise ValueError("Number of weights and trees differ.")
 
     cutoff_threshold = cutoff * weights.sum()
 
