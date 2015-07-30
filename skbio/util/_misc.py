@@ -153,10 +153,10 @@ def is_casava_v180_or_later(header_line):
     Examples
     --------
     >>> from skbio.util import is_casava_v180_or_later
-    >>> print(is_casava_v180_or_later('@foo'))
+    >>> is_casava_v180_or_later(b'@foo')
     False
-    >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
-    >>> print(is_casava_v180_or_later(id_))
+    >>> id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+    >>> is_casava_v180_or_later(id_)
     True
 
     """
@@ -191,9 +191,9 @@ def safe_md5(open_file, block_size=2 ** 20):
 
     Examples
     --------
-    >>> from StringIO import StringIO
+    >>> from io import BytesIO
     >>> from skbio.util import safe_md5
-    >>> fd = StringIO("foo bar baz") # open file like object
+    >>> fd = BytesIO(b"foo bar baz") # open file like object
     >>> x = safe_md5(fd)
     >>> x.hexdigest()
     'ab07acbb1e496801937adfa772424bf7'
