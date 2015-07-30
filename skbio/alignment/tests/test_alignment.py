@@ -473,6 +473,10 @@ class AlignmentTests(TestCase):
         self.assertEqual(self.a3.score(), 42.0)
         self.assertEqual(self.a4.score(), -42.0)
 
+    def test_score_unset_returns_none(self):
+        self.assertEqual(self.a1.score(), None)
+        self.assertEqual(self.a2.score(), None)
+
     def test_start_end_positions(self):
         self.assertEqual(self.a3.start_end_positions(), [(0, 3), (5, 9)])
         self.assertEqual(self.a4.start_end_positions(), [(1, 4), (6, 10)])

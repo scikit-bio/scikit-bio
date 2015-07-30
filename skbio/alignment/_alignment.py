@@ -749,6 +749,8 @@ class Alignment(SequenceCollection):
 
         if score is not None:
             self._score = float(score)
+        else:
+            self._score = None
         self._start_end_positions = start_end_positions
 
     @experimental(as_of="0.4.0")
