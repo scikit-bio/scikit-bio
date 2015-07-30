@@ -162,7 +162,7 @@ class TestCAResults(TestCase):
                                         ignore_directionality=True)
 
     def test_maintain_chi_square_distance_scaling1(self):
-        """In scaling 1, chi^2 distance among rows (sites) is equal to
+        """In scaling 1, chi^2 distance among rows (samples) is equal to
         euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies)
@@ -171,7 +171,7 @@ class TestCAResults(TestCase):
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
     def test_maintain_chi_square_distance_scaling2(self):
-        """In scaling 2, chi^2 distance among columns (species) is
+        """In scaling 2, chi^2 distance among columns (features) is
         equal to euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies, between_rows=False)
