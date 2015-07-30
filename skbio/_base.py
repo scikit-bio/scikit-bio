@@ -62,13 +62,21 @@ class OrdinationResults(SkbioObject):
     biplot_scores : pd.DataFrame
         Correlation coefficients of the samples with respect to the features.
     sample_constraints : pd.DataFrame
-        A basis for the constrained ordination space. <- JORGE REVISE THIS
+        Site constraints (linear combinations of constraining variables):
+        coordinates of the sites in the space of the explanatory variables X.
+        These are the fitted site scores
     proportion_explained : pd.Series
         Proportion explained by each of the dimensions in the ordination space.
         The index corresponds to the ordination axis labels
     png
     svg
 
+    See Also
+    --------
+    ca
+    cca
+    pcoa
+    rda
     """
     default_write_format = 'ordination'
 
