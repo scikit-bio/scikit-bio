@@ -946,9 +946,9 @@ class Format(object):
         ...     return MyObject(fh.readlines()[1:])
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> MyObject.read([u"myformat2\\n", u"some content here!\\n"],
+        >>> MyObject.read(["myformat2\\n", u"some content here!\\n"],
         ...               format='myformat').content
-        [u'some content here!\\n']
+        ['some content here!\\n']
 
         """
         self._check_registration(cls)
@@ -1036,9 +1036,9 @@ class Format(object):
         ...         fh.write(c)
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> obj = MyObject([u"some content here!\\n"])
+        >>> obj = MyObject(["some content here!\\n"])
         >>> obj.write([], format='myformat')
-        [u'myformat2\\n', u'some content here!\\n']
+        ['myformat2\\n', 'some content here!\\n']
 
         """
         self._check_registration(cls)

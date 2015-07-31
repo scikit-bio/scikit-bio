@@ -222,10 +222,10 @@ as a ``DNA``:
 DNA
 ----------------------------------------
 Metadata:
-    u'description': u'description 2'
-    u'id': u'seq2'
+    'description': 'description 2'
+    'id': 'seq2'
 Positional metadata:
-    u'quality': <dtype: uint8>
+    'quality': <dtype: uint8>
 Stats:
     length: 35
     has gaps: False

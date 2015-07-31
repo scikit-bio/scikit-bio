@@ -221,10 +221,10 @@ def open_file(file, **kwargs):
     --------
     Here our input isn't a filehandle and so `f` will get closed.
 
-    >>> with open_file([u'a\n']) as f:
+    >>> with open_file(['a\n']) as f:
     ...     f.read()
     ...
-    u'a\n'
+    'a\n'
     >>> f.closed
     True
 
@@ -237,7 +237,7 @@ def open_file(file, **kwargs):
     >>> with open_file(file) as f:
     ...     f.read()
     ...
-    u'a\nb\nc\n'
+    'a\nb\nc\n'
     >>> f.closed
     False
     >>> file.closed
