@@ -94,6 +94,7 @@ class DissimilarityMatrix(SkbioObject):
     @experimental(as_of="0.4.0")
     def __init__(self, data, ids=None):
         if isinstance(data, DissimilarityMatrix):
+            ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
 
