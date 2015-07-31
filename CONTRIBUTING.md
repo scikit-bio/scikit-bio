@@ -23,7 +23,7 @@ When considering contributing to scikit-bio, you should begin by posting an issu
 
 * For documentation additions, you should first post an issue describing what you propose to add, where you'd like to add it in the documentation, and a description of why you think it's an important addition. For documentation improvements and fixes, you should post an issue describing what is currently wrong or missing and how you propose to address it. For more information about building and contributing to scikit-bio's documentation, see our [documentation guide](doc/README.md).
 
-When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is particularly important prior to our beta (0.4.0) release, as scikit-bio is rapidly changing. This includes complete re-writes of some of the core objects, so if you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.** You should review our [roadmap to beta](https://github.com/biocore/scikit-bio/wiki/beta-release-roadmap) to learn about the changes leading up to 0.4.0.
+When you post your issue, the scikit-bio developers will respond to let you know if we agree with the addition or change. It's very important that you go through this step to avoid wasting time working on a feature that we are not interested in including in scikit-bio. **This initial discussion with the developers is important because scikit-bio is rapidly changing, including complete re-writes of some of the core objects. If you don't get in touch first you could easily waste time by working on an object or interface that is deprecated.**
 
 Getting started
 ---------------
@@ -53,7 +53,9 @@ Particularly for big changes, if you'd like feedback on your code in the form of
 Submitting code to scikit-bio
 -----------------------------
 
-scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. Once You should go through the following steps to submit code to scikit-bio.
+scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
+
+**Note:** We recommend developing scikit-bio in a Python 3 environment because doctests must be written (and pass) in Python 3.
 
 1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
@@ -119,7 +121,7 @@ Testing guidelines
 All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml). This build includes, but is not limited to, the following checks:
 
 - Full unit test suite executes without errors in Python 2 and 3.
-- Doctests execute correctly (currently only for Python 2).
+- Doctests execute correctly in Python 3.
 - C code can be correctly compiled.
 - Cython code is correctly generated.
 - All tests import functionality from the appropriate minimally deep API.
