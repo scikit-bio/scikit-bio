@@ -231,17 +231,18 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     >>> from skbio.tree import TreeNode
     >>> from io import StringIO
     >>> trees = [
-    ... TreeNode.read(StringIO(u"(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
-    ... TreeNode.read(StringIO(u"(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
+    ... TreeNode.read(StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
+    ... TreeNode.read(StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
+    ... TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
     >>> consensus = majority_rule(trees, cutoff=0.5)[0]
-    >>> for node in sorted(consensus.non_tips(), key=lambda k: k.count(tips=True)):
+    >>> for node in sorted(consensus.non_tips(),
+    ...                    key=lambda k: k.count(tips=True)):
     ...     support_value = node.support
     ...     names = ' '.join(sorted(n.name for n in node.tips()))
     ...     print("Tips: %s, support: %s" % (names, support_value))
@@ -257,10 +258,10 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     if not all tips are present across all trees.
 
     >>> trees = [
-    ...     TreeNode.read(StringIO(u"((a,b),(c,d),(e,f));")),
-    ...     TreeNode.read(StringIO(u"(a,(c,d),b,(e,f));")),
-    ...     TreeNode.read(StringIO(u"((c,d),(e,f),b);")),
-    ...     TreeNode.read(StringIO(u"(a,(c,d),(e,f));"))]
+    ...     TreeNode.read(StringIO("((a,b),(c,d),(e,f));")),
+    ...     TreeNode.read(StringIO("(a,(c,d),b,(e,f));")),
+    ...     TreeNode.read(StringIO("((c,d),(e,f),b);")),
+    ...     TreeNode.read(StringIO("(a,(c,d),(e,f));"))]
     >>> consensus_trees = majority_rule(trees)
     >>> len(consensus_trees)
     4

@@ -853,9 +853,9 @@ class Format(object):
         ...         return True, {'version': version}
         ...     return False, {}
         ...
-        >>> myformat_sniffer([u"myformat2\\n", u"some content\\n"])
+        >>> myformat_sniffer(["myformat2\\n", "some content\\n"])
         (True, {'version': 2})
-        >>> myformat_sniffer([u"something else\\n"])
+        >>> myformat_sniffer(["something else\\n"])
         (False, {})
 
         """
@@ -946,7 +946,7 @@ class Format(object):
         ...     return MyObject(fh.readlines()[1:])
         ...
         >>> registry.monkey_patch() # If developing skbio, this isn't needed
-        >>> MyObject.read(["myformat2\\n", u"some content here!\\n"],
+        >>> MyObject.read(["myformat2\\n", "some content here!\\n"],
         ...               format='myformat').content
         ['some content here!\\n']
 
@@ -1031,7 +1031,7 @@ class Format(object):
         ...
         >>> @myformat.writer(MyObject)
         ... def myformat_reader(obj, fh):
-        ...     fh.write(u"myformat2\\n")
+        ...     fh.write("myformat2\\n")
         ...     for c in obj.content:
         ...         fh.write(c)
         ...

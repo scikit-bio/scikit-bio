@@ -2370,6 +2370,7 @@ class TestSequence(TestCase):
 # be relied upon for coverage (the unit tests take care of this)
 class SequenceReprDoctests(object):
     r"""
+    >>> import pandas as pd
     >>> from skbio import Sequence
 
     Empty (minimal) sequence:
@@ -2572,17 +2573,17 @@ class SequenceReprDoctests(object):
     ...     # nested quotes
     ...     10: '"\''
     ... }
-    >>> positional_metadata = {
+    >>> positional_metadata = pd.DataFrame.from_items([
     ...     # str key, int list value
-    ...     'foo': [1, 2, 3, 4],
+    ...     ('foo', [1, 2, 3, 4]),
     ...     # float key, float list value
-    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
+    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
     ...     # int key, object list value
-    ...     42: [[], 4, 5, {}],
+    ...     (42, [[], 4, 5, {}]),
     ...     # truncated key (too long), bool list value
-    ...     'abc' * 90: [True, False, False, True],
+    ...     ('abc' * 90, [True, False, False, True]),
     ...     # None key
-    ...     None: range(4)}
+    ...     (None, range(4))])
     >>> Sequence('ACGT', metadata=metadata,
     ...          positional_metadata=positional_metadata)
     Sequence
@@ -2609,11 +2610,11 @@ class SequenceReprDoctests(object):
         <class 'str'>: None
         <class 'tuple'>: <class 'list'>
     Positional metadata:
-        42.5: <dtype: float64>
         'foo': <dtype: int64>
+        42.5: <dtype: float64>
         42: <dtype: object>
-        None: <dtype: int64>
         <class 'str'>: <dtype: bool>
+        None: <dtype: int64>
     Stats:
         length: 4
     -----------------------------------------------------------------------
