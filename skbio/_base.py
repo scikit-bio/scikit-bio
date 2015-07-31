@@ -21,6 +21,7 @@ from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
 from skbio.stats._misc import _pprint_strs
+from skbio.util._decorator import experimental
 
 
 class SkbioObject(with_metaclass(ABCMeta, object)):
@@ -72,6 +73,7 @@ class OrdinationResults(SkbioObject):
     """
     default_write_format = 'ordination'
 
+    @experimental(as_of="0.4.0")
     def __init__(self, short_method_name, long_method_name, eigvals,
                  samples, features=None, biplot_scores=None,
                  sample_constraints=None, proportion_explained=None):
@@ -86,6 +88,7 @@ class OrdinationResults(SkbioObject):
         self.sample_constraints = sample_constraints
         self.proportion_explained = proportion_explained
 
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the ordination results.
 
@@ -127,6 +130,7 @@ class OrdinationResults(SkbioObject):
 
         return '\n'.join(lines)
 
+    @experimental(as_of="0.4.0")
     def plot(self, df=None, column=None, axes=(0, 1, 2), axis_labels=None,
              title='', cmap=None, s=20):
         """Create a 3-D scatterplot of ordination results colored by metadata.
