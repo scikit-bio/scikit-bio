@@ -108,12 +108,12 @@ to walk through an item at a time so we can examine the debug information.
 
 >>> wf = SequenceProcessor(state=None, options={'reverse':True}, debug=True)
 >>> gen = wf(seqs, fail_callback=lambda x: x.state)
->>> gen.next()
+>>> next(gen)
 'TTTTTTTAAAAAAA'
->>> print(wf.failed)
+>>> wf.failed
 False
->>> print(wf.debug_trace)
-set([('check_length', 0), ('reverse', 2)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0), ('reverse', 2)]
 
 The ``debug_trace`` specifies the methods executed, and the order of their
 execution where closer to zero indicates earlier in the execution order. Gaps
@@ -125,12 +125,12 @@ this time through the workflow?
 Now, let's take a look at the next item, which on our prior run through the
 workflow was a failed item.
 
->>> gen.next()
+>>> next(gen)
 'ATAGACC'
->>> print(wf.failed)
+>>> wf.failed
 True
->>> print(wf.debug_trace)
-set([('check_length', 0)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0)]
 
 What we can see is that the failed sequence only executed the check_length
 method. Since the sequence didn't pass our length filter of 10 nucleotides,
@@ -141,12 +141,12 @@ be disabled if desired).
 This third item previously matched our nucleotide pattern of interest for
 truncation. Let's see what that looks like in the debug output.
 
->>> gen.next() #
+>>> next(gen)
 'CAGGCC'
->>> print(wf.failed)
+>>> wf.failed
 False
->>> wf.debug_trace
-set([('check_length', 0), ('truncate', 1), ('reverse', 2)])
+>>> sorted(wf.debug_trace)
+[('check_length', 0), ('reverse', 2), ('truncate', 1)]
 
 In this last example, we can see that the ``truncate`` method was executed
 prior to the ``reverse`` method and following the ``check_length`` method. This
