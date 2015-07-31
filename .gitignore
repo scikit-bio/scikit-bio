@@ -44,3 +44,6 @@ nosetests.xml
 
 # Sphinx builds
 doc/source/generated
+
+# OSX files
+.DS_Store
