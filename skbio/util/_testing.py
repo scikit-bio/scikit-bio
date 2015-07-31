@@ -64,7 +64,7 @@ class TestRunner(object):
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
-        if not PY3:
+        if PY3:
             argv.extend(['--with-doctest', '--doctest-tests'])
         if verbose:
             argv.append('-v')

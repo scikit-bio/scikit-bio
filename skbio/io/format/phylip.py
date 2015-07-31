@@ -159,10 +159,10 @@ will be raised when we try to write a PHYLIP file:
 >>> long_id_aln.write(fh, format='phylip')
 Traceback (most recent call last):
     ...
-PhylipFormatError: Alignment can only be written in PHYLIP format if all \
-sequence IDs have 10 or fewer characters. Found sequence with ID \
-'long-sequence-2' that exceeds this limit. Use Alignment.update_ids to assign \
-shorter IDs.
+skbio.io._exception.PhylipFormatError: Alignment can only be written in \
+PHYLIP format if all sequence IDs have 10 or fewer characters. Found sequence \
+with ID 'long-sequence-2' that exceeds this limit. Use Alignment.update_ids \
+to assign shorter IDs.
 >>> fh.close()
 
 One way to work around this is to update the IDs to be shorter. The recommended

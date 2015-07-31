@@ -173,10 +173,10 @@ Examples
 --------
 This is a simple Newick string.
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> from skbio import read
 >>> from skbio.tree import TreeNode
->>> f = StringIO(u"((D, E)B, (F, G)C)A;")
+>>> f = StringIO("((D, E)B, (F, G)C)A;")
 >>> tree = read(f, format="newick", into=TreeNode)
 >>> f.close()
 >>> print(tree.ascii_art())
@@ -190,7 +190,7 @@ This is a simple Newick string.
 
 This is a complex Newick string.
 
->>> f = StringIO(u"[example](a:0.1, 'b_b''':0.2, (c:0.3, d_d:0.4)e:0.5)f:0.0;")
+>>> f = StringIO("[example](a:0.1, 'b_b''':0.2, (c:0.3, d_d:0.4)e:0.5)f:0.0;")
 >>> tree = read(f, format="newick", into=TreeNode)
 >>> f.close()
 >>> print(tree.ascii_art())

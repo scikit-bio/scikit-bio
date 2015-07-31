@@ -105,7 +105,7 @@ class Sequence(collections.Sequence, SkbioObject):
     Sequence
     -----------------------------
     Metadata:
-        'authors': <type 'list'>
+        'authors': <class 'list'>
         'desc': 'seq desc'
         'id': 'seq-id'
     Positional metadata:
@@ -121,17 +121,17 @@ class Sequence(collections.Sequence, SkbioObject):
     Retrieve underlying sequence:
 
     >>> seq.values # doctest: +NORMALIZE_WHITESPACE
-    array(['A', 'C', 'G', 'T'],
+    array([b'A', b'C', b'G', b'T'],
           dtype='|S1')
 
     Underlying sequence immutable:
 
-    >>> seq.values = np.array(['T', 'C', 'G', 'A'], dtype='|S1')
+    >>> seq.values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
     Traceback (most recent call last):
         ...
     AttributeError: can't set attribute
 
-    >>> seq.values[0] = 'T'
+    >>> seq.values[0] = b'T'
     Traceback (most recent call last):
         ...
     ValueError: assignment destination is read-only
@@ -193,15 +193,15 @@ class Sequence(collections.Sequence, SkbioObject):
     >>> subseq = seq[1:3]
     >>> subseq
     Sequence
-    ----------------------------
+    -----------------------------
     Metadata:
-        'authors': <type 'list'>
+        'authors': <class 'list'>
         'desc': 'seq desc'
         'id': 'new-id'
         'pubmed': 12345
     Stats:
         length: 2
-    ----------------------------
+    -----------------------------
     0 CG
     >>> pprint(subseq.metadata)
     {'authors': ['Alice', 'Bob'],
@@ -329,7 +329,7 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> from skbio import Sequence
         >>> s = Sequence('AACGA')
         >>> s.values # doctest: +NORMALIZE_WHITESPACE
-        array(['A', 'A', 'C', 'G', 'A'],
+        array([b'A', b'A', b'C', b'G', b'A'],
               dtype='|S1')
 
         """
@@ -1076,7 +1076,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Sequence
         ----------------------------------------------------------------------
         Metadata:
-            'authors': <type 'list'>
+            'authors': <class 'list'>
             'description': "description of the sequence, wrapping across lines
                             if it's too long"
             'id': 'seq-id'
@@ -1777,12 +1777,15 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
+        >>> from collections import defaultdict, Counter
         >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
-        >>> s.kmer_frequencies(3, overlap=False)
-        Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
-        >>> s.kmer_frequencies(3, relative=True, overlap=False)
-        defaultdict(<type 'float'>, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
+        >>> freqs = s.kmer_frequencies(3, overlap=False)
+        >>> freqs == Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
+        True
+        >>> freqs = s.kmer_frequencies(3, relative=True, overlap=False)
+        >>> freqs == defaultdict(float, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
+        True
 
         """
         kmers = self.iter_kmers(k, overlap=overlap)

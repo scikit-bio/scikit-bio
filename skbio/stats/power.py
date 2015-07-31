@@ -261,11 +261,11 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
 
     >>> from scipy.stats import chisquare, nanmean
     >>> test = lambda x: chisquare(np.array([x[i].sum() for i in
-    ...     xrange(len(x))]))[1]
+    ...     range(len(x))]))[1]
 
     Let's make sure that our two distributions are different.
 
-    >>> round(test([pre_rate, pos_rate]), 3)
+    >>> print(round(test([pre_rate, pos_rate]), 3))
     0.003
 
     Since there are an even number of samples, and we don't have enough
@@ -319,7 +319,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     >>> from scipy.stats import kruskal
     >>> def metabolite_test(x):
     ...     return kruskal(x[0], x[1])[1]
-    >>> round(metabolite_test([met_pos, met_neg]), 3)
+    >>> print(round(metabolite_test([met_pos, met_neg]), 3))
     0.005
 
     When we go to perform the statistical test on all the data, you might
@@ -518,9 +518,9 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     >>> cnt
     array([  5.,  10.,  15.,  20.])
     >>> pwr.mean(0)
-    array([ 0.196,  0.356,  0.642,  0.87 ])
+    array([ 0.192,  0.43 ,  0.642,  0.872])
     >>> pwr.std(0).round(3)
-    array([ 0.019,  0.021,  0.044,  0.026])
+    array([ 0.013,  0.023,  0.042,  0.035])
 
     Estimating off the power curve, it looks like 20 cells per group may
     provide adequate power for this experiment, although the large variance
@@ -1110,8 +1110,11 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
 
     # Groups the data by the control groups
     ctrl_groups = meta.groupby(control_cats).groups
-    # Identifies the samples that satisfy the control pairs
-    for (g, ids) in viewitems(ctrl_groups):
+    # Identifies the samples that satisfy the control pairs. Keys are iterated
+    # in sorted order so that results don't change with different dictionary
+    # ordering (especially apparent in Python 3).
+    for g in sorted(ctrl_groups, key=lambda k: str(k)):
+        ids = ctrl_groups[g]
         # If strict_match, Skips over data that has nans
         if not _check_nans(g, switch=True) and strict_match:
             continue

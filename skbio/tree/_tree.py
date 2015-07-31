@@ -114,7 +114,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c, d)root;"])
+        >>> tree = TreeNode.read(["((a,b)c, d)root;"])
         >>> repr(tree)
         '<TreeNode, name: root, internal node count: 1, tips count: 3>'
 
@@ -145,7 +145,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> str(tree)
         '((a,b)c);\n'
 
@@ -262,7 +262,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(a,b)c;"])
+        >>> tree = TreeNode.read(["(a,b)c;"])
         >>> print(tree.pop(0))
         a;
         <BLANKLINE>
@@ -301,7 +301,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(a,b)c;"])
+        >>> tree = TreeNode.read(["(a,b)c;"])
         >>> tree.remove(tree.children[0])
         True
 
@@ -332,7 +332,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(a,b)c;"])
+        >>> tree = TreeNode.read(["(a,b)c;"])
         >>> tree.remove_deleted(lambda x: x.name == 'b')
         >>> print(tree)
         (a)c;
@@ -366,7 +366,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> to_delete = tree.find('b')
         >>> tree.remove_deleted(lambda x: x == to_delete)
         >>> print(tree)
@@ -426,7 +426,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> t = TreeNode.read([u'((H:1,G:1):2,(R:0.5,M:0.7):3);'])
+        >>> t = TreeNode.read(['((H:1,G:1):2,(R:0.5,M:0.7):3);'])
         >>> sheared = t.shear(['G', 'M'])
         >>> print(sheared)
         (G:3.0,M:3.7);
@@ -470,7 +470,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> tree_copy = tree.copy()
         >>> tree_nodes = set([id(n) for n in tree.traverse()])
         >>> tree_copy_nodes = set([id(n) for n in tree_copy.traverse()])
@@ -542,7 +542,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_deepcopy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
@@ -589,7 +589,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
         (b,c,(a,((f,g)h)e)d)root;
@@ -638,7 +638,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> print(tree.count())
         9
         >>> print(tree.count(tips=True))
@@ -674,9 +674,9 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,(b,c)d)e,(f,g)h)i;"])
+        >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> sorted(tree.subset())
-        [u'a', u'b', u'c', u'f', u'g']
+        ['a', 'b', 'c', 'f', 'g']
         """
         return frozenset({i.name for i in self.tips()})
 
@@ -700,12 +700,11 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)h)root;"])
-        >>> for s in sorted(tree.subsets()):
-        ...     print(sorted(s))
-        [u'a', u'b']
-        [u'd', u'e']
-        [u'a', u'b', u'd', u'e']
+        >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)h)root;"])
+        >>> subsets = tree.subsets()
+        >>> len(subsets)
+        3
+
         """
         sets = []
         for i in self.postorder(include_self=False):
@@ -748,7 +747,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(((a,b)c,(d,e)f)g,h)i;"])
+        >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
         >>> print(tree.root_at('c'))
         (a,b,((d,e)f,(h)g)c)root;
         <BLANKLINE>
@@ -791,7 +790,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;"])
+        >>> tree = TreeNode.read(["(((d:1,e:1,(g:1)f:1)c:1)b:1,h:1)a:1;"])
         >>> print(tree.root_at_midpoint())
         ((d:1.0,e:1.0,(g:1.0)f:1.0)c:0.5,((h:1.0)b:1.0):0.5)root;
         <BLANKLINE>
@@ -858,7 +857,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.is_tip())
         False
         >>> print(tree.find('a').is_tip())
@@ -884,7 +883,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.is_root())
         True
         >>> print(tree.find('a').is_root())
@@ -910,7 +909,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.has_children())
         True
         >>> print(tree.find('a').has_children())
@@ -959,7 +958,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> for node in tree.traverse():
         ...     print(node.name)
         None
@@ -1005,7 +1004,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> for node in tree.preorder():
         ...     print(node.name)
         None
@@ -1052,7 +1051,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> for node in tree.postorder():
         ...     print(node.name)
         a
@@ -1120,7 +1119,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c);"])
+        >>> tree = TreeNode.read(["((a,b)c);"])
         >>> for node in tree.pre_and_postorder():
         ...     print(node.name)
         None
@@ -1195,7 +1194,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> for node in tree.levelorder():
         ...     print(node.name)
         None
@@ -1244,7 +1243,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> for node in tree.tips():
         ...     print(node.name)
         a
@@ -1288,7 +1287,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> for node in tree.non_tips():
         ...     print(node.name)
         c
@@ -1412,7 +1411,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio.tree import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)d,(f,g)c);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)d,(f,g)c);"])
         >>> for node in tree.find_all('c'):
         ...     print(node.name, node.children[0].name, node.children[1].name)
         c a b
@@ -1481,7 +1480,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.find('c').name)
         c
         """
@@ -1537,7 +1536,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.find_by_id(2).name)
         d
 
@@ -1584,10 +1583,10 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f);"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
-        [u'a', u'b']
+        ['a', 'b']
         """
         for node in self.traverse(include_self=True):
             if func(node):
@@ -1608,9 +1607,9 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> [node.name for node in tree.find('a').ancestors()]
-        [u'c', u'root']
+        ['c', 'root']
 
         """
         result = []
@@ -1633,7 +1632,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> tip_a = tree.find('a')
         >>> root = tip_a.root()
         >>> root == tree
@@ -1663,10 +1662,10 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e,f)g)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e,f)g)root;"])
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
-        [u'd', u'f']
+        ['d', 'f']
 
         """
         if self.is_root():
@@ -1696,10 +1695,10 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
-        [u'a', u'b', u'root']
+        ['a', 'b', 'root']
 
         """
         nodes = [n for n in self.children + [self.parent] if n is not None]
@@ -1730,7 +1729,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> nodes = [tree.find('a'), tree.find('b')]
         >>> lca = tree.lowest_common_ancestor(nodes)
         >>> print(lca.name)
@@ -1800,16 +1799,17 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio.tree import TreeNode
-        >>> lineages = {'1': ['Bacteria', 'Firmicutes', 'Clostridia'],
-        ...             '2': ['Bacteria', 'Firmicutes', 'Bacilli'],
-        ...             '3': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
-        ...             '4': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
-        ...             '5': ['Archaea', 'Euryarchaeota', 'Thermoplasmata'],
-        ...             '6': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
-        ...             '7': ['Archaea', 'Euryarchaeota', 'Halobacteria'],
-        ...             '8': ['Bacteria', 'Bacteroidetes', 'Sphingobacteria'],
-        ...             '9': ['Bacteria', 'Bacteroidetes', 'Cytophagia']}
-        >>> tree = TreeNode.from_taxonomy(lineages.items())
+        >>> lineages = [
+        ...     ('1', ['Bacteria', 'Firmicutes', 'Clostridia']),
+        ...     ('2', ['Bacteria', 'Firmicutes', 'Bacilli']),
+        ...     ('3', ['Bacteria', 'Bacteroidetes', 'Sphingobacteria']),
+        ...     ('4', ['Archaea', 'Euryarchaeota', 'Thermoplasmata']),
+        ...     ('5', ['Archaea', 'Euryarchaeota', 'Thermoplasmata']),
+        ...     ('6', ['Archaea', 'Euryarchaeota', 'Halobacteria']),
+        ...     ('7', ['Archaea', 'Euryarchaeota', 'Halobacteria']),
+        ...     ('8', ['Bacteria', 'Bacteroidetes', 'Sphingobacteria']),
+        ...     ('9', ['Bacteria', 'Bacteroidetes', 'Cytophagia'])]
+        >>> tree = TreeNode.from_taxonomy(lineages)
         >>> print(tree.ascii_art())
                                       /Clostridia-1
                             /Firmicutes
@@ -1821,13 +1821,13 @@ class TreeNode(SkbioObject):
                  |                   |
         ---------|                    \Cytophagia-9
                  |
-                 |                              /-5
+                 |                              /-4
                  |                    /Thermoplasmata
-                 |                   |          \-4
+                 |                   |          \-5
                   \Archaea- /Euryarchaeota
-                                     |          /-7
+                                     |          /-6
                                       \Halobacteria
-                                                \-6
+                                                \-7
 
         """
         root = cls(name=None)
@@ -2039,11 +2039,12 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
+        >>> from pprint import pprint
         >>> from skbio import TreeNode
-        >>> t = TreeNode.read([u'(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
+        >>> t = TreeNode.read(['(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
         >>> res = t.to_array()
-        >>> res.keys()
-        ['child_index', 'length', 'name', 'id_index', 'id']
+        >>> sorted(res.keys())
+        ['child_index', 'id', 'id_index', 'length', 'name']
         >>> res['child_index']
         [(4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6)]
         >>> for k, v in res['id_index'].items():
@@ -2068,7 +2069,7 @@ class TreeNode(SkbioObject):
         >>> res['id']
         array([0, 1, 2, 3, 4, 5, 6, 7])
         >>> res['name']
-        array([u'a', u'b', u'c', u'd', u'x', u'y', u'z', None], dtype=object)
+        array(['a', 'b', 'c', 'd', 'x', 'y', 'z', None], dtype=object)
 
         """
         if attrs is None:
@@ -2148,7 +2149,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b)c,(d,e)f)root;"])
+        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> print(tree.ascii_art())
                             /-a
                   /c-------|
@@ -2192,7 +2193,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> root = tree
         >>> tree.find('a').accumulate_to_ancestor(root)
         4.0
@@ -2245,7 +2246,7 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> tip_a = tree.find('a')
         >>> tip_d = tree.find('d')
         >>> tip_a.distance(tip_d)
@@ -2320,12 +2321,12 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> dist, tips = tree.get_max_distance()
         >>> dist
         16.0
         >>> [n.name for n in tips]
-        [u'b', u'e']
+        ['b', 'e']
         """
         if not hasattr(self, 'MaxDistTips'):
             # _set_max_distance will throw a TreeError if a node with a single
@@ -2379,12 +2380,12 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> mat = tree.tip_tip_distances()
         >>> print(mat)
         4x4 distance matrix
         IDs:
-        u'a', u'b', u'd', u'e'
+        'a', 'b', 'd', 'e'
         Data:
         [[  0.   3.  14.  15.]
          [  3.   0.  15.  16.]
@@ -2490,8 +2491,8 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read([u"((a,b),(c,d));"])
-        >>> tree2 = TreeNode.read([u"(((a,b),c),d);"])
+        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
         >>> tree1.compare_rfd(tree2)
         2.0
 
@@ -2551,8 +2552,8 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree1 = TreeNode.read([u"((a,b),(c,d));"])
-        >>> tree2 = TreeNode.read([u"(((a,b),c),d);"])
+        >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
+        >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
         >>> tree1.compare_subsets(tree2)
         0.5
 
@@ -2625,8 +2626,8 @@ class TreeNode(SkbioObject):
         --------
         >>> from skbio import TreeNode
         >>> # note, only three common taxa between the trees
-        >>> tree1 = TreeNode.read([u"((a:1,b:1):2,(c:0.5,X:0.7):3);"])
-        >>> tree2 = TreeNode.read([u"(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
+        >>> tree1 = TreeNode.read(["((a:1,b:1):2,(c:0.5,X:0.7):3);"])
+        >>> tree2 = TreeNode.read(["(((a:1,b:1,Y:1):2,c:3):1,Z:4);"])
         >>> dist = tree1.compare_tip_distances(tree2)
         >>> print("%.9f" % dist)
         0.000133446
@@ -2748,18 +2749,18 @@ class TreeNode(SkbioObject):
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tr = TreeNode.read([u"(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
+        >>> tr = TreeNode.read(["(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,"
         ...                     "(H:.4,I:.5)J:1.3)K;"])
         >>> tdbl = tr.descending_branch_length()
         >>> sdbl = tr.descending_branch_length(['A','E'])
-        >>> print(tdbl, sdbl)
+        >>> print(round(tdbl, 1), round(sdbl, 1))
         8.9 2.2
         """
         self.assign_ids()
         if tip_subset is not None:
             all_tips = self.subset()
             if not set(tip_subset).issubset(all_tips):
-                raise ValueError('tip_subset contains ids that arent tip '
+                raise ValueError('tip_subset contains ids that aren\'t tip '
                                  'names.')
 
             lca = self.lowest_common_ancestor(tip_subset)
@@ -2810,21 +2811,21 @@ class TreeNode(SkbioObject):
         Cache the tip names of the tree on its internal nodes
 
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b,(c,d)e)f,(g,h)i)root;"])
+        >>> tree = TreeNode.read(["((a,b,(c,d)e)f,(g,h)i)root;"])
         >>> f = lambda n: [n.name] if n.is_tip() else []
         >>> tree.cache_attr(f, 'tip_names')
         >>> for n in tree.traverse(include_self=True):
         ...     print("Node name: %s, cache: %r" % (n.name, n.tip_names))
-        Node name: root, cache: [u'a', u'b', u'c', u'd', u'g', u'h']
-        Node name: f, cache: [u'a', u'b', u'c', u'd']
-        Node name: a, cache: [u'a']
-        Node name: b, cache: [u'b']
-        Node name: e, cache: [u'c', u'd']
-        Node name: c, cache: [u'c']
-        Node name: d, cache: [u'd']
-        Node name: i, cache: [u'g', u'h']
-        Node name: g, cache: [u'g']
-        Node name: h, cache: [u'h']
+        Node name: root, cache: ['a', 'b', 'c', 'd', 'g', 'h']
+        Node name: f, cache: ['a', 'b', 'c', 'd']
+        Node name: a, cache: ['a']
+        Node name: b, cache: ['b']
+        Node name: e, cache: ['c', 'd']
+        Node name: c, cache: ['c']
+        Node name: d, cache: ['d']
+        Node name: i, cache: ['g', 'h']
+        Node name: g, cache: ['g']
+        Node name: h, cache: ['h']
 
         """
         if cache_type in [set, frozenset]:
@@ -2890,7 +2891,7 @@ class TreeNode(SkbioObject):
         times.
 
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read([u"((a,b),(c,d));"])
+        >>> tree = TreeNode.read(["((a,b),(c,d));"])
         >>> rev = lambda items: items.reverse()
         >>> shuffler = tree.shuffle(names=['a', 'b'], shuffle_f=rev, n=5)
         >>> for shuffled_tree in shuffler:

@@ -97,22 +97,23 @@ Create a table containing 7 OTUs and 6 samples:
    let's define some:
 
    >>> import pandas as pd
-   >>> sample_md = {
-   ...    'A': {'body_site': 'gut', 'subject': 's1'},
-   ...    'B': {'body_site': 'skin', 'subject': 's1'},
-   ...    'C': {'body_site': 'tongue', 'subject': 's1'},
-   ...    'D': {'body_site': 'gut', 'subject': 's2'},
-   ...    'E': {'body_site': 'tongue', 'subject': 's2'},
-   ...    'F': {'body_site': 'skin', 'subject': 's2'}}
-   >>> sample_md = pd.DataFrame.from_dict(sample_md, orient='index')
+   >>> sample_md = [
+   ...    ('A', ['gut', 's1']),
+   ...    ('B', ['skin', 's1']),
+   ...    ('C', ['tongue', 's1']),
+   ...    ('D', ['gut', 's2']),
+   ...    ('E', ['tongue', 's2']),
+   ...    ('F', ['skin', 's2'])]
+   >>> sample_md = pd.DataFrame.from_items(
+   ...     sample_md, columns=['body_site', 'subject'], orient='index')
    >>> sample_md
-     subject body_site
-   A      s1       gut
-   B      s1      skin
-   C      s1    tongue
-   D      s2       gut
-   E      s2    tongue
-   F      s2      skin
+     body_site subject
+   A       gut      s1
+   B      skin      s1
+   C    tongue      s1
+   D       gut      s2
+   E    tongue      s2
+   F      skin      s2
 
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:

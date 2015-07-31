@@ -308,20 +308,20 @@ Let's define this file in-memory as a ``StringIO``, though this could be a real
 file path, file handle, or anything that's supported by scikit-bio's I/O
 registry in practice:
 
->>> fl = [u">seq1 Turkey\\n",
-...       u"AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n",
-...       u">seq2 Salmo gair\\n",
-...       u"AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n",
-...       u"CCGGGCACGGTAT\\n",
-...       u">seq3 H. Sapiens\\n",
-...       u"ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n",
-...       u">seq4 Chimp\\n",
-...       u"AAACCCTTGCCG\\n",
-...       u"TTACGCTTAAAC\\n",
-...       u"CGAGGCCGGGAC\\n",
-...       u"ACTCAT\\n",
-...       u">seq5 Gorilla\\n",
-...       u"AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n"]
+>>> fl = [">seq1 Turkey\\n",
+...       "AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT\\n",
+...       ">seq2 Salmo gair\\n",
+...       "AAGCCTTGGCAGTGCAGGGTGAGCCGTGG\\n",
+...       "CCGGGCACGGTAT\\n",
+...       ">seq3 H. Sapiens\\n",
+...       "ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA\\n",
+...       ">seq4 Chimp\\n",
+...       "AAACCCTTGCCG\\n",
+...       "TTACGCTTAAAC\\n",
+...       "CGAGGCCGGGAC\\n",
+...       "ACTCAT\\n",
+...       ">seq5 Gorilla\\n",
+...       "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n"]
 
 Let's read the FASTA file into a ``SequenceCollection``:
 
@@ -330,7 +330,7 @@ Let's read the FASTA file into a ``SequenceCollection``:
 >>> sc.sequence_lengths()
 [42, 42, 42, 42, 42]
 >>> sc.ids()
-[u'seq1', u'seq2', u'seq3', u'seq4', u'seq5']
+['seq1', 'seq2', 'seq3', 'seq4', 'seq5']
 
 We see that all 5 sequences have 42 characters, and that each of the sequence
 IDs were successfully read into memory.
@@ -356,8 +356,8 @@ Let's inspect the type of sequences stored in the ``Alignment``:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Turkey'
-    u'id': u'seq1'
+    'description': 'Turkey'
+    'id': 'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -372,8 +372,8 @@ change the type of sequence via the ``constructor`` parameter:
 DNA
 ------------------------------------------------
 Metadata:
-    u'description': u'Turkey'
-    u'id': u'seq1'
+    'description': 'Turkey'
+    'id': 'seq1'
 Stats:
     length: 42
     has gaps: False
@@ -420,8 +420,8 @@ use the generator-based reader to process a single sequence at a time in a
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Turkey'
-    u'id': u'seq1'
+    'description': 'Turkey'
+    'id': 'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -430,8 +430,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Salmo gair'
-    u'id': u'seq2'
+    'description': 'Salmo gair'
+    'id': 'seq2'
 Stats:
     length: 42
 ------------------------------------------------
@@ -440,8 +440,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'H. Sapiens'
-    u'id': u'seq3'
+    'description': 'H. Sapiens'
+    'id': 'seq3'
 Stats:
     length: 42
 ------------------------------------------------
@@ -450,8 +450,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Chimp'
-    u'id': u'seq4'
+    'description': 'Chimp'
+    'id': 'seq4'
 Stats:
     length: 42
 ------------------------------------------------
@@ -460,8 +460,8 @@ Stats:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Gorilla'
-    u'id': u'seq5'
+    'description': 'Gorilla'
+    'id': 'seq5'
 Stats:
     length: 42
 ------------------------------------------------
@@ -476,8 +476,8 @@ A single sequence can also be read into a ``Sequence`` (or subclass):
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Turkey'
-    u'id': u'seq1'
+    'description': 'Turkey'
+    'id': 'seq1'
 Stats:
     length: 42
 ------------------------------------------------
@@ -491,8 +491,8 @@ controlled with ``seq_num``. For example, to read the fifth sequence:
 Sequence
 ------------------------------------------------
 Metadata:
-    u'description': u'Gorilla'
-    u'id': u'seq5'
+    'description': 'Gorilla'
+    'id': 'seq5'
 Stats:
     length: 42
 ------------------------------------------------
@@ -505,8 +505,8 @@ We can use the same API to read the fifth sequence into a ``DNA``:
 DNA
 ------------------------------------------------
 Metadata:
-    u'description': u'Gorilla'
-    u'id': u'seq5'
+    'description': 'Gorilla'
+    'id': 'seq5'
 Stats:
     length: 42
     has gaps: False
@@ -544,16 +544,16 @@ Also suppose we have the following QUAL file::
     3 3 10 42 80
 
 >>> fasta_fl = [
-...     u">seq1 db-accession-149855\\n",
-...     u"CGATGTC\\n",
-...     u">seq2 db-accession-34989\\n",
-...     u"CATCG\\n"]
+...     ">seq1 db-accession-149855\\n",
+...     "CGATGTC\\n",
+...     ">seq2 db-accession-34989\\n",
+...     "CATCG\\n"]
 >>> qual_fl = [
-...     u">seq1 db-accession-149855\\n",
-...     u"40 39 39 4\\n",
-...     u"50 1 100\\n",
-...     u">seq2 db-accession-34989\\n",
-...     u"3 3 10 42 80\\n"]
+...     ">seq1 db-accession-149855\\n",
+...     "40 39 39 4\\n",
+...     "50 1 100\\n",
+...     ">seq2 db-accession-34989\\n",
+...     "3 3 10 42 80\\n"]
 
 To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
@@ -562,27 +562,27 @@ generator-based reader as we did above, providing both FASTA and QUAL files:
 ...     seq
 ...     print('')
 Sequence
-------------------------------------------
+----------------------------------------
 Metadata:
-    u'description': u'db-accession-149855'
-    u'id': u'seq1'
+    'description': 'db-accession-149855'
+    'id': 'seq1'
 Positional metadata:
-    u'quality': <dtype: uint8>
+    'quality': <dtype: uint8>
 Stats:
     length: 7
-------------------------------------------
+----------------------------------------
 0 CGATGTC
 <BLANKLINE>
 Sequence
------------------------------------------
+---------------------------------------
 Metadata:
-    u'description': u'db-accession-34989'
-    u'id': u'seq2'
+    'description': 'db-accession-34989'
+    'id': 'seq2'
 Positional metadata:
-    u'quality': <dtype: uint8>
+    'quality': <dtype: uint8>
 Stats:
     length: 5
------------------------------------------
+---------------------------------------
 0 CATCG
 <BLANKLINE>
 

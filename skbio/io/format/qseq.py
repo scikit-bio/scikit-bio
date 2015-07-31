@@ -90,7 +90,7 @@ Let's define this file in-memory as a ``StringIO``, though this could be a real
 file path, file handle, or anything that's supported by scikit-bio's I/O
 registry in practice:
 
->>> from StringIO import StringIO
+>>> from io import StringIO
 >>> fs = '\n'.join([
 ...     'illumina\t1\t3\t34\t-30\t30\t0\t1\tACG....ACGTAC\truBBBBrBCEFGH\t1',
 ...     'illumina\t1\t3\t34\t30\t-30\t0\t1\tCGGGCATTGCA\tCGGGCasdGCA\t0',

@@ -77,7 +77,7 @@ Load a distance matrix from the file:
 
 >>> from io import StringIO
 >>> from skbio import DistanceMatrix
->>> dm_fh = StringIO(u"\\ta\\tb\\tc\\n"
+>>> dm_fh = StringIO("\\ta\\tb\\tc\\n"
 ...                  "a\\t0.0\\t0.5\\t1.0\\n"
 ...                  "b\\t0.5\\t0.0\\t0.75\\n"
 ...                  "c\\t1.0\\t0.75\\t0.0\\n")
@@ -85,7 +85,7 @@ Load a distance matrix from the file:
 >>> print(dm)
 3x3 distance matrix
 IDs:
-u'a', u'b', u'c'
+'a', 'b', 'c'
 Data:
 [[ 0.    0.5   1.  ]
  [ 0.5   0.    0.75]

@@ -541,7 +541,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @stable(as_of='0.4.0-dev')
     def to_regex(self):
-        """Return a regular expression object that accounts for degenerate chars.
+        """Return regular expression object that accounts for degenerate chars.
 
         Returns
         -------
@@ -555,12 +555,13 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         >>> from skbio import DNA
         >>> seq = DNA('TRG')
         >>> regex = seq.to_regex()
-        >>> regex.pattern
-        'T[AG]G'
         >>> regex.match('TAG').string
         'TAG'
+        >>> regex.match('TGG').string
+        'TGG'
         >>> regex.match('TCG') is None
         True
+
         """
         regex_string = []
         for base in str(self):

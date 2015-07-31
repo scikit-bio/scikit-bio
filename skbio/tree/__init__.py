@@ -68,7 +68,7 @@ tips A and B.
 
 Now let's construct a simple tree and dump an ASCII representation:
 
->>> tree = TreeNode.read(StringIO(u"((A, B)C, D)root;"))
+>>> tree = TreeNode.read(StringIO("((A, B)C, D)root;"))
 >>> print(tree.is_root()) # is this the root of the tree?
 True
 >>> print(tree.is_tip()) # is this node a tip?
@@ -133,24 +133,24 @@ distance is the fraction of common clades present in the two trees, where a
 distance of 0 means the trees contain identical clades, and a distance of 1
 indicates the trees do not share any common clades:
 
->>> tree1 = TreeNode.read(StringIO(u"((A, B)C, (D, E)F, (G, H)I)root;"))
->>> tree2 = TreeNode.read(StringIO(u"((G, H)C, (D, E)F, (B, A)I)root;"))
->>> tree3 = TreeNode.read(StringIO(u"((D, B)C, (A, E)F, (G, H)I)root;"))
+>>> tree1 = TreeNode.read(StringIO("((A, B)C, (D, E)F, (G, H)I)root;"))
+>>> tree2 = TreeNode.read(StringIO("((G, H)C, (D, E)F, (B, A)I)root;"))
+>>> tree3 = TreeNode.read(StringIO("((D, B)C, (A, E)F, (G, H)I)root;"))
 >>> print(tree1.compare_subsets(tree1))  # identity case
 0.0
 >>> print(tree1.compare_subsets(tree2))  # same tree but different clade order
 0.0
 >>> print(tree1.compare_subsets(tree3))  # only 1 of 3 common subsets
-0.666666666667
+0.6666666666666667
 
 We can additionally take into account branch length when computing distances
 between trees. First, we're going to construct two new trees with described
 branch length, note the difference in the Newick strings:
 
 >>> tree1 = \
-...     TreeNode.read(StringIO(u"((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;"))
+...     TreeNode.read(StringIO("((A:0.1, B:0.2)C:0.3, D:0.4, E:0.5)root;"))
 >>> tree2 = \
-...     TreeNode.read(StringIO(u"((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;"))
+...     TreeNode.read(StringIO("((A:0.4, B:0.8)C:0.3, D:0.1, E:0.5)root;"))
 
 In these two trees, we've added on a description of length from the node to
 its parent, so for instance:
@@ -200,11 +200,6 @@ Get the number of nodes in the trie
 >>> t.size
 10
 
-Get the trie's prefix map
-
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '8': ['7'], '3': [], '4': []}
-
 Find the value attached to a given key
 
 >>> t.find("ababaa")
@@ -215,13 +210,10 @@ Add a new (key, value) pair to the Trie
 >>> t.insert("bac", "9")
 >>> t.find("bac")
 ['9']
->>> t.prefix_map
-{'1': ['6', '2', '0', '5'], '9': [], '3': [], '4': [], '8': ['7']}
 
 Create a new trie with a list of sequences
 
 >>> from skbio.tree import fasta_to_pairlist
-
 >>> seqs = [("s0", "ACA"),
 ...         ("s1", "ACAGTC"),
 ...         ("s2", "ACTA"),
@@ -230,11 +222,7 @@ Create a new trie with a list of sequences
 ...         ("s5", "A"),
 ...         ("s6", "CATGTA"),
 ...         ("s7", "CACCA")]
-
 >>> t = CompressedTrie(fasta_to_pairlist(seqs))
-
->>> t.prefix_map
-{'s3': [], 's2': [], 's1': ['s0', 's5'], 's7': [], 's6': [], 's4': []}
 
 """
 

@@ -2370,6 +2370,7 @@ class TestSequence(TestCase):
 # be relied upon for coverage (the unit tests take care of this)
 class SequenceReprDoctests(object):
     r"""
+    >>> import pandas as pd
     >>> from skbio import Sequence
 
     Empty (minimal) sequence:
@@ -2557,12 +2558,12 @@ class SequenceReprDoctests(object):
     ...     42.5: 'abc ' * 200,
     ...     # unsupported type (tuple) key, unsupported type (list) value
     ...     ('foo', 'bar'): [1, 2, 3],
-    ...     # unicode key, single long word that wraps
-    ...     u'long word': 'abc' * 30,
+    ...     # bytes key, single long word that wraps
+    ...     b'long word': 'abc' * 30,
     ...     # truncated key (too long), None value
     ...     'too long of a key name to display in repr': None,
-    ...     # wrapped unicode value (has u'' prefix)
-    ...     'unicode wrapped value': u'abcd' * 25,
+    ...     # wrapped bytes value (has b'' prefix)
+    ...     'bytes wrapped value': b'abcd' * 25,
     ...     # float value
     ...     0.1: 99.9999,
     ...     # bool value
@@ -2570,19 +2571,19 @@ class SequenceReprDoctests(object):
     ...     # None key, complex value
     ...     None: complex(-1.0, 0.0),
     ...     # nested quotes
-    ...     10: '"\''}
+    ...     10: '"\''
     ... }
-    >>> positional_metadata = {
+    >>> positional_metadata = pd.DataFrame.from_items([
     ...     # str key, int list value
-    ...     'foo': [1, 2, 3, 4],
+    ...     ('foo', [1, 2, 3, 4]),
     ...     # float key, float list value
-    ...     42.5: [2.5, 3.0, 4.2, -0.00001],
+    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
     ...     # int key, object list value
-    ...     42: [[], 4, 5, {}],
+    ...     (42, [[], 4, 5, {}]),
     ...     # truncated key (too long), bool list value
-    ...     'abc' * 90: [True, False, False, True],
+    ...     ('abc' * 90, [True, False, False, True]),
     ...     # None key
-    ...     None: range(4)}
+    ...     (None, range(4))])
     >>> Sequence('ACGT', metadata=metadata,
     ...          positional_metadata=positional_metadata)
     Sequence
@@ -2592,28 +2593,28 @@ class SequenceReprDoctests(object):
         True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
                abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
                abc abc abc abc '
+        b'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
         0.1: 99.9999
-        42.5: <type 'str'>
+        42.5: <class 'str'>
         10: '"\''
         42: 'some words to test text wrapping and such... yada yada yada
              yada yada yada yada yada.'
         43: False
         'abc': 'some description'
-        'bar': <type 'dict'>
+        'bar': <class 'dict'>
+        'bytes wrapped value': b'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab
+                                 cdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                 abcdabcdabcdabcd'
         'foo': 42
-        <type 'str'>: None
-        'unicode wrapped value': u'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
-                                   abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
-                                   abcdabcdabcdabcdabcd'
-        <type 'tuple'>: <type 'list'>
-        u'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
-                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
+        <class 'str'>: None
+        <class 'tuple'>: <class 'list'>
     Positional metadata:
-        None: <dtype: int64>
-        42: <dtype: object>
-        42.5: <dtype: float64>
-        <type 'str'>: <dtype: bool>
         'foo': <dtype: int64>
+        42.5: <dtype: float64>
+        42: <dtype: object>
+        <class 'str'>: <dtype: bool>
+        None: <dtype: int64>
     Stats:
         length: 4
     -----------------------------------------------------------------------
