@@ -1,0 +1,324 @@
+LOCUS       NZ_CP010438              141 bp    DNA     linear   CON 23-APR-2015
+DEFINITION  Escherichia coli K-12 strain ER3454, complete genome.
+ACCESSION   NZ_CP010438 REGION: 607..747
+VERSION     NZ_CP010438.1  GI:814566395
+DBLINK      BioProject: PRJNA224116
+            BioSample: SAMN03277616
+            Assembly: GCF_000974405.1
+KEYWORDS    RefSeq.
+SOURCE      Escherichia coli K-12
+  ORGANISM  Escherichia coli K-12
+            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales;
+            Enterobacteriaceae; Escherichia.
+REFERENCE   1  (bases 1 to 141)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     A novel recA-independent horizontal gene transfer mechanism in
+            Escherichia coli K-12
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 141)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (22-DEC-2014) Protein Expression and Modification, New
+            England Biolabs, 240 County Rd, Ipswich, MA 01938, USA
+COMMENT     REFSEQ INFORMATION: The reference sequence was derived from
+            CP010438.
+            Source DNA is available from Elizabeth Raleigh (Raleigh@neb.com) at
+            New England Biolabs.
+            Annotation was added by the NCBI Prokaryotic Genome Annotation
+            Pipeline (released 2013). Information about the Pipeline can be
+            found here: http://www.ncbi.nlm.nih.gov/genome/annotation_prok/
+            
+            ##Genome-Assembly-Data-START##
+            Assembly Method       :: SMRT Analysis v. 2.3
+            Genome Coverage       :: 50-200
+            Sequencing Technology :: PacBio
+            ##Genome-Assembly-Data-END##
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider          :: NCBI
+            Annotation Date              :: 04/22/2015 09:53:14
+            Annotation Pipeline          :: NCBI Prokaryotic Genome Annotation
+                                            Pipeline
+            Annotation Method            :: Best-placed reference protein set;
+                                            GeneMarkS+
+            Annotation Software revision :: 2.10 (rev. 464610)
+            Features Annotated           :: Gene; CDS; rRNA; tRNA; ncRNA;
+                                            repeat_region
+            Genes                        :: 4,591
+            CDS                          :: 4,413
+            Pseudo Genes                 :: 59
+            CRISPR Arrays                :: 2
+            rRNAs                        :: 22 (5S, 16S, 23S)
+            tRNAs                        :: 87
+            ncRNA                        :: 10
+            Frameshifted Genes           :: 40
+            ##Genome-Annotation-Data-END##
+            COMPLETENESS: full length.
+FEATURES             Location/Qualifiers
+     source          1..141
+                     /organism="Escherichia coli K-12"
+                     /mol_type="genomic DNA"
+                     /strain="ER3454"
+                     /db_xref="taxon:83333"
+                     /collection_date="Jun-2014"
+                     /genotype="fhuA2::IS2 _(lacZ)4826 glnX44 trpE31 _(hisG)1
+                     gyrA96 recA::cat(FRT)(CmR) recD1014 rpsL104(StrR) xyl-7
+                     mtlA2(Fs) metB1(FS) mrr::tetAR serB28"
+                     /note="derived from K12 MG1655"
+     gene            1..141
+                     /gene="rpmH"
+                     /locus_tag="SH05_RS00005"
+                     /old_locus_tag="SH05_00005"
+     CDS             1..141
+                     /gene="rpmH"
+                     /locus_tag="SH05_RS00005"
+                     /old_locus_tag="SH05_00005"
+                     /inference="EXISTENCE: similar to AA
+                     sequence:SwissProt:C6DKA0.1"
+                     /note="in Escherichia coli transcription of this gene is
+                     enhanced by polyamines; Derived by automated computational
+                     analysis using gene prediction method: Protein Homology."
+                     /codon_start=1
+                     /transl_table=11
+                     /product="50S ribosomal protein L34"
+                     /protein_id="WP_000831330.1"
+                     /db_xref="GI:446754074"
+                     /translation="MKRTFQPSVLKRNRSHGFRARMATKNGRQVLARRRAKGRARLTV
+                     SK"
+ORIGIN      
+        1 atgaaacgca cttttcaacc gtctgtactg aagcgcaacc gttctcacgg cttccgtgct
+       61 cgtatggcta ctaaaaatgg tcgtcaggtt ctggcacgtc gtcgtgctaa aggccgcgct
+      121 cgtctgaccg tttctaagta a
+//
+
+LOCUS       NZ_CP010438              360 bp    DNA     linear   CON 23-APR-2015
+DEFINITION  Escherichia coli K-12 strain ER3454, complete genome.
+ACCESSION   NZ_CP010438 REGION: 764..1123
+VERSION     NZ_CP010438.1  GI:814566395
+DBLINK      BioProject: PRJNA224116
+            BioSample: SAMN03277616
+            Assembly: GCF_000974405.1
+KEYWORDS    RefSeq.
+SOURCE      Escherichia coli K-12
+  ORGANISM  Escherichia coli K-12
+            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales;
+            Enterobacteriaceae; Escherichia.
+REFERENCE   1  (bases 1 to 360)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     A novel recA-independent horizontal gene transfer mechanism in
+            Escherichia coli K-12
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 360)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (22-DEC-2014) Protein Expression and Modification, New
+            England Biolabs, 240 County Rd, Ipswich, MA 01938, USA
+COMMENT     REFSEQ INFORMATION: The reference sequence was derived from
+            CP010438.
+            Source DNA is available from Elizabeth Raleigh (Raleigh@neb.com) at
+            New England Biolabs.
+            Annotation was added by the NCBI Prokaryotic Genome Annotation
+            Pipeline (released 2013). Information about the Pipeline can be
+            found here: http://www.ncbi.nlm.nih.gov/genome/annotation_prok/
+            
+            ##Genome-Assembly-Data-START##
+            Assembly Method       :: SMRT Analysis v. 2.3
+            Genome Coverage       :: 50-200
+            Sequencing Technology :: PacBio
+            ##Genome-Assembly-Data-END##
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider          :: NCBI
+            Annotation Date              :: 04/22/2015 09:53:14
+            Annotation Pipeline          :: NCBI Prokaryotic Genome Annotation
+                                            Pipeline
+            Annotation Method            :: Best-placed reference protein set;
+                                            GeneMarkS+
+            Annotation Software revision :: 2.10 (rev. 464610)
+            Features Annotated           :: Gene; CDS; rRNA; tRNA; ncRNA;
+                                            repeat_region
+            Genes                        :: 4,591
+            CDS                          :: 4,413
+            Pseudo Genes                 :: 59
+            CRISPR Arrays                :: 2
+            rRNAs                        :: 22 (5S, 16S, 23S)
+            tRNAs                        :: 87
+            ncRNA                        :: 10
+            Frameshifted Genes           :: 40
+            ##Genome-Annotation-Data-END##
+            COMPLETENESS: full length.
+FEATURES             Location/Qualifiers
+     source          1..360
+                     /organism="Escherichia coli K-12"
+                     /mol_type="genomic DNA"
+                     /strain="ER3454"
+                     /db_xref="taxon:83333"
+                     /collection_date="Jun-2014"
+                     /genotype="fhuA2::IS2 _(lacZ)4826 glnX44 trpE31 _(hisG)1
+                     gyrA96 recA::cat(FRT)(CmR) recD1014 rpsL104(StrR) xyl-7
+                     mtlA2(Fs) metB1(FS) mrr::tetAR serB28"
+                     /note="derived from K12 MG1655"
+     gene            1..360
+                     /gene="rnpA"
+                     /locus_tag="SH05_RS00010"
+                     /old_locus_tag="SH05_00010"
+     CDS             1..360
+                     /gene="rnpA"
+                     /locus_tag="SH05_RS00010"
+                     /old_locus_tag="SH05_00010"
+                     /inference="EXISTENCE: similar to AA
+                     sequence:SwissProt:Q8FBV5.1"
+                     /note="protein component of RNaseP which catalyzes the
+                     removal of the 5'-leader sequence from pre-tRNA to produce
+                     the mature 5'terminus; this enzyme also cleaves other RNA
+                     substrates; Derived by automated computational analysis
+                     using gene prediction method: Protein Homology."
+                     /codon_start=1
+                     /transl_table=11
+                     /product="ribonuclease P protein component"
+                     /protein_id="WP_000239730.1"
+                     /db_xref="GI:446161875"
+                     /translation="MVKLAFPRELRLLTPSQFTFVFQQPQRAGTPQITILGRLNSLGH
+                     PRIGLTVAKKNVRRAHERNRIKRLTRESFRLRQHELPAMDFVVVAKKGVADLDNRALS
+                     EALEKLWRRHCRLARGS"
+     gene            324..>360
+                     /locus_tag="SH05_RS00015"
+                     /old_locus_tag="SH05_00015"
+     CDS             324..>360
+                     /locus_tag="SH05_RS00015"
+                     /old_locus_tag="SH05_00015"
+                     /inference="EXISTENCE: similar to AA
+                     sequence:SwissProt:Q44066.1"
+                     /note="Derived by automated computational analysis using
+                     gene prediction method: Protein Homology."
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="WP_001307474.1"
+                     /db_xref="GI:485666186"
+                     /translation="MAPPLSPGSRVLIALIRVYQRLISPLLGPHCRFTPTCSSYGIEA
+                     LRRFGVIKGSWLTVKRVLKCHPLHPGGDDPVPPGPFDTREH"
+ORIGIN      
+        1 gtggttaagc tcgcatttcc cagggagtta cgcttgttaa ctcccagtca attcacattc
+       61 gtcttccagc agccacaacg ggctggcacg ccgcaaatta ccattctcgg ccgcctgaat
+      121 tcgctggggc atccccgtat cggtcttaca gtcgccaaga aaaacgttcg acgcgcccat
+      181 gaacgcaatc ggattaaacg tctgacgcgt gaaagcttcc gtctgcgcca acatgaactc
+      241 ccggctatgg atttcgtggt ggtggcgaaa aaaggggttg ccgacctcga taaccgtgct
+      301 ctctcggaag cgttggaaaa attatggcgc cgccactgtc gcctggctcg cgggtcctga
+//
+
+LOCUS       NZ_CP010438              258 bp    DNA     linear   CON 23-APR-2015
+DEFINITION  Escherichia coli K-12 strain ER3454, complete genome.
+ACCESSION   NZ_CP010438 REGION: 1087..1344
+VERSION     NZ_CP010438.1  GI:814566395
+DBLINK      BioProject: PRJNA224116
+            BioSample: SAMN03277616
+            Assembly: GCF_000974405.1
+KEYWORDS    RefSeq.
+SOURCE      Escherichia coli K-12
+  ORGANISM  Escherichia coli K-12
+            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales;
+            Enterobacteriaceae; Escherichia.
+REFERENCE   1  (bases 1 to 258)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     A novel recA-independent horizontal gene transfer mechanism in
+            Escherichia coli K-12
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 258)
+  AUTHORS   Kingston,A.W., Roussel-Rossin,C., Dupont,C. and Raleigh,E.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (22-DEC-2014) Protein Expression and Modification, New
+            England Biolabs, 240 County Rd, Ipswich, MA 01938, USA
+COMMENT     REFSEQ INFORMATION: The reference sequence was derived from
+            CP010438.
+            Source DNA is available from Elizabeth Raleigh (Raleigh@neb.com) at
+            New England Biolabs.
+            Annotation was added by the NCBI Prokaryotic Genome Annotation
+            Pipeline (released 2013). Information about the Pipeline can be
+            found here: http://www.ncbi.nlm.nih.gov/genome/annotation_prok/
+            
+            ##Genome-Assembly-Data-START##
+            Assembly Method       :: SMRT Analysis v. 2.3
+            Genome Coverage       :: 50-200
+            Sequencing Technology :: PacBio
+            ##Genome-Assembly-Data-END##
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider          :: NCBI
+            Annotation Date              :: 04/22/2015 09:53:14
+            Annotation Pipeline          :: NCBI Prokaryotic Genome Annotation
+                                            Pipeline
+            Annotation Method            :: Best-placed reference protein set;
+                                            GeneMarkS+
+            Annotation Software revision :: 2.10 (rev. 464610)
+            Features Annotated           :: Gene; CDS; rRNA; tRNA; ncRNA;
+                                            repeat_region
+            Genes                        :: 4,591
+            CDS                          :: 4,413
+            Pseudo Genes                 :: 59
+            CRISPR Arrays                :: 2
+            rRNAs                        :: 22 (5S, 16S, 23S)
+            tRNAs                        :: 87
+            ncRNA                        :: 10
+            Frameshifted Genes           :: 40
+            ##Genome-Annotation-Data-END##
+            COMPLETENESS: full length.
+FEATURES             Location/Qualifiers
+     source          1..258
+                     /organism="Escherichia coli K-12"
+                     /mol_type="genomic DNA"
+                     /strain="ER3454"
+                     /db_xref="taxon:83333"
+                     /collection_date="Jun-2014"
+                     /genotype="fhuA2::IS2 _(lacZ)4826 glnX44 trpE31 _(hisG)1
+                     gyrA96 recA::cat(FRT)(CmR) recD1014 rpsL104(StrR) xyl-7
+                     mtlA2(Fs) metB1(FS) mrr::tetAR serB28"
+                     /note="derived from K12 MG1655"
+     gene            <1..37
+                     /gene="rnpA"
+                     /locus_tag="SH05_RS00010"
+                     /old_locus_tag="SH05_00010"
+     CDS             <1..37
+                     /gene="rnpA"
+                     /locus_tag="SH05_RS00010"
+                     /old_locus_tag="SH05_00010"
+                     /inference="EXISTENCE: similar to AA
+                     sequence:SwissProt:Q8FBV5.1"
+                     /note="protein component of RNaseP which catalyzes the
+                     removal of the 5'-leader sequence from pre-tRNA to produce
+                     the mature 5'terminus; this enzyme also cleaves other RNA
+                     substrates; Derived by automated computational analysis
+                     using gene prediction method: Protein Homology."
+                     /codon_start=1
+                     /transl_table=11
+                     /product="ribonuclease P protein component"
+                     /protein_id="WP_000239730.1"
+                     /db_xref="GI:446161875"
+                     /translation="MVKLAFPRELRLLTPSQFTFVFQQPQRAGTPQITILGRLNSLGH
+                     PRIGLTVAKKNVRRAHERNRIKRLTRESFRLRQHELPAMDFVVVAKKGVADLDNRALS
+                     EALEKLWRRHCRLARGS"
+     gene            1..258
+                     /locus_tag="SH05_RS00015"
+                     /old_locus_tag="SH05_00015"
+     CDS             1..258
+                     /locus_tag="SH05_RS00015"
+                     /old_locus_tag="SH05_00015"
+                     /inference="EXISTENCE: similar to AA
+                     sequence:SwissProt:Q44066.1"
+                     /note="Derived by automated computational analysis using
+                     gene prediction method: Protein Homology."
+                     /codon_start=1
+                     /transl_table=11
+                     /product="hypothetical protein"
+                     /protein_id="WP_001307474.1"
+                     /db_xref="GI:485666186"
+                     /translation="MAPPLSPGSRVLIALIRVYQRLISPLLGPHCRFTPTCSSYGIEA
+                     LRRFGVIKGSWLTVKRVLKCHPLHPGGDDPVPPGPFDTREH"
+ORIGIN      
+        1 atggcgccgc cactgtcgcc tggctcgcgg gtcctgatag ccctcattcg ggtctatcaa
+       61 cgcctgatta gtccgctact cgggccgcat tgtcgtttca ctccaacctg ttcaagctac
+      121 ggaattgagg cattgcgcag gtttggagtg ataaaaggca gttggttgac ggtgaaacgc
+      181 gtattaaaat gccacccttt acaccctggt ggtgacgatc ccgtcccgcc cggaccattt
+      241 gataccagag aacactaa
+//
+

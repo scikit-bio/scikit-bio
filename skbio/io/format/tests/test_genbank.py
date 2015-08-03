@@ -3,222 +3,198 @@ from future.builtins import map, range, zip
 import six
 
 import io
+import numpy as np
+import numpy.testing as nptest
 from unittest import TestCase, main
 from functools import partial
+from datetime import datetime
+
+from skbio import Protein, DNA, RNA
+from skbio.util import get_data_path
+from skbio.io import GenbankFormatError
+from skbio.io.format.genbank import (
+    _genbank_to_generator, _genbank_to_biological_sequence,
+    _parse_genbanks, _parse_single_genbank,
+    _parse_locus, _parse_reference,
+    _parse_source,  _parse_origin,
+    _parse_features, _parse_single_feature, _parse_loc_str,
+    _parse_section_default,
+    yield_section)
+
+
+class SnifferTests(TestCase):
+    pass
 
 
 class ReaderTests(TestCase):
+    def setUp(self):
+        self.valid = []
+
+    def test_parse_reference(self):
+        lines = '''REFERENCE   1  (bases 1 to 154478)
+  AUTHORS   Sato,S., Nakamura,Y., Kaneko,T., and Tabata,S.
+  TITLE     Complete structure of the chloroplast genome of
+            Arabidopsis thaliana
+  JOURNAL   DNA Res. 6 (5), 283-290 (1999)
+   PUBMED   10574454'''.split('\n')
+
+        exp = {'AUTHORS': 'Sato,S., Nakamura,Y., Kaneko,T., and Tabata,S.',
+               'JOURNAL': 'DNA Res. 6 (5), 283-290 (1999)',
+               'PUBMED': '10574454',
+               'REFERENCE': '1  (bases 1 to 154478)',
+               'TITLE': ('Complete structure of the chloroplast genome of'
+                         ' Arabidopsis thaliana')}
+        self.assertEqual(_parse_reference(lines), exp)
+
+    def test_parse_locus(self):
+        lines = [
+            ['LOCUS       NC_005816               9609 bp'
+             '    DNA     circular CON 07-FEB-2015'],
+            ['LOCUS       SCU49845     5028 bp'
+             '    DNA             PLN       21-JUN-1999'],
+            ['LOCUS       NP_001832                360 aa'
+             '            linear   PRI 18-DEC-2001']]
+        expects = [
+            {'division': 'CON', 'mol_type': DNA, 'shape': 'circular',
+             'locus_name': 'NC_005816', 'date': datetime(2015, 2, 7, 0, 0),
+             'unit': 'bp', 'size': 9609},
+            {'division': 'PLN', 'mol_type': DNA, 'shape': None,
+             'locus_name': 'SCU49845', 'date': datetime(1999, 6, 21, 0, 0),
+             'unit': 'bp', 'size': 5028},
+            {'division': 'PRI', 'mol_type': Protein, 'shape': 'linear',
+             'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
+             'unit': 'aa', 'size': 360}]
+
+        for line, exp in zip(lines, expects):
+            self.assertEqual(_parse_locus(line), exp)
+
+    def test_parse_locus_invalid(self):
+        lines = [
+            # missing unit
+            'LOCUS       NC_005816               9609 '
+            '    DNA     circular CON 07-FEB-2015',
+            # missing division
+            'LOCUS       SCU49845     5028 bp'
+            '    DNA                    21-JUN-1999',
+            # wrong date format
+            'LOCUS       NP_001832                360 aa'
+            '            linear   PRI 2001-12-18']
+        for line in lines:
+            with self.assertRaises(GenbankFormatError):
+                print(_parse_locus(line))
+
+    def test_parse_single_feature(self):
+        lines='''     CDS             join(1713..1891,2322..2438,2538..2633,2801..2843,
+                     2918..3073,3167..3247,3874..3972,4082..4309)
+                     /gene="CCT"
+                     /EC_number="2.7.7.15"
+                     /codon_start=1
+                     /product="CTP:phosphocholine cytidylyltransferase"
+                     /protein_id="AAD45922.1"
+                     /db_xref="GI:5640001"
+                     /translation="MSNVIGDRTEDGLSTAAAASGSTAVQSSPPTDRPVRVYADGIYD
+                     LFHFGHARSLEQAKLAFPNNTYLLVGCCNDETTHKYKGRTVMTAEERYESLRHCKWVD
+                     EVIPDAPWVVNQEFLDKHQIDYVAHDSLPYADSSGAGKDVYEFVKKVGRFKETQRTEG
+                     ISTSDIIMRIVKDYNQYVMRNLDRGYSREDLGVSFVKEKRLRVNMRLKKLQERVKEQQ
+                     ERVGEKIQTVKMLRNEWVENADRWVAGFLEIFEEGCHKMGTAIVDSIQERLMRQKSAE
+                     RLENGQDDDTDDQFYEEYFDHDMGSDDDEDEKFYDEEEVKEEETEKTVMTDAKDNK"'''.split('\n')
+        print(_parse_single_feature(lines, 300, 0))
+
+    def test_parse_features(self):
+        lines = '''FEATURES             Location/Qualifiers
+     source          1..5485
+                     /organism="Arabidopsis thaliana"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:3702"
+                     /ecotype="Col-0"
+     gene            1..4637
+                     /gene="CCT"
+     regulatory      1..1602
+                     /regulatory_class="promoter"
+                     /gene="CCT"
+     regulatory      1554..1560
+                     /regulatory_class="TATA_box"
+                     /gene="CCT"
+     mRNA            join(1603..1891,2322..2438,2538..2633,2801..2843,
+                     2918..3073,3167..3247,3874..3972,4082..4637)
+                     /gene="CCT"
+                     /product="CTP:phosphocholine cytidylyltransferase"
+     5'UTR           1603..1712
+                     /gene="CCT"
+     CDS             join(1713..1891,2322..2438,2538..2633,2801..2843,
+                     2918..3073,3167..3247,3874..3972,4082..4309)
+                     /gene="CCT"
+                     /EC_number="2.7.7.15"
+                     /codon_start=1
+                     /product="CTP:phosphocholine cytidylyltransferase"
+                     /protein_id="AAD45922.1"
+                     /db_xref="GI:5640001"
+                     /translation="MSNVIGDRTEDGLSTAAAASGSTAVQSSPPTDRPVRVYADGIYD
+                     LFHFGHARSLEQAKLAFPNNTYLLVGCCNDETTHKYKGRTVMTAEERYESLRHCKWVD
+                     EVIPDAPWVVNQEFLDKHQIDYVAHDSLPYADSSGAGKDVYEFVKKVGRFKETQRTEG
+                     ISTSDIIMRIVKDYNQYVMRNLDRGYSREDLGVSFVKEKRLRVNMRLKKLQERVKEQQ
+                     ERVGEKIQTVKMLRNEWVENADRWVAGFLEIFEEGCHKMGTAIVDSIQERLMRQKSAE
+                     RLENGQDDDTDDQFYEEYFDHDMGSDDDEDEKFYDEEEVKEEETEKTVMTDAKDNK"
+     3'UTR           4310..4637
+                     /gene="CCT"'''.split('\n')
+        pprint(_parse_features(lines, 5485))
+
+
+    def test_parse_loc_str(self):
+        length = 12
+
+        examples = [
+            '9',  # a single base in the presented sequence
+            '3..8',
+            '<3..8',
+            '1..>8',
+            'complement(3..8)',
+            'complement(join(3..5,7..9))',
+            'join(3..5,7..9)']
+
+        expects = [
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': True, 'rc_': False},
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': True, 'left_partial_': False, 'rc_': False},
+             np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
+             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool))]
+        for example, expect in zip(examples, expects):
+            parsed = _parse_loc_str(example, length)
+            self.assertDictEqual(parsed[0], expect[0])
+            nptest.assert_equal(parsed[1], expect[1])
+
+    def test_parse_genbanks(self):
+        fp = get_data_path('genbank_misc_gene_features')
+        with open(fp) as fh:
+            a = list(_parse_genbanks(fh))[0]
+            pprint(a)
+            import ipdb; ipdb.set_trace()
+
+    def test_genbank_to_generator(self):
+        fp = get_data_path('genbank_misc_gene_features')
+        a = _genbank_to_generator(fp)
+        x = list(a)[0]
+        import ipdb; ipdb.set_trace()
+
+    def test_genbank_to_biological_sequence(self):
+        fp = get_data_path('genbank_multi_records')
+        print(fp)
+        a = _genbank_to_biological_sequence(fp, rec_num=2)
+        import ipdb; ipdb.set_trace()
+
+
+class WriterTests(TestCase):
     pass
 
-gbk_example_dna = '''LOCUS       SCU49845     5028 bp    DNA             PLN       21-JUN-1999
-DEFINITION  Saccharomyces cerevisiae TCP1-beta gene, partial cds, and Axl2p
-            (AXL2) and Rev7p (REV7) genes, complete cds.
-ACCESSION   U49845
-VERSION     U49845.1  GI:1293613
-KEYWORDS    .
-SOURCE      Saccharomyces cerevisiae (baker's yeast)
-  ORGANISM  Saccharomyces cerevisiae
-            Eukaryota; Fungi; Ascomycota; Saccharomycotina; Saccharomycetes;
-            Saccharomycetales; Saccharomycetaceae; Saccharomyces.
-REFERENCE   1  (bases 1 to 5028)
-  AUTHORS   Torpey,L.E., Gibbs,P.E., Nelson,J. and Lawrence,C.W.
-  TITLE     Cloning and sequence of REV7, a gene whose function is required for
-            DNA damage-induced mutagenesis in Saccharomyces cerevisiae
-  JOURNAL   Yeast 10 (11), 1503-1509 (1994)
-  PUBMED    7871890
-REFERENCE   2  (bases 1 to 5028)
-  AUTHORS   Roemer,T., Madden,K., Chang,J. and Snyder,M.
-  TITLE     Selection of axial growth sites in yeast requires Axl2p, a novel
-            plasma membrane glycoprotein
-  JOURNAL   Genes Dev. 10 (7), 777-793 (1996)
-  PUBMED    8846915
-REFERENCE   3  (bases 1 to 5028)
-  AUTHORS   Roemer,T.
-  TITLE     Direct Submission
-  JOURNAL   Submitted (22-FEB-1996) Terry Roemer, Biology, Yale University, New
-            Haven, CT, USA
-FEATURES             Location/Qualifiers
-     source          1..5028
-                     /organism="Saccharomyces cerevisiae"
-                     /db_xref="taxon:4932"
-                     /chromosome="IX"
-                     /map="9"
-     CDS             <1..206
-                     /codon_start=3
-                     /product="TCP1-beta"
-                     /protein_id="AAA98665.1"
-                     /db_xref="GI:1293614"
-                     /translation="SSIYNGISTSGLDLNNGTIADMRQLGIVESYKLKRAVVSSASEA
-                     AEVLLRVDNIIRARPRTANRQHM"
-     gene            687..3158
-                     /gene="AXL2"
-     CDS             687..3158
-                     /gene="AXL2"
-                     /note="plasma membrane glycoprotein"
-                     /codon_start=1
-                     /function="required for axial budding pattern of S.
-                     cerevisiae"
-                     /product="Axl2p"
-                     /protein_id="AAA98666.1"
-                     /db_xref="GI:1293615"
-                     /translation="MTQLQISLLLTATISLLHLVVATPYEAYPIGKQYPPVARVNESF
-                     TFQISNDTYKSSVDKTAQITYNCFDLPSWLSFDSSSRTFSGEPSSDLLSDANTTLYFN
-                     VILEGTDSADSTSLNNTYQFVVTNRPSISLSSDFNLLALLKNYGYTNGKNALKLDPNE
-                     VFNVTFDRSMFTNEESIVSYYGRSQLYNAPLPNWLFFDSGELKFTGTAPVINSAIAPE
-                     TSYSFVIIATDIEGFSAVEVEFELVIGAHQLTTSIQNSLIINVTDTGNVSYDLPLNYV
-                     YLDDDPISSDKLGSINLLDAPDWVALDNATISGSVPDELLGKNSNPANFSVSIYDTYG
-                     DVIYFNFEVVSTTDLFAISSLPNINATRGEWFSYYFLPSQFTDYVNTNVSLEFTNSSQ
-                     DHDWVKFQSSNLTLAGEVPKNFDKLSLGLKANQGSQSQELYFNIIGMDSKITHSNHSA
-                     NATSTRSSHHSTSTSSYTSSTYTAKISSTSAAATSSAPAALPAANKTSSHNKKAVAIA
-                     CGVAIPLGVILVALICFLIFWRRRRENPDDENLPHAISGPDLNNPANKPNQENATPLN
-                     NPFDDDASSYDDTSIARRLAALNTLKLDNHSATESDISSVDEKRDSLSGMNTYNDQFQ
-                     SQSKEELLAKPPVQPPESPFFDPQNRSSSVYMDSEPAVNKSWRYTGNLSPVSDIVRDS
-                     YGSQKTVDTEKLFDLEAPEKEKRTSRDVTMSSLDPWNSNISPSPVRKSVTPSPYNVTK
-                     HRNRHLQNIQDSQSGKNGITPTTMSTSSSDDFVPVKDGENFCWVHSMEPDRRPSKKRL
-                     VDFSNKSNVNVGQVKDIHGRIPEML"
-     gene            complement(3300..4037)
-                     /gene="REV7"
-     CDS             complement(3300..4037)
-                     /gene="REV7"
-                     /codon_start=1
-                     /product="Rev7p"
-                     /protein_id="AAA98667.1"
-                     /db_xref="GI:1293616"
-                     /translation="MNRWVEKWLRVYLKCYINLILFYRNVYPPQSFDYTTYQSFNLPQ
-                     FVPINRHPALIDYIEELILDVLSKLTHVYRFSICIINKKNDLCIEKYVLDFSELQHVD
-                     KDDQIITETEVFDEFRSSLNSLIMHLEKLPKVNDDTITFEAVINAIELELGHKLDRNR
-                     RVDSLEEKAEIERDSNWVKCQEDENLPDNNGFQPPKIKLTSLVGSDVGPLIIHQFSEK
-                     LISGDDKILNGVYSQYEEGESIFGSLF"
-ORIGIN
-        1 gatcctccat atacaacggt atctccacct caggtttaga tctcaacaac ggaaccattg
-       61 ccgacatgag acagttaggt atcgtcgaga gttacaagct aaaacgagca gtagtcagct
-      121 ctgcatctga agccgctgaa gttctactaa gggtggataa catcatccgt gcaagaccaa
-      181 gaaccgccaa tagacaacat atgtaacata tttaggatat acctcgaaaa taataaaccg
-      241 ccacactgtc attattataa ttagaaacag aacgcaaaaa ttatccacta tataattcaa
-      301 agacgcgaaa aaaaaagaac aacgcgtcat agaacttttg gcaattcgcg tcacaaataa
-      361 attttggcaa cttatgtttc ctcttcgagc agtactcgag ccctgtctca agaatgtaat
-      421 aatacccatc gtaggtatgg ttaaagatag catctccaca acctcaaagc tccttgccga
-      481 gagtcgccct cctttgtcga gtaattttca cttttcatat gagaacttat tttcttattc
-      541 tttactctca catcctgtag tgattgacac tgcaacagcc accatcacta gaagaacaga
-      601 acaattactt aatagaaaaa ttatatcttc ctcgaaacga tttcctgctt ccaacatcta
-      661 cgtatatcaa gaagcattca cttaccatga cacagcttca gatttcatta ttgctgacag
-      721 ctactatatc actactccat ctagtagtgg ccacgcccta tgaggcatat cctatcggaa
-      781 aacaataccc cccagtggca agagtcaatg aatcgtttac atttcaaatt tccaatgata
-      841 cctataaatc gtctgtagac aagacagctc aaataacata caattgcttc gacttaccga
-      901 gctggctttc gtttgactct agttctagaa cgttctcagg tgaaccttct tctgacttac
-      961 tatctgatgc gaacaccacg ttgtatttca atgtaatact cgagggtacg gactctgccg
-     1021 acagcacgtc tttgaacaat acataccaat ttgttgttac aaaccgtcca tccatctcgc
-     1081 tatcgtcaga tttcaatcta ttggcgttgt taaaaaacta tggttatact aacggcaaaa
-     1141 acgctctgaa actagatcct aatgaagtct tcaacgtgac ttttgaccgt tcaatgttca
-     1201 ctaacgaaga atccattgtg tcgtattacg gacgttctca gttgtataat gcgccgttac
-     1261 ccaattggct gttcttcgat tctggcgagt tgaagtttac tgggacggca ccggtgataa
-     1321 actcggcgat tgctccagaa acaagctaca gttttgtcat catcgctaca gacattgaag
-     1381 gattttctgc cgttgaggta gaattcgaat tagtcatcgg ggctcaccag ttaactacct
-     1441 ctattcaaaa tagtttgata atcaacgtta ctgacacagg taacgtttca tatgacttac
-     1501 ctctaaacta tgtttatctc gatgacgatc ctatttcttc tgataaattg ggttctataa
-     1561 acttattgga tgctccagac tgggtggcat tagataatgc taccatttcc gggtctgtcc
-     1621 cagatgaatt actcggtaag aactccaatc ctgccaattt ttctgtgtcc atttatgata
-     1681 cttatggtga tgtgatttat ttcaacttcg aagttgtctc cacaacggat ttgtttgcca
-     1741 ttagttctct tcccaatatt aacgctacaa ggggtgaatg gttctcctac tattttttgc
-     1801 cttctcagtt tacagactac gtgaatacaa acgtttcatt agagtttact aattcaagcc
-     1861 aagaccatga ctgggtgaaa ttccaatcat ctaatttaac attagctgga gaagtgccca
-     1921 agaatttcga caagctttca ttaggtttga aagcgaacca aggttcacaa tctcaagagc
-     1981 tatattttaa catcattggc atggattcaa agataactca ctcaaaccac agtgcgaatg
-     2041 caacgtccac aagaagttct caccactcca cctcaacaag ttcttacaca tcttctactt
-     2101 acactgcaaa aatttcttct acctccgctg ctgctacttc ttctgctcca gcagcgctgc
-     2161 cagcagccaa taaaacttca tctcacaata aaaaagcagt agcaattgcg tgcggtgttg
-     2221 ctatcccatt aggcgttatc ctagtagctc tcatttgctt cctaatattc tggagacgca
-     2281 gaagggaaaa tccagacgat gaaaacttac cgcatgctat tagtggacct gatttgaata
-     2341 atcctgcaaa taaaccaaat caagaaaacg ctacaccttt gaacaacccc tttgatgatg
-     2401 atgcttcctc gtacgatgat acttcaatag caagaagatt ggctgctttg aacactttga
-     2461 aattggataa ccactctgcc actgaatctg atatttccag cgtggatgaa aagagagatt
-     2521 ctctatcagg tatgaataca tacaatgatc agttccaatc ccaaagtaaa gaagaattat
-     2581 tagcaaaacc cccagtacag cctccagaga gcccgttctt tgacccacag aataggtctt
-     2641 cttctgtgta tatggatagt gaaccagcag taaataaatc ctggcgatat actggcaacc
-     2701 tgtcaccagt ctctgatatt gtcagagaca gttacggatc acaaaaaact gttgatacag
-     2761 aaaaactttt cgatttagaa gcaccagaga aggaaaaacg tacgtcaagg gatgtcacta
-     2821 tgtcttcact ggacccttgg aacagcaata ttagcccttc tcccgtaaga aaatcagtaa
-     2881 caccatcacc atataacgta acgaagcatc gtaaccgcca cttacaaaat attcaagact
-     2941 ctcaaagcgg taaaaacgga atcactccca caacaatgtc aacttcatct tctgacgatt
-     3001 ttgttccggt taaagatggt gaaaattttt gctgggtcca tagcatggaa ccagacagaa
-     3061 gaccaagtaa gaaaaggtta gtagattttt caaataagag taatgtcaat gttggtcaag
-     3121 ttaaggacat tcacggacgc atcccagaaa tgctgtgatt atacgcaacg atattttgct
-     3181 taattttatt ttcctgtttt attttttatt agtggtttac agatacccta tattttattt
-     3241 agtttttata cttagagaca tttaatttta attccattct tcaaatttca tttttgcact
-     3301 taaaacaaag atccaaaaat gctctcgccc tcttcatatt gagaatacac tccattcaaa
-     3361 attttgtcgt caccgctgat taatttttca ctaaactgat gaataatcaa aggccccacg
-     3421 tcagaaccga ctaaagaagt gagttttatt ttaggaggtt gaaaaccatt attgtctggt
-     3481 aaattttcat cttcttgaca tttaacccag tttgaatccc tttcaatttc tgctttttcc
-     3541 tccaaactat cgaccctcct gtttctgtcc aacttatgtc ctagttccaa ttcgatcgca
-     3601 ttaataactg cttcaaatgt tattgtgtca tcgttgactt taggtaattt ctccaaatgc
-     3661 ataatcaaac tatttaagga agatcggaat tcgtcgaaca cttcagtttc cgtaatgatc
-     3721 tgatcgtctt tatccacatg ttgtaattca ctaaaatcta aaacgtattt ttcaatgcat
-     3781 aaatcgttct ttttattaat aatgcagatg gaaaatctgt aaacgtgcgt taatttagaa
-     3841 agaacatcca gtataagttc ttctatatag tcaattaaag caggatgcct attaatggga
-     3901 acgaactgcg gcaagttgaa tgactggtaa gtagtgtagt cgaatgactg aggtgggtat
-     3961 acatttctat aaaataaaat caaattaatg tagcatttta agtataccct cagccacttc
-     4021 tctacccatc tattcataaa gctgacgcaa cgattactat tttttttttc ttcttggatc
-     4081 tcagtcgtcg caaaaacgta taccttcttt ttccgacctt ttttttagct ttctggaaaa
-     4141 gtttatatta gttaaacagg gtctagtctt agtgtgaaag ctagtggttt cgattgactg
-     4201 atattaagaa agtggaaatt aaattagtag tgtagacgta tatgcatatg tatttctcgc
-     4261 ctgtttatgt ttctacgtac ttttgattta tagcaagggg aaaagaaata catactattt
-     4321 tttggtaaag gtgaaagcat aatgtaaaag ctagaataaa atggacgaaa taaagagagg
-     4381 cttagttcat cttttttcca aaaagcaccc aatgataata actaaaatga aaaggatttg
-     4441 ccatctgtca gcaacatcag ttgtgtgagc aataataaaa tcatcacctc cgttgccttt
-     4501 agcgcgtttg tcgtttgtat cttccgtaat tttagtctta tcaatgggaa tcataaattt
-     4561 tccaatgaat tagcaatttc gtccaattct ttttgagctt cttcatattt gctttggaat
-     4621 tcttcgcact tcttttccca ttcatctctt tcttcttcca aagcaacgat ccttctaccc
-     4681 atttgctcag agttcaaatc ggcctctttc agtttatcca ttgcttcctt cagtttggct
-     4741 tcactgtctt ctagctgttg ttctagatcc tggtttttct tggtgtagtt ctcattatta
-     4801 gatctcaagt tattggagtc ttcagccaat tgctttgtat cagacaattg actctctaac
-     4861 ttctccactt cactgtcgag ttgctcgttt ttagcggaca aagatttaat ctcgttttct
-     4921 ttttcagtgt tagattgctc taattctttg agctgttctc tcagctcctc atatttttct
-     4981 tgccatgact cagattctaa ttttaagcta ttcaatttct ctttgatc
-//
-'''
 
-gbk_example_protein = u'''LOCUS       AAD51968      143 aa    linear   BCT 21-AUG-2001
-DEFINITION  transcriptional regulator RovA [Yersinia enterocolitica].
-ACCESSION   AAD51968
-VERSION     AAD51968.1  GI:5805369
-DBSOURCE    locus AF171097 accession AF171097.1
-KEYWORDS    .
-SOURCE      Yersinia enterocolitica
-  ORGANISM  Yersinia enterocolitica
-            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales;
-            Enterobacteriaceae; Yersinia.
-REFERENCE   1  (residues 1 to 143)
-  AUTHORS   Revell,P.A. and Miller,V.L.
-  TITLE     A chromosomally encoded regulator is required for expression of the
-            Yersinia enterocolitica inv gene and for virulence
-  JOURNAL   Mol. Microbiol. 35 (3), 677-685 (2000)
-  MEDLINE   20138369
-   PUBMED   10672189
-REFERENCE   2  (residues 1 to 143)
-  AUTHORS   Revell,P.A. and Miller,V.L.
-  TITLE     Direct Submission
-  JOURNAL   Submitted (22-JUL-1999) Molecular Microbiology, Washington
-            University School of Medicine, Campus Box 8230, 660 South Euclid,
-            St. Louis, MO 63110, USA
-COMMENT     Method: conceptual translation.
-FEATURES             Location/Qualifiers
-     source          1..143
-                     /organism="Yersinia enterocolitica"
-                     /mol_type="unassigned DNA"
-                     /strain="JB580v"
-                     /serotype="O:8"
-                     /db_xref="taxon:630"
-     Protein         1..143
-                     /product="transcriptional regulator RovA"
-                     /name="regulates inv expression"
-     CDS             1..143
-                     /gene="rovA"
-                     /coded_by="AF171097.1:380..811"
-                     /note="regulator of virulence"
-                     /transl_table=11
-ORIGIN
-        1 mestlgsdla rlvrvwrali dhrlkplelt qthwvtlhni nrlppeqsqi qlakaigieq
-       61 pslvrtldql eekglitrht candrrakri klteqsspii eqvdgvicst rkeilggisp
-      121 deiellsgli dklerniiql qsk
-//
-'''
+if __name__ == '__main__':
+    main()
