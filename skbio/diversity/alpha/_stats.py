@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 
 def phylogenetic_diversity(u, otu_ids, tree):
-    observed_otus = dict(zip(otu_ids, u))
-    observed_nodes = tree.observed_nodes(observed_otus)
-    result = sum(o.length for o in observed_nodes)
+    observed_otus = {o: u for o, u in zip(otu_ids, u) if u >= 1}
+    observed_nodes = tree.observed_node_counts(observed_otus)
+    result = sum(o.length for o in observed_nodes if o.length is not None)
     return result
