@@ -650,6 +650,21 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
+    def observed_nodes(self, observed_otus, verbose=False, min_count=1):
+        observed_nodes = defaultdict(int)
+        for otu, count in observed_otus.items():
+            if count < 1:
+                continue
+            else:
+                t = self.find(otu)
+                observed_nodes[t] += count
+                for internal_node in t.ancestors():
+                    if internal_node.is_root():
+                        pass
+                    else:
+                        observed_nodes[internal_node] += count
+        return observed_nodes
+
     @experimental(as_of="0.4.0")
     def subtree(self, tip_list=None):
         r"""Make a copy of the subtree"""

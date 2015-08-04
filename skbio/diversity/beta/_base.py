@@ -11,12 +11,13 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
+from ._stats import _to_pdist_metric
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
 
 @experimental(as_of="0.4.0")
-def pw_distances(counts, ids=None, metric="braycurtis"):
+def pw_distances(counts, ids=None, metric="braycurtis", **kwargs):
     """Compute distances between all pairs of columns in a counts matrix
 
     Parameters
@@ -53,6 +54,8 @@ def pw_distances(counts, ids=None, metric="braycurtis"):
         raise ValueError(
             "Number of rows in counts must be equal to number of provided "
             "ids.")
+    if callable(metric):
+        metric = _to_pdist_metric(metric, **kwargs)
 
     distances = pdist(counts, metric)
     return DistanceMatrix(
