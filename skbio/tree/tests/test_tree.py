@@ -59,10 +59,13 @@ class TreeTests(TestCase):
         expected = defaultdict(int)
         self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
                          expected)
+        # error on zero count(s)
+        otu_counts = {'a': 0}
+        self.assertRaises(ValueError, self.simple_t.observed_node_counts,
+                          otu_counts)
         otu_counts = {'a': 0, 'b': 0, 'c': 0, 'd': 0}
-        expected = defaultdict(int)
-        self.assertEqual(self.simple_t.observed_node_counts(otu_counts),
-                         expected)
+        self.assertRaises(ValueError, self.simple_t.observed_node_counts,
+                          otu_counts)
 
         # all OTUs observed once
         otu_counts = {'a': 1, 'b': 1, 'c': 1, 'd': 1}

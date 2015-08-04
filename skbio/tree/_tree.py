@@ -651,22 +651,39 @@ class TreeNode(SkbioObject):
             return len(list(self.traverse(include_self=True)))
 
     @experimental(as_of="0.4.0")
-    def observed_node_counts(self, otu_counts):
+    def observed_node_counts(self, tip_counts):
+        """Returns counts of nodes observations from counts of tip observations
+
+        Parameters
+        ----------
+        tip_counts : dict of ints
+            Counts of observations of tips. Keys correspond to tip names in
+            ``self``, and counts are ints greater than zero.
+
+        Returns
+        -------
+        dict
+            Counts of observations of nodes. Keys correspond to node names
+            (internal nodes or tips), and counts are ints greater than zero.
+
+        Raises
+        ------
+        ValueError
+            If a count less than one is observed.
+        MissingNodeError
+            If a count is provided for a tip not in the tree, or for an
+            internal node.
+
+        """
         result = defaultdict(int)
-        for otu, count in otu_counts.items():
-            if count <= 0:
-                # I'm torn on whether this check should be here. I don't like
-                # it b/c this function now has an idea of what it means for an
-                # OTU to be observed. However, since the result is a default
-                # dict, doing the lookup will add the key with a count of zero,
-                # so methods that just look at the keys in result could end up
-                # considering a node with a count of zero to be observed...
-                continue
+        for tip_name, count in tip_counts.items():
+            if count < 1:
+                raise ValueError("All tip counts must be greater than zero.")
             else:
-                t = self.find(otu)
+                t = self.find(tip_name)
                 if not t.is_tip():
-                    raise MissingNodeError("OTUs can only be tips in the "
-                        "tree. %s is an internal node." % t.name)
+                    raise MissingNodeError("Counts can only be for tips in "
+                        "the tree. %s is an internal node." % t.name)
                 result[t] += count
                 for internal_node in t.ancestors():
                     result[internal_node] += count
