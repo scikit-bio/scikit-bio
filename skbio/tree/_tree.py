@@ -650,20 +650,27 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
-    def observed_nodes(self, observed_otus, verbose=False, min_count=1):
-        observed_nodes = defaultdict(int)
-        for otu, count in observed_otus.items():
-            if count < 1:
+    @experimental(as_of="0.4.0")
+    def observed_node_counts(self, otu_counts):
+        result = defaultdict(int)
+        for otu, count in otu_counts.items():
+            if count <= 0:
+                # I'm torn on whether this check should be here. I don't like
+                # it b/c this function now has an idea of what it means for an
+                # OTU to be observed. However, since the result is a default
+                # dict, doing the lookup will add the key with a count of zero,
+                # so methods that just look at the keys in result could end up
+                # considering a node with a count of zero to be observed...
                 continue
             else:
                 t = self.find(otu)
-                observed_nodes[t] += count
+                if not t.is_tip():
+                    raise MissingNodeError("OTUs can only be tips in the "
+                        "tree. %s is an internal node." % t.name)
+                result[t] += count
                 for internal_node in t.ancestors():
-                    if internal_node.is_root():
-                        pass
-                    else:
-                        observed_nodes[internal_node] += count
-        return observed_nodes
+                    result[internal_node] += count
+        return result
 
     @experimental(as_of="0.4.0")
     def subtree(self, tip_list=None):
