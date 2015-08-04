@@ -128,6 +128,21 @@ class TreeTests(TestCase):
         self.assertRaises(MissingNodeError, self.simple_t.observed_node_counts,
                           otu_counts)
 
+        # test with another tree
+        otu_counts = {}
+        expected = defaultdict(int)
+        self.assertEqual(self.complex_tree.observed_node_counts(otu_counts),
+                         expected)
+
+        otu_counts = {'e': 42, 'f': 1}
+        expected[self.complex_tree.root()] = 43
+        expected[self.complex_tree.find('int5')] = 43
+        expected[self.complex_tree.find('e')] = 42
+        expected[self.complex_tree.find('f')] = 1
+        self.assertEqual(self.complex_tree.observed_node_counts(otu_counts),
+                         expected)
+
+
     def test_count(self):
         """Get node counts"""
         exp = 7
