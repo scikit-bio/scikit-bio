@@ -11,11 +11,11 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
 import numpy as np
-import numpy.testing as npt
 from six import StringIO
 
 from skbio import TreeNode
 from skbio.diversity.alpha._stats import phylogenetic_diversity
+
 
 class StatsTests(TestCase):
 
@@ -26,17 +26,18 @@ class StatsTests(TestCase):
             [0, 0, 6, 2, 1],
             [0, 0, 1, 1, 1]])
         self.sids1 = list('ABCD')
-        self.oids1 = ['OTU%d' % i for i in range(1,6)]
-        self.t1 = TreeNode.read(StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:'
-            '1.0):1.0):0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
 
-    def test_phylogenetic_diversity_empty(self):
+    def test_phylogenetic_diversity_none_observed(self):
         actual = phylogenetic_diversity(
             [0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
 
-    def test_phylogenetic_diversity_empty(self):
+    def test_phylogenetic_diversity_all_observed(self):
         actual = phylogenetic_diversity(
             [1, 1, 1, 1, 1], self.oids1, self.t1)
         expected = sum([n.length for n in self.t1.traverse()

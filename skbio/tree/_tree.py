@@ -682,8 +682,9 @@ class TreeNode(SkbioObject):
             else:
                 t = self.find(tip_name)
                 if not t.is_tip():
-                    raise MissingNodeError("Counts can only be for tips in "
-                        "the tree. %s is an internal node." % t.name)
+                    raise MissingNodeError(
+                        "Counts can only be for tips in the tree. %s is an "
+                        "internal node." % t.name)
                 result[t] += count
                 for internal_node in t.ancestors():
                     result[internal_node] += count

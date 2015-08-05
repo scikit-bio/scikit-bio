@@ -145,7 +145,6 @@ class TreeTests(TestCase):
         self.assertEqual(self.complex_tree.observed_node_counts(otu_counts),
                          expected)
 
-
     def test_count(self):
         """Get node counts"""
         exp = 7

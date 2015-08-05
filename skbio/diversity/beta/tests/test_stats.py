@@ -11,11 +11,11 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
 import numpy as np
-import numpy.testing as npt
 from six import StringIO
 
-from skbio import DistanceMatrix, TreeNode
+from skbio import TreeNode
 from skbio.diversity.beta._stats import unweighted_unifrac, weighted_unifrac
+
 
 class StatsTests(TestCase):
 
@@ -28,9 +28,10 @@ class StatsTests(TestCase):
             [5, 3, 5, 0, 0],
             [0, 0, 0, 3, 5]])
         self.sids1 = list('ABCDEF')
-        self.oids1 = ['OTU%d' % i for i in range(1,6)]
-        self.t1 = TreeNode.read(StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:'
-            '1.0):1.0):0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
 
     def test_unweighted_unifrac_identity(self):
         for i in range(len(self.b1)):
@@ -166,16 +167,16 @@ class StatsTests(TestCase):
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_zero_counts(self):
-        # expected results derived from QIIME 1.9.1, which
-        # is a completely different implementation skbio's initial
-        # weighted unifrac implementation
         actual = weighted_unifrac(
             [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
+        # calculated the following by hand, as QIIME 1.9.1 tells the user
+        # that values involving empty vectors will be uninformative, and
+        # returns 1.0
         actual = weighted_unifrac(
             [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
-        expected = 1.0
+        expected = 2.0
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac(self):
@@ -277,7 +278,7 @@ class StatsTests(TestCase):
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
 
-    def test_weighted_unifrac_zero_counts(self):
+    def test_weighted_unifrac_zero_counts_normalized(self):
         # expected results derived from QIIME 1.9.1, which
         # is a completely different implementation skbio's initial
         # weighted unifrac implementation

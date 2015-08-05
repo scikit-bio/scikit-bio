@@ -15,21 +15,26 @@ def unweighted_unifrac(u, v, otu_ids, tree):
     v_observed_otus = {o: v for o, v in zip(otu_ids, v) if v >= 1}
     observed_nodes1 = set(tree.observed_node_counts(u_observed_otus))
     observed_nodes2 = set(tree.observed_node_counts(v_observed_otus))
-    observed_branch_length = sum(o.length for o in observed_nodes1 | observed_nodes2 if o.length is not None)
-    shared_branch_length = sum(o.length for o in observed_nodes1 & observed_nodes2 if o.length is not None)
-    unique_branch_length = observed_branch_length - shared_branch_length
+    observed_branch_length = sum(
+        o.length for o in observed_nodes1 | observed_nodes2
+        if o.length is not None)
     if observed_branch_length == 0:
         # boundary case where both communities have no members
-        unweighted_unifrac = 0.0
-    else:
-        unweighted_unifrac = unique_branch_length / observed_branch_length
+        return 0.0
+    shared_branch_length = sum(
+        o.length for o in observed_nodes1 & observed_nodes2
+        if o.length is not None)
+    unique_branch_length = observed_branch_length - shared_branch_length
+    unweighted_unifrac = unique_branch_length / observed_branch_length
     return unweighted_unifrac
+
 
 def _sample_branch_weight(observed_nodes, total_count):
     if total_count == 0:
         return 0
     else:
         return observed_nodes / total_count
+
 
 def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
     u_observed_otus = {o: u for o, u in zip(otu_ids, u) if u >= 1}
@@ -60,6 +65,7 @@ def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
         return weighted_unifrac / D
     else:
         return weighted_unifrac
+
 
 def _to_pdist_metric(metric, **kwargs):
     result = partial(metric, **kwargs)
