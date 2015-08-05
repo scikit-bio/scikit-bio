@@ -69,3 +69,6 @@ class StatsTests(TestCase):
             self.b1[3], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
+
+if __name__ == "__main__":
+    main()

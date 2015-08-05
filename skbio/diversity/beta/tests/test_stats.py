@@ -37,7 +37,7 @@ class StatsTests(TestCase):
             actual = unweighted_unifrac(
                 self.b1[i], self.b1[i], self.oids1, self.t1)
             expected = 0.0
-            self.assertEqual(actual, expected)
+            self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac_symmetry(self):
         for i in range(len(self.b1)):
@@ -53,11 +53,21 @@ class StatsTests(TestCase):
         actual = unweighted_unifrac(
             self.b1[4], self.b1[5], self.oids1, self.t1)
         expected = 1.0
-        self.assertEqual(actual, expected)
+        self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
             [1, 1, 1, 0, 0], [0, 0, 0, 1, 1], self.oids1, self.t1)
         expected = 1.0
-        self.assertEqual(actual, expected)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_unweighted_unifrac_zero_counts(self):
+        actual = unweighted_unifrac(
+            [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 1.0
+        self.assertAlmostEqual(actual, expected)
+        actual = unweighted_unifrac(
+            [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac(self):
         # expected results derived from QIIME 1.9.1, which
@@ -134,7 +144,7 @@ class StatsTests(TestCase):
             actual = weighted_unifrac(
                 self.b1[i], self.b1[i], self.oids1, self.t1)
             expected = 0.0
-            self.assertEqual(actual, expected)
+            self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_symmetry(self):
         for i in range(len(self.b1)):
@@ -153,7 +163,20 @@ class StatsTests(TestCase):
         actual = weighted_unifrac(
             self.b1[4], self.b1[5], self.oids1, self.t1)
         expected = 4.0
-        self.assertEqual(actual, expected)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_unifrac_zero_counts(self):
+        # expected results derived from QIIME 1.9.1, which
+        # is a completely different implementation skbio's initial
+        # weighted unifrac implementation
+        actual = weighted_unifrac(
+            [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+        actual = weighted_unifrac(
+            [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 1.0
+        self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac(self):
         # expected results derived from QIIME 1.9.1, which
@@ -229,7 +252,7 @@ class StatsTests(TestCase):
             actual = weighted_unifrac(
                 self.b1[i], self.b1[i], self.oids1, self.t1, normalized=True)
             expected = 0.0
-            self.assertEqual(actual, expected)
+            self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_symmetry_normalized(self):
         for i in range(len(self.b1)):
@@ -245,14 +268,29 @@ class StatsTests(TestCase):
     def test_weighted_unifrac_non_overlapping_normalized(self):
         # these communities only share the root node
         actual = weighted_unifrac(
-        self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
         expected = 1.0
-        self.assertEqual(actual, expected)
+        self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
             [1, 1, 1, 0, 0], [0, 0, 0, 1, 1], self.oids1, self.t1,
             normalized=True)
         expected = 1.0
-        self.assertEqual(actual, expected)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_unifrac_zero_counts(self):
+        # expected results derived from QIIME 1.9.1, which
+        # is a completely different implementation skbio's initial
+        # weighted unifrac implementation
+        actual = weighted_unifrac(
+            [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1,
+            normalized=True)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+        actual = weighted_unifrac(
+            [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1,
+            normalized=True)
+        expected = 1.0
+        self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_normalized(self):
         # expected results derived from QIIME 1.9.1, which
@@ -322,3 +360,6 @@ class StatsTests(TestCase):
             self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
+
+if __name__ == "__main__":
+    main()
