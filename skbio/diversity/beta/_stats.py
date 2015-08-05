@@ -21,22 +21,30 @@ def unweighted_unifrac(u, v, otu_ids, tree):
     unweighted_unifrac = unique_branch_length / observed_branch_length
     return unweighted_unifrac
 
-def weighted_unifrac(u, v, otu_ids, tree):
+def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
     u_observed_otus = {o: u for o, u in zip(otu_ids, u) if u >= 1}
+    u_total_count = sum(u)
     v_observed_otus = {o: v for o, v in zip(otu_ids, v) if v >= 1}
-    observed_nodes1 = tree.observed_node_counts(u_observed_otus)
-    observed_nodes2 = tree.observed_node_counts(v_observed_otus)
-    differential_branch_length = 0
-    observed_branch_length = 0
-    for o in set(observed_nodes1) | set(observed_nodes2):
-        observed_count = observed_nodes1[o] + observed_nodes2[o]
-        observed_count_diff = abs(observed_nodes1[o] - observed_nodes2[o])
+    v_total_count = sum(v)
+    u_observed_nodes = tree.observed_node_counts(u_observed_otus)
+    v_observed_nodes = tree.observed_node_counts(v_observed_otus)
+    weighted_unifrac = 0
+    D = 0
+    for o in set(u_observed_nodes) | set(v_observed_nodes):
         # handle the case of o.length is None
-        o_length = o.length or 0
-        differential_branch_length += (o_length * observed_count_diff)
-        observed_branch_length += (o_length * observed_count)
-    weighted_unifrac = differential_branch_length / observed_branch_length
-    return weighted_unifrac
+        b = o.length or 0
+        branch_weight = abs((u_observed_nodes[o] / u_total_count) -
+                            (v_observed_nodes[o] / v_total_count))
+        weighted_unifrac += b * branch_weight
+        if normalized:
+            d = o.accumulate_to_ancestor(tree.root())
+            normed_weight = ((u_observed_nodes[o] / u_total_count) +
+                             (v_observed_nodes[o] / v_total_count))
+            D += (d * normed_weight)
+    if normalized:
+        return weighted_unifrac / D
+    else:
+        return weighted_unifrac
 
 def _to_pdist_metric(metric, **kwargs):
     result = partial(metric, **kwargs)
