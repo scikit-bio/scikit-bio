@@ -33,6 +33,10 @@ class StatsTests(TestCase):
 
     def test_phylogenetic_diversity_none_observed(self):
         actual = phylogenetic_diversity(
+            [], [], self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+        actual = phylogenetic_diversity(
             [0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)

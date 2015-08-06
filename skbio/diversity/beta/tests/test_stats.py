@@ -69,6 +69,10 @@ class StatsTests(TestCase):
             [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
+        actual = unweighted_unifrac(
+            [], [], [], self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac(self):
         # expected results derived from QIIME 1.9.1, which
@@ -177,6 +181,10 @@ class StatsTests(TestCase):
         actual = weighted_unifrac(
             [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 2.0
+        self.assertAlmostEqual(actual, expected)
+        actual = weighted_unifrac(
+            [], [], [], self.t1)
+        expected = 0.0
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac(self):
@@ -291,6 +299,10 @@ class StatsTests(TestCase):
             [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], self.oids1, self.t1,
             normalized=True)
         expected = 1.0
+        self.assertAlmostEqual(actual, expected)
+        actual = weighted_unifrac(
+            [], [], [], self.t1, normalized=True)
+        expected = 0.0
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_normalized(self):
