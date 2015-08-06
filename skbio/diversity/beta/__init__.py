@@ -43,7 +43,7 @@ Create a table containing 7 OTUs and 6 samples:
    Compute Bray-Curtis distances between all pairs of samples and return a
    ``DistanceMatrix`` object:
 
-   >>> bc_dm = pw_distances(data, ids, "braycurtis")
+   >>> bc_dm = pw_distances("braycurtis", data, ids)
    >>> print(bc_dm)
    6x6 distance matrix
    IDs:
@@ -56,42 +56,51 @@ Create a table containing 7 OTUs and 6 samples:
     [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]
     [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]
 
-   Compute Jaccard distances between all pairs of samples and return a
-   ``DistanceMatrix`` object:
+   Compute weighted unifrac distances between all pairs of samples and return a
+   ``DistanceMatrix`` object. Because weighted unifrac is a phylogenetic beta
+   diversity metric, we'll need to create a ``skbio.TreeNode`` object that
+   contains all of the tips in the tree, and pass that along with the ids of
+   the OTUs corresponding to the counts in ``data``.
 
-   >>> j_dm = pw_distances(data, ids, "jaccard")
-   >>> print(j_dm)
+   >>> from skbio import TreeNode
+   >>> tree = TreeNode.read(['(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+   ...                      '(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):0.5'
+   ...                      '):1.25):0.0)root;'])
+   >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
+   >>> wu_dm = pw_distances("weighted_unifrac", data, ids, tree=tree,
+   ...                      otu_ids=otu_ids)
+   >>> print(wu_dm)
    6x6 distance matrix
    IDs:
    'A', 'B', 'C', 'D', 'E', 'F'
    Data:
-   [[ 0.          0.83333333  1.          1.          0.83333333  1.        ]
-    [ 0.83333333  0.          1.          1.          0.83333333  1.        ]
-    [ 1.          1.          0.          1.          1.          1.        ]
-    [ 1.          1.          1.          0.          1.          1.        ]
-    [ 0.83333333  0.83333333  1.          1.          0.          1.        ]
-    [ 1.          1.          1.          1.          1.          0.        ]]
+   [[ 0.          2.77549923  3.82857143  0.42512039  3.8547619   3.10937312]
+    [ 2.77549923  0.          2.26433692  2.98435423  2.24270353  0.46774194]
+    [ 3.82857143  2.26433692  0.          3.95224719  0.16025641  1.86111111]
+    [ 0.42512039  2.98435423  3.95224719  0.          3.98796148  3.30870431]
+    [ 3.8547619   2.24270353  0.16025641  3.98796148  0.          1.82967033]
+    [ 3.10937312  0.46774194  1.86111111  3.30870431  1.82967033  0.        ]]
 
    Determine if the resulting distance matrices are significantly correlated
    by computing the Mantel correlation between them. Then determine if the
    p-value is significant based on an alpha of 0.05:
 
    >>> from skbio.stats.distance import mantel
-   >>> r, p_value, n = mantel(j_dm, bc_dm)
+   >>> r, p_value, n = mantel(wu_dm, bc_dm)
    >>> print(r)
-   -0.209362157621
+   0.922404392093
    >>> print(p_value < 0.05)
-   False
+   True
 
    Compute PCoA for both distance matrices, and then find the Procrustes
    M-squared value that results from comparing the coordinate matrices.
 
    >>> from skbio.stats.ordination import pcoa
    >>> bc_pc = pcoa(bc_dm)
-   >>> j_pc = pcoa(j_dm)
+   >>> wu_pc = pcoa(wu_dm)
    >>> from skbio.stats.spatial import procrustes
-   >>> print(procrustes(bc_pc.samples.values, j_pc.samples.values)[2])
-   0.466134984787
+   >>> print(procrustes(bc_pc.samples.values, wu_pc.samples.values)[2])
+   0.096574934963
 
    All of this only gets interesting in the context of sample metadata, so
    let's define some:
@@ -118,7 +127,7 @@ Create a table containing 7 OTUs and 6 samples:
    Now let's plot our PCoA results, coloring each sample by the subject it
    was taken from:
 
-   >>> fig = bc_pc.plot(sample_md, 'subject',
+   >>> fig = wu_pc.plot(sample_md, 'subject',
    ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
    ...                  title='Samples colored by subject', cmap='jet', s=50)
 
@@ -131,7 +140,7 @@ Create a table containing 7 OTUs and 6 samples:
 
    >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use
-   >>> fig = bc_pc.plot(sample_md, 'body_site',
+   >>> fig = wu_pc.plot(sample_md, 'body_site',
    ...                  axis_labels=('PC 1', 'PC 2', 'PC 3'),
    ...                  title='Samples colored by body site', cmap='jet', s=50)
 

@@ -53,13 +53,13 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
     References
     ----------
     .. [1] Lozupone, C. & Knight, R. UniFrac: a new phylogenetic method for
-       comparing microbial communities. Appl. Environ. Microbiol. 71, 8228–8235
+       comparing microbial communities. Appl. Environ. Microbiol. 71, 8228-8235
        (2005).
 
     .. [2] Lozupone, C. A., Hamady, M., Kelley, S. T. & Knight, R. Quantitative
        and qualitative beta diversity measures lead to different insights into
        factors that structure microbial communities. Appl. Environ. Microbiol.
-       73, 1576–1585 (2007).
+       73, 1576-1585 (2007).
 
     """
     if len(u_counts) != len(v_counts) != len(otu_ids):

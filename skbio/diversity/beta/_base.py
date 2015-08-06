@@ -13,6 +13,7 @@ from functools import partial
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
+from skbio.diversity.beta._unifrac import unweighted_unifrac, weighted_unifrac
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
@@ -52,11 +53,17 @@ def pw_distances(metric, counts, ids=None, **kwargs):
     pw_distances_from_table
 
     """
+    # this should probably go somewhere else. where?
+    _skbio_metrics = {'unweighted_unifrac': unweighted_unifrac,
+                      'weighted_unifrac': weighted_unifrac}
     num_samples = len(counts)
     if ids is not None and num_samples != len(ids):
         raise ValueError(
             "Number of rows in counts must be equal to number of provided "
             "ids.")
+    if metric in _skbio_metrics:
+        metric = _skbio_metrics[metric]
+
     if callable(metric):
         metric = partial(metric, **kwargs)
 
