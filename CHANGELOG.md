@@ -16,6 +16,7 @@
     - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
+* ``skbio.diversity.beta.pw_distances`` and ``skbio.diversity.beta.pw_distances_from_table`` no longer define a default metric, and ``metric`` is now the first argument to these functions.
 
 ### Miscellaneous
 * Doctests are now written in Python 3.
