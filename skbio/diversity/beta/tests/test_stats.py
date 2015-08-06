@@ -11,8 +11,8 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
 import numpy as np
-from six import StringIO
 
+from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.diversity.beta._stats import unweighted_unifrac, weighted_unifrac
 
