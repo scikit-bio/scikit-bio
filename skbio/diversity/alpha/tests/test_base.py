@@ -13,6 +13,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
+from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
@@ -31,9 +32,8 @@ class BaseTests(TestCase):
             [0, 0, 1, 1, 1]])
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
-        self.t1 = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.t1 = TreeNode.read(['(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+                                 '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'])
 
     def test_validate(self):
         # python list
@@ -163,7 +163,8 @@ class BaseTests(TestCase):
         npt.assert_array_almost_equal(observed_upper, expected_upper)
 
     def test_faith_pd_none_observed(self):
-        actual = faith_pd([], [], self.t1)
+        actual = faith_pd(np.array([], dtype=int), np.array([], dtype=int),
+                          self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
         actual = faith_pd([0, 0, 0, 0, 0], self.oids1, self.t1)
