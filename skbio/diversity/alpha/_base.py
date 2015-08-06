@@ -295,7 +295,7 @@ def esty_ci(counts):
     return f1 / n - z * np.sqrt(W), f1 / n + z * np.sqrt(W)
 
 
-@experimental(as_of="0.4.0")
+@experimental(as_of="0.4.0-dev")
 def faith_pd(counts, otu_ids, tree):
     """ Compute Faith's phylogenetic diversity metric (PD)
 

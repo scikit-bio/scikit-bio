@@ -8,7 +8,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+from skbio.util._decorator import experimental
 
+
+@experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
     """ Compute unweighted unifrac
 
@@ -80,13 +83,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
     return unweighted_unifrac
 
 
-def _sample_branch_weight(observed_nodes, total_count):
-    if total_count == 0:
-        return 0
-    else:
-        return observed_nodes / total_count
-
-
+@experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
     """ Compute weighted unifrac with or without branch length normalization
 
@@ -164,3 +161,10 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
         return weighted_unifrac / D
     else:
         return weighted_unifrac
+
+
+def _sample_branch_weight(observed_nodes, total_count):
+    if total_count == 0:
+        return 0
+    else:
+        return observed_nodes / total_count
