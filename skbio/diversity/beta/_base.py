@@ -8,10 +8,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+from functools import partial
+
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
-from ._stats import _to_pdist_metric
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
@@ -55,7 +56,7 @@ def pw_distances(counts, ids=None, metric="braycurtis", **kwargs):
             "Number of rows in counts must be equal to number of provided "
             "ids.")
     if callable(metric):
-        metric = _to_pdist_metric(metric, **kwargs)
+        metric = partial(metric, **kwargs)
 
     distances = pdist(counts, metric)
     return DistanceMatrix(

@@ -184,7 +184,9 @@ from __future__ import absolute_import, division, print_function
 from skbio.util import TestRunner
 
 from ._base import pw_distances, pw_distances_from_table
+from ._unifrac import unweighted_unifrac, weighted_unifrac
 
-__all__ = ["pw_distances", "pw_distances_from_table"]
+__all__ = ["pw_distances", "pw_distances_from_table", "unweighted_unifrac",
+           "weighted_unifrac"]
 
 test = TestRunner(__file__).test

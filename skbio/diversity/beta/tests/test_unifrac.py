@@ -14,7 +14,7 @@ import numpy as np
 
 from skbio.io._fileobject import StringIO
 from skbio import TreeNode
-from skbio.diversity.beta._stats import unweighted_unifrac, weighted_unifrac
+from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 
 
 class StatsTests(TestCase):

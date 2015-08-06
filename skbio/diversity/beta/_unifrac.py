@@ -7,19 +7,18 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from functools import partial
 
 
-def unweighted_unifrac(u, v, otu_ids, tree):
+def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
     """ Compute unweighted unifrac
 
     Parameters
     ----------
-    u, v: list, np.array
+    u_counts, v_counts: list, np.array
         Vectors of counts of OTUs for two samples. Must be equal length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u`` and ``v``.
+        same length as ``u_counts`` and ``v_counts``.
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
@@ -32,7 +31,8 @@ def unweighted_unifrac(u, v, otu_ids, tree):
     Raises
     ------
     ValueError
-        If ``u``, ``v``, and ``otu_ids`` are not all equal in length.
+        If ``u_counts``, ``v_counts``, and ``otu_ids`` are not all of equal
+        length.
     MissingNodeError
         If an OTU id is provided that does not correspond to a tip in the
         tree.
@@ -59,11 +59,11 @@ def unweighted_unifrac(u, v, otu_ids, tree):
        73, 1576–1585 (2007).
 
     """
-    if len(u) != len(v) != len(otu_ids):
-        raise ValueError("Input vectors u, v, and otu_ids must be equal"
-                         " length.")
-    u_observed_otus = {o: u for o, u in zip(otu_ids, u) if u >= 1}
-    v_observed_otus = {o: v for o, v in zip(otu_ids, v) if v >= 1}
+    if len(u_counts) != len(v_counts) != len(otu_ids):
+        raise ValueError("Input vectors u_counts, v_counts, and otu_ids must"
+                         " be of equal length.")
+    u_observed_otus = {o: c for o, c in zip(otu_ids, u_counts) if c >= 1}
+    v_observed_otus = {o: c for o, c in zip(otu_ids, v_counts) if c >= 1}
     observed_nodes1 = set(tree.observed_node_counts(u_observed_otus))
     observed_nodes2 = set(tree.observed_node_counts(v_observed_otus))
     observed_branch_length = sum(
@@ -87,16 +87,16 @@ def _sample_branch_weight(observed_nodes, total_count):
         return observed_nodes / total_count
 
 
-def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
+def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
     """ Compute weighted unifrac with or without branch length normalization
 
     Parameters
     ----------
-    u, v: list, np.array
+    u_counts, v_counts: list, np.array
         Vectors of counts of OTUs for two samples. Must be equal length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u`` and ``v``.
+        same length as ``u_counts`` and ``v_counts``.
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
@@ -112,7 +112,8 @@ def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
     Raises
     ------
     ValueError
-        If ``u``, ``v``, and ``otu_ids`` are not all equal in length.
+        If ``u_counts``, ``v_counts``, and ``otu_ids`` are not all equal in
+        length.
     MissingNodeError
         If an OTU id is provided that does not correspond to a tip in the
         tree.
@@ -135,10 +136,10 @@ def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
        73, 1576–1585 (2007).
 
     """
-    u_observed_otus = {o: u for o, u in zip(otu_ids, u) if u >= 1}
-    u_total_count = sum(u)
-    v_observed_otus = {o: v for o, v in zip(otu_ids, v) if v >= 1}
-    v_total_count = sum(v)
+    u_observed_otus = {o: c for o, c in zip(otu_ids, u_counts) if c >= 1}
+    u_total_count = sum(u_counts)
+    v_observed_otus = {o: c for o, c in zip(otu_ids, v_counts) if c >= 1}
+    v_total_count = sum(v_counts)
     if u_total_count == 0 and v_total_count == 0:
         # boundary case where both communities have no members
         return 0.0
@@ -163,8 +164,3 @@ def weighted_unifrac(u, v, otu_ids, tree, normalized=False):
         return weighted_unifrac / D
     else:
         return weighted_unifrac
-
-
-def _to_pdist_metric(metric, **kwargs):
-    result = partial(metric, **kwargs)
-    return result
