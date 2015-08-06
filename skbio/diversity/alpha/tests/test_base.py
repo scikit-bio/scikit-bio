@@ -15,15 +15,25 @@ import numpy.testing as npt
 
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
-    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
-    osd, robbins, shannon, simpson, simpson_e, singles, strong)
+    esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
+    observed_otus, osd, robbins, shannon, simpson, simpson_e, singles, strong)
 from skbio.diversity.alpha._base import _validate
 
 
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
+        self.b1 = np.array(
+           [[1, 3, 0, 1, 0],
+            [0, 2, 0, 4, 4],
+            [0, 0, 6, 2, 1],
+            [0, 0, 1, 1, 1]])
+        self.sids1 = list('ABCD')
+        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
 
     def test_validate(self):
         # python list
@@ -151,6 +161,42 @@ class BaseTests(TestCase):
 
         npt.assert_array_almost_equal(observed_lower, expected_lower)
         npt.assert_array_almost_equal(observed_upper, expected_upper)
+
+    def test_faith_pd_none_observed(self):
+        actual = faith_pd([], [], self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd([0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_all_observed(self):
+        actual = faith_pd([1, 1, 1, 1, 1], self.oids1, self.t1)
+        expected = sum([n.length for n in self.t1.traverse()
+                        if n.length is not None])
+        self.assertAlmostEqual(actual, expected)
+
+        actual = faith_pd([1, 2, 3, 4, 5], self.oids1, self.t1)
+        expected = sum([n.length for n in self.t1.traverse()
+                        if n.length is not None])
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd(self):
+        # expected results derived from QIIME 1.9.1, which
+        # is a completely different implementation skbio's initial
+        # phylogenetic diversity implementation
+        actual = faith_pd(self.b1[0], self.oids1, self.t1)
+        expected = 4.5
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[1], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[2], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[3], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
 
     def test_fisher_alpha(self):
         exp = 2.7823795367398798
