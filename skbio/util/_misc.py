@@ -161,7 +161,7 @@ def is_casava_v180_or_later(header_line):
 
     """
     if not header_line.startswith(b'@'):
-        raise ValueError("Non-header line passed in!")
+        raise ValueError("Non-header line passed in.")
     fields = header_line.split(b':')
 
     return len(fields) == 10 and fields[7] in b'YN'
