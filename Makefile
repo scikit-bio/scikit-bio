@@ -14,6 +14,6 @@ endif
 
 test:
 	$(TEST_COMMAND)
-	pep8 skbio setup.py checklist.py
 	flake8 skbio setup.py checklist.py
 	./checklist.py
+	check-manifest
