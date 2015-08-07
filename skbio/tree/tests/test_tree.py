@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
-import warnings
 
 import numpy as np
 import numpy.testing as nptest
@@ -609,22 +608,22 @@ class TreeTests(TestCase):
 
     def test_tip_tip_distances_no_length(self):
         t = TreeNode.read(StringIO(u"((a,b)c,(d,e)f);"))
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error")
-            with self.assertRaises(RepresentationWarning):
-                t.tip_tip_distances()
-        for node in t.preorder():
-            self.assertEqual(node.length, None)
+        exp_t = TreeNode.read(StringIO(u"((a:0,b:0)c:0,(d:0,e:0)f:0);"))
+        exp_t_dm = exp_t.tip_tip_distances()
 
-    def test_tip_tip_distances_no_length_are_maintained(self):
+        t_dm = nptest.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        self.assertEqual(t_dm, exp_t_dm)
+
+        for node in t.preorder():
+            self.assertIs(node.length, None)
+
+    def test_tip_tip_distances_missing_length(self):
         t = TreeNode.read(StringIO(u"((a,b:6)c:4,(d,e:0)f);"))
         exp_t = TreeNode.read(StringIO(u"((a:0,b:6)c:4,(d:0,e:0)f:0);"))
         exp_t_dm = exp_t.tip_tip_distances()
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
 
-            t_dm = t.tip_tip_distances()
-            self.assertEqual(t_dm, exp_t_dm)
+        t_dm = nptest.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        self.assertEqual(t_dm, exp_t_dm)
 
     def test_neighbors(self):
         """Get neighbors of a node"""
