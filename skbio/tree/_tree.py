@@ -440,7 +440,7 @@ class TreeNode(SkbioObject):
         ids = set(names)
 
         if not ids.issubset(all_tips):
-            raise ValueError("ids are not a subset of the tree!")
+            raise ValueError("ids are not a subset of the tree.")
 
         while len(list(tcopy.tips())) != len(ids):
             for n in list(tcopy.tips()):
@@ -1372,7 +1372,7 @@ class TreeNode(SkbioObject):
                 if node.is_tip():
                     if name in tip_cache:
                         raise DuplicateNodeError("Tip with name '%s' already "
-                                                 "exists!" % name)
+                                                 "exists." % name)
 
                     tip_cache[name] = node
                 else:
@@ -1748,7 +1748,7 @@ class TreeNode(SkbioObject):
         tips = [self.find(name) for name in tipnames]
 
         if len(tips) == 0:
-            raise ValueError("No tips found!")
+            raise ValueError("No tips found.")
 
         nodes_to_scrub = []
 
@@ -2207,7 +2207,7 @@ class TreeNode(SkbioObject):
                 raise NoParentError("Provided ancestor is not in the path")
 
             if curr.length is None:
-                raise NoLengthError("No length on node %s found!" %
+                raise NoLengthError("No length on node %s found." %
                                     curr.name or "unnamed")
 
             accum += curr.length
@@ -2845,7 +2845,7 @@ class TreeNode(SkbioObject):
                 return a + b
 
         else:
-            raise TypeError("Only list, set and frozenset are supported!")
+            raise TypeError("Only list, set and frozenset are supported.")
 
         for node in self.postorder(include_self=True):
             node._registered_caches.add(cache_attrname)
