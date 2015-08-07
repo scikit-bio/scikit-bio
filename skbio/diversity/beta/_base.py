@@ -18,6 +18,13 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
 
+def _get_skbio_metrics():
+    result = {
+        'unweighted_unifrac': unweighted_unifrac,
+        'weighted_unifrac': weighted_unifrac}
+    return result
+
+
 @experimental(as_of="0.4.0")
 def pw_distances(metric, counts, ids=None, **kwargs):
     """Compute distances between all pairs of columns in a counts matrix
@@ -53,9 +60,7 @@ def pw_distances(metric, counts, ids=None, **kwargs):
     pw_distances_from_table
 
     """
-    # this should probably go somewhere else. where?
-    _skbio_metrics = {'unweighted_unifrac': unweighted_unifrac,
-                      'weighted_unifrac': weighted_unifrac}
+    _skbio_metrics = _get_skbio_metrics()
     num_samples = len(counts)
     if ids is not None and num_samples != len(ids):
         raise ValueError(

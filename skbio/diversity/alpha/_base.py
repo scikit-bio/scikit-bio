@@ -305,7 +305,7 @@ def faith_pd(counts, otu_ids, tree):
         Vector of counts.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u``.
+        same length as ``counts``.
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
@@ -318,7 +318,7 @@ def faith_pd(counts, otu_ids, tree):
     Raises
     ------
     ValueError
-        If ``u`` and ``otu_ids`` are not equal in length.
+        If ``counts`` and ``otu_ids`` are not equal in length.
     MissingNodeError
         If an OTU id is provided that does not correspond to a tip in the
         tree.

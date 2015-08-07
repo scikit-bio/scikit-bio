@@ -13,6 +13,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
+from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
@@ -32,8 +33,9 @@ class BaseTests(TestCase):
             [0, 0, 1, 1, 1]])
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
-        self.t1 = TreeNode.read(['(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-                                 '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'])
+        self.t1 = TreeNode.read(StringIO(
+            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
 
     def test_validate(self):
         # python list
@@ -173,13 +175,13 @@ class BaseTests(TestCase):
 
     def test_faith_pd_all_observed(self):
         actual = faith_pd([1, 1, 1, 1, 1], self.oids1, self.t1)
-        expected = sum([n.length for n in self.t1.traverse()
-                        if n.length is not None])
+        expected = sum(n.length for n in self.t1.traverse()
+                       if n.length is not None)
         self.assertAlmostEqual(actual, expected)
 
         actual = faith_pd([1, 2, 3, 4, 5], self.oids1, self.t1)
-        expected = sum([n.length for n in self.t1.traverse()
-                        if n.length is not None])
+        expected = sum(n.length for n in self.t1.traverse()
+                       if n.length is not None)
         self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd(self):

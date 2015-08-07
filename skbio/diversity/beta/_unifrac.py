@@ -11,9 +11,13 @@ from __future__ import absolute_import, division, print_function
 from skbio.util._decorator import experimental
 
 
+def _observed_otu_counts(counts, otu_ids):
+    return {o: c for o, c in zip(otu_ids, counts) if c >= 1}
+
+
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
-    """ Compute unweighted unifrac
+    """ Compute unweighted UniFrac
 
     Parameters
     ----------
@@ -29,7 +33,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
     Returns
     -------
     float
-        The unweighted unifrac distance between the two samples.
+        The unweighted UniFrac distance between the two samples.
 
     Raises
     ------
@@ -46,9 +50,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
 
     Notes
     -----
-    Unweighted unifrac was originally described in [1]_. A discussion of
+    Unweighted UniFrac was originally described in [1]_. A discussion of
     unweighted (qualitative) versus weighted (quantitiative) diversity metrics
-    is presented in [2]_.
+    is presented in [2]_. Deeper mathemtical discussions of this metric is
+    presented in [3]_.
 
     References
     ----------
@@ -61,31 +66,32 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
        factors that structure microbial communities. Appl. Environ. Microbiol.
        73, 1576-1585 (2007).
 
+    .. [3] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
+        R. UniFrac: an effective distance metric for microbial community
+        comparison. ISME J. 5, 169-172 (2011).
+
     """
     if len(u_counts) != len(v_counts) != len(otu_ids):
         raise ValueError("Input vectors u_counts, v_counts, and otu_ids must"
                          " be of equal length.")
-    u_observed_otus = {o: c for o, c in zip(otu_ids, u_counts) if c >= 1}
-    v_observed_otus = {o: c for o, c in zip(otu_ids, v_counts) if c >= 1}
-    observed_nodes1 = set(tree.observed_node_counts(u_observed_otus))
-    observed_nodes2 = set(tree.observed_node_counts(v_observed_otus))
-    observed_branch_length = sum(
-        o.length for o in observed_nodes1 | observed_nodes2
-        if o.length is not None)
-    if observed_branch_length == 0:
+    u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
+    v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
+    u_obs_nodes = set(tree.observed_node_counts(u_obs_otu_counts))
+    v_obs_nodes = set(tree.observed_node_counts(v_obs_otu_counts))
+    obs_branch_length = sum(o.length or 0.0 for o in u_obs_nodes | v_obs_nodes)
+    if obs_branch_length == 0:
         # boundary case where both communities have no members
         return 0.0
     shared_branch_length = sum(
-        o.length for o in observed_nodes1 & observed_nodes2
-        if o.length is not None)
-    unique_branch_length = observed_branch_length - shared_branch_length
-    unweighted_unifrac = unique_branch_length / observed_branch_length
+        o.length or 0.0 for o in u_obs_nodes & v_obs_nodes)
+    unique_branch_length = obs_branch_length - shared_branch_length
+    unweighted_unifrac = unique_branch_length / obs_branch_length
     return unweighted_unifrac
 
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
-    """ Compute weighted unifrac with or without branch length normalization
+    """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
     ----------
@@ -104,7 +110,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
     Returns
     -------
     float
-        The weighted unifrac distance between the two samples.
+        The weighted UniFrac distance between the two samples.
 
     Raises
     ------
@@ -121,39 +127,43 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
 
     Notes
     -----
-    Unweighted unifrac was originally described in [1]_, which includes a
+    Unweighted UniFrac was originally described in [1]_, which includes a
     discussion of unweighted (qualitative) versus weighted (quantitiative)
-    diversity metrics.
+    diversity metrics. Deeper mathemtical discussions of this metric is
+    presented in [2]_.
 
     References
     ----------
     .. [1] Lozupone, C. A., Hamady, M., Kelley, S. T. & Knight, R. Quantitative
        and qualitative beta diversity measures lead to different insights into
        factors that structure microbial communities. Appl. Environ. Microbiol.
-       73, 1576–1585 (2007).
+       73, 1576-1585 (2007).
+
+    .. [2] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
+        R. UniFrac: an effective distance metric for microbial community
+        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    u_observed_otus = {o: c for o, c in zip(otu_ids, u_counts) if c >= 1}
+    u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     u_total_count = sum(u_counts)
-    v_observed_otus = {o: c for o, c in zip(otu_ids, v_counts) if c >= 1}
+    v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
     v_total_count = sum(v_counts)
-    if u_total_count == 0 and v_total_count == 0:
+    u_obs_nodes = tree.observed_node_counts(u_obs_otu_counts)
+    v_obs_nodes = tree.observed_node_counts(v_obs_otu_counts)
+    uv_obs_nodes = set(u_obs_nodes) | set(v_obs_nodes)
+    if len(uv_obs_nodes) == 0:
         # boundary case where both communities have no members
         return 0.0
-    u_observed_nodes = tree.observed_node_counts(u_observed_otus)
-    v_observed_nodes = tree.observed_node_counts(v_observed_otus)
     weighted_unifrac = 0
     D = 0
-    for o in set(u_observed_nodes) | set(v_observed_nodes):
+    for o in uv_obs_nodes:
         # handle the case of o.length is None
         b = o.length or 0
-        u_branch_weight = _sample_branch_weight(
-            u_observed_nodes[o], u_total_count)
-        v_branch_weight = _sample_branch_weight(
-            v_observed_nodes[o], v_total_count)
+        u_branch_weight = _sample_branch_weight(u_obs_nodes[o], u_total_count)
+        v_branch_weight = _sample_branch_weight(v_obs_nodes[o], v_total_count)
         branch_weight = abs(u_branch_weight - v_branch_weight)
         weighted_unifrac += b * branch_weight
-        if o.is_tip() and normalized:
+        if normalized and o.is_tip():
             d = o.accumulate_to_ancestor(tree.root())
             normed_weight = u_branch_weight + v_branch_weight
             D += (d * normed_weight)

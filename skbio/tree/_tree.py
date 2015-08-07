@@ -652,13 +652,13 @@ class TreeNode(SkbioObject):
 
     @experimental(as_of="0.4.0")
     def observed_node_counts(self, tip_counts):
-        """Returns counts of nodes observations from counts of tip observations
+        """Returns counts of node observations from counts of tip observations
 
         Parameters
         ----------
         tip_counts : dict of ints
             Counts of observations of tips. Keys correspond to tip names in
-            ``self``, and counts are ints greater than zero.
+            ``self``, and counts are unsigned ints.
 
         Returns
         -------

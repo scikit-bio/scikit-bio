@@ -56,16 +56,18 @@ Create a table containing 7 OTUs and 6 samples:
     [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]
     [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]
 
-   Compute weighted unifrac distances between all pairs of samples and return a
-   ``DistanceMatrix`` object. Because weighted unifrac is a phylogenetic beta
+   Compute weighted UniFrac distances between all pairs of samples and return a
+   ``DistanceMatrix`` object. Because weighted UniFrac is a phylogenetic beta
    diversity metric, we'll need to create a ``skbio.TreeNode`` object that
    contains all of the tips in the tree, and pass that along with the ids of
    the OTUs corresponding to the counts in ``data``.
 
    >>> from skbio import TreeNode
-   >>> tree = TreeNode.read(['(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+   >>> from io import StringIO
+   >>> tree = TreeNode.read(StringIO(
+   ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
    ...                      '(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):0.5'
-   ...                      '):1.25):0.0)root;'])
+   ...                      '):1.25):0.0)root;'))
    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
    >>> wu_dm = pw_distances("weighted_unifrac", data, ids, tree=tree,
    ...                      otu_ids=otu_ids)
@@ -149,14 +151,14 @@ next step is to quantify the strength of the grouping/clustering that we see in
 ordination plots. There are many statistical methods available to accomplish
 this; many operate on distance matrices. Let's use ANOSIM to quantify the
 strength of the clustering we see in the ordination plots above, using our
-Bray-Curtis distance matrix and sample metadata.
+weighted UniFrac distance matrix and sample metadata.
 
 First test the grouping of samples by subject:
 
 >>> from skbio.stats.distance import anosim
->>> results = anosim(bc_dm, sample_md, column='subject', permutations=999)
+>>> results = anosim(wu_dm, sample_md, column='subject', permutations=999)
 >>> results['test statistic']
--0.4074074074074075
+-0.33333333333333331
 >>> results['p-value'] < 0.1
 False
 
@@ -165,7 +167,7 @@ p-value is insignificant at an alpha of 0.1.
 
 Now let's test the grouping of samples by body site:
 
->>> results = anosim(bc_dm, sample_md, column='body_site', permutations=999)
+>>> results = anosim(wu_dm, sample_md, column='body_site', permutations=999)
 >>> results['test statistic']
 1.0
 >>> results['p-value'] < 0.1
