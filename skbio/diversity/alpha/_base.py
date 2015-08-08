@@ -77,18 +77,17 @@ def berger_parker_d(counts):
 
 @experimental(as_of="0.4.0")
 def brillouin_d(counts):
-    """Calculate Brillouin index of alpha diversity.
+    r"""Calculate Brillouin index of alpha diversity.
 
     This is calculated as follows:
 
     .. math::
 
-       HB = \\frac{\\ln N!-\\sum^s_{i=1}{\\ln n_i!}}{N}
+       HB = \frac{\ln N!-\sum^s_{i=1}{\ln n_i!}}{N}
 
-    :math:`N` is defined as the total number of individuals in the sample,
-    :math:`s` is the number of OTUs, and :math:`n_i` is defined as the number
-    of individuals in the ith OTUs.
-
+    where :math:`N` is defined as the total number of individuals in the
+    sample, :math:`s` is the number of OTUs, and :math:`n_i` is defined as the
+    number of individuals in the :math:`i^{\text{th}}` OTU.
 
     Parameters
     ----------
