@@ -315,8 +315,8 @@ def esty_ci(counts):
 def fisher_alpha(counts):
     r"""Calculate Fisher's alpha, a metric of diversity.
 
-    Fisher's alpha is estimated by iteratively solving the following equation
-    for :math:`\alpha`:
+    Fisher's alpha is estimated by solving the following equation for
+    :math:`\alpha`:
 
     .. math::
 
