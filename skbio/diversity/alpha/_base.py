@@ -186,7 +186,7 @@ def enspie(counts):
 
     .. math::
 
-      ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
+       ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
 
     where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
     the community represented by OTU :math:`i`.
@@ -405,16 +405,16 @@ def goods_coverage(counts):
 
 @experimental(as_of="0.4.0")
 def heip_e(counts):
-    """Calculate Heip's evenness measure.
+    r"""Calculate Heip's evenness measure.
 
     Heip's evenness is defined as:
 
     .. math::
 
-      \\frac{(e^H-1)}{(S-1)}
+       \frac{(e^H-1)}{(S-1)}
 
-    Where :math:`H` is defined as the Shannon-Wiener entropy of counts and
-    :math:`S` is defined as the number of OTUs.
+    where :math:`H` is the Shannon-Wiener entropy of counts (using logarithm
+    base :math:`e`) and :math:`S` is the number of OTUs in the sample.
 
     Parameters
     ----------
@@ -425,6 +425,10 @@ def heip_e(counts):
     -------
     double
         Heip's evenness measure.
+
+    See Also
+    --------
+    shannon
 
     Notes
     -----

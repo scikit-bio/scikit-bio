@@ -22,8 +22,8 @@ def ace(counts, rare_threshold=10):
 
     .. math::
 
-      S_{ace} = S_{abund}+\frac{S_{rare}}{C_{ace}}+
-      \frac{F_1}{C_{ace}}\gamma^2_{ace}
+       S_{ace}=S_{abund}+\frac{S_{rare}}{C_{ace}}+
+       \frac{F_1}{C_{ace}}\gamma^2_{ace}
 
     where :math:`S_{abund}` is the number of abundant OTUs (with more than
     `rare_threshold`  individuals) when all samples are pooled,
@@ -38,9 +38,9 @@ def ace(counts, rare_threshold=10):
 
     .. math::
 
-      \gamma^2_{ace} = max\left[\frac{S_{rare}}{C_{ace}}
-      \frac{\sum^{10}_{i=1}{{i\left(i-1\right)}}F_i}
-      {\left(N_{rare}\right)\left(N_{rare}-1\right)} -1,0\right]
+       \gamma^2_{ace}=max\left[\frac{S_{rare}}{C_{ace}}
+       \frac{\sum^{10}_{i=1}{{i\left(i-1\right)}}F_i}
+       {\left(N_{rare}\right)\left(N_{rare}-1\right)} -1,0\right]
 
     Parameters
     ----------
