@@ -180,17 +180,16 @@ def doubles(counts):
 
 @experimental(as_of="0.4.0")
 def enspie(counts):
-    """Calculate ENS_pie alpha diversity measure.
+    r"""Calculate ENS_pie alpha diversity measure.
 
     ENS_pie is equivalent to ``1 / dominance``:
 
     .. math::
 
-      ENS_{pie} = \\frac{1}{\\sum_{i=1}^s{p_i^2}}
+      ENS_{pie} = \frac{1}{\sum_{i=1}^s{p_i^2}}
 
     where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
-    the community represented by OTU i.
-
+    the community represented by OTU :math:`i`.
 
     Parameters
     ----------
