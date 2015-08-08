@@ -313,17 +313,17 @@ def esty_ci(counts):
 
 @experimental(as_of="0.4.0")
 def fisher_alpha(counts):
-    """Calculate Fisher's alpha, a metric of diversity.
+    r"""Calculate Fisher's alpha, a metric of diversity.
 
-    Alpha is the index of the following log series distribution:
+    Fisher's alpha is estimated by iteratively solving the following equation
+    for :math:`\alpha`:
 
     .. math::
 
-      \\alpha x,\\frac{\\alpha x^2}{2},\\frac{\\alpha x^3}{3},...,
-      \\frac{\\alpha x^n}{n}
+       S=\alpha\ln(1+\frac{N}{\alpha})
 
-    Each term in the series is equal to the number of OTUs predicted to
-    have 1,2,3,...,n individuals in the sample.
+    where :math:`S` is the number of OTUs and :math:`N` is the
+    total number of individuals in the sample.
 
     Parameters
     ----------
