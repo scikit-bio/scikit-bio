@@ -37,18 +37,18 @@ def _validate(counts, suppress_cast=False):
 
 @experimental(as_of="0.4.0")
 def berger_parker_d(counts):
-    """Calculate Berger-Parker dominance.
+    r"""Calculate Berger-Parker dominance.
 
     Berger-Parker dominance is defined as the fraction of the sample that
-    belongs to the most abundant OTUs:
+    belongs to the most abundant OTU:
 
     .. math::
 
-       d = \\frac{N_{max}}{N}
+       d = \frac{N_{max}}{N}
 
-    :math:`N_{max}` is defined as the number of individuals in the most
-    abundant OTUs, and :math:`N` is defined as the total number of individuals
-    in the sample.
+    where :math:`N_{max}` is defined as the number of individuals in the most
+    abundant OTU (or any of the most abundant OTUs in the case of ties), and
+    :math:`N` is defined as the total number of individuals in the sample.
 
     Parameters
     ----------
