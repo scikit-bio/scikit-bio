@@ -117,13 +117,13 @@ def brillouin_d(counts):
 
 @experimental(as_of="0.4.0")
 def dominance(counts):
-    """Calculate dominance.
+    r"""Calculate dominance.
 
     Dominance is defined as
 
     .. math::
 
-       \\sum{p_i^2}
+       \sum{p_i^2}
 
     where :math:`p_i` is the proportion of the entire community that OTU
     :math:`i` represents.
@@ -258,13 +258,13 @@ def equitability(counts, base=2):
 
 @experimental(as_of="0.4.0")
 def esty_ci(counts):
-    """Calculate Esty's CI.
+    r"""Calculate Esty's CI.
 
     Esty's CI is defined as
 
     .. math::
 
-       F_1/N \\pm z\\sqrt{W}
+       F_1/N \pm z\sqrt{W}
 
     where :math:`F_1` is the number of singleton OTUs, :math:`N` is the total
     number of individuals (sum of abundances for all OTUs), and :math:`z` is a
@@ -275,7 +275,7 @@ def esty_ci(counts):
 
     .. math::
 
-       \\frac{F_1(N-F_1)+2NF_2}{N^3}
+       \frac{F_1(N-F_1)+2NF_2}{N^3}
 
     where :math:`F_2` is the number of doubleton OTUs.
 
@@ -375,13 +375,13 @@ def fisher_alpha(counts):
 
 @experimental(as_of="0.4.0")
 def goods_coverage(counts):
-    """Calculate Good's coverage of counts.
+    r"""Calculate Good's coverage of counts.
 
     Good's coverage estimator is defined as
 
     .. math::
 
-       1-\\frac{F_1}{N}
+       1-\frac{F_1}{N}
 
     where :math:`F_1` is the number of singleton OTUs and :math:`N` is the
     total number of individuals (sum of abundances for all OTUs).
@@ -803,13 +803,13 @@ def osd(counts):
 
 @experimental(as_of="0.4.0")
 def robbins(counts):
-    """Calculate Robbins' estimator for the probability of unobserved outcomes.
+    r"""Calculate Robbins' estimator for the probability of unobserved outcomes.
 
     Robbins' estimator is defined as:
 
     .. math::
 
-       \\frac{F_1}{n+1}
+       \frac{F_1}{n+1}
 
     where :math:`F_1` is the number of singleton OTUs.
 
@@ -923,13 +923,13 @@ def simpson(counts):
 
 @experimental(as_of="0.4.0")
 def simpson_e(counts):
-    """Calculate Simpson's evenness measure E.
+    r"""Calculate Simpson's evenness measure E.
 
     Simpson's E is defined as
 
     .. math::
 
-       E=\\frac{1 / D}{S_{obs}}
+       E=\frac{1 / D}{S_{obs}}
 
     where :math:`D` is dominance and :math:`S_{obs}` is the number of observed
     OTUs.
