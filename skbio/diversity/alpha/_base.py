@@ -589,17 +589,17 @@ def mcintosh_d(counts):
 
 @experimental(as_of="0.4.0")
 def mcintosh_e(counts):
-    """Calculate McIntosh's evenness measure E.
+    r"""Calculate McIntosh's evenness measure E.
 
-    The McIntosh evenness measure E is defined as:
+    McIntosh evenness measure E is defined as:
 
     .. math::
 
-      E = \\frac{\\sqrt{\\sum{n_i^2}}}{\\sqrt{((N-S+1)^2 + S -1}}
+       E = \frac{\sqrt{\sum{n_i^2}}}{\sqrt{((N-S+1)^2 + S -1}}
 
-    Where :math:`n_i` is the number of individuals in the ith OTUs,
-    :math:`N` is the total number of individuals, and :math:`S` is the number
-    of OTUs.
+    where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
+    OTU, :math:`N` is the total number of individuals, and :math:`S` is the
+    number of OTUs in the sample.
 
     Parameters
     ----------
@@ -617,12 +617,13 @@ def mcintosh_e(counts):
 
     Notes
     -----
-    The implementation here is based on the description given in [1]_, *NOT*
+    The implementation here is based on the description given in [1]_, **NOT**
     the one in the SDR-IV online manual, which is wrong.
 
     References
     ----------
-    .. [1] Heip & Engels 1974 p 560.
+    .. [1] Heip & Engels (1974) Comparing Species Diversity and Evenness
+       Indices. p 560.
 
     """
     counts = _validate(counts)
