@@ -537,23 +537,23 @@ def margalef(counts):
 
 @experimental(as_of="0.4.0")
 def mcintosh_d(counts):
-    """Calculate McIntosh dominance index D.
+    r"""Calculate McIntosh dominance index D.
 
-    The McIntosh dominance index D is defined as:
-
-    .. math::
-
-       D = \\frac{N - U}{N - \\sqrt{N}}
-
-    where :math:`N` is the total number of individuals (sum of abundances for
-    all OTUs) and :math:`U` is given as:
+    McIntosh dominance index D is defined as:
 
     .. math::
 
-        U = \\sqrt{\\sum{{n_i}^2}}
+       D = \frac{N - U}{N - \sqrt{N}}
 
-    where :math:`n_i` is the sum of abundances for all OTUs in the
-    :math:`i_{th}` OTUs.
+    where :math:`N` is the total number of individuals in the sample and
+    :math:`U` is defined as:
+
+    .. math::
+
+       U = \sqrt{\sum{{n_i}^2}}
+
+    where :math:`n_i` is the number of individuals in the :math:`i^{\text{th}}`
+    OTU.
 
     Parameters
     ----------
