@@ -636,16 +636,16 @@ def mcintosh_e(counts):
 
 @experimental(as_of="0.4.0")
 def menhinick(counts):
-    """Calculate Menhinick's richness index.
+    r"""Calculate Menhinick's richness index.
 
-    The Menhinick's richness index is defined as:
+    Menhinick's richness index is defined as:
 
     .. math::
 
-      D_{Mn} = \\frac{S}{\\sqrt{N}}
+       D_{Mn} = \frac{S}{\sqrt{N}}
 
-    Where :math:`S` is the number of OTUs recorded and :math:`N` is the
-    total number of individuals in the sample.
+    where :math:`S` is the number of OTUs and :math:`N` is the total number of
+    individuals in the sample.
 
     Assumes square-root accumulation.
 
@@ -675,13 +675,13 @@ def menhinick(counts):
 
 @experimental(as_of="0.4.0")
 def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
-    """Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
+    r"""Calculate Michaelis-Menten fit to rarefaction curve of observed OTUs.
 
     The Michaelis-Menten equation is defined as:
 
     .. math::
 
-       S=\\frac{nS_{max}}{n+B}
+       S=\frac{nS_{max}}{n+B}
 
     where :math:`n` is the number of individuals and :math:`S` is the number of
     OTUs. This function estimates the :math:`S_{max}` parameter.
