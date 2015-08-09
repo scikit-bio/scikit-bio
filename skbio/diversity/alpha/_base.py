@@ -805,7 +805,7 @@ def osd(counts):
 def robbins(counts):
     """Calculate Robbins' estimator for the probability of unobserved outcomes.
 
-    Robbins' estimator is defined as
+    Robbins' estimator is defined as:
 
     .. math::
 
@@ -839,15 +839,16 @@ def robbins(counts):
 
 @experimental(as_of="0.4.0")
 def shannon(counts, base=2):
-    """Calculate Shannon entropy of counts (H), default in bits.
+    r"""Calculate Shannon entropy of counts, default in bits.
+
+    Shannon-Wiener diversity index is defined as:
 
     .. math::
 
-      H = -\\sum_{i=1}^s\\left(p_i\\log_2 p_i\\right)
+       H = -\sum_{i=1}^s\left(p_i\log_2 p_i\right)
 
-    Where :math:`p_i` is the proportion of individuals in the ith OTUs,
-    :math:`s` is the number of OTUs, and :math:`N` is the total number of
-    individuals in the sample.
+    where :math:`s` is the number of OTUs and :math:`p_i` is the proportion of
+    the community represented by OTU :math:`i`.
 
     Parameters
     ----------
@@ -864,7 +865,7 @@ def shannon(counts, base=2):
     Notes
     -----
     The implementation here is based on the description given in the SDR-IV
-    online manual [1]_, except that the default logarithm base used here is 2
+    online manual [1]_ except that the default logarithm base used here is 2
     instead of :math:`e`.
 
     References
@@ -880,16 +881,16 @@ def shannon(counts, base=2):
 
 @experimental(as_of="0.4.0")
 def simpson(counts):
-    """Calculate Simpson's index.
+    r"""Calculate Simpson's index.
 
-    Simpson's index is defined as 1 - dominance:
+    Simpson's index is defined as ``1 - dominance``:
 
     .. math::
 
-       1 - \\sum{p_i^2}
+       1 - \sum{p_i^2}
 
-    where :math:`p_i` is the proportion of the entire community that OTU
-    :math:`i` represents.
+    where :math:`p_i` is the proportion of the community represented by OTU
+    :math:`i`.
 
     Parameters
     ----------
@@ -983,18 +984,20 @@ def singles(counts):
 
 @experimental(as_of="0.4.0")
 def strong(counts):
-    """Calculate Strong's dominance index (Dw).
+    r"""Calculate Strong's dominance index.
 
     Strong's dominance index is defined as:
 
     .. math::
 
-      D_w = max_i[(\\frac{b_i}{Q})-\\frac{i}{R}]
+       D_w = max_i[(\frac{b_i}{N})-\frac{i}{S}]
 
-    where :math:`b_i` is sequential cumulative totaling of the ith OTUs
-    abundance values ranked from largest to smallest, :math:`Q` is the total
-    number of individuals in the sample, :math:`R` is the number of OTUs in the
-    sample, and :math:`max_i` is the largest calculated ith values.
+    where :math:`b_i` is the sequential cumulative totaling of the
+    :math:`i^{\text{th}}` OTU abundance values ranked from largest to smallest,
+    :math:`N` is the total number of individuals in the sample, and
+    :math:`S` is the number of OTUs in the sample. The expression in brackets
+    is computed for all OTUs, and :math:`max_i` denotes the maximum value in
+    brackets for any OTU.
 
     Parameters
     ----------
@@ -1013,7 +1016,7 @@ def strong(counts):
 
     References
     ----------
-    .. [1] Strong, W. L., 2002 Assessing OTUs abundance uneveness within and
+    .. [1] Strong, W. L., 2002 Assessing species abundance uneveness within and
        between plant communities. Community Ecology, 3, 237-246.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
