@@ -498,15 +498,16 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
 @experimental(as_of="0.4.0")
 def margalef(counts):
-    """Calculate Margalef's richness index.
+    r"""Calculate Margalef's richness index.
+
+    Margalef's D is defined as:
 
     .. math::
 
-       D = \\frac{(S - 1)}{\\ln N}
+       D = \frac{(S - 1)}{\ln N}
 
-    where :math:`S` is the OTUs number and :math:`N` is the
-    total number of individuals (sum of abundances for all OTUs).
-
+    where :math:`S` is the number of OTUs and :math:`N` is the total number of
+    individuals in the sample.
 
     Assumes log accumulation.
 
