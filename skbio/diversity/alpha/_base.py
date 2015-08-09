@@ -449,19 +449,8 @@ def heip_e(counts):
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     """Calculate Kempton-Taylor Q index of alpha diversity.
 
-    The Q index is defined as:
-
-    .. math::
-
-      Q = \\frac{\\frac{1}{2}n_{R1}+\\sum_{R1+1}^{R2-1}n_r+\\frac{1}{2}n_{R2}}
-      {\\log\\frac{R2}{R1}}
-
-    This estimates the slope of the cumulative abundance curve in the
-    interquantile range. By default, uses lower and upper quartiles, rounding
-    inwards. Where :math:`R1` and :math:`R2` are the 25\\% and 75\\% on the
-    cumulative OTUs curve. :math:`n_{R1}` and :math:`n_{R2}` are the number
-    of individuals in those classes. :math:`n_r` is the number of OTUs with
-    R abundance.
+    Estimates the slope of the cumulative abundance curve in the interquantile
+    range. By default, uses lower and upper quartiles, rounding inwards.
 
     Parameters
     ----------
@@ -494,7 +483,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     References
     ----------
     .. [1] Kempton, R. A. and Taylor, L. R. (1976) Models and statistics for
-       OTUs diversity. Nature, 262, 818-820.
+       species diversity. Nature, 262, 818-820.
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
