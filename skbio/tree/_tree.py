@@ -664,7 +664,7 @@ class TreeNode(SkbioObject):
         -------
         dict
             Counts of observations of nodes. Keys correspond to node names
-            (internal nodes or tips), and counts are ints greater than zero.
+            (internal nodes or tips), and counts are unsigned ints.
 
         Raises
         ------

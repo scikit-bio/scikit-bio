@@ -16,7 +16,8 @@ def _observed_otu_counts(counts, otu_ids):
 
 
 @experimental(as_of="0.4.0-dev")
-def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
+def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
+                       suppress_shear=False):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -76,6 +77,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
                          " be of equal length.")
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
+    if not suppress_shear:
+        tree = tree.shear(u_obs_otu_counts.keys() | v_obs_otu_counts.keys())
     u_obs_nodes = set(tree.observed_node_counts(u_obs_otu_counts))
     v_obs_nodes = set(tree.observed_node_counts(v_obs_otu_counts))
     obs_branch_length = sum(o.length or 0.0 for o in u_obs_nodes | v_obs_nodes)
@@ -90,7 +93,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree):
 
 
 @experimental(as_of="0.4.0-dev")
-def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
+def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
+                     suppress_shear=False):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -148,6 +152,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False):
     u_total_count = sum(u_counts)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
     v_total_count = sum(v_counts)
+    if not suppress_shear:
+        tree = tree.shear(u_obs_otu_counts.keys() | v_obs_otu_counts.keys())
     u_obs_nodes = tree.observed_node_counts(u_obs_otu_counts)
     v_obs_nodes = tree.observed_node_counts(v_obs_otu_counts)
     uv_obs_nodes = set(u_obs_nodes) | set(v_obs_nodes)

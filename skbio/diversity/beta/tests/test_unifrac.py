@@ -32,6 +32,30 @@ class StatsTests(TestCase):
         self.t1 = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                      '0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.t1_w_extra_tips = TreeNode.read(
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                     ')root;'))
+
+    def test_unweighted_extra_tips_filtered(self):
+        print(self.t1_w_extra_tips.tip_tip_distances())
+        print(self.t1.tip_tip_distances())
+        for i in range(len(self.b1)):
+            for j in range(len(self.b1)):
+                actual = unweighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1_w_extra_tips)
+                expected = unweighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_extra_tips_filtered(self):
+        for i in range(len(self.b1)):
+            for j in range(len(self.b1)):
+                actual = weighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1_w_extra_tips)
+                expected = weighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac_identity(self):
         for i in range(len(self.b1)):
