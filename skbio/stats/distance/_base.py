@@ -691,6 +691,7 @@ class DistanceMatrix(DissimilarityMatrix):
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable[:i]):
                 dm[i, j] = dm[j, i] = metric(a, b)
+
         return cls(dm, keys)
 
     @experimental(as_of="0.4.0")
