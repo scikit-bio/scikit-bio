@@ -100,29 +100,32 @@ estimate for the critical value of 0.01, and a critical value of 0.001.
 ...                                       min_counts=3,
 ...                                       counts_interval=1,
 ...                                       draw_mode="matched",
-...                                       alpha_pwr=0.1)
+...                                       alpha_pwr=0.1,
+...                                       num_iter=25)
 >>> pwr_010, counts_010 = subsample_power(test=f,
 ...                                       samples=samples,
 ...                                       max_counts=10,
 ...                                       min_counts=3,
 ...                                       counts_interval=1,
 ...                                       draw_mode="matched",
-...                                       alpha_pwr=0.01)
+...                                       alpha_pwr=0.01,
+...                                       num_iter=25)
 >>> pwr_001, counts_001 = subsample_power(test=f,
 ...                                       samples=samples,
 ...                                       max_counts=10,
 ...                                       min_counts=3,
 ...                                       counts_interval=1,
 ...                                       draw_mode="matched",
-...                                       alpha_pwr=0.001)
+...                                       alpha_pwr=0.001,
+...                                       num_iter=25)
 >>> counts_100
 array([3, 4, 5, 6, 7, 8, 9])
 >>> pwr_100.mean(0)
-array([ 0.4716,  0.8226,  0.9424,  0.986 ,  0.9988,  1.    ,  1.    ])
+array([ 0.484,  0.844,  0.932,  0.984,  1.   ,  1.   ,  1.   ])
 >>> pwr_010.mean(0)
-array([ 0.0492,  0.2368,  0.5462,  0.823 ,  0.9474,  0.9828,  0.9982])
+array([ 0.044,  0.224,  0.572,  0.836,  0.928,  0.996,  1.   ])
 >>> pwr_001.mean(0)
-array([ 0.0028,  0.0174,  0.1262,  0.342 ,  0.5928,  0.8256,  0.9594])
+array([ 0.   ,  0.016,  0.108,  0.332,  0.572,  0.848,  0.956])
 
 Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples
@@ -513,14 +516,14 @@ def subsample_paired_power(test, meta, cat, control_cats, order=None,
     ...                                   cat='TREATMENT',
     ...                                   control_cats=control_cats,
     ...                                   counts_interval=5,
-    ...                                   num_iter=100,
+    ...                                   num_iter=25,
     ...                                   num_runs=5)
     >>> cnt
     array([  5.,  10.,  15.,  20.])
     >>> pwr.mean(0)
-    array([ 0.192,  0.43 ,  0.642,  0.872])
+    array([ 0.24 ,  0.528,  0.68 ,  0.88 ])
     >>> pwr.std(0).round(3)
-    array([ 0.013,  0.023,  0.042,  0.035])
+    array([ 0.088,  0.127,  0.168,  0.08 ])
 
     Estimating off the power curve, it looks like 20 cells per group may
     provide adequate power for this experiment, although the large variance
@@ -687,13 +690,12 @@ def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
 
     >>> from skbio.stats.power import bootstrap_power_curve
     >>> sample_counts = np.arange(5, 80, 5)
-    >>> power_mean, power_bound = bootstrap_power_curve(f,
-    ...                                                 [samples_1, samples_2],
-    ...                                                 sample_counts)
+    >>> power_mean, power_bound = bootstrap_power_curve(
+    ...     f, [samples_1, samples_2], sample_counts, num_iter=25)
     >>> sample_counts[power_mean - power_bound.round(3) > .80].min()
-    20
+    25
 
-    Based on this analysis, it looks like we need at least 20 observations
+    Based on this analysis, it looks like we need at least 25 observations
     from each distribution to avoid committing a type II error more than 20%
     of the time.
 

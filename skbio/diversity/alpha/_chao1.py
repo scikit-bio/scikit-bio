@@ -17,7 +17,7 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def chao1(counts, bias_corrected=True):
-    """Calculate chao1 richness estimator.
+    r"""Calculate chao1 richness estimator.
 
     Uses the bias-corrected version unless `bias_corrected` is ``False`` *and*
     there are both singletons and doubletons.
@@ -47,7 +47,7 @@ def chao1(counts, bias_corrected=True):
 
     .. math::
 
-       chao1=S_{obs}+\\frac{F_1^2}{2F_2}
+       chao1=S_{obs}+\frac{F_1^2}{2F_2}
 
     where :math:`F_1` and :math:`F_2` are the count of singletons and
     doubletons, respectively.
@@ -56,7 +56,7 @@ def chao1(counts, bias_corrected=True):
 
     .. math::
 
-       chao1=S_{obs}+\\frac{F_1(F_1-1)}{2(F_2+1)}
+       chao1=S_{obs}+\frac{F_1(F_1-1)}{2(F_2+1)}
 
     References
     ----------

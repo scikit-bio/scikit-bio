@@ -16,7 +16,31 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def ace(counts, rare_threshold=10):
-    """Calculate the ACE metric (Abundance-based Coverage Estimator).
+    r"""Calculate the ACE metric (Abundance-based Coverage Estimator).
+
+    The ACE metric is defined as:
+
+    .. math::
+
+       S_{ace}=S_{abund}+\frac{S_{rare}}{C_{ace}}+
+       \frac{F_1}{C_{ace}}\gamma^2_{ace}
+
+    where :math:`S_{abund}` is the number of abundant OTUs (with more than
+    `rare_threshold`  individuals) when all samples are pooled,
+    :math:`S_{rare}` is the number of rare OTUs (with less than or equal to
+    `rare_threshold` individuals) when all samples are pooled, :math:`C_{ace}`
+    is the sample abundance coverage estimator, :math:`F_1` is the frequency of
+    singletons, and :math:`\gamma^2_{ace}` is the estimated coefficient of
+    variation for rare OTUs.
+
+    The estimated coefficient of variation is defined as (assuming
+    `rare_threshold` is 10, the default):
+
+    .. math::
+
+       \gamma^2_{ace}=max\left[\frac{S_{rare}}{C_{ace}}
+       \frac{\sum^{10}_{i=1}{{i\left(i-1\right)}}F_i}
+       {\left(N_{rare}\right)\left(N_{rare}-1\right)} -1,0\right]
 
     Parameters
     ----------
