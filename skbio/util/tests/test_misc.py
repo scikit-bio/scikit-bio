@@ -20,7 +20,8 @@ from uuid import uuid4
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
                         create_dir, find_duplicates, flatten,
                         is_casava_v180_or_later)
-from skbio.util._misc import _handle_error_codes, MiniRegistry, chunk_str
+from skbio.util._misc import (
+    _handle_error_codes, MiniRegistry, chunk_str, resolve_key)
 
 
 class TestMiniRegistry(unittest.TestCase):
@@ -129,6 +130,33 @@ class TestMiniRegistry(unittest.TestCase):
                          "First line\n\n                Some description of th"
                          "ings, also this:\n\n                Other things are"
                          " happening now.\n                ")
+
+
+class ResolveKeyTests(unittest.TestCase):
+    def test_callable(self):
+        def func(x):
+            return str(x)
+
+        self.assertEqual(resolve_key(1, func), "1")
+        self.assertEqual(resolve_key(4, func), "4")
+
+    def test_index(self):
+        class MetadataHaver(dict):
+            metadata = {}
+
+            @property
+            def metadata(self):
+                return self
+
+        obj = MetadataHaver({'foo': 123})
+        self.assertEqual(resolve_key(obj, 'foo'), 123)
+
+        obj = MetadataHaver({'foo': 123, 'bar': 'baz'})
+        self.assertEqual(resolve_key(obj, 'bar'), 'baz')
+
+    def test_wrong_type(self):
+        with self.assertRaises(TypeError):
+            resolve_key({'foo': 1}, 'foo')
 
 
 class ChunkStrTests(unittest.TestCase):

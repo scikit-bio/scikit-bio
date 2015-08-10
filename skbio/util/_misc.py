@@ -17,6 +17,17 @@ import inspect
 from ._decorator import experimental, deprecated
 
 
+def resolve_key(obj, key):
+    """Resolve key given a object and key."""
+    if callable(key):
+        return key(obj)
+    elif hasattr(obj, 'metadata'):
+        return obj.metadata[key]
+    raise TypeError("Could not resolve key %r. Key must be callable or %s must"
+                    " have `metadata` attribute." % (key,
+                                                     obj.__class__.__name__))
+
+
 def make_sentinel(name):
     return type(name, (object, ), {
         '__repr__': lambda s: name,
