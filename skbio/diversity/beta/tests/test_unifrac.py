@@ -14,6 +14,7 @@ import numpy as np
 
 from skbio.io._fileobject import StringIO
 from skbio import TreeNode
+from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 
 
@@ -137,10 +138,10 @@ class StatsTests(TestCase):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(DuplicateNodeError, unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(DuplicateNodeError, weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # otu_ids has duplicated ids
         t = TreeNode.read(
@@ -229,10 +230,10 @@ class StatsTests(TestCase):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
-        self.assertRaises(ValueError, unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(MissingNodeError, unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(MissingNodeError, weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
     def test_unweighted_unifrac_non_overlapping(self):
         # these communities only share the root node

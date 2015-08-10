@@ -35,13 +35,6 @@ def _validate(u_counts, v_counts, otu_ids, tree):
         raise ValueError("Input vector otu_ids must be the same length as "
                          "u_counts and v_counts.")
 
-    tip_names = [e.name for e in tree.tips()]
-    set_tip_names = set(tip_names)
-    if len(tip_names) != len(set_tip_names):
-        raise ValueError('Duplicated OTU ids are not allowed in tree.')
-    if set_otu_ids - set_tip_names != set():
-        raise ValueError('All otu_ids must be tip names in tree.')
-
     branch_lengths = [e.length for e in tree.traverse() if not e.is_root()]
     if np.array([l is None for l in branch_lengths]).any():
         raise ValueError('All non-root nodes in tree must have a branch '
