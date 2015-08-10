@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
+
 from skbio.util._decorator import experimental
 
 
@@ -15,9 +17,40 @@ def _observed_otu_counts(counts, otu_ids):
     return {o: c for o, c in zip(otu_ids, counts) if c >= 1}
 
 
+def _validate(u_counts, v_counts, otu_ids, tree):
+    if (np.asarray(u_counts) < 0).any() or (np.asarray(v_counts) < 0).any():
+        raise ValueError('Counts vectors can only contain integers >= 0.')
+
+    len_otu_ids = len(otu_ids)
+    set_otu_ids = set(otu_ids)
+    if len_otu_ids != len(set_otu_ids):
+        raise ValueError('Duplicated OTU ids are not allowed in otu_ids.')
+
+    len_u_counts = len(u_counts)
+    len_v_counts = len(v_counts)
+    if len_u_counts != len_v_counts:
+        raise ValueError("Input vectors u_counts and v_counts must be of "
+                         "equal length.")
+    if len_u_counts != len_otu_ids:
+        raise ValueError("Input vector otu_ids must be the same length as "
+                         "u_counts and v_counts.")
+
+    tip_names = [e.name for e in tree.tips()]
+    set_tip_names = set(tip_names)
+    if len(tip_names) != len(set_tip_names):
+        raise ValueError('Duplicated OTU ids are not allowed in tree.')
+    if set_otu_ids - set_tip_names != set():
+        raise ValueError('All otu_ids must be tip names in tree.')
+
+    branch_lengths = [e.length for e in tree.traverse() if not e.is_root()]
+    if np.array([l is None for l in branch_lengths]).any():
+        raise ValueError('All non-root nodes in tree must have a branch '
+                         'length.')
+
+
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       suppress_shear=False):
+                       suppress_validation=False):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -30,6 +63,11 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
+    suppress_validation: bool, optional
+        If `True`, validation of the input won't be performed. This step can
+        be slow, so if validation is being before elsewhere it can be disabled
+        here. However, invalid input data can lead to invalid results, so this
+        step should not be bypassed all together.
 
     Returns
     -------
@@ -72,13 +110,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
         comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if len(u_counts) != len(v_counts) != len(otu_ids):
-        raise ValueError("Input vectors u_counts, v_counts, and otu_ids must"
-                         " be of equal length.")
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
-    if not suppress_shear:
-        tree = tree.shear(u_obs_otu_counts.keys() | v_obs_otu_counts.keys())
     u_obs_nodes = set(tree.observed_node_counts(u_obs_otu_counts))
     v_obs_nodes = set(tree.observed_node_counts(v_obs_otu_counts))
     obs_branch_length = sum(o.length or 0.0 for o in u_obs_nodes | v_obs_nodes)
@@ -94,7 +129,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     suppress_shear=False):
+                     suppress_validation=False):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -110,6 +145,11 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     normalized: boolean, optional
         If ``True``, apply branch length normalization. Resulting distances
         will then be in the range ``[0, 1]``.
+    suppress_validation: bool, optional
+        If `True`, validation of the input won't be performed. This step can
+        be slow, so if validation is being before elsewhere it can be disabled
+        here. However, invalid input data can lead to invalid results, so this
+        step should not be bypassed all together.
 
     Returns
     -------
@@ -148,12 +188,12 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         comparison. ISME J. 5, 169-172 (2011).
 
     """
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     u_total_count = sum(u_counts)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
     v_total_count = sum(v_counts)
-    if not suppress_shear:
-        tree = tree.shear(u_obs_otu_counts.keys() | v_obs_otu_counts.keys())
     u_obs_nodes = tree.observed_node_counts(u_obs_otu_counts)
     v_obs_nodes = tree.observed_node_counts(v_obs_otu_counts)
     uv_obs_nodes = set(u_obs_nodes) | set(v_obs_nodes)
