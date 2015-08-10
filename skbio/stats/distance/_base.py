@@ -22,6 +22,7 @@ from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
 from skbio.util._decorator import experimental
+from skbio.util._misc import resolve_key
 
 
 class DissimilarityMatrixError(Exception):
@@ -648,6 +649,43 @@ class DistanceMatrix(DissimilarityMatrix):
 
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
+
+    @classmethod
+    @experimental(as_of="0.4.0-dev")
+    def from_iterable(cls, iterable, metric, key=None):
+        """Create DistanceMatrix from all pairs in an iterable given a metric.
+
+        Parameters
+        ----------
+        iterable : iterable
+            Iterable containing objects to compute pairwise distances on.
+        metric : callable
+            A function that takes two arguments and returns a float
+            representing the distance between the two arguments.
+        key : callable, str, optional
+            A function that takes one argument and returns a string
+            representing the id of the element in the distance matrix.
+            Alternatively, a key to a `metadata` property if it exists for
+            each element in the `iterable`. If None, then default ids will be
+            used.
+
+        Returns
+        -------
+        DistanceMatrix
+            The `metric` applied to all pairwise elements in the `iterable`.
+
+        """
+        iterable = list(iterable)
+
+        keys = None
+        if key is not None:
+            keys = [resolve_key(e, key) for e in iterable]
+
+        dm = np.zeros((len(iterable),) * 2)
+        for i, a in enumerate(iterable):
+            for j, b in enumerate(iterable[:i]):
+                dm[i, j] = dm[j, i] = metric(a, b)
+        return cls(dm, keys)
 
     @experimental(as_of="0.4.0")
     def condensed_form(self):
