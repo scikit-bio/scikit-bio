@@ -20,7 +20,6 @@ from skbio.diversity.alpha import (
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from skbio.diversity.alpha._base import _validate
 
 
 class BaseTests(TestCase):
@@ -36,57 +35,6 @@ class BaseTests(TestCase):
         self.t1 = TreeNode.read(StringIO(
             '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
             '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
-
-    def test_validate(self):
-        # python list
-        obs = _validate([0, 2, 1, 3])
-        npt.assert_array_equal(obs, np.array([0, 2, 1, 3]))
-        self.assertEqual(obs.dtype, int)
-
-        # numpy array (no copy made)
-        data = np.array([0, 2, 1, 3])
-        obs = _validate(data)
-        npt.assert_array_equal(obs, data)
-        self.assertEqual(obs.dtype, int)
-        self.assertTrue(obs is data)
-
-        # single element
-        obs = _validate([42])
-        npt.assert_array_equal(obs, np.array([42]))
-        self.assertEqual(obs.dtype, int)
-        self.assertEqual(obs.shape, (1,))
-
-        # suppress casting to int
-        obs = _validate([42.2, 42.1, 0], suppress_cast=True)
-        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
-        self.assertEqual(obs.dtype, float)
-
-        # all zeros
-        obs = _validate([0, 0, 0])
-        npt.assert_array_equal(obs, np.array([0, 0, 0]))
-        self.assertEqual(obs.dtype, int)
-
-        # all zeros (single value)
-        obs = _validate([0])
-        npt.assert_array_equal(obs, np.array([0]))
-        self.assertEqual(obs.dtype, int)
-
-    def test_validate_invalid_input(self):
-        # wrong dtype
-        with self.assertRaises(TypeError):
-            _validate([0, 2, 1.2, 3])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaises(ValueError):
-            _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
-
-        # wrong number of dimensions (scalar)
-        with self.assertRaises(ValueError):
-            _validate(1)
-
-        # negative values
-        with self.assertRaises(ValueError):
-            _validate([0, 0, 2, -1, 3])
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)

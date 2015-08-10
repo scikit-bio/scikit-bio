@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import _validate
+from skbio.diversity.alpha._base import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
@@ -62,7 +62,7 @@ def ace(counts, rare_threshold=10):
        10:227-246.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     freq_counts = np.bincount(counts)
     s_rare = _otus_rare(freq_counts, rare_threshold)
     singles = freq_counts[1]

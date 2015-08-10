@@ -8,9 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-import numpy as np
-
 from skbio.util._decorator import experimental
+from skbio.diversity._base import (_validate_counts_vectors,
+                                   _validate_otu_ids_and_tree)
 
 
 def _observed_otu_counts(counts, otu_ids):
@@ -18,27 +18,8 @@ def _observed_otu_counts(counts, otu_ids):
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
-    if (np.asarray(u_counts) < 0).any() or (np.asarray(v_counts) < 0).any():
-        raise ValueError('Counts vectors can only contain integers >= 0.')
-
-    len_otu_ids = len(otu_ids)
-    set_otu_ids = set(otu_ids)
-    if len_otu_ids != len(set_otu_ids):
-        raise ValueError('Duplicated OTU ids are not allowed in otu_ids.')
-
-    len_u_counts = len(u_counts)
-    len_v_counts = len(v_counts)
-    if len_u_counts != len_v_counts:
-        raise ValueError("Input vectors u_counts and v_counts must be of "
-                         "equal length.")
-    if len_u_counts != len_otu_ids:
-        raise ValueError("Input vector otu_ids must be the same length as "
-                         "u_counts and v_counts.")
-
-    branch_lengths = [e.length for e in tree.traverse() if not e.is_root()]
-    if np.array([l is None for l in branch_lengths]).any():
-        raise ValueError('All non-root nodes in tree must have a branch '
-                         'length.')
+    _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
+    _validate_otu_ids_and_tree(u_counts, otu_ids, tree)
 
 
 @experimental(as_of="0.4.0-dev")
