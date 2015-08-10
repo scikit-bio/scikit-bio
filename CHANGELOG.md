@@ -22,6 +22,7 @@
 ### Miscellaneous
 * Doctests are now written in Python 3.
 * ``make test`` now validates MANIFEST.in using [check-manifest](https://github.com/mgedmin/check-manifest). ([#461](https://github.com/biocore/scikit-bio/issues/461))
+* Many new alpha diversity equations added to ``skbio.diversity.alpha`` documentation. ([#321](https://github.com/biocore/scikit-bio/issues/321))
 
 ## Version 0.4.0 (2015-07-08)
 
