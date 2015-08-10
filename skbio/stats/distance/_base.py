@@ -674,6 +674,12 @@ class DistanceMatrix(DissimilarityMatrix):
         DistanceMatrix
             The `metric` applied to all pairwise elements in the `iterable`.
 
+        Notes
+        -----
+        Symmetry and hollowness are assumed when calculating the distances via
+        `metric`. Therefore, distances are only computed for the strictly
+        upper/lower triangle.
+
         """
         iterable = list(iterable)
 
