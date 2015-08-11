@@ -51,9 +51,8 @@ For more details please refer to the CASAVA documentation [1]_.
    `metadata` attribute is automatically populated with data corresponding
    to the names above.
 
-.. note:: `lowercase` functionality is supported when reading QSeq files,
-   depending on the object type the file is being read into. Refer to
-   specific object constructor documentation for details.
+.. note:: `lowercase` functionality is supported when reading QSeq files.
+   Refer to specific object constructor documentation for details.
 
 .. note:: scikit-bio allows for the filter field to be ommitted, but it is not
    clear if this is part of the original format specification.
