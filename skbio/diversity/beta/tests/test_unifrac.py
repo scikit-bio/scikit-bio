@@ -38,6 +38,11 @@ class StatsTests(TestCase):
                      '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
                      ')root;'))
 
+        self.t2 = TreeNode.read(
+            StringIO('((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
+                     'root;'))
+        self.oids2 = ['OTU%d' % i for i in range(1, 5)]
+
     def test_unweighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree
         for i in range(len(self.b1)):
@@ -86,32 +91,60 @@ class StatsTests(TestCase):
         expected = 0.25
         self.assertEqual(actual, expected)
 
-    def test_unweighted_toggle_root_observed(self):
-        # expected values computed with QIIME 1.9.1
-        # root node not observed
-        actual = unweighted_unifrac([1, 1, 0, 0, 0], [0, 2, 0, 0, 0],
-                                    self.oids1, self.t1)
-        expected = 0.2
-        self.assertAlmostEqual(actual, expected)
-        # same samples, but with one extra OTU that results in the
-        # root node being observed
-        actual = unweighted_unifrac([1, 1, 0, 1, 0], [0, 2, 0, 1, 0],
-                                    self.oids1, self.t1)
-        expected = 0.111111111111
+    def test_unweighted_root_not_observed(self):
+        # expected values computed with QIIME 1.9.1 and by hand
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = unweighted_unifrac([1, 1, 0, 0], [1, 0, 0, 0],
+                                    self.oids2, self.t2)
+        # for clarity of what I'm testing, compute expected as it would
+        # based on the branch lengths. the values that compose shared was
+        # a point of confusion for me here, so leaving these in for
+        # future reference
+        expected = 0.2 / (0.1 + 0.2 + 0.3)  # 0.3333333333
         self.assertAlmostEqual(actual, expected)
 
-    def test_weighted_toggle_root_observed(self):
-        # expected values computed with QIIME 1.9.1
-        # root node not observed
-        actual = weighted_unifrac([1, 1, 0, 0, 0], [0, 2, 0, 0, 0],
-                                  self.oids1, self.t1)
-        expected = 0.5
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = unweighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                    self.oids2, self.t2)
+        # for clarity of what I'm testing, compute expected as it would
+        # based on the branch lengths. the values that compose shared was
+        # a point of confusion for me here, so leaving these in for
+        # future reference
+        expected = 0.7 / (1.1 + 0.5 + 0.7)  # 0.3043478261
         self.assertAlmostEqual(actual, expected)
-        # same samples, but with one extra OTU that results in the
-        # root node being observed
-        actual = weighted_unifrac([1, 1, 0, 1, 0], [0, 2, 0, 1, 0],
-                                  self.oids1, self.t1)
-        expected = 0.333333333333
+
+    def test_weighted_root_not_observed(self):
+        # expected values computed by hand, these disagree with QIIME 1.9.1
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
+                                  self.oids2, self.t2)
+        expected = 0.15
+        self.assertAlmostEqual(actual, expected)
+
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                  self.oids2, self.t2)
+        expected = 0.6
+        self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_normalized_root_not_observed(self):
+        # expected values computed by hand, these disagree with QIIME 1.9.1
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
+                                  self.oids2, self.t2, normalized=True)
+        expected = 0.1764705882
+        self.assertAlmostEqual(actual, expected)
+
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                  self.oids2, self.t2, normalized=True)
+        expected = 0.1818181818
         self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac_identity(self):
