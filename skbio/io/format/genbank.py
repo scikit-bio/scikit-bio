@@ -129,7 +129,7 @@ def _genbank_to_dna(fh, seq_num=1, **kwargs):
 @genbank.reader(RNA)
 def _genbank_to_rna(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
-    return _construct(record, DNA, **kwargs).transcribe()
+    return _construct(record, RNA, **kwargs)
 
 
 @genbank.reader(Protein)
@@ -150,14 +150,17 @@ def _construct(record, constructor=None, **kwargs):
         if unit == 'bp':
             # RNA mol type has T instead of U;
             # so still read in as DNA
-            constructor_ = DNA
+            constructor = DNA
         elif unit == 'aa':
-            constructor_ = Protein
+            constructor = Protein
         else:
-            constructor_ = Sequence
+            constructor = Sequence
+    if constructor == RNA:
+        return DNA(
+            seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
     else:
-        constructor_ = constructor
-    return constructor_(seq, metadata=md, positional_metadata=pmd, **kwargs)
+        return constructor(
+            seq, metadata=md, positional_metadata=pmd, **kwargs)
 
 
 def _parse_genbanks(fh):
