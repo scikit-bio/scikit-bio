@@ -71,7 +71,7 @@ class BaseTests(TestCase):
                           'euclidean')
 
     def test_pw_distances_euclidean(self):
-        actual_dm = pw_distances(self.t1, self.ids1, 'euclidean')
+        actual_dm = pw_distances('euclidean', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -83,7 +83,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 2.82842712)
         npt.assert_almost_equal(actual_dm['C', 'B'], 2.82842712)
 
-        actual_dm = pw_distances(self.t2, self.ids2, 'euclidean')
+        actual_dm = pw_distances('euclidean', self.t2, self.ids2)
         expected_data = [
             [0., 80.8455317, 84.0297566, 36.3042697, 86.0116271, 78.9176786],
             [80.8455317, 0., 71.0844568, 74.4714710, 69.3397433, 14.422205],
@@ -98,7 +98,7 @@ class BaseTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_pw_distances_braycurtis(self):
-        actual_dm = pw_distances(self.t1, self.ids1, 'braycurtis')
+        actual_dm = pw_distances('braycurtis', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -110,7 +110,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 0.66666667)
         npt.assert_almost_equal(actual_dm['C', 'B'], 0.66666667)
 
-        actual_dm = pw_distances(self.t2, self.ids2, 'braycurtis')
+        actual_dm = pw_distances('braycurtis', self.t2, self.ids2)
         expected_data = [
             [0., 0.78787879, 0.86666667, 0.30927835, 0.85714286, 0.81521739],
             [0.78787879, 0., 0.78142077, 0.86813187, 0.75, 0.1627907],
@@ -126,36 +126,36 @@ class BaseTests(TestCase):
 
     def test_pw_distances_from_table_euclidean(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances(self.t1, self.ids1, 'euclidean')
+        m_dm = pw_distances('euclidean', self.t1, self.ids1,)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table1,
-            'euclidean')
+            DeprecationWarning, pw_distances_from_table, 'euclidean',
+            self.table1)
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances(self.t2, self.ids2, 'euclidean')
+        m_dm = pw_distances('euclidean', self.t2, self.ids2)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table2,
-            'euclidean')
+            DeprecationWarning, pw_distances_from_table, 'euclidean',
+            self.table2)
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
     def test_pw_distances_from_table_braycurtis(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances(self.t1, self.ids1, 'braycurtis')
+        m_dm = pw_distances('braycurtis', self.t1, self.ids1)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table1,
-            'braycurtis')
+            DeprecationWarning, pw_distances_from_table, 'braycurtis',
+            self.table1)
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances(self.t2, self.ids2, 'braycurtis')
+        m_dm = pw_distances('braycurtis', self.t2, self.ids2,)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table2,
-            'braycurtis')
+            DeprecationWarning, pw_distances_from_table, 'braycurtis',
+            self.table2)
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])

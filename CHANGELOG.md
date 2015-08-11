@@ -5,8 +5,11 @@
 ### Features
 * Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
+* Added ``skbio.util.RepresentationWarning`` for warning about substitutions, assumptions, or particular alterations that were made for the successful completion of a process.
+* ``TreeNode.tip_tip_distances`` now supports nodes without an associated length. In this case, a length of 0.0 is assumed and an ``skbio.util.RepresentationWarning`` is raised. Previous behavior was to raise a ``NoLengthError``. ([#791](https://github.com/biocore/scikit-bio/issues/791))
+* ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 
-### Backward-incompatible changes (experimental functionality)
+### Backward-incompatible changes [experimental]
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
 * Change ``OrdinationResults`` to have its attributes based on ``pd.DataFrame`` and ``pd.Series`` objects, instead of pairs of identifiers and values. The changes are as follows:
     - ``species`` and ``species_ids`` have been replaced by a ``pd.DataFrame`` named ``features``.
@@ -16,9 +19,15 @@
     - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
+* ``skbio.diversity.beta.pw_distances`` and ``skbio.diversity.beta.pw_distances_from_table`` no longer define a default metric, and ``metric`` is now the first argument to these functions.
+
+### Deprecated functionality [experimental]
+* ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
 
 ### Miscellaneous
 * Doctests are now written in Python 3.
+* ``make test`` now validates MANIFEST.in using [check-manifest](https://github.com/mgedmin/check-manifest). ([#461](https://github.com/biocore/scikit-bio/issues/461))
+* Many new alpha diversity equations added to ``skbio.diversity.alpha`` documentation. ([#321](https://github.com/biocore/scikit-bio/issues/321))
 
 ## Version 0.4.0 (2015-07-08)
 

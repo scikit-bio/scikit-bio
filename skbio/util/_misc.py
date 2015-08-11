@@ -17,6 +17,17 @@ import inspect
 from ._decorator import experimental, deprecated
 
 
+def resolve_key(obj, key):
+    """Resolve key given a object and key."""
+    if callable(key):
+        return key(obj)
+    elif hasattr(obj, 'metadata'):
+        return obj.metadata[key]
+    raise TypeError("Could not resolve key %r. Key must be callable or %s must"
+                    " have `metadata` attribute." % (key,
+                                                     obj.__class__.__name__))
+
+
 def make_sentinel(name):
     return type(name, (object, ), {
         '__repr__': lambda s: name,
@@ -161,7 +172,7 @@ def is_casava_v180_or_later(header_line):
 
     """
     if not header_line.startswith(b'@'):
-        raise ValueError("Non-header line passed in!")
+        raise ValueError("Non-header line passed in.")
     fields = header_line.split(b':')
 
     return len(fields) == 10 and fields[7] in b'YN'

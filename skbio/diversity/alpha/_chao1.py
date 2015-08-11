@@ -10,13 +10,14 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import _validate, osd
+from ._base import osd
+from skbio.diversity.alpha._base import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.4.0")
 def chao1(counts, bias_corrected=True):
-    """Calculate chao1 richness estimator.
+    r"""Calculate chao1 richness estimator.
 
     Uses the bias-corrected version unless `bias_corrected` is ``False`` *and*
     there are both singletons and doubletons.
@@ -46,7 +47,7 @@ def chao1(counts, bias_corrected=True):
 
     .. math::
 
-       chao1=S_{obs}+\\frac{F_1^2}{2F_2}
+       chao1=S_{obs}+\frac{F_1^2}{2F_2}
 
     where :math:`F_1` and :math:`F_2` are the count of singletons and
     doubletons, respectively.
@@ -55,7 +56,7 @@ def chao1(counts, bias_corrected=True):
 
     .. math::
 
-       chao1=S_{obs}+\\frac{F_1(F_1-1)}{2(F_2+1)}
+       chao1=S_{obs}+\frac{F_1(F_1-1)}{2(F_2+1)}
 
     References
     ----------
@@ -63,7 +64,7 @@ def chao1(counts, bias_corrected=True):
        a population. Scandinavian Journal of Statistics 11, 265-270.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     o, s, d = osd(counts)
 
     if not bias_corrected and s and d:
@@ -117,7 +118,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     .. [1] http://viceroy.eeb.uconn.edu/estimates/
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     o, s, d = osd(counts)
     if s:
         chao = chao1(counts, bias_corrected)

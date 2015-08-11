@@ -340,7 +340,13 @@ class DistributionsTests(TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             grouped_distributions(*args)
-            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
+
+            expected_warning_raised = False
+            for warning in w:
+                if issubclass(warning.category, RuntimeWarning):
+                    expected_warning_raised = True
+                    break
+            self.assertTrue(expected_warning_raised)
 
     def test_grouped_distributions_scatter(self):
         fig = grouped_distributions('scatter', self.ValidTypicalData,
@@ -365,7 +371,13 @@ class DistributionsTests(TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             grouped_distributions(*args)
-            self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
+
+            expected_warning_raised = False
+            for warning in w:
+                if issubclass(warning.category, RuntimeWarning):
+                    expected_warning_raised = True
+                    break
+            self.assertTrue(expected_warning_raised)
 
     def test_grouped_distributions_empty_marker_list(self):
         grouped_distributions('scatter', self.ValidTypicalData,

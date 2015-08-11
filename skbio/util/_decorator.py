@@ -197,7 +197,7 @@ class deprecated(_state_decorator):
 
     Used to indicate that a public class or function is deprecated, meaning
     that its API will be removed in a future version of scikit-bio. Decorating
-    functionality as experimental will update its doc string to indicate the
+    functionality as deprecated will update its doc string to indicate the
     first version of scikit-bio when the functionality was deprecated, the
     first version of scikit-bio when the functionality will no longer exist,
     and the reason for deprecation of the API. It will also cause calls to the
