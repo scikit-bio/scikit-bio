@@ -12,6 +12,7 @@ from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
 from skbio.io import GenbankFormatError
 from skbio.io.format.genbank import (
+    _genbank_sniffer,
     _genbank_to_generator, _genbank_to_biological_sequence,
     _genbank_to_dna, _genbank_to_rna,
     _parse_locus, _parse_reference,
@@ -19,7 +20,24 @@ from skbio.io.format.genbank import (
 
 
 class SnifferTests(TestCase):
-    pass
+    def setUp(self):
+        self.positive_fps = list(map(get_data_path, [
+            'genbank_5_blanks_start_of_file']))
+
+        self.negative_fps = list(map(get_data_path, [
+            'empty',
+            'whitespace_only',
+            'genbank_6_blanks_start_of_file',
+            'genbank_w_beginning_whitespace',
+            'genbank_missing_locus_name']))
+
+    def test_positives(self):
+        for fp in self.positive_fps:
+            self.assertEqual(_genbank_sniffer(fp), (True, {}))
+
+    def test_negatives(self):
+        for fp in self.negative_fps:
+            self.assertEqual(_genbank_sniffer(fp), (False, {}))
 
 
 class ReaderTests(TestCase):

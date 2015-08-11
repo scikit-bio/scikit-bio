@@ -93,21 +93,19 @@ _HEADERS = ['LOCUS',
 
 @genbank.sniffer()
 def _genbank_sniffer(fh):
-    # check the 1st line starts with 'LOCUS' and the last line ends with '//'
+    # check the 1st real line is a valid LOCUS line
     if _too_many_blanks(fh, 5):
         return False, {}
     try:
-        line = next(_line_generator(fh, skip_blanks=True))
+        line = next(_line_generator(fh, skip_blanks=True, strip=False))
     except StopIteration:
         return False, {}
 
-    if line.startswith(_HEADERS[0]):
-        for line in _line_generator(fh, skip_blanks=True):
-            if line == '//':
-                return True, {}
+    try:
+        _parse_locus([line])
+    except GenbankFormatError:
         return False, {}
-    else:
-        return False, {}
+    return True, {}
 
 
 @genbank.reader(None)
@@ -173,7 +171,7 @@ def _parse_genbanks(fh):
 
 
 def _parse_single_genbank(chunks):
-    metadata = dict()
+    metadata = {}
     metadata['REFERENCE'] = []
     sequence = ''
     # each section starts with a HEADER without indent.
@@ -238,7 +236,7 @@ def _parse_locus(lines):
                'SYN|UNA|EST|PAT|STS|GSS|HTG|HTC|ENV|CON)'
                ' +([0-9]{2}-[A-Z]{3}-[0-9]{4})')
     matches = re.match(pattern, line)
-    res = dict()
+
     try:
         res = dict(zip(
             ['locus_name', 'size', 'unit',
