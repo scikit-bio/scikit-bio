@@ -155,6 +155,8 @@ def _construct(record, constructor=None, **kwargs):
             constructor = Protein
         else:
             constructor = Sequence
+    if 'lowcase' not in kwargs and constructor != Sequence:
+        kwargs['lowercase'] = True
     if constructor == RNA:
         return DNA(
             seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
@@ -199,7 +201,7 @@ def _parse_single_genbank(chunks):
         if header == 'REFERENCE':
             metadata[header].append(parsed)
         elif header == 'ORIGIN':
-            sequence = parsed.upper()
+            sequence = parsed
         elif header == 'FEATURES':
             metadata[header] = parsed[0]
             positional_metadata = pd.concat(parsed[1], axis=1).to_sparse()

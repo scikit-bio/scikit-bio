@@ -45,7 +45,7 @@ class ReaderTests(TestCase):
         self.valid = []
 
         self.multi = (
-            ('GSREILDFK',
+            ('gsreildfk',
              {'ACCESSION': 'AAB29917',
               'COMMENT': 'Method: direct peptide sequencing.',
               'DBSOURCE': 'accession AAB29917.1',
@@ -85,7 +85,7 @@ class ReaderTests(TestCase):
              pd.DataFrame({0: np.ones(9),
                            1: np.ones(9)}).to_sparse(),
              Protein),
-            ('GTGAAACAAAGCACTATTGCACTGGCTGTCTTACCGTTACTGTTTACCCCTGTGACAAAAGCC',
+            ('gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
              {'ACCESSION': 'M14399',
               'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
               'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
@@ -127,7 +127,7 @@ class ReaderTests(TestCase):
              pd.DataFrame({0: np.ones(63),
                            1: np.ones(63)}).to_sparse(),
              DNA),
-            ('CATGCAGGC',
+            ('catgcaggc',
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
               'FEATURES': [{'clone': 'ROP4R2E04',
@@ -279,7 +279,8 @@ REFERENCE   1  (bases 1 to 154478)
         fp = get_data_path('genbank_multi_records')
         for i, gb in enumerate(_genbank_to_generator(fp)):
             seq, md, pmd, constructor = self.multi[i]
-            exp = constructor(seq, metadata=md, positional_metadata=pmd)
+            exp = constructor(seq, metadata=md, lowercase=True,
+                              positional_metadata=pmd)
             self.assertEqual(exp, gb)
 
     def test_genbank_to_biological_sequence(self):
@@ -295,7 +296,8 @@ REFERENCE   1  (bases 1 to 154478)
         i = 2
         exp = self.multi[i]
         gb = _genbank_to_dna(fp, seq_num=i+1)
-        expect = DNA(exp[0], metadata=exp[1], positional_metadata=exp[2])
+        expect = DNA(exp[0], metadata=exp[1], lowercase=True,
+                     positional_metadata=exp[2])
         self.assertEqual(expect, gb)
 
     def test_genbank_to_rna(self):
@@ -303,8 +305,8 @@ REFERENCE   1  (bases 1 to 154478)
         i = 1
         exp = self.multi[i]
         gb = _genbank_to_rna(fp, seq_num=i+1)
-        expect = RNA(exp[0].replace('T', 'U'), metadata=exp[1],
-                     positional_metadata=exp[2])
+        expect = RNA(exp[0].replace('t', 'u'), metadata=exp[1],
+                     lowercase=True, positional_metadata=exp[2])
         self.assertEqual(expect, gb)
 
 
