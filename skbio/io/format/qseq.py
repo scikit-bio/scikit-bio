@@ -187,18 +187,16 @@ def _qseq_to_sequence_collection(fh, constructor=Sequence,
 
 
 @qseq.reader(Sequence)
-def _qseq_to_biological_sequence(fh, seq_num=1,
-                                 phred_offset=_default_phred_offset,
-                                 variant=_default_variant):
+def _qseq_to_sequence(fh, seq_num=1, phred_offset=_default_phred_offset,
+                      variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=Sequence), seq_num)
+                             constructor=Sequence, **kwargs), seq_num)
 
 
 @qseq.reader(DNA)
-def _qseq_to_dna_sequence(fh, seq_num=1,
-                          phred_offset=_default_phred_offset,
-                          variant=_default_variant, **kwargs):
+def _qseq_to_dna(fh, seq_num=1, phred_offset=_default_phred_offset,
+                 variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=DNA, **kwargs),
@@ -206,9 +204,8 @@ def _qseq_to_dna_sequence(fh, seq_num=1,
 
 
 @qseq.reader(RNA)
-def _qseq_to_rna_sequence(fh, seq_num=1,
-                          phred_offset=_default_phred_offset,
-                          variant=_default_variant, **kwargs):
+def _qseq_to_rna(fh, seq_num=1, phred_offset=_default_phred_offset,
+                 variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=RNA, **kwargs),
@@ -216,9 +213,8 @@ def _qseq_to_rna_sequence(fh, seq_num=1,
 
 
 @qseq.reader(Protein)
-def _qseq_to_protein_sequence(fh, seq_num=1,
-                              phred_offset=_default_phred_offset,
-                              variant=_default_variant, **kwargs):
+def _qseq_to_protein(fh, seq_num=1, phred_offset=_default_phred_offset,
+                     variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=Protein, **kwargs),

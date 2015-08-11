@@ -33,6 +33,7 @@ class SequenceSubclass(Sequence):
 
 class TestSequence(TestCase):
     def setUp(self):
+        self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
         self.sequence_kinds = frozenset([
             str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
@@ -1432,6 +1433,27 @@ class TestSequence(TestCase):
 
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
+
+    def test_lowercase_mungeable_key(self):
+        # NOTE: This test relies on Sequence._munge_to_index_array working
+        # properly. If the internal implementation of the lowercase method
+        # changes to no longer use _munge_to_index_array, this test may need
+        # to be updated to cover cases currently covered by
+        # _munge_to_index_array
+        self.assertEqual('AAAAaaaa', self.lowercase_seq.lowercase('key'))
+
+    def test_lowercase_array_key(self):
+        # NOTE: This test relies on Sequence._munge_to_index_array working
+        # properly. If the internal implementation of the lowercase method
+        # changes to no longer use _munge_to_index_array, this test may need
+        # to be updated to cover cases currently covered by
+        # _munge_to_index_array
+        self.assertEqual('aaAAaaaa',
+                         self.lowercase_seq.lowercase(
+                             np.array([True, True, False, False, True, True,
+                                       True, True])))
+        self.assertEqual('AaAAaAAA',
+                         self.lowercase_seq.lowercase([1, 4]))
 
     def test_distance(self):
         tested = 0

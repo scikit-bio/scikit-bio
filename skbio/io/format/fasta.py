@@ -749,14 +749,14 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
 
 
 @fasta.reader(Sequence)
-def _fasta_to_biological_sequence(fh, qual=FileSentinel, seq_num=1):
+def _fasta_to_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Sequence),
+        _fasta_to_generator(fh, qual=qual, constructor=Sequence, **kwargs),
         seq_num)
 
 
 @fasta.reader(DNA)
-def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_dna(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
                             constructor=DNA, **kwargs),
@@ -764,7 +764,7 @@ def _fasta_to_dna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
 
 
 @fasta.reader(RNA)
-def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_rna(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
                             constructor=RNA, **kwargs),
@@ -772,7 +772,7 @@ def _fasta_to_rna_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
 
 
 @fasta.reader(Protein)
-def _fasta_to_protein_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_protein(fh, qual=FileSentinel, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fasta_to_generator(fh, qual=qual,
                             constructor=Protein, **kwargs),
@@ -830,37 +830,35 @@ def _generator_to_fasta(obj, fh, qual=FileSentinel,
 
 
 @fasta.writer(Sequence)
-def _biological_sequence_to_fasta(obj, fh, qual=FileSentinel,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  max_width=None):
+def _sequence_to_fasta(obj, fh, qual=FileSentinel,
+                       id_whitespace_replacement='_',
+                       description_newline_replacement=' ', max_width=None,
+                       lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width)
+                        description_newline_replacement, max_width, lowercase)
 
 
 @fasta.writer(DNA)
-def _dna_sequence_to_fasta(obj, fh, qual=FileSentinel,
-                           id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           max_width=None, lowercase=None):
+def _dna_to_fasta(obj, fh, qual=FileSentinel, id_whitespace_replacement='_',
+                  description_newline_replacement=' ', max_width=None,
+                  lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width, lowercase)
 
 
 @fasta.writer(RNA)
-def _rna_sequence_to_fasta(obj, fh, qual=FileSentinel,
-                           id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           max_width=None, lowercase=None):
+def _rna_to_fasta(obj, fh, qual=FileSentinel, id_whitespace_replacement='_',
+                  description_newline_replacement=' ', max_width=None,
+                  lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width, lowercase)
 
 
 @fasta.writer(Protein)
-def _protein_sequence_to_fasta(obj, fh, qual=FileSentinel,
-                               id_whitespace_replacement='_',
-                               description_newline_replacement=' ',
-                               max_width=None, lowercase=None):
+def _protein_to_fasta(obj, fh, qual=FileSentinel,
+                      id_whitespace_replacement='_',
+                      description_newline_replacement=' ', max_width=None,
+                      lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width, lowercase)
 

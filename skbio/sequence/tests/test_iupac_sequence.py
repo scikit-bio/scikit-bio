@@ -39,9 +39,6 @@ class ExampleMotifsTester(ExampleIUPACSequence):
 
 
 class TestIUPACSequence(TestCase):
-    def setUp(self):
-        self.lowercase_seq = ExampleIUPACSequence('AAAAaaaa', lowercase='key')
-
     def test_instantiation_with_no_implementation(self):
         class IUPACSequenceSubclassNoImplementation(IUPACSequence):
             pass
@@ -170,27 +167,6 @@ class TestIUPACSequence(TestCase):
                                        "a bool or string, but got %s" %
                                        invalid_type):
                 ExampleIUPACSequence('ACGTacgt', lowercase=invalid_key)
-
-    def test_lowercase_mungeable_key(self):
-        # NOTE: This test relies on Sequence._munge_to_index_array working
-        # properly. If the internal implementation of the lowercase method
-        # changes to no longer use _munge_to_index_array, this test may need
-        # to be updated to cover cases currently covered by
-        # _munge_to_index_array
-        self.assertEqual('AAAAaaaa', self.lowercase_seq.lowercase('key'))
-
-    def test_lowercase_array_key(self):
-        # NOTE: This test relies on Sequence._munge_to_index_array working
-        # properly. If the internal implementation of the lowercase method
-        # changes to no longer use _munge_to_index_array, this test may need
-        # to be updated to cover cases currently covered by
-        # _munge_to_index_array
-        self.assertEqual('aaAAaaaa',
-                         self.lowercase_seq.lowercase(
-                             np.array([True, True, False, False, True, True,
-                                       True, True])))
-        self.assertEqual('AaAAaAAA',
-                         self.lowercase_seq.lowercase([1, 4]))
 
     def test_degenerate_chars(self):
         expected = set("XYZ")
