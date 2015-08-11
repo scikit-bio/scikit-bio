@@ -117,26 +117,26 @@ def _genbank_to_generator(fh, constructor=None, **kwargs):
 
 
 @genbank.reader(Sequence)
-def _genbank_to_biological_sequence(fh, rec_num=1, **kwargs):
-    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+def _genbank_to_biological_sequence(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
     return _construct(record, Sequence, **kwargs)
 
 
 @genbank.reader(DNA)
-def _genbank_to_dna(fh, rec_num=1, **kwargs):
-    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+def _genbank_to_dna(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
     return _construct(record, DNA, **kwargs)
 
 
 @genbank.reader(RNA)
-def _genbank_to_rna(fh, rec_num=1, **kwargs):
-    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+def _genbank_to_rna(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
     return _construct(record, DNA, **kwargs).transcribe()
 
 
 @genbank.reader(Protein)
-def _genbank_to_protein(fh, rec_num=1, **kwargs):
-    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+def _genbank_to_protein(fh, seq_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
     return _construct(record, Protein, **kwargs)
 
 

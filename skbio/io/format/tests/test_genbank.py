@@ -267,7 +267,7 @@ REFERENCE   1  (bases 1 to 154478)
     def test_genbank_to_biological_sequence(self):
         fp = get_data_path('genbank_multi_records')
         for i, exp in enumerate(self.multi):
-            gb = _genbank_to_biological_sequence(fp, rec_num=i+1)
+            gb = _genbank_to_biological_sequence(fp, seq_num=i+1)
             expect = Sequence(
                 exp[0], metadata=exp[1], positional_metadata=exp[2])
             self.assertEqual(expect, gb)
@@ -276,7 +276,7 @@ REFERENCE   1  (bases 1 to 154478)
         fp = get_data_path('genbank_multi_records')
         i = 2
         exp = self.multi[i]
-        gb = _genbank_to_dna(fp, rec_num=i+1)
+        gb = _genbank_to_dna(fp, seq_num=i+1)
         expect = DNA(exp[0], metadata=exp[1], positional_metadata=exp[2])
         self.assertEqual(expect, gb)
 
@@ -284,7 +284,7 @@ REFERENCE   1  (bases 1 to 154478)
         fp = get_data_path('genbank_multi_records')
         i = 1
         exp = self.multi[i]
-        gb = _genbank_to_rna(fp, rec_num=i+1)
+        gb = _genbank_to_rna(fp, seq_num=i+1)
         expect = RNA(exp[0].replace('T', 'U'), metadata=exp[1],
                      positional_metadata=exp[2])
         self.assertEqual(expect, gb)
