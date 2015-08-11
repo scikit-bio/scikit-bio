@@ -207,7 +207,7 @@ def _parse_single_genbank(chunks):
             sequence = parsed
         elif header == 'FEATURES':
             metadata[header] = parsed[0]
-            positional_metadata = pd.concat(parsed[1], axis=1).to_sparse()
+            positional_metadata = pd.concat(parsed[1], axis=1)
         else:
             metadata[header] = parsed
     return sequence, metadata, positional_metadata

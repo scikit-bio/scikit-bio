@@ -92,8 +92,8 @@ class ReaderTests(TestCase):
               'SOURCE': {'ORGANISM': 'Bacteria',
                          'taxonomy': 'Unclassified.'},
               'VERSION': 'AAB29917.1  GI:545426'},
-             pd.DataFrame({0: np.ones(9),
-                           1: np.ones(9)}).to_sparse(),
+             pd.DataFrame({0: np.ones(9, dtype=bool),
+                           1: np.ones(9, dtype=bool)}),
              Protein),
             ('gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
              {'ACCESSION': 'M14399',
@@ -133,8 +133,8 @@ class ReaderTests(TestCase):
                          'Gammaproteobacteria; Enterobacteriales; '
                          'Enterobacteriaceae; Escherichia.'},
               'VERSION': 'M14399.1  GI:145229'},
-             pd.DataFrame({0: np.ones(63),
-                           1: np.ones(63)}).to_sparse(),
+             pd.DataFrame({0: np.ones(63, dtype=bool),
+                           1: np.ones(63, dtype=bool)}),
              DNA),
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
@@ -174,8 +174,8 @@ class ReaderTests(TestCase):
                          'Micrococcales; Promicromonosporaceae; '
                          'Xylanimonas; environmental samples.'},
               'VERSION': 'HQ018078.1  GI:304421728'},
-             pd.DataFrame({0: [1] * 9,
-                           1: [0] + [1] * 7 + [0]}).to_sparse(),
+             pd.DataFrame({0: [True] * 9,
+                           1: [False] + [True] * 7 + [False]}),
              DNA))
 
     def test_parse_reference(self):
