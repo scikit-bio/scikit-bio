@@ -69,7 +69,7 @@ from skbio.io.format._base import (_get_nth_sequence,
                                    _too_many_blanks)
 from skbio.util._misc import chunk_str
 from skbio.sequence import Sequence, DNA, RNA, Protein
-
+from pprint import pprint
 
 genbank = create_format('genbank')
 
@@ -81,6 +81,7 @@ _HEADERS = ['LOCUS',
             'DEFINITION',
             'ACCESSION',
             'VERSION',
+            'DBSOURCE',
             'DBLINK',
             'KEYWORDS',
             'SOURCE',
@@ -112,37 +113,53 @@ def _genbank_sniffer(fh):
 @genbank.reader(None)
 def _genbank_to_generator(fh, constructor=None, **kwargs):
     for record in _parse_genbanks(fh):
-        seq, md, pmd = record
-        if constructor is None:
-            constructor = md['LOCUS']['mol_type']
-        yield constructor(seq, metadata=md, positional_metadata=pmd, **kwargs)
+        yield _construct(record, constructor, **kwargs)
 
 
 @genbank.reader(Sequence)
 def _genbank_to_biological_sequence(fh, rec_num=1, **kwargs):
-    return _get_nth_sequence(
-        _genbank_to_generator(fh, constructor=Sequence, **kwargs),
-        rec_num)
+    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+    return _construct(record, Sequence, **kwargs)
 
 
 @genbank.reader(DNA)
-def _genbank_to_dna(fh, rec_num=1):
-    pass
+def _genbank_to_dna(fh, rec_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+    return _construct(record, DNA, **kwargs)
 
 
 @genbank.reader(RNA)
-def _genbank_to_rna(fh, rec_num=1):
-    pass
+def _genbank_to_rna(fh, rec_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+    return _construct(record, DNA, **kwargs).transcribe()
 
 
 @genbank.reader(Protein)
-def _genbank_to_protein(fh, rec_num=1):
-    pass
+def _genbank_to_protein(fh, rec_num=1, **kwargs):
+    record = _get_nth_sequence(_parse_genbanks(fh), rec_num)
+    return _construct(record, Protein, **kwargs)
 
 
 @genbank.writer(None)
 def _sequences_to_genbank(fh):
     pass
+
+
+def _construct(record, constructor=None, **kwargs):
+    seq, md, pmd = record
+    if constructor is None:
+        unit = md['LOCUS']['unit']
+        if unit == 'bp':
+            # RNA mol type has T instead of U;
+            # so still read in as DNA
+            constructor_ = DNA
+        elif unit == 'aa':
+            constructor_ = Protein
+        else:
+            constructor_ = Sequence
+    else:
+        constructor_ = constructor
+    return constructor_(seq, metadata=md, positional_metadata=pmd, **kwargs)
 
 
 def _parse_genbanks(fh):
@@ -156,37 +173,34 @@ def _parse_genbanks(fh):
 
 
 def _parse_single_genbank(chunks):
-    headers_parsers = {
-        k: globals().get('_parse_{h}'.format(h=k.lower()),
-                         _parse_section_default)
-        for k in _HEADERS}
-
-    metadata = dict.fromkeys(_HEADERS)
+    metadata = dict()
     metadata['REFERENCE'] = []
-    metadata['FEATURES'] = []
     sequence = ''
     # each section starts with a HEADER without indent.
     section_splitter = yield_section(lambda x: not x[0].isspace(), strip=False)
     for section in section_splitter(chunks):
         header = section[0].split(None, 1)[0]
-        parser = headers_parsers[header]
+        parser = globals().get('_parse_%s' % header.lower())
+        if not parser:
+            parser = _parse_section_default
+        if header == 'FEATURES':
+            parser = partial(
+                parser, length=metadata['LOCUS']['size'])
+
         try:
             parsed = parser(section)
         except:
             raise GenbankFormatError(
-                'Could not parse this section with %s():\n%s' %
-                (parser.__name__, ''.join(section)))
+                'Could not parse this section with %s:\n%s' %
+                (parser, ''.join(section)))
 
         # reference can appear multiple times
-        if header == 'LOCUS':
-            headers_parsers['FEATURES'] = partial(
-                headers_parsers['FEATURES'], length=parsed['size'])
         if header == 'REFERENCE':
             metadata[header].append(parsed)
         elif header == 'ORIGIN':
             sequence = parsed.upper()
         elif header == 'FEATURES':
-            metadata[header].append(parsed[0])
+            metadata[header] = parsed[0]
             positional_metadata = pd.concat(parsed[1], axis=1).to_sparse()
         else:
             metadata[header] = parsed
@@ -239,19 +253,6 @@ def _parse_locus(lines):
     #     res['shape'] = 'linear'
 
     res['size'] = int(res['size'])
-
-    if res['mol_type'] is None:
-        if res['unit'] == 'aa':
-            res['mol_type'] = Protein
-        else:
-            res['mol_type'] = Sequence
-    elif 'DNA' in res['mol_type']:
-        res['mol_type'] = DNA
-    elif 'RNA' in res['mol_type']:
-        res['mol_type'] = RNA
-    else:
-        res['mol_type'] = Sequence
-
     res['date'] = datetime.strptime(res['date'], _TIME_FORMAT)
     return res
 
@@ -278,12 +279,12 @@ def _parse_source(lines):
     # SOURCE line is not informative; skip it
     _, organism = list(section_splitter(lines))
 
-    res['ORGANISM'] = organism[0].split(None, 1)[1]
+    res['ORGANISM'] = organism[0].split(None, 1)[1].strip()
     res['taxonomy'] = ' '.join([i.strip() for i in organism[1:]])
     return res
 
 
-def _parse_features(lines, length=141):
+def _parse_features(lines, length):
     '''Parse FEATURES field.
     '''
     features = []
@@ -314,7 +315,7 @@ def _parse_single_feature(lines, length, index):
         `positional_metadata` for the feature.
 
     '''
-    feature = {}
+    feature = dict()
     feature['index_'] = index
     # each component of a feature starts with '/', except the 1st
     # component of location.
@@ -327,7 +328,7 @@ def _parse_single_feature(lines, length, index):
             first = False
             type, location = _parse_section_default(
                 section, join_delimitor='', return_label=True)
-            feature['type'] = type
+            feature['type_'] = type
             feature['location'] = location
             loc, loc_pmd = _parse_loc_str(location, length)
             feature.update(loc)
@@ -335,12 +336,18 @@ def _parse_single_feature(lines, length, index):
             # following sections are Qualifiers
             k, v = _parse_section_default(
                 section, label_delimitor='=',
-                join_delimitor='', return_label=True)
+                join_delimitor=' ', return_label=True)
             k = k[1:]
             # strip the quotes if it is quoted.
-            if v[0] == '"' and v[-1] == '"':
+            # v could be empty
+            if v and v[0] == '"' and v[-1] == '"':
                 v = v[1:-1]
-            feature[k] = v
+            # some Qualifiers can appear multiple times
+            if k in feature:
+                feature[k] = [feature[k]]
+                feature[k].append(v)
+            else:
+                feature[k] = v
     return feature, loc_pmd
 
 
@@ -377,7 +384,7 @@ def _parse_loc_str(loc_str, length):
             index = int(i) - 1
         else:
             raise GenbankFormatError(
-                'Unable to parse location string:\n%s' %
+                'Could not parse location string:\n%s' %
                 loc_str)
         pmd[index] = True
 
@@ -410,11 +417,14 @@ def _parse_section_default(
     label = None
     for line in lines:
         if first:
-            line = line.split(label_delimitor, 1)
-            if len(line) == 2:
-                label, section = line
+            try:
+                items = line.split(label_delimitor, 1)
+            except:
+                GenbankFormatError('Could not split the line:\n%s', line)
+            if len(items) == 2:
+                label, section = items
             else:
-                label = line[0]
+                label = items[0]
                 section = ""
             data.append(section)
             first = False
