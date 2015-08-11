@@ -261,8 +261,12 @@ def _parse_reference(lines):
     '''Parse single REFERENCE field.
     '''
     res = {}
-    section_splitter = yield_section(lambda x: not x.startswith(' ' * 11),
-                                     skip_blanks=True, strip=False)
+    # magic number 11: the non keyworded lines in REFERENCE
+    # are at least indented with 11 spaces.
+    feature_indent = ' ' * 11
+    section_splitter = yield_section(
+        lambda x: not x.startswith(feature_indent),
+        skip_blanks=True, strip=False)
     for section in section_splitter(lines):
         label, data = _parse_section_default(
             section, join_delimitor=' ', return_label=True)
@@ -274,8 +278,12 @@ def _parse_source(lines):
     '''Parse SOURCE field.
     '''
     res = {}
-    section_splitter = yield_section(lambda x: not x.startswith(' ' * 11),
-                                     skip_blanks=True, strip=False)
+    # magic number 11: the non keyworded lines in SOURCE
+    # are at least indented with 11 spaces.
+    feature_indent = ' ' * 11
+    section_splitter = yield_section(
+        lambda x: not x.startswith(feature_indent),
+        skip_blanks=True, strip=False)
     # SOURCE line is not informative; skip it
     _, organism = list(section_splitter(lines))
 
@@ -294,9 +302,9 @@ def _parse_features(lines, length):
         lines = lines[1:]
     # magic number 20: the lines following header of each feature
     # are at least indented with 20 spaces.
-    n = 20
+    feature_indent = ' ' * 20
     section_splitter = yield_section(
-        lambda x: not x.startswith(' ' * n),
+        lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
     for i, section in enumerate(section_splitter(lines)):
         feature, pmd = _parse_single_feature(section, length, i)
