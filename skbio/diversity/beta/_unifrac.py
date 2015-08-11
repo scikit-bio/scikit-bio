@@ -18,8 +18,9 @@ def _observed_otu_counts(counts, otu_ids):
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
-    _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
-    _validate_otu_ids_and_tree(u_counts, otu_ids, tree)
+    _validate_counts_vectors(u_counts=u_counts, v_counts=v_counts,
+                             suppress_cast=True)
+    _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
 
 @experimental(as_of="0.4.0-dev")
@@ -85,7 +86,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
     """
     if not suppress_validation:
-        _validate(u_counts, v_counts, otu_ids, tree)
+        _validate(u_counts=u_counts, v_counts=v_counts,
+                  otu_ids=otu_ids, tree=tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
     u_obs_nodes = set(tree.observed_node_counts(u_obs_otu_counts))
@@ -163,7 +165,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
     """
     if not suppress_validation:
-        _validate(u_counts, v_counts, otu_ids, tree)
+        _validate(u_counts=u_counts, v_counts=v_counts,
+                  otu_ids=otu_ids, tree=tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
     u_total_count = sum(u_counts)
     v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
