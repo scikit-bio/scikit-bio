@@ -109,17 +109,17 @@ def _fast_unifrac_setup(t, envs, make_subtree=True):
         t2 = t.copy()
         wanted = set(envs.keys())
         def delete_test(node):
-            if node.istip() and node.Name not in wanted:
+            if node.is_tip() and node.name not in wanted:
                 return True
             return False
-        t2.removeDeleted(delete_test)
+        t2.remove_deleted(delete_test)
         t2.prune()
         t = t2
 
     #index tree
     node_index, nodes = index_tree(t)
     #get good nodes, defined as those that are in the env file.
-    good_nodes=dict([(i.Name,envs[i.Name]) for i in t.tips() if i.Name in envs])
+    good_nodes=dict([(i.name,envs[i.name]) for i in t.tips() if i.name in envs])
     envs = good_nodes
     count_array, unique_envs, env_to_index, node_to_index = index_envs(envs, node_index)
     env_names = sorted(unique_envs)
@@ -146,20 +146,20 @@ def index_tree(t):
     child_index = []
     curr_index = 0
     for n in t.traverse(self_before=False, self_after=True):
-        for c in n.Children:
+        for c in n.children:
             c._leaf_index = curr_index
             id_index[curr_index] = c
             curr_index += 1
             if c:    #c has children itself, so need to add to result
-                child_index.append((c._leaf_index, c.Children[0]._leaf_index,\
-                    c.Children[-1]._leaf_index))
+                child_index.append((c._leaf_index, c.children[0]._leaf_index,\
+                    c.children[-1]._leaf_index))
     #handle root, which should be t itself
     t._leaf_index = curr_index
     id_index[curr_index] = t
     #only want to add to the child_index if t has children...
-    if t.Children:
-        child_index.append((t._leaf_index, t.Children[0]._leaf_index,\
-            t.Children[-1]._leaf_index))
+    if t.children:
+        child_index.append((t._leaf_index, t.children[0]._leaf_index,\
+            t.children[-1]._leaf_index))
     return id_index, child_index
 
 def index_envs(env_counts, tree_index, array_constructor=int):
@@ -177,8 +177,8 @@ def index_envs(env_counts, tree_index, array_constructor=int):
     #figure out taxon label to index map
     node_to_index = {}
     for i, node in tree_index.items():
-        if node.Name is not None:
-            node_to_index[node.Name] = i
+        if node.name is not None:
+            node_to_index[node.name] = i
     #walk over env_counts, adding correct slots in array
     for name in env_counts:
         curr_row_index = node_to_index[name]
@@ -192,8 +192,8 @@ def get_branch_lengths(tree_index):
     result = np.zeros(len(tree_index), float)
     for i, node in tree_index.items():
         try:
-            if node.Length is not None:
-                result[i] = node.Length
+            if node.length is not None:
+                result[i] = node.length
         except AttributeError:
             pass
     return result
