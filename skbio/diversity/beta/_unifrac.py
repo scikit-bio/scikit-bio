@@ -40,9 +40,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
         be a superset of ``otu_ids``, but not a subset.
     suppress_validation: bool, optional
         If `True`, validation of the input won't be performed. This step can
-        be slow, so if validation is being before elsewhere it can be disabled
-        here. However, invalid input data can lead to invalid results, so this
-        step should not be bypassed all together.
+        be slow, so if validation is run elsewhere it can be disabled here.
+        However, invalid input data can lead to invalid results, so this step
+        should not be bypassed all together.
 
     Returns
     -------
@@ -123,9 +123,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         will then be in the range ``[0, 1]``.
     suppress_validation: bool, optional
         If `True`, validation of the input won't be performed. This step can
-        be slow, so if validation is being before elsewhere it can be disabled
-        here. However, invalid input data can lead to invalid results, so this
-        step should not be bypassed all together.
+        be slow, so if validation is run elsewhere it can be disabled here.
+        However, invalid input data can lead to invalid results, so this step
+        should not be bypassed all together.
 
     Returns
     -------
