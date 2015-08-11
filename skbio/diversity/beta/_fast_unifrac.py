@@ -1,4 +1,5 @@
 import numpy as np
+from ._unifrac import _validate
 
 def unifrac(branch_lengths, i, j):
     """Calculates unifrac(i,j) from branch lengths and cols i and j of m.
@@ -11,8 +12,52 @@ def unifrac(branch_lengths, i, j):
     tree. Slicing m (e.g. m[:,i]) returns a vector in the right format; note
     that it should be a row vector (the default), not a column vector.
     """
+    ### NOTE: this is cogent.maths.unifrac.fast_tree.unifrac, but there are
+    ### other metrics that can (should?) be ported like:
+    ###  - unnormalized_unifrac
+    ###  - G
+    ###  - unnormalized_G
+
     return 1 - ((branch_lengths * np.logical_and(i,j)).sum()/\
         (branch_lengths * np.logical_or(i,j)).sum())
+
+
+def _skbio_counts_to_envs(u_counts, v_counts, otu_ids):
+    """This is a place holder method to help get the API hooked up
+
+    This method should be unnecessary once the implementation is optimized to
+    the interface.
+    """
+    envs = {}
+    for u, v, otu in zip(u_counts, v_counts, otu_ids):
+        ### NOTE: this is ducttape to fit the API
+        counts = {}
+        if u:
+            counts['u'] = u
+        if v:
+            counts['v'] = v
+        if counts:
+            envs[otu] = counts
+    return envs
+
+
+def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
+                       suppress_validation=False):
+    """fit to unifrac API"""
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
+    envs = _skbio_counts_to_envs(u_counts, v_counts, otu_ids)
+
+    return fast_unifrac(tree, envs)
+
+
+def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
+                     suppress_validation=False):
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
+    envs = _skbio_counts_to_envs(u_counts, v_counts, otu_ids)
+
+    return fast_unifrac(tree, envs, weighted=True)
 
 
 def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
