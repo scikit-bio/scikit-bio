@@ -183,9 +183,9 @@ def _parse_single_genbank(chunks):
     section_splitter = yield_section(lambda x: not x[0].isspace(), strip=False)
     for section in section_splitter(chunks):
         header = section[0].split(None, 1)[0]
-        parser = globals().get('_parse_%s' % header.lower())
-        if not parser:
-            parser = _parse_section_default
+        parser = _PARSER_TABLE.get(
+            header, _parse_section_default)
+
         if header == 'FEATURES':
             parser = partial(
                 parser, length=metadata['LOCUS']['size'])
@@ -461,8 +461,9 @@ def yield_section(is_another_section, **kwargs):
 
     Returns
     -------
-    generator
-        A generator to yield section one by one.
+    function
+        A function accept a list of lines as input and return
+        a generator to yield section one by one.
     '''
     def parser(lines):
         curr = []
@@ -477,3 +478,11 @@ def yield_section(is_another_section, **kwargs):
         if curr:
             yield curr
     return parser
+
+
+_PARSER_TABLE = {
+    'LOCUS': _parse_locus,
+    'SOURCE': _parse_source,
+    'REFERENCE': _parse_reference,
+    'FEATURES': _parse_features,
+    'ORIGIN': _parse_origin}
