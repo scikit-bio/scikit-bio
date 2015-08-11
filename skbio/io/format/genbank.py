@@ -155,7 +155,7 @@ def _construct(record, constructor=None, **kwargs):
             constructor = Protein
         else:
             constructor = Sequence
-    if 'lowcase' not in kwargs and constructor != Sequence:
+    if 'lowercase' not in kwargs and constructor != Sequence:
         kwargs['lowercase'] = True
     if constructor == RNA:
         return DNA(
@@ -178,6 +178,7 @@ def _parse_genbanks(fh):
 def _parse_single_genbank(chunks):
     metadata = {}
     metadata['REFERENCE'] = []
+    positional_metadata = None
     sequence = ''
     # each section starts with a HEADER without indent.
     section_splitter = yield_section(lambda x: not x[0].isspace(), strip=False)

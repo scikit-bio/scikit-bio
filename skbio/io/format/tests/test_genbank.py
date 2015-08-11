@@ -14,7 +14,7 @@ from skbio.io import GenbankFormatError
 from skbio.io.format.genbank import (
     _genbank_sniffer,
     _genbank_to_generator, _genbank_to_biological_sequence,
-    _genbank_to_dna, _genbank_to_rna,
+    _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
     _parse_loc_str, _parse_section_default)
 
@@ -22,7 +22,9 @@ from skbio.io.format.genbank import (
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
-            'genbank_5_blanks_start_of_file']))
+            'genbank_5_blanks_start_of_file',
+            'genbank_single_record',
+            'genbank_multi_records']))
 
         self.negative_fps = list(map(get_data_path, [
             'empty',
@@ -43,7 +45,16 @@ class SnifferTests(TestCase):
 class ReaderTests(TestCase):
     def setUp(self):
         self.valid = []
-
+        self.single = (
+            'GSREILDFK',
+            {'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
+                       'division': 'BCT',
+                       'locus_name': 'AAB29917',
+                       'mol_type': None,
+                       'shape': 'linear',
+                       'size': 9,
+                       'unit': 'aa'},
+             'REFERENCE': []})
         self.multi = (
             ('gsreildfk',
              {'ACCESSION': 'AAB29917',
@@ -275,6 +286,14 @@ REFERENCE   1  (bases 1 to 154478)
             self.assertDictEqual(parsed[0], expect[0])
             nptest.assert_equal(parsed[1], expect[1])
 
+    def test_genbank_to_generator_single(self):
+        # test single record and uppercase sequence
+        fp = get_data_path('genbank_single_record')
+        for c in [Sequence, Protein]:
+            gb = next(_genbank_to_generator(fp, constructor=c))
+            exp = c(self.single[0], self.single[1])
+            self.assertEqual(exp, gb)
+
     def test_genbank_to_generator(self):
         fp = get_data_path('genbank_multi_records')
         for i, gb in enumerate(_genbank_to_generator(fp)):
@@ -307,6 +326,15 @@ REFERENCE   1  (bases 1 to 154478)
         gb = _genbank_to_rna(fp, seq_num=i+1)
         expect = RNA(exp[0].replace('t', 'u'), metadata=exp[1],
                      lowercase=True, positional_metadata=exp[2])
+        self.assertEqual(expect, gb)
+
+    def test_genbank_to_protein(self):
+        fp = get_data_path('genbank_multi_records')
+        i = 0
+        exp = self.multi[i]
+        gb = _genbank_to_protein(fp, seq_num=i+1)
+        expect = Protein(exp[0], metadata=exp[1],
+                         lowercase=True, positional_metadata=exp[2])
         self.assertEqual(expect, gb)
 
 
