@@ -52,6 +52,11 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
         raise ValueError("OTU IDs vector must be the same length as counts "
                          "vector(s).")
 
+    if len(tree.root().children) > 2:
+        # this is an imperfect check for whether the tree is rooted or not.
+        # can this be improved?
+        raise ValueError("Tree must be rooted.")
+
     branch_lengths = [e.length for e in tree.traverse() if not e.is_root()]
     if np.array([l is None for l in branch_lengths]).any():
         raise ValueError("All non-root nodes in tree must have a branch "

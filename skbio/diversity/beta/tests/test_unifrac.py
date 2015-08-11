@@ -176,6 +176,17 @@ class StatsTests(TestCase):
         self.assertRaises(DuplicateNodeError, weighted_unifrac, u_counts,
                           v_counts, otu_ids, t)
 
+        # unrooted tree as input
+        t = TreeNode.read(StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                   'OTU4:0.7);'))
+        u_counts = [1, 2, 3]
+        v_counts = [1, 1, 1]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+
         # otu_ids has duplicated ids
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
