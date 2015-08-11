@@ -177,7 +177,6 @@ def _parse_genbanks(fh):
 
 def _parse_single_genbank(chunks):
     metadata = {}
-    metadata['REFERENCE'] = []
     positional_metadata = None
     sequence = ''
     # each section starts with a HEADER without indent.
@@ -200,7 +199,10 @@ def _parse_single_genbank(chunks):
 
         # reference can appear multiple times
         if header == 'REFERENCE':
-            metadata[header].append(parsed)
+            if header in metadata:
+                metadata[header].append(parsed)
+            else:
+                metadata[header] = [parsed]
         elif header == 'ORIGIN':
             sequence = parsed
         elif header == 'FEATURES':
@@ -356,7 +358,8 @@ def _parse_single_feature(lines, length, index):
                 v = v[1:-1]
             # some Qualifiers can appear multiple times
             if k in feature:
-                feature[k] = [feature[k]]
+                if not isinstance(feature[k], list):
+                    feature[k] = [feature[k]]
                 feature[k].append(v)
             else:
                 feature[k] = v

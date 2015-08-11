@@ -53,8 +53,7 @@ class ReaderTests(TestCase):
                        'mol_type': None,
                        'shape': 'linear',
                        'size': 9,
-                       'unit': 'aa'},
-             'REFERENCE': []})
+                       'unit': 'aa'}})
         self.multi = (
             ('gsreildfk',
              {'ACCESSION': 'AAB29917',
@@ -110,7 +109,7 @@ class ReaderTests(TestCase):
                             'right_partial_': False,
                             'type_': 'source'},
                            {'codon_start': '1',
-                            'db_xref': 'GI:145230',
+                            'db_xref': ['GI:145230', 'taxon:562', 'taxon:561'],
                             'index_': 1,
                             'left_partial_': False,
                             'location': '1..>63',
@@ -129,7 +128,6 @@ class ReaderTests(TestCase):
                         'shape': 'linear',
                         'size': 63,
                         'unit': 'bp'},
-              'REFERENCE': [],
               'SOURCE': {'ORGANISM': 'Escherichia coli',
                          'taxonomy': 'Bacteria; Proteobacteria; '
                          'Gammaproteobacteria; Enterobacteriales; '
@@ -171,7 +169,6 @@ class ReaderTests(TestCase):
                         'shape': 'linear',
                         'size': 9,
                         'unit': 'bp'},
-              'REFERENCE': [],
               'SOURCE': {'ORGANISM': 'uncultured Xylanimonas sp.',
                          'taxonomy': 'Bacteria; Actinobacteria; '
                          'Micrococcales; Promicromonosporaceae; '
