@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from future.builtins import map, range, zip
 import six
-
+import io
 import numpy as np
 import pandas as pd
 import numpy.testing as nptest
@@ -16,7 +16,11 @@ from skbio.io.format.genbank import (
     _genbank_to_generator, _genbank_to_biological_sequence,
     _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
-    _parse_loc_str, _parse_section_default)
+    _parse_loc_str, _parse_section_default,
+    _generator_to_genbank, _biological_sequence_to_genbank,
+    _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
+    _serialize_single_genbank,
+    _serialize_locus)
 
 
 class SnifferTests(TestCase):
@@ -42,9 +46,28 @@ class SnifferTests(TestCase):
             self.assertEqual(_genbank_sniffer(fp), (False, {}))
 
 
-class ReaderTests(TestCase):
+class GenbankIOTests(TestCase):
+    # parent class to set up test data for the child class
     def setUp(self):
-        self.valid = []
+        # test locus line
+        self.locus = (
+            (['LOCUS       NC_005816   9609 bp   '
+              'DNA   circular   CON   07-FEB-2015'],
+             {'division': 'CON', 'mol_type': 'DNA', 'shape': 'circular',
+              'locus_name': 'NC_005816', 'date': datetime(2015, 2, 7, 0, 0),
+              'unit': 'bp', 'size': 9609}),
+            (['LOCUS       SCU49845   5028 bp   '
+              'DNA      PLN   21-JUN-1999'],
+             {'division': 'PLN', 'mol_type': 'DNA', 'shape': None,
+             'locus_name': 'SCU49845', 'date': datetime(1999, 6, 21, 0, 0),
+              'unit': 'bp', 'size': 5028}),
+            (['LOCUS       NP_001832   360 aa      '
+              'linear   PRI   18-DEC-2001'],
+             {'division': 'PRI', 'mol_type': None, 'shape': 'linear',
+              'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
+              'unit': 'aa', 'size': 360}))
+
+        self.single_fp = get_data_path('genbank_single_record')
         self.single = (
             'GSREILDFK',
             {'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
@@ -53,7 +76,11 @@ class ReaderTests(TestCase):
                        'mol_type': None,
                        'shape': 'linear',
                        'size': 9,
-                       'unit': 'aa'}})
+                       'unit': 'aa'}},
+            None,
+            Protein)
+
+        self.multi_fp = get_data_path('genbank_multi_records')
         self.multi = (
             ('gsreildfk',
              {'ACCESSION': 'AAB29917',
@@ -95,7 +122,9 @@ class ReaderTests(TestCase):
              pd.DataFrame({0: np.ones(9, dtype=bool),
                            1: np.ones(9, dtype=bool)}),
              Protein),
-            ('gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
+
+            ('gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
+             # 'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
              {'ACCESSION': 'M14399',
               'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
               'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
@@ -135,7 +164,8 @@ class ReaderTests(TestCase):
               'VERSION': 'M14399.1  GI:145229'},
              pd.DataFrame({0: np.ones(63, dtype=bool),
                            1: np.ones(63, dtype=bool)}),
-             DNA),
+             RNA),
+
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
@@ -178,6 +208,8 @@ class ReaderTests(TestCase):
                            1: [False] + [True] * 7 + [False]}),
              DNA))
 
+
+class ReaderTests(GenbankIOTests):
     def test_parse_reference(self):
         lines = '''
 REFERENCE   1  (bases 1 to 154478)
@@ -196,26 +228,8 @@ REFERENCE   1  (bases 1 to 154478)
         self.assertEqual(_parse_reference(lines), exp)
 
     def test_parse_locus(self):
-        lines = [
-            ['LOCUS       NC_005816               9609 bp'
-             '    DNA     circular CON 07-FEB-2015'],
-            ['LOCUS       SCU49845     5028 bp'
-             '    DNA             PLN       21-JUN-1999'],
-            ['LOCUS       NP_001832                360 aa'
-             '            linear   PRI 18-DEC-2001']]
-        expects = [
-            {'division': 'CON', 'mol_type': 'DNA', 'shape': 'circular',
-             'locus_name': 'NC_005816', 'date': datetime(2015, 2, 7, 0, 0),
-             'unit': 'bp', 'size': 9609},
-            {'division': 'PLN', 'mol_type': 'DNA', 'shape': None,
-             'locus_name': 'SCU49845', 'date': datetime(1999, 6, 21, 0, 0),
-             'unit': 'bp', 'size': 5028},
-            {'division': 'PRI', 'mol_type': None, 'shape': 'linear',
-             'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
-             'unit': 'aa', 'size': 360}]
-
-        for line, exp in zip(lines, expects):
-            self.assertEqual(_parse_locus(line), exp)
+        for serialized, parsed in self.locus:
+            self.assertEqual(_parse_locus(serialized), parsed)
 
     def test_parse_locus_invalid(self):
         lines = [
@@ -335,8 +349,40 @@ REFERENCE   1  (bases 1 to 154478)
         self.assertEqual(expect, gb)
 
 
-class WriterTests(TestCase):
-    pass
+class WriterTests(GenbankIOTests):
+    def test_serialize_locus(self):
+        for serialized, parsed in self.locus:
+            self.assertEqual(
+                _serialize_locus('LOCUS', parsed), serialized[0] + '\n')
+
+    def test_generator_to_genbank(self):
+        seq, md, pmd, constructor = self.single
+        obj = constructor(seq, md, pmd)
+        fh = io.StringIO()
+        _generator_to_genbank([obj], fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_any_sequence_to_genbank(self):
+        writers = {Protein: _protein_to_genbank,
+                   RNA: _rna_to_genbank,
+                   DNA: _dna_to_genbank}
+        fh = io.StringIO()
+        for seq, md, pmd, constructor in self.multi:
+            obj = constructor(seq, md, pmd, lowercase=True)
+            writers[constructor](obj, fh)
+            obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.multi_fp) as fh:
+            exp = fh.read()
+        print(obs)
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

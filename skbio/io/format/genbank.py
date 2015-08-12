@@ -73,6 +73,7 @@ from pprint import pprint
 
 genbank = create_format('genbank')
 
+
 # date format in locus line of genbank record
 _TIME_FORMAT = '%d-%b-%Y'
 # This list is ordered
@@ -139,8 +140,29 @@ def _genbank_to_protein(fh, seq_num=1, **kwargs):
 
 
 @genbank.writer(None)
-def _sequences_to_genbank(fh):
-    pass
+def _generator_to_genbank(obj, fh):
+    for obj_i in obj:
+        _serialize_single_genbank(obj_i, fh)
+
+
+@genbank.writer(Sequence)
+def _biological_sequence_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
+
+
+@genbank.writer(DNA)
+def _dna_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
+
+
+@genbank.writer(RNA)
+def _rna_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
+
+
+@genbank.writer(Protein)
+def _protein_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
 
 
 def _construct(record, constructor=None, **kwargs):
@@ -213,6 +235,26 @@ def _parse_single_genbank(chunks):
     return sequence, metadata, positional_metadata
 
 
+def _serialize_single_genbank(obj, fh):
+    md = obj.metadata
+    for header in _HEADERS:
+        if header in md:
+            serializer = _SERIALIZER_TABLE.get(
+                header, _serialize_section_default)
+            out = serializer(header, md[header])
+            # test if out is a iterator
+            # see Item 17
+            if iter(out) is iter(out):
+                for s in out:
+                    fh.write(s)
+            else:
+                fh.write(out)
+
+    for s in _serialize_origin(str(obj)):
+        fh.write(s)
+    fh.write('//\n')
+
+
 def _parse_locus(lines):
     '''Parse the line LOCUS.
 
@@ -247,9 +289,8 @@ def _parse_locus(lines):
 
     try:
         res = dict(zip(
-            ['locus_name', 'size', 'unit',
-             'mol_type', 'shape',
-             'division', 'date'],
+            ['locus_name', 'size', 'unit', 'mol_type',
+             'shape', 'division', 'date'],
             matches.groups()))
     except:
         raise GenbankFormatError(
@@ -261,6 +302,26 @@ def _parse_locus(lines):
     res['size'] = int(res['size'])
     res['date'] = datetime.strptime(res['date'], _TIME_FORMAT)
     return res
+
+
+def _serialize_locus(header, obj, indent=12):
+    '''Serilize LOCUS line.
+
+    Parameters
+    ----------
+    obj : dict
+    '''
+    try:
+        # use 'or' to convert None to ''
+        kwargs = {k: v or '' for k, v in obj.items()}
+        # convert datetime to str
+        kwargs['date'] = kwargs['date'].strftime(_TIME_FORMAT).upper()
+    except:
+        raise
+
+    return ('{header:<{indent}}{locus_name}   {size} {unit}'
+            '   {mol_type}   {shape}   {division}   {date}\n').format(
+                header=header, indent=indent, **kwargs)
 
 
 def _parse_reference(lines):
@@ -280,6 +341,21 @@ def _parse_reference(lines):
     return res
 
 
+def _serialize_reference(header, obj, indent=12):
+    '''Serialize REFERENCE.
+
+    Parameters
+    ----------
+    obj : list
+    '''
+    ref = []
+    for i in obj:
+        s = '{header:<{indent}}'.format(
+            header=header, indent=indent)
+        ref.append(s)
+    return '%s\n' % '\n'.join(ref)
+
+
 def _parse_source(lines):
     '''Parse SOURCE field.
     '''
@@ -296,6 +372,22 @@ def _parse_source(lines):
     res['ORGANISM'] = organism[0].split(None, 1)[1].strip()
     res['taxonomy'] = ' '.join([i.strip() for i in organism[1:]])
     return res
+
+
+def _serialize_source(header, obj, indent=12):
+    '''Serialize SOURCE.
+
+    Parameters
+    ----------
+    obj : dict
+    '''
+    s = ('{header:<{indent}}{organism}\n'
+         '{h:<{indent}}{organism}\n'
+         '{space}{taxonomy}\n').format(
+             header=header, indent=indent,
+             h='  ORGANISM', organism=obj['ORGANISM'],
+             space=' ' * 12, taxonomy=obj['taxonomy'])
+    return s
 
 
 def _parse_features(lines, length):
@@ -319,6 +411,18 @@ def _parse_features(lines, length):
     return features, positional_metadata
 
 
+def _serialize_features(header, obj, indent=21):
+    first = True
+    for feature in obj:
+        if first:
+            first = False
+            yield '{header:<{indent}}Location/Qualifiers\n{feat}'.format(
+                header=header, indent=indent,
+                feat=_serialize_single_feature(feature, indent))
+        else:
+            yield _serialize_single_feature(feature, indent)
+
+
 def _parse_single_feature(lines, length, index):
     '''Parse a feature.
 
@@ -329,7 +433,7 @@ def _parse_single_feature(lines, length, index):
         `positional_metadata` for the feature.
 
     '''
-    feature = dict()
+    feature = {}
     feature['index_'] = index
     # each component of a feature starts with '/', except the 1st
     # component of location.
@@ -364,6 +468,40 @@ def _parse_single_feature(lines, length, index):
             else:
                 feature[k] = v
     return feature, loc_pmd
+
+
+def _serialize_single_feature(obj, indent=21):
+    padding = ' ' * 8
+    qualifiers = []
+    for k in obj:
+        if k.endswith('_') or k in ('location', 'type'):
+            continue
+        v = obj[k]
+        if isinstance(v, list):
+            for vi in v:
+                qualifiers.append(_serialize_qualifier(k, vi))
+        else:
+            qualifiers.append(_serialize_qualifier(k, v))
+
+    qualifiers = [' ' * indent + i for i in qualifiers]
+    return '{header:>{indent}}{loc}\n{qualifiers}\n'.format(
+        header=obj['type_'] + padding, loc=obj['location'],
+        indent=indent, qualifiers='\n'.join(qualifiers))
+
+
+def _serialize_qualifier(key, value):
+    '''Serialize a Qualifier in a feature.
+
+    Parameters
+    ----------
+    value : int, str
+    '''
+    # if value is empty
+    if not value:
+        return '/%s' % key
+    if isinstance(value, str):
+        value = '"%s"' % value
+    return '/{k}={v}'.format(k=key, v=value)
 
 
 def _parse_loc_str(loc_str, length):
@@ -419,6 +557,26 @@ def _parse_origin(lines):
     return ''.join(sequence)
 
 
+def _serialize_origin(seq, indent=9):
+    '''Serialize seq to ORIGIN.
+
+    Parameters
+    ----------
+    seq : str
+    '''
+    n = 1
+    line_size = 60
+    frag_size = 10
+    for i in range(0, len(seq), line_size):
+        line = seq[i:i+line_size]
+        s = '{n:>{indent}} {s}\n'.format(
+            n=n, indent=indent, s=chunk_str(line, frag_size, ' '))
+        if n == 1:
+            s = 'ORIGIN\n' + s
+        n = n + line_size
+        yield s
+
+
 def _parse_section_default(
         lines, label_delimitor=None, join_delimitor=' ', return_label=False):
     '''Parse sections in default way.
@@ -450,6 +608,11 @@ def _parse_section_default(
         return label, data
     else:
         return data
+
+
+def _serialize_section_default(header, obj, indent=12):
+    return '{header:<{indent}}{obj}\n'.format(
+        header=header, obj=obj, indent=indent)
 
 
 def yield_section(is_another_section, **kwargs):
@@ -490,3 +653,10 @@ _PARSER_TABLE = {
     'REFERENCE': _parse_reference,
     'FEATURES': _parse_features,
     'ORIGIN': _parse_origin}
+
+
+_SERIALIZER_TABLE = {
+    'LOCUS': _serialize_locus,
+    'SOURCE': _serialize_source,
+    'REFERENCE': _serialize_reference,
+    'FEATURES': _serialize_features}
