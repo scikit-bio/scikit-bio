@@ -299,12 +299,9 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
-                    # Can't use partials for this because the read
-                    # function below can't operate on partials
                     expected_kwargs = {}
-                    if hasattr(constructor, 'lowercase'):
-                        expected_kwargs['lowercase'] = 'introns'
-                        observed_kwargs['lowercase'] = 'introns'
+                    expected_kwargs['lowercase'] = 'introns'
+                    observed_kwargs['lowercase'] = 'introns'
 
                     expected = [constructor(c[2],
                                             metadata={'id': c[0],
@@ -376,11 +373,8 @@ class TestReaders(unittest.TestCase):
 
                         _drop_kwargs(observed_kwargs, 'constructor')
 
-                        # Can't use partials for this because the read
-                        # function below can't operate on partials
-                        if hasattr(constructor, 'lowercase'):
-                            expected_kwargs['lowercase'] = 'introns'
-                            observed_kwargs['lowercase'] = 'introns'
+                        expected_kwargs['lowercase'] = 'introns'
+                        observed_kwargs['lowercase'] = 'introns'
 
                         seq_num = observed_kwargs.get('seq_num', 1)
                         c = components[seq_num - 1]
@@ -404,12 +398,9 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
-                    # Can't use partials for this because the read
-                    # function below can't operate on partials
                     expected_kwargs = {}
-                    if hasattr(constructor, 'lowercase'):
-                        expected_kwargs['lowercase'] = 'introns'
-                        observed_kwargs['lowercase'] = 'introns'
+                    expected_kwargs['lowercase'] = 'introns'
+                    observed_kwargs['lowercase'] = 'introns'
 
                     expected = SequenceCollection(
                         [constructor(
@@ -430,12 +421,9 @@ class TestReaders(unittest.TestCase):
                     _drop_kwargs(observed_kwargs, 'seq_num')
                     constructor = observed_kwargs.get('constructor', Sequence)
 
-                    # Can't use partials for this because the read
-                    # function below can't operate on partials
                     expected_kwargs = {}
-                    if hasattr(constructor, 'lowercase'):
-                        expected_kwargs['lowercase'] = 'introns'
-                        observed_kwargs['lowercase'] = 'introns'
+                    expected_kwargs['lowercase'] = 'introns'
+                    observed_kwargs['lowercase'] = 'introns'
 
                     expected = Alignment(
                         [constructor(
@@ -507,11 +495,8 @@ class TestWriters(unittest.TestCase):
                     if constructor is RNA:
                         observed_kwargs['validate'] = False
 
-                    # Can't use partials for this because the read
-                    # function below can't operate on partials
-                    if hasattr(constructor, 'lowercase'):
-                        expected_kwargs['lowercase'] = 'introns'
-                        observed_kwargs['lowercase'] = 'introns'
+                    expected_kwargs['lowercase'] = 'introns'
+                    observed_kwargs['lowercase'] = 'introns'
 
                     fh = io.StringIO()
                     for c in components:

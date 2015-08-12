@@ -348,17 +348,16 @@ def _fastq_to_generator(fh, variant=None, phred_offset=None,
 
 
 @fastq.reader(Sequence)
-def _fastq_to_biological_sequence(fh, variant=None, phred_offset=None,
-                                  seq_num=1):
+def _fastq_to_sequence(fh, variant=None, phred_offset=None, seq_num=1,
+                       **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
-                            constructor=Sequence),
+                            constructor=Sequence, **kwargs),
         seq_num)
 
 
 @fastq.reader(DNA)
-def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
-                           **kwargs):
+def _fastq_to_dna(fh, variant=None, phred_offset=None, seq_num=1,  **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
                             constructor=DNA, **kwargs),
@@ -366,8 +365,7 @@ def _fastq_to_dna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
 
 
 @fastq.reader(RNA)
-def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
-                           **kwargs):
+def _fastq_to_rna(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
                             constructor=RNA, **kwargs),
@@ -375,8 +373,8 @@ def _fastq_to_rna_sequence(fh, variant=None, phred_offset=None, seq_num=1,
 
 
 @fastq.reader(Protein)
-def _fastq_to_protein_sequence(fh, variant=None, phred_offset=None, seq_num=1,
-                               **kwargs):
+def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1,
+                      **kwargs):
     return _get_nth_sequence(
         _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
                             constructor=Protein,
@@ -422,39 +420,36 @@ def _generator_to_fastq(obj, fh, variant=None, phred_offset=None,
 
 
 @fastq.writer(Sequence)
-def _biological_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' '):
+def _sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
+                       id_whitespace_replacement='_',
+                       description_newline_replacement=' ', lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
-                        description_newline_replacement)
+                        description_newline_replacement, lowercase=lowercase)
 
 
 @fastq.writer(DNA)
-def _dna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                           id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           lowercase=None):
+def _dna_to_fastq(obj, fh, variant=None, phred_offset=None,
+                  id_whitespace_replacement='_',
+                  description_newline_replacement=' ', lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=lowercase)
 
 
 @fastq.writer(RNA)
-def _rna_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                           id_whitespace_replacement='_',
-                           description_newline_replacement=' ',
-                           lowercase=None):
+def _rna_to_fastq(obj, fh, variant=None, phred_offset=None,
+                  id_whitespace_replacement='_',
+                  description_newline_replacement=' ', lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=lowercase)
 
 
 @fastq.writer(Protein)
-def _protein_sequence_to_fastq(obj, fh, variant=None, phred_offset=None,
-                               id_whitespace_replacement='_',
-                               description_newline_replacement=' ',
-                               lowercase=None):
+def _protein_to_fastq(obj, fh, variant=None, phred_offset=None,
+                      id_whitespace_replacement='_',
+                      description_newline_replacement=' ', lowercase=None):
     _sequences_to_fastq([obj], fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=lowercase)
