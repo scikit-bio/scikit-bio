@@ -9,11 +9,11 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+from io import StringIO
 
 import numpy as np
 import numpy.testing as npt
 
-from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
@@ -33,8 +33,8 @@ class BaseTests(TestCase):
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(StringIO(
-            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+            u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            u'0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
