@@ -3,10 +3,10 @@
 sudo: false
 language: python
 env:
-  - PYTHON_VERSION=3.4
-  - PYTHON_VERSION=3.3
-  - PYTHON_VERSION=2.7 USE_CYTHON=TRUE
-  - PYTHON_VERSION=2.7
+  - PYTHON_VERSION=3.4 MAKE_DOC=TRUE
+  - PYTHON_VERSION=3.3 MAKE_DOC=FALSE
+  - PYTHON_VERSION=2.7 USE_CYTHON=TRUE MAKE_DOC=FALSE
+  - PYTHON_VERSION=2.7 MAKE_DOC=FALSE
 before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
@@ -24,7 +24,7 @@ install:
   - pip install -e . --no-deps
 script:
   - WITH_COVERAGE=TRUE make test
-  - make -C doc clean html
+  - if [ ${MAKE_DOC} ] ; then make -C doc clean html; fi
 after_success:
   - coveralls
 notifications:
