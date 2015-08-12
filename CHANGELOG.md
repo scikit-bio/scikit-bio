@@ -9,6 +9,7 @@
 * ``TreeNode.tip_tip_distances`` now supports nodes without an associated length. In this case, a length of 0.0 is assumed and an ``skbio.util.RepresentationWarning`` is raised. Previous behavior was to raise a ``NoLengthError``. ([#791](https://github.com/biocore/scikit-bio/issues/791))
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
+* The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
 
 ### Backward-incompatible changes [experimental]
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
