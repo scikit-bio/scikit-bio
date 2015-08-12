@@ -30,6 +30,14 @@ class DNA(IUPACSequence, NucleotideMixin):
         Arbitrary per-character metadata. For example, quality data from
         sequencing reads. Must be able to be passed directly to the Pandas
         DataFrame constructor.
+    lowercase : bool or str, optional
+        If ``True``, lowercase sequence characters will be converted to
+        uppercase characters in order to be valid IUPAC DNA characters. If
+        ``False``, no characters will be converted. If a str, it will be
+        treated as a key into the positional metadata of the object. All
+        lowercase characters will be converted to uppercase, and a ``True``
+        value will be stored in a boolean array in the positional metadata
+        under the key.
     validate : bool, optional
         If ``True``, validation will be performed to ensure that all sequence
         characters are in the IUPAC DNA character set. If ``False``, validation
@@ -39,14 +47,6 @@ class DNA(IUPACSequence, NucleotideMixin):
         work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
-    lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC DNA characters. If
-        ``False``, no characters will be converted. If a str, it will be
-        treated as a key into the positional metadata of the object. All
-        lowercase characters will be converted to uppercase, and a ``True``
-        value will be stored in a boolean array in the positional metadata
-        under the key.
 
     Attributes
     ----------

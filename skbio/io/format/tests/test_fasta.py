@@ -19,11 +19,10 @@ import numpy as np
 from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
 from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.fasta import (
-    _fasta_sniffer, _fasta_to_generator, _fasta_to_biological_sequence,
-    _fasta_to_dna_sequence, _fasta_to_rna_sequence, _fasta_to_protein_sequence,
+    _fasta_sniffer, _fasta_to_generator, _fasta_to_sequence,
+    _fasta_to_dna, _fasta_to_rna, _fasta_to_protein,
     _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
-    _biological_sequence_to_fasta, _dna_sequence_to_fasta,
-    _rna_sequence_to_fasta, _protein_sequence_to_fasta,
+    _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
     _sequence_collection_to_fasta, _alignment_to_fasta)
 from skbio.util import get_data_path
 
@@ -480,19 +479,19 @@ class ReaderTests(TestCase):
 
     def test_fasta_to_any_sequence(self):
         for constructor, reader_fn in ((Sequence,
-                                        _fasta_to_biological_sequence),
+                                        _fasta_to_sequence),
                                        (partial(DNA, validate=False,
                                                 lowercase='introns'),
-                                        partial(_fasta_to_dna_sequence,
+                                        partial(_fasta_to_dna,
                                                 validate=False,
                                                 lowercase='introns')),
                                        (partial(RNA, validate=False,
                                                 lowercase='introns'),
-                                        partial(_fasta_to_rna_sequence,
+                                        partial(_fasta_to_rna,
                                                 validate=False,
                                                 lowercase='introns')),
                                        (partial(Protein, lowercase='introns'),
-                                        partial(_fasta_to_protein_sequence,
+                                        partial(_fasta_to_protein,
                                                 validate=False,
                                                 lowercase='introns'))):
 
@@ -858,17 +857,6 @@ class WriterTests(TestCase):
                 _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 
-    def test_generator_to_fasta_sequence_lowercase_exception(self):
-        seq = Sequence('ACgt', metadata={'id': ''})
-        fh = io.StringIO()
-        with six.assertRaisesRegex(self, AttributeError,
-                                   "lowercase specified but class Sequence "
-                                   "does not support lowercase "
-                                   "functionality"):
-            _generator_to_fasta(SequenceCollection([seq]), fh,
-                                lowercase='introns')
-        fh.close()
-
     # light testing of object -> fasta writers to ensure interface is present
     # and kwargs are passed through. extensive testing of underlying writer is
     # performed above
@@ -879,27 +867,28 @@ class WriterTests(TestCase):
         id_ = 'f o o'
         desc = 'b\na\nr'
         test_data = (
-            (_biological_sequence_to_fasta,
+            (partial(_sequence_to_fasta, lowercase='introns'),
              Sequence('ACgt', metadata={'id': id_, 'description': desc},
-                      positional_metadata={'quality': range(1, 5)}),
+                      positional_metadata={'quality': range(1, 5)},
+                      lowercase='introns'),
              ('fasta_single_bio_seq_defaults',
               'fasta_single_bio_seq_non_defaults',
               'qual_single_bio_seq_non_defaults')),
-            (partial(_dna_sequence_to_fasta, lowercase='introns'),
+            (partial(_dna_to_fasta, lowercase='introns'),
              DNA('TAcg', metadata={'id': id_, 'description': desc},
                  positional_metadata={'quality': range(4)},
                  lowercase='introns'),
              ('fasta_single_dna_seq_defaults',
               'fasta_single_dna_seq_non_defaults',
               'qual_single_dna_seq_non_defaults')),
-            (partial(_rna_sequence_to_fasta, lowercase='introns'),
+            (partial(_rna_to_fasta, lowercase='introns'),
              RNA('uaCG', metadata={'id': id_, 'description': desc},
                  positional_metadata={'quality': range(2, 6)},
                  lowercase='introns'),
              ('fasta_single_rna_seq_defaults',
               'fasta_single_rna_seq_non_defaults',
               'qual_single_rna_seq_non_defaults')),
-            (partial(_protein_sequence_to_fasta, lowercase='introns'),
+            (partial(_protein_to_fasta, lowercase='introns'),
              Protein('PqQ', metadata={'id': id_, 'description': desc},
                      positional_metadata={'quality': [42, 41, 40]},
                      lowercase='introns'),
@@ -971,26 +960,6 @@ class WriterTests(TestCase):
             self.assertEqual(obs_fasta, exp_fasta)
             self.assertEqual(obs_qual, exp_qual)
 
-            fh2 = io.StringIO()
-            with six.assertRaisesRegex(self, AttributeError,
-                                       "lowercase specified but class "
-                                       "Sequence does not support lowercase "
-                                       "functionality"):
-                fn(obj, fh2, lowercase='introns')
-            fh2.close()
-
-            fasta_fh2 = io.StringIO()
-            qual_fh2 = io.StringIO()
-            with six.assertRaisesRegex(self, AttributeError,
-                                       "lowercase specified but class "
-                                       "Sequence does not support lowercase "
-                                       "functionality"):
-                fn(obj, fasta_fh2, id_whitespace_replacement='*',
-                   description_newline_replacement='+', max_width=3,
-                   qual=qual_fh2, lowercase='introns')
-            fasta_fh2.close()
-            qual_fh2.close()
-
 
 class RoundtripTests(TestCase):
     def test_roundtrip_generators(self):
@@ -1054,17 +1023,17 @@ class RoundtripTests(TestCase):
                         ('fasta_sequence_collection_different_type',
                          'qual_sequence_collection_different_type')]))
 
-        for reader, writer in ((_fasta_to_biological_sequence,
-                                _biological_sequence_to_fasta),
-                               (partial(_fasta_to_dna_sequence,
+        for reader, writer in ((_fasta_to_sequence,
+                                _sequence_to_fasta),
+                               (partial(_fasta_to_dna,
                                         validate=False),
-                                _dna_sequence_to_fasta),
-                               (partial(_fasta_to_rna_sequence,
+                                _dna_to_fasta),
+                               (partial(_fasta_to_rna,
                                         validate=False),
-                                _rna_sequence_to_fasta),
-                               (partial(_fasta_to_protein_sequence,
+                                _rna_to_fasta),
+                               (partial(_fasta_to_protein,
                                         validate=False),
-                                _protein_sequence_to_fasta)):
+                                _protein_to_fasta)):
             for fasta_fp, qual_fp in fps:
                 # read
                 obj1 = reader(fasta_fp, qual=qual_fp)
