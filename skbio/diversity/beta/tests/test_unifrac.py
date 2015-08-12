@@ -164,6 +164,10 @@ class StatsTests(TestCase):
                 self.assertAlmostEqual(actual, expected)
 
     def test_invalid_input(self):
+        # Many of these tests are duplicated from
+        # skbio.diversity.tests.test_base, but I think it's important to
+        # confirm that they are being run when *unifrac is called.
+
         # tree has duplicated tip ids
         t = TreeNode.read(
             StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
