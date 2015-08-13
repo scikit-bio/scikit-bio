@@ -19,7 +19,6 @@ from skbio.io.format.genbank import (
     _parse_loc_str, _parse_section_default,
     _generator_to_genbank, _biological_sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
-    _serialize_single_genbank,
     _serialize_locus)
 
 
@@ -67,6 +66,7 @@ class GenbankIOTests(TestCase):
               'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
               'unit': 'aa', 'size': 360}))
 
+        # test single record and uppercase sequence
         self.single_fp = get_data_path('genbank_single_record')
         self.single = (
             'GSREILDFK',
@@ -80,6 +80,11 @@ class GenbankIOTests(TestCase):
             None,
             Protein)
 
+        # test:
+        # 1. multiple records in one file
+        # 2. lowercase sequence
+        # 3. DNA, RNA, Protein type
+        # 4. variation of formats
         self.multi_fp = get_data_path('genbank_multi_records')
         self.multi = (
             ('gsreildfk',
@@ -115,6 +120,11 @@ class GenbankIOTests(TestCase):
                              'PUBMED': '7764422',
                              'REFERENCE': '1  (residues 1 to 9)',
                              'REMARK': 'from the original journal article.',
+                             'TITLE': 'a microbial L-carnitine amidase'},
+                            {'AUTHORS': 'Joeres,U. and Kula,M.R.',
+                             'JOURNAL': 'AMB 40 (5), 606-610 (1994)',
+                             'PUBMED': '7764422',
+                             'REFERENCE': '1  (residues 1 to 9)',
                              'TITLE': 'a microbial L-carnitine amidase'}],
               'SOURCE': {'ORGANISM': 'Bacteria',
                          'taxonomy': 'Unclassified.'},
@@ -123,8 +133,7 @@ class GenbankIOTests(TestCase):
                            1: np.ones(9, dtype=bool)}),
              Protein),
 
-            ('gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
-             # 'gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
+            ('gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
              {'ACCESSION': 'M14399',
               'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
               'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
@@ -137,7 +146,7 @@ class GenbankIOTests(TestCase):
                             'rc_': False,
                             'right_partial_': False,
                             'type_': 'source'},
-                           {'codon_start': '1',
+                           {'codon_start': 1,
                             'db_xref': ['GI:145230', 'taxon:562', 'taxon:561'],
                             'index_': 1,
                             'left_partial_': False,
@@ -146,7 +155,7 @@ class GenbankIOTests(TestCase):
                             'protein_id': 'AAA23431.1',
                             'rc_': False,
                             'right_partial_': True,
-                            'transl_table': '11',
+                            'transl_table': 11,
                             'translation': 'MKQSTIALAVLPLLFTPVTKA',
                             'type_': 'CDS'}],
               'KEYWORDS': 'alkaline phosphatase; signal peptide.',
@@ -164,7 +173,7 @@ class GenbankIOTests(TestCase):
               'VERSION': 'M14399.1  GI:145229'},
              pd.DataFrame({0: np.ones(63, dtype=bool),
                            1: np.ones(63, dtype=bool)}),
-             RNA),
+             DNA),
 
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
@@ -299,54 +308,49 @@ REFERENCE   1  (bases 1 to 154478)
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
-        fp = get_data_path('genbank_single_record')
         for c in [Sequence, Protein]:
-            gb = next(_genbank_to_generator(fp, constructor=c))
-            exp = c(self.single[0], self.single[1])
-            self.assertEqual(exp, gb)
+            obs = next(_genbank_to_generator(self.single_fp, constructor=c))
+            exp = c(self.single[0], metadata=self.single[1],
+                    positioanl_metadata=self.single[2])
+            self.assertEqual(exp, obs)
 
     def test_genbank_to_generator(self):
-        fp = get_data_path('genbank_multi_records')
-        for i, gb in enumerate(_genbank_to_generator(fp)):
+        for i, obs in enumerate(_genbank_to_generator(self.multi_fp)):
             seq, md, pmd, constructor = self.multi[i]
             exp = constructor(seq, metadata=md, lowercase=True,
                               positional_metadata=pmd)
-            self.assertEqual(exp, gb)
+            self.assertEqual(exp, obs)
 
     def test_genbank_to_biological_sequence(self):
-        fp = get_data_path('genbank_multi_records')
         for i, exp in enumerate(self.multi):
-            gb = _genbank_to_biological_sequence(fp, seq_num=i+1)
-            expect = Sequence(
-                exp[0], metadata=exp[1], positional_metadata=exp[2])
-            self.assertEqual(expect, gb)
+            obs = _genbank_to_biological_sequence(self.multi_fp, seq_num=i+1)
+            exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
+                           positional_metadata=exp[2])
+            self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
-        fp = get_data_path('genbank_multi_records')
         i = 2
         exp = self.multi[i]
-        gb = _genbank_to_dna(fp, seq_num=i+1)
-        expect = DNA(exp[0], metadata=exp[1], lowercase=True,
-                     positional_metadata=exp[2])
-        self.assertEqual(expect, gb)
+        obs = _genbank_to_dna(self.multi_fp, seq_num=i+1)
+        exp = DNA(exp[0], metadata=exp[1], lowercase=True,
+                  positional_metadata=exp[2])
+        self.assertEqual(exp, obs)
 
     def test_genbank_to_rna(self):
-        fp = get_data_path('genbank_multi_records')
         i = 1
         exp = self.multi[i]
-        gb = _genbank_to_rna(fp, seq_num=i+1)
-        expect = RNA(exp[0].replace('t', 'u'), metadata=exp[1],
-                     lowercase=True, positional_metadata=exp[2])
-        self.assertEqual(expect, gb)
+        obs = _genbank_to_rna(self.multi_fp, seq_num=i+1)
+        exp = RNA(exp[0].replace('t', 'u'), metadata=exp[1],
+                  lowercase=True, positional_metadata=exp[2])
+        self.assertEqual(exp, obs)
 
     def test_genbank_to_protein(self):
-        fp = get_data_path('genbank_multi_records')
         i = 0
         exp = self.multi[i]
-        gb = _genbank_to_protein(fp, seq_num=i+1)
-        expect = Protein(exp[0], metadata=exp[1],
-                         lowercase=True, positional_metadata=exp[2])
-        self.assertEqual(expect, gb)
+        obs = _genbank_to_protein(self.multi_fp, seq_num=i+1)
+        exp = Protein(exp[0], metadata=exp[1],
+                      lowercase=True, positional_metadata=exp[2])
+        self.assertEqual(exp, obs)
 
 
 class WriterTests(GenbankIOTests):
@@ -368,15 +372,33 @@ class WriterTests(GenbankIOTests):
 
         self.assertEqual(obs, exp)
 
-    def test_any_sequence_to_genbank(self):
-        writers = {Protein: _protein_to_genbank,
-                   RNA: _rna_to_genbank,
-                   DNA: _dna_to_genbank}
+    def test_biological_sequence_to_genbank(self):
         fh = io.StringIO()
-        for seq, md, pmd, constructor in self.multi:
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
+            obj = Sequence(seq, md, pmd, lowercase=True)
+            lowercase = np.ones(md['LOCUS']['size'], dtype=bool)
+            _biological_sequence_to_genbank(obj, fh, lowercase=lowercase)
+            obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.multi_fp) as fh:
+            exp = fh.read()
+        print(obs)
+        self.assertEqual(obs, exp)
+
+    def test_any_sequence_to_genbank(self):
+        writers = [_protein_to_genbank,
+                   _rna_to_genbank,
+                   _dna_to_genbank]
+        fh = io.StringIO()
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
+            # test the second record as RNA
+            if i == 1:
+                seq = seq.replace('t', 'u')
+                constructor = RNA
             obj = constructor(seq, md, pmd, lowercase=True)
             lowercase = np.ones(md['LOCUS']['size'], dtype=bool)
-            writers[constructor](obj, fh, lowercase=lowercase)
+            writers[i](obj, fh, lowercase=lowercase)
             obs = fh.getvalue()
         fh.close()
 

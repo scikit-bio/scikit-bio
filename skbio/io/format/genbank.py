@@ -52,7 +52,7 @@ Examples
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import range, zip
-from six.moves import zip_longest
+
 import re
 import textwrap
 
@@ -62,17 +62,13 @@ from datetime import datetime
 from functools import partial
 
 from skbio.io import create_format, GenbankFormatError
-from skbio.io.registry import FileSentinel
-from skbio.io.format._base import (_get_nth_sequence,
-                                   _parse_fasta_like_header,
-                                   _format_fasta_like_records, _line_generator,
-                                   _too_many_blanks)
+from skbio.io.format._base import (
+    _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str
 from skbio.sequence import Sequence, DNA, RNA, Protein
-from pprint import pprint
+
 
 genbank = create_format('genbank')
-
 
 # date format in locus line of genbank record
 _TIME_FORMAT = '%d-%b-%Y'
@@ -468,9 +464,12 @@ def _parse_single_feature(lines, length, index):
                 join_delimitor=' ', return_label=True)
             k = k[1:]
             # strip the quotes if it is quoted.
-            # v could be empty
-            if v and v[0] == '"' and v[-1] == '"':
-                v = v[1:-1]
+            # v could be empty if there is no value for this qualifier.
+            if v:
+                if v[0] == '"' and v[-1] == '"':
+                    v = v[1:-1]
+                else:  # it should be number if not quoted
+                    v = int(v)
             # some Qualifiers can appear multiple times
             if k in feature:
                 if not isinstance(feature[k], list):
