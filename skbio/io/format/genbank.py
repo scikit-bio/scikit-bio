@@ -483,7 +483,7 @@ def _parse_single_feature(lines, length, index):
 def _serialize_single_feature(obj, indent=21):
     padding = ' ' * 8
     qualifiers = []
-    for k in obj:
+    for k in sorted(obj):
         if k.endswith('_') or k in ('location', 'type'):
             continue
         v = obj[k]
