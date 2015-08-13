@@ -5,6 +5,7 @@
 ### Features
 * Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
+* Added ``skbio.io.format.genbank`` for read and write genbank format for ``DNA``, ``RNA``, ``Protein`` and ``Sequence`` classes.
 
 ### Backward-incompatible changes (experimental functionality)
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
