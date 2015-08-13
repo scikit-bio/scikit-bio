@@ -4,6 +4,19 @@ Genbank format (:mod:`skbio.io.format.genbank`)
 
 .. currentmodule:: skbio.io.format.genbank
 
+Genbank format (Genbank Flat File Format) stores sequence and its annotation
+together. The start of the annotation section is marked by a line beginning
+with the word "LOCUS". The start of sequence section is marked by a line
+beginning with the word "ORIGIN" and the end of the section is marked by a line
+with only "//".
+
+The Genbank file usually ends with .gb or sometimes .gbk. The Genbank format
+for protein has been renamed to Genpept. The Genbank (for nucleotide) and
+Genpept are essentially the same format.
+
+An example of a Genbank file can be see here:
+<http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>
+
 Format Support
 --------------
 **Has Sniffer: Yes**
@@ -22,20 +35,17 @@ Format Support
 
 Format Specification
 --------------------
-The following sections define the genbank formats.
+The International Nucleotide Sequence Database Collaboration (INSDC)
+foundational initiative between the DDBJ, EMBL, and Genbank
+(http://www.insdc.org/). These organisations all use the
+same "Feature Table" layout in their plain text flat file formats.
 
-<http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>
+However, the header and sequence sections of an EMBL file are very
+different in layout to those produced by Genbank/DDBJ.
 
 Feature Table Documentation:
 http://www.insdc.org/files/feature_table.html
 ftp://ftp.ncbi.nih.gov/genbank/docs/FTv10_3.html
-
-    The International Nucleotide Sequence Database Collaboration (INSDC)
-    between the DDBJ, EMBL, and GenBank.  These organisations all use the
-    same "Feature Table" layout in their plain text flat file formats.
-
-    However, the header and sequence sections of an EMBL file are very
-    different in layout to those produced by GenBank/DDBJ.
 
 Examples
 --------
@@ -54,8 +64,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import range, zip
 
 import re
-import textwrap
-
 import numpy as np
 import pandas as pd
 from datetime import datetime
