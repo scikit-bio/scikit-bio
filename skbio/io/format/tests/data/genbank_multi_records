@@ -1,81 +1,81 @@
-LOCUS       AAB29917                  9 aa            linear   BCT 23-SEP-1994
+LOCUS       AAB29917   9 aa      linear   BCT   23-SEP-1994
 DEFINITION  L-carnitine amidase {N-terminal}
 ACCESSION   AAB29917
 VERSION     AAB29917.1  GI:545426
 DBSOURCE    accession AAB29917.1
 KEYWORDS    .
-SOURCE      Bacteria (eubacteria)
+SOURCE      Bacteria
   ORGANISM  Bacteria
             Unclassified.
 REFERENCE   1  (residues 1 to 9)
   AUTHORS   Joeres,U. and Kula,M.R.
-  TITLE     a microbial L-carnitine
-            amidase
+  TITLE     a microbial L-carnitine amidase
   JOURNAL   AMB 40 (5), 606-610 (1994)
-   PUBMED   7764422
+  PUBMED    7764422
   REMARK    from the original journal article.
+REFERENCE   1  (residues 1 to 9)
+  AUTHORS   Joeres,U. and Kula,M.R.
+  TITLE     a microbial L-carnitine amidase
+  JOURNAL   AMB 40 (5), 606-610 (1994)
+  PUBMED    7764422
 COMMENT     Method: direct peptide sequencing.
 FEATURES             Location/Qualifiers
-     source          1..9
-                     /organism="Bacteria"
+       source        1..9
                      /db_xref="taxon:2"
-     Protein         1..>9
+                     /organism="Bacteria"
+      Protein        1..>9
                      /product="L-carnitine amidase"
 ORIGIN
         1 gsreildfk
 //
-LOCUS       ECOALKP                   63 bp    mRNA    linear   BCT 26-APR-1993
+LOCUS       ECOALKP   63 bp   mRNA   linear   BCT   26-APR-1993
 DEFINITION  alkaline phosphatase signal mRNA, 5' end.
 ACCESSION   M14399
 VERSION     M14399.1  GI:145229
 KEYWORDS    alkaline phosphatase; signal peptide.
 SOURCE      Escherichia coli
   ORGANISM  Escherichia coli
-            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales;
-            Enterobacteriaceae; Escherichia.
+            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Escherichia.
 COMMENT     Original source text: E.coli, cDNA to mRNA.
 FEATURES             Location/Qualifiers
-     source          1..63
-                     /organism="Escherichia coli"
-                     /mol_type="mRNA"
+       source        1..63
                      /db_xref="taxon:562"
-     CDS             1..>63
-                     /note="alkaline phosphatase signal peptide"
+                     /mol_type="mRNA"
+                     /organism="Escherichia coli"
+          CDS        1..>63
                      /codon_start=1
-                     /transl_table=11
-                     /protein_id="AAA23431.1"
                      /db_xref="GI:145230"
                      /db_xref="taxon:562"
                      /db_xref="taxon:561"
+                     /note="alkaline phosphatase signal peptide"
+                     /protein_id="AAA23431.1"
+                     /transl_table=11
                      /translation="MKQSTIALAVLPLLFTPVTKA"
 ORIGIN
-        1 gtgaaacaaa gcactattgc actggctgtc ttaccgttac tgtttacccc tgtgacaaaa
+        1 gugaaacaaa gcacuauugc acuggcuguc uuaccguuac uguuuacccc ugugacaaaa
        61 gcc
 //
-
-LOCUS       HQ018078                  9 bp    DNA     linear   ENV 29-AUG-2010
-DEFINITION  Uncultured Xylanimonas sp.16S,
-            partial
+LOCUS       HQ018078   9 bp   DNA   linear   ENV   29-AUG-2010
+DEFINITION  Uncultured Xylanimonas sp.16S, partial
 ACCESSION   HQ018078
 VERSION     HQ018078.1  GI:304421728
 KEYWORDS    ENV.
 SOURCE      uncultured Xylanimonas sp.
   ORGANISM  uncultured Xylanimonas sp.
-            Bacteria; Actinobacteria; Micrococcales; Promicromonosporaceae;
-            Xylanimonas; environmental samples.
+            Bacteria; Actinobacteria; Micrococcales; Promicromonosporaceae; Xylanimonas; environmental samples.
 FEATURES             Location/Qualifiers
-     source          1..9
-                     /organism="uncultured Xylanimonas sp."
-                     /isolation_source="rhizosphere soil not treated with
-                     nitrogen fertilizer"
-                     /host="sugarcane"
-                     /db_xref="taxon:876087"
+       source        1..9
                      /clone="ROP4R2E04"
-                     /environmental_sample
                      /country="Brazil: Parana, Paranavai"
+                     /db_xref="taxon:876087"
+                     /environmental_sample
+                     /host="sugarcane"
+                     /isolation_source="rhizosphere soil not treated with nitrogen fertilizer"
                      /lat_lon="23.0728 S 52.4650 W"
-     rRNA            complement(<2..>8)
+                     /organism="uncultured Xylanimonas sp."
+         rRNA        complement(<2..>8)
                      /product="16S ribosomal RNA"
 ORIGIN
         1 catgcaggc
 //
+
