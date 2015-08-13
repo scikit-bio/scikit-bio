@@ -177,7 +177,7 @@ def _construct(record, constructor=None, **kwargs):
             constructor = Protein
         else:
             constructor = Sequence
-    if 'lowercase' not in kwargs and constructor != Sequence:
+    if 'lowercase' not in kwargs:
         kwargs['lowercase'] = True
     if constructor == RNA:
         return DNA(
