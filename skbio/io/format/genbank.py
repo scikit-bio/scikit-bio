@@ -163,24 +163,21 @@ def _protein_to_genbank(obj, fh, lowercase=None):
 
 def _construct(record, constructor=None, **kwargs):
     seq, md, pmd = record
+    if 'lowercase' not in kwargs:
+        kwargs['lowercase'] = True
     if constructor is None:
         unit = md['LOCUS']['unit']
         if unit == 'bp':
-            # RNA mol type has T instead of U;
-            # so still read in as DNA
-            constructor = DNA
+            is_rna = 'u' in seq or 'U' in seq
+            # often RNA mol type has T instead of U for genbank from from NCBI;
+            # but in case of files from other sources...
+            constructor = RNA if is_rna else DNA
         elif unit == 'aa':
             constructor = Protein
         else:
             constructor = Sequence
-    if 'lowercase' not in kwargs:
-        kwargs['lowercase'] = True
-    if constructor == RNA:
-        return DNA(
-            seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
-    else:
-        return constructor(
-            seq, metadata=md, positional_metadata=pmd, **kwargs)
+    return constructor(
+        seq, metadata=md, positional_metadata=pmd, **kwargs)
 
 
 def _parse_genbanks(fh):

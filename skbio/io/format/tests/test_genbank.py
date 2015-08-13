@@ -133,7 +133,7 @@ class GenbankIOTests(TestCase):
                            1: np.ones(9, dtype=bool)}),
              Protein),
 
-            ('gtgaaacaaagcactattgcactggctgtcttaccgttactgtttacccctgtgacaaaagcc',
+            ('gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
              {'ACCESSION': 'M14399',
               'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
               'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
@@ -173,7 +173,7 @@ class GenbankIOTests(TestCase):
               'VERSION': 'M14399.1  GI:145229'},
              pd.DataFrame({0: np.ones(63, dtype=bool),
                            1: np.ones(63, dtype=bool)}),
-             DNA),
+             RNA),
 
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
@@ -340,7 +340,7 @@ REFERENCE   1  (bases 1 to 154478)
         i = 1
         exp = self.multi[i]
         obs = _genbank_to_rna(self.multi_fp, seq_num=i+1)
-        exp = RNA(exp[0].replace('t', 'u'), metadata=exp[1],
+        exp = RNA(exp[0], metadata=exp[1],
                   lowercase=True, positional_metadata=exp[2])
         self.assertEqual(exp, obs)
 
@@ -383,7 +383,7 @@ class WriterTests(GenbankIOTests):
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
-        print(obs)
+
         self.assertEqual(obs, exp)
 
     def test_any_sequence_to_genbank(self):
@@ -404,8 +404,8 @@ class WriterTests(GenbankIOTests):
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
-        print(obs)
-        self.assertEqual(obs, exp)
+
+        self.assertEqual(obs.strip(), exp.strip())
 
 
 if __name__ == '__main__':
