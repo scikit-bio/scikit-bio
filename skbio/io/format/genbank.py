@@ -140,29 +140,29 @@ def _genbank_to_protein(fh, seq_num=1, **kwargs):
 
 
 @genbank.writer(None)
-def _generator_to_genbank(obj, fh):
+def _generator_to_genbank(obj, fh, lowercase=None):
     for obj_i in obj:
-        _serialize_single_genbank(obj_i, fh)
+        _serialize_single_genbank(obj_i, fh, lowercase)
 
 
 @genbank.writer(Sequence)
-def _biological_sequence_to_genbank(obj, fh):
-    _serialize_single_genbank(obj, fh)
+def _biological_sequence_to_genbank(obj, fh, lowercase=None):
+    _serialize_single_genbank(obj, fh, lowercase)
 
 
 @genbank.writer(DNA)
-def _dna_to_genbank(obj, fh):
-    _serialize_single_genbank(obj, fh)
+def _dna_to_genbank(obj, fh, lowercase=None):
+    _serialize_single_genbank(obj, fh, lowercase)
 
 
 @genbank.writer(RNA)
-def _rna_to_genbank(obj, fh):
-    _serialize_single_genbank(obj, fh)
+def _rna_to_genbank(obj, fh, lowercase=None):
+    _serialize_single_genbank(obj, fh, lowercase)
 
 
 @genbank.writer(Protein)
-def _protein_to_genbank(obj, fh):
-    _serialize_single_genbank(obj, fh)
+def _protein_to_genbank(obj, fh, lowercase=None):
+    _serialize_single_genbank(obj, fh, lowercase)
 
 
 def _construct(record, constructor=None, **kwargs):
@@ -235,22 +235,25 @@ def _parse_single_genbank(chunks):
     return sequence, metadata, positional_metadata
 
 
-def _serialize_single_genbank(obj, fh):
+def _serialize_single_genbank(obj, fh, lowercase=None):
     md = obj.metadata
     for header in _HEADERS:
         if header in md:
             serializer = _SERIALIZER_TABLE.get(
                 header, _serialize_section_default)
             out = serializer(header, md[header])
-            # test if out is a iterator
-            # see Item 17
+            # test if 'out' is a iterator.
+            # cf. Effective Python Item 17
             if iter(out) is iter(out):
                 for s in out:
                     fh.write(s)
             else:
                 fh.write(out)
-
-    for s in _serialize_origin(str(obj)):
+    if lowercase is None:
+        seq_str = str(obj)
+    else:
+        seq_str = obj.lowercase(lowercase)
+    for s in _serialize_origin(seq_str):
         fh.write(s)
     fh.write('//\n')
 
@@ -348,12 +351,20 @@ def _serialize_reference(header, obj, indent=12):
     ----------
     obj : list
     '''
-    ref = []
-    for i in obj:
-        s = '{header:<{indent}}'.format(
-            header=header, indent=indent)
-        ref.append(s)
-    return '%s\n' % '\n'.join(ref)
+    padding = '  '
+    sort_order = {'REFERENCE': 0, 'AUTHORS': 1,
+                  'TITLE': 2, 'JOURNAL': 3, 'PUBMED': 4}
+    for obj_i in obj:
+        ref_i = []
+        for h in sorted(obj_i, key=lambda k: sort_order.get(k, 100)):
+            if h == header:
+                s = '{h:<{indent}}{ref}'.format(
+                    h=h, indent=indent, ref=obj_i[h])
+            else:
+                s = '{h:<{indent}}{value}'.format(
+                    h=padding + h, indent=indent, value=obj_i[h])
+            ref_i.append(s)
+        yield '%s\n' % '\n'.join(ref_i)
 
 
 def _parse_source(lines):

@@ -375,7 +375,8 @@ class WriterTests(GenbankIOTests):
         fh = io.StringIO()
         for seq, md, pmd, constructor in self.multi:
             obj = constructor(seq, md, pmd, lowercase=True)
-            writers[constructor](obj, fh)
+            lowercase = np.ones(md['LOCUS']['size'], dtype=bool)
+            writers[constructor](obj, fh, lowercase=lowercase)
             obs = fh.getvalue()
         fh.close()
 
