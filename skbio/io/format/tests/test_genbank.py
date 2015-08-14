@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
-from future.builtins import map, range, zip
-import six
+from future.builtins import map, zip
 import io
 import numpy as np
 import pandas as pd
@@ -311,7 +310,7 @@ REFERENCE   1  (bases 1 to 154478)
         for c in [Sequence, Protein]:
             obs = next(_genbank_to_generator(self.single_fp, constructor=c))
             exp = c(self.single[0], metadata=self.single[1],
-                    positioanl_metadata=self.single[2])
+                    positional_metadata=self.single[2])
             self.assertEqual(exp, obs)
 
     def test_genbank_to_generator(self):

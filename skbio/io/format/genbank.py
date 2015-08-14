@@ -300,9 +300,6 @@ def _parse_locus(lines):
         raise GenbankFormatError(
             "Could not parse the LOCUS line:\n%s" % line)
 
-    # if res['shape'] is None:
-    #     res['shape'] = 'linear'
-
     res['size'] = int(res['size'])
     res['date'] = datetime.strptime(res['date'], _TIME_FORMAT)
     return res
@@ -315,13 +312,10 @@ def _serialize_locus(header, obj, indent=12):
     ----------
     obj : dict
     '''
-    try:
-        # use 'or' to convert None to ''
-        kwargs = {k: v or '' for k, v in obj.items()}
-        # convert datetime to str
-        kwargs['date'] = kwargs['date'].strftime(_TIME_FORMAT).upper()
-    except:
-        raise
+    # use 'or' to convert None to ''
+    kwargs = {k: v or '' for k, v in obj.items()}
+    # convert datetime to str
+    kwargs['date'] = kwargs['date'].strftime(_TIME_FORMAT).upper()
 
     return ('{header:<{indent}}{locus_name}   {size} {unit}'
             '   {mol_type}   {shape}   {division}   {date}\n').format(
