@@ -3,6 +3,7 @@
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
 ### Features
+* Added ``skbio.goenrich`` - a module for performing gene ontology enrichment analysis
 * Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
 * Added ``skbio.util.RepresentationWarning`` for warning about substitutions, assumptions, or particular alterations that were made for the successful completion of a process.
