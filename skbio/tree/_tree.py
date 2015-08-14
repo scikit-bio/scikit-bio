@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from operator import or_
 from copy import deepcopy
 from itertools import combinations
@@ -23,6 +24,7 @@ from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
+from skbio.util import RepresentationWarning
 from skbio.util._decorator import experimental
 
 
@@ -438,7 +440,7 @@ class TreeNode(SkbioObject):
         ids = set(names)
 
         if not ids.issubset(all_tips):
-            raise ValueError("ids are not a subset of the tree!")
+            raise ValueError("ids are not a subset of the tree.")
 
         while len(list(tcopy.tips())) != len(ids):
             for n in list(tcopy.tips()):
@@ -1370,7 +1372,7 @@ class TreeNode(SkbioObject):
                 if node.is_tip():
                     if name in tip_cache:
                         raise DuplicateNodeError("Tip with name '%s' already "
-                                                 "exists!" % name)
+                                                 "exists." % name)
 
                     tip_cache[name] = node
                 else:
@@ -1746,7 +1748,7 @@ class TreeNode(SkbioObject):
         tips = [self.find(name) for name in tipnames]
 
         if len(tips) == 0:
-            raise ValueError("No tips found!")
+            raise ValueError("No tips found.")
 
         nodes_to_scrub = []
 
@@ -2205,7 +2207,7 @@ class TreeNode(SkbioObject):
                 raise NoParentError("Provided ancestor is not in the path")
 
             if curr.length is None:
-                raise NoLengthError("No length on node %s found!" %
+                raise NoLengthError("No length on node %s found." %
                                     curr.name or "unnamed")
 
             accum += curr.length
@@ -2369,13 +2371,16 @@ class TreeNode(SkbioObject):
         ------
         ValueError
             If any of the specified `endpoints` are not tips
-        NoLengthError
-            If a node without length is encountered
 
         See Also
         --------
         distance
         compare_tip_distances
+
+        Notes
+        -----
+        If a node does not have an associated length, 0.0 will be used and a
+        ``RepresentationWarning`` will be raised.
 
         Examples
         --------
@@ -2436,11 +2441,14 @@ class TreeNode(SkbioObject):
             # can possibly use np.zeros
             starts, stops = [], []  # to calc ._start and ._stop for curr node
             for child in node.children:
-                if child.length is None:
-                    raise NoLengthError("Node with name '%s' doesn't have a "
-                                        "length." % child.name)
-
-                distances[child.__start:child.__stop] += child.length
+                length = child.length
+                if length is None:
+                    warnings.warn(
+                        "`TreeNode.tip_tip_distances`: Node with name %r does "
+                        "not have an associated length, so a length of 0.0 "
+                        "will be used." % child.name, RepresentationWarning)
+                    length = 0.0
+                distances[child.__start:child.__stop] += length
 
                 starts.append(child.__start)
                 stops.append(child.__stop)
@@ -2837,7 +2845,7 @@ class TreeNode(SkbioObject):
                 return a + b
 
         else:
-            raise TypeError("Only list, set and frozenset are supported!")
+            raise TypeError("Only list, set and frozenset are supported.")
 
         for node in self.postorder(include_self=True):
             node._registered_caches.add(cache_attrname)

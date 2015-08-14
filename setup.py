@@ -120,7 +120,7 @@ setup(name='scikit-bio',
           'six >= 1.9.0'
       ],
       extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
-                               "python-dateutil"],
+                               "python-dateutil", "check-manifest"],
                       'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={

@@ -20,7 +20,7 @@ from skbio._base import SkbioObject
 from skbio.sequence import Sequence
 from skbio.stats.distance import DistanceMatrix
 from ._exception import (SequenceCollectionError, AlignmentError)
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, deprecated
 
 
 class SequenceCollection(SkbioObject):
@@ -289,7 +289,9 @@ class SequenceCollection(SkbioObject):
         """
         return str(''.join(self.write([], format='fasta')))
 
-    @experimental(as_of="0.4.0")
+    @deprecated(as_of="0.4.0-dev", until='0.4.2',
+                reason=('Use `skbio.DistanceMatrix.from_iterable` with'
+                        ' key="id" instead.'))
     def distances(self, distance_fn):
         """Compute distances between all pairs of sequences
 

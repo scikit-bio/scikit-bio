@@ -428,7 +428,7 @@ class Workflow(object):
             """Track debug information about a method execution"""
             if not hasattr(self, 'debug_trace'):
                 raise AttributeError(
-                    "%s doesn't have debug_trace!" % self.__class__)
+                    "%s doesn't have debug_trace." % self.__class__)
 
             exec_order = self.debug_counter
             name = func.__name__

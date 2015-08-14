@@ -1,3 +1,4 @@
+include .coveragerc
 include CHANGELOG.md
 include CONTRIBUTING.md
 include COPYING.txt
@@ -7,12 +8,16 @@ include RELEASE.md
 include checklist.py
 
 graft assets
+graft ci
 graft doc
 graft ipynbs
 graft licenses
 graft skbio
 
 prune doc/build
+prune doc/source/generated
 
 global-exclude *.pyc
 global-exclude *.pyo
+global-exclude *.so
+global-exclude .*.swp

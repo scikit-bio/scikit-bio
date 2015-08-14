@@ -6,3 +6,4 @@ coveralls
 natsort
 CacheControl[FileCache]
 git+git://github.com/numpy/numpydoc.git
+check-manifest

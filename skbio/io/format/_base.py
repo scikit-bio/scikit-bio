@@ -186,12 +186,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
             qual = seq.positional_metadata['quality'].values
 
         if lowercase is not None:
-            if hasattr(seq, 'lowercase'):
-                seq_str = seq.lowercase(lowercase)
-            else:
-                raise AttributeError("lowercase specified but class %s does "
-                                     "not support lowercase functionality" %
-                                     seq.__class__.__name__)
+            seq_str = seq.lowercase(lowercase)
         else:
             seq_str = str(seq)
         yield header, "%s" % seq_str, qual

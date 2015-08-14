@@ -16,13 +16,13 @@ from skbio.util._decorator import experimental
 
 @experimental(as_of="0.4.0")
 def gini_index(data, method='rectangles'):
-    """Calculate the Gini index.
+    r"""Calculate the Gini index.
 
     The Gini index is defined as
 
     .. math::
 
-       G=\\frac{A}{A+B}
+       G=\frac{A}{A+B}
 
     where :math:`A` is the area between :math:`y=x` and the Lorenz curve and
     :math:`B` is the area under the Lorenz curve. Simplifies to :math:`1-2B`
@@ -61,13 +61,13 @@ def gini_index(data, method='rectangles'):
 
     .. math::
 
-       dx\\sum_{i=1}^n h_i
+       dx\sum_{i=1}^n h_i
 
     The formula for ``method='trapezoids'`` is
 
     .. math::
 
-       dx(\\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)
+       dx(\frac{h_0+h_n}{2}+\sum_{i=1}^{n-1} h_i)
 
     References
     ----------
