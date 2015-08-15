@@ -74,6 +74,18 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     """fit to unifrac API"""
     if not suppress_validation:
         _validate(u_counts, v_counts, otu_ids, tree)
+
+    u_sum = sum(u_counts)
+    v_sum = sum(v_counts)
+
+    if not u_sum or not v_sum:
+        if u_sum + v_sum:
+            # u or v counts are all zeros
+            return 1.0
+        else:
+            # u and v are zero
+            return 0.0
+
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
 
     return fast_unifrac(tree, envs)
