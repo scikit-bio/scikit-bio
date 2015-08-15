@@ -348,16 +348,12 @@ def bind_to_parent_array(t, a):
             result.append([a[n._leaf_index], a[n.Parent._leaf_index]])
     return result
 
-###
-
 
 def unifrac_tasks_from_matrix(u, env_names):
     """Returns the UniFrac matrix, PCoA, and/or cluster from the matrix."""
     result = {}
-
     result['distance_matrix'] = (u, env_names)
-<<<<<<< HEAD
-n    return result
+    return result
 
 
 def tip_distances(a, bound_indices, tip_indices):
@@ -368,8 +364,6 @@ def tip_distances(a, bound_indices, tip_indices):
     mask = np.zeros(len(a))
     np.put(mask, tip_indices, 1)
     a *= mask[:, np.newaxis]
-=======
-    return result
 
 
 def PD_whole_tree(t, envs):
@@ -382,7 +376,7 @@ def PD_whole_tree(t, envs):
         branch_lengths, nodes, t = _fast_unifrac_setup(t, envs)
     count_array = count_array.astype(bool)
     bound_indices = bind_to_array(nodes, count_array)
-    #initialize result
+    # initialize result
     bool_descendants(bound_indices)
     result = (branch_lengths * count_array.T).sum(1)
     return unique_envs, result
@@ -393,4 +387,3 @@ def faith_pd(counts, otu_ids, tree):
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
 
     return PD_whole_tree(tree, envs)[1]  # just return the result
->>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426
