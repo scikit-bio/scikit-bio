@@ -9,10 +9,10 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+from io import StringIO
 
 import numpy as np
 
-from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
@@ -31,12 +31,17 @@ class StatsTests(TestCase):
         self.sids1 = list('ABCDEF')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         self.t1_w_extra_tips = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                     ')root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                     u')root;'))
+
+        self.t2 = TreeNode.read(
+            StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
+                     u'root;'))
+        self.oids2 = ['OTU%d' % i for i in range(1, 5)]
 
     def test_unweighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree
@@ -61,13 +66,13 @@ class StatsTests(TestCase):
     def test_unweighted_minimal_trees(self):
         # expected values computed by hand
         # zero tips
-        tree = TreeNode.read(StringIO('root;'))
+        tree = TreeNode.read(StringIO(u'root;'))
         actual = unweighted_unifrac([], [], [], tree)
         expected = 0.0
         self.assertEqual(actual, expected)
 
         # two tips
-        tree = TreeNode.read(StringIO('(OTU1:0.25, OTU2:0.25)root;'))
+        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
         actual = unweighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'], tree)
         expected = 1.0
         self.assertEqual(actual, expected)
@@ -75,43 +80,71 @@ class StatsTests(TestCase):
     def test_weighted_minimal_trees(self):
         # expected values computed by hand
         # zero tips
-        tree = TreeNode.read(StringIO('root;'))
+        tree = TreeNode.read(StringIO(u'root;'))
         actual = weighted_unifrac([], [], [], tree)
         expected = 0.0
         self.assertEqual(actual, expected)
 
         # two tips
-        tree = TreeNode.read(StringIO('(OTU1:0.25, OTU2:0.25)root;'))
+        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
         actual = weighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'], tree)
         expected = 0.25
         self.assertEqual(actual, expected)
 
-    def test_unweighted_toggle_root_observed(self):
-        # expected values computed with QIIME 1.9.1
-        # root node not observed
-        actual = unweighted_unifrac([1, 1, 0, 0, 0], [0, 2, 0, 0, 0],
-                                    self.oids1, self.t1)
-        expected = 0.2
-        self.assertAlmostEqual(actual, expected)
-        # same samples, but with one extra OTU that results in the
-        # root node being observed
-        actual = unweighted_unifrac([1, 1, 0, 1, 0], [0, 2, 0, 1, 0],
-                                    self.oids1, self.t1)
-        expected = 0.111111111111
+    def test_unweighted_root_not_observed(self):
+        # expected values computed with QIIME 1.9.1 and by hand
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = unweighted_unifrac([1, 1, 0, 0], [1, 0, 0, 0],
+                                    self.oids2, self.t2)
+        # for clarity of what I'm testing, compute expected as it would
+        # based on the branch lengths. the values that compose shared was
+        # a point of confusion for me here, so leaving these in for
+        # future reference
+        expected = 0.2 / (0.1 + 0.2 + 0.3)  # 0.3333333333
         self.assertAlmostEqual(actual, expected)
 
-    def test_weighted_toggle_root_observed(self):
-        # expected values computed with QIIME 1.9.1
-        # root node not observed
-        actual = weighted_unifrac([1, 1, 0, 0, 0], [0, 2, 0, 0, 0],
-                                  self.oids1, self.t1)
-        expected = 0.5
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = unweighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                    self.oids2, self.t2)
+        # for clarity of what I'm testing, compute expected as it would
+        # based on the branch lengths. the values that compose shared was
+        # a point of confusion for me here, so leaving these in for
+        # future reference
+        expected = 0.7 / (1.1 + 0.5 + 0.7)  # 0.3043478261
         self.assertAlmostEqual(actual, expected)
-        # same samples, but with one extra OTU that results in the
-        # root node being observed
-        actual = weighted_unifrac([1, 1, 0, 1, 0], [0, 2, 0, 1, 0],
-                                  self.oids1, self.t1)
-        expected = 0.333333333333
+
+    def test_weighted_root_not_observed(self):
+        # expected values computed by hand, these disagree with QIIME 1.9.1
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
+                                  self.oids2, self.t2)
+        expected = 0.15
+        self.assertAlmostEqual(actual, expected)
+
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                  self.oids2, self.t2)
+        expected = 0.6
+        self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_normalized_root_not_observed(self):
+        # expected values computed by hand, these disagree with QIIME 1.9.1
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered shared
+        actual = weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
+                                  self.oids2, self.t2, normalized=True)
+        expected = 0.1764705882
+        self.assertAlmostEqual(actual, expected)
+
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered shared
+        actual = weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
+                                  self.oids2, self.t2, normalized=True)
+        expected = 0.1818181818
         self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac_identity(self):
@@ -131,10 +164,14 @@ class StatsTests(TestCase):
                 self.assertAlmostEqual(actual, expected)
 
     def test_invalid_input(self):
+        # Many of these tests are duplicated from
+        # skbio.diversity.tests.test_base, but I think it's important to
+        # confirm that they are being run when *unifrac is called.
+
         # tree has duplicated tip ids
         t = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU2:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU2:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -143,10 +180,21 @@ class StatsTests(TestCase):
         self.assertRaises(DuplicateNodeError, weighted_unifrac, u_counts,
                           v_counts, otu_ids, t)
 
+        # unrooted tree as input
+        t = TreeNode.read(StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                   u'OTU4:0.7);'))
+        u_counts = [1, 2, 3]
+        v_counts = [1, 1, 1]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+
         # otu_ids has duplicated ids
         t = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
@@ -157,8 +205,8 @@ class StatsTests(TestCase):
 
         # len of vectors not equal
         t = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -183,8 +231,8 @@ class StatsTests(TestCase):
 
         # negative counts
         t = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, -3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -202,7 +250,7 @@ class StatsTests(TestCase):
 
         # tree with no branch lengths
         t = TreeNode.read(
-            StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -213,8 +261,8 @@ class StatsTests(TestCase):
 
         # tree missing some branch lengths
         t = TreeNode.read(
-            StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -225,8 +273,8 @@ class StatsTests(TestCase):
 
         # otu_ids not present in tree
         t = TreeNode.read(
-            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     '0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']

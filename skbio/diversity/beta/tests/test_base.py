@@ -13,8 +13,10 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio import DistanceMatrix
-from skbio.diversity.beta import pw_distances, pw_distances_from_table
+from skbio.io._fileobject import StringIO
+from skbio import DistanceMatrix, TreeNode
+from skbio.diversity.beta import (pw_distances, pw_distances_from_table,
+                                  unweighted_unifrac, weighted_unifrac)
 
 
 class HelperBiomTable(object):
@@ -44,6 +46,9 @@ class BaseTests(TestCase):
                    [2, 3],
                    [0, 1]]
         self.ids1 = list('ABC')
+        self.tree1 = TreeNode.read(StringIO(
+            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'))
+        self.otu_ids1 = ['O1', 'O2']
 
         self.t2 = [[23, 64, 14, 0, 0, 3, 1],
                    [0, 3, 35, 42, 0, 12, 1],
@@ -122,6 +127,62 @@ class BaseTests(TestCase):
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(actual_dm[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_pw_distances_unweighted_unifrac(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('unweighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = pw_distances(unweighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.0, 0.25/1.0],
+            [0.0, 0.0, 0.25/1.0],
+            [0.25/1.0, 0.25/1.0, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_pw_distances_weighted_unifrac(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.1750000, 0.12499999],
+            [0.1750000, 0.0, 0.3000000],
+            [0.12499999, 0.3000000, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_pw_distances_weighted_unifrac_normalized(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1,
+                           normalized=True)
+        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1,
+                           normalized=True)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.128834, 0.085714],
+            [0.128834, 0.0, 0.2142857],
+            [0.085714, 0.2142857, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
                                         expected_dm[id1, id2], 6)
 
     def test_pw_distances_from_table_euclidean(self):

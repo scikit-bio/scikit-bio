@@ -13,7 +13,6 @@ from abc import ABCMeta, abstractproperty
 from itertools import product
 
 import numpy as np
-from six import string_types
 
 import re
 
@@ -57,11 +56,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
-    # ASCII is built such that the difference between uppercase and lowercase
-    # is the 6th bit.
-    _ascii_invert_case_bit_offset = 32
     _number_of_extended_ascii_codes = 256
-    _ascii_lowercase_boundary = 90
     __validation_mask = None
     __degenerate_codes = None
     __nondegenerate_codes = None
@@ -174,30 +169,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 validate=True, lowercase=False):
+                 lowercase=False, validate=True):
         super(IUPACSequence, self).__init__(
-            sequence, metadata, positional_metadata)
-
-        if lowercase is False:
-            pass
-        elif lowercase is True or isinstance(lowercase, string_types):
-            lowercase_mask = self._bytes > self._ascii_lowercase_boundary
-            self._convert_to_uppercase(lowercase_mask)
-
-            # If it isn't True, it must be a string_type
-            if not (lowercase is True):
-                self.positional_metadata[lowercase] = lowercase_mask
-        else:
-            raise TypeError("lowercase keyword argument expected a bool or "
-                            "string, but got %s" % type(lowercase))
+            sequence, metadata, positional_metadata, lowercase)
 
         if validate:
             self._validate()
-
-    def _convert_to_uppercase(self, lowercase):
-        if np.any(lowercase):
-            with self._byte_ownership():
-                self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
     def _validate(self):
         # This is the fastest way that we have found to identify the
@@ -219,53 +196,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                         [str(b.tostring().decode("ascii")) for b in bad] if
                         len(bad) > 1 else bad[0],
                         list(self.alphabet)))
-
-    @stable(as_of='0.4.0')
-    def lowercase(self, lowercase):
-        """Return a case-sensitive string representation of the sequence.
-
-        Parameters
-        ----------
-        lowercase: str or boolean vector
-            If lowercase is a boolean vector, it is used to set sequence
-            characters to lowercase in the output string. True values in the
-            boolean vector correspond to lowercase characters. If lowercase
-            is a str, it is treated like a key into the positional metadata,
-            pointing to a column which must be a boolean vector.
-            That boolean vector is then used as described previously.
-
-        Returns
-        -------
-        str
-            String representation of sequence with specified characters set to
-            lowercase.
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACGT')
-        >>> s.lowercase([True, True, False, False])
-        'acGT'
-        >>> s = DNA('ACGT',
-        ...         positional_metadata={'exons': [True, False, False, True]})
-        >>> s.lowercase('exons')
-        'aCGt'
-
-        Constructor automatically populates a column in positional metadata
-        when the ``lowercase`` keyword argument is provided with a column name:
-
-        >>> s = DNA('ACgt', lowercase='introns')
-        >>> s.lowercase('introns')
-        'ACgt'
-        >>> s = DNA('ACGT', lowercase='introns')
-        >>> s.lowercase('introns')
-        'ACGT'
-
-        """
-        index = self._munge_to_index_array(lowercase)
-        outbytes = self._bytes.copy()
-        outbytes[index] ^= self._ascii_invert_case_bit_offset
-        return str(outbytes.tostring().decode('ascii'))
 
     @stable(as_of='0.4.0')
     def gaps(self):

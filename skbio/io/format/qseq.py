@@ -51,9 +51,8 @@ For more details please refer to the CASAVA documentation [1]_.
    `metadata` attribute is automatically populated with data corresponding
    to the names above.
 
-.. note:: `lowercase` functionality is supported when reading QSeq files,
-   depending on the object type the file is being read into. Refer to
-   specific object constructor documentation for details.
+.. note:: `lowercase` functionality is supported when reading QSeq files.
+   Refer to specific object constructor documentation for details.
 
 .. note:: scikit-bio allows for the filter field to be ommitted, but it is not
    clear if this is part of the original format specification.
@@ -187,18 +186,16 @@ def _qseq_to_sequence_collection(fh, constructor=Sequence,
 
 
 @qseq.reader(Sequence)
-def _qseq_to_biological_sequence(fh, seq_num=1,
-                                 phred_offset=_default_phred_offset,
-                                 variant=_default_variant):
+def _qseq_to_sequence(fh, seq_num=1, phred_offset=_default_phred_offset,
+                      variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
-                             constructor=Sequence), seq_num)
+                             constructor=Sequence, **kwargs), seq_num)
 
 
 @qseq.reader(DNA)
-def _qseq_to_dna_sequence(fh, seq_num=1,
-                          phred_offset=_default_phred_offset,
-                          variant=_default_variant, **kwargs):
+def _qseq_to_dna(fh, seq_num=1, phred_offset=_default_phred_offset,
+                 variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=DNA, **kwargs),
@@ -206,9 +203,8 @@ def _qseq_to_dna_sequence(fh, seq_num=1,
 
 
 @qseq.reader(RNA)
-def _qseq_to_rna_sequence(fh, seq_num=1,
-                          phred_offset=_default_phred_offset,
-                          variant=_default_variant, **kwargs):
+def _qseq_to_rna(fh, seq_num=1, phred_offset=_default_phred_offset,
+                 variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=RNA, **kwargs),
@@ -216,9 +212,8 @@ def _qseq_to_rna_sequence(fh, seq_num=1,
 
 
 @qseq.reader(Protein)
-def _qseq_to_protein_sequence(fh, seq_num=1,
-                              phred_offset=_default_phred_offset,
-                              variant=_default_variant, **kwargs):
+def _qseq_to_protein(fh, seq_num=1, phred_offset=_default_phred_offset,
+                     variant=_default_variant, **kwargs):
     return _get_nth_sequence(_qseq_to_generator(fh, filter=False,
                              phred_offset=phred_offset, variant=variant,
                              constructor=Protein, **kwargs),

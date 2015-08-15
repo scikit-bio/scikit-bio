@@ -56,6 +56,13 @@ class Sequence(collections.Sequence, SkbioObject):
         constructor. Each column of metadata must be the same length as the
         biological sequence. A shallow copy of the positional metadata will be
         made if necessary (see Examples section below for details).
+    lowercase : bool or str, optional
+        If ``True``, lowercase sequence characters will be converted to
+        uppercase characters. If ``False``, no characters will be converted.
+        If a str, it will be treated as a key into the positional metadata of
+        the object. All lowercase characters will be converted to uppercase,
+        and a ``True`` value will be stored in a boolean array in the
+        positional metadata under the key.
 
     Attributes
     ----------
@@ -312,6 +319,10 @@ class Sequence(collections.Sequence, SkbioObject):
     3      []       10
 
     """
+    # ASCII is built such that the difference between uppercase and lowercase
+    # is the 6th bit.
+    _ascii_invert_case_bit_offset = 32
+    _ascii_lowercase_boundary = 90
     default_write_format = 'fasta'
     __hash__ = None
 
@@ -520,8 +531,8 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.tostring()
 
     @stable(as_of="0.4.0")
-    def __init__(self, sequence, metadata=None,
-                 positional_metadata=None):
+    def __init__(self, sequence, metadata=None, positional_metadata=None,
+                 lowercase=False):
 
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
@@ -584,6 +595,19 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             self.positional_metadata = positional_metadata
 
+        if lowercase is False:
+            pass
+        elif lowercase is True or isinstance(lowercase, six.string_types):
+            lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            self._convert_to_uppercase(lowercase_mask)
+
+            # If it isn't True, it must be a string_type
+            if not (lowercase is True):
+                self.positional_metadata[lowercase] = lowercase_mask
+        else:
+            raise TypeError("lowercase keyword argument expected a bool or "
+                            "string, but got %s" % type(lowercase))
+
     def _set_bytes_contiguous(self, sequence):
         """Munge the sequence data into a numpy array of dtype uint8."""
         if not sequence.flags['C_CONTIGUOUS']:
@@ -601,6 +625,11 @@ class Sequence(collections.Sequence, SkbioObject):
     def _set_bytes(self, sequence):
         sequence.flags.writeable = False
         self._bytes = sequence
+
+    def _convert_to_uppercase(self, lowercase):
+        if np.any(lowercase):
+            with self._byte_ownership():
+                self._bytes[lowercase] ^= self._ascii_invert_case_bit_offset
 
     @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
@@ -1347,6 +1376,54 @@ class Sequence(collections.Sequence, SkbioObject):
             seq_copy._positional_metadata = positional_metadata
 
         return seq_copy
+
+    @stable(as_of='0.4.0')
+    def lowercase(self, lowercase):
+        """Return a case-sensitive string representation of the sequence.
+
+        Parameters
+        ----------
+        lowercase: str or boolean vector
+            If lowercase is a boolean vector, it is used to set sequence
+            characters to lowercase in the output string. True values in the
+            boolean vector correspond to lowercase characters. If lowercase
+            is a str, it is treated like a key into the positional metadata,
+            pointing to a column which must be a boolean vector.
+            That boolean vector is then used as described previously.
+
+        Returns
+        -------
+        str
+            String representation of sequence with specified characters set to
+            lowercase.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('ACGT')
+        >>> s.lowercase([True, True, False, False])
+        'acGT'
+        >>> s = Sequence('ACGT',
+        ...              positional_metadata={
+        ...                 'exons': [True, False, False, True]})
+        >>> s.lowercase('exons')
+        'aCGt'
+
+        Constructor automatically populates a column in positional metadata
+        when the ``lowercase`` keyword argument is provided with a column name:
+
+        >>> s = Sequence('ACgt', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACgt'
+        >>> s = Sequence('ACGT', lowercase='introns')
+        >>> s.lowercase('introns')
+        'ACGT'
+
+        """
+        index = self._munge_to_index_array(lowercase)
+        outbytes = self._bytes.copy()
+        outbytes[index] ^= self._ascii_invert_case_bit_offset
+        return str(outbytes.tostring().decode('ascii'))
 
     @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
