@@ -1,7 +1,6 @@
+from __future__ import division
 import numpy as np
 from ._unifrac import _validate
-
-
 
 
 def unifrac(branch_lengths, i, j):
@@ -118,7 +117,6 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac):
      branch_lengths, nodes, t) = _fast_unifrac_setup(t, envs)
 
     bound_indices = bind_to_array(nodes, count_array)
-    result = {}
     # weighted unifrac
     if weighted:
         tip_indices = [n._leaf_index for n in t.tips()]
@@ -274,6 +272,15 @@ def get_branch_lengths(tree_index):
     return result
 
 
+def _branch_correct(tip_distances, i, j):
+    """Calculates weighted unifrac branch length correction.
+
+    tip_distances  must be 0 except for tips.
+    """
+    result = tip_distances.ravel()*((i / i.sum())+(j / j.sum()))
+    return result.sum()
+
+
 def get_unique_envs(envs):
     """extract all unique envs from envs dict"""
     result = set()
@@ -293,11 +300,12 @@ def bind_to_array(tree_index, a):
     node.
 
     Order is assumed to be traversal order, i.e. for the typical case of
-    postorder traversal iterating over the items in the result and consolidating
-    each time should give the same result as postorder traversal of the original
-    tree. Should also be able to modify for preorder traversal.
+    postorder traversal iterating over the items in the result and
+    consolidating each time should give the same result as postorder
+    traversal of the original tree. Should also be able to modify for
+    preorder traversal.
     """
-    #note: range ends with end+1, not end, b/c end is included
+    # note: range ends with end+1, not end, b/c end is included
     return [(a[node], a[start:end+1]) for node, start, end in tree_index]
 
 
@@ -318,9 +326,8 @@ def bool_descendants(bound_indices):
     """For each internal node, sets col to True if any descendant is True."""
     traverse_reduce(bound_indices, np.logical_or.reduce)
 
-### specific to weighted
 
-
+# specific to weighted
 def sum_descendants(bound_indices):
     """For each internal node, sets col to sum of values in descendants."""
     traverse_reduce(bound_indices, sum)
