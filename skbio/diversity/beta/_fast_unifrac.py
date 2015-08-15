@@ -29,17 +29,19 @@ def _skbio_counts_to_envs(otu_ids, *counts):
     the interface.
     """
     envs = {}
+    n_counts = len(counts)
+
     for packed in zip(otu_ids, *counts):
         ### NOTE: this is ducttape to fit the API
         otu_id = packed[0]
 
         counts = {}
-        for env in range(1, len(counts) + 1):
+        for env in range(1, n_counts + 1):
             if packed[env]:
                 counts[env] = packed[env]
 
         if counts:
-            envs[otu] = counts
+            envs[otu_id] = counts
 
     return envs
 
@@ -109,46 +111,9 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
-        u = unifrac_matrix(branch_lengths, count_array, metric=metric, is_symmetric=is_symmetric)
+        u = unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
 
-    result.update(unifrac_tasks_from_matrix(u, env_names))
-    return result
-
-
-def unifrac_matrix(branch_lengths, m, metric=unifrac, is_symmetric=True):
-    """Calculates unifrac(i,j) for all i,j in m.
-
-    branch_lengths is the array of branch lengths.
-
-    m is 2D array: rows are taxa, states are columns. Assumes that ancestral
-    states have already been calculated (either by logical_or or Fitch).
-
-    metric: metric to use for combining each pair of columns i and j. Default
-    is unifrac.
-
-    is_symmetric indicates whether the metric is symmetric. Default is True.
-    """
-    num_cols = m.shape[-1]
-    cols = [m[:,i] for i in range(num_cols)]
-    result = np.zeros((num_cols,num_cols), float)
-    if is_symmetric:
-        #only calc half matrix and transpose
-        for i in range(1, num_cols):
-            first_col = cols[i]
-            row_result = []
-            for j in range(i):
-                second_col = cols[j]
-                row_result.append(metric(branch_lengths, first_col, second_col))
-            result[i,:j+1] = row_result
-        #note: can't use += because shared memory between a and transpose(a)
-        result = result + np.transpose(result)
-    else:
-        #calc full matrix, incl. diagonal (which is probably 0...)
-        for i in range(num_cols):
-            first_col = cols[i]
-            result[i] = [metric(branch_lengths, first_col, cols[j]) for \
-                j in range(num_cols)]
-    return result
+    return u
 
 
 def _fast_unifrac_setup(t, envs, make_subtree=True):
