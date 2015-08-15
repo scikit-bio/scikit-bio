@@ -179,7 +179,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     a two-sided test with 999 permutations:
 
     >>> coeff, p_value, n = mantel(x, y)
-    >>> round(coeff, 4)
+    >>> print(round(coeff, 4))
     0.7559
 
     Thus, we see a moderate-to-strong positive correlation (:math:`r_M=0.7559`)
@@ -232,7 +232,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     example where all distance matrix IDs matched:
 
     >>> coeff, p_value, n = mantel(x, y, lookup=lookup)
-    >>> round(coeff, 4)
+    >>> print(round(coeff, 4))
     0.7559
 
     ``mantel`` also accepts input that is ``array_like``. For example, if we
@@ -246,7 +246,7 @@ def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
     ...      [2, 0, 6],
     ...      [7, 6, 0]]
     >>> coeff, p_value, n = mantel(x, y)
-    >>> round(coeff, 4)
+    >>> print(round(coeff, 4))
     0.7559
 
     It is import to note that reordering/matching of IDs (and hence the

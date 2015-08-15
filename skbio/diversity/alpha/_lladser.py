@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import _validate
+from skbio.diversity.alpha._base import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
@@ -49,7 +49,7 @@ def lladser_pe(counts, r=10):
        2011.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
 
@@ -103,7 +103,7 @@ def lladser_ci(counts, r, alpha=0.95, f=10, ci_type='ULCL'):
        2011.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     sample = _expand_counts(counts)
     np.random.shuffle(sample)
 

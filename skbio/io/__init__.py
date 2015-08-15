@@ -120,14 +120,14 @@ For example, to read a `newick` file using both interfaces you would type:
 >>> from skbio import read
 >>> from skbio import TreeNode
 >>> from io import StringIO
->>> open_filehandle = StringIO(u'(a, b);')
+>>> open_filehandle = StringIO('(a, b);')
 >>> tree = read(open_filehandle, format='newick', into=TreeNode)
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
 
 For the OO interface:
 
->>> open_filehandle = StringIO(u'(a, b);')
+>>> open_filehandle = StringIO('(a, b);')
 >>> tree = TreeNode.read(open_filehandle, format='newick')
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>
@@ -143,7 +143,7 @@ that `format` may be omitted there as well.
 
 As an example:
 
->>> open_filehandle = StringIO(u'(a, b);')
+>>> open_filehandle = StringIO('(a, b);')
 >>> tree = TreeNode.read(open_filehandle)
 >>> tree
 <TreeNode, name: unnamed, internal node count: 0, tips count: 2>

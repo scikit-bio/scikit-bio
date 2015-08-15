@@ -68,14 +68,14 @@ Check if we weighted the data or not:
 >>> print(trajectory_results.weighted)
 False
 
-Check the trajectory_results results of one of the categories:
+Check the results of one of the categories:
 
 >>> print(trajectory_results.categories[0].category)
 Treatment
 >>> print(trajectory_results.categories[0].probability)
 0.0118478282382
 
-Check the trajectory_results results of one group of one of the categories:
+Check the results of one group of one of the categories:
 
 >>> print(trajectory_results.categories[0].groups[0].name)
 Control
@@ -473,8 +473,10 @@ class GradientANOVA(object):
         for cat, cat_groups in self._groups.items():
             # Loop through all the category values present in the current
             # category and compute the trajectory for each of them
-            res_by_group = [self._get_group_trajectories(group, sample_ids)
-                            for group, sample_ids in cat_groups.items()]
+            res_by_group = []
+            for group in sorted(cat_groups, key=lambda k: str(k)):
+                res_by_group.append(
+                    self._get_group_trajectories(group, cat_groups[group]))
 
             result.categories.append(_ANOVA_trajectories(cat, res_by_group))
 

@@ -23,7 +23,7 @@ install:
   - pip install -r ci/pip_requirements.txt
   - pip install -e . --no-deps
 script:
-  - PYTHONWARNINGS=ignore WITH_COVERAGE=TRUE make test
+  - WITH_COVERAGE=TRUE make test
   - make -C doc clean html
 after_success:
   - coveralls

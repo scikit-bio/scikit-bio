@@ -409,10 +409,10 @@ class GroupResultsTests(BaseTests):
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)
@@ -433,10 +433,10 @@ class CategoryResultsTests(BaseTests):
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)
@@ -457,10 +457,10 @@ class GradientANOVAResultsTests(BaseTests):
             obs_out_f.close()
             obs_raw_f.close()
 
-            with open(get_data_path(out_fp), 'U') as f:
+            with open(get_data_path(out_fp)) as f:
                 exp_out = f.read()
 
-            with open(get_data_path(raw_fp), 'U') as f:
+            with open(get_data_path(raw_fp)) as f:
                 exp_raw = f.read()
 
             self.assertEqual(obs_out, exp_out)

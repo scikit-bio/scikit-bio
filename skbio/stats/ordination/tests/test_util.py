@@ -32,7 +32,7 @@ class TestUtils(TestCase):
         npt.assert_almost_equal((3.5, 1.707825127), obs)
 
         obs = mean_and_std(self.x, with_std=False)
-        self.assertEquals((3.5, None), obs)
+        self.assertEqual((3.5, None), obs)
 
         obs = mean_and_std(self.x, ddof=2)
         npt.assert_almost_equal((3.5, 2.091650066), obs)

@@ -63,13 +63,21 @@ class OrdinationResults(SkbioObject):
     biplot_scores : pd.DataFrame
         Correlation coefficients of the samples with respect to the features.
     sample_constraints : pd.DataFrame
-        A basis for the constrained ordination space. <- JORGE REVISE THIS
+        Site constraints (linear combinations of constraining variables):
+        coordinates of the sites in the space of the explanatory variables X.
+        These are the fitted site scores
     proportion_explained : pd.Series
         Proportion explained by each of the dimensions in the ordination space.
         The index corresponds to the ordination axis labels
     png
     svg
 
+    See Also
+    --------
+    ca
+    cca
+    pcoa
+    rda
     """
     default_write_format = 'ordination'
 
@@ -393,11 +401,13 @@ class OrdinationResults(SkbioObject):
     # directly (since otherwise the client dictates which one it shows by
     # default)
     @property
+    @experimental(as_of="0.4.0")
     def png(self):
         """Display basic 3-D scatterplot in IPython Notebook as PNG."""
         return Image(self._repr_png_(), embed=True)
 
     @property
+    @experimental(as_of="0.4.0")
     def svg(self):
         """Display basic 3-D scatterplot in IPython Notebook as SVG."""
         return SVG(self._repr_svg_())

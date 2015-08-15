@@ -17,6 +17,17 @@ import inspect
 from ._decorator import experimental, deprecated
 
 
+def resolve_key(obj, key):
+    """Resolve key given a object and key."""
+    if callable(key):
+        return key(obj)
+    elif hasattr(obj, 'metadata'):
+        return obj.metadata[key]
+    raise TypeError("Could not resolve key %r. Key must be callable or %s must"
+                    " have `metadata` attribute." % (key,
+                                                     obj.__class__.__name__))
+
+
 def make_sentinel(name):
     return type(name, (object, ), {
         '__repr__': lambda s: name,
@@ -153,15 +164,15 @@ def is_casava_v180_or_later(header_line):
     Examples
     --------
     >>> from skbio.util import is_casava_v180_or_later
-    >>> print(is_casava_v180_or_later('@foo'))
+    >>> is_casava_v180_or_later(b'@foo')
     False
-    >>> id_ = '@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
-    >>> print(is_casava_v180_or_later(id_))
+    >>> id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
+    >>> is_casava_v180_or_later(id_)
     True
 
     """
     if not header_line.startswith(b'@'):
-        raise ValueError("Non-header line passed in!")
+        raise ValueError("Non-header line passed in.")
     fields = header_line.split(b':')
 
     return len(fields) == 10 and fields[7] in b'YN'
@@ -191,9 +202,9 @@ def safe_md5(open_file, block_size=2 ** 20):
 
     Examples
     --------
-    >>> from StringIO import StringIO
+    >>> from io import BytesIO
     >>> from skbio.util import safe_md5
-    >>> fd = StringIO("foo bar baz") # open file like object
+    >>> fd = BytesIO(b"foo bar baz") # open file like object
     >>> x = safe_md5(fd)
     >>> x.hexdigest()
     'ab07acbb1e496801937adfa772424bf7'
