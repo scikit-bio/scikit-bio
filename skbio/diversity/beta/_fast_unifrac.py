@@ -1,25 +1,48 @@
+from __future__ import division
 import numpy as np
 from ._unifrac import _validate
+
 
 def unifrac(branch_lengths, i, j):
     """Calculates unifrac(i,j) from branch lengths and cols i and j of m.
 
     This is the original, unweighted UniFrac metric.
 
-    branch_lengths should be row vector, same length as # nodes in tree.
+    Parameters
+    ----------
+    branch_lengths: np.array
+         branch_lengths should be row vector, same length as # nodes in tree.
+    i : np.array
+        a slice of states from m, same length as # nodes in tree.
+        Slicing m (e.g. m[:,i]) returns a vector in the right format; note
+        that it should be a row vector (the default), not a column vector.
+    j : np.array
+        a slice of states from m, same length as # nodes in tree.
+        Slicing m (e.g. m[:,j]) returns a vector in the right format; note
+        that it should be a row vector (the default), not a column vector.
 
-    i and j should be slices of states from m, same length as # nodes in
-    tree. Slicing m (e.g. m[:,i]) returns a vector in the right format; note
-    that it should be a row vector (the default), not a column vector.
+    Returns
+    -------
+    float
+        Unweighted unifrac metric
+
+    Notes
+    -----
+    This is cogent.maths.unifrac.fast_tree.unifrac, but there are
+    other metrics that can (should?) be ported like:
+     - unnormalized_unifrac
+     - G
+     - unnormalized_G
     """
-    ### NOTE: this is cogent.maths.unifrac.fast_tree.unifrac, but there are
-    ### other metrics that can (should?) be ported like:
-    ###  - unnormalized_unifrac
-    ###  - G
-    ###  - unnormalized_G
 
-    return 1 - ((branch_lengths * np.logical_and(i,j)).sum()/\
-        (branch_lengths * np.logical_or(i,j)).sum())
+    _or, _and = np.logical_or(i, j), np.logical_and(i, j)
+    return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
+
+
+def w_unifrac(branch_lengths, i, j):
+    """Calculates weighted unifrac(i,j) from branch lengths and cols i,j of m.
+    """
+    return (branch_lengths * abs((i / i.sum()) - (j / j.sum()))).sum()
 
 
 def _skbio_counts_to_envs(otu_ids, *counts):
@@ -32,7 +55,7 @@ def _skbio_counts_to_envs(otu_ids, *counts):
     n_counts = len(counts)
 
     for packed in zip(otu_ids, *counts):
-        ### NOTE: this is ducttape to fit the API
+        # NOTE: this is ducttape to fit the API
         otu_id = packed[0]
 
         counts = {}
@@ -70,6 +93,17 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
                      suppress_validation=False):
+    u_sum = sum(u_counts)
+    v_sum = sum(v_counts)
+
+    if not u_sum or not v_sum:
+        if u_sum + v_sum:
+            # u or v counts are all zeros
+            if normalized:
+                return 1.0
+        else:
+            # u and v are zero
+            return 0.0
     if not suppress_validation:
         _validate(u_counts, v_counts, otu_ids, tree)
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
@@ -77,49 +111,43 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     return fast_unifrac(tree, envs, weighted=True)
 
 
-def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
-    #weighted_unifrac_f=_weighted_unifrac,make_subtree=True):
-    """ Run fast unifrac.
+def fast_unifrac(t, envs, weighted=False, metric=unifrac):
+    # weighted_unifrac_f=_weighted_unifrac,make_subtree=True):
+    """
+    Run fast unifrac.
 
-    t: phylogenetic tree relating the sequences.  pycogent phylonode object
-    envs: dict of {sequence:{env:count}} showing environmental abundance.
-    weighted: if True, performs the weighted UniFrac procedure.
-    metric: distance metric to use.  currently you must use unifrac only
+    Parameters
+    ----------
+    t: skbio.TreeNode
+        phylogenetic tree relating the sequences.
+    envs: dict
+        dict of {sequence:{env:count}} showing environmental abundance.
+    weighted: bool
+        if True, performs the weighted UniFrac procedure.
+    metric: function
+        distance metric to use.  currently you must use unifrac only
         if weighted=True.
         see fast_tree.py for metrics (e.g.: G, unnormalized_G, unifrac, etc.)
-    modes: tasks to perform on running unifrac.  see fast_unifrac.py
-        default is to get a unifrac distance matrix, pcoa on that matrix, and a
-        cluster of the environments
-    is_symmetric: if the desired distance matrix is symmetric
-        (dist(sampleA, sampleB) == dist(sampleB, sampleA)), then set this True
-        to prevent calculating the same number twice
 
+    Returns
+    -------
+    u : np.array
+        Unifrac distance matrix
     """
-    envs, count_array, unique_envs, env_to_index, node_to_index, env_names, branch_lengths, nodes, t = _fast_unifrac_setup(t, envs)
-    bound_indices = bind_to_array(nodes, count_array)
-    result = {}
+    (envs, count_array,
+     unique_envs, env_to_index,
+     node_to_index, env_names,
+     branch_lengths, nodes, t) = _fast_unifrac_setup(t, envs)
 
+    bound_indices = bind_to_array(nodes, count_array)
     # weighted unifrac
     if weighted:
         tip_indices = [n._leaf_index for n in t.tips()]
         sum_descendants(bound_indices)
-        tip_ds = branch_lengths.copy()[:,np.newaxis]
+        tip_ds = branch_lengths.copy()[:, np.newaxis]
         bindings = bind_to_parent_array(t, tip_ds)
         tip_distances(tip_ds, bindings, tip_indices)
-        if weighted == 'correct':
-            bl_correct = True
-        else:
-            bl_correct = False
-        u = weighted_unifrac_matrix(branch_lengths, count_array, tip_indices, \
-            bl_correct=bl_correct, tip_distances=tip_ds, \
-            unifrac_f=weighted_unifrac_f)
-        #figure out if we need the vector
-        if UNIFRAC_DIST_VECTOR in modes:
-            result[UNIFRAC_DIST_VECTOR] = (weighted_unifrac_vector(
-                branch_lengths, count_array, tip_indices,
-                bl_correct=bl_correct, tip_distances=tip_ds,
-                unifrac_f=weighted_unifrac_f), env_names)
-
+        u = w_unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
@@ -133,6 +161,7 @@ def _fast_unifrac_setup(t, envs, make_subtree=True):
     if make_subtree:
         t2 = t.copy()
         wanted = set(envs.keys())
+
         def delete_test(node):
             if node.is_tip() and node.name not in wanted:
                 return True
@@ -141,22 +170,28 @@ def _fast_unifrac_setup(t, envs, make_subtree=True):
         t2.prune()
         t = t2
 
-    #index tree
+    # index tree
     node_index, nodes = index_tree(t)
-    #get good nodes, defined as those that are in the env file.
-    good_nodes=dict([(i.name,envs[i.name]) for i in t.tips() if i.name in envs])
+    # get good nodes, defined as those that are in the env file.
+    good_nodes = dict([(i.name, envs[i.name])
+                       for i in t.tips() if i.name in envs])
     envs = good_nodes
-    count_array, unique_envs, env_to_index, node_to_index = index_envs(envs, node_index)
+    (count_array, unique_envs,
+     env_to_index, node_to_index) = index_envs(envs, node_index)
     env_names = sorted(unique_envs)
-    #Note: envs get sorted at the step above
+    # Note: envs get sorted at the step above
     branch_lengths = get_branch_lengths(node_index)
     if not envs:
-        raise ValueError, "No valid samples/environments found. Check whether tree tips match otus/taxa present in samples/environments"
-    return envs, count_array, unique_envs, env_to_index, node_to_index, env_names, branch_lengths, nodes, t
+        raise ValueError, ''.join(["No valid samples/environments found.",
+                                   "Check whether tree tips match ",
+                                   "otus/taxa present ",
+                                   "in samples/environments"])
+    return (envs, count_array, unique_envs, env_to_index,
+            node_to_index, env_names, branch_lengths, nodes, t)
 
 
 def index_tree(t):
-    """Returns tuple containing {node_id:node}, [node_id,first_child,last_child]
+    """
 
     Indexes nodes in-place as n._leaf_index.
 
@@ -166,8 +201,18 @@ def index_tree(t):
             set an index on each child
             for each child with children:
                 add the child and its start and end tips to the result
+
+    Parameters
+    ----------
+    t : skbio.TreeNode
+        Phylogenetic tree
+
+    Returns
+    -------
+    tuple
+        Contains {node_id:node}, [node_id,first_child,last_child]
     """
-    id_index = {}    #needs to be dict, not list, b/c adding out of order
+    id_index = {}    # needs to be dict, not list, b/c adding out of order
     child_index = []
     curr_index = 0
     for n in t.traverse(self_before=False, self_after=True):
@@ -175,45 +220,68 @@ def index_tree(t):
             c._leaf_index = curr_index
             id_index[curr_index] = c
             curr_index += 1
-            if c:    #c has children itself, so need to add to result
-                child_index.append((c._leaf_index, c.children[0]._leaf_index,\
-                    c.children[-1]._leaf_index))
-    #handle root, which should be t itself
+            if c:    # c has children itself, so need to add to result
+                child_index.append((c._leaf_index, c.children[0]._leaf_index,
+                                    c.children[-1]._leaf_index))
+    # handle root, which should be t itself
     t._leaf_index = curr_index
     id_index[curr_index] = t
-    #only want to add to the child_index if t has children...
+    # only want to add to the child_index if t has children...
     if t.children:
-        child_index.append((t._leaf_index, t.children[0]._leaf_index,\
-            t.children[-1]._leaf_index))
+        child_index.append((t._leaf_index, t.children[0]._leaf_index,
+                            t.children[-1]._leaf_index))
     return id_index, child_index
 
-def index_envs(env_counts, tree_index, array_constructor=int):
-    """Returns array of taxon x env with counts of the taxon in each env.
 
-    env_counts should be the output of count_envs(lines).
-    tree_index should be the id_index of index_tree(t).
-    array_constructor is int by default (may need to change to float later
+def index_envs(env_counts, tree_index, array_constructor=int):
+    """
+    Calculates the taxon counts in each env (what is an env?)
+
+    Parameters
+    ----------
+    env_counts : np.array
+       Should be the output of count_envs(lines).
+    tree_index : np.array
+       Should be the id_index of index_tree(t).
+    array_constructor: function
+        int by default (may need to change to float later
         to handle microarray data).
+
+    Returns
+    -------
+    np.array
+        Array of taxon x env with counts of the taxon in each env.
     """
     num_nodes = len(tree_index)
     unique_envs, num_envs = get_unique_envs(env_counts)
     env_to_index = dict([(e, i) for i, e in enumerate(unique_envs)])
     result = np.zeros((num_nodes, num_envs), array_constructor)
-    #figure out taxon label to index map
+    # figure out taxon label to index map
     node_to_index = {}
     for i, node in tree_index.items():
         if node.name is not None:
             node_to_index[node.name] = i
-    #walk over env_counts, adding correct slots in array
+    # walk over env_counts, adding correct slots in array
     for name in env_counts:
         curr_row_index = node_to_index[name]
         for env, count in env_counts[name].items():
             result[curr_row_index, env_to_index[env]] = count
-    #return all the data structures we created; will be useful for other tasks
+    # return all the data structures we created; will be useful for other tasks
     return result, unique_envs, env_to_index, node_to_index
 
+
 def get_branch_lengths(tree_index):
-    """Returns array of branch lengths, in tree index order."""
+    """
+    Parameters
+    ----------
+    tree_index: dict
+
+
+    Returns
+    -------
+    np.array
+        Array of branch lengths, in tree index order.
+    """
     result = np.zeros(len(tree_index), float)
     for i, node in tree_index.items():
         try:
@@ -223,13 +291,24 @@ def get_branch_lengths(tree_index):
             pass
     return result
 
+
+def _branch_correct(tip_distances, i, j):
+    """Calculates weighted unifrac branch length correction.
+
+    tip_distances  must be 0 except for tips.
+    """
+    result = tip_distances.ravel()*((i / i.sum())+(j / j.sum()))
+    return result.sum()
+
+
 def get_unique_envs(envs):
     """extract all unique envs from envs dict"""
     result = set()
     for v in envs.values():
         result.update(v.keys())
-    #sort envs for convenience in testing and display
+    # sort envs for convenience in testing and display
     return sorted(result), len(result)
+
 
 def bind_to_array(tree_index, a):
     """Binds tree_index to array a, returning result in list.
@@ -241,12 +320,14 @@ def bind_to_array(tree_index, a):
     node.
 
     Order is assumed to be traversal order, i.e. for the typical case of
-    postorder traversal iterating over the items in the result and consolidating
-    each time should give the same result as postorder traversal of the original
-    tree. Should also be able to modify for preorder traversal.
+    postorder traversal iterating over the items in the result and
+    consolidating each time should give the same result as postorder
+    traversal of the original tree. Should also be able to modify for
+    preorder traversal.
     """
-    #note: range ends with end+1, not end, b/c end is included
+    # note: range ends with end+1, not end, b/c end is included
     return [(a[node], a[start:end+1]) for node, start, end in tree_index]
+
 
 def traverse_reduce(bound_indices, f):
     """Applies a[i] = f(a[j:k]) over list of [(a[i], a[j:k])].
@@ -260,15 +341,17 @@ def traverse_reduce(bound_indices, f):
     for i, s in bound_indices:
         i[:] = f(s, 0)
 
+
 def bool_descendants(bound_indices):
     """For each internal node, sets col to True if any descendant is True."""
     traverse_reduce(bound_indices, np.logical_or.reduce)
 
-### specific to weighted
 
+# specific to weighted
 def sum_descendants(bound_indices):
     """For each internal node, sets col to sum of values in descendants."""
     traverse_reduce(bound_indices, sum)
+
 
 def bind_to_parent_array(t, a):
     """Binds tree to array a, returning result in list.
@@ -289,17 +372,25 @@ def bind_to_parent_array(t, a):
     result = []
     for n in t.traverse(self_before=True, self_after=False):
         if n is not t:
-            result.append([a[n._leaf_index], a[n.Parent._leaf_index]])
+            result.append([a[n._leaf_index], a[n.parent._leaf_index]])
     return result
 
-###
 
 def unifrac_tasks_from_matrix(u, env_names):
     """Returns the UniFrac matrix, PCoA, and/or cluster from the matrix."""
     result = {}
-
     result['distance_matrix'] = (u, env_names)
     return result
+
+
+def tip_distances(a, bound_indices, tip_indices):
+    """Sets each tip to its distance from the root.
+    Note: This will need its own unittest"""
+    for i, s in bound_indices:
+        i += s
+    mask = np.zeros(len(a))
+    np.put(mask, tip_indices, 1)
+    a *= mask[:, np.newaxis]
 
 
 def PD_whole_tree(t, envs):
@@ -312,7 +403,7 @@ def PD_whole_tree(t, envs):
         branch_lengths, nodes, t = _fast_unifrac_setup(t, envs)
     count_array = count_array.astype(bool)
     bound_indices = bind_to_array(nodes, count_array)
-    #initialize result
+    # initialize result
     bool_descendants(bound_indices)
     result = (branch_lengths * count_array.T).sum(1)
     return unique_envs, result

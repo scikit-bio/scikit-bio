@@ -24,12 +24,12 @@ class StatsTests(object):
         self.weighted_unifrac = self._method['weighted_unifrac']
 
         self.b1 = np.array(
-           [[1, 3, 0, 1, 0],
-            [0, 2, 0, 4, 4],
-            [0, 0, 6, 2, 1],
-            [0, 0, 1, 1, 1],
-            [5, 3, 5, 0, 0],
-            [0, 0, 0, 3, 5]])
+            [[1, 3, 0, 1, 0],
+             [0, 2, 0, 4, 4],
+             [0, 0, 6, 2, 1],
+             [0, 0, 1, 1, 1],
+             [5, 3, 5, 0, 0],
+             [0, 0, 0, 3, 5]])
         self.sids1 = list('ABCDEF')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(
