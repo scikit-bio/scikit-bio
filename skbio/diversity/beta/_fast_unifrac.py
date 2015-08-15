@@ -2,6 +2,8 @@ import numpy as np
 from ._unifrac import _validate
 
 
+
+
 def unifrac(branch_lengths, i, j):
     """Calculates unifrac(i,j) from branch lengths and cols i and j of m.
 
@@ -24,20 +26,24 @@ def unifrac(branch_lengths, i, j):
     -------
     float
         Unweighted unifrac metric
+
+    Notes
+    -----
+    This is cogent.maths.unifrac.fast_tree.unifrac, but there are
+    other metrics that can (should?) be ported like:
+     - unnormalized_unifrac
+     - G
+     - unnormalized_G
     """
-<<<<<<< HEAD
+
     _or, _and = np.logical_or(i, j), np.logical_and(i, j)
     return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
-=======
-    ### NOTE: this is cogent.maths.unifrac.fast_tree.unifrac, but there are
-    ### other metrics that can (should?) be ported like:
-    ###  - unnormalized_unifrac
-    ###  - G
-    ###  - unnormalized_G
 
-    return 1 - ((branch_lengths * np.logical_and(i,j)).sum()/\
-        (branch_lengths * np.logical_or(i,j)).sum())
->>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426
+
+def w_unifrac(branch_lengths, i, j):
+    """Calculates weighted unifrac(i,j) from branch lengths and cols i,j of m.
+    """
+    return (branch_lengths * abs((i / i.sum()) - (j / j.sum()))).sum()
 
 
 def _skbio_counts_to_envs(otu_ids, *counts):
@@ -50,7 +56,7 @@ def _skbio_counts_to_envs(otu_ids, *counts):
     n_counts = len(counts)
 
     for packed in zip(otu_ids, *counts):
-        ### NOTE: this is ducttape to fit the API
+        # NOTE: this is ducttape to fit the API
         otu_id = packed[0]
 
         counts = {}
@@ -83,7 +89,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     return fast_unifrac(tree, envs, weighted=True)
 
 
-def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
+def fast_unifrac(t, envs, weighted=False, metric=unifrac):
     # weighted_unifrac_f=_weighted_unifrac,make_subtree=True):
     """
     Run fast unifrac.
@@ -100,19 +106,11 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
         distance metric to use.  currently you must use unifrac only
         if weighted=True.
         see fast_tree.py for metrics (e.g.: G, unnormalized_G, unifrac, etc.)
-    modes: str
-        tasks to perform on running unifrac.  see fast_unifrac.py
-        default is to get a unifrac distance matrix, pcoa on that matrix, and a
-        cluster of the environments
-    is_symmetric: bool
-        if the desired distance matrix is symmetric
-        (dist(sampleA, sampleB) == dist(sampleB, sampleA)), then set this True
-        to prevent calculating the same number twice
 
     Returns
     -------
-    result : dict
-        dict of distance matrix
+    u : np.array
+        Unifrac distance matrix
     """
     (envs, count_array,
      unique_envs, env_to_index,
@@ -121,7 +119,6 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
 
     bound_indices = bind_to_array(nodes, count_array)
     result = {}
-    UNIFRAC_DIST_VECTOR = "distance_vector"
     # weighted unifrac
     if weighted:
         tip_indices = [n._leaf_index for n in t.tips()]
@@ -130,76 +127,15 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
         bindings = bind_to_parent_array(t, tip_ds)
         tip_distances(tip_ds, bindings, tip_indices)
         bl_correct = weighted == 'correct'
-        u = weighted_unifrac_matrix(branch_lengths, count_array,
-                                    tip_indices, bl_correct=bl_correct,
-                                    tip_distances=tip_ds,
-                                    unifrac_f=weighted_unifrac_f)
-        # figure out if we need the vector
-        if UNIFRAC_DIST_VECTOR in modes:
-            result[UNIFRAC_DIST_VECTOR] = (weighted_unifrac_vector(
-                branch_lengths, count_array, tip_indices,
-                bl_correct=bl_correct, tip_distances=tip_ds,
-                unifrac_f=weighted_unifrac_f), env_names)
-
+        u = w_unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
+        if bl_correct:
+            u /= _branch_correct(tip_ds, count_array[:, 0], count_array[:, 1])
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
-<<<<<<< HEAD
-        u = unifrac_matrix(branch_lengths, count_array,
-                           metric=metric, is_symmetric=is_symmetric)
-
-    result.update(unifrac_tasks_from_matrix(u, env_names))
-    return result
-
-
-def unifrac_matrix(branch_lengths, m, metric=unifrac, is_symmetric=True):
-    """Calculates unifrac(i,j) for all i,j in m.
-
-    Parameters
-    ----------
-    branch_lengths: np.array
-        The array of branch lengths.
-    m : np.array
-        A 2D array: rows are taxa, states are columns. Assumes that ancestral
-        states have already been calculated (either by logical_or or Fitch).
-    metric: function
-        metric to use for combining each pair of columns i and j. Default
-        is unifrac.
-    is_symmetric: bool
-        indicates whether the metric is symmetric. Default is True.
-
-    Returns
-    -------
-    np.array
-        Unifrac distance matrix
-    """
-    num_cols = m.shape[-1]
-    cols = [m[:, i] for i in range(num_cols)]
-    result = np.zeros((num_cols, num_cols), float)
-    if is_symmetric:
-        # only calculate half matrix and transpose
-        for i in range(1, num_cols):
-            first_col = cols[i]
-            row_result = []
-            for j in range(i):
-                second_col = cols[j]
-                row_result.append(metric(branch_lengths,
-                                         first_col, second_col))
-            result[i, :j+1] = row_result
-        # note: can't use += because shared memory between a and transpose(a)
-        result = result + np.transpose(result)
-    else:
-        # calc full matrix, incl. diagonal (which is probably 0...)
-        for i in range(num_cols):
-            first_col = cols[i]
-            result[i] = [metric(branch_lengths, first_col, cols[j])
-                         for j in range(num_cols)]
-    return result
-=======
         u = unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
 
     return u
->>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426
 
 
 def _fast_unifrac_setup(t, envs, make_subtree=True):
@@ -343,7 +279,7 @@ def get_unique_envs(envs):
     result = set()
     for v in envs.values():
         result.update(v.keys())
-    #sort envs for convenience in testing and display
+    # sort envs for convenience in testing and display
     return sorted(result), len(result)
 
 
