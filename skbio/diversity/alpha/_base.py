@@ -14,7 +14,8 @@ from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
 from skbio.util._decorator import experimental
-from skbio.diversity._base import _validate_counts_vector
+from skbio.diversity._base import (_validate_counts_vector,
+                                   _validate_otu_ids_and_tree)
 
 
 @experimental(as_of="0.4.0")
@@ -294,7 +295,7 @@ def esty_ci(counts):
 
 
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree):
+def faith_pd(counts, otu_ids, tree, suppress_validation=False):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
@@ -307,6 +308,11 @@ def faith_pd(counts, otu_ids, tree):
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
+    suppress_validation: bool, optional
+        If `True`, validation of the input won't be performed. This step can
+        be slow, so if validation is run elsewhere it can be disabled here.
+        However, invalid input data can lead to invalid results, so this step
+        should not be bypassed all together.
 
     Returns
     -------
@@ -332,7 +338,9 @@ def faith_pd(counts, otu_ids, tree):
        Biol. Conserv. (1992).
 
     """
-    counts = _validate_counts_vector(counts)
+    if not suppress_validation:
+        counts = _validate_counts_vector(counts)
+        _validate_otu_ids_and_tree(counts, otu_ids, tree)
     observed_otus = {o: c for o, c in zip(otu_ids, counts) if c >= 1}
     observed_nodes = tree.observed_node_counts(observed_otus)
     result = sum(o.length for o in observed_nodes if o.length is not None)

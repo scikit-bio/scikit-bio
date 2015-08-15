@@ -1,4 +1,5 @@
 import numpy as np
+from ._unifrac import _validate
 
 
 def unifrac(branch_lengths, i, j):
@@ -24,8 +25,62 @@ def unifrac(branch_lengths, i, j):
     float
         Unweighted unifrac metric
     """
+<<<<<<< HEAD
     _or, _and = np.logical_or(i, j), np.logical_and(i, j)
     return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
+=======
+    ### NOTE: this is cogent.maths.unifrac.fast_tree.unifrac, but there are
+    ### other metrics that can (should?) be ported like:
+    ###  - unnormalized_unifrac
+    ###  - G
+    ###  - unnormalized_G
+
+    return 1 - ((branch_lengths * np.logical_and(i,j)).sum()/\
+        (branch_lengths * np.logical_or(i,j)).sum())
+>>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426
+
+
+def _skbio_counts_to_envs(otu_ids, *counts):
+    """This is a place holder method to help get the API hooked up
+
+    This method should be unnecessary once the implementation is optimized to
+    the interface.
+    """
+    envs = {}
+    n_counts = len(counts)
+
+    for packed in zip(otu_ids, *counts):
+        ### NOTE: this is ducttape to fit the API
+        otu_id = packed[0]
+
+        counts = {}
+        for env in range(1, n_counts + 1):
+            if packed[env]:
+                counts[env] = packed[env]
+
+        if counts:
+            envs[otu_id] = counts
+
+    return envs
+
+
+def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
+                       suppress_validation=False):
+    """fit to unifrac API"""
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
+    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
+
+    return fast_unifrac(tree, envs)
+
+
+def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
+                     suppress_validation=False):
+    if not suppress_validation:
+        _validate(u_counts, v_counts, otu_ids, tree)
+    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
+
+    return fast_unifrac(tree, envs, weighted=True)
 
 
 def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
@@ -89,6 +144,7 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac, is_symmetric=True):
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
+<<<<<<< HEAD
         u = unifrac_matrix(branch_lengths, count_array,
                            metric=metric, is_symmetric=is_symmetric)
 
@@ -139,6 +195,11 @@ def unifrac_matrix(branch_lengths, m, metric=unifrac, is_symmetric=True):
             result[i] = [metric(branch_lengths, first_col, cols[j])
                          for j in range(num_cols)]
     return result
+=======
+        u = unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
+
+    return u
+>>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426
 
 
 def _fast_unifrac_setup(t, envs, make_subtree=True):
@@ -359,6 +420,7 @@ def unifrac_tasks_from_matrix(u, env_names):
     result = {}
 
     result['distance_matrix'] = (u, env_names)
+<<<<<<< HEAD
 n    return result
 
 
@@ -370,3 +432,29 @@ def tip_distances(a, bound_indices, tip_indices):
     mask = np.zeros(len(a))
     np.put(mask, tip_indices, 1)
     a *= mask[:, np.newaxis]
+=======
+    return result
+
+
+def PD_whole_tree(t, envs):
+    """Run PD on t and envs for each env.
+
+    Note: this is specific for PD per se, use PD_generic_whole_tree if you
+    want to calculate a related metric.
+    """
+    envs, count_array, unique_envs, env_to_index, node_to_index, env_names, \
+        branch_lengths, nodes, t = _fast_unifrac_setup(t, envs)
+    count_array = count_array.astype(bool)
+    bound_indices = bind_to_array(nodes, count_array)
+    #initialize result
+    bool_descendants(bound_indices)
+    result = (branch_lengths * count_array.T).sum(1)
+    return unique_envs, result
+
+
+def faith_pd(counts, otu_ids, tree):
+    """skbio api"""
+    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
+
+    return PD_whole_tree(tree, envs)[1]  # just return the result
+>>>>>>> 3fc968effde95b3c25438ab2826b179ec27fb426

@@ -10,8 +10,9 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import main
 
-from .test_unifrac_base import StatsTests
-from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
+from skbio.diversity.beta.tests.test_unifrac_base import StatsTests
+from skbio.diversity.beta._fast_unifrac import (unweighted_unifrac,
+                                                weighted_unifrac)
 
 
 StatsTests._method = {'unweighted_unifrac': unweighted_unifrac,
