@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase
 from io import StringIO
 
 import numpy as np
@@ -17,7 +16,8 @@ from skbio import TreeNode
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
-class StatsTests(TestCase):
+class StatsTests(object):
+    _method = {}
 
     def setUp(self):
         self.unweighted_unifrac = self._method['unweighted_unifrac']
