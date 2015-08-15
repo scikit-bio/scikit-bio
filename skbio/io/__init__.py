@@ -23,6 +23,7 @@ see the associated documentation.
    ordination
    phylip
    qseq
+   biom
 
 .. currentmodule:: skbio.io.registry
 
@@ -59,6 +60,7 @@ User exceptions and warnings
    PhylipFormatError
    QSeqFormatError
    QUALFormatError
+   BIOMFormatError
 
 Subpackages
 -----------
@@ -198,7 +200,8 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          ClustalFormatError, FASTAFormatError,
                          IOSourceError, FASTQFormatError, LSMatFormatError,
                          NewickFormatError, OrdinationFormatError,
-                         PhylipFormatError, QSeqFormatError, QUALFormatError)
+                         PhylipFormatError, QSeqFormatError, QUALFormatError,
+                         BIOMFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -216,7 +219,8 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'OrdinationFormatError',
            'PhylipFormatError',
            'QSeqFormatError',
-           'QUALFormatError']
+           'QUALFormatError',
+           'BIOMFormatError']
 
 
 # Necessary to import each file format module to have them added to the I/O
@@ -230,6 +234,7 @@ import_module('skbio.io.format.newick')
 import_module('skbio.io.format.ordination')
 import_module('skbio.io.format.phylip')
 import_module('skbio.io.format.qseq')
+import_module('skbio.io.format.biom')
 
 
 # This is meant to be a handy indicator to the user that they have done

@@ -82,3 +82,8 @@ class InvalidRegistrationError(Exception):
 class DuplicateRegistrationError(Exception):
     """Raised when a function is already registered in skbio.io"""
     pass
+
+
+class BIOMFormatError(FileFormatError):
+    """Raised when a ``biom`` formatted file cannot be parsed."""
+    pass
