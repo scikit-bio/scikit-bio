@@ -93,6 +93,17 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
                      suppress_validation=False):
+    u_sum = sum(u_counts)
+    v_sum = sum(v_counts)
+
+    if not u_sum or not v_sum:
+        if u_sum + v_sum:
+            # u or v counts are all zeros
+            if normalized:
+                return 1.0
+        else:
+            # u and v are zero
+            return 0.0
     if not suppress_validation:
         _validate(u_counts, v_counts, otu_ids, tree)
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
@@ -136,10 +147,7 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac):
         tip_ds = branch_lengths.copy()[:, np.newaxis]
         bindings = bind_to_parent_array(t, tip_ds)
         tip_distances(tip_ds, bindings, tip_indices)
-        bl_correct = weighted == 'correct'
         u = w_unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
-        if bl_correct:
-            u /= _branch_correct(tip_ds, count_array[:, 0], count_array[:, 1])
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
@@ -364,7 +372,7 @@ def bind_to_parent_array(t, a):
     result = []
     for n in t.traverse(self_before=True, self_after=False):
         if n is not t:
-            result.append([a[n._leaf_index], a[n.Parent._leaf_index]])
+            result.append([a[n._leaf_index], a[n.parent._leaf_index]])
     return result
 
 
