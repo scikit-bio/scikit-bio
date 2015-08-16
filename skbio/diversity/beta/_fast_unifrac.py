@@ -39,10 +39,23 @@ def unifrac(branch_lengths, i, j):
     return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
 
 
-def w_unifrac(branch_lengths, i, j):
+def w_unifrac(branch_lengths, tip_indices, i, j):
     """Calculates weighted unifrac(i,j) from branch lengths and cols i,j of m.
     """
-    return (branch_lengths * abs((i / i.sum()) - (j / j.sum()))).sum()
+    i_sum = (np.take(i, tip_indices)).sum()
+    j_sum = (np.take(j, tip_indices)).sum()
+
+    if i_sum:
+        i_ = i / i_sum
+    else:
+        i_ = 0.0
+
+    if j_sum:
+        j_ = j / j_sum
+    else:
+        j_ = 0.0
+
+    return (branch_lengths * abs(i_ - j_)).sum()
 
 
 def _skbio_counts_to_envs(otu_ids, *counts):
@@ -101,6 +114,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
             # u or v counts are all zeros
             if normalized:
                 return 1.0
+            # NOTE: we cannot handle the unnormalized case here yet as it
+            # requires operations on the tree vector
         else:
             # u and v are zero
             return 0.0
@@ -147,7 +162,16 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac):
         tip_ds = branch_lengths.copy()[:, np.newaxis]
         bindings = bind_to_parent_array(t, tip_ds)
         tip_distances(tip_ds, bindings, tip_indices)
-        u = w_unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
+
+        # NOTE: in the unnormalized case, it is possible for count_array to
+        # have a single column of v_counts come in as all zeros.
+        u_counts = count_array[:, 0]
+        if count_array.shape[1] == 1:
+            v_counts = np.zeros(count_array.shape[0])
+        else:
+            v_counts = count_array[:, 1]
+
+        u = w_unifrac(branch_lengths, tip_indices, u_counts, v_counts)
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
