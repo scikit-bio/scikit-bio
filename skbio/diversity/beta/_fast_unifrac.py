@@ -123,10 +123,10 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         _validate(u_counts, v_counts, otu_ids, tree)
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
 
-    return fast_unifrac(tree, envs, weighted=True)
+    return fast_unifrac(tree, envs, weighted=True, normalized=normalized)
 
 
-def fast_unifrac(t, envs, weighted=False, metric=unifrac):
+def fast_unifrac(t, envs, weighted=False, metric=unifrac, normalized=False):
     # weighted_unifrac_f=_weighted_unifrac,make_subtree=True):
     """
     Run fast unifrac.
@@ -170,8 +170,12 @@ def fast_unifrac(t, envs, weighted=False, metric=unifrac):
             v_counts = np.zeros(count_array.shape[0])
         else:
             v_counts = count_array[:, 1]
+        u_sum = (np.take(u_counts, tip_indices)).sum()
+        v_sum = (np.take(v_counts, tip_indices)).sum()
 
         u = w_unifrac(branch_lengths, tip_indices, u_counts, v_counts)
+        if normalized:
+            u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
     # unweighted unifrac
     else:
         bool_descendants(bound_indices)
@@ -316,12 +320,12 @@ def get_branch_lengths(tree_index):
     return result
 
 
-def _branch_correct(tip_distances, i, j):
+def _branch_correct(tip_distances, i, j, i_sum, j_sum):
     """Calculates weighted unifrac branch length correction.
 
     tip_distances  must be 0 except for tips.
     """
-    result = tip_distances.ravel()*((i / i.sum())+(j / j.sum()))
+    result = tip_distances.ravel()*((i / i_sum)+(j / j_sum))
     return result.sum()
 
 
