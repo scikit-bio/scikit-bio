@@ -206,10 +206,10 @@ def _fast_unifrac_setup(t, envs, make_subtree=True):
     # Note: envs get sorted at the step above
     branch_lengths = get_branch_lengths(node_index)
     if not envs:
-        raise ValueError, ''.join(["No valid samples/environments found.",
-                                   "Check whether tree tips match ",
-                                   "otus/taxa present ",
-                                   "in samples/environments"])
+        raise ValueError(''.join(["No valid samples/environments found.",
+                                  "Check whether tree tips match ",
+                                  "otus/taxa present ",
+                                  "in samples/environments"]))
     return (envs, count_array, unique_envs, env_to_index,
             node_to_index, env_names, branch_lengths, nodes, t)
 
@@ -435,6 +435,6 @@ def PD_whole_tree(t, envs):
 
 def faith_pd(counts, otu_ids, tree):
     """skbio api"""
-    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
+    envs = _skbio_counts_to_envs(otu_ids, counts)
 
     return PD_whole_tree(tree, envs)[1]  # just return the result

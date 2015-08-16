@@ -177,8 +177,8 @@ class StatsTests(object):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(DuplicateNodeError, self.unweighted_unifrac, u_counts,
-                          v_counts, otu_ids, t)
+        self.assertRaises(DuplicateNodeError, self.unweighted_unifrac,
+                          u_counts, v_counts, otu_ids, t)
         self.assertRaises(DuplicateNodeError, self.weighted_unifrac, u_counts,
                           v_counts, otu_ids, t)
 
@@ -200,10 +200,10 @@ class StatsTests(object):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # len of vectors not equal
         t = TreeNode.read(
@@ -212,24 +212,24 @@ class StatsTests(object):
         u_counts = [1, 2]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # negative counts
         t = TreeNode.read(
@@ -238,17 +238,17 @@ class StatsTests(object):
         u_counts = [1, 2, -3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
         u_counts = [1, 2, 3]
         v_counts = [1, 1, -1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # tree with no branch lengths
         t = TreeNode.read(
@@ -256,10 +256,10 @@ class StatsTests(object):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
@@ -268,10 +268,10 @@ class StatsTests(object):
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
-        self.assertRaises(ValueError, self.weighted_unifrac, u_counts, v_counts,
-                          otu_ids, t)
+        self.assertRaises(ValueError, self.unweighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
+        self.assertRaises(ValueError, self.weighted_unifrac, u_counts,
+                          v_counts, otu_ids, t)
 
         # otu_ids not present in tree
         t = TreeNode.read(
