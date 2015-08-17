@@ -75,7 +75,8 @@ class StatsTests(object):
 
         # two tips
         tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
-        actual = self.unweighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'], tree)
+        actual = self.unweighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'],
+                                         tree)
         expected = 1.0
         self.assertEqual(actual, expected)
 
@@ -98,7 +99,7 @@ class StatsTests(object):
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered shared
         actual = self.unweighted_unifrac([1, 1, 0, 0], [1, 0, 0, 0],
-                                    self.oids2, self.t2)
+                                         self.oids2, self.t2)
         # for clarity of what I'm testing, compute expected as it would
         # based on the branch lengths. the values that compose shared was
         # a point of confusion for me here, so leaving these in for
@@ -109,7 +110,7 @@ class StatsTests(object):
         # root node not observed, but branch between (OTU3, OTU4) and root
         # is considered shared
         actual = self.unweighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
-                                    self.oids2, self.t2)
+                                         self.oids2, self.t2)
         # for clarity of what I'm testing, compute expected as it would
         # based on the branch lengths. the values that compose shared was
         # a point of confusion for me here, so leaving these in for
@@ -122,14 +123,14 @@ class StatsTests(object):
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered shared
         actual = self.weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
-                                  self.oids2, self.t2)
+                                       self.oids2, self.t2)
         expected = 0.15
         self.assertAlmostEqual(actual, expected)
 
         # root node not observed, but branch between (OTU3, OTU4) and root
         # is considered shared
         actual = self.weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
-                                  self.oids2, self.t2)
+                                       self.oids2, self.t2)
         expected = 0.6
         self.assertAlmostEqual(actual, expected)
 
@@ -138,14 +139,14 @@ class StatsTests(object):
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered shared
         actual = self.weighted_unifrac([1, 0, 0, 0], [1, 1, 0, 0],
-                                  self.oids2, self.t2, normalized=True)
+                                       self.oids2, self.t2, normalized=True)
         expected = 0.1764705882
         self.assertAlmostEqual(actual, expected)
 
         # root node not observed, but branch between (OTU3, OTU4) and root
         # is considered shared
         actual = self.weighted_unifrac([0, 0, 1, 1], [0, 0, 1, 0],
-                                  self.oids2, self.t2, normalized=True)
+                                       self.oids2, self.t2, normalized=True)
         expected = 0.1818181818
         self.assertAlmostEqual(actual, expected)
 
