@@ -144,29 +144,29 @@ def _genbank_to_protein(fh, seq_num=1, **kwargs):
 
 
 @genbank.writer(None)
-def _generator_to_genbank(obj, fh, lowercase=None):
+def _generator_to_genbank(obj, fh):
     for obj_i in obj:
-        _serialize_single_genbank(obj_i, fh, lowercase)
+        _serialize_single_genbank(obj_i, fh)
 
 
 @genbank.writer(Sequence)
-def _biological_sequence_to_genbank(obj, fh, lowercase=None):
-    _serialize_single_genbank(obj, fh, lowercase)
+def _biological_sequence_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
 
 
 @genbank.writer(DNA)
-def _dna_to_genbank(obj, fh, lowercase=None):
-    _serialize_single_genbank(obj, fh, lowercase)
+def _dna_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
 
 
 @genbank.writer(RNA)
-def _rna_to_genbank(obj, fh, lowercase=None):
-    _serialize_single_genbank(obj, fh, lowercase)
+def _rna_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
 
 
 @genbank.writer(Protein)
-def _protein_to_genbank(obj, fh, lowercase=None):
-    _serialize_single_genbank(obj, fh, lowercase)
+def _protein_to_genbank(obj, fh):
+    _serialize_single_genbank(obj, fh)
 
 
 def _construct(record, constructor=None, **kwargs):
@@ -210,6 +210,8 @@ def _parse_single_genbank(chunks):
             header, _parse_section_default)
 
         if header == 'FEATURES':
+            # This requires 'LOCUS' line parsed before 'FEATURES', which should
+            # be true and is implicitly checked by the sniffer.
             parser = partial(
                 parser, length=metadata['LOCUS']['size'])
 
@@ -236,7 +238,13 @@ def _parse_single_genbank(chunks):
     return sequence, metadata, positional_metadata
 
 
-def _serialize_single_genbank(obj, fh, lowercase=None):
+def _serialize_single_genbank(obj, fh):
+    '''Write a Genbank record.
+
+    Always write it in NCBI canonical way:
+    1. sequence in lowercase
+    2. 'u' as 't' even in RNA molecules.
+    '''
     md = obj.metadata
     for header in _HEADERS:
         if header in md:
@@ -250,10 +258,13 @@ def _serialize_single_genbank(obj, fh, lowercase=None):
                     fh.write(s)
             else:
                 fh.write(out)
-    if lowercase is None:
-        seq_str = str(obj)
-    else:
-        seq_str = obj.lowercase(lowercase)
+    # always write RNA seq as DNA
+    if isinstance(obj, RNA):
+        obj = obj.reverse_transcribe()
+
+    # always write in lowercase
+    seq_str = str(obj).lower()
+
     for s in _serialize_origin(seq_str):
         fh.write(s)
     fh.write('//\n')

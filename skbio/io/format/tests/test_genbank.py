@@ -67,6 +67,7 @@ class GenbankIOTests(TestCase):
 
         # test single record and uppercase sequence
         self.single_fp = get_data_path('genbank_single_record')
+        self.single_lower_fp = get_data_path('genbank_single_record_lower')
         self.single = (
             'GSREILDFK',
             {'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
@@ -366,7 +367,7 @@ class WriterTests(GenbankIOTests):
         obs = fh.getvalue()
         fh.close()
 
-        with io.open(self.single_fp) as fh:
+        with io.open(self.single_lower_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
@@ -375,15 +376,14 @@ class WriterTests(GenbankIOTests):
         fh = io.StringIO()
         for i, (seq, md, pmd, constructor) in enumerate(self.multi):
             obj = Sequence(seq, md, pmd, lowercase=True)
-            lowercase = np.ones(md['LOCUS']['size'], dtype=bool)
-            _biological_sequence_to_genbank(obj, fh, lowercase=lowercase)
+            _biological_sequence_to_genbank(obj, fh)
             obs = fh.getvalue()
         fh.close()
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
 
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.strip(), exp.strip())
 
     def test_any_sequence_to_genbank(self):
         writers = [_protein_to_genbank,
@@ -396,8 +396,7 @@ class WriterTests(GenbankIOTests):
                 seq = seq.replace('t', 'u')
                 constructor = RNA
             obj = constructor(seq, md, pmd, lowercase=True)
-            lowercase = np.ones(md['LOCUS']['size'], dtype=bool)
-            writers[i](obj, fh, lowercase=lowercase)
+            writers[i](obj, fh)
             obs = fh.getvalue()
         fh.close()
 
