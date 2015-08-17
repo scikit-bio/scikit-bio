@@ -135,12 +135,12 @@ class RNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.0")
+    @stable(as_of="0.4.0-dev")
     def reverse_transcribe(self):
         """Reverse transcribe RNA into DNA.
 
-        Uracil (U) is replaced with thymine (T) in the reverse transcribed
-        sequence.
+        It returns the coding DNA strand of the RNA sequence, i.e. uracil (U)
+        is replaced with thymine (T) in the reverse transcribed sequence.
 
         Returns
         -------
@@ -155,8 +155,8 @@ class RNA(IUPACSequence, NucleotideMixin):
 
         Notes
         -----
-        DNA sequence's metadata and positional metadata are included in the
-        transcribed RNA sequence.
+        RNA sequence's metadata and positional metadata are included in the
+        transcribed DNA sequence.
 
         Examples
         --------
@@ -198,8 +198,9 @@ class RNA(IUPACSequence, NucleotideMixin):
             positional_metadata = self.positional_metadata
 
         # turn off validation because `seq` is guaranteed to be valid
-        return DNA(seq, metadata=metadata,
-                   positional_metadata=positional_metadata, validate=False)
+        return skbio.DNA(seq, metadata=metadata,
+                         positional_metadata=positional_metadata,
+                         validate=False)
 
     @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
@@ -414,5 +415,3 @@ _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
 _motifs.interpolate(RNA, "find_motifs")
-
-from ._dna import DNA  # noqa
