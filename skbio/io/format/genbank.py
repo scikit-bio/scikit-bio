@@ -170,16 +170,16 @@ def _protein_to_genbank(obj, fh):
 
 
 def _construct(record, constructor=None, **kwargs):
+    '''Construct the object of Sequence, DNA, RNA, or Protein.
+    '''
     seq, md, pmd = record
     if 'lowercase' not in kwargs:
         kwargs['lowercase'] = True
     if constructor is None:
         unit = md['LOCUS']['unit']
         if unit == 'bp':
-            is_rna = 'u' in seq or 'U' in seq
-            # often RNA mol type has T instead of U for genbank from from NCBI;
-            # but in case of files from other sources...
-            constructor = RNA if is_rna else DNA
+            # RNA mol type has T instead of U for genbank from from NCBI
+            constructor = DNA
         elif unit == 'aa':
             constructor = Protein
         else:

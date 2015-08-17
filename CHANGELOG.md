@@ -11,6 +11,7 @@
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
+* Added ``reverse_transcribe`` class method to ``RNA``.
 
 ### Backward-incompatible changes [experimental]
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.

@@ -26,6 +26,7 @@ class SnifferTests(TestCase):
         self.positive_fps = list(map(get_data_path, [
             'genbank_5_blanks_start_of_file',
             'genbank_single_record',
+            'genbank_single_record_rna',
             'genbank_multi_records']))
 
         self.negative_fps = list(map(get_data_path, [
@@ -65,7 +66,7 @@ class GenbankIOTests(TestCase):
               'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
               'unit': 'aa', 'size': 360}))
 
-        # test single record and uppercase sequence
+        # test single record and read uppercase sequence
         self.single_fp = get_data_path('genbank_single_record')
         self.single_lower_fp = get_data_path('genbank_single_record_lower')
         self.single = (
@@ -79,6 +80,51 @@ class GenbankIOTests(TestCase):
                        'unit': 'aa'}},
             None,
             Protein)
+
+        self.single_dna_fp = get_data_path('genbank_single_record_dna')
+        self.single_rna_fp = get_data_path('genbank_single_record_rna')
+        self.single_rna = (
+            'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
+            {'ACCESSION': 'M14399',
+             'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
+             'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
+             'FEATURES': [{'db_xref': 'taxon:562',
+                           'index_': 0,
+                           'left_partial_': False,
+                           'location': '1..63',
+                           'mol_type': 'mRNA',
+                           'organism': 'Escherichia coli',
+                           'rc_': False,
+                           'right_partial_': False,
+                           'type_': 'source'},
+                          {'codon_start': 1,
+                           'db_xref': ['GI:145230', 'taxon:562', 'taxon:561'],
+                           'index_': 1,
+                           'left_partial_': False,
+                           'location': '1..>63',
+                           'note': 'alkaline phosphatase signal peptide',
+                           'protein_id': 'AAA23431.1',
+                           'rc_': False,
+                           'right_partial_': True,
+                           'transl_table': 11,
+                           'translation': 'MKQSTIALAVLPLLFTPVTKA',
+                           'type_': 'CDS'}],
+             'KEYWORDS': 'alkaline phosphatase; signal peptide.',
+             'LOCUS': {'date': datetime(1993, 4, 26, 0, 0),
+                       'division': 'BCT',
+                       'locus_name': 'ECOALKP',
+                       'mol_type': 'mRNA',
+                       'shape': 'linear',
+                       'size': 63,
+                       'unit': 'bp'},
+             'SOURCE': {'ORGANISM': 'Escherichia coli',
+                        'taxonomy': 'Bacteria; Proteobacteria; '
+                        'Gammaproteobacteria; Enterobacteriales; '
+                        'Enterobacteriaceae; Escherichia.'},
+             'VERSION': 'M14399.1  GI:145229'},
+            pd.DataFrame({0: np.ones(63, dtype=bool),
+                          1: np.ones(63, dtype=bool)}),
+            RNA)
 
         # test:
         # 1. multiple records in one file
@@ -132,48 +178,6 @@ class GenbankIOTests(TestCase):
              pd.DataFrame({0: np.ones(9, dtype=bool),
                            1: np.ones(9, dtype=bool)}),
              Protein),
-
-            ('gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
-             {'ACCESSION': 'M14399',
-              'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
-              'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
-              'FEATURES': [{'db_xref': 'taxon:562',
-                            'index_': 0,
-                            'left_partial_': False,
-                            'location': '1..63',
-                            'mol_type': 'mRNA',
-                            'organism': 'Escherichia coli',
-                            'rc_': False,
-                            'right_partial_': False,
-                            'type_': 'source'},
-                           {'codon_start': 1,
-                            'db_xref': ['GI:145230', 'taxon:562', 'taxon:561'],
-                            'index_': 1,
-                            'left_partial_': False,
-                            'location': '1..>63',
-                            'note': 'alkaline phosphatase signal peptide',
-                            'protein_id': 'AAA23431.1',
-                            'rc_': False,
-                            'right_partial_': True,
-                            'transl_table': 11,
-                            'translation': 'MKQSTIALAVLPLLFTPVTKA',
-                            'type_': 'CDS'}],
-              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
-              'LOCUS': {'date': datetime(1993, 4, 26, 0, 0),
-                        'division': 'BCT',
-                        'locus_name': 'ECOALKP',
-                        'mol_type': 'mRNA',
-                        'shape': 'linear',
-                        'size': 63,
-                        'unit': 'bp'},
-              'SOURCE': {'ORGANISM': 'Escherichia coli',
-                         'taxonomy': 'Bacteria; Proteobacteria; '
-                         'Gammaproteobacteria; Enterobacteriales; '
-                         'Enterobacteriaceae; Escherichia.'},
-              'VERSION': 'M14399.1  GI:145229'},
-             pd.DataFrame({0: np.ones(63, dtype=bool),
-                           1: np.ones(63, dtype=bool)}),
-             RNA),
 
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
@@ -328,20 +332,19 @@ REFERENCE   1  (bases 1 to 154478)
                            positional_metadata=exp[2])
             self.assertEqual(exp, obs)
 
+    def test_genbank_to_rna(self):
+        seq, md, pmd, constructor = self.single_rna
+        obs = _genbank_to_rna(self.single_rna_fp)
+        exp = constructor(seq, metadata=md,
+                          lowercase=True, positional_metadata=pmd)
+        self.assertEqual(exp, obs)
+
     def test_genbank_to_dna(self):
-        i = 2
+        i = 1
         exp = self.multi[i]
         obs = _genbank_to_dna(self.multi_fp, seq_num=i+1)
         exp = DNA(exp[0], metadata=exp[1], lowercase=True,
                   positional_metadata=exp[2])
-        self.assertEqual(exp, obs)
-
-    def test_genbank_to_rna(self):
-        i = 1
-        exp = self.multi[i]
-        obs = _genbank_to_rna(self.multi_fp, seq_num=i+1)
-        exp = RNA(exp[0], metadata=exp[1],
-                  lowercase=True, positional_metadata=exp[2])
         self.assertEqual(exp, obs)
 
     def test_genbank_to_protein(self):
@@ -377,33 +380,40 @@ class WriterTests(GenbankIOTests):
         for i, (seq, md, pmd, constructor) in enumerate(self.multi):
             obj = Sequence(seq, md, pmd, lowercase=True)
             _biological_sequence_to_genbank(obj, fh)
-            obs = fh.getvalue()
+        obs = fh.getvalue()
         fh.close()
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
+        self.assertEqual(obs, exp)
 
-        self.assertEqual(obs.strip(), exp.strip())
-
-    def test_any_sequence_to_genbank(self):
+    def test_dna_protein_to_genbank(self):
         writers = [_protein_to_genbank,
-                   _rna_to_genbank,
                    _dna_to_genbank]
         fh = io.StringIO()
         for i, (seq, md, pmd, constructor) in enumerate(self.multi):
-            # test the second record as RNA
-            if i == 1:
-                seq = seq.replace('t', 'u')
-                constructor = RNA
             obj = constructor(seq, md, pmd, lowercase=True)
             writers[i](obj, fh)
-            obs = fh.getvalue()
+        obs = fh.getvalue()
         fh.close()
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
 
-        self.assertEqual(obs.strip(), exp.strip())
+        self.assertEqual(obs, exp)
+
+    def test_rna_to_genbank(self):
+        fh = io.StringIO()
+        seq, md, pmd, constructor = self.single_rna
+        obj = constructor(seq, md, pmd, lowercase=True)
+        _rna_to_genbank(obj, fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_dna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
