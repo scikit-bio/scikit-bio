@@ -142,9 +142,9 @@ Phylogenetic Diversity (PD) metric to the sample:
 >>> from skbio.diversity.alpha import faith_pd
 >>> from io import StringIO
 >>> tree = TreeNode.read(StringIO(
-...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
-...                      'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
+...                      u'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7', 'OTU8']
 >>> faith_pd(counts, otu_ids, tree)
 6.95
