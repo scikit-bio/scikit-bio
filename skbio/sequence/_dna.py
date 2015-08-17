@@ -7,10 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
-from ._rna import RNA
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
@@ -222,6 +220,7 @@ class DNA(IUPACSequence, NucleotideMixin):
 
         See Also
         --------
+        RNA.reverse_transcribe
         RNA.translate
         translate_six_frames
         transcribe
@@ -408,3 +407,5 @@ _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
 _motifs.interpolate(DNA, "find_motifs")
+
+from ._rna import RNA  # noqa

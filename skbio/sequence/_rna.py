@@ -136,6 +136,72 @@ class RNA(IUPACSequence, NucleotideMixin):
         return _motifs
 
     @stable(as_of="0.4.0")
+    def reverse_transcribe(self):
+        """Reverse transcribe RNA into DNA.
+
+        Uracil (U) is replaced with thymine (T) in the reverse transcribed
+        sequence.
+
+        Returns
+        -------
+        DNA
+            Reverse transcribed sequence.
+
+        See Also
+        --------
+        DNA.transcribe
+        translate
+        translate_six_frames
+
+        Notes
+        -----
+        DNA sequence's metadata and positional metadata are included in the
+        transcribed RNA sequence.
+
+        Examples
+        --------
+        Reverse transcribe RNA into DNA:
+
+        >>> from skbio import RNA
+        >>> rna = RNA('UAACGUUA')
+        >>> rna
+        RNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 UAACGUUA
+        >>> rna.reverse_transcribe()
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 TAACGTTA
+        """
+        seq = self._string.replace(b'U', b'T')
+
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
+        # turn off validation because `seq` is guaranteed to be valid
+        return DNA(seq, metadata=metadata,
+                   positional_metadata=positional_metadata, validate=False)
+
+    @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.
 
@@ -348,3 +414,5 @@ _motifs = _parent_motifs.copy()
 
 # Leave this at the bottom
 _motifs.interpolate(RNA, "find_motifs")
+
+from ._dna import DNA  # noqa
