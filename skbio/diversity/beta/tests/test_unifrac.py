@@ -147,6 +147,18 @@ class StatsTests(TestCase):
         expected = 0.1818181818
         self.assertAlmostEqual(actual, expected)
 
+    def test_unweighted_unifrac_kwargs(self):
+        # confirm that **kwargs can be passed
+        actual = unweighted_unifrac(self.b1[0], self.b1[0], self.oids1,
+                                    self.t1, not_a_known_parameter=42)
+        self.assertAlmostEqual(actual, 0.0)
+
+    def test_weighted_unifrac_kwargs(self):
+        # confirm that **kwargs can be passed
+        actual = weighted_unifrac(self.b1[0], self.b1[0], self.oids1,
+                                  self.t1, not_a_known_parameter=42)
+        self.assertAlmostEqual(actual, 0.0)
+
     def test_unweighted_unifrac_identity(self):
         for i in range(len(self.b1)):
             actual = unweighted_unifrac(

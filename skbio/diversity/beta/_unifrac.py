@@ -25,7 +25,7 @@ def _validate(u_counts, v_counts, otu_ids, tree):
 
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       suppress_validation=False):
+                       suppress_validation=False, **kwargs):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -105,7 +105,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     suppress_validation=False):
+                     suppress_validation=False, **kwargs):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -119,8 +119,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
     normalized: boolean, optional
-        If ``True``, apply branch length normalization. Resulting distances
-        will then be in the range ``[0, 1]``.
+        If ``True``, apply branch length normalization, which is described in
+        [1]_. Resulting distances will then be in the range ``[0, 1]``.
     suppress_validation: bool, optional
         If `True`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
@@ -147,7 +147,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
     Notes
     -----
-    Unweighted UniFrac was originally described in [1]_, which includes a
+    Weighted UniFrac was originally described in [1]_, which includes a
     discussion of unweighted (qualitative) versus weighted (quantitiative)
     diversity metrics. Deeper mathemtical discussions of this metric is
     presented in [2]_.
