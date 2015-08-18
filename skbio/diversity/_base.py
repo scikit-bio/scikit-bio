@@ -32,9 +32,13 @@ def _validate_counts_vector(counts, suppress_cast=False):
     return counts
 
 
-def _validate_counts_vectors(*args, suppress_cast=False):
+def _validate_counts_vectors(*args, **kwargs):
     results = []
     lens = []
+    # py2-compatible mechanism for specifying a keyword argument when also
+    # passing *args derived from SO answer:
+    # http://stackoverflow.com/a/15302038/3424666
+    suppress_cast = kwargs.pop('suppress_cast', False)
     for counts in args:
         results.append(_validate_counts_vector(counts, suppress_cast))
         lens.append(len(counts))
