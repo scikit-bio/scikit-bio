@@ -124,12 +124,12 @@ setup(name='scikit-bio',
                       'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
+          'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],
+          'skbio.diversity.beta.tests': ['data/qiime-191-tt/*'],
           'skbio.io.tests': ['data/*'],
           'skbio.io.format.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
-          'skbio.diversity.alpha.tests': ['data/*'],
-          'skbio.diversity.beta.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
           }
       )
