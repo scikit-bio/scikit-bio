@@ -42,6 +42,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
+    **kwargs: dict, optional
+        Keyword arguments are used from within scikit-bio to support optimized
+        implementations of this function. Users should not pass any keyword
+        arguments.
 
     Returns
     -------
@@ -125,6 +129,10 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
+    **kwargs: dict, optional
+        Keyword arguments are used from within scikit-bio to support optimized
+        implementations of this function. Users should not pass any keyword
+        arguments.
 
     Returns
     -------

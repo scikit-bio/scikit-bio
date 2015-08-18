@@ -18,7 +18,7 @@ from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 
 
-class StatsTests(TestCase):
+class TestUniFrac(TestCase):
 
     def setUp(self):
         self.b1 = np.array(
