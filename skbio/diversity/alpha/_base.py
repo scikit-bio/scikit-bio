@@ -295,7 +295,7 @@ def esty_ci(counts):
 
 
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree, suppress_validation=False):
+def faith_pd(counts, otu_ids, tree, validate=True):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
@@ -338,7 +338,7 @@ def faith_pd(counts, otu_ids, tree, suppress_validation=False):
        Biol. Conserv. (1992).
 
     """
-    if not suppress_validation:
+    if validate:
         counts = _validate_counts_vector(counts)
         _validate_otu_ids_and_tree(counts, otu_ids, tree)
     observed_otus = {o: c for o, c in zip(otu_ids, counts) if c >= 1}
