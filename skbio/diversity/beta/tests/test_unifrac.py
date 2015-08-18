@@ -21,7 +21,7 @@ from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 class TestUniFrac(TestCase):
 
     def setUp(self):
-        self.b1 = np.array(
+        self.table1 = np.array(
            [[1, 3, 0, 1, 0],
             [0, 2, 0, 4, 4],
             [0, 0, 6, 2, 1],
@@ -45,22 +45,24 @@ class TestUniFrac(TestCase):
 
     def test_unweighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
+        for i in range(len(self.table1)):
+            for j in range(len(self.table1)):
                 actual = unweighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1_w_extra_tips)
+                    self.table1[i], self.table1[j], self.oids1,
+                    self.t1_w_extra_tips)
                 expected = unweighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                    self.table1[i], self.table1[j], self.oids1, self.t1)
                 self.assertAlmostEqual(actual, expected)
 
     def test_weighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
+        for i in range(len(self.table1)):
+            for j in range(len(self.table1)):
                 actual = weighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1_w_extra_tips)
+                    self.table1[i], self.table1[j], self.oids1,
+                    self.t1_w_extra_tips)
                 expected = weighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                    self.table1[i], self.table1[j], self.oids1, self.t1)
                 self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_minimal_trees(self):
@@ -149,30 +151,30 @@ class TestUniFrac(TestCase):
 
     def test_unweighted_unifrac_kwargs(self):
         # confirm that **kwargs can be passed
-        actual = unweighted_unifrac(self.b1[0], self.b1[0], self.oids1,
+        actual = unweighted_unifrac(self.table1[0], self.table1[0], self.oids1,
                                     self.t1, not_a_known_parameter=42)
         self.assertAlmostEqual(actual, 0.0)
 
     def test_weighted_unifrac_kwargs(self):
         # confirm that **kwargs can be passed
-        actual = weighted_unifrac(self.b1[0], self.b1[0], self.oids1,
+        actual = weighted_unifrac(self.table1[0], self.table1[0], self.oids1,
                                   self.t1, not_a_known_parameter=42)
         self.assertAlmostEqual(actual, 0.0)
 
     def test_unweighted_unifrac_identity(self):
-        for i in range(len(self.b1)):
+        for i in range(len(self.table1)):
             actual = unweighted_unifrac(
-                self.b1[i], self.b1[i], self.oids1, self.t1)
+                self.table1[i], self.table1[i], self.oids1, self.t1)
             expected = 0.0
             self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_unifrac_symmetry(self):
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
+        for i in range(len(self.table1)):
+            for j in range(len(self.table1)):
                 actual = unweighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                    self.table1[i], self.table1[j], self.oids1, self.t1)
                 expected = unweighted_unifrac(
-                    self.b1[j], self.b1[i], self.oids1, self.t1)
+                    self.table1[j], self.table1[i], self.oids1, self.t1)
                 self.assertAlmostEqual(actual, expected)
 
     def test_invalid_input(self):
@@ -298,7 +300,7 @@ class TestUniFrac(TestCase):
     def test_unweighted_unifrac_non_overlapping(self):
         # these communities only share the root node
         actual = unweighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1)
+            self.table1[4], self.table1[5], self.oids1, self.t1)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
@@ -326,84 +328,84 @@ class TestUniFrac(TestCase):
         # unweighted unifrac implementation
         # sample A versus all
         actual = unweighted_unifrac(
-            self.b1[0], self.b1[1], self.oids1, self.t1)
+            self.table1[0], self.table1[1], self.oids1, self.t1)
         expected = 0.238095238095
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[0], self.b1[2], self.oids1, self.t1)
+            self.table1[0], self.table1[2], self.oids1, self.t1)
         expected = 0.52
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[0], self.b1[3], self.oids1, self.t1)
+            self.table1[0], self.table1[3], self.oids1, self.t1)
         expected = 0.52
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[0], self.b1[4], self.oids1, self.t1)
+            self.table1[0], self.table1[4], self.oids1, self.t1)
         expected = 0.545454545455
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[0], self.b1[5], self.oids1, self.t1)
+            self.table1[0], self.table1[5], self.oids1, self.t1)
         expected = 0.619047619048
         self.assertAlmostEqual(actual, expected)
         # sample B versus remaining
         actual = unweighted_unifrac(
-            self.b1[1], self.b1[2], self.oids1, self.t1)
+            self.table1[1], self.table1[2], self.oids1, self.t1)
         expected = 0.347826086957
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[1], self.b1[3], self.oids1, self.t1)
+            self.table1[1], self.table1[3], self.oids1, self.t1)
         expected = 0.347826086957
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[1], self.b1[4], self.oids1, self.t1)
+            self.table1[1], self.table1[4], self.oids1, self.t1)
         expected = 0.68
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[1], self.b1[5], self.oids1, self.t1)
+            self.table1[1], self.table1[5], self.oids1, self.t1)
         expected = 0.421052631579
         self.assertAlmostEqual(actual, expected)
         # sample C versus remaining
         actual = unweighted_unifrac(
-            self.b1[2], self.b1[3], self.oids1, self.t1)
+            self.table1[2], self.table1[3], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[2], self.b1[4], self.oids1, self.t1)
+            self.table1[2], self.table1[4], self.oids1, self.t1)
         expected = 0.68
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[2], self.b1[5], self.oids1, self.t1)
+            self.table1[2], self.table1[5], self.oids1, self.t1)
         expected = 0.421052631579
         self.assertAlmostEqual(actual, expected)
         # sample D versus remaining
         actual = unweighted_unifrac(
-            self.b1[3], self.b1[4], self.oids1, self.t1)
+            self.table1[3], self.table1[4], self.oids1, self.t1)
         expected = 0.68
         self.assertAlmostEqual(actual, expected)
         actual = unweighted_unifrac(
-            self.b1[3], self.b1[5], self.oids1, self.t1)
+            self.table1[3], self.table1[5], self.oids1, self.t1)
         expected = 0.421052631579
         self.assertAlmostEqual(actual, expected)
         # sample E versus remaining
         actual = unweighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1)
+            self.table1[4], self.table1[5], self.oids1, self.t1)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_identity(self):
-        for i in range(len(self.b1)):
+        for i in range(len(self.table1)):
             actual = weighted_unifrac(
-                self.b1[i], self.b1[i], self.oids1, self.t1)
+                self.table1[i], self.table1[i], self.oids1, self.t1)
             expected = 0.0
             self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_symmetry(self):
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
+        for i in range(len(self.table1)):
+            for j in range(len(self.table1)):
                 actual = weighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                    self.table1[i], self.table1[j], self.oids1, self.t1)
                 expected = weighted_unifrac(
-                    self.b1[j], self.b1[i], self.oids1, self.t1)
+                    self.table1[j], self.table1[i], self.oids1, self.t1)
                 self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_non_overlapping(self):
@@ -412,7 +414,7 @@ class TestUniFrac(TestCase):
         # weighted unifrac implementation
         # these communities only share the root node
         actual = weighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1)
+            self.table1[4], self.table1[5], self.oids1, self.t1)
         expected = 4.0
         self.assertAlmostEqual(actual, expected)
 
@@ -438,92 +440,94 @@ class TestUniFrac(TestCase):
         # is a completely different implementation skbio's initial
         # weighted unifrac implementation
         actual = weighted_unifrac(
-            self.b1[0], self.b1[1], self.oids1, self.t1)
+            self.table1[0], self.table1[1], self.oids1, self.t1)
         expected = 2.4
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[2], self.oids1, self.t1)
+            self.table1[0], self.table1[2], self.oids1, self.t1)
         expected = 1.86666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[3], self.oids1, self.t1)
+            self.table1[0], self.table1[3], self.oids1, self.t1)
         expected = 2.53333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[4], self.oids1, self.t1)
+            self.table1[0], self.table1[4], self.oids1, self.t1)
         expected = 1.35384615385
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[5], self.oids1, self.t1)
+            self.table1[0], self.table1[5], self.oids1, self.t1)
         expected = 3.2
         self.assertAlmostEqual(actual, expected)
         # sample B versus remaining
         actual = weighted_unifrac(
-            self.b1[1], self.b1[2], self.oids1, self.t1)
+            self.table1[1], self.table1[2], self.oids1, self.t1)
         expected = 2.26666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[3], self.oids1, self.t1)
+            self.table1[1], self.table1[3], self.oids1, self.t1)
         expected = 0.933333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[4], self.oids1, self.t1)
+            self.table1[1], self.table1[4], self.oids1, self.t1)
         expected = 3.2
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[5], self.oids1, self.t1)
+            self.table1[1], self.table1[5], self.oids1, self.t1)
         expected = 0.8375
         self.assertAlmostEqual(actual, expected)
         # sample C versus remaining
         actual = weighted_unifrac(
-            self.b1[2], self.b1[3], self.oids1, self.t1)
+            self.table1[2], self.table1[3], self.oids1, self.t1)
         expected = 1.33333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[2], self.b1[4], self.oids1, self.t1)
+            self.table1[2], self.table1[4], self.oids1, self.t1)
         expected = 1.89743589744
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[2], self.b1[5], self.oids1, self.t1)
+            self.table1[2], self.table1[5], self.oids1, self.t1)
         expected = 2.66666666667
         self.assertAlmostEqual(actual, expected)
         # sample D versus remaining
         actual = weighted_unifrac(
-            self.b1[3], self.b1[4], self.oids1, self.t1)
+            self.table1[3], self.table1[4], self.oids1, self.t1)
         expected = 2.66666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[3], self.b1[5], self.oids1, self.t1)
+            self.table1[3], self.table1[5], self.oids1, self.t1)
         expected = 1.33333333333
         self.assertAlmostEqual(actual, expected)
         # sample E versus remaining
         actual = weighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1)
+            self.table1[4], self.table1[5], self.oids1, self.t1)
         expected = 4.0
         self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_identity_normalized(self):
-        for i in range(len(self.b1)):
+        for i in range(len(self.table1)):
             actual = weighted_unifrac(
-                self.b1[i], self.b1[i], self.oids1, self.t1, normalized=True)
+                self.table1[i], self.table1[i], self.oids1, self.t1,
+                normalized=True)
             expected = 0.0
             self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_symmetry_normalized(self):
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
+        for i in range(len(self.table1)):
+            for j in range(len(self.table1)):
                 actual = weighted_unifrac(
-                    self.b1[i], self.b1[j], self.oids1, self.t1,
+                    self.table1[i], self.table1[j], self.oids1, self.t1,
                     normalized=True)
                 expected = weighted_unifrac(
-                    self.b1[j], self.b1[i], self.oids1, self.t1,
+                    self.table1[j], self.table1[i], self.oids1, self.t1,
                     normalized=True)
                 self.assertAlmostEqual(actual, expected)
 
     def test_weighted_unifrac_non_overlapping_normalized(self):
         # these communities only share the root node
         actual = weighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[4], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
@@ -556,67 +560,82 @@ class TestUniFrac(TestCase):
         # is a completely different implementation skbio's initial
         # weighted unifrac implementation
         actual = weighted_unifrac(
-            self.b1[0], self.b1[1], self.oids1, self.t1, normalized=True)
+            self.table1[0], self.table1[1], self.oids1, self.t1,
+            normalized=True)
         expected = 0.6
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[2], self.oids1, self.t1, normalized=True)
+            self.table1[0], self.table1[2], self.oids1, self.t1,
+            normalized=True)
         expected = 0.466666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[3], self.oids1, self.t1, normalized=True)
+            self.table1[0], self.table1[3], self.oids1, self.t1,
+            normalized=True)
         expected = 0.633333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[4], self.oids1, self.t1, normalized=True)
+            self.table1[0], self.table1[4], self.oids1, self.t1,
+            normalized=True)
         expected = 0.338461538462
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[0], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[0], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 0.8
         self.assertAlmostEqual(actual, expected)
         # sample B versus remaining
         actual = weighted_unifrac(
-            self.b1[1], self.b1[2], self.oids1, self.t1, normalized=True)
+            self.table1[1], self.table1[2], self.oids1, self.t1,
+            normalized=True)
         expected = 0.566666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[3], self.oids1, self.t1, normalized=True)
+            self.table1[1], self.table1[3], self.oids1, self.t1,
+            normalized=True)
         expected = 0.233333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[4], self.oids1, self.t1, normalized=True)
+            self.table1[1], self.table1[4], self.oids1, self.t1,
+            normalized=True)
         expected = 0.8
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[1], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[1], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 0.209375
         self.assertAlmostEqual(actual, expected)
         # sample C versus remaining
         actual = weighted_unifrac(
-            self.b1[2], self.b1[3], self.oids1, self.t1, normalized=True)
+            self.table1[2], self.table1[3], self.oids1, self.t1,
+            normalized=True)
         expected = 0.333333333333
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[2], self.b1[4], self.oids1, self.t1, normalized=True)
+            self.table1[2], self.table1[4], self.oids1, self.t1,
+            normalized=True)
         expected = 0.474358974359
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[2], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[2], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 0.666666666667
         self.assertAlmostEqual(actual, expected)
         # sample D versus remaining
         actual = weighted_unifrac(
-            self.b1[3], self.b1[4], self.oids1, self.t1, normalized=True)
+            self.table1[3], self.table1[4], self.oids1, self.t1,
+            normalized=True)
         expected = 0.666666666667
         self.assertAlmostEqual(actual, expected)
         actual = weighted_unifrac(
-            self.b1[3], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[3], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 0.333333333333
         self.assertAlmostEqual(actual, expected)
         # sample E versus remaining
         actual = weighted_unifrac(
-            self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
+            self.table1[4], self.table1[5], self.oids1, self.t1,
+            normalized=True)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
 
