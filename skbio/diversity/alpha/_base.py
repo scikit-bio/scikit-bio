@@ -308,8 +308,8 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
-    suppress_validation: bool, optional
-        If `True`, validation of the input won't be performed. This step can
+    validate: bool, optional
+        If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
