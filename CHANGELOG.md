@@ -23,7 +23,7 @@
     - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
-* ``skbio.diversity.beta.pw_distances`` and ``skbio.diversity.beta.pw_distances_from_table`` no longer define a default metric, and ``metric`` is now the first argument to these functions.
+* ``skbio.diversity.beta.pw_distances`` no longer defines a default metric, and ``metric`` is now the first argument to this function.
 
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.

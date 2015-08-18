@@ -89,13 +89,13 @@ def pw_distances_from_table(table, metric='braycurtis'):
 
     Parameters
     ----------
-    metric : str, callable
-        The name of the pairwise distance function to use when generating
-        pairwise distances. See the scipy ``pdist`` docs and the scikit-bio
-        functions linked under *See Also* for available metrics.
     table : biom.table.Table
         ``Table`` containing count/abundance data of observations across
         samples.
+    metric : str, callable, optional
+        The name of the pairwise distance function to use when generating
+        pairwise distances. See the scipy ``pdist`` docs and the scikit-bio
+        functions linked under *See Also* for available metrics.
 
     Returns
     -------
