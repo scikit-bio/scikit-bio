@@ -22,6 +22,8 @@ Functions
 
     pw_distances
     pw_distances_from_table
+    unweighted_unifrac
+    weighted_unifrac
 
 Examples
 --------
