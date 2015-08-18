@@ -332,6 +332,17 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     Faith's phylogenetic diversity, often referred to as PD, was originally
     described in [1]_.
 
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce Faith PD results from
+    PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
+
     References
     ----------
     .. [1] Faith, D. P. Conservation evaluation and phylogenetic diversity.

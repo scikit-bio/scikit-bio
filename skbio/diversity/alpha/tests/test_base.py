@@ -189,15 +189,17 @@ class BaseTests(TestCase):
     def test_faith_pd_qiime_tiny_test(self):
         # the following table and tree are derived from the QIIME 1.9.1
         # "tiny-test" data
-        data_dir = get_data_path('qiime-191-tt', '../../tests/data')
-        tt_table_fp = os.path.join(data_dir, 'otu-table.tsv')
-        tt_tree_fp = os.path.join(data_dir, 'tree.nwk')
+        tt_table_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'otu-table.tsv'), 'data')
+        tt_tree_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'tree.nwk'), 'data')
 
         self.q_table = pd.read_csv(tt_table_fp, sep='\t', skiprows=1,
                                    index_col=0)
         self.q_tree = TreeNode.read(tt_tree_fp)
 
-        expected_fp = os.path.join(data_dir, 'faith-pd.txt')
+        expected_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'faith-pd.txt'), 'data')
         expected = pd.read_csv(expected_fp, sep='\t', index_col=0)
         for sid in self.q_table.columns:
             actual = faith_pd(self.q_table[sid], otu_ids=self.q_table.index,

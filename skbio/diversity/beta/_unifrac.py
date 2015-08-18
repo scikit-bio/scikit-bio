@@ -72,6 +72,17 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     is presented in [2]_. Deeper mathemtical discussions of this metric is
     presented in [3]_.
 
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce UniFrac results from
+    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
+
     References
     ----------
     .. [1] Lozupone, C. & Knight, R. UniFrac: a new phylogenetic method for
@@ -158,6 +169,17 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     discussion of unweighted (qualitative) versus weighted (quantitiative)
     diversity metrics. Deeper mathemtical discussions of this metric is
     presented in [2]_.
+
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce UniFrac results from
+    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
 
     References
     ----------

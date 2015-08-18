@@ -48,16 +48,18 @@ class TestUniFrac(TestCase):
 
         # the following table and tree are derived from the QIIME 1.9.1
         # "tiny-test" data
-        self.data_dir = get_data_path('qiime-191-tt', '../../tests/data')
-        tt_table_fp = os.path.join(self.data_dir, 'otu-table.tsv')
-        tt_tree_fp = os.path.join(self.data_dir, 'tree.nwk')
+        tt_table_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'otu-table.tsv'), 'data')
+        tt_tree_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'tree.nwk'), 'data')
 
         self.q_table = pd.read_csv(tt_table_fp, sep='\t', skiprows=1,
                                    index_col=0)
         self.q_tree = TreeNode.read(tt_tree_fp)
 
     def test_unweighted_unifrac_qiime_tiny_test(self):
-        dm_fp = os.path.join(self.data_dir, 'unweighted_unifrac_dm.txt')
+        dm_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'unweighted_unifrac_dm.txt'), 'data')
         expected = DistanceMatrix.read(dm_fp)
         for sid1 in self.q_table.columns:
             for sid2 in self.q_table.columns:
@@ -67,7 +69,8 @@ class TestUniFrac(TestCase):
                 self.assertAlmostEqual(actual, expected[sid1, sid2])
 
     def test_weighted_unifrac_qiime_tiny_test(self):
-        dm_fp = os.path.join(self.data_dir, 'weighted_unifrac_dm.txt')
+        dm_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'weighted_unifrac_dm.txt'), 'data')
         expected = DistanceMatrix.read(dm_fp)
         for sid1 in self.q_table.columns:
             for sid2 in self.q_table.columns:
@@ -78,8 +81,9 @@ class TestUniFrac(TestCase):
                                        msg="%s, %s" % (sid1, sid2))
 
     def test_weighted_normalized_unifrac_qiime_tiny_test(self):
-        dm_fp = os.path.join(self.data_dir,
-                             'weighted_normalized_unifrac_dm.txt')
+        dm_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'weighted_normalized_unifrac_dm.txt'),
+            'data')
         expected = DistanceMatrix.read(dm_fp)
         for sid1 in self.q_table.columns:
             for sid2 in self.q_table.columns:
