@@ -10,10 +10,13 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 from io import StringIO
+import os
 
 import numpy as np
+import pandas as pd
 
-from skbio import TreeNode
+from skbio import TreeNode, DistanceMatrix
+from skbio.util import get_data_path
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 
@@ -42,6 +45,49 @@ class TestUniFrac(TestCase):
             StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
                      u'root;'))
         self.oids2 = ['OTU%d' % i for i in range(1, 5)]
+
+        # the following table and tree are derived from the QIIME 1.9.1
+        # "tiny-test" data
+        self.data_dir = get_data_path('qiime-191-tt', '../../tests/data')
+        tt_table_fp = os.path.join(self.data_dir, 'otu-table.tsv')
+        tt_tree_fp = os.path.join(self.data_dir, 'tree.nwk')
+
+        self.q_table = pd.read_csv(tt_table_fp, sep='\t', skiprows=1,
+                                   index_col=0)
+        self.q_tree = TreeNode.read(tt_tree_fp)
+
+    def test_unweighted_unifrac_qiime_tiny_test(self):
+        dm_fp = os.path.join(self.data_dir, 'unweighted_unifrac_dm.txt')
+        expected = DistanceMatrix.read(dm_fp)
+        for sid1 in self.q_table.columns:
+            for sid2 in self.q_table.columns:
+                actual = unweighted_unifrac(
+                    self.q_table[sid1], self.q_table[sid2],
+                    otu_ids=self.q_table.index, tree=self.q_tree)
+                self.assertAlmostEqual(actual, expected[sid1, sid2])
+
+    def test_weighted_unifrac_qiime_tiny_test(self):
+        dm_fp = os.path.join(self.data_dir, 'weighted_unifrac_dm.txt')
+        expected = DistanceMatrix.read(dm_fp)
+        for sid1 in self.q_table.columns:
+            for sid2 in self.q_table.columns:
+                actual = weighted_unifrac(
+                    self.q_table[sid1], self.q_table[sid2],
+                    otu_ids=self.q_table.index, tree=self.q_tree)
+                self.assertAlmostEqual(actual, expected[sid1, sid2],
+                                       msg="%s, %s" % (sid1, sid2))
+
+    def test_weighted_normalized_unifrac_qiime_tiny_test(self):
+        dm_fp = os.path.join(self.data_dir,
+                             'weighted_normalized_unifrac_dm.txt')
+        expected = DistanceMatrix.read(dm_fp)
+        for sid1 in self.q_table.columns:
+            for sid2 in self.q_table.columns:
+                actual = weighted_unifrac(
+                    self.q_table[sid1], self.q_table[sid2],
+                    otu_ids=self.q_table.index, tree=self.q_tree,
+                    normalized=True)
+                self.assertAlmostEqual(actual, expected[sid1, sid2])
 
     def test_unweighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree

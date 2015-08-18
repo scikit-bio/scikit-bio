@@ -10,11 +10,14 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 from io import StringIO
+import os
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio import TreeNode
+from skbio.util import get_data_path
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
@@ -148,6 +151,24 @@ class BaseTests(TestCase):
         actual = faith_pd(self.b1[3], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_qiime_tiny_test(self):
+        # the following table and tree are derived from the QIIME 1.9.1
+        # "tiny-test" data
+        data_dir = get_data_path('qiime-191-tt', '../../tests/data')
+        tt_table_fp = os.path.join(data_dir, 'otu-table.tsv')
+        tt_tree_fp = os.path.join(data_dir, 'tree.nwk')
+
+        self.q_table = pd.read_csv(tt_table_fp, sep='\t', skiprows=1,
+                                   index_col=0)
+        self.q_tree = TreeNode.read(tt_tree_fp)
+
+        expected_fp = os.path.join(data_dir, 'faith-pd.txt')
+        expected = pd.read_csv(expected_fp, sep='\t', index_col=0)
+        for sid in self.q_table.columns:
+            actual = faith_pd(self.q_table[sid], otu_ids=self.q_table.index,
+                              tree=self.q_tree)
+            self.assertAlmostEqual(actual, expected['PD_whole_tree'][sid])
 
     def test_fisher_alpha(self):
         exp = 2.7823795367398798
