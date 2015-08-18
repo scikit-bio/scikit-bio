@@ -32,17 +32,17 @@ def _validate_counts_vector(counts, suppress_cast=False):
     return counts
 
 
-def _validate_counts_vectors(u_counts, v_counts, suppress_cast=False):
-    u_counts = _validate_counts_vector(u_counts, suppress_cast)
-    v_counts = _validate_counts_vector(v_counts, suppress_cast)
-
-    len_u_counts = len(u_counts)
-    len_v_counts = len(v_counts)
-    if len_u_counts != len_v_counts:
+def _validate_counts_vectors(*args, suppress_cast=False):
+    results = []
+    lens = []
+    for counts in args:
+        results.append(_validate_counts_vector(counts, suppress_cast))
+        lens.append(len(counts))
+    if len(set(lens)) > 1:
         raise ValueError("Input vectors u_counts and v_counts must be of "
                          "equal length.")
 
-    return u_counts, v_counts
+    return results
 
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
