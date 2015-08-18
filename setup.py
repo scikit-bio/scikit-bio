@@ -128,6 +128,8 @@ setup(name='scikit-bio',
           'skbio.io.format.tests': ['data/*'],
           'skbio.stats.tests': ['data/*'],
           'skbio.stats.distance.tests': ['data/*'],
+          'skbio.diversity.alpha.tests': ['data/*'],
+          'skbio.diversity.beta.tests': ['data/*'],
           'skbio.stats.ordination.tests': ['data/*']
           }
       )

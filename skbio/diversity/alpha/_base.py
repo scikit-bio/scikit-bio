@@ -14,25 +14,8 @@ from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
 from skbio.util._decorator import experimental
-
-
-def _validate(counts, suppress_cast=False):
-    """Validate and convert input to an acceptable counts vector type.
-
-    Note: may not always return a copy of `counts`!
-
-    """
-    counts = np.asarray(counts)
-
-    if not suppress_cast:
-        counts = counts.astype(int, casting='safe', copy=False)
-
-    if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
-    return counts
+from skbio.diversity._base import (_validate_counts_vector,
+                                   _validate_otu_ids_and_tree)
 
 
 @experimental(as_of="0.4.0")
@@ -71,7 +54,7 @@ def berger_parker_d(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return counts.max() / counts.sum()
 
 
@@ -109,7 +92,7 @@ def brillouin_d(counts):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     nz = counts[counts.nonzero()]
     n = nz.sum()
     return (gammaln(n + 1) - gammaln(nz + 1).sum()) / n
@@ -154,7 +137,7 @@ def dominance(counts):
     .. [1] http://folk.uio.no/ohammer/past/diversity.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     freqs = counts / counts.sum()
     return (freqs * freqs).sum()
 
@@ -174,7 +157,7 @@ def doubles(counts):
         Doubleton count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts == 2).sum()
 
 
@@ -216,7 +199,7 @@ def enspie(counts):
        Ecology Letters, Volume 16, Issue Supplement s1, pgs 17-26.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return 1 / dominance(counts)
 
 
@@ -250,7 +233,7 @@ def equitability(counts, base=2):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     numerator = shannon(counts, base)
     denominator = np.log(observed_otus(counts)) / np.log(base)
     return numerator / denominator
@@ -300,7 +283,7 @@ def esty_ci(counts):
        estimator of the coverage of a random sample". Ann Statist 11: 905-912.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
 
     f1 = singles(counts)
     f2 = doubles(counts)
@@ -309,6 +292,70 @@ def esty_ci(counts):
     W = (f1 * (n - f1) + 2 * n * f2) / (n ** 3)
 
     return f1 / n - z * np.sqrt(W), f1 / n + z * np.sqrt(W)
+
+
+@experimental(as_of="0.4.0-dev")
+def faith_pd(counts, otu_ids, tree, validate=True):
+    """ Compute Faith's phylogenetic diversity metric (PD)
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+    otu_ids: list, np.array
+        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
+        same length as ``counts``.
+    tree: skbio.TreeNode
+        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
+        be a superset of ``otu_ids``, but not a subset.
+    validate: bool, optional
+        If `False`, validation of the input won't be performed. This step can
+        be slow, so if validation is run elsewhere it can be disabled here.
+        However, invalid input data can lead to invalid results, so this step
+        should not be bypassed all together.
+
+    Returns
+    -------
+    float
+        The phylogenetic diversity (PD) of the samples.
+
+    Raises
+    ------
+    ValueError
+        If ``counts`` and ``otu_ids`` are not equal in length.
+    MissingNodeError
+        If an OTU id is provided that does not correspond to a tip in the
+        tree.
+
+    Notes
+    -----
+    Faith's phylogenetic diversity, often referred to as PD, was originally
+    described in [1]_.
+
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce Faith PD results from
+    PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
+
+    References
+    ----------
+    .. [1] Faith, D. P. Conservation evaluation and phylogenetic diversity.
+       Biol. Conserv. (1992).
+
+    """
+    if validate:
+        counts = _validate_counts_vector(counts)
+        _validate_otu_ids_and_tree(counts, otu_ids, tree)
+    observed_otus = {o: c for o, c in zip(otu_ids, counts) if c >= 1}
+    observed_nodes = tree.observed_node_counts(observed_otus)
+    result = sum(o.length for o in observed_nodes if o.length is not None)
+    return result
 
 
 @experimental(as_of="0.4.0")
@@ -351,7 +398,7 @@ def fisher_alpha(counts):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = counts.sum()
     s = observed_otus(counts)
 
@@ -397,7 +444,7 @@ def goods_coverage(counts):
         Good's coverage estimator.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     f1 = singles(counts)
     N = counts.sum()
     return 1 - (f1 / N)
@@ -440,7 +487,7 @@ def heip_e(counts):
        UK., 54, 555-557.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return ((np.exp(shannon(counts, base=np.e)) - 1) /
             (observed_otus(counts) - 1))
 
@@ -487,7 +534,7 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = len(counts)
     lower = int(np.ceil(n * lower_quantile))
     upper = int(n * upper_quantile)
@@ -531,7 +578,7 @@ def margalef(counts):
        76-77.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (observed_otus(counts) - 1) / np.log(counts.sum())
 
 
@@ -581,7 +628,7 @@ def mcintosh_d(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     u = np.sqrt((counts * counts).sum())
     n = counts.sum()
     return (n - u) / (n - np.sqrt(n))
@@ -626,7 +673,7 @@ def mcintosh_e(counts):
        Indices. p 560.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     numerator = np.sqrt((counts * counts).sum())
     n = counts.sum()
     s = observed_otus(counts)
@@ -669,7 +716,7 @@ def menhinick(counts):
        76-77.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return observed_otus(counts) / np.sqrt(counts.sum())
 
 
@@ -727,7 +774,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        Michaelis-Menten equation. Biometrics 43, 793-803.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
 
     n_indiv = counts.sum()
     if params_guess is None:
@@ -767,7 +814,7 @@ def observed_otus(counts):
         Distinct OTU count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts != 0).sum()
 
 
@@ -797,7 +844,7 @@ def osd(counts):
     on these three measures.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return observed_otus(counts), singles(counts), doubles(counts)
 
 
@@ -833,7 +880,7 @@ def robbins(counts):
     .. [1] Robbins, H. E (1968). Ann. of Stats. Vol 36, pp. 256-257.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return singles(counts) / counts.sum()
 
 
@@ -873,7 +920,7 @@ def shannon(counts, base=2):
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     freqs = counts / counts.sum()
     nonzero_freqs = freqs[freqs.nonzero()]
     return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
@@ -917,7 +964,7 @@ def simpson(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return 1 - dominance(counts)
 
 
@@ -959,7 +1006,7 @@ def simpson_e(counts):
     .. [1] http://www.tiem.utk.edu/~gross/bioed/bealsmodules/simpsonDI.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return enspie(counts) / observed_otus(counts)
 
 
@@ -978,7 +1025,7 @@ def singles(counts):
         Singleton count.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     return (counts == 1).sum()
 
 
@@ -1021,7 +1068,7 @@ def strong(counts):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     n = counts.sum()
     s = observed_otus(counts)
     i = np.arange(1, len(counts) + 1)

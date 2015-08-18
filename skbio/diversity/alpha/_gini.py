@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import _validate
+from skbio.diversity.alpha._base import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
@@ -77,7 +77,7 @@ def gini_index(data, method='rectangles'):
 
     """
     # Suppress cast to int because this method supports ints and floats.
-    data = _validate(data, suppress_cast=True)
+    data = _validate_counts_vector(data, suppress_cast=True)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
     return 1 - 2 * B
