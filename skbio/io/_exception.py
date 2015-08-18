@@ -24,7 +24,7 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
-class GenbankFormatError(FileFormatError):
+class GenBankFormatError(FileFormatError):
     """Raised when a ``genbank`` formatted file cannot be parsed."""
     pass
 

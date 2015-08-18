@@ -196,7 +196,7 @@ from skbio.util import TestRunner
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
                          ClustalFormatError, FASTAFormatError,
-                         GenbankFormatError,
+                         GenBankFormatError,
                          IOSourceError, FASTQFormatError, LSMatFormatError,
                          NewickFormatError, OrdinationFormatError,
                          PhylipFormatError, QSeqFormatError, QUALFormatError)
@@ -212,7 +212,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'ClustalFormatError',
            'FASTAFormatError',
            'FASTQFormatError',
-           'GenbankFormatError',
+           'GenBankFormatError',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',

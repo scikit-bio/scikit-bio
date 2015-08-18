@@ -1,21 +1,22 @@
 """
-Genbank format (:mod:`skbio.io.format.genbank`)
+GenBank format (:mod:`skbio.io.format.genbank`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.genbank
 
-Genbank format (Genbank Flat File Format) stores sequence and its annotation
+GenBank format (GenBank Flat File Format) stores sequence and its annotation
 together. The start of the annotation section is marked by a line beginning
 with the word "LOCUS". The start of sequence section is marked by a line
 beginning with the word "ORIGIN" and the end of the section is marked by a line
 with only "//".
 
-The Genbank file usually ends with .gb or sometimes .gbk. The Genbank format
-for protein has been renamed to Genpept. The Genbank (for nucleotide) and
+The GenBank file usually ends with .gb or sometimes .gbk. The GenBank format
+for protein has been renamed to GenPept. The GenBank (for nucleotide) and
 Genpept are essentially the same format.
 
-An example of a Genbank file can be see here:
+An example of a GenBank file can be see here:
 <http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>
+
 
 Format Support
 --------------
@@ -32,16 +33,21 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.sequence.Protein`                                  |
 +------+------+---------------------------------------------------------------+
+|Yes   | Yes  | generator of :mod:`skbio.sequence.Sequence` objects           |
++------+------+---------------------------------------------------------------+
+
 
 Format Specification
 --------------------
+**State: Experimental as of 0.4.0-dev.**
+
 The International Nucleotide Sequence Database Collaboration (INSDC)
-foundational initiative between the DDBJ, EMBL, and Genbank
+foundational initiative between the DDBJ, EMBL, and GenBank
 (http://www.insdc.org/). These organisations all use the
 same "Feature Table" layout in their plain text flat file formats.
 
 However, the header and sequence sections of an EMBL file are very
-different in layout to those produced by Genbank/DDBJ.
+different in layout to those produced by GenBank/DDBJ.
 
 Feature Table Documentation:
 http://www.insdc.org/files/feature_table.html
@@ -70,7 +76,7 @@ import pandas as pd
 from datetime import datetime
 from functools import partial
 
-from skbio.io import create_format, GenbankFormatError
+from skbio.io import create_format, GenBankFormatError
 from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str
@@ -109,7 +115,7 @@ def _genbank_sniffer(fh):
 
     try:
         _parse_locus([line])
-    except GenbankFormatError:
+    except GenBankFormatError:
         return False, {}
     return True, {}
 
@@ -121,7 +127,7 @@ def _genbank_to_generator(fh, constructor=None, **kwargs):
 
 
 @genbank.reader(Sequence)
-def _genbank_to_biological_sequence(fh, seq_num=1, **kwargs):
+def _genbank_to_sequence(fh, seq_num=1, **kwargs):
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
     return _construct(record, Sequence, **kwargs)
 
@@ -151,7 +157,7 @@ def _generator_to_genbank(obj, fh):
 
 
 @genbank.writer(Sequence)
-def _biological_sequence_to_genbank(obj, fh):
+def _sequence_to_genbank(obj, fh):
     _serialize_single_genbank(obj, fh)
 
 
@@ -204,7 +210,7 @@ def _parse_single_genbank(chunks):
     positional_metadata = None
     sequence = ''
     # each section starts with a HEADER without indent.
-    section_splitter = yield_section(lambda x: not x[0].isspace(), strip=False)
+    section_splitter = _yield_section(lambda x: not x[0].isspace(), strip=False)
     for section in section_splitter(chunks):
         header = section[0].split(None, 1)[0]
         parser = _PARSER_TABLE.get(
@@ -219,7 +225,7 @@ def _parse_single_genbank(chunks):
         try:
             parsed = parser(section)
         except:
-            raise GenbankFormatError(
+            raise GenBankFormatError(
                 'Could not parse this section with %s:\n%s' %
                 (parser, ''.join(section)))
 
@@ -240,7 +246,7 @@ def _parse_single_genbank(chunks):
 
 
 def _serialize_single_genbank(obj, fh):
-    '''Write a Genbank record.
+    '''Write a GenBank record.
 
     Always write it in NCBI canonical way:
     1. sequence in lowercase
@@ -309,7 +315,7 @@ def _parse_locus(lines):
              'shape', 'division', 'date'],
             matches.groups()))
     except:
-        raise GenbankFormatError(
+        raise GenBankFormatError(
             "Could not parse the LOCUS line:\n%s" % line)
 
     res['size'] = int(res['size'])
@@ -341,7 +347,7 @@ def _parse_reference(lines):
     # magic number 11: the non keyworded lines in REFERENCE
     # are at least indented with 11 spaces.
     feature_indent = ' ' * 11
-    section_splitter = yield_section(
+    section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
     for section in section_splitter(lines):
@@ -381,7 +387,7 @@ def _parse_source(lines):
     # magic number 11: the non keyworded lines in SOURCE
     # are at least indented with 11 spaces.
     feature_indent = ' ' * 11
-    section_splitter = yield_section(
+    section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
     # SOURCE line is not informative; skip it
@@ -419,7 +425,7 @@ def _parse_features(lines, length):
     # magic number 20: the lines following header of each feature
     # are at least indented with 20 spaces.
     feature_indent = ' ' * 20
-    section_splitter = yield_section(
+    section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
     for i, section in enumerate(section_splitter(lines)):
@@ -455,7 +461,7 @@ def _parse_single_feature(lines, length, index):
     feature['index_'] = index
     # each component of a feature starts with '/', except the 1st
     # component of location.
-    section_splitter = yield_section(
+    section_splitter = _yield_section(
         lambda x: x.startswith('/'), strip=True)
     first = True
     for section in section_splitter(lines):
@@ -529,7 +535,7 @@ def _parse_loc_str(loc_str, length):
     '''Parse location string.
 
     Warning: This converts coordinates to 0-based from 1-based as
-    in Genbank format.
+    in GenBank format.
     '''
     pmd = np.zeros(length, dtype=bool)
     res = {'rc_': False,
@@ -557,7 +563,7 @@ def _parse_loc_str(loc_str, length):
         elif i.isdigit():  # single base
             index = int(i) - 1
         else:
-            raise GenbankFormatError(
+            raise GenBankFormatError(
                 'Could not parse location string:\n%s' %
                 loc_str)
         pmd[index] = True
@@ -614,7 +620,7 @@ def _parse_section_default(
             try:
                 items = line.split(label_delimitor, 1)
             except:
-                GenbankFormatError('Could not split the line:\n%s', line)
+                GenBankFormatError('Could not split the line:\n%s', line)
             if len(items) == 2:
                 label, section = items
             else:
@@ -636,7 +642,7 @@ def _serialize_section_default(header, obj, indent=12):
         header=header, obj=obj, indent=indent)
 
 
-def yield_section(is_another_section, **kwargs):
+def _yield_section(is_another_section, **kwargs):
     '''Returns function that returns successive sections from file.
 
     Parameters

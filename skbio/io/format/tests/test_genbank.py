@@ -12,20 +12,20 @@ from future.builtins import map, zip
 import io
 import numpy as np
 import pandas as pd
-import numpy.testing as nptest
+import numpy.testing as npt
 from unittest import TestCase, main
 from datetime import datetime
 
 from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
-from skbio.io import GenbankFormatError
+from skbio.io import GenBankFormatError
 from skbio.io.format.genbank import (
     _genbank_sniffer,
-    _genbank_to_generator, _genbank_to_biological_sequence,
+    _genbank_to_generator, _genbank_to_sequence,
     _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
     _parse_loc_str, _parse_section_default,
-    _generator_to_genbank, _biological_sequence_to_genbank,
+    _generator_to_genbank, _sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
     _serialize_locus)
 
@@ -54,7 +54,7 @@ class SnifferTests(TestCase):
             self.assertEqual(_genbank_sniffer(fp), (False, {}))
 
 
-class GenbankIOTests(TestCase):
+class GenBankIOTests(TestCase):
     # parent class to set up test data for the child class
     def setUp(self):
         # test locus line
@@ -231,7 +231,7 @@ class GenbankIOTests(TestCase):
              DNA))
 
 
-class ReaderTests(GenbankIOTests):
+class ReaderTests(GenBankIOTests):
     def test_parse_reference(self):
         lines = '''
 REFERENCE   1  (bases 1 to 154478)
@@ -266,7 +266,7 @@ REFERENCE   1  (bases 1 to 154478)
              '            linear   PRI 2001-12-18']]
         for line in lines:
             with self.assertRaisesRegexp(
-                    GenbankFormatError, 'Could not parse the LOCUS line:.*'):
+                    GenBankFormatError, 'Could not parse the LOCUS line:.*'):
                 _parse_locus(line)
 
     def test_parse_section_default(self):
@@ -317,7 +317,7 @@ REFERENCE   1  (bases 1 to 154478)
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example, length)
             self.assertDictEqual(parsed[0], expect[0])
-            nptest.assert_equal(parsed[1], expect[1])
+            npt.assert_equal(parsed[1], expect[1])
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
@@ -334,9 +334,9 @@ REFERENCE   1  (bases 1 to 154478)
                               positional_metadata=pmd)
             self.assertEqual(exp, obs)
 
-    def test_genbank_to_biological_sequence(self):
+    def test_genbank_to_sequence(self):
         for i, exp in enumerate(self.multi):
-            obs = _genbank_to_biological_sequence(self.multi_fp, seq_num=i+1)
+            obs = _genbank_to_sequence(self.multi_fp, seq_num=i+1)
             exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
                            positional_metadata=exp[2])
             self.assertEqual(exp, obs)
@@ -365,7 +365,7 @@ REFERENCE   1  (bases 1 to 154478)
         self.assertEqual(exp, obs)
 
 
-class WriterTests(GenbankIOTests):
+class WriterTests(GenBankIOTests):
     def test_serialize_locus(self):
         for serialized, parsed in self.locus:
             self.assertEqual(
@@ -384,11 +384,11 @@ class WriterTests(GenbankIOTests):
 
         self.assertEqual(obs, exp)
 
-    def test_biological_sequence_to_genbank(self):
+    def test_sequence_to_genbank(self):
         fh = io.StringIO()
         for i, (seq, md, pmd, constructor) in enumerate(self.multi):
             obj = Sequence(seq, md, pmd, lowercase=True)
-            _biological_sequence_to_genbank(obj, fh)
+            _sequence_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
 
