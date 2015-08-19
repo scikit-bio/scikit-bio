@@ -11,8 +11,9 @@
   "project": "scikit-bio",
   "project_url": "http://scikit-bio.org/",
   "pythons": [
-    "2.7",
-    "3.4"
+    "3.4",
+    "3.3",
+    "2.7"
   ],
   "version": 1
 }
