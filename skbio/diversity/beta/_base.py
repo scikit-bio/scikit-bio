@@ -19,10 +19,10 @@ from skbio.util._decorator import experimental, deprecated
 
 
 def _get_skbio_metrics():
-    result = {
+    return {
         'unweighted_unifrac': unweighted_unifrac,
-        'weighted_unifrac': weighted_unifrac}
-    return result
+        'weighted_unifrac': weighted_unifrac,
+        }
 
 
 @experimental(as_of="0.4.0")
@@ -84,18 +84,18 @@ pw_distances_from_table_deprecation_reason = (
 
 @deprecated(as_of="0.4.0", until="0.4.1",
             reason=pw_distances_from_table_deprecation_reason)
-def pw_distances_from_table(metric, table):
+def pw_distances_from_table(table, metric='braycurtis'):
     """Compute distances between all pairs of samples in table
 
     Parameters
     ----------
-    metric : str, callable
-        The name of the pairwise distance function to use when generating
-        pairwise distances. See the scipy ``pdist`` docs and the scikit-bio
-        functions linked under *See Also* for available metrics.
     table : biom.table.Table
         ``Table`` containing count/abundance data of observations across
         samples.
+    metric : str, callable, optional
+        The name of the pairwise distance function to use when generating
+        pairwise distances. See the scipy ``pdist`` docs and the scikit-bio
+        functions linked under *See Also* for available metrics.
 
     Returns
     -------

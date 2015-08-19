@@ -75,11 +75,19 @@ class BaseTests(TestCase):
             _validate_counts_vector([0, 0, 2, -1, 3])
 
     def test_validate_counts_vectors(self):
-        # basic valid input
+        # basic valid input (n=2)
         obs_u, obs_v = _validate_counts_vectors([0, 1, 1, 0, 2],
                                                 [0, 0, 2, 1, 3])
         npt.assert_array_equal(obs_u, np.array([0, 1, 1, 0, 2]))
         npt.assert_array_equal(obs_v, np.array([0, 0, 2, 1, 3]))
+
+        # basic valid input (n=3)
+        actual = _validate_counts_vectors([0, 1, 1, 0, 2],
+                                          [0, 0, 2, 1, 3],
+                                          [1, 1, 1, 1, 1])
+        npt.assert_array_equal(actual[0], np.array([0, 1, 1, 0, 2]))
+        npt.assert_array_equal(actual[1], np.array([0, 0, 2, 1, 3]))
+        npt.assert_array_equal(actual[2], np.array([1, 1, 1, 1, 1]))
 
         # empty counts vectors
         obs_u, obs_v = _validate_counts_vectors(np.array([], dtype=int),

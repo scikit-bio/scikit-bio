@@ -10,6 +10,8 @@
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
+* Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
+* Added ``reverse_transcribe`` class method to ``RNA``.
 
 ### Backward-incompatible changes [experimental]
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
@@ -21,7 +23,7 @@
     - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
-* ``skbio.diversity.beta.pw_distances`` and ``skbio.diversity.beta.pw_distances_from_table`` no longer define a default metric, and ``metric`` is now the first argument to these functions.
+* ``skbio.diversity.beta.pw_distances`` no longer defines a default metric, and ``metric`` is now the first argument to this function.
 
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.

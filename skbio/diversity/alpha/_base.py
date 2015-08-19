@@ -295,7 +295,7 @@ def esty_ci(counts):
 
 
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree, suppress_validation=False):
+def faith_pd(counts, otu_ids, tree, validate=True):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
@@ -308,8 +308,8 @@ def faith_pd(counts, otu_ids, tree, suppress_validation=False):
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
-    suppress_validation: bool, optional
-        If `True`, validation of the input won't be performed. This step can
+    validate: bool, optional
+        If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
@@ -332,13 +332,24 @@ def faith_pd(counts, otu_ids, tree, suppress_validation=False):
     Faith's phylogenetic diversity, often referred to as PD, was originally
     described in [1]_.
 
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce Faith PD results from
+    PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
+
     References
     ----------
     .. [1] Faith, D. P. Conservation evaluation and phylogenetic diversity.
        Biol. Conserv. (1992).
 
     """
-    if not suppress_validation:
+    if validate:
         counts = _validate_counts_vector(counts)
         _validate_otu_ids_and_tree(counts, otu_ids, tree)
     observed_otus = {o: c for o, c in zip(otu_ids, counts) if c >= 1}

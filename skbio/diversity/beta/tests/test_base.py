@@ -189,16 +189,16 @@ class BaseTests(TestCase):
         # results are equal when passed as Table or matrix
         m_dm = pw_distances('euclidean', self.t1, self.ids1,)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, 'euclidean',
-            self.table1)
+            DeprecationWarning, pw_distances_from_table, self.table1,
+            'euclidean')
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
         m_dm = pw_distances('euclidean', self.t2, self.ids2)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, 'euclidean',
-            self.table2)
+            DeprecationWarning, pw_distances_from_table, self.table2,
+            'euclidean')
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
@@ -207,16 +207,14 @@ class BaseTests(TestCase):
         # results are equal when passed as Table or matrix
         m_dm = pw_distances('braycurtis', self.t1, self.ids1)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, 'braycurtis',
-            self.table1)
+            DeprecationWarning, pw_distances_from_table, self.table1)
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
         m_dm = pw_distances('braycurtis', self.t2, self.ids2,)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, 'braycurtis',
-            self.table2)
+            DeprecationWarning, pw_distances_from_table, self.table2)
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])

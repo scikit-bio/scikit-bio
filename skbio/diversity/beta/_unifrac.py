@@ -18,14 +18,13 @@ def _observed_otu_counts(counts, otu_ids):
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
-    _validate_counts_vectors(u_counts=u_counts, v_counts=v_counts,
-                             suppress_cast=True)
+    _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
     _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
 
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       suppress_validation=False):
+                       validate=True, **kwargs):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -38,11 +37,15 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
-    suppress_validation: bool, optional
-        If `True`, validation of the input won't be performed. This step can
+    validate: bool, optional
+        If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
+    **kwargs: dict, optional
+        Keyword arguments are used from within scikit-bio to support optimized
+        implementations of this function. Users should not pass any keyword
+        arguments.
 
     Returns
     -------
@@ -69,6 +72,17 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     is presented in [2]_. Deeper mathemtical discussions of this metric is
     presented in [3]_.
 
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce UniFrac results from
+    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
+
     References
     ----------
     .. [1] Lozupone, C. & Knight, R. UniFrac: a new phylogenetic method for
@@ -85,7 +99,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
         comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if not suppress_validation:
+    if validate:
         _validate(u_counts=u_counts, v_counts=v_counts,
                   otu_ids=otu_ids, tree=tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
@@ -105,7 +119,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     suppress_validation=False):
+                     validate=True, **kwargs):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -119,13 +133,17 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
     normalized: boolean, optional
-        If ``True``, apply branch length normalization. Resulting distances
-        will then be in the range ``[0, 1]``.
-    suppress_validation: bool, optional
-        If `True`, validation of the input won't be performed. This step can
+        If ``True``, apply branch length normalization, which is described in
+        [1]_. Resulting distances will then be in the range ``[0, 1]``.
+    validate: bool, optional
+        If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
+    **kwargs: dict, optional
+        Keyword arguments are used from within scikit-bio to support optimized
+        implementations of this function. Users should not pass any keyword
+        arguments.
 
     Returns
     -------
@@ -147,10 +165,21 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
     Notes
     -----
-    Unweighted UniFrac was originally described in [1]_, which includes a
+    Weighted UniFrac was originally described in [1]_, which includes a
     discussion of unweighted (qualitative) versus weighted (quantitiative)
     diversity metrics. Deeper mathemtical discussions of this metric is
     presented in [2]_.
+
+    This implementation differs from that in PyCogent (and therefore QIIME
+    versions less than 2.0.0) by imposing a few additional restrictions on the
+    inputs. First, the input tree must be rooted. In PyCogent, if an unrooted
+    tree was provided that had a single trifurcating node (a newick convention
+    for unrooted trees) that node was considered the root of the tree. Next,
+    all OTU IDs must be tips in the tree. PyCogent would silently ignore OTU
+    IDs that were not present the tree. To reproduce UniFrac results from
+    PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
+    are performed on a rooted tree and that all OTU IDs are present in the
+    tree.
 
     References
     ----------
@@ -164,7 +193,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if not suppress_validation:
+    if validate:
         _validate(u_counts=u_counts, v_counts=v_counts,
                   otu_ids=otu_ids, tree=tree)
     u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
