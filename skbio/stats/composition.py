@@ -90,7 +90,7 @@ array([ 0.25,  0.25,  0.5 ])
 
 from __future__ import absolute_import, division, print_function
 import numpy as np
-import scipy.stats as ss
+import scipy.stats
 
 from skbio.util._decorator import experimental
 
@@ -385,5 +385,167 @@ def centralize(mat):
 
     """
     mat = closure(mat)
-    cen = ss.gmean(mat, axis=0)
+    cen = scipy.stats.gmean(mat, axis=0)
     return perturb_inv(mat, cen)
+
+
+@experimental(as_of="0.4.0")
+def ancom(mat, cats,
+          alpha=0.05,
+          multicorr=False,
+          tau=0.02,
+          func=scipy.stats.ttest_ind):
+    """
+    Calculates pairwise log ratios between all otus
+    and performs a signficance test to determine if there is a
+    significant difference in feature ratios with respect to the
+    variable of interest
+
+    In an experiment with only two treatments, this test tests the
+    following hypothesis for feature :math:`i`
+    :math:`H_{0i}:\E[\ln(u_i^{(1)})] = \E[\ln(u_i^{(2)})]`
+
+    where :math:`u_i^{(1)}` is the mean abundance for feature
+    :math:`i` in the first group and :math:`u_i^{(2)}` is the
+    mean abundance for feature :math:`i` in the second group.
+
+    This method can be extended two an arbitrary number of classes
+    by passing in a different statistical function.
+
+
+    Parameters
+    ----------
+    mat: np.array
+       A 2D matrix where
+       rows = samples
+       columns = features
+    cat: np.array, float
+       Vector of categories
+    multicorr: bool
+       Runs multiple comparisons correction or not.
+       If specified, this will run Holm-Boniferroni
+       correction
+    tau: float
+       A constant used to determine an appropriate
+       cutoff (@wdwvt1 can you comment here plz?)
+    func: function
+       A statistical signficance function to test for
+       signficance between classes.
+       The default is scipy.stats.ttest_ind
+
+    Returns:
+    --------
+    W : np.array, float
+        List of W statistics
+    reject : np.array, bool
+        Indicates if the null hypothesis has been rejected
+
+    References
+    ----------
+    ..[1] S. Mandal, 'Analysis of composition of microbiomes:
+          a novel method for studying microbial composition'
+    """
+
+    mat = np.atleast_2d(mat)
+    cats = np.array(cats)
+    if np.any(mat == 0):
+        raise ValueError('Cannot handle zeros in feature table. '
+                         'Make sure to run a zero replacement method')
+    _logratio_mat = _log_compare(mat, cats, func)
+    logratio_mat = _logratio_mat + _logratio_mat.T
+
+    n_samp, n_feat = mat.shape
+    # Multiple comparisons
+    if multicorr:
+        for i in range(n_feat):
+            pvalues = _holm(logratio_mat[i, :])
+            logratio_mat[i, :] = pvalues
+
+    W = np.zeros(n_feat)
+    for i in range(n_feat):
+        W[i] = (logratio_mat[i, :] < alpha).sum()
+    c_start = max(W)/n_feat
+    cutoff = c_start - np.linspace(0.05, 0.25, 5)
+    dels = np.zeros(len(cutoff))
+    prop_cut = np.zeros(len(cutoff), dtype=np.float32)
+    for cut in range(len(cutoff)):
+        prop_cut[cut] = sum(W > n_feat*cutoff[cut])/len(W)
+    for i in range(len(cutoff)-1):
+        dels[i] = abs(prop_cut[i]-prop_cut[i+1])
+
+    if (dels[1] < tau) and (dels[2] < tau) and (dels[3] < tau):
+        nu = cutoff[1]
+    elif (dels[1] >= tau) and (dels[2] < tau) and (dels[3] < tau):
+        nu = cutoff[2]
+    elif (dels[2] >= tau) and (dels[3] < tau) and (dels[4] < tau):
+        nu = cutoff[3]
+    else:
+        nu = cutoff[4]
+    reject = W >= nu*n_feat
+    return W, reject
+
+
+def _holm(p):
+    """
+    Performs Holm-Boniferroni correction for pvalues
+    to account for multiple comparisons
+
+    Parameters
+    ---------
+    p: numpy.array
+        array of pvalues
+
+    Returns
+    -------
+    numpy.array
+        corrected pvalues
+    """
+    K = len(p)
+    sort_index = -np.ones(K, dtype=np.int64)
+    sorted_p = np.sort(p)
+    sorted_p_adj = sorted_p*(K-np.arange(K))
+    for j in range(K):
+        idx = (p == sorted_p[j]) & (sort_index < 0)
+        num_ties = len(sort_index[idx])
+        sort_index[idx] = np.arange(j, (j+num_ties), dtype=np.int64)
+
+    sorted_holm_p = [min([max(sorted_p_adj[:k]), 1])
+                     for k in range(1, K+1)]
+    holm_p = [sorted_holm_p[sort_index[k]] for k in range(K)]
+    return holm_p
+
+
+def _log_compare(mat, cats,
+                 stat_func=scipy.stats.ttest_ind):
+    """
+    Calculates pairwise log ratios between all otus
+    and performs a permutation tests to determine if there is a
+    significant difference in OTU ratios with respect to the
+    variable of interest
+
+    Parameters
+    ----------
+    mat: pd.DataFrame
+       rows = samples
+       columns = features (i.e. OTUs)
+    cat: np.array, float
+       Vector of categories
+    stat_func: function
+        statistical test to run
+
+    Returns:
+    --------
+    log ratio pvalue matrix
+    """
+    r, c = mat.shape
+    log_ratio = np.zeros((c, c))
+    log_mat = np.log(mat)
+    cs = np.unique(cats)
+    for i in range(c-1):
+        ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
+        func = lambda x: stat_func(*[x[cats == k] for k in cs])
+        m, p = np.apply_along_axis(func,
+                                   axis=0,
+                                   arr=ratio)
+        log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
+    return log_ratio

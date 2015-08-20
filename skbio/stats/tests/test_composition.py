@@ -13,8 +13,8 @@ import numpy as np
 import numpy.testing as npt
 from skbio.stats.composition import (closure, multiplicative_replacement,
                                      perturb, perturb_inv, power,
-                                     clr, centralize)
-
+                                     clr, centralize, ancom)
+import scipy.stats
 
 class CompositionTests(TestCase):
 
@@ -31,9 +31,27 @@ class CompositionTests(TestCase):
         self.data6 = [[1, 2, 3, 0, 5],
                       [1, 0, 0, 4, 5],
                       [1, 2, 3, 4, 5]]
+
+        self.table = np.array([
+            [10, 10.5, 10, 20, 20.5, 20.3],
+            [11, 11.5, 11, 21, 21.5, 21.3],
+            [10, 10.5, 10, 10, 10.5, 10.2],
+            [10, 10.5, 10, 10, 10.5, 10.3],
+            [10, 10.5, 10, 10, 10.5, 10.1],
+            [10, 10.5, 10, 10, 10.5, 10.6],
+            [10, 10.5, 10, 10, 10.5, 10.4]]).T
+        self.cats = [0, 0, 0, 1, 1, 1]
         # Bad datasets
         self.bad1 = np.array([1, 2, -1])
         self.bad2 = np.array([[[1, 2, 3, 0, 5]]])
+        self.bad3 = np.array([
+            [10, 10, 10, 20, 20, 0],
+            [11, 11, 11, 21, 21, 21],
+            [10, 10, 10, 10, 10, 10],
+            [10, 10, 10, 10, 10, 10],
+            [10, 10, 10, 10, 10, 10],
+            [10, 10, 10, 10, 10, 10],
+            [10, 10, 10, 10, 10, 10]]).T
 
     def test_closure(self):
 
@@ -217,6 +235,40 @@ class CompositionTests(TestCase):
         npt.assert_allclose(self.data1,
                             np.array([[2, 2, 6],
                                       [4, 4, 2]]))
+
+    def test_ancom(self):
+        W, reject = ancom(self.table, self.cats, multicorr=False)
+        npt.assert_allclose(W,
+                            np.array([7., 7., 3., 3., 3., 3., 3.]))
+        npt.assert_allclose(reject,
+                            np.array([True, True, False, False,
+                                      False, False, False], dtype=bool))
+        W, reject = ancom(self.table, self.cats, multicorr=False)
+        npt.assert_allclose(W,
+                            np.array([7., 7., 3., 3., 3., 3., 3.]))
+        npt.assert_allclose(reject,
+                            np.array([True, True, False, False,
+                                      False, False, False], dtype=bool))
+
+        W, reject = ancom(self.table, self.cats, multicorr=True,
+                          func=scipy.stats.mannwhitneyu)
+        npt.assert_allclose(W,
+                            np.array([1., 1., 1., 1., 1., 1., 1.]))
+        npt.assert_allclose(reject,
+                            np.array([True,  True,  True,  True,
+                                      True,  True,  True], dtype=bool))
+
+        W, reject = ancom(self.table, self.cats, multicorr=False,
+                          func=scipy.stats.mannwhitneyu)
+        npt.assert_allclose(W,
+                            np.array([7.,  7.,  3.,  3.,  3.,  3.,  3.]))
+        npt.assert_allclose(reject,
+                            np.array([True,  True, False, False,
+                                      False, False, False], dtype=bool))
+
+        with self.assertRaises(ValueError):
+            ancom(self.bad3, self.cats, multicorr=False)
+
 
 if __name__ == "__main__":
     main()
