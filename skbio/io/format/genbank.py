@@ -17,7 +17,6 @@ Genpept are essentially the same format.
 An example of a GenBank file can be see here:
 <http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>
 
-
 Format Support
 --------------
 **Has Sniffer: Yes**
@@ -36,7 +35,6 @@ Format Support
 |Yes   | Yes  | generator of :mod:`skbio.sequence.Sequence` objects           |
 +------+------+---------------------------------------------------------------+
 
-
 Format Specification
 --------------------
 **State: Experimental as of 0.4.0-dev.**
@@ -53,8 +51,185 @@ Feature Table Documentation:
 http://www.insdc.org/files/feature_table.html
 ftp://ftp.ncbi.nih.gov/genbank/docs/FTv10_3.html
 
+The sequence in the ``'ORIGIN'`` section is always in lowercase for the
+GenBank files downloaded from NCBI. For the RNA molecules, ``'t'`` (thymine),
+instead of ``'u'`` (uracil) is used in the sequence. All GenBank writers
+follow these traditions while writing GenBank files.
+
+Format Parameters
+-----------------
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``constructor`` parameter can be used with the ``Sequence`` generator
+to specify the in-memory type of each GenBank record that is parsed.
+``constructor`` should be ``Sequence`` or a sub-class of ``Sequence``.
+It is also detected by the unit label on the LOCUS line. For example, if it
+is ``'bp'``, it will be read into ``DNA``; if it is ``'aa'``, it will be read
+into ``Protein``. Otherwise, it will be read into ``Sequence``. This default
+behavior is overridden by setting ``constructor``.
+
+``lowercase`` is another parameter available for all GenBank readers.
+By default, it is set to ``True`` to read in the ``'ORIGIN'`` sequence
+as lowercase letters. This parameter is passed to ``Sequence`` or
+its sub-class constructor.
+
+``seq_num`` is a parameter used with the ``Sequence``, ``DNA``, ``RNA``, and
+``Protein`` GenBank readers. It specifies which GenBank record to read from the
+concatenated GenBank file with multiple records in it.
+
 Examples
 --------
+
+Reading and Writing GenBank Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Suppose we have the following GenBank file [example modified from [1_]::
+
+    LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012
+    DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.
+    ACCESSION   3K1V_A
+    VERSION     3K1V_A  GI:260656459
+    KEYWORDS    .
+    SOURCE      synthetic construct
+      ORGANISM  synthetic construct
+                other sequences; artificial sequences.
+    REFERENCE   1  (bases 1 to 34)
+      AUTHORS   Klein,D.J., Edwards,T.E. and Ferre-D'Amare,A.R.
+      TITLE     Cocrystal structure of a class I preQ1 riboswitch
+      JOURNAL   Nat. Struct. Mol. Biol. 16 (3), 343-344 (2009)
+       PUBMED   19234468
+    COMMENT     SEQRES.
+    FEATURES             Location/Qualifiers
+         source          1..34
+                         /organism="synthetic construct"
+                         /mol_type="other RNA"
+                         /db_xref="taxon:32630"
+    ORIGIN
+            1 agaggttcta gcacatccct ctataaaaaa ctaa
+    //
+
+>>> gb = ['LOCUS       3K1V_A     34 bp   RNA    linear   SYN 10-OCT-2012\\n',
+...       'DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.\\n',
+...       'ACCESSION   3K1V_A\\n',
+...       'VERSION     3K1V_A  GI:260656459\\n',
+...       'KEYWORDS    .\\n',
+...       'SOURCE      synthetic construct\\n',
+...       '  ORGANISM  synthetic construct\\n',
+...       '            other sequences; artificial sequences.\\n',
+...       'REFERENCE   1  (bases 1 to 34)\\n',
+...       "  AUTHORS   Klein,D.J., Edwards,T.E. and Ferre-D'Amare,A.R.\\n",
+...       '  TITLE     Cocrystal structure of a class I preQ1 riboswitch\\n',
+...       '  JOURNAL   Nat. Struct. Mol. Biol. 16 (3), 343-344 (2009)\\n',
+...       '   PUBMED   19234468\\n',
+...       'COMMENT     SEQRES.\\n',
+...       'FEATURES             Location/Qualifiers\\n',
+...       '     source          1..34\\n',
+...       '                     /organism="synthetic construct"\\n',
+...       '                     /mol_type="other RNA"\\n',
+...       '                     /db_xref="taxon:32630"\\n',
+...       'ORIGIN\\n',
+...       '        1 agaggttcta gcacatccct ctataaaaaa ctaa\\n',
+...       '//\\n']
+
+Now we can read it as ``DNA`` object:
+
+>>> from skbio import DNA, RNA, Sequence
+>>> dna_seq = DNA.read(gb)
+>>> dna_seq
+DNA
+-----------------------------------------------------------------
+Metadata:
+    'ACCESSION': '3K1V_A'
+    'COMMENT': 'SEQRES.'
+    'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
+    'FEATURES': <class 'list'>
+    'KEYWORDS': '.'
+    'LOCUS': <class 'dict'>
+    'REFERENCE': <class 'list'>
+    'SOURCE': <class 'dict'>
+    'VERSION': '3K1V_A  GI:260656459'
+Positional metadata:
+    0: <dtype: bool>
+Stats:
+    length: 34
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 35.29%
+-----------------------------------------------------------------
+0 AGAGGTTCTA GCACATCCCT CTATAAAAAA CTAA
+
+
+Since this is a riboswitch molecule, we may want to read it as ``RNA``.
+As the GenBank file usually have ``'t'`` instead of ``'u'`` in the
+sequence, we can not read it as ``RNA`` directly without conversion.
+We can read it as ``DNA`` and then ``transcribe`` it into ``RNA``:
+
+>>> rna_seq = dna_seq.transcribe()
+>>> rna_seq
+RNA
+-----------------------------------------------------------------
+Metadata:
+    'ACCESSION': '3K1V_A'
+    'COMMENT': 'SEQRES.'
+    'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
+    'FEATURES': <class 'list'>
+    'KEYWORDS': '.'
+    'LOCUS': <class 'dict'>
+    'REFERENCE': <class 'list'>
+    'SOURCE': <class 'dict'>
+    'VERSION': '3K1V_A  GI:260656459'
+Positional metadata:
+    0: <dtype: bool>
+Stats:
+    length: 34
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 35.29%
+-----------------------------------------------------------------
+0 AGAGGUUCUA GCACAUCCCU CUAUAAAAAA CUAA
+
+
+Or we can convert ``'t'`` to ``'u'`` in the sequence and then read it
+as ``RNA``:
+
+>>> gb_rna = gb
+>>> gb_rna[-2] = gb_rna[-2].replace('t', 'u')
+>>> rna_seq_2 = RNA.read(gb_rna)
+>>> rna_seq_2 == rna_seq
+True
+
+>>> from io import StringIO
+>>> with StringIO() as fh:
+...     print(dna_seq.write(fh, format='genbank').getvalue())
+LOCUS       3K1V_A   34 bp   RNA   linear   SYN   10-OCT-2012
+DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.
+ACCESSION   3K1V_A
+VERSION     3K1V_A  GI:260656459
+KEYWORDS    .
+SOURCE      synthetic construct
+  ORGANISM  synthetic construct
+            other sequences; artificial sequences.
+REFERENCE   1  (bases 1 to 34)
+  AUTHORS   Klein,D.J., Edwards,T.E. and Ferre-D'Amare,A.R.
+  TITLE     Cocrystal structure of a class I preQ1 riboswitch
+  JOURNAL   Nat. Struct. Mol. Biol. 16 (3), 343-344 (2009)
+  PUBMED    19234468
+COMMENT     SEQRES.
+FEATURES             Location/Qualifiers
+       source        1..34
+                     /db_xref="taxon:32630"
+                     /mol_type="other RNA"
+                     /organism="synthetic construct"
+ORIGIN
+        1 agaggttcta gcacatccct ctataaaaaa ctaa
+//
+<BLANKLINE>
+
+References
+----------
+.. [1_] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
 
 """
 
@@ -210,7 +385,8 @@ def _parse_single_genbank(chunks):
     positional_metadata = None
     sequence = ''
     # each section starts with a HEADER without indent.
-    section_splitter = _yield_section(lambda x: not x[0].isspace(), strip=False)
+    section_splitter = _yield_section(
+        lambda x: not x[0].isspace(), strip=False)
     for section in section_splitter(chunks):
         header = section[0].split(None, 1)[0]
         parser = _PARSER_TABLE.get(
