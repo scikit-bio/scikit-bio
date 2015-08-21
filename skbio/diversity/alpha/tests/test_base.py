@@ -23,7 +23,7 @@ from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, pielou, robbins, shannon, simpson, simpson_e, singles,
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e, singles,
     strong)
 
 
@@ -394,19 +394,19 @@ class BaseTests(TestCase):
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
 
-    def test_pielou(self):
+    def test_pielou_e(self):
         # Calculate "by hand".
         arr = np.array([1, 2, 3, 1])
         h = shannon(arr)
         s = 4
         expected = h / np.log(s)
-        self.assertAlmostEqual(pielou(arr), expected)
+        self.assertAlmostEqual(pielou_e(arr), expected)
 
-        self.assertAlmostEqual(pielou(self.counts), 1.334283585856)
+        self.assertAlmostEqual(pielou_e(self.counts), 1.334283585856)
 
-        self.assertAlmostEqual(pielou([1, 1]), 1.44269504088)
-        self.assertAlmostEqual(pielou([1, 1, 1, 1, 1, 1]), 1.44269504088)
-        self.assertAlmostEqual(pielou([1, 1, 1, 1, 1, 1, 0, 0]), 1.44269504088)
+        self.assertAlmostEqual(pielou_e([1, 1]), 1.44269504088)
+        self.assertAlmostEqual(pielou_e([1, 1, 1, 1]), 1.44269504088)
+        self.assertAlmostEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.44269504088)
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)

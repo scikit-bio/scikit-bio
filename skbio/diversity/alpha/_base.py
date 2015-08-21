@@ -222,7 +222,7 @@ def equitability(counts, base=2):
     See Also
     --------
     shannon
-    pielou
+    pielou_e
 
     Notes
     -----
@@ -477,7 +477,7 @@ def heip_e(counts):
     See Also
     --------
     shannon
-    pielou
+    pielou_e
 
     Notes
     -----
@@ -850,8 +850,8 @@ def osd(counts):
     return observed_otus(counts), singles(counts), doubles(counts)
 
 
-@experimental(as_of="0.4.0")
-def pielou(counts):
+@experimental(as_of="0.4.0-dev")
+def pielou_e(counts):
     """Calculate Pielou's Evenness (Shannon index / ln(number of OTUs).
 
     Pielou's Evenness is defined as:
