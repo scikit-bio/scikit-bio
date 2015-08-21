@@ -4,6 +4,7 @@
 import glob
 import sys
 import os
+import types
 
 # Check that dependencies are installed and the correct version if necessary
 sphinx_version = '1.2.2'
@@ -25,6 +26,26 @@ except ImportError:
     raise RuntimeError(
         "numpydoc v0.6 or later required. Install it with:\n"
         "  pip install git+git://github.com/numpy/numpydoc.git")
+
+@property
+def _extras(self):
+    # This will be accessed in a for-loop, so memoize to prevent quadratic
+    # behavior.
+    if not hasattr(self, '__memoized_extras'):
+        # We want every dunder that has a function type (not class slot),
+        # meaning we created the dunder, not Python.
+        # We don't ever care about __init__ and the user will see plenty of
+        # __repr__ calls, so why waste space.
+        self.__memoized_extras = [
+            a for a, v in inspect.getmembers(self._cls)
+            if type(v) == types.FunctionType and a.startswith('__')
+            and a not in ['__init__', '__repr__']
+        ]
+    return self.__memoized_extras
+
+# The extra_public_methods depends on what class we are looking at.
+numpydoc.docscrape.ClassDoc.extra_public_methods = _extras
+
 
 import skbio
 from skbio.util._decorator import classproperty
