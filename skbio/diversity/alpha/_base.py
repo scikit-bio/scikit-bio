@@ -852,7 +852,7 @@ def osd(counts):
 
 @experimental(as_of="0.4.0-dev")
 def pielou_e(counts):
-    """Calculate Pielou's Evenness index J'.
+    r"""Calculate Pielou's Evenness index J'.
 
     Pielou's Evenness is defined as:
 
