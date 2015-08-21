@@ -371,6 +371,12 @@ class DissimilarityMatrix(SkbioObject):
 
         ax.set_xticklabels(self.ids, rotation=90, minor=False)
         ax.set_yticklabels(self.ids, minor=False)
+
+        # Ensure there is no white border around the heatmap by manually
+        # setting the limits
+        ax.set_ylim(0, len(self.ids))
+        ax.set_xlim(0, len(self.ids))
+
         ax.set_title(title)
 
         return fig
