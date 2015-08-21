@@ -23,8 +23,8 @@ from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e, singles,
-    strong)
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 
 
 class BaseTests(TestCase):

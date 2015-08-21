@@ -852,13 +852,13 @@ def osd(counts):
 
 @experimental(as_of="0.4.0-dev")
 def pielou_e(counts):
-    """Calculate Pielou's Evenness (Shannon index / ln(number of OTUs).
+    """Calculate Pielou's Evenness index J'.
 
     Pielou's Evenness is defined as:
 
     .. math::
 
-       \frac{(H)}{\ln S}
+       J' = \frac{(H)}{\ln S}
 
     where :math:`H` is the Shannon-Wiener entropy of counts and :math:`S` is
     the number of OTUs in the sample.
