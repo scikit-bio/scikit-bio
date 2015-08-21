@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from skbio.util._decorator import experimental
 from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
     bool_descendants, _skbio_counts_to_envs)
 
@@ -28,7 +29,8 @@ def PD_whole_tree(t, envs):
     return unique_envs, result
 
 
-def faith_pd(counts, otu_ids, tree):
+@experimental(as_of="0.4.0")
+def faith_pd_fast(counts, otu_ids, tree):
     """skbio api"""
     envs = _skbio_counts_to_envs(otu_ids, counts)
 

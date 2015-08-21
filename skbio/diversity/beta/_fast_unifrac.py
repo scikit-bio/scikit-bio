@@ -1,7 +1,16 @@
-from __future__ import division
-import numpy as np
-from ._unifrac import _validate
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
+import numpy as np
+
+from ._unifrac import _validate
 from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
     bool_descendants, _skbio_counts_to_envs, traverse_reduce)
 
@@ -61,8 +70,8 @@ def w_unifrac(branch_lengths, tip_indices, i, j):
     return (branch_lengths * abs(i_ - j_)).sum()
 
 
-def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       suppress_validation=False):
+def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
+                            suppress_validation=False):
     """fit to unifrac API"""
     if not suppress_validation:
         _validate(u_counts, v_counts, otu_ids, tree)
@@ -83,8 +92,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
     return fast_unifrac(tree, envs)
 
 
-def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     suppress_validation=False):
+def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
+                          suppress_validation=False):
     u_sum = sum(u_counts)
     v_sum = sum(v_counts)
 
