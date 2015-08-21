@@ -858,7 +858,7 @@ def pielou_e(counts):
 
     .. math::
 
-       J' = \frac{(H)}{\ln S}
+       J' = \frac{(H)}{\ln(S)}
 
     where :math:`H` is the Shannon-Wiener entropy of counts and :math:`S` is
     the number of OTUs in the sample.
@@ -881,9 +881,8 @@ def pielou_e(counts):
     Notes
     -----
     The implementation here is based on the description given by Carlo Heip
-    [1]_ and is also described on Wikipedia [2]_.
-
-    It is similar to Heip's evenness [1]_.
+    [1]_ and is also described on Wikipedia [2]_. It is similar to Heip's
+    evenness [1]_.
 
     References
     ----------
@@ -892,7 +891,6 @@ def pielou_e(counts):
     .. [2] https://en.wikipedia.org/wiki/Species_evenness
 
     """
-
     counts = _validate_counts_vector(counts)
     return shannon(counts) / np.log(observed_otus(counts))
 
