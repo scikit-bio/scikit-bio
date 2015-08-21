@@ -10,7 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util._decorator import experimental
 from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
-    bool_descendants, _skbio_counts_to_envs)
+                                        bool_descendants,
+                                        _skbio_counts_to_envs)
+from skbio.diversity._base import (_validate_counts_vector,
+                                   _validate_otu_ids_and_tree)
 
 
 def PD_whole_tree(t, envs):
@@ -30,8 +33,15 @@ def PD_whole_tree(t, envs):
 
 
 @experimental(as_of="0.4.0")
-def faith_pd_fast(counts, otu_ids, tree):
+def faith_pd_fast(counts, otu_ids, tree, validate=True):
     """skbio api"""
+    if validate:
+        counts = _validate_counts_vector(counts)
+        _validate_otu_ids_and_tree(counts, otu_ids, tree)
+
+    if sum(counts) == 0:
+        return 0.0
+
     envs = _skbio_counts_to_envs(otu_ids, counts)
 
-    return PD_whole_tree(tree, envs)[1]  # just return the result
+    return PD_whole_tree(tree, envs)[1][0]  # just return the result

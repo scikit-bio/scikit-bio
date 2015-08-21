@@ -11,10 +11,14 @@ from __future__ import absolute_import, division, print_function
 from unittest import main, TestCase
 
 from skbio.diversity.alpha.tests.test_faith_base import FaithTests
-from skbio.diversity.alpha import faith_pd_fast
+from skbio.diversity.alpha import faith_pd, faith_pd_fast
 
 
 class FaithTests(FaithTests, TestCase):
+    _method = {'faith_pd': faith_pd}
+
+
+class FaithFastTests(FaithTests, TestCase):
     _method = {'faith_pd': faith_pd_fast}
 
 

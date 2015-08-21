@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from skbio.util._decorator import experimental
 from ._unifrac import _validate
 from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
     bool_descendants, _skbio_counts_to_envs, traverse_reduce)
@@ -70,6 +71,7 @@ def w_unifrac(branch_lengths, tip_indices, i, j):
     return (branch_lengths * abs(i_ - j_)).sum()
 
 
+@experimental(as_of="0.4.0")
 def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
                             suppress_validation=False):
     """fit to unifrac API"""
@@ -92,6 +94,7 @@ def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
     return fast_unifrac(tree, envs)
 
 
+@experimental(as_of="0.4.0")
 def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
                           suppress_validation=False):
     u_sum = sum(u_counts)
