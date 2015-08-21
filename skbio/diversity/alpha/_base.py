@@ -222,6 +222,7 @@ def equitability(counts, base=2):
     See Also
     --------
     shannon
+    pielou
 
     Notes
     -----
@@ -237,7 +238,6 @@ def equitability(counts, base=2):
     numerator = shannon(counts, base)
     denominator = np.log(observed_otus(counts)) / np.log(base)
     return numerator / denominator
-
 
 @experimental(as_of="0.4.0")
 def esty_ci(counts):
@@ -476,6 +476,7 @@ def heip_e(counts):
     See Also
     --------
     shannon
+    pielou
 
     Notes
     -----
@@ -847,6 +848,51 @@ def osd(counts):
     counts = _validate_counts_vector(counts)
     return observed_otus(counts), singles(counts), doubles(counts)
 
+@experimental(as_of="0.4.0")
+def pielou(counts):
+    """Calculate Pielou's Evenness (Shannon index / ln(number of OTUs).
+
+    Pielou's Evenness is defined as:
+
+    .. math::
+
+       \frac{(H)}{\ln S}
+
+    where :math:`H` is the Shannon-Wiener entropy of counts and :math:`S` is 
+    the number of OTUs in the sample.
+
+    Parameters
+    ----------
+    counts : 1-D array_like, int
+        Vector of counts.
+
+    Returns
+    -------
+    double
+        Pielou's Evenness.
+
+    See Also
+    --------
+    shannon
+    heip_e
+
+    Notes
+    -----
+    The implementation here is based on the description given by Carlo Heip [1]_
+    and is also described on Wikipedia [2]_.
+    
+	It is similar to Heip's evenness [1]_.
+	
+    References
+    ----------
+    .. [1] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
+       UK., 54, 555-557.
+    .. [2] https://en.wikipedia.org/wiki/Species_evenness
+
+    """
+    
+    counts = _validate_counts_vector(counts)
+    return shannon(counts) / np.log(observed_otus(counts))
 
 @experimental(as_of="0.4.0")
 def robbins(counts):
