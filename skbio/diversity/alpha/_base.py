@@ -893,7 +893,7 @@ def pielou_e(counts):
 
     """
     counts = _validate_counts_vector(counts)
-    return shannon(counts) / np.log(observed_otus(counts))
+    return shannon(counts, base=np.e) / np.log(observed_otus(counts))
 
 
 @experimental(as_of="0.4.0")

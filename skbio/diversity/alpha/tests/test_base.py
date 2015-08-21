@@ -397,16 +397,22 @@ class BaseTests(TestCase):
     def test_pielou_e(self):
         # Calculate "by hand".
         arr = np.array([1, 2, 3, 1])
-        h = shannon(arr)
+        h = shannon(arr, np.e)
         s = 4
         expected = h / np.log(s)
         self.assertAlmostEqual(pielou_e(arr), expected)
 
-        self.assertAlmostEqual(pielou_e(self.counts), 1.334283585856)
+        self.assertAlmostEqual(pielou_e(self.counts), 0.92485490560)
 
-        self.assertAlmostEqual(pielou_e([1, 1]), 1.44269504088)
-        self.assertAlmostEqual(pielou_e([1, 1, 1, 1]), 1.44269504088)
-        self.assertAlmostEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.44269504088)
+        self.assertEqual(pielou_e([1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
+
+        # Examples from
+        # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
+        self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
+        print(pielou_e([0, 0, 200, 0, 0]))
+        # self.assertAlmostEqual(pielou_e([0,0,200,0,0]), 0.0, 3)
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
