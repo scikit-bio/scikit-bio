@@ -13,7 +13,8 @@ import numpy as np
 from skbio.util._decorator import experimental
 from ._unifrac import _validate
 from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
-    bool_descendants, _skbio_counts_to_envs, traverse_reduce)
+                                        bool_descendants,
+                                        _skbio_counts_to_envs, traverse_reduce)
 
 
 def unifrac(branch_lengths, i, j):
