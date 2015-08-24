@@ -23,7 +23,8 @@ from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, robbins, shannon, simpson, simpson_e, singles, strong)
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 
 
 class BaseTests(TestCase):
@@ -392,6 +393,26 @@ class BaseTests(TestCase):
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_pielou_e(self):
+        # Calculate "by hand".
+        arr = np.array([1, 2, 3, 1])
+        h = shannon(arr, np.e)
+        s = 4
+        expected = h / np.log(s)
+        self.assertAlmostEqual(pielou_e(arr), expected)
+
+        self.assertAlmostEqual(pielou_e(self.counts), 0.92485490560)
+
+        self.assertEqual(pielou_e([1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
+
+        # Examples from
+        # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
+        self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
+        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
+        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
