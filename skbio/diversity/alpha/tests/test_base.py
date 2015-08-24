@@ -411,8 +411,8 @@ class BaseTests(TestCase):
         # Examples from
         # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
         self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
-        print(pielou_e([0, 0, 200, 0, 0]))
-        # self.assertAlmostEqual(pielou_e([0,0,200,0,0]), 0.0, 3)
+        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
+        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
