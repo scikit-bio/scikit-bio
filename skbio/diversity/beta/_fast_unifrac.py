@@ -74,9 +74,9 @@ def w_unifrac(branch_lengths, tip_indices, i, j):
 
 @experimental(as_of="0.4.0")
 def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
-                            suppress_validation=False):
+                            validate=False, **kwargs):
     """fit to unifrac API"""
-    if not suppress_validation:
+    if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
     u_sum = sum(u_counts)
@@ -97,7 +97,7 @@ def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
 
 @experimental(as_of="0.4.0")
 def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
-                          suppress_validation=False):
+                          validate=False, **kwargs):
     u_sum = sum(u_counts)
     v_sum = sum(v_counts)
 
@@ -111,7 +111,7 @@ def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
         else:
             # u and v are zero
             return 0.0
-    if not suppress_validation:
+    if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
     envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
 
