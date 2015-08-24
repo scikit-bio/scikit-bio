@@ -204,43 +204,6 @@ def enspie(counts):
 
 
 @experimental(as_of="0.4.0")
-def equitability(counts, base=2):
-    """Calculate equitability (Shannon index corrected for number of OTUs).
-
-    Parameters
-    ----------
-    counts : 1-D array_like, int
-        Vector of counts.
-    base : scalar, optional
-        Logarithm base to use in the calculations.
-
-    Returns
-    -------
-    double
-        Measure of equitability.
-
-    See Also
-    --------
-    shannon
-    pielou_e
-
-    Notes
-    -----
-    The implementation here is based on the description given in the SDR-IV
-    online manual [1]_.
-
-    References
-    ----------
-    .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
-
-    """
-    counts = _validate_counts_vector(counts)
-    numerator = shannon(counts, base)
-    denominator = np.log(observed_otus(counts)) / np.log(base)
-    return numerator / denominator
-
-
-@experimental(as_of="0.4.0")
 def esty_ci(counts):
     r"""Calculate Esty's CI.
 

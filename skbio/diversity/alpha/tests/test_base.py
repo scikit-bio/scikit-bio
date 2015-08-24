@@ -20,7 +20,7 @@ from skbio import TreeNode
 from skbio.util import get_data_path
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
@@ -82,10 +82,6 @@ class BaseTests(TestCase):
         arr = np.array([1, 0, 2, 5, 2])
         exp = 1 / dominance(arr)
         self.assertAlmostEqual(enspie(arr), exp)
-
-    def test_equitability(self):
-        self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
-        self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
 
     def test_esty_ci(self):
         def _diversity(indices, f):
