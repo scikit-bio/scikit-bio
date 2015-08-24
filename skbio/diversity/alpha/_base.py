@@ -880,13 +880,14 @@ def pielou_e(counts):
 
     Notes
     -----
-    The implementation here is based on the described in Wikipedia [1]_. It was
-    first proposed by E. C. Pielou [2]_ and is similar to Heip's evenness [3]_.
+    The implementation here is based on the description in Wikipedia [1]_.
+    It was first proposed by E. C. Pielou [2]_ and is similar to Heip's
+    evenness [3]_.
 
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Species_evenness
-    .. [2] PIELOU, E. C., 1966. The measurement of diversity in different types
+    .. [2] Pielou, E. C., 1966. The measurement of diversity in different types
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
     .. [3] Heip, C. 1974. A new index measuring evenness. J. Mar. Biol. Ass.
        UK., 54, 555-557.
