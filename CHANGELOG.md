@@ -26,6 +26,11 @@
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
 * ``skbio.diversity.beta.pw_distances`` no longer defines a default metric, and ``metric`` is now the first argument to this function.
 
+### Bug Fixes
+
+* ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
+  heatmap it plots (PR #1070).
+
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
 
