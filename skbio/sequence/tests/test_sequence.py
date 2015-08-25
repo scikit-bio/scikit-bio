@@ -766,6 +766,21 @@ class TestSequence(TestCase):
                                        "length of index"):
                 seq.positional_metadata['bar'] = array_like
 
+    def test_observed_chars_property(self):
+        self.assertEqual(Sequence('').observed_chars, set())
+        self.assertEqual(Sequence('x').observed_chars, {b'x'})
+        self.assertEqual(Sequence('xYz').observed_chars, {b'x', b'Y', b'z'})
+        self.assertEqual(Sequence('xYzxxZz').observed_chars,
+                         {b'x', b'Y', b'z', b'Z'})
+        self.assertEqual(Sequence('\t   ').observed_chars, {b' ', b'\t'})
+        self.assertEqual(
+            Sequence('aabbcc', metadata={'foo': 'bar'},
+                     positional_metadata={'foo': range(6)}).observed_chars,
+            {b'a', b'b', b'c'})
+
+        with self.assertRaises(AttributeError):
+            Sequence('ACGT').observed_chars = {b'a', b'b', b'c'}
+
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
         seq_b = Sequence("B")

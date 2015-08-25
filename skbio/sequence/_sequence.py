@@ -527,6 +527,25 @@ class Sequence(collections.Sequence, SkbioObject):
         self._positional_metadata = None
 
     @property
+    @experimental(as_of="0.4.0-dev")
+    def observed_chars(self):
+        """Set of observed characters in the sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('AACGAC')
+        >>> s.observed_chars == {b'G', b'A', b'C'}
+        True
+
+        """
+        return set(self.values)
+
+    @property
     def _string(self):
         return self._bytes.tostring()
 
