@@ -45,6 +45,40 @@ class StatsTests(object):
                      u'root;'))
         self.oids2 = ['OTU%d' % i for i in range(1, 5)]
 
+    def test_unweighted_otus_out_of_order(self):
+        # UniFrac API does not assert the observations are in tip order of the
+        # input tree
+        shuffled_ids = self.oids1[:]
+        shuffled_b1 = self.b1.copy()
+
+        shuffled_ids[0], shuffled_ids[-1] = shuffled_ids[-1], shuffled_ids[0]
+        shuffled_b1[:, [0, -1]] = shuffled_b1[:, [-1, 0]]
+
+        for i in range(len(self.b1)):
+            for j in range(len(self.b1)):
+                actual = self.unweighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                expected = self.unweighted_unifrac(
+                    shuffled_b1[i], shuffled_b1[j], shuffled_ids, self.t1)
+                self.assertAlmostEqual(actual, expected)
+
+    def test_weighted_otus_out_of_order(self):
+        # UniFrac API does not assert the observations are in tip order of the
+        # input tree
+        shuffled_ids = self.oids1[:]
+        shuffled_b1 = self.b1.copy()
+
+        shuffled_ids[0], shuffled_ids[-1] = shuffled_ids[-1], shuffled_ids[0]
+        shuffled_b1[:, [0, -1]] = shuffled_b1[:, [-1, 0]]
+
+        for i in range(len(self.b1)):
+            for j in range(len(self.b1)):
+                actual = self.weighted_unifrac(
+                    self.b1[i], self.b1[j], self.oids1, self.t1)
+                expected = self.weighted_unifrac(
+                    shuffled_b1[i], shuffled_b1[j], shuffled_ids, self.t1)
+                self.assertAlmostEqual(actual, expected)
+
     def test_unweighted_extra_tips(self):
         # UniFrac values are the same despite unobserved tips in the tree
         for i in range(len(self.b1)):
