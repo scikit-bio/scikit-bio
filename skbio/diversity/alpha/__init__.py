@@ -70,7 +70,6 @@ Functions
    dominance
    doubles
    enspie
-   equitability
    esty_ci
    faith_pd
    faith_pd_fast
@@ -88,6 +87,7 @@ Functions
    michaelis_menten_fit
    observed_otus
    osd
+   pielou_e
    robbins
    shannon
    simpson
@@ -168,20 +168,21 @@ from skbio.util import TestRunner
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
 from ._base import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
-    observed_otus, osd, robbins, shannon, simpson, simpson_e, singles, strong)
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 from ._fast_faith import faith_pd_fast
 
 __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
-           'dominance', 'doubles', 'enspie', 'equitability', 'esty_ci',
+           'dominance', 'doubles', 'enspie', 'esty_ci',
            'faith_pd', 'fisher_alpha', 'goods_coverage', 'heip_e',
            'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
            'menhinick', 'michaelis_menten_fit', 'observed_otus', 'osd',
-           'robbins', 'shannon', 'simpson', 'simpson_e', 'singles', 'strong',
-           'gini_index', 'lladser_pe', 'lladser_ci', 'faith_pd_fast']
+           'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e', 'singles',
+           'strong', 'gini_index', 'lladser_pe', 'lladser_ci', 'faith_pd_fast']
 
 test = TestRunner(__file__).test
