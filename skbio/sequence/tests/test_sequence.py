@@ -768,18 +768,19 @@ class TestSequence(TestCase):
 
     def test_observed_chars_property(self):
         self.assertEqual(Sequence('').observed_chars, set())
-        self.assertEqual(Sequence('x').observed_chars, {b'x'})
-        self.assertEqual(Sequence('xYz').observed_chars, {b'x', b'Y', b'z'})
+        self.assertEqual(Sequence('x').observed_chars, {'x'})
+        self.assertEqual(Sequence('xYz').observed_chars, {'x', 'Y', 'z'})
+        self.assertEqual(Sequence('zzz').observed_chars, {'z'})
         self.assertEqual(Sequence('xYzxxZz').observed_chars,
-                         {b'x', b'Y', b'z', b'Z'})
-        self.assertEqual(Sequence('\t   ').observed_chars, {b' ', b'\t'})
+                         {'x', 'Y', 'z', 'Z'})
+        self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
         self.assertEqual(
             Sequence('aabbcc', metadata={'foo': 'bar'},
                      positional_metadata={'foo': range(6)}).observed_chars,
-            {b'a', b'b', b'c'})
+            {'a', 'b', 'c'})
 
         with self.assertRaises(AttributeError):
-            Sequence('ACGT').observed_chars = {b'a', b'b', b'c'}
+            Sequence('ACGT').observed_chars = {'a', 'b', 'c'}
 
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
@@ -1654,6 +1655,119 @@ class TestSequence(TestCase):
 
         self.assertEqual(
             SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
+
+    def test_frequencies_defaults(self):
+        self.assertEqual(Sequence('').frequencies(), Counter())
+        self.assertEqual(Sequence('x').frequencies(), Counter({'x': 1}))
+        self.assertEqual(Sequence('xYz').frequencies(),
+                         Counter({'x': 1, 'Y': 1, 'z': 1}))
+        self.assertEqual(Sequence('zzz').frequencies(), Counter({'z': 3}))
+        self.assertEqual(Sequence('xYzxxZz').frequencies(),
+                         Counter({'x': 3, 'Y': 1, 'Z': 1, 'z': 2}))
+        self.assertEqual(Sequence('\t   ').frequencies(),
+                         Counter({'\t': 1, ' ': 3}))
+        self.assertEqual(
+            Sequence('aabbcc', metadata={'foo': 'bar'},
+                     positional_metadata={'foo': range(6)}).frequencies(),
+            Counter({'a': 2, 'b': 2, 'c': 2}))
+
+    def test_frequencies_relative(self):
+        self.assertEqual(Sequence('').frequencies(relative=True),
+                         defaultdict(float))
+        self.assertEqual(Sequence('x').frequencies(relative=True),
+                         defaultdict(float, {'x': 1.0}))
+        self.assertEqual(Sequence('xYz').frequencies(relative=True),
+                         defaultdict(float, {'x': 1/3, 'Y': 1/3, 'z': 1/3}))
+        self.assertEqual(Sequence('zzz').frequencies(relative=True),
+                         defaultdict(float, {'z': 1.0}))
+        self.assertEqual(
+            Sequence('xYzxxZz').frequencies(relative=True),
+            defaultdict(float, {'x': 3/7, 'Y': 1/7, 'Z': 1/7, 'z': 2/7}))
+        self.assertEqual(Sequence('\t   ').frequencies(relative=True),
+                         defaultdict(float, {'\t': 1/4, ' ': 3/4}))
+        self.assertEqual(
+            Sequence('aabbcc', metadata={'foo': 'bar'},
+                     positional_metadata={'foo':
+                         range(6)}).frequencies(relative=True),
+            defaultdict(float, {'a': 2/6, 'b': 2/6, 'c': 2/6}))
+
+    def test_frequencies_chars(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.frequencies(chars=set()), Counter())
+        self.assertEqual(seq.frequencies(chars=set(), relative=True),
+                         defaultdict(float))
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}),
+                         Counter({'a': 0, 'b': 0}))
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         defaultdict(float, {'a': 0.0, 'b': 0.0}))
+
+        seq = Sequence('abcbca')
+
+        self.assertEqual(seq.frequencies(chars=set()), Counter())
+        self.assertEqual(seq.frequencies(chars=set(), relative=True),
+                         defaultdict(float))
+
+        self.assertEqual(seq.frequencies(chars='a'), Counter({'a': 2}))
+        self.assertEqual(seq.frequencies(chars='a', relative=True),
+                         defaultdict(float, {'a': 2/6}))
+
+        self.assertEqual(seq.frequencies(chars={'a'}), Counter({'a': 2}))
+        self.assertEqual(seq.frequencies(chars={'a'}, relative=True),
+                         defaultdict(float, {'a': 2/6}))
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}),
+                         Counter({'a': 2, 'b': 2}))
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         defaultdict(float, {'a': 2/6, 'b': 2/6}))
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}),
+                         Counter({'a': 2, 'b': 2, 'd': 0}))
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}, relative=True),
+                         defaultdict(float, {'a': 2/6, 'b': 2/6, 'd': 0.0}))
+
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}),
+                         Counter({'x': 0, 'y': 0, 'z': 0}))
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}, relative=True),
+                         defaultdict(float, {'x': 0.0, 'y': 0.0, 'z': 0.0}))
+
+    def test_frequencies_chars_varied_type(self):
+        pass
+
+    def test_frequencies_invalid_chars(self):
+        seq = Sequence('abcabc')
+
+        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+            seq.frequencies(chars='')
+
+        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+            seq.frequencies(chars={''})
+
+        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+            seq.frequencies(chars='ab')
+
+        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+            seq.frequencies(chars={'b', 'ab'})
+
+        with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
+            seq.frequencies(chars={'a', None})
+
+        with six.assertRaisesRegex(self, TypeError, 'set.*int'):
+            seq.frequencies(chars=42)
+
+    def test_frequencies_passing_observed_chars_equivalent_to_default(self):
+        seq = Sequence('abcabc')
+
+        exp = Counter({'a': 2, 'b': 2, 'c': 2})
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.frequencies(chars=seq.observed_chars), exp)
+
+        exp = defaultdict(float, {'a': 2/6, 'b': 2/6, 'c': 2/6})
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(
+            seq.frequencies(chars=seq.observed_chars, relative=True),
+            exp)
 
     def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
