@@ -8,40 +8,30 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
+
 from skbio.util._decorator import experimental
-from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
-                                        bool_descendants,
-                                        _skbio_counts_to_envs)
+from skbio.diversity._fast_base import _counts_and_length
 from skbio.diversity._base import (_validate_counts_vector,
                                    _validate_otu_ids_and_tree)
 
 
-def PD_whole_tree(t, envs):
-    """Run PD on t and envs for each env.
-
-    Note: this is specific for PD per se, use PD_generic_whole_tree if you
-    want to calculate a related metric.
-    """
-    envs, count_array, unique_envs, env_to_index, node_to_index, env_names, \
-        branch_lengths, nodes, t = _fast_unifrac_setup(t, envs)
-    count_array = count_array.astype(bool)
-    bound_indices = bind_to_array(nodes, count_array)
-    # initialize result
-    bool_descendants(bound_indices)
-    result = (branch_lengths * count_array.T).sum(1)
-    return unique_envs, result
-
-
 @experimental(as_of="0.4.0")
-def faith_pd_fast(counts, otu_ids, tree, validate=True):
-    """skbio api"""
+def faith_pd_fast(counts, otu_ids, tree, validate=True, indexed=None):
+    """TODO: add or just pull from educational's __doc__?"""
     if validate:
         counts = _validate_counts_vector(counts)
         _validate_otu_ids_and_tree(counts, otu_ids, tree)
 
-    if sum(counts) == 0:
+    counts = np.asarray(counts)
+    otu_ids = np.asarray(otu_ids)
+
+    if counts.sum() == 0:
         return 0.0
 
-    envs = _skbio_counts_to_envs(otu_ids, counts)
+    count_array, length = _counts_and_length(counts, otu_ids, tree, indexed)
 
-    return PD_whole_tree(tree, envs)[1][0]  # just return the result
+    count_array = np.where(count_array > 0, 1, 0)
+    result = (length * count_array.T).sum()
+
+    return result

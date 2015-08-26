@@ -12,9 +12,7 @@ import numpy as np
 
 from skbio.util._decorator import experimental
 from ._unifrac import _validate
-from skbio.diversity._fast_base import (_fast_unifrac_setup, bind_to_array,
-                                        bool_descendants,
-                                        _skbio_counts_to_envs, traverse_reduce)
+from skbio.diversity._fast_base import _counts_and_length
 
 
 def unifrac(branch_lengths, i, j):
@@ -74,106 +72,115 @@ def w_unifrac(branch_lengths, tip_indices, i, j):
 
 @experimental(as_of="0.4.0")
 def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
-                            validate=False, **kwargs):
-    """fit to unifrac API"""
+                            validate=True, indexed=None, **kwargs):
+    """TODO: add or just pull from educational's __doc__?"""
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
-    u_sum = sum(u_counts)
-    v_sum = sum(v_counts)
+    u_counts = np.asarray(u_counts)
+    v_counts = np.asarray(v_counts)
+    otu_ids = np.asarray(otu_ids)
 
-    if not u_sum or not v_sum:
-        if u_sum + v_sum:
-            # u or v counts are all zeros
-            return 1.0
-        else:
-            # u and v are zero
-            return 0.0
+    boundary = _boundary_case(u_counts, v_counts)
+    if boundary is not None:
+        return boundary
 
-    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
+    counts = np.vstack([u_counts, v_counts])
+    count_array, length = _counts_and_length(counts, otu_ids, tree, indexed)
 
-    return fast_unifrac(tree, envs)
+    return unifrac(length, count_array[:, 0], count_array[:, 1])
 
 
 @experimental(as_of="0.4.0")
 def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
-                          validate=False, **kwargs):
-    u_sum = sum(u_counts)
-    v_sum = sum(v_counts)
+                          validate=True, indexed=None, **kwargs):
+    """TODO: add or just pull from educational's __doc__?"""
+    if validate:
+        _validate(u_counts, v_counts, otu_ids, tree)
+
+    u_counts = np.asarray(u_counts)
+    v_counts = np.asarray(v_counts)
+    otu_ids = np.asarray(otu_ids)
+
+    boundary = _boundary_case(u_counts, v_counts, normalized, unweighted=False)
+    if boundary is not None:
+        return boundary
+
+    counts = np.vstack([u_counts, v_counts])
+    count_array, length = _counts_and_length(counts, otu_ids, tree, indexed)
+
+    tip_indices = [n.id for n in tree.tips()]
+    tip_ds = length.copy()[:, np.newaxis]
+    bindings = bind_to_parent_array(tree, tip_ds)
+    tip_distances(tip_ds, bindings, tip_indices)
+
+    u_counts = count_array[:, 0]
+    if count_array.shape[1] == 1:
+        v_counts = np.zeros(count_array.shape[0])
+    else:
+        v_counts = count_array[:, 1]
+
+    u_sum = (np.take(u_counts, tip_indices)).sum()
+    v_sum = (np.take(v_counts, tip_indices)).sum()
+
+    u = w_unifrac(length, tip_indices, u_counts, v_counts)
+    if normalized:
+        u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+
+    return u
+
+
+def _to_numpy(u_counts, v_counts, otu_ids):
+    """Cast objects of importance to numpy arrays"""
+    return np.asarray(u_counts), np.asarray(v_counts), np.asarray(otu_ids)
+
+
+def _boundary_case(u_counts, v_counts, normalized=False, unweighted=True):
+    """Test for boundary conditions
+
+    Parameters
+    ----------
+    u_counts, v_counts: np.array
+        Vectors of counts of OTUs for two samples.
+    normalized: bool
+        Indicates if the method is normalized.
+    unweighted: bool
+        Indicates if the method is weighted.
+
+    Returns
+    -------
+    float or None
+        Specifically, one of `[0.0, 1.0, None]`. `None` indicates that a
+        boundary condition was not observed.
+
+    Notes
+    -----
+    The following boundary conditions are tested:
+
+        * if u_counts or v_counts is all zeros
+        * if both u_counts and v_counts are all zeros
+        * both of the above conditions with respect to normalized and weighted
+    """
+    u_sum = u_counts.sum()
+    v_sum = v_counts.sum()
 
     if not u_sum or not v_sum:
         if u_sum + v_sum:
             # u or v counts are all zeros
-            if normalized:
+            if normalized or unweighted:
+                # u or v counts are all zeros
                 return 1.0
+            elif unweighted:
+                # u and v are zero
+                return 0.0
+
             # NOTE: we cannot handle the unnormalized case here yet as it
             # requires operations on the tree vector
         else:
             # u and v are zero
             return 0.0
-    if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
-    envs = _skbio_counts_to_envs(otu_ids, u_counts, v_counts)
 
-    return fast_unifrac(tree, envs, weighted=True, normalized=normalized)
-
-
-def fast_unifrac(t, envs, weighted=False, metric=unifrac, normalized=False):
-    # weighted_unifrac_f=_weighted_unifrac,make_subtree=True):
-    """
-    Run fast unifrac.
-
-    Parameters
-    ----------
-    t: skbio.TreeNode
-        phylogenetic tree relating the sequences.
-    envs: dict
-        dict of {sequence:{env:count}} showing environmental abundance.
-    weighted: bool
-        if True, performs the weighted UniFrac procedure.
-    metric: function
-        distance metric to use.  currently you must use unifrac only
-        if weighted=True.
-        see fast_tree.py for metrics (e.g.: G, unnormalized_G, unifrac, etc.)
-
-    Returns
-    -------
-    u : np.array
-        Unifrac distance matrix
-    """
-    (envs, count_array,
-     unique_envs, env_to_index,
-     node_to_index, env_names,
-     branch_lengths, nodes, t) = _fast_unifrac_setup(t, envs)
-
-    bound_indices = bind_to_array(nodes, count_array)
-    # weighted unifrac
-    if weighted:
-        tip_indices = [n._leaf_index for n in t.tips()]
-        sum_descendants(bound_indices)
-        tip_ds = branch_lengths.copy()[:, np.newaxis]
-        bindings = bind_to_parent_array(t, tip_ds)
-        tip_distances(tip_ds, bindings, tip_indices)
-
-        # NOTE: in the unnormalized case, it is possible for count_array to
-        # have a single column of v_counts come in as all zeros.
-        u_counts = count_array[:, 0]
-        if count_array.shape[1] == 1:
-            v_counts = np.zeros(count_array.shape[0])
-        else:
-            v_counts = count_array[:, 1]
-        u_sum = (np.take(u_counts, tip_indices)).sum()
-        v_sum = (np.take(v_counts, tip_indices)).sum()
-
-        u = w_unifrac(branch_lengths, tip_indices, u_counts, v_counts)
-        if normalized:
-            u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
-    # unweighted unifrac
-    else:
-        bool_descendants(bound_indices)
-        u = unifrac(branch_lengths, count_array[:, 0], count_array[:, 1])
-
-    return u
+    return None
 
 
 def _branch_correct(tip_distances, i, j, i_sum, j_sum):
@@ -185,16 +192,10 @@ def _branch_correct(tip_distances, i, j, i_sum, j_sum):
     return result.sum()
 
 
-# specific to weighted
-def sum_descendants(bound_indices):
-    """For each internal node, sets col to sum of values in descendants."""
-    traverse_reduce(bound_indices, sum)
-
-
 def bind_to_parent_array(t, a):
     """Binds tree to array a, returning result in list.
 
-    Takes as input tree t with _leaf_index set.
+    Takes as input tree t with id set.
 
     Returns list of (node_row, parent_row such that node_row points to the
     row of a that corresponds to the current row, and parent_row points to
@@ -210,14 +211,7 @@ def bind_to_parent_array(t, a):
     result = []
     for n in t.traverse(self_before=True, self_after=False):
         if n is not t:
-            result.append([a[n._leaf_index], a[n.parent._leaf_index]])
-    return result
-
-
-def unifrac_tasks_from_matrix(u, env_names):
-    """Returns the UniFrac matrix, PCoA, and/or cluster from the matrix."""
-    result = {}
-    result['distance_matrix'] = (u, env_names)
+            result.append([a[n.id], a[n.parent.id]])
     return result
 
 
