@@ -1998,57 +1998,64 @@ class TestSequence(TestCase):
         ]
         self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
 
+    def test_kmer_frequencies_empty_sequence(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.kmer_frequencies(1), {})
+        self.assertEqual(seq.kmer_frequencies(1, overlap=False), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True, overlap=False),
+                         {})
+
     def test_kmer_frequencies(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
         # overlap = True
-        expected = Counter('GATTACA')
+        expected = {'G': 1, 'A': 3, 'T': 2, 'C': 1}
         self.assertEqual(seq.kmer_frequencies(1, overlap=True), expected)
-        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+
+        expected = {'GAT': 1, 'ATT': 1, 'TTA': 1, 'TAC': 1, 'ACA': 1}
         self.assertEqual(seq.kmer_frequencies(3, overlap=True), expected)
-        expected = Counter([])
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=True), expected)
 
         # overlap = False
-        expected = Counter(['GAT', 'TAC'])
+        expected = {'GAT': 1, 'TAC': 1}
         self.assertEqual(seq.kmer_frequencies(3, overlap=False), expected)
-        expected = Counter(['GATTACA'])
+
+        expected = {'GATTACA': 1}
         self.assertEqual(seq.kmer_frequencies(7, overlap=False), expected)
-        expected = Counter([])
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=False), expected)
 
     def test_kmer_frequencies_relative(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
         # overlap = True
-        expected = defaultdict(float)
-        expected['A'] = 3/7.
-        expected['C'] = 1/7.
-        expected['G'] = 1/7.
-        expected['T'] = 2/7.
+        expected = {'A': 3/7, 'C': 1/7, 'G': 1/7, 'T': 2/7}
         self.assertEqual(seq.kmer_frequencies(1, overlap=True, relative=True),
                          expected)
-        expected = defaultdict(float)
-        expected['GAT'] = 1/5.
-        expected['ATT'] = 1/5.
-        expected['TTA'] = 1/5.
-        expected['TAC'] = 1/5.
-        expected['ACA'] = 1/5.
+
+        expected = {'GAT': 1/5, 'ATT': 1/5, 'TTA': 1/5, 'TAC': 1/5, 'ACA': 1/5}
         self.assertEqual(seq.kmer_frequencies(3, overlap=True, relative=True),
                          expected)
-        expected = defaultdict(float)
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=True, relative=True),
                          expected)
 
         # overlap = False
-        expected = defaultdict(float)
-        expected['GAT'] = 1/2.
-        expected['TAC'] = 1/2.
+        expected = {'GAT': 1/2, 'TAC': 1/2}
         self.assertEqual(seq.kmer_frequencies(3, overlap=False, relative=True),
                          expected)
-        expected = defaultdict(float)
-        expected['GATTACA'] = 1.0
+
+        expected = {'GATTACA': 1.0}
         self.assertEqual(seq.kmer_frequencies(7, overlap=False, relative=True),
                          expected)
-        expected = defaultdict(float)
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=False, relative=True),
                          expected)
 
@@ -2069,8 +2076,7 @@ class TestSequence(TestCase):
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
         seq = Sequence('AAAAAAAAAA')
-        self.assertEqual(seq.kmer_frequencies(1, relative=True),
-                         defaultdict(float, {'A': 1.0}))
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {'A': 1.0})
 
     def test_find_with_regex(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})

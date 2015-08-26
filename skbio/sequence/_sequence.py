@@ -1900,11 +1900,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Returns
         -------
-        collections.Counter or collections.defaultdict
+        dict
             Frequencies of words of length `k` contained in the biological
-            sequence. This will be a ``collections.Counter`` if `relative` is
-            ``False`` and a ``collections.defaultdict`` if `relative` is
-            ``True``.
+            sequence.
 
         Raises
         ------
@@ -1913,19 +1911,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from collections import defaultdict, Counter
+        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> freqs = s.kmer_frequencies(3, overlap=False)
-        >>> freqs == Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
-        True
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'ACA': 1, 'CAT': 1, 'TTA': 2}
         >>> freqs = s.kmer_frequencies(3, relative=True, overlap=False)
-        >>> freqs == defaultdict(float, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
-        True
+        >>> pprint(freqs)
+        {'ACA': 0.25, 'CAT': 0.25, 'TTA': 0.5}
 
         """
         kmers = self.iter_kmers(k, overlap=overlap)
-        freqs = collections.Counter((str(seq) for seq in kmers))
+        freqs = dict(collections.Counter((str(seq) for seq in kmers)))
 
         if relative:
             if overlap:
@@ -1933,7 +1931,7 @@ class Sequence(collections.Sequence, SkbioObject):
             else:
                 num_kmers = len(self) // k
 
-            relative_freqs = collections.defaultdict(float)
+            relative_freqs = {}
             for kmer, count in viewitems(freqs):
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs
