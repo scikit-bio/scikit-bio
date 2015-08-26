@@ -54,7 +54,7 @@ ftp://ftp.ncbi.nih.gov/genbank/docs/FTv10_3.html
 The sequence in the ``'ORIGIN'`` section is always in lowercase for the
 GenBank files downloaded from NCBI. For the RNA molecules, ``'t'`` (thymine),
 instead of ``'u'`` (uracil) is used in the sequence. All GenBank writers
-follow these traditions while writing GenBank files.
+follow these conventions while writing GenBank files.
 
 Format Parameters
 -----------------
@@ -75,8 +75,8 @@ as lowercase letters. This parameter is passed to ``Sequence`` or
 its sub-class constructor.
 
 ``seq_num`` is a parameter used with the ``Sequence``, ``DNA``, ``RNA``, and
-``Protein`` GenBank readers. It specifies which GenBank record to read from the
-concatenated GenBank file with multiple records in it.
+``Protein`` GenBank readers. It specifies which GenBank record to read from
+a GenBank file with multiple records in it.
 
 Examples
 --------
