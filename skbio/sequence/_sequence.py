@@ -1785,43 +1785,58 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @experimental(as_of="0.4.0-dev")
     def frequencies(self, chars=None, relative=False):
-        if isinstance(chars, six.string_types):
-            chars = set([chars])
+        # perform quick sanity checks first before computing frequencies
+        if chars is not None:
+            chars = self._munge_to_char_set(chars)
 
-        if isinstance(chars, set):
-            str_chars = set()
+        freqs = dict(collections.Counter(str(self)))
+
+        if chars is not None:
+            for obs_char in list(freqs.keys()):
+                if obs_char not in chars:
+                    del freqs[obs_char]
             for char in chars:
-                if type(char) is bytes or type(char) is np.bytes_:
-                    char = char.decode('ascii')
-                elif isinstance(char, six.string_types):
-                    pass
-                else:
-                    raise TypeError(
-                        "Each element of `chars` must be string-like, not %r" %
-                        type(char).__name__)
+                if char not in freqs:
+                    freqs[char] = 0
 
-                if len(char) != 1:
-                    raise ValueError(
-                        "Each element of `chars` must contain a single "
-                        "character (found %d characters)" % len(char))
-                str_chars.add(char)
-            chars = str_chars
-        elif chars is not None:
+        if relative:
+            seq_len = len(self)
+            relative_freqs = {}
+            for obs_char, count in viewitems(freqs):
+                try:
+                    relative_freq = count / seq_len
+                except ZeroDivisionError:
+                    relative_freq = np.nan
+                relative_freqs[obs_char] = relative_freq
+            freqs = relative_freqs
+
+        return freqs
+
+    def _munge_to_char_set(self, chars):
+        """Helper for Sequence.frequencies."""
+        if (isinstance(chars, six.string_types) or
+            isinstance(chars, six.binary_type)):
+            chars = set([chars])
+        elif not isinstance(chars, set):
             raise TypeError(
                 "`chars` must be of type `set`, not %r" % type(chars).__name__)
 
-        #freqs = collections.Counter(str(self))
-        freqs = self.kmer_frequencies(k=1, overlap=False, relative=relative)
-
-        if chars is not None:
-            for char in list(freqs.keys()):
-                if char not in chars:
-                    del freqs[char]
-            for char in chars:
-                if char not in freqs:
-                    freqs[char] = 0.0 if relative else 0
-
-        return freqs
+        munged_chars = set()
+        for char in chars:
+            if isinstance(char, six.binary_type):
+                char = char.decode('ascii')
+            elif isinstance(char, six.string_types):
+                pass
+            else:
+                raise TypeError(
+                    "Each element of `chars` must be string-like, not %r" %
+                    type(char).__name__)
+            if len(char) != 1:
+                raise ValueError(
+                    "Each element of `chars` must contain a single "
+                    "character (found %d characters)" % len(char))
+            munged_chars.add(char)
+        return munged_chars
 
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
