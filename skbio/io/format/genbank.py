@@ -740,7 +740,7 @@ def _parse_loc_str(loc_str, length):
             index = int(i) - 1
         else:
             raise GenBankFormatError(
-                'Could not parse location string:\n%s' %
+                'Could not parse location string: "%s"' %
                 loc_str)
         pmd[index] = True
 

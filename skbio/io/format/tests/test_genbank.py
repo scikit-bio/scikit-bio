@@ -319,6 +319,19 @@ REFERENCE   1  (bases 1 to 154478)
             self.assertDictEqual(parsed[0], expect[0])
             npt.assert_equal(parsed[1], expect[1])
 
+    def test_parse_loc_str_illegal(self):
+        length = 12
+        examples = [
+            'abc',
+            '',
+            '3-8']
+        for example in examples:
+            print(example)
+            with self.assertRaisesRegexp(
+                    GenBankFormatError,
+                    'Could not parse location string: "%s"' % example):
+                _parse_loc_str(example, length)
+
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
         for c in [Sequence, Protein]:
