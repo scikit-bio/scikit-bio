@@ -729,8 +729,12 @@ def _parse_loc_str(loc_str, length):
             beg = int(beg)
             end = int(end)
             index = range(beg-1, end)
-        elif i.isdigit():  # single base
+        elif i.isdigit():  # single unit
             index = int(i) - 1
+        elif '^' in i:  # position between units, e.g. 12^13
+            # TODO: this case is not handled. Basically pmd will be all False.
+            # Will update in future.
+            index = range(2, 1)
         else:
             raise GenBankFormatError(
                 'Could not parse location string: "%s"' %
