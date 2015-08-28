@@ -697,20 +697,34 @@ def _parse_loc_str(loc_str, length):
 
     Warning: This converts coordinates to 0-based from 1-based as
     in GenBank format.
+
+    The location descriptor can be one of the following:
+    (a) a single base number. e.g. 467
+    (b) a site between two indicated adjoining bases. e.g. 123^124
+    (c) a single base chosen from within a specified range of bases (not
+        allowed for new entries). e.g. 102.110
+    (d) the base numbers delimiting a sequence span. e.g.340..565
+    (e) a remote entry identifier followed by a local location
+        descriptor (i.e., a-d). e.g. J00194.1:100..202
+
+    TODO:
+    handle (b), (c), (e) cases correctly
     '''
     pmd = np.zeros(length, dtype=bool)
     res = {'rc_': False,
            'left_partial_': False,
            'right_partial_': False}
     items = re.split('[(),]+', loc_str)
-    operators = ['join', 'complement']
+    operators = ['join', 'complement', 'order']
     if 'complement' in items:
         res['rc_'] = True
     for i in items:
         i = i.strip()
         if i in operators or not i:
             continue
-        elif '..' in i:  # span
+        elif ':' in i:  # (e)
+            index = []
+        elif '..' in i:  # (d)
             beg, end = i.split('..')
             if beg.startswith('<'):
                 beg = beg[1:]
@@ -721,12 +735,12 @@ def _parse_loc_str(loc_str, length):
             beg = int(beg)
             end = int(end)
             index = range(beg-1, end)
-        elif i.isdigit():  # single unit
+        elif '.' in i:  # (c)
+            index = []
+        elif i.isdigit():  # (a)
             index = int(i) - 1
-        elif '^' in i:  # position between units, e.g. 12^13
-            # TODO: this case is not handled. Basically pmd will be all False.
-            # Will update in future.
-            index = range(2, 1)
+        elif '^' in i:  # (b)
+            index = []
         else:
             raise GenBankFormatError(
                 'Could not parse location string: "%s"' %
