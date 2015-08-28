@@ -21,7 +21,6 @@ REFERENCE   1  (residues 1 to 9)
 COMMENT     Method: direct peptide sequencing.
 FEATURES             Location/Qualifiers
        source        1..9
-                     /db_xref="taxon:2"
                      /organism="Bacteria"
       Protein        1..>9
                      /product="L-carnitine amidase"
@@ -38,14 +37,8 @@ SOURCE      uncultured Xylanimonas sp.
             Bacteria; Actinobacteria; Micrococcales; Promicromonosporaceae; Xylanimonas; environmental samples.
 FEATURES             Location/Qualifiers
        source        1..9
-                     /clone="ROP4R2E04"
                      /country="Brazil: Parana, Paranavai"
-                     /db_xref="taxon:876087"
                      /environmental_sample
-                     /host="sugarcane"
-                     /isolation_source="rhizosphere soil not treated with nitrogen fertilizer"
-                     /lat_lon="23.0728 S 52.4650 W"
-                     /organism="uncultured Xylanimonas sp."
          rRNA        complement(<2..>8)
                      /product="16S ribosomal RNA"
 ORIGIN

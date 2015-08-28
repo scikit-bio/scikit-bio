@@ -608,6 +608,7 @@ def _parse_features(lines, length):
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
     for i, section in enumerate(section_splitter(lines)):
+        # print(i) ; continue
         feature, pmd = _parse_single_feature(section, length, i)
         features.append(feature)
         positional_metadata.append(pmd)
@@ -659,13 +660,7 @@ def _parse_single_feature(lines, length, index):
                 section, label_delimitor='=',
                 join_delimitor=' ', return_label=True)
             k = k[1:]
-            # strip the quotes if it is quoted.
-            # v could be empty if there is no value for this qualifier.
-            if v:
-                if v[0] == '"' and v[-1] == '"':
-                    v = v[1:-1]
-                else:  # it should be number if not quoted
-                    v = int(v)
+
             # some Qualifiers can appear multiple times
             if k in feature:
                 if not isinstance(feature[k], list):
@@ -705,8 +700,7 @@ def _serialize_qualifier(key, value):
     # if value is empty
     if not value:
         return '/%s' % key
-    if isinstance(value, str):
-        value = '"%s"' % value
+
     return '/{k}={v}'.format(k=key, v=value)
 
 
@@ -796,10 +790,8 @@ def _parse_section_default(
     label = None
     for line in lines:
         if first:
-            try:
-                items = line.split(label_delimitor, 1)
-            except:
-                GenBankFormatError('Could not split the line:\n%s', line)
+            items = line.split(label_delimitor, 1)
+
             if len(items) == 2:
                 label, section = items
             else:
