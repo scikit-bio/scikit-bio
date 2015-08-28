@@ -401,6 +401,9 @@ def _parse_single_genbank(chunks):
         try:
             parsed = parser(section)
         except:
+            # in case the section is too long...
+            if len(section) > 49:
+                section = section[:49].append('...')
             raise GenBankFormatError(
                 'Could not parse this section with %s:\n%s' %
                 (parser, ''.join(section)))

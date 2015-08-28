@@ -291,6 +291,7 @@ REFERENCE   1  (bases 1 to 154478)
         length = 12
 
         examples = [
+            '',
             '9',  # a single base in the presented sequence
             '3..8',
             '<3..8',
@@ -300,6 +301,8 @@ REFERENCE   1  (bases 1 to 154478)
             'join(3..5,7..9)']
 
         expects = [
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
              np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
@@ -323,10 +326,8 @@ REFERENCE   1  (bases 1 to 154478)
         length = 12
         examples = [
             'abc',
-            '',
             '3-8']
         for example in examples:
-            print(example)
             with self.assertRaisesRegexp(
                     GenBankFormatError,
                     'Could not parse location string: "%s"' % example):
