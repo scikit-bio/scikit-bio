@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
+from future.builtins import range, zip
 from future.utils import viewitems
 import six
 
@@ -319,6 +319,7 @@ class Sequence(collections.Sequence, SkbioObject):
     3      []       10
 
     """
+    _number_of_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -1785,13 +1786,97 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @experimental(as_of="0.4.0-dev")
     def frequencies(self, chars=None, relative=False):
-        # perform quick sanity checks first before computing frequencies
+        """Compute frequencies of characters in the sequence.
+
+        Parameters
+        ----------
+        chars : str or set of str, optional
+            Characters to compute the frequencies of. May be a ``str``
+            containing a single character or a ``set`` of single-character
+            strings. If ``None``, frequencies will be computed for all
+            characters present in the sequence.
+        relative : bool, optional
+            If ``True``, return the relative frequency of each character
+            instead of its count. If `chars` is provided, relative frequencies
+            will be computed with respect to the number of characters in the
+            sequence, **not** the total count of characters observed in
+            `chars`. Thus, the relative frequencies will not necessarily sum to
+            1.0 if `chars` is provided.
+
+        Returns
+        -------
+        dict
+            Frequencies of characters in the sequence.
+
+        Raises
+        ------
+        TypeError
+            If `chars` is not a ``str`` or ``set`` of ``str``.
+        ValueError
+            If `chars` is not a single-character ``str`` or a ``set`` of
+            single-character strings.
+
+        See Also
+        --------
+        kmer_frequencies
+        iter_kmers
+
+        Notes
+        -----
+        If the sequence is empty (i.e., length zero), ``relative=True``,
+        **and** `chars` is provided, the relative frequency of each specified
+        character will be ``np.nan``.
+
+        If `chars` is not provided, this method is equivalent to, but faster
+        than, ``seq.kmer_frequencies(k=1)``.
+
+        If `chars` is not provided, it is equivalent to, but faster than,
+        passing ``chars=seq.observed_chars``.
+
+        Examples
+        --------
+        Compute character frequencies of a sequence:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('AGAAGACC')
+        >>> freqs = seq.frequencies()
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'A': 4, 'C': 2, 'G': 2}
+
+        Compute relative character frequencies:
+
+        >>> freqs = seq.frequencies(relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'G': 0.25}
+
+        Compute relative frequencies of characters A, C, and T:
+
+        >>> freqs = seq.frequencies(chars={'A', 'C', 'T'}, relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'T': 0.0}
+
+        Note that since character T is not in the sequence we receive a
+        relative frequency of 0.0. The relative frequencies of A and C are
+        relative to the number of characters in the sequence (8), **not** the
+        number of A and C characters (4 + 2 = 6).
+
+        """
+        # Perform quick sanity checks first before computing frequencies.
         if chars is not None:
             chars = self._munge_to_char_set(chars)
 
-        freqs = dict(collections.Counter(str(self)))
+        freqs = np.bincount(self._bytes,
+                            minlength=self._number_of_extended_ascii_codes)
+        obs_bytes = np.nonzero(freqs)
+        # Downcast from int64 to uint8 then convert to str. This is safe
+        # because we are guaranteed to have indices in the range 0 to 255
+        # inclusive.
+        obs_chars = obs_bytes[0].astype(np.uint8).tostring().decode('ascii')
+        freqs = dict(zip(obs_chars, freqs[obs_bytes]))
 
         if chars is not None:
+            # Get a copy of the keys because we're deleting in the loop.
             for obs_char in list(freqs.keys()):
                 if obs_char not in chars:
                     del freqs[obs_char]
@@ -1814,8 +1899,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
     def _munge_to_char_set(self, chars):
         """Helper for Sequence.frequencies."""
-        if (isinstance(chars, six.string_types) or
-            isinstance(chars, six.binary_type)):
+        if isinstance(chars, six.string_types) or \
+                isinstance(chars, six.binary_type):
             chars = set([chars])
         elif not isinstance(chars, set):
             raise TypeError(

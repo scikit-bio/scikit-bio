@@ -1745,6 +1745,25 @@ class TestSequence(TestCase):
             self.assertEqual(seq.frequencies(chars=chars, relative=True),
                              {'x': 0.0, 'z': 5/11})
 
+    def test_frequencies_chars_out_of_ascii_range(self):
+        seq = Sequence('abcabc')
+        self.assertEqual(seq.frequencies(chars={'a', u'\u1F30'}),
+                         {'a': 2, u'\u1F30': 0})
+        self.assertEqual(
+            seq.frequencies(chars={'a', u'\u1F30'}, relative=True),
+            {'a': 2/6, u'\u1F30': 0.0})
+
+    def test_frequencies_equivalent_to_kmer_frequencies_k_of_1(self):
+        seq = Sequence('abcabc')
+
+        exp = {'a': 2, 'b': 2, 'c': 2}
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1), exp)
+
+        exp = {'a': 2/6, 'b': 2/6, 'c': 2/6}
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1, relative=True), exp)
+
     def test_frequencies_passing_observed_chars_equivalent_to_default(self):
         seq = Sequence('abcabc')
 
