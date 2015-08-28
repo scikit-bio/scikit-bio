@@ -1873,28 +1873,27 @@ class Sequence(collections.Sequence, SkbioObject):
         # because we are guaranteed to have indices in the range 0 to 255
         # inclusive.
         obs_chars = obs_bytes[0].astype(np.uint8).tostring().decode('ascii')
-        freqs = dict(zip(obs_chars, freqs[obs_bytes]))
+        obs_counts = freqs[obs_bytes]
+        if relative:
+            obs_counts = obs_counts / len(self)
+        freqs = dict(zip(obs_chars, obs_counts))
 
         if chars is not None:
             # Get a copy of the keys because we're deleting in the loop.
             for obs_char in list(freqs.keys()):
                 if obs_char not in chars:
                     del freqs[obs_char]
+
+            fill_value = 0
+            if relative:
+                if self:
+                    fill_value = 0.0
+                else:
+                    fill_value = np.nan
+
             for char in chars:
                 if char not in freqs:
-                    freqs[char] = 0
-
-        if relative:
-            seq_len = len(self)
-            relative_freqs = {}
-            for obs_char, count in viewitems(freqs):
-                try:
-                    relative_freq = count / seq_len
-                except ZeroDivisionError:
-                    relative_freq = np.nan
-                relative_freqs[obs_char] = relative_freq
-            freqs = relative_freqs
-
+                    freqs[char] = fill_value
         return freqs
 
     def _munge_to_char_set(self, chars):
