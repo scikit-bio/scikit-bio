@@ -1,0 +1,19 @@
+{
+  "environment_type": "conda",
+  "matrix": {
+    "ipython": [],
+    "matplotlib": [],
+    "nose": [],
+    "numpy": [],
+    "pandas": [],
+    "scipy": []
+  },
+  "project": "scikit-bio",
+  "project_url": "http://scikit-bio.org/",
+  "pythons": [
+    "3.4",
+    "3.3",
+    "2.7"
+  ],
+  "version": 1
+}
