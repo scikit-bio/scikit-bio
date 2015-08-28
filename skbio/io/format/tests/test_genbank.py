@@ -34,8 +34,8 @@ class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = list(map(get_data_path, [
             'genbank_5_blanks_start_of_file',
-            'genbank_single_record',
-            'genbank_single_record_rna',
+            'genbank_single_record_upper',
+            'genbank_single_record_lower',
             'genbank_multi_records']))
 
         self.negative_fps = list(map(get_data_path, [
@@ -76,7 +76,7 @@ class GenBankIOTests(TestCase):
               'unit': 'aa', 'size': 360}))
 
         # test single record and read uppercase sequence
-        self.single_fp = get_data_path('genbank_single_record')
+        self.single_fp = get_data_path('genbank_single_record_upper')
         self.single_lower_fp = get_data_path('genbank_single_record_lower')
         self.single = (
             'GSREILDFK',
@@ -90,8 +90,7 @@ class GenBankIOTests(TestCase):
             None,
             Protein)
 
-        self.single_dna_fp = get_data_path('genbank_single_record_dna')
-        self.single_rna_fp = get_data_path('genbank_single_record_rna')
+        self.single_rna_fp = get_data_path('genbank_single_record')
         self.single_rna = (
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'ACCESSION': 'M14399',
@@ -426,7 +425,7 @@ class WriterTests(GenBankIOTests):
         obs = fh.getvalue()
         fh.close()
 
-        with io.open(self.single_dna_fp) as fh:
+        with io.open(self.single_rna_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)

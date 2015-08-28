@@ -162,10 +162,9 @@ Stats:
 
 Since this is a riboswitch molecule, we may want to read it as ``RNA``.
 As the GenBank file usually have ``'t'`` instead of ``'u'`` in the
-sequence, we can not read it as ``RNA`` directly without conversion.
-We can read it as ``DNA`` and then ``transcribe`` it into ``RNA``:
+sequence, we can read it as ``RNA`` by converting ``'t'`` to ``'u'``:
 
->>> rna_seq = dna_seq.transcribe()
+>>> rna_seq = RNA.read(gb)
 >>> rna_seq
 RNA
 -----------------------------------------------------------------
@@ -190,14 +189,7 @@ Stats:
 -----------------------------------------------------------------
 0 AGAGGUUCUA GCACAUCCCU CUAUAAAAAA CUAA
 
-
-Or we can convert ``'t'`` to ``'u'`` in the sequence and then read it
-as ``RNA``:
-
->>> gb_rna = gb
->>> gb_rna[-2] = gb_rna[-2].replace('t', 'u')
->>> rna_seq_2 = RNA.read(gb_rna)
->>> rna_seq_2 == rna_seq
+>>> rna_seq == dna_seq.transcribe()
 True
 
 >>> from io import StringIO
@@ -366,8 +358,12 @@ def _construct(record, constructor=None, **kwargs):
             constructor = Protein
         else:
             constructor = Sequence
-    return constructor(
-        seq, metadata=md, positional_metadata=pmd, **kwargs)
+    if constructor == RNA:
+        return DNA(
+            seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
+    else:
+        return constructor(
+            seq, metadata=md, positional_metadata=pmd, **kwargs)
 
 
 def _parse_genbanks(fh):
