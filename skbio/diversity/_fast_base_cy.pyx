@@ -1,35 +1,74 @@
 import numpy as np
-cimport numpy as cnp
+cimport numpy as np
 cimport cython
+
+DTYPE = np.int64
+ctypedef np.int64_t DTYPE_t
 
 
 @cython.boundscheck(False) 
 @cython.wraparound(False) 
-cdef traverse_reduce(tuple child_index, cnp.ndarray[cnp.int64_t, ndim=2] a):
-    """Apply a[k] = sum[i:j]
+def tip_distances(np.ndarray[np.double_t, ndim=2] a, object t, 
+                  np.ndarray[DTYPE_t, ndim=1] tip_indices):
+    """Sets each tip to its distance from the root.
+    Note: This will need its own unittest"""
+    cdef:
+        object n
+        Py_ssize_t i, p_i, j, n_rows, n_cols
+        np.ndarray[np.double_t, ndim=1] mask
 
+    ### preorder_reduce
+    ##### take bind_to_parent_array result, dump down to cythonz
+    n_rows = a.shape[0]
+    n_cols = a.shape[1]
+    for n in t.preorder(include_self=False):
+        i = n.id
+        p_i = n.parent.id
+
+        for j in range(n_cols):
+            a[i, j] += a[p_i, j]
+
+    #for i, s in bound_indices:
+    #    i += s
+    mask = np.zeros(n_rows, dtype=np.double)
+    for i in range(tip_indices.shape[0]):
+        mask[tip_indices[i]] = 1.0
+    #np.put(mask, tip_indices, 1)
+
+    for i in range(n_rows):
+        for j in range(n_cols):
+            a[i, j] *= mask[i]
+    #a *= mask[:, np.newaxis]
+
+@cython.boundscheck(False) 
+@cython.wraparound(False) 
+cdef traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index, 
+                     np.ndarray[DTYPE_t, ndim=2] a):
+    """Apply a[k] = sum[i:j]
+    ### postorder_reduce
     TODO: describe in detail, and include a hand example of how the reduction
     works. It's awesome.
     """
     cdef:
-        cnp.int64_t node, start, end
-        Py_ssize_t i, j
-        tuple child_data
+        Py_ssize_t i, j, k
+        DTYPE_t node, start, end
+        DTYPE_t n_envs = a.shape[1]
 
-    for i in range(len(child_index)):
-        child_data = child_index[i]
-        node = child_data[0]
-        start = child_data[1]
-        end = child_data[2]
-
+    # possible GPGPU target
+    for i in range(child_index.shape[0]):
+        node = child_index[i, 0]
+        start = child_index[i, 1]
+        end = child_index[i, 2]
+       
         for j in range(start, end + 1):
-            a[node] += a[j]
-
+            for k in range(n_envs):
+                a[node, k] += a[j, k]
+        
 
 @cython.boundscheck(False) 
 @cython.wraparound(False) 
-def nodes_by_counts(cnp.ndarray[cnp.int64_t, ndim=2] counts, 
-                    cnp.ndarray tip_ids, 
+def nodes_by_counts(np.ndarray counts, 
+                    np.ndarray tip_ids, 
                     dict indexed):
     """Construct the count array, and the counts up the tree
 
@@ -52,22 +91,23 @@ def nodes_by_counts(cnp.ndarray[cnp.int64_t, ndim=2] counts,
 
     """
     cdef:
-        cnp.ndarray nodes, observed_ids
-        cnp.ndarray[cnp.int64_t, ndim=2] count_array, counts_t
-        cnp.ndarray[cnp.int64_t, ndim=1] observed_indices, otus_in_nodes
+        np.ndarray nodes, observed_ids
+        np.ndarray[DTYPE_t, ndim=2] count_array, counts_t
+        np.ndarray[DTYPE_t, ndim=1] observed_indices, otus_in_nodes
         Py_ssize_t i, j
         set observed_ids_set
         object n
         dict node_lookup
-        cnp.int64_t n_count_vectors, n_count_otus
+        DTYPE_t n_count_vectors, n_count_otus
 
     nodes = indexed['name']
 
     # allow counts to be a vector
     counts = np.atleast_2d(counts)
+    counts = counts.astype(DTYPE)
 
-    # determine observed IDs. It may be worth breaking apart the reduce call
-    # and optimizing it futher.
+    # determine observed IDs. It may be possible to unroll these calls to 
+    # squeeze a little more performance
     observed_indices = counts.sum(0).nonzero()[0]
     observed_ids = tip_ids[observed_indices]
     observed_ids_set = set(observed_ids)
@@ -80,14 +120,14 @@ def nodes_by_counts(cnp.ndarray[cnp.int64_t, ndim=2] counts,
             node_lookup[n] = i
 
     # determine the positions of the observed IDs in nodes
-    otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=np.int64)
+    otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)
     for i in range(observed_ids.shape[0]):
         n = observed_ids[i]
         otus_in_nodes[i] = node_lookup[n]
 
     # count_array has a row per node (not tip) and a column per env.
     n_count_vectors = counts.shape[0]
-    count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=np.int64)
+    count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=DTYPE)
    
     # populate the counts array with the counts of each observation in each
     # env
