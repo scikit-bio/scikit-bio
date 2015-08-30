@@ -7,11 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from warnings import warn
 
 import numpy as np
 
-from skbio.util import EfficiencyWarning
 from skbio.diversity._fast_base_cy import nodes_by_counts
 
 

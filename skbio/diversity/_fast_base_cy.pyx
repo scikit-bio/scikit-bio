@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -8,46 +16,111 @@ ctypedef np.int64_t DTYPE_t
 
 @cython.boundscheck(False) 
 @cython.wraparound(False) 
-def tip_distances(np.ndarray[np.double_t, ndim=2] a, object t, 
+def tip_distances(np.ndarray[np.double_t, ndim=1] a, object t, 
                   np.ndarray[DTYPE_t, ndim=1] tip_indices):
-    """Sets each tip to its distance from the root.
-    Note: This will need its own unittest"""
+    """Sets each tip to its distance from the root
+
+    Parameters
+    ----------
+    a : np.ndarray of double
+        A matrix in which each row corresponds to a node in ``t``.
+    t : skbio.tree.TreeNode
+        The tree that corresponds to the rows in ``a``.
+    tip_indices : np.ndarray of int
+        The index positions in ``a`` of the tips in ``t``.
+    
+    Returns
+    -------
+    np.ndarray of double
+        A matrix in which each row corresponds to a node in ``t``, Only the 
+        rows that correspond to tips are nonzero, and the values in these rows 
+        are the distance from that tip to the root of the tree.
+    """
     cdef:
         object n
-        Py_ssize_t i, p_i, j, n_rows, n_cols
+        Py_ssize_t i, p_i, n_rows
         np.ndarray[np.double_t, ndim=1] mask
-
-    ### preorder_reduce
-    ##### take bind_to_parent_array result, dump down to cythonz
-    n_rows = a.shape[0]
-    n_cols = a.shape[1]
+        np.ndarray[np.double_t, ndim=1] tip_ds = a.copy()
+    
+    # preorder reduction over the tree to gather distances at the tips
+    n_rows = tip_ds.shape[0]
     for n in t.preorder(include_self=False):
         i = n.id
         p_i = n.parent.id
 
-        for j in range(n_cols):
-            a[i, j] += a[p_i, j]
+        tip_ds[i] += tip_ds[p_i]
 
-    #for i, s in bound_indices:
-    #    i += s
+    # construct a mask that represents the locations of the tips
     mask = np.zeros(n_rows, dtype=np.double)
     for i in range(tip_indices.shape[0]):
         mask[tip_indices[i]] = 1.0
-    #np.put(mask, tip_indices, 1)
 
+    # apply the mask such that tip_ds only includes values which correspond to
+    # the tips of the tree.
     for i in range(n_rows):
-        for j in range(n_cols):
-            a[i, j] *= mask[i]
-    #a *= mask[:, np.newaxis]
+        tip_ds[i] *= mask[i]
+
+    return tip_ds
+
 
 @cython.boundscheck(False) 
 @cython.wraparound(False) 
 cdef traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index, 
                      np.ndarray[DTYPE_t, ndim=2] a):
     """Apply a[k] = sum[i:j]
-    ### postorder_reduce
-    TODO: describe in detail, and include a hand example of how the reduction
-    works. It's awesome.
+
+    Parameters
+    ----------
+    child_index: nparray of int
+        A matrix in which the first column corresponds to an index position in
+        ``a``, which represents a node in a tree. The second column is the 
+        starting index in ``a`` for the node's children, and the third column
+        is the ending index in ``a`` for the node's children.
+    a : np.ndarray of int
+        A matrix of the environment data. Each row corresponds to a node in a
+        tree, and each column corresponds to an environment. On input, it is
+        assumed that only tips have counts.
+
+    Notes
+    -----
+    This is effectively a postorder reduction over the tree. For example, 
+    given the following tree:
+
+                            /-A
+                  /E-------|
+                 |          \-B
+        -root----|
+                 |          /-C
+                  \F-------|
+                            \-D
+
+    And assuming counts for [A, B, C, D] in environment FOO of [1, 1, 1, 0] and
+    counts for environment BAR of [0, 1, 1, 1], the input counts matrix ``a``
+    would be:
+
+        [1 0  -> A
+         1 1  -> B
+         1 1  -> C
+         0 1  -> D
+         0 0  -> E
+         0 0  -> F
+         0 0] -> root
+
+    The method will perform the following reduction:
+
+        [1 0     [1 0     [1 0     [1 0 
+         1 1      1 1      1 1      1 1 
+         1 1      1 1      1 1      1 1 
+         0 1  ->  0 1  ->  0 1  ->  0 1 
+         0 0      2 1      2 1      2 1 
+         0 0      0 0      1 2      1 2 
+         0 0]     0 0]     0 0]     3 3]
+
+    The index positions of the above are encoded in ``child_index`` which 
+    describes the node to aggregate into, and the start and stop index 
+    positions of the nodes immediate descendents. 
+
+    This method operates inplace on ``a``
     """
     cdef:
         Py_ssize_t i, j, k
