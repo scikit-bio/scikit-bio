@@ -104,9 +104,9 @@ class FastUnifracTests(StatsTests, TestCase):
                       [0, 1, 1], [1, 1, 1], [0, 1, 1], [1, 1, 1]])
         # lengths from ((a:1,b:2):4,(c:3,(d:1,e:1):2):3)
         bl = np.array([1, 2, 1, 1, 3, 2, 4, 3, 0], dtype=float)
-        self.assertEqual(unifrac(bl, m[:,0], m[:,1]), 10/16.0)
-        self.assertEqual(unifrac(bl, m[:,0], m[:,2]), 8/13.0)
-        self.assertEqual(unifrac(bl, m[:,1], m[:,2]), 8/17.0)
+        self.assertEqual(unifrac(bl, m[:, 0], m[:, 1]), 10/16.0)
+        self.assertEqual(unifrac(bl, m[:, 0], m[:, 2]), 8/13.0)
+        self.assertEqual(unifrac(bl, m[:, 1], m[:, 2]), 8/17.0)
 
     def test_w_unifrac(self):
         # lengths from ((a:1,b:2):4,(c:3,(d:1,e:1):2):3)
@@ -121,7 +121,7 @@ class FastUnifracTests(StatsTests, TestCase):
                       [0, 1, 1],  # parent of (d, e)
                       [2, 1, 1],  # parent of a, b
                       [0, 2, 1],  # parent of c (d, e)
-                      [2, 3, 2]]) # root
+                      [2, 3, 2]])  # root
 
         # sum just the counts at the tips
         m0s = m[:5, 0].sum()
