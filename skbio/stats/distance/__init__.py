@@ -198,6 +198,7 @@ from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
+from ._regression import linregress
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
