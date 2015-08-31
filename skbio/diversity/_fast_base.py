@@ -43,8 +43,8 @@ def index_tree(tree):
     return indexed
 
 
-def _counts_and_length(counts, otu_ids, tree, indexed):
-    """Get the counts array and the tree branch lengths"""
+def counts_and_index(counts, otu_ids, tree, indexed):
+    """Get the counts array and the indexed tree"""
     if indexed is None:
         indexed = index_tree(tree)
 

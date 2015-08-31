@@ -12,7 +12,7 @@ import numpy as np
 
 from skbio.util._decorator import experimental
 from ._unifrac import _validate
-from skbio.diversity._fast_base import _counts_and_length
+from skbio.diversity._fast_base import counts_and_index
 from skbio.diversity._fast_base_cy import tip_distances
 
 
@@ -102,47 +102,48 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=unifrac,
     metric, counts, length = make_unweighted_pdist(input_counts, tip_ids, tree)
     mat = pw_distances(metric, counts, ids=['%d' % i for i in range(10)])
     """
-    count_array, indexed = _counts_and_length(counts, obs_ids, tree, indexed)
+    count_array, indexed = counts_and_index(counts, obs_ids, tree, indexed)
     length = indexed['length']
 
     if metric is unifrac:
-        def f(u, v):
-            boundary = _boundary_case(u.sum(), v.sum())
+        def f(u_counts, v_counts):
+            boundary = _boundary_case(u_counts.sum(), v_counts.sum())
             if boundary is not None:
                 return boundary
-            return unifrac(length, u, v)
+            return unifrac(length, u_counts, v_counts)
 
     elif metric is w_unifrac:
         # This block is duplicated in weighted_unifrac_fast -- possibly should
         # be decomposed.
         # There is a lot in common with both of these methods, but pulling the
         # normalized check out reduces branching logic.
+        tip_idx = np.array([n.id for n in indexed['id_index'].values()
+                            if n.is_tip()])
         if normalized:
-            def f(u, v):
-                u_sum = u.sum()
-                v_sum = v.sum()
+            def f(u_counts, v_counts):
+                u_sum = np.take(u_counts, tip_idx).sum()
+                v_sum = np.take(v_counts, tip_idx).sum()
 
-                boundary = _boundary_case(u_sum, v_sum)
+                boundary = _boundary_case(u_sum, v_sum, normalized,
+                                          unweighted=False)
                 if boundary is not None:
                     return boundary
 
-                tip_idx = np.array([n.id for n in indexed['id_index'].values()
-                                    if n.is_tip()])
                 tip_ds = tip_distances(length, tree, tip_idx)
 
-                u = w_unifrac(length, u, v, u_sum, v_sum)
-                u /= _branch_correct(tip_ds, u, v, u_sum, v_sum)
+                u = w_unifrac(length, u_counts, v_counts, u_sum, v_sum)
+                u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
                 return u
         else:
-            def f(u, v):
-                u_sum = u.sum()
-                v_sum = v.sum()
+            def f(u_counts, v_counts):
+                u_sum = np.take(u_counts, tip_idx).sum()
+                v_sum = np.take(v_counts, tip_idx).sum()
 
-                boundary = _boundary_case(u_sum, v_sum)
+                boundary = _boundary_case(u_sum, v_sum, unweighted=False)
                 if boundary is not None:
                     return boundary
 
-                u = w_unifrac(length, u, v, u_sum, v_sum)
+                u = w_unifrac(length, u_counts, v_counts, u_sum, v_sum)
                 return u
     else:
         raise AttributeError("Unknown metric: %s" % metric)
@@ -169,7 +170,7 @@ def unweighted_unifrac_fast(u_counts, v_counts, otu_ids, tree,
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_length(counts, otu_ids, tree, indexed)
+    count_array, indexed = counts_and_index(counts, otu_ids, tree, indexed)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
 
@@ -201,7 +202,7 @@ def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_length(counts, otu_ids, tree, indexed)
+    count_array, indexed = counts_and_index(counts, otu_ids, tree, indexed)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
 
@@ -214,7 +215,6 @@ def weighted_unifrac_fast(u_counts, v_counts, otu_ids, tree, normalized=False,
         # tip distances to the root
         tip_indices = np.array([n.id for n in indexed['id_index'].values()
                                 if n.is_tip()])
-
         tip_ds = tip_distances(length, tree, tip_indices)
         u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
 
