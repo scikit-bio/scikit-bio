@@ -32,7 +32,8 @@ def faith_pd_fast(counts, otu_ids, tree, validate=True, indexed=None):
     # If Faith's PD is being calculated for a large number of samples, the
     # count_array could be produced a single time for the samples. This would
     # be much faster than producing it for each sample.
-    count_array, length = _counts_and_length(counts, otu_ids, tree, indexed)
+    count_array, indexed = _counts_and_length(counts, otu_ids, tree, indexed)
+    length = indexed['length']
 
     count_array = np.where(count_array > 0, 1, 0)
     result = (length * count_array.T).sum()
