@@ -2088,7 +2088,10 @@ class TreeNode(SkbioObject):
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
         >>> res['child_index']
-        ((4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6))
+        array([[4, 0, 2],
+               [5, 3, 3],
+               [6, 4, 5],
+               [7, 6, 6]])
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
