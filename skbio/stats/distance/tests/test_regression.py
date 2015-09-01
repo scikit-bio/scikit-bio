@@ -121,6 +121,13 @@ class RegressionTests(TestCase):
                             np.array([0.4950495, 0.14851485,
                                       0.14851485]))
 
+        self.assertItemsEqual(B.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(T.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(pvals.index,
+                              ['intercept'] + range(2))
+
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
         self.assertAlmostEqual(R2, 0.9967634167352184)
@@ -138,6 +145,12 @@ class RegressionTests(TestCase):
         npt.assert_allclose(pvals.values,
                             np.array([0.4950495, 0.14851485,
                                       0.14851485]))
+        self.assertItemsEqual(B.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(T.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(pvals.index,
+                              ['intercept'] + range(2))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
