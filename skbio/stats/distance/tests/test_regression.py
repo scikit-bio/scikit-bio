@@ -128,7 +128,11 @@ class RegressionTests(TestCase):
 
     # Tests for bad inputs (i.e. bad distance matrices)
     def test_bad(self):
-        pass
+        with self.assertRaises(ValueError):
+            linregress(self.y3, self.x4, self.x2,
+                       permutations=100,
+                       random_state=0)
+
 
 if __name__ == "__main__":
     main()
