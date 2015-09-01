@@ -16,7 +16,8 @@ from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import squareform
+from scipy.spatial.distance import (squareform,
+                                    euclidean)
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
@@ -834,7 +835,7 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 
 
 @experimental(as_of="0.4.0")
-def makedm(x, dist_func=scipy.spatial.distance.euclidean):
+def makedm(x, dist_func=euclidean):
     """
     Creates a distance matrix on some input for
     a specified distance function
@@ -842,7 +843,9 @@ def makedm(x, dist_func=scipy.spatial.distance.euclidean):
     Parameters
     ----------
     x : array_like or pd.DataFrame or pd.Series
-       Input data
+       Input data.  If the data is 1D, then each
+       element corresponds to a sample.  If the data is 2D
+       then rows are samples, and columns are features
     dist_func : function
        Distance metric.  Must accept exactly two inputs.
 
@@ -859,7 +862,7 @@ def makedm(x, dist_func=scipy.spatial.distance.euclidean):
         for j in range(i):
             dm[i, j] = dist_func(x.ix[i, :],
                                  x.ix[j, :])
-    return DistanceMatrix(dm, x.index)
+    return DistanceMatrix(dm + dm.T, x.index)
 
 
 # helper functions for anosim and permanova

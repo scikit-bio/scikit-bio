@@ -193,7 +193,7 @@ from skbio.util import TestRunner
 
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
-                    randdm)
+                    randdm, makedm)
 from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
@@ -201,7 +201,8 @@ from ._mantel import mantel, pwmantel
 from ._regression import linregress
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel', 'linregress']
+           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'makedm',
+           'anosim', 'permanova', 'bioenv', 'mantel', 'pwmantel',
+           'linregress']
 
 test = TestRunner(__file__).test

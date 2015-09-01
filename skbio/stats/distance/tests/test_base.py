@@ -21,10 +21,10 @@ from IPython.core.display import Image, SVG
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
-    DissimilarityMatrix, randdm)
+    DissimilarityMatrix, randdm, makedm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
-
+from scipy.spatial.distance import cityblock
 
 class DissimilarityMatrixTestData(TestCase):
     def setUp(self):
@@ -548,6 +548,56 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         eq_dm = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         self.assertTrue(self.dm_3x3 == eq_dm)
         self.assertTrue(eq_dm == self.dm_3x3)
+
+
+class MakeDistanceMatrixTests(TestCase):
+    def test_array_like(self):
+        dm = makedm([1, 2, 3])
+        exp = DistanceMatrix([[0, 1, 2],
+                              [1, 0, 1],
+                              [2, 1, 0]])
+        self.assertTrue(dm, exp)
+
+        dm = makedm([[1, 2, 3], [1, 3, 5]])
+        exp = DistanceMatrix([[0, 5],
+                              [5, 0]])
+
+        self.assertTrue(dm, exp)
+
+        dm = makedm([[1, 2, 3], [1, 3, 5]],
+                    dist_func=cityblock)
+        exp = DistanceMatrix([[0, 3],
+                              [3, 0]])
+        self.assertTrue(dm, exp)
+
+
+    def test_pandas_series(self):
+        dm = makedm(pd.Series([1, 2, 3]))
+        exp = DistanceMatrix([[0, 1, 2],
+                              [1, 0, 1],
+                              [2, 1, 0]])
+        self.assertTrue(dm, exp)
+
+    def test_pandas_dataframe(self):
+        dm = makedm(pd.DataFrame([1, 2, 3]))
+        exp = DistanceMatrix([[0, 1, 2],
+                              [1, 0, 1],
+                              [2, 1, 0]])
+        self.assertTrue(dm, exp)
+
+        dm = makedm(pd.DataFrame([[1, 2, 3],
+                                  [1, 3, 5]]))
+        exp = DistanceMatrix([[0, 5],
+                              [5, 0]])
+
+        self.assertTrue(dm, exp)
+
+        dm = makedm(pd.DataFrame([[1, 2, 3],
+                                  [1, 3, 5]]),
+                    dist_func=cityblock)
+        exp = DistanceMatrix([[0, 3],
+                              [3, 0]])
+        self.assertTrue(dm, exp)
 
 
 class RandomDistanceMatrixTests(TestCase):
