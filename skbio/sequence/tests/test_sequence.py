@@ -1731,27 +1731,39 @@ class TestSequence(TestCase):
         seq = Sequence('zabczzzabcz')
 
         # single character case (shortcut)
-        for chars in b'z', u'z', np.fromstring('z', dtype='|S1')[0]:
-            self.assertEqual(seq.frequencies(chars=chars), {'z': 5})
-            self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                             {'z': 5/11})
+        chars = b'z'
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
+
+        chars = u'z'
+        self.assertEqual(seq.frequencies(chars=chars), {u'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {u'z': 5/11})
+
+        chars = np.fromstring('z', dtype='|S1')[0]
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
 
         # set of characters, some present, some not
-        for chars in ({b'x', b'z'}, {u'x', u'z'},
-                      {np.fromstring('x', dtype='|S1')[0],
-                       np.fromstring('z', dtype='|S1')[0]}):
-            self.assertEqual(seq.frequencies(chars=chars),
-                             {'x': 0, 'z': 5})
-            self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                             {'x': 0.0, 'z': 5/11})
+        chars = {b'x', b'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
 
-    def test_frequencies_chars_out_of_ascii_range(self):
-        seq = Sequence('abcabc')
-        self.assertEqual(seq.frequencies(chars={'a', u'\u1F30'}),
-                         {'a': 2, u'\u1F30': 0})
-        self.assertEqual(
-            seq.frequencies(chars={'a', u'\u1F30'}, relative=True),
-            {'a': 2/6, u'\u1F30': 0.0})
+        chars = {u'x', u'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {u'x': 0, u'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {u'x': 0.0, u'z': 5/11})
+
+        chars = {
+            np.fromstring('x', dtype='|S1')[0],
+            np.fromstring('z', dtype='|S1')[0]
+        }
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
 
     def test_frequencies_equivalent_to_kmer_frequencies_k_of_1(self):
         seq = Sequence('abcabc')
@@ -1794,6 +1806,12 @@ class TestSequence(TestCase):
 
         with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
             seq.frequencies(chars={'a', None})
+
+        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+            seq.frequencies(chars=u'\u1F30')
+
+        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+            seq.frequencies(chars={'c', u'\u1F30'})
 
         with six.assertRaisesRegex(self, TypeError, 'set.*int'):
             seq.frequencies(chars=42)

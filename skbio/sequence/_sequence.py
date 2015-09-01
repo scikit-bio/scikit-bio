@@ -1815,6 +1815,9 @@ class Sequence(collections.Sequence, SkbioObject):
         ValueError
             If `chars` is not a single-character ``str`` or a ``set`` of
             single-character strings.
+        ValueError
+            If `chars` contains characters outside the allowable range of
+            characters in a ``Sequence`` object.
 
         See Also
         --------
@@ -1862,41 +1865,26 @@ class Sequence(collections.Sequence, SkbioObject):
         number of A and C characters (4 + 2 = 6).
 
         """
-        # Perform quick sanity checks first before computing frequencies.
-        if chars is not None:
-            chars = self._munge_to_char_set(chars)
-
         freqs = np.bincount(self._bytes,
                             minlength=self._number_of_extended_ascii_codes)
-        obs_bytes = np.nonzero(freqs)
-        # Downcast from int64 to uint8 then convert to str. This is safe
-        # because we are guaranteed to have indices in the range 0 to 255
-        # inclusive.
-        obs_chars = obs_bytes[0].astype(np.uint8).tostring().decode('ascii')
-        obs_counts = freqs[obs_bytes]
-        if relative:
-            obs_counts = obs_counts / len(self)
-        freqs = dict(zip(obs_chars, obs_counts))
 
         if chars is not None:
-            # Get a copy of the keys because we're deleting in the loop.
-            for obs_char in list(freqs.keys()):
-                if obs_char not in chars:
-                    del freqs[obs_char]
+            chars, indices = self._chars_to_indices(chars)
+        else:
+            indices, = np.nonzero(freqs)
+            # Downcast from int64 to uint8 then convert to str. This is safe
+            # because we are guaranteed to have indices in the range 0 to 255
+            # inclusive.
+            chars = indices.astype(np.uint8).tostring().decode('ascii')
 
-            fill_value = 0
-            if relative:
-                if self:
-                    fill_value = 0.0
-                else:
-                    fill_value = np.nan
+        obs_counts = freqs[indices]
+        if relative:
+            obs_counts = obs_counts / len(self)
 
-            for char in chars:
-                if char not in freqs:
-                    freqs[char] = fill_value
-        return freqs
+        # Use tolist() for minor performance gain.
+        return dict(zip(chars, obs_counts.tolist()))
 
-    def _munge_to_char_set(self, chars):
+    def _chars_to_indices(self, chars):
         """Helper for Sequence.frequencies."""
         if isinstance(chars, six.string_types) or \
                 isinstance(chars, six.binary_type):
@@ -1905,13 +1893,13 @@ class Sequence(collections.Sequence, SkbioObject):
             raise TypeError(
                 "`chars` must be of type `set`, not %r" % type(chars).__name__)
 
-        munged_chars = set()
+        # Impose an (arbitrary) ordering to `chars` so that we can return
+        # `indices` in that same order.
+        chars = list(chars)
+        indices = []
         for char in chars:
-            if isinstance(char, six.binary_type):
-                char = char.decode('ascii')
-            elif isinstance(char, six.string_types):
-                pass
-            else:
+            if not (isinstance(char, six.string_types) or
+                    isinstance(char, six.binary_type)):
                 raise TypeError(
                     "Each element of `chars` must be string-like, not %r" %
                     type(char).__name__)
@@ -1919,8 +1907,14 @@ class Sequence(collections.Sequence, SkbioObject):
                 raise ValueError(
                     "Each element of `chars` must contain a single "
                     "character (found %d characters)" % len(char))
-            munged_chars.add(char)
-        return munged_chars
+
+            index = ord(char)
+            if index >= self._number_of_extended_ascii_codes:
+                raise ValueError(
+                    "Character %r in `chars` is outside the range of "
+                    "allowable characters in a `Sequence` object." % char)
+            indices.append(index)
+        return chars, indices
 
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
