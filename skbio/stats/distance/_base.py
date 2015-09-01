@@ -833,6 +833,35 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     return constructor(data, ids)
 
 
+@experimental(as_of="0.4.0")
+def makedm(x, dist_func=scipy.spatial.distance.euclidean):
+    """
+    Creates a distance matrix on some input for
+    a specified distance function
+
+    Parameters
+    ----------
+    x : array_like or pd.DataFrame or pd.Series
+       Input data
+    dist_func : function
+       Distance metric.  Must accept exactly two inputs.
+
+    Returns
+    -------
+    skbio.DistanceMatrix
+       DistanceMatrix of distances across all possible pairs
+       of samples
+    """
+    x = pd.DataFrame(x)
+    n = len(x.index)
+    dm = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i):
+            dm[i, j] = dist_func(x.ix[i, :],
+                                 x.ix[j, :])
+    return DistanceMatrix(dm, x.index)
+
+
 # helper functions for anosim and permanova
 
 def _preprocess_input(distance_matrix, grouping, column):
