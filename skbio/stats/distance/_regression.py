@@ -31,8 +31,11 @@ def linregress(y, *args, **kwargs):
         Number of permutations to perform.  If no permutations
        are specified, then the residuals are assumed to be normally
         distributed
-    random_state: int or np.RandomState
+    random_state: int or np.RandomState, optional
         Pseudo number generator state used for random sampling.
+    strict: bool, optional
+        Specifies if the ordering of the distance matrices
+        matters
 
     Returns
     -------
@@ -59,7 +62,6 @@ def linregress(y, *args, **kwargs):
        Edition. Elsevier.
     .. [2] Legendre, P. Lapointe, F., Casgrain P. (1994) Modeling Brain
        Evolution from Behavior: A Permutational Regression Approach
-
     """
 
     # Unpackage kwargs

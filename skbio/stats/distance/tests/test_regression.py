@@ -41,6 +41,17 @@ class RegressionTests(TestCase):
                                   [10, 14, 18, 20, 0]])
         self.x3 = DistanceMatrix(self.x2.data*0.5)
 
+        # self.x2 with 4 and 5 swapped
+        self.x4 = DistanceMatrix([[0, 1, 2.1, 5.3, 4.4],
+                                  [1, 0, 2.9, 7.1, 6.2],
+                                  [2.1, 2.9, 0, 8.8, 7.9],
+                                  [5.3, 7.1, 8.8, 0, 9.7],
+                                  [4.4, 6.2, 7.9, 9.7, 0]],
+                                  ['1', '2', '3', '5', '4'])
+        self.y3 = DistanceMatrix(self.y2.data,
+                                 ['1', '2', '3', '4', '5'])
+        self.x5 = DistanceMatrix(self.x3.data,
+                                 ['1', '2', '3', '4', '5'])
 
     def test1(self):
         np.random.seed(0)
@@ -102,7 +113,18 @@ class RegressionTests(TestCase):
 
     # Tests for reordering of ids in distance matrices
     def test3(self):
-        pass
+        B, T, pvals, F, model_pval, R2 = linregress(self.y3, self.x4, self.x5,
+                                                    permutations=100,
+                                                    random_state=0)
+        npt.assert_allclose(B, np.array([-0.25088147, 1.63911646, 0.81955823]))
+        npt.assert_allclose(T, np.array([-0.91738343, 46.43031958,
+                                         46.43031958]))
+        npt.assert_allclose(pvals, np.array([0.4950495, 0.14851485,
+                                             0.14851485]))
+
+        self.assertAlmostEqual(F, 1077.8872882816077)
+        self.assertAlmostEqual(model_pval, 0.1485148514851485)
+        self.assertAlmostEqual(R2, 0.9967634167352184)
 
     # Tests for bad inputs (i.e. bad distance matrices)
     def test_bad(self):
