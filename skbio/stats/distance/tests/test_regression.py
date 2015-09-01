@@ -15,7 +15,7 @@ import numpy.testing as npt
 
 from skbio import DistanceMatrix
 
-from skbio.stats.distance import linregress
+from skbio.stats.distance import mrm
 from skbio.util import get_data_path
 
 
@@ -54,7 +54,7 @@ class RegressionTests(TestCase):
 
     def test1(self):
         np.random.seed(0)
-        B, T, pvals, F, model_pval, R2 = linregress(self.y1, self.x1,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y1, self.x1,
                                                     permutations=10)
         npt.assert_allclose(B, np.array([-0.17582418,  2.08791209]))
         npt.assert_allclose(T, np.array([ -0.43039376,  10.96965511]))
@@ -63,7 +63,7 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(model_pval, 0.2727272727272727)
         self.assertAlmostEqual(R2, 0.9917582417582471)
 
-        B, T, pvals, F, model_pval, R2 = linregress(self.y1, self.x1,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y1, self.x1,
                                                     permutations=10,
                                                     random_state=0)
         npt.assert_allclose(B, np.array([-0.17582418,  2.08791209]))
@@ -74,7 +74,7 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(R2, 0.9917582417582471)
 
         st = np.random.RandomState(seed=0)
-        B, T, pvals, F, model_pval, R2 = linregress(self.y1, self.x1,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y1, self.x1,
                                                     permutations=10,
                                                     random_state=st)
         npt.assert_allclose(B, np.array([-0.17582418,  2.08791209]))
@@ -87,7 +87,7 @@ class RegressionTests(TestCase):
 
     def test2(self):
 
-        B, T, pvals, F, model_pval, R2 = linregress(self.y2, self.x2,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y2, self.x2,
                                                     permutations=10,
                                                     random_state=0)
         npt.assert_allclose(B, np.array([-0.25088147,  2.04889557]))
@@ -97,7 +97,7 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(model_pval, 0.36363636363636365)
         self.assertAlmostEqual(R2, 0.99676341673522)
 
-        B, T, pvals, F, model_pval, R2 = linregress(self.y2, self.x2, self.x3,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y2, self.x2, self.x3,
                                                     permutations=100,
                                                     random_state=0)
         npt.assert_allclose(B, np.array([-0.25088147, 1.63911646, 0.81955823]))
@@ -112,7 +112,7 @@ class RegressionTests(TestCase):
 
     # Tests for reordering of ids in distance matrices
     def test3(self):
-        B, T, pvals, F, model_pval, R2 = linregress(self.y3, self.x4, self.x5,
+        B, T, pvals, F, model_pval, R2 = mrm(self.y3, self.x4, self.x5,
                                                     permutations=100,
                                                     random_state=0)
         npt.assert_allclose(B, np.array([-0.25088147, 1.63911646, 0.81955823]))
@@ -128,7 +128,7 @@ class RegressionTests(TestCase):
     # Tests for bad inputs (i.e. bad distance matrices)
     def test_bad(self):
         with self.assertRaises(ValueError):
-            linregress(self.y3, self.x4, self.x2,
+            mrm(self.y3, self.x4, self.x2,
                        permutations=100,
                        random_state=0)
 

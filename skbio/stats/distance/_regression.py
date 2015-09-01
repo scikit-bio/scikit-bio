@@ -17,7 +17,7 @@ from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance import DistanceMatrix
 
 @experimental(as_of="0.4.0")
-def linregress(y, *args, **kwargs):
+def mrm(y, *args, **kwargs):
     """
     This module performs a multiple linear regression on distance
     matrices.  This is done by extracting the upper (or lower)
@@ -38,6 +38,12 @@ def linregress(y, *args, **kwargs):
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
+    missing : str, optional
+        Specifies if missing values should be dropped or imputed
+        To drop missing values, let missing='drop'
+        To impute missing values, let missing='impute'
+        To ignore missing values, let missing=None
+        default: missing=None
     random_state: int or np.RandomState, optional
         Pseudo number generator state used for random sampling.
     strict : bool, optional
@@ -83,17 +89,19 @@ def linregress(y, *args, **kwargs):
     """
 
     # Unpack kwargs
-    params = {'permutations': 10000,
+    params = {'permutations': 999,
               'random_state': 0,
               'strict': True,
-              'lookup': None}
+              'lookup': None,
+              'missing': None}
     for key in ('permutations', 'random_state',
-                'strict', 'lookup'):
+                'strict', 'lookup', 'missing'):
         params[key] = kwargs.get(key, params[key])
     permutations = params['permutations']
     random_state = params['random_state']
     strict = params['strict']
     lookup = params['lookup']
+    missing = params['missing']
 
     random_state = check_random_state(random_state)
 
@@ -114,6 +122,11 @@ def linregress(y, *args, **kwargs):
     n, p = X.shape
     J = np.ones((n, n))
     I = np.identity(n)
+
+    if missing=='drop':
+        idx = np.logical_not(np.isnan(x.sum(axis=1)))
+        Y = Y[idx, :]
+        X = X[idx, :]
 
     # Define regression function
     def regress(Y, X, computeR=False):

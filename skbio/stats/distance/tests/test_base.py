@@ -550,56 +550,6 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.assertTrue(eq_dm == self.dm_3x3)
 
 
-class MakeDistanceMatrixTests(TestCase):
-    def test_array_like(self):
-        dm = makedm([1, 2, 3])
-        exp = DistanceMatrix([[0, 1, 2],
-                              [1, 0, 1],
-                              [2, 1, 0]])
-        self.assertTrue(dm, exp)
-
-        dm = makedm([[1, 2, 3], [1, 3, 5]])
-        exp = DistanceMatrix([[0, 5],
-                              [5, 0]])
-
-        self.assertTrue(dm, exp)
-
-        dm = makedm([[1, 2, 3], [1, 3, 5]],
-                    dist_func=cityblock)
-        exp = DistanceMatrix([[0, 3],
-                              [3, 0]])
-        self.assertTrue(dm, exp)
-
-
-    def test_pandas_series(self):
-        dm = makedm(pd.Series([1, 2, 3]))
-        exp = DistanceMatrix([[0, 1, 2],
-                              [1, 0, 1],
-                              [2, 1, 0]])
-        self.assertTrue(dm, exp)
-
-    def test_pandas_dataframe(self):
-        dm = makedm(pd.DataFrame([1, 2, 3]))
-        exp = DistanceMatrix([[0, 1, 2],
-                              [1, 0, 1],
-                              [2, 1, 0]])
-        self.assertTrue(dm, exp)
-
-        dm = makedm(pd.DataFrame([[1, 2, 3],
-                                  [1, 3, 5]]))
-        exp = DistanceMatrix([[0, 5],
-                              [5, 0]])
-
-        self.assertTrue(dm, exp)
-
-        dm = makedm(pd.DataFrame([[1, 2, 3],
-                                  [1, 3, 5]]),
-                    dist_func=cityblock)
-        exp = DistanceMatrix([[0, 3],
-                              [3, 0]])
-        self.assertTrue(dm, exp)
-
-
 class RandomDistanceMatrixTests(TestCase):
     def test_default_usage(self):
         exp = DistanceMatrix(np.asarray([[0.0]]), ['1'])
