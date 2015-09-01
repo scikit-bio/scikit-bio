@@ -86,7 +86,7 @@ def linregress(y, *args, **kwargs):
     params = {'permutations': 10000,
               'random_state': 0,
               'strict': True,
-              'lookup': {}}
+              'lookup': None}
     for key in ('permutations', 'random_state',
                 'strict', 'lookup'):
         params[key] = kwargs.get(key, params[key])
