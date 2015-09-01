@@ -92,6 +92,43 @@ def mrm(y, *args, **kwargs):
     .. [2] Legendre, P. Lapointe, F., Casgrain P. (1994) Modeling Brain
        Evolution from Behavior: A Permutational Regression Approach
     .. [3] https://cran.r-project.org/web/packages/ecodist/index.html
+
+    Examples
+    --------
+    Import the functionality we'll use in the following examples
+
+    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import mrm
+
+    Define two 3x3 distance matrices
+
+    >>> x = DistanceMatrix([[0, 1, 2.1],
+    ...                     [1, 0, 2.9],
+    ...                     [2.1, 2.9, 0]])
+    >>> y = DistanceMatrix([[0, 2, 4],
+    ...                     [2, 0, 6],
+    ...                     [4, 6, 0]])
+
+    Now perform a multiple regression fit
+    >>> B, T, pvals, F, model_pval, R2 = mrm(y, x)
+    >>> print(B)
+    intercept   -0.175824
+    0            2.087912
+    dtype: float64
+    >>> print(T)
+    intercept    -0.430394
+    0            10.969655
+    dtype: float64
+    >>> print(pvals)
+    intercept    0.344
+    0            0.165
+    dtype: float64
+    >>> print(F)
+    120.33333333340981
+    >>> print(model_pval)
+    0.165
+    >>> print(R2)
+    0.991758241758
     """
     # Unpack kwargs
     params = {'permutations': 999,
