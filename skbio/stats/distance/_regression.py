@@ -28,9 +28,9 @@ def linregress(y, *args, **kwargs):
 
     Parameters
     ----------
-    y : DistanceMatrix, array_like, or filepath
+    y : DistanceMatrix, array_like
         Response distance matrix
-    x1, x2, ... : DistanceMatrix, array_like, or filepath
+    x1, x2, ... : DistanceMatrix, array_like
         to distance matrices.  These distance matrices are predictors
         for the regression.  They are also known as covariates
     permutations : int, optional
@@ -97,16 +97,7 @@ def linregress(y, *args, **kwargs):
 
     random_state = check_random_state(random_state)
 
-    # Read all of the distance matrices from files
-    # if necessary
-    if isinstance(y, six.string_types):
-        y = DistanceMatrix.read(y)
-    xargs = []
-    for x in args:
-        if isinstance(x, six.string_types):
-            x = DistanceMatrix.read(x)
-        xargs.append(x)
-
+    xargs = list(args)
     # Conform all of the ids in the distance matrices to the same order
     if strict:
         for i in range(len(xargs)):
