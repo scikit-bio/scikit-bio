@@ -52,6 +52,13 @@ class RegressionTests(TestCase):
                                  ['1', '2', '3', '4', '5'])
         self.x5 = DistanceMatrix(self.x3.data,
                                  ['1', '2', '3', '4', '5'])
+        self.x6 = DistanceMatrix([[0, 1, 2.1, 4.4, 5.3, 1],
+                                  [1, 0, 2.9, 6.2, 7.1, 1],
+                                  [2.1, 2.9, 0, 7.9, 8.8, 1],
+                                  [4.4, 6.2, 7.9, 0, 9.7, 1],
+                                  [5.3, 7.1, 8.8, 9.7, 0, 1],
+                                  [1, 1, 1, 1, 1, 0]],
+                                  ['1', '2', '3', '5', '4', '6'])
 
     def test1(self):
         np.random.seed(0)
@@ -202,6 +209,29 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(model_pval, 0.2727272727272727)
         self.assertAlmostEqual(R2, 0.9917582417582471)
 
+    def test_strict(self):
+        B, T, pvals, F, model_pval, R2 = mrm(self.y3, self.x6, self.x5,
+                                             permutations=100,
+                                             strict=False,
+                                             random_state=0)
+        npt.assert_allclose(B.values,
+                            np.array([-0.25088147, 1.63911646, 0.81955823]))
+        npt.assert_allclose(T.values,
+                            np.array([-0.91738343, 46.43031958,
+                                      46.43031958]))
+        npt.assert_allclose(pvals.values,
+                            np.array([0.4950495, 0.14851485,
+                                      0.14851485]))
+        self.assertItemsEqual(B.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(T.index,
+                              ['intercept'] + range(2))
+        self.assertItemsEqual(pvals.index,
+                              ['intercept'] + range(2))
+
+        self.assertAlmostEqual(F, 1077.8872882816077)
+        self.assertAlmostEqual(model_pval, 0.1485148514851485)
+        self.assertAlmostEqual(R2, 0.9967634167352184)
 
 if __name__ == "__main__":
     main()
