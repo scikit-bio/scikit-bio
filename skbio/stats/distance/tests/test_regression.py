@@ -39,7 +39,7 @@ class RegressionTests(TestCase):
                                   [4, 6, 0, 16, 18],
                                   [9, 12, 16, 0, 20],
                                   [10, 14, 18, 20, 0]])
-        self.x3 = DistanceMatrix(x2.data*0.5)
+        self.x3 = DistanceMatrix(self.x2.data*0.5)
 
 
     def test1(self):
@@ -76,26 +76,37 @@ class RegressionTests(TestCase):
 
 
     def test2(self):
-        np.random.seed(0)
+
         B, T, pvals, F, model_pval, R2 = linregress(self.y2, self.x2,
-                                                    permutations=10)
+                                                    permutations=10,
+                                                    random_state=0)
         npt.assert_allclose(B, np.array([-0.25088147,  2.04889557]))
         npt.assert_allclose(T, np.array([ -0.98072414,  49.6360995 ]))
-        npt.assert_allclose(pvals, np.array([ 0.63636364,  0.09090909]))
+        npt.assert_allclose(pvals, np.array([ 0.90909091,  0.36363636]))
         self.assertAlmostEqual(F, 2463.7423732163857)
-        self.assertAlmostEqual(model_pval, 0.09090909090909091)
+        self.assertAlmostEqual(model_pval, 0.36363636363636365)
         self.assertAlmostEqual(R2, 0.99676341673522)
 
         B, T, pvals, F, model_pval, R2 = linregress(self.y2, self.x2, self.x3,
-                                                    permutations=100)
+                                                    permutations=100,
+                                                    random_state=0)
         npt.assert_allclose(B, np.array([-0.25088147, 1.63911646, 0.81955823]))
         npt.assert_allclose(T, np.array([-0.91738343, 46.43031958,
                                          46.43031958]))
-        npt.assert_allclose(pvals, np.array([0.53465347, 0.13861386,
-                                             0.13861386]))
+        npt.assert_allclose(pvals, np.array([0.4950495, 0.14851485,
+                                             0.14851485]))
+
         self.assertAlmostEqual(F, 1077.8872882816077)
-        self.assertAlmostEqual(model_pval, 0.13861386138613863)
+        self.assertAlmostEqual(model_pval, 0.1485148514851485)
         self.assertAlmostEqual(R2, 0.9967634167352184)
+
+    # Tests for reordering of ids in distance matrices
+    def test3(self):
+        pass
+
+    # Tests for bad inputs (i.e. bad distance matrices)
+    def test_bad(self):
+        pass
 
 if __name__ == "__main__":
     main()

@@ -15,19 +15,18 @@ from skbio.util._misc import check_random_state
 from skbio.stats.distance._mantel import _order_dms
 
 
-
 @experimental(as_of="0.4.0")
 def linregress(y, *args, **kwargs):
     """
-    Performs a linear regression on distance matrices using
-    permutation of residuals
+    Performs a multiple linear regression on distance matrices.
+    The pvalues are calculated through permutation of residuals
 
     Parameters
     ----------
-    x1, x2, ... : skbio.DistanceMatrix
-        Predictor distance matrices
     y : skbio.DistanceMatrix
         Response distance matrix
+    x1, x2, ... : skbio.DistanceMatrix
+        Predictor distance matrices.  Also known as covariates
     permutations : int, optional
         Number of permutations to perform.  If no permutations
        are specified, then the residuals are assumed to be normally
@@ -64,9 +63,9 @@ def linregress(y, *args, **kwargs):
     """
 
     # Unpackage kwargs
-    params = {'permutations':10000,
-              'random_state':0,
-              'strict':True}
+    params = {'permutations': 10000,
+              'random_state': 0,
+              'strict': True}
     for key in ('permutations', 'random_state'):
         params[key] = kwargs.get(key, params[key])
     permutations = params['permutations']
@@ -76,7 +75,7 @@ def linregress(y, *args, **kwargs):
     random_state = check_random_state(random_state)
 
     # Conform all of the ids in the distance matrices to the same order
-    xargs = copy.deepcopy(args)
+    xargs = list(args)
     if strict:
         for i in range(len(xargs)):
             y, xargs[i] = _order_dms(y, xargs[i])
@@ -91,7 +90,7 @@ def linregress(y, *args, **kwargs):
     J = np.ones((n, n))
     I = np.identity(n)
 
-    # Permutation on residuals
+    # Define regression function
     def regress(Y, X, computeR=False):
         XX1 = np.linalg.pinv(X.T.dot(X))
         B = XX1.dot(X.T.dot(Y))
@@ -114,12 +113,13 @@ def linregress(y, *args, **kwargs):
             R2 = None
         return Yhat, B, T, F, R2
 
+    # Permutation on residuals
     Yhat, B, T, F, R2 = regress(Y, X, computeR=True)
     E = Y - Yhat
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
     for i in range(permutations):
-        np.random.shuffle(E)
+        random_state.shuffle(E)
         Ynew = Yhat + E
         Yhat_, B_, T_, F_, _ = regress(Ynew, X, computeR=False)
         Ts[i, :] = T_
