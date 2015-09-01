@@ -16,8 +16,7 @@ import numpy.testing as npt
 from skbio import DistanceMatrix
 
 from skbio.stats.distance import linregress
-from skbio.util import get_data_path, assert_data_frame_almost_equal
-import numpy.testing as npt
+from skbio.util import get_data_path
 
 
 class RegressionTests(TestCase):

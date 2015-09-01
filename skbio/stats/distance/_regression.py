@@ -8,47 +8,64 @@
 
 from __future__ import absolute_import, division, print_function
 
-import copy
+import six
 import numpy as np
 from skbio.util._decorator import experimental
 from skbio.util._misc import check_random_state
 from skbio.stats.distance._mantel import _order_dms
 
+from skbio.stats.distance import DistanceMatrix
 
 @experimental(as_of="0.4.0")
 def linregress(y, *args, **kwargs):
     """
-    Performs a multiple linear regression on distance matrices.
-    The pvalues are calculated through permutation of residuals
+    This module performs a multiple linear regression on distance
+    matrices.  This is done by extracting the upper (or lower)
+    triangular portions of the symmetric distance matrices,
+    and collapsing them to compute a multiple linear regression
+    on the distances.  The signficances are computed by
+    permuting the residuals.
 
     Parameters
     ----------
-    y : skbio.DistanceMatrix
+    y : DistanceMatrix, array_like, or filepath
         Response distance matrix
-    x1, x2, ... : skbio.DistanceMatrix
-        Predictor distance matrices.  Also known as covariates
+    x1, x2, ... : DistanceMatrix, array_like, or filepath
+        to distance matrices.  These distance matrices are predictors
+        for the regression.  They are also known as covariates
     permutations : int, optional
-        Number of permutations to perform.  If no permutations
-       are specified, then the residuals are assumed to be normally
-        distributed
+        Number of times to randomly permute `x` when assessing statistical
+        significance. Must be greater than or equal to zero. If zero,
+        statistical significance calculations will be skipped and the p-value
+        will be ``np.nan``.
     random_state: int or np.RandomState, optional
         Pseudo number generator state used for random sampling.
-    strict: bool, optional
-        Specifies if the ordering of the distance matrices
-        matters
+    strict : bool, optional
+        If ``True``, raises a ``ValueError`` if IDs are found that do not exist
+        in all of the distance matrices. If ``False``, any nonmatching IDs are
+        discarded before running the test. See `n` (in Returns section below)
+        for the number of matching IDs that were used in the test. This
+        parameter is ignored if `x` and `y` are ``array_like``.
+    lookup : dict, optional
+        Maps each ID in the distance matrices to a new ID. Used to match up IDs
+        across distance matrices prior to running the Mantel test. If the IDs
+        already match between the distance matrices, this parameter is not
+        necessary. This parameter is disallowed if `x` and `y` are
+        ``array_like``.
 
     Returns
     -------
     B : np.array
         Array of coefficients
     T : np.array
-        Array of t-statistics for each coefficient
+        Array of pseudo t-statistics for each coefficient
     pvals : np.array
-        Array of p-values for each coefficient
+        Array of p-values for each coefficient calculated
+        using pseudo T-tests
     F : float
-        pseudo F-statistic for overall model
+        pseudo F-statistic for lack of fit
     model_pval : float
-        pvalue for overal model
+        pvalue from pseudo F-test for lack of fit
     R2: float
         Coefficient of determination squared
 
@@ -62,31 +79,46 @@ def linregress(y, *args, **kwargs):
        Edition. Elsevier.
     .. [2] Legendre, P. Lapointe, F., Casgrain P. (1994) Modeling Brain
        Evolution from Behavior: A Permutational Regression Approach
+    .. [3] https://cran.r-project.org/web/packages/ecodist/index.html
     """
 
-    # Unpackage kwargs
+    # Unpack kwargs
     params = {'permutations': 10000,
               'random_state': 0,
-              'strict': True}
-    for key in ('permutations', 'random_state'):
+              'strict': True,
+              'lookup': {}}
+    for key in ('permutations', 'random_state',
+                'strict', 'lookup'):
         params[key] = kwargs.get(key, params[key])
     permutations = params['permutations']
     random_state = params['random_state']
     strict = params['strict']
+    lookup = params['lookup']
 
     random_state = check_random_state(random_state)
 
+    # Read all of the distance matrices from files
+    # if necessary
+    if isinstance(y, six.string_types):
+        y = DistanceMatrix.read(y)
+    xargs = []
+    for x in args:
+        if isinstance(x, six.string_types):
+            x = DistanceMatrix.read(x)
+        xargs.append(x)
+
     # Conform all of the ids in the distance matrices to the same order
-    xargs = list(args)
     if strict:
         for i in range(len(xargs)):
-            y, xargs[i] = _order_dms(y, xargs[i])
+            y, xargs[i] = _order_dms(y, xargs[i],
+                                     strict=strict,
+                                     lookup=lookup)
 
     # Linearize all predictor distance matrices into
     # a single matrix
     n = len(y.data)
     X = np.vstack([np.ones((1, n*(n-1)/2))] + \
-                  [x.data[np.triu_indices(n, 1)] for x in xargs]).T
+                  [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
     n, p = X.shape
     J = np.ones((n, n))
