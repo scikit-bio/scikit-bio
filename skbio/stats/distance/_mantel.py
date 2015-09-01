@@ -20,7 +20,6 @@ from scipy.stats import pearsonr, spearmanr
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental
 
-
 @experimental(as_of="0.4.0")
 def mantel(x, y, method='pearson', permutations=999, alternative='two-sided',
            strict=True, lookup=None):
@@ -392,15 +391,7 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     if num_dms < 2:
         raise ValueError("Must provide at least two distance matrices.")
-
-    if labels is None:
-        labels = range(num_dms)
-    else:
-        if num_dms != len(labels):
-            raise ValueError("Number of labels must match the number of "
-                             "distance matrices.")
-        if len(set(labels)) != len(labels):
-            raise ValueError("Labels must be unique.")
+    labels = _check_dm_labels(labels, num_dms)
 
     num_combs = scipy.misc.comb(num_dms, 2, exact=True)
     results_dtype = [('dm1', object), ('dm2', object), ('statistic', float),
@@ -480,3 +471,31 @@ def _remap_ids(dm, lookup, label, order):
     dm_copy = dm.copy()
     dm_copy.ids = remapped_ids
     return dm_copy
+
+
+def _check_dm_labels(labels, num_dms):
+    """
+    Checks labels to make sure that they map to each
+    distance matrix and that they are unique
+
+    Parameters
+    ----------
+    labels: iterable
+        iterable of label strings.
+    num_dms: int
+        number of distance matrices
+
+    Returns
+    -------
+    labels
+        newly created or validated labels
+    """
+    if labels is None:
+        labels = range(num_dms)
+    else:
+        if num_dms != len(labels):
+            raise ValueError("Number of labels must match the number of "
+                             "distance matrices.")
+        if len(set(labels)) != len(labels):
+            raise ValueError("Labels must be unique.")
+    return labels

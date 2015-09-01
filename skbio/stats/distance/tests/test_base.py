@@ -21,7 +21,7 @@ from IPython.core.display import Image, SVG
 from skbio import DistanceMatrix
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
-    DissimilarityMatrix, randdm, makedm)
+    DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from scipy.spatial.distance import cityblock

@@ -10,9 +10,10 @@ from __future__ import absolute_import, division, print_function
 
 import six
 import numpy as np
+import pandas as pd
 from skbio.util._decorator import experimental
 from skbio.util._misc import check_random_state
-from skbio.stats.distance._mantel import _order_dms
+from skbio.stats.distance._mantel import _order_dms, _check_dm_labels
 
 from skbio.stats.distance import DistanceMatrix
 
@@ -33,6 +34,11 @@ def mrm(y, *args, **kwargs):
     x1, x2, ... : DistanceMatrix, array_like
         to distance matrices.  These distance matrices are predictors
         for the regression.  They are also known as covariates
+    labels : iterable of str or int, optional
+        Labels for each distance matrix in `args`. These are used in the results
+        ``DataFrame`` to identify the pair of distance matrices used in a
+        pairwise Mantel test. If ``None``, defaults to monotonically-increasing
+        integers starting at zero.
     permutations : int, optional
         Number of times to randomly permute `x` when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
@@ -61,11 +67,11 @@ def mrm(y, *args, **kwargs):
 
     Returns
     -------
-    B : np.array
+    B : pd.Series
         Array of coefficients
-    T : np.array
+    T : pd.Series
         Array of pseudo t-statistics for each coefficient
-    pvals : np.array
+    pvals : pd.Series
         Array of p-values for each coefficient calculated
         using pseudo T-tests
     F : float
@@ -93,15 +99,20 @@ def mrm(y, *args, **kwargs):
               'random_state': 0,
               'strict': True,
               'lookup': None,
-              'missing': None}
+              'missing': None,
+              'labels': None}
     for key in ('permutations', 'random_state',
-                'strict', 'lookup', 'missing'):
+                'strict', 'lookup', 'missing', 'labels'):
         params[key] = kwargs.get(key, params[key])
+
     permutations = params['permutations']
     random_state = params['random_state']
     strict = params['strict']
     lookup = params['lookup']
     missing = params['missing']
+    labels = params['labels']
+
+    labels = _check_dm_labels(labels, len(args))
 
     random_state = check_random_state(random_state)
 
@@ -129,18 +140,15 @@ def mrm(y, *args, **kwargs):
         X = X[idx, :]
 
     # Define regression function
-    def regress(Y, X, computeR=False):
-        XX1 = np.linalg.pinv(X.T.dot(X))
+    XX1 = np.linalg.pinv(X.T.dot(X))
+    H = X.dot(XX1).dot(X.T)
+    def regress(Y, computeR=False):
         B = XX1.dot(X.T.dot(Y))
-        H = X.dot(XX1).dot(X.T)
         Yhat = H.dot(Y)
-
         SSE = Y.T.dot(I - H).dot(Y)
         SSR = Y.T.dot(H - (1./n)*J).dot(Y)
-        dfe = n - p
-        dfr = p - 1
-        MSR = SSR / dfr
-        MSE = SSE / dfe
+        dfe, dfr = n - p,  p - 1
+        MSR, MSE = SSR / dfr, SSE / dfe
 
         T = np.ravel(B) / np.sqrt(np.diag(XX1) * MSE)
         F = MSR / MSE
@@ -152,23 +160,25 @@ def mrm(y, *args, **kwargs):
         return Yhat, B, T, F, R2
 
     # Permutation on residuals
-    Yhat, B, T, F, R2 = regress(Y, X, computeR=True)
+    Yhat, B, T, F, R2 = regress(Y, computeR=True)
     E = Y - Yhat
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
-        Yhat_, B_, T_, F_, _ = regress(Ynew, X, computeR=False)
+        Yhat_, B_, T_, F_, _ = regress(Ynew, computeR=False)
         Ts[i, :] = T_
         Fs[i] = F_
 
     pvals = ((abs(T) >= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
     model_pval = ((F >= Fs).sum() + 1) / (permutations + 1)
+    labs = ['intercept'] + list(labels)
+    B = pd.Series(np.ravel(B), index=labs)
+    T = pd.Series(np.ravel(T), index=labs)
+    pvals = pd.Series(np.ravel(pvals), index=labs)
 
-    return (np.ravel(B),
-            np.ravel(T),
-            pvals,
+    return (B, T, pvals,
             np.asscalar(F),
             np.asscalar(model_pval),
             np.asscalar(R2))
