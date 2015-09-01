@@ -69,6 +69,7 @@ class Sequence(collections.Sequence, SkbioObject):
     values
     metadata
     positional_metadata
+    observed_chars
 
     See Also
     --------
