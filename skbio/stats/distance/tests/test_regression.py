@@ -175,6 +175,33 @@ class RegressionTests(TestCase):
                 permutations=100,
                 random_state=0)
 
+    def test_distance_matrix_instances_with_lookup(self):
+        self.x1.ids = ('a', 'b', 'c')
+        self.y1.ids = ('d', 'e', 'f')
+        lookup = {'a': 'A', 'b': 'B', 'c': 'C',
+                  'd': 'A', 'e': 'B', 'f': 'C'}
+
+        B, T, pvals, F, model_pval, R2 = mrm(self.y1, self.x1,
+                                             permutations=10,
+                                             lookup=lookup,
+                                             random_state=0)
+        npt.assert_allclose(B.values,
+                            np.array([-0.17582418,  2.08791209]))
+        npt.assert_allclose(T.values,
+                            np.array([ -0.43039376,  10.96965511]))
+        npt.assert_allclose(pvals.values,
+                            np.array([ 0.45454545,  0.27272727]))
+
+        self.assertItemsEqual(B.index,
+                              ['intercept', 0])
+        self.assertItemsEqual(T.index,
+                              ['intercept', 0])
+        self.assertItemsEqual(pvals.index,
+                              ['intercept', 0])
+        self.assertAlmostEqual(F, 120.33333333340981)
+        self.assertAlmostEqual(model_pval, 0.2727272727272727)
+        self.assertAlmostEqual(R2, 0.9917582417582471)
+
 
 if __name__ == "__main__":
     main()

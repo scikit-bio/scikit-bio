@@ -14,8 +14,8 @@ import pandas as pd
 from skbio.util._decorator import experimental
 from skbio.util._misc import check_random_state
 from skbio.stats.distance._mantel import _order_dms, _check_dm_labels
-
 from skbio.stats.distance import DistanceMatrix
+
 
 @experimental(as_of="0.4.0")
 def mrm(y, *args, **kwargs):
@@ -93,7 +93,6 @@ def mrm(y, *args, **kwargs):
        Evolution from Behavior: A Permutational Regression Approach
     .. [3] https://cran.r-project.org/web/packages/ecodist/index.html
     """
-
     # Unpack kwargs
     params = {'permutations': 999,
               'random_state': 0,
@@ -113,7 +112,6 @@ def mrm(y, *args, **kwargs):
     labels = params['labels']
 
     labels = _check_dm_labels(labels, len(args))
-
     random_state = check_random_state(random_state)
 
     xargs = list(args)
@@ -138,7 +136,6 @@ def mrm(y, *args, **kwargs):
         idx = np.logical_not(np.isnan(x.sum(axis=1)))
         Y = Y[idx, :]
         X = X[idx, :]
-
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
     H = X.dot(XX1).dot(X.T)
@@ -149,7 +146,6 @@ def mrm(y, *args, **kwargs):
         SSR = Y.T.dot(H - (1./n)*J).dot(Y)
         dfe, dfr = n - p,  p - 1
         MSR, MSE = SSR / dfr, SSE / dfe
-
         T = np.ravel(B) / np.sqrt(np.diag(XX1) * MSE)
         F = MSR / MSE
         if computeR:
@@ -158,7 +154,6 @@ def mrm(y, *args, **kwargs):
         else:
             R2 = None
         return Yhat, B, T, F, R2
-
     # Permutation on residuals
     Yhat, B, T, F, R2 = regress(Y, computeR=True)
     E = Y - Yhat
@@ -167,17 +162,15 @@ def mrm(y, *args, **kwargs):
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
-        Yhat_, B_, T_, F_, _ = regress(Ynew, computeR=False)
-        Ts[i, :] = T_
-        Fs[i] = F_
-
+        Yhat_, B_, T_, F_,  _ = regress(Ynew, computeR=False)
+        Ts[i, :], Fs[i] = T_, F_
+    # Calculate result statistics
     pvals = ((abs(T) >= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
     model_pval = ((F >= Fs).sum() + 1) / (permutations + 1)
     labs = ['intercept'] + list(labels)
     B = pd.Series(np.ravel(B), index=labs)
     T = pd.Series(np.ravel(T), index=labs)
     pvals = pd.Series(np.ravel(pvals), index=labs)
-
     return (B, T, pvals,
             np.asscalar(F),
             np.asscalar(model_pval),
