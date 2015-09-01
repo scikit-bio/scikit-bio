@@ -202,6 +202,6 @@ from ._regression import linregress
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel']
+           'permanova', 'bioenv', 'mantel', 'pwmantel', 'linregress']
 
 test = TestRunner(__file__).test
