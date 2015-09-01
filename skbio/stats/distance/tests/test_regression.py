@@ -11,13 +11,11 @@ from __future__ import absolute_import, division, print_function
 from unittest import TestCase, main
 
 import numpy as np
-import pandas as pd
 import numpy.testing as npt
 
 from skbio import DistanceMatrix
 
 from skbio.stats.distance import mrm
-from skbio.util import get_data_path
 
 
 class RegressionTests(TestCase):

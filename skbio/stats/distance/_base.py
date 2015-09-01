@@ -16,8 +16,8 @@ from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import (squareform,
-                                    euclidean)
+from scipy.spatial.distance import squareform
+
 
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs

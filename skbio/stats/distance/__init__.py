@@ -203,6 +203,6 @@ from ._regression import mrm
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
            'DissimilarityMatrix', 'DistanceMatrix', 'randdm',
            'anosim', 'permanova', 'bioenv', 'mantel', 'pwmantel',
-           'linregress']
+           'mrm']
 
 test = TestRunner(__file__).test

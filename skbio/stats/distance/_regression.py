@@ -8,13 +8,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-import six
 import numpy as np
 import pandas as pd
 from skbio.util._decorator import experimental
 from skbio.util._misc import check_random_state
 from skbio.stats.distance._mantel import _order_dms, _check_dm_labels
-from skbio.stats.distance import DistanceMatrix
 
 
 @experimental(as_of="0.4.0")
@@ -170,7 +168,7 @@ def mrm(y, *args, **kwargs):
     I = np.identity(n)
 
     if missing=='drop':
-        idx = np.logical_not(np.isnan(x.sum(axis=1)))
+        idx = np.logical_not(np.isnan(X.sum(axis=1)))
         Y = Y[idx, :]
         X = X[idx, :]
     # Define regression function
