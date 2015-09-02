@@ -630,9 +630,9 @@ class SequenceCollection(SkbioObject):
         Returns
         -------
         list
-            List of ``collections.Counter`` objects, one for each sequence
-            in the ``SequenceCollection``, representing the frequency of each
-            k-word in each sequence of the ``SequenceCollection``.
+            List of ``dict`` objects, one for each sequence in the
+            ``SequenceCollection``, representing the frequency of each k-word
+            in each sequence of the ``SequenceCollection``.
 
         See Also
         --------
@@ -645,15 +645,14 @@ class SequenceCollection(SkbioObject):
         ...              DNA('AT', metadata={'id': "seq2"}),
         ...              DNA('TTTT', metadata={'id': "seq3"})]
         >>> s1 = SequenceCollection(sequences)
-        >>> kmer_freqs = list(s1.kmer_frequencies(1))
-        >>> kmer_freqs == [Counter({'A': 1}), Counter({'A': 1, 'T': 1}),
-        ...                Counter({'T': 4})]
+        >>> kmer_freqs = s1.kmer_frequencies(1)
+        >>> kmer_freqs == [{'A': 1}, {'A': 1, 'T': 1}, {'T': 4}]
         True
         >>> for freqs in s1.kmer_frequencies(2):
-        ...     print(freqs)
-        Counter()
-        Counter({'AT': 1})
-        Counter({'TT': 3})
+        ...     freqs
+        {}
+        {'AT': 1}
+        {'TT': 3}
 
         """
         return [s.kmer_frequencies(k, overlap=overlap, relative=relative)
@@ -1143,7 +1142,7 @@ class Alignment(SequenceCollection):
 
         positions_to_keep = []
         for i, f in enumerate(position_frequencies):
-            gap_frequency = sum([f[c] for c in gap_chars])
+            gap_frequency = sum([f[c] if c in f else 0.0 for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 positions_to_keep.append(i)
         return self.subalignment(positions_to_keep=positions_to_keep)
@@ -1191,7 +1190,7 @@ class Alignment(SequenceCollection):
         gap_chars = self[0].gap_chars
         seqs_to_keep = []
         for seq, f in zip(self, base_frequencies):
-            gap_frequency = sum([f[c] for c in gap_chars])
+            gap_frequency = sum([f[c] if c in f else 0.0 for c in gap_chars])
             if gap_frequency <= maximum_gap_frequency:
                 seqs_to_keep.append(seq.metadata['id'])
         return self.subalignment(seqs_to_keep=seqs_to_keep)

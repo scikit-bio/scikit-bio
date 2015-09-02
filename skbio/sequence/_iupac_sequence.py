@@ -56,7 +56,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
-    _number_of_extended_ascii_codes = 256
     __validation_mask = None
     __degenerate_codes = None
     __nondegenerate_codes = None
