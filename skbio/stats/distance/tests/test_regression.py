@@ -16,7 +16,7 @@ import pandas as pd
 from pandas.util.testing import assert_index_equal
 from skbio import DistanceMatrix
 from skbio.stats.distance import mrm, make_categorical_dms
-
+from skbio.util import get_data_path
 
 class RegressionTests(TestCase):
     def setUp(self):
@@ -218,6 +218,29 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
         self.assertAlmostEqual(R2, 0.9967634167352184)
+
+    def test_ecodist(self):
+
+        forestpct_dm_ecodist = DistanceMatrix.read(
+            get_data_path('regression_forestpct_ecodist.txt'))
+
+        sitelocation_dm_ecodist = DistanceMatrix.read(
+            get_data_path('regression_sitelocation_ecodist.txt'))
+
+        loar10_dm_ecodist = DistanceMatrix.read(
+            get_data_path('regression_loar10_ecodist.txt'))
+
+        expB = [6.9372046, 0.1456083, -0.4840631]
+        expR2 = 0.04927212
+        expF = 31.66549
+
+        B, T, pvals, F, model_pval, R2 = mrm(loar10_dm_ecodist,
+                                             forestpct_dm_ecodist,
+                                             sitelocation_dm_ecodist,
+                                             permutations=10)
+        npt.assert_allclose(B.values, expB, rtol=1e-5, atol=1e-5)
+        self.assertAlmostEqual(F, expF, delta=1e-5)
+        self.assertAlmostEqual(R2, expR2, delta=1e-5)
 
 
 class MakeCategoricalDMS(TestCase):
