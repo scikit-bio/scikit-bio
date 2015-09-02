@@ -16,6 +16,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.stats.distance._mantel import _order_dms, _check_dm_labels
 from scipy.spatial.distance import cityblock
 
+
 @experimental(as_of="0.4.0")
 def mrm(y, *args, **kwargs):
     """
@@ -34,21 +35,15 @@ def mrm(y, *args, **kwargs):
         to distance matrices.  These distance matrices are predictors
         for the regression.  They are also known as covariates
     labels : iterable of str or int, optional
-        Labels for each distance matrix in `args`. These are used in the results
-        ``DataFrame`` to identify the pair of distance matrices used in a
-        pairwise Mantel test. If ``None``, defaults to monotonically-increasing
+        Labels for each distance matrix in `args`. These are used in the
+        results ``DataFrame`` to identify the distance matrices in
+        `x1, x2, ...`. If ``None``, defaults to monotonically-increasing
         integers starting at zero.
     permutations : int, optional
         Number of times to randomly permute `x` when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
-    missing : str, optional
-        Specifies if missing values should be dropped or imputed
-        To drop missing values, let missing='drop'
-        To impute missing values, let missing='impute'
-        To ignore missing values, let missing=None
-        default: missing=None
     random_state: int or np.RandomState, optional
         Pseudo number generator state used for random sampling.
     strict : bool, optional
@@ -120,17 +115,15 @@ def mrm(y, *args, **kwargs):
               'random_state': 0,
               'strict': True,
               'lookup': None,
-              'missing': None,
               'labels': None}
     for key in ('permutations', 'random_state',
-                'strict', 'lookup', 'missing', 'labels'):
+                'strict', 'lookup', 'labels'):
         params[key] = kwargs.get(key, params[key])
 
     permutations = params['permutations']
     random_state = params['random_state']
     strict = params['strict']
     lookup = params['lookup']
-    missing = params['missing']
     labels = params['labels']
 
     labels = _check_dm_labels(labels, len(args))
@@ -147,26 +140,23 @@ def mrm(y, *args, **kwargs):
     # Linearize all predictor distance matrices into
     # a single matrix
     n = len(y.data)
-    X = np.vstack([np.ones((1, n*(n-1)/2))] + \
+    X = np.vstack([np.ones((1, n*(n-1)/2))] +
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
     n, p = X.shape
     J = np.ones((n, n))
     I = np.identity(n)
 
-    if missing=='drop':
-        idx = np.logical_not(np.isnan(X.sum(axis=1)))
-        Y = Y[idx, :]
-        X = X[idx, :]
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
     H = X.dot(XX1).dot(X.T)
+    dfe, dfr = n - p,  p - 1
+
     def regress(Y, computeR=False):
         B = XX1.dot(X.T.dot(Y))
         Yhat = H.dot(Y)
         SSE = Y.T.dot(I - H).dot(Y)
         SSR = Y.T.dot(H - (1./n)*J).dot(Y)
-        dfe, dfr = n - p,  p - 1
         MSR, MSE = SSR / dfr, SSE / dfe
         T = np.ravel(B) / np.sqrt(np.diag(XX1) * MSE)
         F = MSR / MSE
@@ -176,6 +166,7 @@ def mrm(y, *args, **kwargs):
         else:
             R2 = None
         return Yhat, B, T, F, R2
+
     # Permutation on residuals
     Yhat, B, T, F, R2 = regress(Y, computeR=True)
     E = Y - Yhat
@@ -203,8 +194,9 @@ def make_categorical_dms(x, metric=cityblock):
     """
     Creates multiple distance matrices from a categorical vector.
     If vector has 3 categories A, B, C, then 3 different
-    distance matrices will be created for the distances between
-    AB, BC and AC.
+    categorical indicator vectors will be created. From these categorical
+    vectors, distance matrices will be created for the distances between
+    each pair of categorical indicator vectors.
 
     Parameters
     ----------
@@ -223,6 +215,6 @@ def make_categorical_dms(x, metric=cityblock):
     cats = np.unique(x)
     for i in range(len(cats)):
         for j in range(i):
-            a, b = (x==cats[j]), (x==cats[i])
+            a, b = (x == cats[j]), (x == cats[i])
             yield DistanceMatrix.from_iterable(np.vstack([a, b]).T,
                                                metric=metric)

@@ -18,6 +18,7 @@ from ._decorator import experimental, deprecated
 import numpy as np
 import numbers
 
+
 def resolve_key(obj, key):
     """Resolve key given a object and key."""
     if callable(key):
