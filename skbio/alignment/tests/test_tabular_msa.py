@@ -8,22 +8,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+import unittest
 
-class TestingUtilError(Exception):
-    """Raised when an exception is needed to test exception handling."""
+from skbio.alignment import TabularMSA
+
+
+class TestTabularMSA(unittest.TestCase):
     pass
 
 
-class OverrideError(AssertionError):
-    """Raised when a property does not exist in the parent class."""
-    pass
-
-
-class OperationError(ValueError):
-    """Raised when an operation cannot be performed."""
-    pass
-
-
-class UniqueError(ValueError):
-    """Raised when unique values were expected."""
-    pass
+if __name__ == "__main__":
+    unittest.main()
