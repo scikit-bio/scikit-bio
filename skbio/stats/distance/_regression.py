@@ -12,8 +12,9 @@ import numpy as np
 import pandas as pd
 from skbio.util._decorator import experimental
 from skbio.util._misc import check_random_state
+from skbio.stats.distance import DistanceMatrix
 from skbio.stats.distance._mantel import _order_dms, _check_dm_labels
-
+from scipy.spatial.distance import cityblock
 
 @experimental(as_of="0.4.0")
 def mrm(y, *args, **kwargs):
@@ -113,20 +114,6 @@ def mrm(y, *args, **kwargs):
     intercept   -0.175824
     0            2.087912
     dtype: float64
-    >>> print(T)
-    intercept    -0.430394
-    0            10.969655
-    dtype: float64
-    >>> print(pvals)
-    intercept    0.344
-    0            0.165
-    dtype: float64
-    >>> print(F)
-    120.33333333340981
-    >>> print(model_pval)
-    0.165
-    >>> print(R2)
-    0.991758241758
     """
     # Unpack kwargs
     params = {'permutations': 999,
@@ -210,3 +197,32 @@ def mrm(y, *args, **kwargs):
             np.asscalar(F),
             np.asscalar(model_pval),
             np.asscalar(R2))
+
+
+def make_categorical_dms(x, metric=cityblock):
+    """
+    Creates multiple distance matrices from a categorical vector.
+    If vector has 3 categories A, B, C, then 3 different
+    distance matrices will be created for the distances between
+    AB, BC and AC.
+
+    Parameters
+    ----------
+    x : array_like
+       1-D categorical vector.
+    metric: function, option
+       The distance metric to use to compare two categorical vectors
+       default: scipy.spatial.distance.cityblock
+
+    Returns
+    -------
+    iterable
+       Iterable of skbio.DistanceMatrix objects
+    """
+    x = np.array(x)
+    cats = np.unique(x)
+    for i in range(len(cats)):
+        for j in range(i):
+            a, b = (x==cats[j]), (x==cats[i])
+            yield DistanceMatrix.from_iterable(np.vstack([a, b]).T,
+                                               metric=metric)

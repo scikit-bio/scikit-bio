@@ -24,7 +24,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
-from scipy.spatial.distance import cityblock
+
 
 class DissimilarityMatrixTestData(TestCase):
     def setUp(self):

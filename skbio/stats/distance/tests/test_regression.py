@@ -12,10 +12,10 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-
+import pandas as pd
+from pandas.util.testing import assert_index_equal
 from skbio import DistanceMatrix
-
-from skbio.stats.distance import mrm
+from skbio.stats.distance import mrm, make_categorical_dms
 
 
 class RegressionTests(TestCase):
@@ -126,12 +126,12 @@ class RegressionTests(TestCase):
                             np.array([0.4950495, 0.14851485,
                                       0.14851485]))
 
-        self.assertItemsEqual(B.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(T.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(pvals.index,
-                              ['intercept'] + range(2))
+        assert_index_equal(B.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(T.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(pvals.index,
+                           pd.Index(['intercept'] + range(2)))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
@@ -150,12 +150,12 @@ class RegressionTests(TestCase):
         npt.assert_allclose(pvals.values,
                             np.array([0.4950495, 0.14851485,
                                       0.14851485]))
-        self.assertItemsEqual(B.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(T.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(pvals.index,
-                              ['intercept'] + range(2))
+        assert_index_equal(B.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(T.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(pvals.index,
+                           pd.Index(['intercept'] + range(2)))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
@@ -197,12 +197,12 @@ class RegressionTests(TestCase):
         npt.assert_allclose(pvals.values,
                             np.array([ 0.45454545,  0.27272727]))
 
-        self.assertItemsEqual(B.index,
-                              ['intercept', 0])
-        self.assertItemsEqual(T.index,
-                              ['intercept', 0])
-        self.assertItemsEqual(pvals.index,
-                              ['intercept', 0])
+        assert_index_equal(B.index,
+                           pd.Index(['intercept', 0]))
+        assert_index_equal(T.index,
+                           pd.Index(['intercept', 0]))
+        assert_index_equal(pvals.index,
+                           pd.Index(['intercept', 0]))
         self.assertAlmostEqual(F, 120.33333333340981)
         self.assertAlmostEqual(model_pval, 0.2727272727272727)
         self.assertAlmostEqual(R2, 0.9917582417582471)
@@ -220,16 +220,49 @@ class RegressionTests(TestCase):
         npt.assert_allclose(pvals.values,
                             np.array([0.4950495, 0.14851485,
                                       0.14851485]))
-        self.assertItemsEqual(B.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(T.index,
-                              ['intercept'] + range(2))
-        self.assertItemsEqual(pvals.index,
-                              ['intercept'] + range(2))
+        assert_index_equal(B.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(T.index,
+                           pd.Index(['intercept'] + range(2)))
+        assert_index_equal(pvals.index,
+                           pd.Index(['intercept'] + range(2)))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
         self.assertAlmostEqual(R2, 0.9967634167352184)
+
+
+class MakeCategoricalDMS(TestCase):
+    def setUp(self):
+        self.x1 = np.array(['a', 'b', 'a'])
+        self.x2 = np.array(['a', 'b', 'c'])
+
+    def test1(self):
+        res = list(make_categorical_dms(self.x1))
+        ab = DistanceMatrix([[0, 2, 0],
+                             [2, 0, 2],
+                             [0, 2, 0]])
+        npt.assert_allclose(ab.data,
+                            res[0].data)
+
+    def test2(self):
+        res = list(make_categorical_dms(self.x2))
+        ab = DistanceMatrix([[0, 2, 1],
+                             [2, 0, 1],
+                             [1, 1, 0]])
+        ac = DistanceMatrix([[0, 1, 2],
+                             [1, 0, 1],
+                             [2, 1, 0]])
+        bc = DistanceMatrix([[0, 1, 1],
+                             [1, 0, 2],
+                             [1, 2, 0]])
+        npt.assert_allclose(ab.data,
+                            res[0].data)
+        npt.assert_allclose(ac.data,
+                            res[1].data)
+        npt.assert_allclose(bc.data,
+                            res[2].data)
+
 
 if __name__ == "__main__":
     main()
