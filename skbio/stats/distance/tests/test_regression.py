@@ -18,6 +18,7 @@ from skbio import DistanceMatrix
 from skbio.stats.distance import mrm, make_categorical_dms
 from skbio.util import get_data_path
 
+
 class RegressionTests(TestCase):
     def setUp(self):
         self.x1 = DistanceMatrix([[0, 1, 2.1],
