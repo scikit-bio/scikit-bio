@@ -16,7 +16,7 @@ import skbio.io  # noqa
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
 from skbio.alignment import (
-    local_pairwise_align_ssw, SequenceCollection, Alignment)
+    local_pairwise_align_ssw, SequenceCollection, Alignment, TabularMSA)
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio._base import OrdinationResults
@@ -24,7 +24,8 @@ from skbio._base import OrdinationResults
 
 __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
-           'Alignment', 'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
+           'Alignment', 'TabularMSA', 'TreeNode', 'nj', 'read', 'write',
+           'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.4.0-dev"
