@@ -189,8 +189,8 @@ def mrm(y, *args, **kwargs):
             np.asscalar(model_pval),
             np.asscalar(R2))
 
-
-def make_categorical_dms(x, metric=cityblock):
+@experimental(as_of="0.4.0")
+def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
     """
     Creates multiple distance matrices from a categorical vector.
     If vector has 3 categories A, B, C, then 3 different
@@ -200,7 +200,7 @@ def make_categorical_dms(x, metric=cityblock):
 
     Parameters
     ----------
-    x : array_like
+    x : pd.Series or array_like
        1-D categorical vector.
     metric: function, option
        The distance metric to use to compare two categorical vectors
@@ -209,12 +209,18 @@ def make_categorical_dms(x, metric=cityblock):
     Returns
     -------
     iterable
-       Iterable of skbio.DistanceMatrix objects
+       Iterable of tuples that contains
+       1. skbio.DistanceMatrix
+       2. string identifier
     """
-    x = np.array(x)
+    x = pd.Series(x)
+    if ignore_nans:
+        x = x[~pd.isnull(x)]
     cats = np.unique(x)
     for i in range(len(cats)):
         for j in range(i):
             a, b = (x == cats[j]), (x == cats[i])
-            yield DistanceMatrix.from_iterable(np.vstack([a, b]).T,
-                                               metric=metric)
+            yield (DistanceMatrix.from_iterable(np.vstack([a, b]).T,
+                                               metric=metric),
+                                               '%s_%s' % (str(cats[i]),
+                                                          str(cats[j])))
