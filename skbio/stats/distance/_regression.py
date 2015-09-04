@@ -110,6 +110,7 @@ def mrm(y, *args, **kwargs):
     0            2.087912
     dtype: float64
     """
+    print('Entering function')
     # Unpack kwargs
     params = {'permutations': 999,
               'random_state': 0,
@@ -128,8 +129,9 @@ def mrm(y, *args, **kwargs):
 
     labels = _check_dm_labels(labels, len(args))
     random_state = check_random_state(random_state)
-
+    print('Unpacked kwargs')
     xargs = list(args)
+    print('copying over xargs')
     # Conform all of the ids in the distance matrices to the same order
     if strict:
         for i in range(len(xargs)):
@@ -144,24 +146,27 @@ def mrm(y, *args, **kwargs):
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
     n, p = X.shape
-    J = np.ones((n, n))
     I = np.identity(n)
-
+    print("Y:%s" % str(Y.shape))
+    print("X:%s" % str(X.shape))
+    print("I:%s" % str(I.shape))
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
     H = X.dot(XX1).dot(X.T)
     dfe, dfr = n - p,  p - 1
+    print("XX1:%s" % str(XX1.shape))
+    print("H:%s" % str(H.shape))
 
     def regress(Y, computeR=False):
         B = XX1.dot(X.T.dot(Y))
         Yhat = H.dot(Y)
         SSE = Y.T.dot(I - H).dot(Y)
-        SSR = Y.T.dot(H - (1./n)*J).dot(Y)
+        SSR = Y.T.dot(H - (1./n)).dot(Y)
         MSR, MSE = SSR / dfr, SSE / dfe
         T = np.ravel(B) / np.sqrt(np.diag(XX1) * MSE)
         F = MSR / MSE
         if computeR:
-            SST = Y.T.dot(I - (1./n)*J).dot(Y)
+            SST = Y.T.dot(I - (1./n)).dot(Y)
             R2 = SSR / SST
         else:
             R2 = None
@@ -169,9 +174,13 @@ def mrm(y, *args, **kwargs):
 
     # Permutation on residuals
     Yhat, B, T, F, R2 = regress(Y, computeR=True)
+    print("B:%s" % str(B.shape))
+    print("Yhat:%s" % str(Yhat.shape))
+
     E = Y - Yhat
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
+    print("Ts:%s" % str(Ts.shape))
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
@@ -188,6 +197,7 @@ def mrm(y, *args, **kwargs):
             np.asscalar(F),
             np.asscalar(model_pval),
             np.asscalar(R2))
+
 
 @experimental(as_of="0.4.0")
 def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
@@ -215,12 +225,12 @@ def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
     """
     x = pd.Series(x)
     if ignore_nans:
-        x = x[~pd.isnull(x)]
-    cats = np.unique(x)
+        y = x[~pd.isnull(x)]
+    cats = np.unique(y)
     for i in range(len(cats)):
         for j in range(i):
             a, b = (x == cats[j]), (x == cats[i])
-            yield (DistanceMatrix.from_iterable(np.vstack([a, b]).T,
-                                               metric=metric),
-                                               '%s_%s' % (str(cats[i]),
-                                                          str(cats[j])))
+            dm = DistanceMatrix.from_iterable(np.vstack([a, b]).T,
+                                                metric=metric)
+            dm.ids = x.index
+            yield (dm, '%s_%s' % (str(cats[i]), str(cats[j])))
