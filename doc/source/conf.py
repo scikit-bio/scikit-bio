@@ -5,12 +5,58 @@ import glob
 import sys
 import os
 import types
+import re
 
 # Check that dependencies are installed and the correct version if necessary
 sphinx_version = '1.2.2'
 import sphinx
 if sphinx.__version__ != sphinx_version:
     raise RuntimeError("Sphinx %s required" % sphinx_version)
+
+import sphinx.ext.autosummary as autosummary
+
+class NewAuto(autosummary.Autosummary):
+    def get_items(self, names):
+        # Camel to snake case from http://stackoverflow.com/a/1176023/579416
+        first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+        all_cap_re = re.compile('([a-z0-9])([A-Z])')
+        def fix_item(display_name, sig, summary, real_name):
+            class_name = real_name.split('.')[-2]
+            s1 = first_cap_re.sub(r'\1_\2', class_name)
+            nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
+            if len(nice_name) > 10:
+                nice_name = ''.join([e[0] for e in nice_name.split('_')])
+            def fmt(string):
+                count = string.count('%s')
+                return string % tuple([nice_name] * count)
+
+            specials = {
+                '__eq__': fmt('%s1 == %s2'),
+                '__ne__': fmt('%s1 != %s2'),
+                '__gt__': fmt('%s1 > %s2'),
+                '__lt__': fmt('%s1 < %s2'),
+                '__ge__': fmt('%s1 >= %s2'),
+                '__le__': fmt('%s1 <= %s2'),
+                '__getitem__': fmt('%s[x]'),
+                '__iter__': fmt('iter(%s)'),
+                '__contains__': fmt('x in %s'),
+                '__bool__': fmt('bool(%s)'),
+                '__str__': fmt('str(%s)'),
+                '__reversed__': fmt('reversed(%s)'),
+                '__len__': fmt('len(%s)'),
+                '__copy__': fmt('copy.copy(%s)'),
+                '__deepcopy__': fmt('copy.deepcopy(%s)'),
+            }
+            if display_name in specials:
+                return specials[display_name], '', summary, real_name
+            return display_name, sig, summary, real_name
+
+        skip = ['__nonzero__']
+
+        return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
+                if e[0] not in skip]
+
+autosummary.Autosummary = NewAuto
 
 import sphinx_bootstrap_theme
 
