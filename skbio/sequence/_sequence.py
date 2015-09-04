@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
+from future.builtins import range, zip
 from future.utils import viewitems
 import six
 
@@ -69,6 +69,7 @@ class Sequence(collections.Sequence, SkbioObject):
     values
     metadata
     positional_metadata
+    observed_chars
 
     See Also
     --------
@@ -319,6 +320,7 @@ class Sequence(collections.Sequence, SkbioObject):
     3      []       10
 
     """
+    _number_of_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -525,6 +527,25 @@ class Sequence(collections.Sequence, SkbioObject):
     @positional_metadata.deleter
     def positional_metadata(self):
         self._positional_metadata = None
+
+    @property
+    @experimental(as_of="0.4.0-dev")
+    def observed_chars(self):
+        """Set of observed characters in the sequence.
+
+        Notes
+        -----
+        This property is not writeable.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> s = Sequence('AACGAC')
+        >>> s.observed_chars == {'G', 'A', 'C'}
+        True
+
+        """
+        return set(str(self))
 
     @property
     def _string(self):
@@ -938,7 +959,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.size
 
     @stable(as_of="0.4.0")
-    def __nonzero__(self):
+    def __bool__(self):
         """Returns truth value (truthiness) of sequence.
 
         Returns
@@ -956,6 +977,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         return len(self) > 0
+
+    __nonzero__ = __bool__
 
     @stable(as_of="0.4.0")
     def __iter__(self):
@@ -1764,6 +1787,138 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.mismatches(other).sum())
 
+    @experimental(as_of="0.4.0-dev")
+    def frequencies(self, chars=None, relative=False):
+        """Compute frequencies of characters in the sequence.
+
+        Parameters
+        ----------
+        chars : str or set of str, optional
+            Characters to compute the frequencies of. May be a ``str``
+            containing a single character or a ``set`` of single-character
+            strings. If ``None``, frequencies will be computed for all
+            characters present in the sequence.
+        relative : bool, optional
+            If ``True``, return the relative frequency of each character
+            instead of its count. If `chars` is provided, relative frequencies
+            will be computed with respect to the number of characters in the
+            sequence, **not** the total count of characters observed in
+            `chars`. Thus, the relative frequencies will not necessarily sum to
+            1.0 if `chars` is provided.
+
+        Returns
+        -------
+        dict
+            Frequencies of characters in the sequence.
+
+        Raises
+        ------
+        TypeError
+            If `chars` is not a ``str`` or ``set`` of ``str``.
+        ValueError
+            If `chars` is not a single-character ``str`` or a ``set`` of
+            single-character strings.
+        ValueError
+            If `chars` contains characters outside the allowable range of
+            characters in a ``Sequence`` object.
+
+        See Also
+        --------
+        kmer_frequencies
+        iter_kmers
+
+        Notes
+        -----
+        If the sequence is empty (i.e., length zero), ``relative=True``,
+        **and** `chars` is provided, the relative frequency of each specified
+        character will be ``np.nan``.
+
+        If `chars` is not provided, this method is equivalent to, but faster
+        than, ``seq.kmer_frequencies(k=1)``.
+
+        If `chars` is not provided, it is equivalent to, but faster than,
+        passing ``chars=seq.observed_chars``.
+
+        Examples
+        --------
+        Compute character frequencies of a sequence:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('AGAAGACC')
+        >>> freqs = seq.frequencies()
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'A': 4, 'C': 2, 'G': 2}
+
+        Compute relative character frequencies:
+
+        >>> freqs = seq.frequencies(relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'G': 0.25}
+
+        Compute relative frequencies of characters A, C, and T:
+
+        >>> freqs = seq.frequencies(chars={'A', 'C', 'T'}, relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'T': 0.0}
+
+        Note that since character T is not in the sequence we receive a
+        relative frequency of 0.0. The relative frequencies of A and C are
+        relative to the number of characters in the sequence (8), **not** the
+        number of A and C characters (4 + 2 = 6).
+
+        """
+        freqs = np.bincount(self._bytes,
+                            minlength=self._number_of_extended_ascii_codes)
+
+        if chars is not None:
+            chars, indices = self._chars_to_indices(chars)
+        else:
+            indices, = np.nonzero(freqs)
+            # Downcast from int64 to uint8 then convert to str. This is safe
+            # because we are guaranteed to have indices in the range 0 to 255
+            # inclusive.
+            chars = indices.astype(np.uint8).tostring().decode('ascii')
+
+        obs_counts = freqs[indices]
+        if relative:
+            obs_counts = obs_counts / len(self)
+
+        # Use tolist() for minor performance gain.
+        return dict(zip(chars, obs_counts.tolist()))
+
+    def _chars_to_indices(self, chars):
+        """Helper for Sequence.frequencies."""
+        if isinstance(chars, six.string_types) or \
+                isinstance(chars, six.binary_type):
+            chars = set([chars])
+        elif not isinstance(chars, set):
+            raise TypeError(
+                "`chars` must be of type `set`, not %r" % type(chars).__name__)
+
+        # Impose an (arbitrary) ordering to `chars` so that we can return
+        # `indices` in that same order.
+        chars = list(chars)
+        indices = []
+        for char in chars:
+            if not (isinstance(char, six.string_types) or
+                    isinstance(char, six.binary_type)):
+                raise TypeError(
+                    "Each element of `chars` must be string-like, not %r" %
+                    type(char).__name__)
+            if len(char) != 1:
+                raise ValueError(
+                    "Each element of `chars` must contain a single "
+                    "character (found %d characters)" % len(char))
+
+            index = ord(char)
+            if index >= self._number_of_extended_ascii_codes:
+                raise ValueError(
+                    "Character %r in `chars` is outside the range of "
+                    "allowable characters in a `Sequence` object." % char)
+            indices.append(index)
+        return chars, indices
+
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
         """Generate kmers of length `k` from the biological sequence.
@@ -1841,11 +1996,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Returns
         -------
-        collections.Counter or collections.defaultdict
+        dict
             Frequencies of words of length `k` contained in the biological
-            sequence. This will be a ``collections.Counter`` if `relative` is
-            ``False`` and a ``collections.defaultdict`` if `relative` is
-            ``True``.
+            sequence.
 
         Raises
         ------
@@ -1854,19 +2007,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from collections import defaultdict, Counter
+        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> freqs = s.kmer_frequencies(3, overlap=False)
-        >>> freqs == Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
-        True
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'ACA': 1, 'CAT': 1, 'TTA': 2}
         >>> freqs = s.kmer_frequencies(3, relative=True, overlap=False)
-        >>> freqs == defaultdict(float, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
-        True
+        >>> pprint(freqs)
+        {'ACA': 0.25, 'CAT': 0.25, 'TTA': 0.5}
 
         """
         kmers = self.iter_kmers(k, overlap=overlap)
-        freqs = collections.Counter((str(seq) for seq in kmers))
+        freqs = dict(collections.Counter((str(seq) for seq in kmers)))
 
         if relative:
             if overlap:
@@ -1874,7 +2027,7 @@ class Sequence(collections.Sequence, SkbioObject):
             else:
                 num_kmers = len(self) // k
 
-            relative_freqs = collections.defaultdict(float)
+            relative_freqs = {}
             for kmer, count in viewitems(freqs):
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs

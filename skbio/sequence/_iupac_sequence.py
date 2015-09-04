@@ -56,7 +56,6 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        A Cornish-Bowden
 
     """
-    _number_of_extended_ascii_codes = 256
     __validation_mask = None
     __degenerate_codes = None
     __nondegenerate_codes = None
@@ -191,7 +190,11 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             bad = list(np.where(
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
             raise ValueError(
-                "Invalid character%s in sequence: %r. Valid IUPAC characters: "
+                "Invalid character%s in sequence: %r. \n"
+                "Lowercase letters are not used in IUPAC notation. You can "
+                "pass `lowercase=True` if your sequence contains lowercase "
+                "letters.\n"
+                "Valid IUPAC characters: "
                 "%r" % ('s' if len(bad) > 1 else '',
                         [str(b.tostring().decode("ascii")) for b in bad] if
                         len(bad) > 1 else bad[0],

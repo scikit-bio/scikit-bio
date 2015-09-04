@@ -13,7 +13,7 @@ from six.moves import zip_longest
 import copy
 import re
 from types import GeneratorType
-from collections import Counter, defaultdict, Hashable
+from collections import Hashable
 from unittest import TestCase, main
 
 import numpy as np
@@ -765,6 +765,22 @@ class TestSequence(TestCase):
                                        "Length of values does not match "
                                        "length of index"):
                 seq.positional_metadata['bar'] = array_like
+
+    def test_observed_chars_property(self):
+        self.assertEqual(Sequence('').observed_chars, set())
+        self.assertEqual(Sequence('x').observed_chars, {'x'})
+        self.assertEqual(Sequence('xYz').observed_chars, {'x', 'Y', 'z'})
+        self.assertEqual(Sequence('zzz').observed_chars, {'z'})
+        self.assertEqual(Sequence('xYzxxZz').observed_chars,
+                         {'x', 'Y', 'z', 'Z'})
+        self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
+        self.assertEqual(
+            Sequence('aabbcc', metadata={'foo': 'bar'},
+                     positional_metadata={'foo': range(6)}).observed_chars,
+            {'a', 'b', 'c'})
+
+        with self.assertRaises(AttributeError):
+            Sequence('ACGT').observed_chars = {'a', 'b', 'c'}
 
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
@@ -1640,6 +1656,166 @@ class TestSequence(TestCase):
         self.assertEqual(
             SequenceSubclass("ABCDEFG").index(SequenceSubclass("A")), 0)
 
+    def test_frequencies_empty_sequence(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.frequencies(), {})
+        self.assertEqual(seq.frequencies(relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars=set()), {})
+        self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}), {'a': 0, 'b': 0})
+
+        # use npt.assert_equal to explicitly handle nan comparisons
+        npt.assert_equal(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         {'a': np.nan, 'b': np.nan})
+
+    def test_frequencies_observed_chars(self):
+        seq = Sequence('x')
+        self.assertEqual(seq.frequencies(), {'x': 1})
+        self.assertEqual(seq.frequencies(relative=True), {'x': 1.0})
+
+        seq = Sequence('xYz')
+        self.assertEqual(seq.frequencies(), {'x': 1, 'Y': 1, 'z': 1})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'x': 1/3, 'Y': 1/3, 'z': 1/3})
+
+        seq = Sequence('zzz')
+        self.assertEqual(seq.frequencies(), {'z': 3})
+        self.assertEqual(seq.frequencies(relative=True), {'z': 1.0})
+
+        seq = Sequence('xYzxxZz')
+        self.assertEqual(seq.frequencies(), {'x': 3, 'Y': 1, 'Z': 1, 'z': 2})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'x': 3/7, 'Y': 1/7, 'Z': 1/7, 'z': 2/7})
+
+        seq = Sequence('\t   ')
+        self.assertEqual(seq.frequencies(), {'\t': 1, ' ': 3})
+        self.assertEqual(seq.frequencies(relative=True), {'\t': 1/4, ' ': 3/4})
+
+        seq = Sequence('aabbcc', metadata={'foo': 'bar'},
+                       positional_metadata={'foo': range(6)})
+        self.assertEqual(seq.frequencies(), {'a': 2, 'b': 2, 'c': 2})
+        self.assertEqual(seq.frequencies(relative=True),
+                         {'a': 2/6, 'b': 2/6, 'c': 2/6})
+
+    def test_frequencies_specified_chars(self):
+        seq = Sequence('abcbca')
+
+        self.assertEqual(seq.frequencies(chars=set()), {})
+        self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
+
+        self.assertEqual(seq.frequencies(chars='a'), {'a': 2})
+        self.assertEqual(seq.frequencies(chars='a', relative=True), {'a': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a'}), {'a': 2})
+        self.assertEqual(seq.frequencies(chars={'a'}, relative=True),
+                         {'a': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}), {'a': 2, 'b': 2})
+        self.assertEqual(seq.frequencies(chars={'a', 'b'}, relative=True),
+                         {'a': 2/6, 'b': 2/6})
+
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}),
+                         {'a': 2, 'b': 2, 'd': 0})
+        self.assertEqual(seq.frequencies(chars={'a', 'b', 'd'}, relative=True),
+                         {'a': 2/6, 'b': 2/6, 'd': 0.0})
+
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}),
+                         {'x': 0, 'y': 0, 'z': 0})
+        self.assertEqual(seq.frequencies(chars={'x', 'y', 'z'}, relative=True),
+                         {'x': 0.0, 'y': 0.0, 'z': 0.0})
+
+    def test_frequencies_chars_varied_type(self):
+        seq = Sequence('zabczzzabcz')
+
+        # single character case (shortcut)
+        chars = b'z'
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
+
+        chars = u'z'
+        self.assertEqual(seq.frequencies(chars=chars), {u'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {u'z': 5/11})
+
+        chars = np.fromstring('z', dtype='|S1')[0]
+        self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'z': 5/11})
+
+        # set of characters, some present, some not
+        chars = {b'x', b'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
+
+        chars = {u'x', u'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {u'x': 0, u'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {u'x': 0.0, u'z': 5/11})
+
+        chars = {
+            np.fromstring('x', dtype='|S1')[0],
+            np.fromstring('z', dtype='|S1')[0]
+        }
+        self.assertEqual(seq.frequencies(chars=chars), {b'x': 0, b'z': 5})
+        self.assertEqual(seq.frequencies(chars=chars, relative=True),
+                         {b'x': 0.0, b'z': 5/11})
+
+    def test_frequencies_equivalent_to_kmer_frequencies_k_of_1(self):
+        seq = Sequence('abcabc')
+
+        exp = {'a': 2, 'b': 2, 'c': 2}
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1), exp)
+
+        exp = {'a': 2/6, 'b': 2/6, 'c': 2/6}
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(seq.kmer_frequencies(k=1, relative=True), exp)
+
+    def test_frequencies_passing_observed_chars_equivalent_to_default(self):
+        seq = Sequence('abcabc')
+
+        exp = {'a': 2, 'b': 2, 'c': 2}
+        self.assertEqual(seq.frequencies(chars=None), exp)
+        self.assertEqual(seq.frequencies(chars=seq.observed_chars), exp)
+
+        exp = {'a': 2/6, 'b': 2/6, 'c': 2/6}
+        self.assertEqual(seq.frequencies(chars=None, relative=True), exp)
+        self.assertEqual(
+            seq.frequencies(chars=seq.observed_chars, relative=True),
+            exp)
+
+    def test_frequencies_invalid_chars(self):
+        seq = Sequence('abcabc')
+
+        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+            seq.frequencies(chars='')
+
+        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+            seq.frequencies(chars={''})
+
+        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+            seq.frequencies(chars='ab')
+
+        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+            seq.frequencies(chars={'b', 'ab'})
+
+        with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
+            seq.frequencies(chars={'a', None})
+
+        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+            seq.frequencies(chars=u'\u1F30')
+
+        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+            seq.frequencies(chars={'c', u'\u1F30'})
+
+        with six.assertRaisesRegex(self, TypeError, 'set.*int'):
+            seq.frequencies(chars=42)
+
     def _compare_kmers_results(self, observed, expected):
         for obs, exp in zip_longest(observed, expected, fillvalue=None):
             self.assertEqual(obs, exp)
@@ -1869,57 +2045,64 @@ class TestSequence(TestCase):
         ]
         self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
 
+    def test_kmer_frequencies_empty_sequence(self):
+        seq = Sequence('')
+
+        self.assertEqual(seq.kmer_frequencies(1), {})
+        self.assertEqual(seq.kmer_frequencies(1, overlap=False), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {})
+        self.assertEqual(seq.kmer_frequencies(1, relative=True, overlap=False),
+                         {})
+
     def test_kmer_frequencies(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
         # overlap = True
-        expected = Counter('GATTACA')
+        expected = {'G': 1, 'A': 3, 'T': 2, 'C': 1}
         self.assertEqual(seq.kmer_frequencies(1, overlap=True), expected)
-        expected = Counter(['GAT', 'ATT', 'TTA', 'TAC', 'ACA'])
+
+        expected = {'GAT': 1, 'ATT': 1, 'TTA': 1, 'TAC': 1, 'ACA': 1}
         self.assertEqual(seq.kmer_frequencies(3, overlap=True), expected)
-        expected = Counter([])
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=True), expected)
 
         # overlap = False
-        expected = Counter(['GAT', 'TAC'])
+        expected = {'GAT': 1, 'TAC': 1}
         self.assertEqual(seq.kmer_frequencies(3, overlap=False), expected)
-        expected = Counter(['GATTACA'])
+
+        expected = {'GATTACA': 1}
         self.assertEqual(seq.kmer_frequencies(7, overlap=False), expected)
-        expected = Counter([])
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=False), expected)
 
     def test_kmer_frequencies_relative(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})
+
         # overlap = True
-        expected = defaultdict(float)
-        expected['A'] = 3/7.
-        expected['C'] = 1/7.
-        expected['G'] = 1/7.
-        expected['T'] = 2/7.
+        expected = {'A': 3/7, 'C': 1/7, 'G': 1/7, 'T': 2/7}
         self.assertEqual(seq.kmer_frequencies(1, overlap=True, relative=True),
                          expected)
-        expected = defaultdict(float)
-        expected['GAT'] = 1/5.
-        expected['ATT'] = 1/5.
-        expected['TTA'] = 1/5.
-        expected['TAC'] = 1/5.
-        expected['ACA'] = 1/5.
+
+        expected = {'GAT': 1/5, 'ATT': 1/5, 'TTA': 1/5, 'TAC': 1/5, 'ACA': 1/5}
         self.assertEqual(seq.kmer_frequencies(3, overlap=True, relative=True),
                          expected)
-        expected = defaultdict(float)
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=True, relative=True),
                          expected)
 
         # overlap = False
-        expected = defaultdict(float)
-        expected['GAT'] = 1/2.
-        expected['TAC'] = 1/2.
+        expected = {'GAT': 1/2, 'TAC': 1/2}
         self.assertEqual(seq.kmer_frequencies(3, overlap=False, relative=True),
                          expected)
-        expected = defaultdict(float)
-        expected['GATTACA'] = 1.0
+
+        expected = {'GATTACA': 1.0}
         self.assertEqual(seq.kmer_frequencies(7, overlap=False, relative=True),
                          expected)
-        expected = defaultdict(float)
+
+        expected = {}
         self.assertEqual(seq.kmer_frequencies(8, overlap=False, relative=True),
                          expected)
 
@@ -1940,8 +2123,7 @@ class TestSequence(TestCase):
         # 1.0. This occurs because 1/10 cannot be represented exactly as a
         # floating point number.
         seq = Sequence('AAAAAAAAAA')
-        self.assertEqual(seq.kmer_frequencies(1, relative=True),
-                         defaultdict(float, {'A': 1.0}))
+        self.assertEqual(seq.kmer_frequencies(1, relative=True), {'A': 1.0})
 
     def test_find_with_regex(self):
         seq = Sequence('GATTACA', positional_metadata={'quality': range(7)})

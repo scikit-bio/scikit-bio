@@ -13,6 +13,38 @@
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
 * Added ``reverse_transcribe`` class method to ``RNA``.
+* Added `Sequence.observed_chars` property for obtaining the set of observed characters in a sequence. ([#1075](https://github.com/biocore/scikit-bio/issues/1075))
+* Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/biocore/scikit-bio/issues/1074))
+
+### Backward-incompatible changes [stable]
+* `Sequence.kmer_frequencies` now returns a `dict`. Previous behavior was to return a `collections.Counter` if `relative=False` was passed, and a `collections.defaultdict` if `relative=True` was passed. In the case of a missing key, the `Counter` would return 0 and the `defaultdict` would return 0.0. Because the return type is now always a `dict`, attempting to access a missing key will raise a `KeyError`. This change *may* break backwards-compatibility depending on how the `Counter`/`defaultdict` is being used. We hope that in most cases this change will not break backwards-compatibility because both `Counter` and `defaultdict` are `dict` subclasses.
+
+   If the previous behavior is desired, convert the `dict` into a `Counter`/`defaultdict`:
+
+    ```python
+    import collections
+    from skbio import Sequence
+    seq = Sequence('ACCGAGTTTAACCGAATA')
+
+    # Counter
+    freqs_dict = seq.kmer_frequencies(k=8)
+    freqs_counter = collections.Counter(freqs_dict)
+
+    # defaultdict
+    freqs_dict = seq.kmer_frequencies(k=8, relative=True)
+    freqs_default_dict = collections.defaultdict(float, freqs_dict)
+    ```
+
+   **Rationale:** We believe it is safer to return `dict` instead of `Counter`/`defaultdict` as this may prevent error-prone usage of the return value. Previous behavior allowed accessing missing kmers, returning 0 or 0.0 depending on the `relative` parameter. This is convenient in many cases but also potentially misleading. For example, consider the following code:
+
+    ```python
+    from skbio import Sequence
+    seq = Sequence('ACCGAGTTTAACCGAATA')
+    freqs = seq.kmer_frequencies(k=8)
+    freqs['ACCGA']
+    ```
+
+    Previous behavior would return 0 because the kmer `'ACCGA'` is not present in the `Counter`. In one respect this is the correct answer because we asked for kmers of length 8; `'ACCGA'` is a different length so it is not included in the results. However, we believe it is safer to avoid this implicit behavior in case the user assumes there are no `'ACCGA'` kmers in the sequence (which there are!). A `KeyError` in this case is more explicit and forces the user to consider their query. Returning a `dict` will also be consistent with `Sequence.frequencies`.
 
 ### Backward-incompatible changes [experimental]
 * Replaced ``PCoA``, ``CCA``, ``CA`` and ``RDA`` in ``skbio.stats.ordination`` with equivalent functions ``pcoa``, ``cca``, ``ca`` and ``rda``. These functions now take ``pd.DataFrame`` objects.
