@@ -141,7 +141,7 @@ def mrm(y, *args, **kwargs):
 
     # Linearize all predictor distance matrices into
     # a single matrix
-    n = len(y.data)
+    n = len(xargs[0].data)
     X = np.vstack([np.ones((1, n*(n-1)/2))] +
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
@@ -231,6 +231,6 @@ def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
         for j in range(i):
             a, b = (x == cats[j]), (x == cats[i])
             dm = DistanceMatrix.from_iterable(np.vstack([a, b]).T,
-                                                metric=metric)
-            dm.ids = x.index
+                                                metric=metric,
+                                                keys=x.index)
             yield (dm, '%s_%s' % (str(cats[i]), str(cats[j])))
