@@ -658,7 +658,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
     @classmethod
     @experimental(as_of="0.4.0-dev")
-    def from_iterable(cls, iterable, metric, key=None):
+    def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
         Parameters
@@ -668,17 +668,25 @@ class DistanceMatrix(DissimilarityMatrix):
         metric : callable
             A function that takes two arguments and returns a float
             representing the distance between the two arguments.
-        key : callable, str, optional
+        key : callable or metadata key, optional
             A function that takes one argument and returns a string
             representing the id of the element in the distance matrix.
             Alternatively, a key to a `metadata` property if it exists for
             each element in the `iterable`. If None, then default ids will be
             used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
 
         Returns
         -------
         DistanceMatrix
             The `metric` applied to all pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
 
         Notes
         -----
@@ -688,17 +696,22 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same"
+                             " time.")
 
-        keys = None
+        keys_ = None
         if key is not None:
-            keys = [resolve_key(e, key) for e in iterable]
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = keys
 
         dm = np.zeros((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable[:i]):
                 dm[i, j] = dm[j, i] = metric(a, b)
 
-        return cls(dm, keys)
+        return cls(dm, keys_)
 
     @experimental(as_of="0.4.0")
     def condensed_form(self):
