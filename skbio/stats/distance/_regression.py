@@ -129,9 +129,7 @@ def mrm(y, *args, **kwargs):
 
     labels = _check_dm_labels(labels, len(args))
     random_state = check_random_state(random_state)
-    print('Unpacked kwargs')
     xargs = list(args)
-    print('copying over xargs')
     # Conform all of the ids in the distance matrices to the same order
     if strict:
         for i in range(len(xargs)):
@@ -147,16 +145,10 @@ def mrm(y, *args, **kwargs):
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
     n, p = X.shape
     I = np.identity(n)
-    print("Y:%s" % str(Y.shape))
-    print("X:%s" % str(X.shape))
-    print("I:%s" % str(I.shape))
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
     H = X.dot(XX1).dot(X.T)
     dfe, dfr = n - p,  p - 1
-    print("XX1:%s" % str(XX1.shape))
-    print("H:%s" % str(H.shape))
-
     def regress(Y, computeR=False):
         B = XX1.dot(X.T.dot(Y))
         Yhat = H.dot(Y)
@@ -174,13 +166,9 @@ def mrm(y, *args, **kwargs):
 
     # Permutation on residuals
     Yhat, B, T, F, R2 = regress(Y, computeR=True)
-    print("B:%s" % str(B.shape))
-    print("Yhat:%s" % str(Yhat.shape))
-
     E = Y - Yhat
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
-    print("Ts:%s" % str(Ts.shape))
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
