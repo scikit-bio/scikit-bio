@@ -61,10 +61,10 @@ class RegressionTests(TestCase):
         self.y4 = DistanceMatrix([[0, 2, 4, 9, 10, 1],
                                   [2, 0, 6, 12, 14, 1],
                                   [4, 6, 0, 16, 18, 1],
-                                  [9, 12, 16, 0, 20,1 ],
+                                  [9, 12, 16, 0, 20, 1],
                                   [10, 14, 18, 20, 0, 1],
                                   [1, 1, 1, 1, 1, 0]],
-                                  ['1', '2', '3', '5', '4', '6'])
+                                 ['1', '2', '3', '5', '4', '6'])
 
     def test1(self):
         B, T, pvals, F, model_pval, R2 = mrm(self.y1, self.x1,
@@ -226,7 +226,6 @@ class RegressionTests(TestCase):
         self.assertAlmostEqual(F, 1077.8872882816077)
         self.assertAlmostEqual(model_pval, 0.1485148514851485)
         self.assertAlmostEqual(R2, 0.9967634167352184)
-
 
         B, T, pvals, F, model_pval, R2 = mrm(self.y4, self.x6, self.x5,
                                              permutations=100,

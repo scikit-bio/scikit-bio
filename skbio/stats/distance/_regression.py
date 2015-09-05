@@ -155,6 +155,7 @@ def mrm(y, *args, **kwargs):
     XX1 = np.linalg.pinv(X.T.dot(X))
     H = X.dot(XX1).dot(X.T)
     dfe, dfr = n - p,  p - 1
+
     def regress(Y, computeR=False):
         B = XX1.dot(X.T.dot(Y))
         Yhat = H.dot(Y)
@@ -225,6 +226,6 @@ def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
         for j in range(i):
             a, b = (x == cats[j]), (x == cats[i])
             dm = DistanceMatrix.from_iterable(np.vstack([a, b]).T,
-                                                metric=metric,
-                                                keys=x.index)
+                                              metric=metric,
+                                              keys=x.index)
             yield (dm, '%s_%s' % (str(cats[i]), str(cats[j])))
