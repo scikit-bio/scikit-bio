@@ -110,7 +110,6 @@ def mrm(y, *args, **kwargs):
     0            2.087912
     dtype: float64
     """
-    print('Entering function')
     # Unpack kwargs
     params = {'permutations': 999,
               'random_state': 0,
@@ -131,15 +130,22 @@ def mrm(y, *args, **kwargs):
     random_state = check_random_state(random_state)
     xargs = list(args)
     # Conform all of the ids in the distance matrices to the same order
-    if strict:
-        for i in range(len(xargs)):
-            y, xargs[i] = _order_dms(y, xargs[i],
-                                     strict=strict,
-                                     lookup=lookup)
+    # Intersect all covariates
+    for i in range(len(xargs)):
+        for j in range(i):
+            xargs[i], xargs[j] = _order_dms(xargs[i],
+                                            xargs[j],
+                                            strict=strict,
+                                            lookup=lookup)
+    # Intersect response matrix against all covariates
+    for i in range(len(xargs)):
+        y, xargs[i] = _order_dms(y, xargs[i],
+                                 strict=strict,
+                                 lookup=lookup)
 
     # Linearize all predictor distance matrices into
     # a single matrix
-    n = len(xargs[0].data)
+    n = len(y.data)
     X = np.vstack([np.ones((1, n*(n-1)/2))] +
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
