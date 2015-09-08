@@ -135,7 +135,8 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        This property can be set and deleted.
+        This property can be set and deleted. Keys are stored as an immutable
+        ``numpy.ndarray``.
 
         Examples
         --------
@@ -157,6 +158,16 @@ class TabularMSA(SkbioObject):
         >>> msa.keys = ['seq1', 'seq2']
         >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
         array(['seq1', 'seq2'],
+              dtype='<U4')
+
+        To make updates to a subset of the keys, first make a copy of the keys,
+        update them, then set them again:
+
+        >>> new_keys = msa.keys.copy()
+        >>> new_keys[0] = 'new1'
+        >>> msa.keys = new_keys
+        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
+        array(['new1', 'seq2'],
               dtype='<U4')
 
         Delete keys:
@@ -553,6 +564,9 @@ class TabularMSA(SkbioObject):
             if duplicates:
                 raise UniqueError(
                     "Keys must be unique. Duplicate keys: %r" % duplicates)
+            # Create an immutable ndarray to ensure key invariants are
+            # preserved.
             keys_ = np.asarray(keys_)
+            keys_.flags.writeable = False
 
         self._keys = keys_

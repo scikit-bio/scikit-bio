@@ -188,6 +188,27 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertIsInstance(keys, np.ndarray)
         npt.assert_array_equal(keys, np.array(['AC', 'AG', 'AT']))
 
+        # immutable
+        with self.assertRaises(ValueError):
+            keys[1] = 'AA'
+        # original state is maintained
+        npt.assert_array_equal(keys, np.array(['AC', 'AG', 'AT']))
+
+    def test_keys_update_subset_of_keys(self):
+        # keys can be copied, modified, then re-set
+        msa = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')], key=str)
+        npt.assert_array_equal(msa.keys, np.array(['AC', 'AG', 'AT']))
+
+        new_keys = msa.keys.copy()
+        new_keys[1] = 'AA'
+        msa.keys = new_keys
+        npt.assert_array_equal(msa.keys, np.array(['AC', 'AA', 'AT']))
+
+        self.assertFalse(msa.keys.flags.writeable)
+        self.assertTrue(new_keys.flags.writeable)
+        new_keys[1] = 'GG'
+        npt.assert_array_equal(msa.keys, np.array(['AC', 'AA', 'AT']))
+
     def test_keys_setter_empty(self):
         msa = TabularMSA([])
         self.assertFalse(msa.has_keys())
@@ -405,6 +426,17 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         msa.reindex()
         self.assertFalse(msa.has_keys())
+
+    def test_reindex_makes_copy_of_keys(self):
+        msa = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')])
+        keys = np.asarray([1, 2, 3])
+        msa.reindex(keys=keys)
+        npt.assert_array_equal(msa.keys, np.array([1, 2, 3]))
+
+        self.assertFalse(msa.keys.flags.writeable)
+        self.assertTrue(keys.flags.writeable)
+        keys[1] = 42
+        npt.assert_array_equal(msa.keys, np.array([1, 2, 3]))
 
     def test_reindex_key_and_keys_both_provided(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
