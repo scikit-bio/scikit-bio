@@ -959,7 +959,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.size
 
     @stable(as_of="0.4.0")
-    def __nonzero__(self):
+    def __bool__(self):
         """Returns truth value (truthiness) of sequence.
 
         Returns
@@ -977,6 +977,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         return len(self) > 0
+
+    __nonzero__ = __bool__
 
     @stable(as_of="0.4.0")
     def __iter__(self):
