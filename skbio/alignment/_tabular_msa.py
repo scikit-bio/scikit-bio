@@ -96,7 +96,7 @@ class TabularMSA(SkbioObject):
         --------
         >>> from skbio import DNA, TabularMSA
 
-        Create a ``TabularMSA`` with 2 sequences and 3 positions:
+        Create a ``TabularMSA`` object with 2 sequences and 3 positions:
 
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa.shape
@@ -135,23 +135,51 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        This property is not writeable.
+        This property can be set and deleted.
 
         Examples
         --------
+        Create a ``TabularMSA`` object keyed by sequence identifier:
+
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'})]
         >>> msa = TabularMSA(seqs, key='id')
+
+        Retrieve keys:
+
         >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
         array(['a', 'b'],
               dtype='<U1')
 
+        Set keys:
+
+        >>> msa.keys = ['seq1', 'seq2']
+        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
+        array(['seq1', 'seq2'],
+              dtype='<U4')
+
+        Delete keys:
+
+        >>> msa.has_keys()
+        True
+        >>> del msa.keys
+        >>> msa.has_keys()
+        False
+
         """
-        if self._keys is None:
+        if not self.has_keys():
             raise OperationError(
                 "Keys do not exist. Use `reindex` to set them.")
         return self._keys
+
+    @keys.setter
+    def keys(self, keys):
+        self.reindex(keys=keys)
+
+    @keys.deleter
+    def keys(self):
+        self.reindex()
 
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, key=None, keys=None):
