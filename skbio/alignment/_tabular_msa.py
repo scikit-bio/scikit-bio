@@ -34,15 +34,31 @@ class TabularMSA(SkbioObject):
     key : callable or metadata key, optional
         If provided, defines a unique, hashable key for each sequence in
         `sequences`. Can either be a callable accepting a single argument (each
-        sequence) or a key into each sequence's ``metadata`` attribute. If not
-        provided, keys will not be set and certain operations requiring keys
-        will raise an ``OperationError``.
+        sequence) or a key into each sequence's ``metadata`` attribute.
+    keys : iterable, optional
+        An iterable of the same length as `sequences` containing unique,
+        hashable elements. Each element will be used as the respective key for
+        `sequences`.
+
+    Raises
+    ------
+    ValueError
+        If `key` and `keys` are both provided.
+    ValueError
+        If `keys` is not the same length as `sequences`.
+    UniqueError
+        If keys are not unique.
 
     See Also
     --------
     skbio.sequence.DNA
     skbio.sequence.RNA
     skbio.sequence.Protein
+
+    Notes
+    -----
+    If `key` or `keys` are not provided, keys will not be set and certain
+    operations requiring keys will raise an ``OperationError``.
 
     """
 
@@ -138,7 +154,7 @@ class TabularMSA(SkbioObject):
         return self._keys
 
     @experimental(as_of='0.4.0-dev')
-    def __init__(self, sequences, key=None):
+    def __init__(self, sequences, key=None, keys=None):
         sequences = iter(sequences)
         seq = next(sequences, None)
 
@@ -169,7 +185,7 @@ class TabularMSA(SkbioObject):
         self._seqs = seqs
         self._dtype = dtype
         self._shape = _Shape(sequence=len(seqs), position=length)
-        self.reindex(key=key)
+        self.reindex(key=key, keys=keys)
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
@@ -420,7 +436,7 @@ class TabularMSA(SkbioObject):
         return self._keys is not None
 
     @experimental(as_of='0.4.0-dev')
-    def reindex(self, key=None):
+    def reindex(self, key=None, keys=None):
         """Reassign keys to sequences in the MSA.
 
         Parameters
@@ -428,12 +444,19 @@ class TabularMSA(SkbioObject):
         key : callable or metadata key, optional
             If provided, defines a unique, hashable key for each sequence in
             the MSA. Can either be a callable accepting a single argument (each
-            sequence) or a key into each sequence's ``metadata`` attribute. If
-            not provided, keys will not be set and certain operations requiring
-            keys will raise an ``OperationError``.
+            sequence) or a key into each sequence's ``metadata`` attribute.
+        keys : iterable, optional
+            An iterable of the same length as the number of sequences in the
+            MSA. `keys` must contain unique, hashable elements. Each element
+            will be used as the respective key for the sequences in the MSA.
 
         Raises
         ------
+        ValueError
+            If `key` and `keys` are both provided.
+        ValueError
+            If `keys` is not the same length as the number of sequences in the
+            MSA.
         UniqueError
             If keys are not unique.
 
@@ -441,6 +464,11 @@ class TabularMSA(SkbioObject):
         --------
         keys
         has_keys
+
+        Notes
+        -----
+        If `key` or `keys` are not provided, keys will not be set and certain
+        operations requiring keys will raise an ``OperationError``.
 
         Examples
         --------
@@ -468,13 +496,35 @@ class TabularMSA(SkbioObject):
         >>> msa.has_keys()
         False
 
+        Alternatively, an iterable of keys may be passed via `keys`:
+
+        >>> msa.reindex(keys=['a', 'b'])
+        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
+        array(['a', 'b'],
+              dtype='<U1')
+
         """
-        keys = None
+        if key is not None and keys is not None:
+            raise ValueError(
+                "Cannot use both `key` and `keys` at the same time.")
+
+        keys_ = None
         if key is not None:
-            keys = [resolve_key(seq, key) for seq in self._seqs]
-            duplicates = find_duplicates(keys)
+            keys_ = [resolve_key(seq, key) for seq in self._seqs]
+        elif keys is not None:
+            keys = list(keys)
+            if len(keys) != len(self):
+                raise ValueError(
+                    "Number of elements in `keys` must match number of "
+                    "sequences: %d != %d" % (len(keys), len(self)))
+            keys_ = keys
+
+        if keys_ is not None:
+            # Hashability of keys is implicitly checked here.
+            duplicates = find_duplicates(keys_)
             if duplicates:
                 raise UniqueError(
                     "Keys must be unique. Duplicate keys: %r" % duplicates)
-            keys = np.asarray(keys)
-        self._keys = keys
+            keys_ = np.asarray(keys_)
+
+        self._keys = keys_
