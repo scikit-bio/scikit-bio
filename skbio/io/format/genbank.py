@@ -381,8 +381,7 @@ def _construct(record, constructor=None, **kwargs):
             constructor = DNA
         elif unit == 'aa':
             constructor = Protein
-        else:
-            constructor = Sequence
+
     if constructor == RNA:
         return DNA(
             seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
