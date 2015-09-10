@@ -18,7 +18,7 @@ from ._decorator import experimental, deprecated
 
 
 def resolve_key(obj, key):
-    """Resolve key given a object and key."""
+    """Resolve key given an object and key."""
     if callable(key):
         return key(obj)
     elif hasattr(obj, 'metadata'):
