@@ -76,7 +76,7 @@ class GenBankIOTests(TestCase):
               'unit': 'aa', 'size': 360}))
 
         # test single record and read uppercase sequence
-        self.single_fp = get_data_path('genbank_single_record_upper')
+        self.single_upper_fp = get_data_path('genbank_single_record_upper')
         self.single_lower_fp = get_data_path('genbank_single_record_lower')
         self.single = (
             'GSREILDFK',
@@ -290,7 +290,10 @@ REFERENCE   1  (bases 1 to 154478)
             '1..>8',
             'complement(3..8)',
             'complement(join(3..5,7..9))',
-            'join(3..5,7..9)']
+            'join(3..5,7..9)',
+            'J00194.1:1..9',
+            '1.9',
+            '1^9']
 
         expects = [
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
@@ -308,7 +311,13 @@ REFERENCE   1  (bases 1 to 154478)
             ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
              np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool))]
+             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.zeros(length, dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.zeros(length, dtype=bool)),
+            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
+             np.zeros(length, dtype=bool))]
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example, length)
             self.assertDictEqual(parsed[0], expect[0])
@@ -328,7 +337,7 @@ REFERENCE   1  (bases 1 to 154478)
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
         for c in [Sequence, Protein]:
-            obs = next(_genbank_to_generator(self.single_fp, constructor=c))
+            obs = next(_genbank_to_generator(self.single_upper_fp, constructor=c))
             exp = c(self.single[0], metadata=self.single[1],
                     positional_metadata=self.single[2])
             self.assertEqual(exp, obs)

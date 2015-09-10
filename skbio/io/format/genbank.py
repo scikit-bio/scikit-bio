@@ -56,6 +56,31 @@ GenBank files downloaded from NCBI. For the RNA molecules, ``'t'`` (thymine),
 instead of ``'u'`` (uracil) is used in the sequence. All GenBank writers
 follow these conventions while writing GenBank files.
 
+All the sections before ``'FEATURES'`` will be read into ``metadata`` of
+``Sequence`` or its sub-class. The header and its content of a section
+is stored as a pair of key and value in ``metadata``. For the ``'REFERENCE'``
+section, its value is stored as a list, as there are often multiple
+reference sections in one GenBank record.
+
+The information of the ``'FEATURES'`` is stored in both ``metadata`` and
+``positional_metadata`` of ``Sequence`` or its sub-class. For each feature,
+its location is stored as boolean column in ``positional_metadata``; other
+qualifiers are stored as a ``dict`` in the ``list`` of
+``metadata['FEATURES']``. In the ``dict`` of qualifiers, there are a few
+extra keys, which end with ``'_'``, including:
+
+    1. ``'index_'``: the column index to the ``positional_metadata``,
+where the location of the current feature is stored.
+
+    2. ``'left_partial_'``: whether the exact lower boundary point of the
+feature is unknown.
+
+    3. ``'right_partial_'``: whether the exact upper boundary point of the
+feature is unknown.
+
+    4. ``'type_'``: the molecular type of the feature. Its value is from the
+header of the feature.
+
 Format Parameters
 -----------------
 
