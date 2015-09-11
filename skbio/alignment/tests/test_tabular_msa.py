@@ -493,6 +493,28 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         npt.assert_array_equal(msa.keys, keys)
 
+    def test_append(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        msa.append(DNA('AAAA'))
+        self.assertEqual(msa.shape, (3, 4))
+        # TODO: Hack to get last seq. once __getitem__ is implemented use
+        # msa[-1]
+        seq = None
+        for seq in msa:
+            pass
+        self.assertEqual(seq, DNA('AAAA'))
+
+    def test_append_wrong_dtype(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        with six.assertRaisesRegex(self, TypeError, ".*type must be.*"):
+            msa.append(RNA('UUUU'))
+
+    def test_append_wrong_length(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        with six.assertRaisesRegex(self, TypeError,
+                                   ".*length must be 4, but was 5.*"):
+            msa.append(DNA('ACGTA'))
+
 
 if __name__ == "__main__":
     unittest.main()

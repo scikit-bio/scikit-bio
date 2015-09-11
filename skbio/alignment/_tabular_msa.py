@@ -570,3 +570,16 @@ class TabularMSA(SkbioObject):
             keys_.flags.writeable = False
 
         self._keys = keys_
+
+    @experimental(as_of='0.4.0-dev')
+    def append(self, seq):
+        if type(seq) != self._dtype:
+            raise TypeError("Appended sequence type must be %s" %
+                            self._dtype)
+        elif len(seq) != self.shape.position:
+            raise TypeError("Appended sequence length must be %d, but was %d" %
+                            (self.shape.position, len(seq)))
+        else:
+            self._shape = _Shape(sequence=self._shape.sequence+1,
+                                 position=self._shape.position)
+            self._seqs.append(seq)
