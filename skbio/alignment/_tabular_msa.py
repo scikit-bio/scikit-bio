@@ -570,7 +570,8 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        This operation, even if successful, is not necessarily meaningful.
+        The MSA is not automatically re-aligned when a sequence is appended.
+        Therefore, this operation is not necessarily meaningful on its own.
 
         Examples
         --------
