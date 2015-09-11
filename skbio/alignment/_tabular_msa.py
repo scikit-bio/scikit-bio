@@ -201,7 +201,7 @@ class TabularMSA(SkbioObject):
         self._shape = _Shape(sequence=0, position=0)
 
         for seq in sequences:
-            self.append(seq)
+            self._add_sequence(seq)
 
         self.reindex(key=key, keys=keys)
 
@@ -551,7 +551,7 @@ class TabularMSA(SkbioObject):
         self._keys = keys_
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence):
+    def append(self, sequence, key=None):
         """Append a sequence to the MSA.
 
         Parameters
@@ -575,16 +575,20 @@ class TabularMSA(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
-        >>> len(msa)
-        2
-        >>> msa.append(DNA('AAA'))
-        >>> len(msa)
-        3
 
         """
-        msa_is_empty = len(self) == 0
+        if key is not None and not self.has_keys():
+            raise OperationError(
+                "key was provided but MSA does not have keys.")
+        elif key is None and self.has_keys():
+            raise OperationError(
+                "MSA requires a key but none was provided.")
+        else:
+            self._add_sequence(sequence)
+            self.reindex(key=key)
+
+    def _add_sequence(self, sequence):
+        msa_is_empty = not len(self)
         if msa_is_empty:
             dtype = type(sequence)
             if not issubclass(dtype, IUPACSequence):

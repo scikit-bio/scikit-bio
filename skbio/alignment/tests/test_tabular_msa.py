@@ -493,42 +493,66 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         npt.assert_array_equal(msa.keys, keys)
 
-    def test_append(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
-        msa.append(DNA('AAAA'))
-        self.assertEqual(msa.shape, (3, 4))
+
+class TestAppend(unittest.TestCase):
+    def setUp(self):
+        self.msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+
+    def test_simple(self):
+        self.msa.append(DNA('AAAA'))
+        self.assertEqual(self.msa.shape, (3, 4))
         # TODO: Hack to get last seq. once __getitem__ is implemented use
         # msa[-1]
         seq = None
-        for seq in msa:
+        for seq in self.msa:
             pass
         self.assertEqual(seq, DNA('AAAA'))
 
-    def test_append_to_empty_msa(self):
+    def test_to_empty_msa(self):
         msa = TabularMSA([])
         msa.append(DNA('ACGT'))
         self.assertEqual(len(msa), 1)
 
-
-    def test_append_to_empty_msa_invalid_dtype(self):
+    def test_to_empty_msa_invalid_dtype(self):
         msa = TabularMSA([])
         with six.assertRaisesRegex(self, TypeError,
                                    'sequence.*alphabet.*Sequence'):
             msa.append(Sequence(''))
 
-    def test_append_wrong_dtype(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+    def test_wrong_dtype_rna(self):
         with six.assertRaisesRegex(self, TypeError, 'mixed types.*RNA.*DNA'):
-            msa.append(RNA('UUUU'))
-        msa = TabularMSA([Protein(''), Protein('')])
-        with six.assertRaisesRegex(self, TypeError,
-                                   'mixed types.*float.*Protein'):
-            msa.append(42.0)
+            self.msa.append(RNA('UUUU'))
 
-    def test_append_wrong_length(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+    def test_wrong_dtype_float(self):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'mixed types.*float.*DNA'):
+            self.msa.append(42.0)
+
+    def test_wrong_length(self):
         with six.assertRaisesRegex(self, ValueError, 'same length.*5 != 4'):
-            msa.append(DNA('ACGTA'))
+            self.msa.append(DNA('ACGTA'))
+
+    def test_with_key(self):
+        msa = TabularMSA([DNA('', metadata={'id': 'a'}),
+                          DNA('', metadata={'id': 'b'})],
+                          key='id')
+        msa.append(DNA('', metadata={'id': 'c'}), key='id')
+        npt.assert_array_equal(msa.keys, np.array(['a', 'b', 'c']))
+
+    def test_with_key_msa_has_no_keys(self):
+        with six.assertRaisesRegex(self, OperationError,
+                                   "key was provided but MSA does not have "
+                                   "keys"):
+            self.msa.append(DNA('AAAA'), 'id')
+
+    def test_no_key_msa_has_keys(self):
+        msa = TabularMSA([DNA('', metadata={'id': 'a'}),
+                          DNA('', metadata={'id': 'b'})],
+                          key='id')
+        with six.assertRaisesRegex(self, OperationError,
+                                   "MSA requires a key but none was "
+                                   "provided"):
+            msa.append(DNA(''))
 
 
 if __name__ == "__main__":
