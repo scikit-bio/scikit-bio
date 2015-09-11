@@ -12,7 +12,6 @@ import unittest
 import itertools
 
 import six
-import future.utils
 import numpy as np
 import numpy.testing as npt
 
@@ -24,6 +23,13 @@ from skbio.util._testing import ReallyEqualMixin
 class TabularMSASubclass(TabularMSA):
     """Used for testing purposes."""
     pass
+
+
+class Unorderable(object):
+    """For testing unorderable objects in Python 2 and 3."""
+    def __lt__(self, other):
+        raise TypeError()
+    __cmp__ = __lt__
 
 
 class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
@@ -538,28 +544,26 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(msa, TabularMSA([DNA('TC'), DNA('AA')]))
 
     def test_sort_on_unorderable_msa_keys(self):
-        # TODO is there a better way to handle this?
-        if future.utils.PY3:
-            msa = TabularMSA([DNA('AAA'), DNA('ACG')], keys=[42, None])
-            with self.assertRaises(TypeError):
-                msa.sort()
-            self.assertEqual(
-                msa,
-                TabularMSA([DNA('AAA'), DNA('ACG')], keys=[42, None]))
+        unorderable = Unorderable()
+        msa = TabularMSA([DNA('AAA'), DNA('ACG')], keys=[42, unorderable])
+        with self.assertRaises(TypeError):
+            msa.sort()
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('AAA'), DNA('ACG')], keys=[42, unorderable]))
 
     def test_sort_on_unorderable_key(self):
-        # TODO is there a better way to handle this?
-        if future.utils.PY3:
-            msa = TabularMSA([
+        unorderable = Unorderable()
+        msa = TabularMSA([
+            DNA('AAA', metadata={'id': 42}),
+            DNA('ACG', metadata={'id': unorderable})], keys=[42, 43])
+        with self.assertRaises(TypeError):
+            msa.sort(key='id')
+        self.assertEqual(
+            msa,
+            TabularMSA([
                 DNA('AAA', metadata={'id': 42}),
-                DNA('ACG', metadata={'id': None})], keys=[42, 43])
-            with self.assertRaises(TypeError):
-                msa.sort(key='id')
-            self.assertEqual(
-                msa,
-                TabularMSA([
-                    DNA('AAA', metadata={'id': 42}),
-                    DNA('ACG', metadata={'id': None})], keys=[42, 43]))
+                DNA('ACG', metadata={'id': unorderable})], keys=[42, 43]))
 
     def test_sort_on_invalid_key(self):
         msa = TabularMSA([DNA('AAA'), DNA('ACG')], keys=[42, 43])
