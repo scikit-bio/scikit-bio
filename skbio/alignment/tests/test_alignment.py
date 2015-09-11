@@ -409,6 +409,40 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(self.s3.sequence_lengths(), [7, 3, 7, 3, 12])
         self.assertEqual(self.empty.sequence_lengths(), [])
 
+    def test_sample_sequences(self):
+        self.assertTrue(self.empty.sample_sequences().is_empty())
+
+        with self.assertRaises(SequenceCollectionError):
+            self.s1.sample_sequences(with_replacement=False, no_sequences_to_sample=3)
+
+        with self.assertRaises(SequenceCollectionError):
+            self.s3.sample_sequences(with_replacement=False, no_sequences_to_sample=6)
+
+        s3_sample_3 = self.s3.sample_sequences(with_replacement=False,
+                                               no_sequences_to_sample=3)
+
+        self.assertEqual(s3_sample_3.sequence_count(), 3)
+        self.assertEqual(len(s3_sample_3.ids()), len(set(s3_sample_3.ids())))
+        self.assertTrue(set(s3_sample_3.ids()).issubset(set(self.s3.ids())))
+
+        s3_sample_4 = self.s3.sample_sequences(with_replacement=False,
+                                               no_sequences_to_sample=4)
+        
+        self.assertEqual(s3_sample_4.sequence_count(), 4)
+        self.assertEqual(len(s3_sample_4.ids()), len(set(s3_sample_4.ids())))
+        self.assertTrue(set(s3_sample_4.ids()).issubset(set(self.s3.ids())))
+
+        s3_sample_3_repl = self.s3.sample_sequences(with_replacement=True,
+                                                    no_sequences_to_sample=3)
+
+        self.assertEqual(s3_sample_3_repl.sequence_count(), 3)
+        self.assertTrue(set(s3_sample_3_repl.ids()).issubset(set(self.s3.ids())))
+
+        s3_sample_4_repl = self.s3.sample_sequences(with_replacement=True,
+                                               no_sequences_to_sample=4)
+        
+        self.assertEqual(s3_sample_4_repl.sequence_count(), 4)
+        self.assertTrue(set(s3_sample_4_repl.ids()).issubset(set(self.s3.ids())))
 
 class AlignmentTests(TestCase):
 
