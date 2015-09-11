@@ -337,7 +337,8 @@ REFERENCE   1  (bases 1 to 154478)
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
         for c in [Sequence, Protein]:
-            obs = next(_genbank_to_generator(self.single_upper_fp, constructor=c))
+            obs = next(_genbank_to_generator(
+                self.single_upper_fp, constructor=c))
             exp = c(self.single[0], metadata=self.single[1],
                     positional_metadata=self.single[2])
             self.assertEqual(exp, obs)
@@ -431,6 +432,63 @@ class WriterTests(GenBankIOTests):
         seq, md, pmd, constructor = self.single_rna
         obj = constructor(seq, md, pmd, lowercase=True)
         _rna_to_genbank(obj, fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+
+class RoundtripTests(GenBankIOTests):
+    def test_roundtrip_generator(self):
+        fh = io.StringIO()
+        _generator_to_genbank(_genbank_to_generator(self.multi_fp), fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.multi_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_rna(self):
+        fh = io.StringIO()
+        _rna_to_genbank(_genbank_to_rna(self.single_rna_fp), fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_dna(self):
+        fh = io.StringIO()
+        _dna_to_genbank(_genbank_to_dna(self.single_rna_fp), fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_rna_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_protein(self):
+        fh = io.StringIO()
+        _protein_to_genbank(_genbank_to_protein(self.single_lower_fp), fh)
+        obs = fh.getvalue()
+        fh.close()
+
+        with io.open(self.single_lower_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_sequence(self):
+        fh = io.StringIO()
+        _sequence_to_genbank(_genbank_to_sequence(self.single_rna_fp), fh)
         obs = fh.getvalue()
         fh.close()
 
