@@ -684,6 +684,31 @@ class SequenceCollection(SkbioObject):
         """
         return [len(seq) for seq in self]
 
+    def sample_sequences(self, no_sequences_to_sample=None, with_replacement=False):
+        """Sample rows from the `SequenceCollection`
+
+        Note that calling this method with the default arguments corresponds to
+        shuffling the sequences/rows of the `SequenceCollection`.
+
+        Parameters
+        ----------
+        no_sequences_to_sample : int
+            The number of sequences to sample from the `SequenceCollection`.
+        with_replacement : bool
+            Whether to sample with or without replacement.
+
+        Returns
+        -------
+        SequenceCollection
+            New `SequenceCollection` (or subclass) with sampled sequences.
+        """
+        if no_sequences_to_sample is None:
+            no_sequences_to_sample = self.sequence_count()
+
+        samples = np.random.choice(elf.ids(), no_sequences_to_sample,
+                                   replace=with_replacement)
+        return self.__class__([self.get_seq(id) for id in ids])
+
 
 class Alignment(SequenceCollection):
     """Class for storing alignments of biological sequences.
