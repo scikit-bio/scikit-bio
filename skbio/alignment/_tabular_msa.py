@@ -622,8 +622,7 @@ class TabularMSA(SkbioObject):
     def sort(self, key=None, reverse=False):
         """Sort sequences in-place.
 
-        Performs a stable sort of the sequences in-place using Python's
-        ``sorted`` function.
+        Performs a stable sort of the sequences in-place.
 
         Parameters
         ----------
@@ -645,13 +644,12 @@ class TabularMSA(SkbioObject):
         keys
         has_keys
         reindex
-        sorted
 
         Notes
         -----
-        This method is modeled after, and in fact uses, Python's built-in
-        sorting functionality (e.g., ``list.sort()``, ``sorted()``). See [1]_
-        for an excellent tutorial on sorting in Python.
+        This method's API is similar to Python's built-in sorting functionality
+        (e.g., ``list.sort()``, ``sorted()``). See [1]_ for an excellent
+        tutorial on sorting in Python.
 
         References
         ----------
