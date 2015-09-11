@@ -698,6 +698,12 @@ class SequenceCollection(SkbioObject):
         with_replacement : bool
             Whether to sample with or without replacement.
 
+        Raises
+        ------
+        SequenceCollectionError
+            If `no_sequences_to_sample` is larger than number of sequences in
+            the `SequenceCollection` and `with_replacement` is `False`.
+
         Returns
         -------
         SequenceCollection
