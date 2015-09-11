@@ -9,7 +9,10 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import operator
 
+from future.builtins import zip
+from future.utils import viewkeys, viewvalues
 import numpy as np
 
 from skbio._base import SkbioObject
@@ -123,6 +126,11 @@ class TabularMSA(SkbioObject):
     def keys(self):
         """Keys in the order of sequences in the MSA.
 
+        Returns
+        -------
+        np.ndarray (object)
+            Immutable 1D array of keys with ``object`` dtype.
+
         Raises
         ------
         OperationError
@@ -135,8 +143,7 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        This property can be set and deleted. Keys are stored as an immutable
-        ``numpy.ndarray``.
+        This property can be set and deleted.
 
         Examples
         --------
@@ -149,26 +156,23 @@ class TabularMSA(SkbioObject):
 
         Retrieve keys:
 
-        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
-        array(['a', 'b'],
-              dtype='<U1')
+        >>> msa.keys
+        array(['a', 'b'], dtype=object)
 
         Set keys:
 
         >>> msa.keys = ['seq1', 'seq2']
-        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
-        array(['seq1', 'seq2'],
-              dtype='<U4')
+        >>> msa.keys
+        array(['seq1', 'seq2'], dtype=object)
 
         To make updates to a subset of the keys, first make a copy of the keys,
         update them, then set them again:
 
         >>> new_keys = msa.keys.copy()
-        >>> new_keys[0] = 'new1'
+        >>> new_keys[0] = 'new-key'
         >>> msa.keys = new_keys
-        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
-        array(['new1', 'seq2'],
-              dtype='<U4')
+        >>> msa.keys
+        array(['new-key', 'seq2'], dtype=object)
 
         Delete keys:
 
@@ -191,6 +195,48 @@ class TabularMSA(SkbioObject):
     @keys.deleter
     def keys(self):
         self.reindex()
+
+    @classmethod
+    @experimental(as_of="0.4.0-dev")
+    def from_dict(cls, dictionary):
+        """Create a ``TabularMSA`` from a ``dict``.
+
+        Parameters
+        ----------
+        dictionary : dict
+            Dictionary mapping keys to alphabet-aware scikit-bio sequence
+            objects. The ``TabularMSA`` object will have its keys set to the
+            keys in the dictionary.
+
+        Returns
+        -------
+        TabularMSA
+            ``TabularMSA`` object constructed from the keys and sequences in
+            `dictionary`.
+
+        See Also
+        --------
+        to_dict
+        sort
+
+        Notes
+        -----
+        The order of sequences and keys in the resulting ``TabularMSA`` object
+        is arbitrary. Use ``TabularMSA.sort`` to set a different order.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> seqs = {'a': DNA('ACGT'), 'b': DNA('A--T')}
+        >>> msa = TabularMSA.from_dict(seqs)
+
+        """
+        # Python 2 and 3 guarantee same order of iteration as long as no
+        # modifications are made to the dictionary between calls:
+        #     https://docs.python.org/2/library/stdtypes.html#dict.items
+        #     https://docs.python.org/3/library/stdtypes.html#
+        #         dictionary-view-objects
+        return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
     def get_cached_key(self):
@@ -513,9 +559,8 @@ class TabularMSA(SkbioObject):
         >>> msa.reindex(key='id')
         >>> msa.has_keys()
         True
-        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
-        array(['a', 'b'],
-              dtype='<U1')
+        >>> msa.keys
+        array(['a', 'b'], dtype=object)
 
         Remove keys from the MSA:
 
@@ -526,9 +571,8 @@ class TabularMSA(SkbioObject):
         Alternatively, an iterable of keys may be passed via `keys`:
 
         >>> msa.reindex(keys=['a', 'b'])
-        >>> msa.keys # doctest: +NORMALIZE_WHITESPACE
-        array(['a', 'b'],
-              dtype='<U1')
+        >>> msa.keys
+        array(['a', 'b'], dtype=object)
 
         """
         if key is not None and keys is not None:
@@ -553,9 +597,12 @@ class TabularMSA(SkbioObject):
             if duplicates:
                 raise UniqueError(
                     "Keys must be unique. Duplicate keys: %r" % duplicates)
+
             # Create an immutable ndarray to ensure key invariants are
-            # preserved.
-            keys_ = np.asarray(keys_)
+            # preserved. Use object dtype to preserve original key types. This
+            # is important, for example, because np.array(['a', 42]) will
+            # upcast to ['a', '42'].
+            keys_ = np.array(keys_, dtype=object, copy=True)
             keys_.flags.writeable = False
 
         self._keys = keys_
@@ -622,3 +669,128 @@ class TabularMSA(SkbioObject):
             self._shape = _Shape(sequence=self._shape.sequence + 1,
                                  position=self._shape.position)
             self._seqs.append(sequence)
+
+    def sort(self, key=None, reverse=False):
+        """Sort sequences in-place.
+
+        Performs a stable sort of the sequences in-place.
+
+        Parameters
+        ----------
+        key : callable or metadata key, optional
+            If provided, defines a key to sort each sequence on. Can either be
+            a callable accepting a single argument (each sequence) or a key
+            into each sequence's ``metadata`` attribute. If not provided,
+            sequences will be sorted using existing keys on the ``TabularMSA``.
+        reverse: bool, optional
+            If ``True``, sort in reverse order.
+
+        Raises
+        ------
+        OperationError
+            If `key` is not provided and keys do not exist on the MSA.
+
+        See Also
+        --------
+        keys
+        has_keys
+        reindex
+
+        Notes
+        -----
+        This method's API is similar to Python's built-in sorting functionality
+        (e.g., ``list.sort()``, ``sorted()``). See [1]_ for an excellent
+        tutorial on sorting in Python.
+
+        References
+        ----------
+        .. [1] https://docs.python.org/3/howto/sorting.html
+
+        Examples
+        --------
+        Create a ``TabularMSA`` object without keys:
+
+        >>> from skbio import DNA, TabularMSA
+        >>> seqs = [DNA('ACG', metadata={'id': 'c'}),
+        ...         DNA('AC-', metadata={'id': 'b'}),
+        ...         DNA('AC-', metadata={'id': 'a'})]
+        >>> msa = TabularMSA(seqs)
+
+        Sort the sequences in alphabetical order by sequence identifier:
+
+        >>> msa.sort(key='id')
+        >>> msa == TabularMSA([DNA('AC-', metadata={'id': 'a'}),
+        ...                    DNA('AC-', metadata={'id': 'b'}),
+        ...                    DNA('ACG', metadata={'id': 'c'})])
+        True
+
+        Note that since the sort is in-place, the ``TabularMSA`` object is
+        modified (a new object is **not** returned).
+
+        Create a ``TabularMSA`` object with keys:
+
+        >>> seqs = [DNA('ACG'), DNA('AC-'), DNA('AC-')]
+        >>> msa = TabularMSA(seqs, keys=['c', 'b', 'a'])
+
+        Sort the sequences using the MSA's existing keys:
+
+        >>> msa.sort()
+        >>> msa == TabularMSA([DNA('AC-'), DNA('AC-'), DNA('ACG')],
+        ...                   keys=['a', 'b', 'c'])
+        True
+
+        """
+        if key is None:
+            sort_keys = self.keys.tolist()
+        else:
+            sort_keys = [resolve_key(seq, key) for seq in self._seqs]
+
+        if len(self) > 0:
+            if self.has_keys():
+                _, sorted_seqs, sorted_keys = self._sort_by_first_element(
+                    [sort_keys, self._seqs, self.keys.tolist()], reverse)
+                self.keys = sorted_keys
+            else:
+                _, sorted_seqs = self._sort_by_first_element(
+                    [sort_keys, self._seqs], reverse)
+            self._seqs = list(sorted_seqs)
+
+    def _sort_by_first_element(self, components, reverse):
+        """Helper for TabularMSA.sort."""
+        # Taken and modified from http://stackoverflow.com/a/13668413/3776794
+        return zip(*sorted(
+            zip(*components), key=operator.itemgetter(0), reverse=reverse))
+
+    @experimental(as_of='0.4.0-dev')
+    def to_dict(self):
+        """Create a ``dict`` from this ``TabularMSA``.
+
+        Returns
+        -------
+        dict
+            Dictionary constructed from the keys and sequences in this
+            ``TabularMSA``.
+
+        Raises
+        ------
+        OperationError
+            If keys do not exist.
+
+        See Also
+        --------
+        from_dict
+        keys
+        has_keys
+        reindex
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> seqs = [DNA('ACGT'), DNA('A--T')]
+        >>> msa = TabularMSA(seqs, keys=['a', 'b'])
+        >>> dictionary = msa.to_dict()
+        >>> dictionary == {'a': DNA('ACGT'), 'b': DNA('A--T')}
+        True
+
+        """
+        return dict(zip(self.keys, self._seqs))
