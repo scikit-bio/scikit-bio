@@ -427,7 +427,7 @@ class SequenceCollectionTests(TestCase):
 
         s3_sample_4 = self.s3.sample_sequences(with_replacement=False,
                                                no_sequences_to_sample=4)
-        
+
         self.assertEqual(s3_sample_4.sequence_count(), 4)
         self.assertEqual(len(s3_sample_4.ids()), len(set(s3_sample_4.ids())))
         self.assertTrue(set(s3_sample_4.ids()).issubset(set(self.s3.ids())))
@@ -439,8 +439,8 @@ class SequenceCollectionTests(TestCase):
         self.assertTrue(set(s3_sample_3_repl.ids()).issubset(set(self.s3.ids())))
 
         s3_sample_4_repl = self.s3.sample_sequences(with_replacement=True,
-                                               no_sequences_to_sample=4)
-        
+                                                    no_sequences_to_sample=4)
+
         self.assertEqual(s3_sample_4_repl.sequence_count(), 4)
         self.assertTrue(set(s3_sample_4_repl.ids()).issubset(set(self.s3.ids())))
 
