@@ -511,7 +511,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_append_wrong_length(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
-        with six.assertRaisesRegex(self, TypeError,
+        with six.assertRaisesRegex(self, ValueError,
                                    ".*length must be 4, but was 5.*"):
             msa.append(DNA('ACGTA'))
 
