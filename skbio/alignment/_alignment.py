@@ -684,8 +684,8 @@ class SequenceCollection(SkbioObject):
         """
         return [len(seq) for seq in self]
 
-    def sample_sequences(self, no_sequences_to_sample=None, with_replacement=False):
-        """Sample rows from the `SequenceCollection`
+    def sample_sequences(self, no_sequences_to_sample=None):
+        """Sample rows from the `SequenceCollection` without replacement.
 
         Note that calling this method with the default arguments corresponds to
         shuffling the sequences/rows of the `SequenceCollection`.
@@ -694,9 +694,8 @@ class SequenceCollection(SkbioObject):
         ----------
         no_sequences_to_sample : int
             The number of sequences to sample from the `SequenceCollection`.
+            If `None` all sequences will be sampled.
             If zero an empty `SequenceCollection` will be returned.
-        with_replacement : bool
-            Whether to sample with or without replacement.
 
         Raises
         ------
@@ -722,7 +721,7 @@ class SequenceCollection(SkbioObject):
                                           'when with_replacement is False.')
 
         samples = np.random.choice(self.ids(), no_sequences_to_sample,
-                                   replace=with_replacement)
+                                   replace=False)
         return self.__class__([self.get_seq(id) for id in samples])
 
 
@@ -1416,8 +1415,8 @@ class Alignment(SequenceCollection):
                 return False
         return True
 
-    def sample_sequences(self, no_sequences_to_sample=None, with_replacement=False):
-        """Sample sequences from the `Alignment`
+    def sample_sequences(self, no_sequences_to_sample=None):
+        """Sample sequences from the `Alignment` without replacement.
 
         Note that calling this method with the default arguments corresponds to
         shuffling the sequences/rows of the `Alignment`.
@@ -1426,14 +1425,12 @@ class Alignment(SequenceCollection):
         ----------
         no_sequences_to_sample : int
             The number of sequences to sample from the `Alignment`.
+            If `None` all sequences will be sampled.
             If zero an empty `Alignment` will be returned.
-        with_replacement : bool
-            Whether to sample with or without replacement.
 
         Returns
         -------
         Alignment
             New `Alignment` (or subclass) with sampled sequences.
         """
-        return super(Alignment, self).sample_sequences(no_sequences_to_sample,
-                                                       with_replacement)
+        return super(Alignment, self).sample_sequences(no_sequences_to_sample)

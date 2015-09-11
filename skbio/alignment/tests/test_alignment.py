@@ -432,18 +432,6 @@ class SequenceCollectionTests(TestCase):
         self.assertEqual(len(s3_sample_4.ids()), len(set(s3_sample_4.ids())))
         self.assertTrue(set(s3_sample_4.ids()).issubset(set(self.s3.ids())))
 
-        s3_sample_3_repl = self.s3.sample_sequences(with_replacement=True,
-                                                    no_sequences_to_sample=3)
-
-        self.assertEqual(s3_sample_3_repl.sequence_count(), 3)
-        self.assertTrue(set(s3_sample_3_repl.ids()).issubset(set(self.s3.ids())))
-
-        s3_sample_4_repl = self.s3.sample_sequences(with_replacement=True,
-                                                    no_sequences_to_sample=4)
-
-        self.assertEqual(s3_sample_4_repl.sequence_count(), 4)
-        self.assertTrue(set(s3_sample_4_repl.ids()).issubset(set(self.s3.ids())))
-
 class AlignmentTests(TestCase):
 
     def setUp(self):
