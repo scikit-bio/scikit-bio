@@ -690,14 +690,14 @@ class TabularMSA(SkbioObject):
 
         """
         if key is None:
-            sort_keys = self.keys
+            sort_keys = self.keys.tolist()
         else:
             sort_keys = [resolve_key(seq, key) for seq in self._seqs]
 
         if len(self) > 0:
             if self.has_keys():
                 _, sorted_seqs, sorted_keys = self._sort_by_first_element(
-                    [sort_keys, self._seqs, self.keys], reverse)
+                    [sort_keys, self._seqs, self.keys.tolist()], reverse)
                 self.keys = sorted_keys
             else:
                 _, sorted_seqs = self._sort_by_first_element(
