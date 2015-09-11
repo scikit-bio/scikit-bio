@@ -504,15 +504,30 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             pass
         self.assertEqual(seq, DNA('AAAA'))
 
+    def test_append_to_empty_msa(self):
+        msa = TabularMSA([])
+        msa.append(DNA('ACGT'))
+        self.assertEqual(len(msa), 1)
+
+
+    def test_append_to_empty_msa_invalid_dtype(self):
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, TypeError,
+                                   'sequence.*alphabet.*Sequence'):
+            msa.append(Sequence(''))
+
     def test_append_wrong_dtype(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
-        with six.assertRaisesRegex(self, TypeError, ".*type must be.*"):
+        with six.assertRaisesRegex(self, TypeError, 'mixed types.*RNA.*DNA'):
             msa.append(RNA('UUUU'))
+        msa = TabularMSA([Protein(''), Protein('')])
+        with six.assertRaisesRegex(self, TypeError,
+                                   'mixed types.*float.*Protein'):
+            msa.append(42.0)
 
     def test_append_wrong_length(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
-        with six.assertRaisesRegex(self, ValueError,
-                                   ".*length must be 4, but was 5.*"):
+        with six.assertRaisesRegex(self, ValueError, 'same length.*5 != 4'):
             msa.append(DNA('ACGTA'))
 
 

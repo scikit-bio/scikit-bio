@@ -195,35 +195,14 @@ class TabularMSA(SkbioObject):
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, key=None, keys=None):
         sequences = iter(sequences)
-        seq = next(sequences, None)
 
-        dtype = None
-        length = 0
-        seqs = []
-        if seq is not None:
-            seqs.append(seq)
-            dtype = type(seq)
-            if not issubclass(dtype, IUPACSequence):
-                raise TypeError(
-                    "`sequences` must contain scikit-bio sequence objects "
-                    "that have an alphabet, not type %r" % dtype.__name__)
-            length = len(seq)
+        self._seqs = []
+        self._dtype = None
+        self._shape = _Shape(sequence=0, position=0)
 
-            for seq in sequences:
-                if type(seq) is not dtype:
-                    raise TypeError(
-                        "`sequences` cannot contain mixed types. Type %r does "
-                        "not match type %r" %
-                        (type(seq).__name__, dtype.__name__))
-                if len(seq) != length:
-                    raise ValueError(
-                        "`sequences` must contain sequences of the same "
-                        "length: %r != %r" % (len(seq), length))
-                seqs.append(seq)
+        for seq in sequences:
+            self.append(seq)
 
-        self._seqs = seqs
-        self._dtype = dtype
-        self._shape = _Shape(sequence=len(seqs), position=length)
         self.reindex(key=key, keys=keys)
 
     @experimental(as_of='0.4.0-dev')
@@ -604,14 +583,26 @@ class TabularMSA(SkbioObject):
         3
 
         """
-        if type(sequence) != self._dtype:
-            raise TypeError("Appended sequence type must be %s" %
-                            self._dtype)
+        msa_is_empty = len(self) == 0
+        if msa_is_empty:
+            dtype = type(sequence)
+            if not issubclass(dtype, IUPACSequence):
+                raise TypeError(
+                    "`sequences` must contain scikit-bio sequence objects "
+                    "that have an alphabet, not type %r" % dtype.__name__)
+            self._dtype = dtype
+            self._shape = _Shape(sequence=1, position=len(sequence))
+            self._seqs = [sequence]
+        elif type(sequence) != self.dtype:
+            raise TypeError(
+                "`sequences` cannot contain mixed types. Type %r does "
+                "not match type %r" %
+                (type(sequence).__name__, self.dtype.__name__))
         elif len(sequence) != self.shape.position:
             raise ValueError(
-                "Appended sequence length must be %d, but was %d" %
-                (self.shape.position, len(sequence)))
+                "`sequences` must contain sequences of the same "
+                "length: %r != %r" % (len(sequence), self.shape.position))
         else:
-            self._shape = _Shape(sequence=self._shape.sequence+1,
+            self._shape = _Shape(sequence=self._shape.sequence + 1,
                                  position=self._shape.position)
             self._seqs.append(sequence)
