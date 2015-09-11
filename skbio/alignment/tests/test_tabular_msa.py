@@ -269,6 +269,29 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         del msa.keys
         self.assertFalse(msa.has_keys())
 
+    def test_get_cached_key_str(self):
+        msa = TabularMSA([DNA('', metadata={'id': 42}),
+                          DNA('', metadata={'id': 43})], key='id')
+        key = msa.get_cached_key()
+        self.assertEqual(key, 'id')
+
+    def test_get_cached_key_callable(self):
+        def key_func(x):
+            return x.metadata['id']
+
+        msa = TabularMSA([DNA('', metadata={'id': 42}),
+                          DNA('', metadata={'id': 43})], key=key_func)
+        key = msa.get_cached_key()
+        self.assertEqual(key, key_func)
+
+    def test_get_cached_key_no_key_exists(self):
+        msa = TabularMSA([DNA(''), DNA('')])
+        with six.assertRaisesRegex(
+                self, OperationError,
+                "MSA requires a key but none was provided, and no "
+                "cached key exists"):
+            msa.get_cached_key()
+
     def test_bool(self):
         self.assertFalse(TabularMSA([]))
         self.assertFalse(TabularMSA([RNA('')]))
@@ -535,7 +558,7 @@ class TestAppend(unittest.TestCase):
     def test_with_key(self):
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
-                          key='id')
+                         key='id')
         msa.append(DNA('', metadata={'id': 'c'}), key='id')
         npt.assert_array_equal(msa.keys, np.array(['a', 'b', 'c']))
 
@@ -548,10 +571,15 @@ class TestAppend(unittest.TestCase):
     def test_no_key_msa_has_keys(self):
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
-                          key='id')
+                         key='id')
+        msa.append(DNA('', metadata={'id': 'c'}))
+        npt.assert_array_equal(msa.keys, np.array(['a', 'b', 'c']))
+
+    def test_no_key_msa_has_keys_but_not_cached(self):
+        msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
         with six.assertRaisesRegex(self, OperationError,
                                    "MSA requires a key but none was "
-                                   "provided"):
+                                   "provided, and no cached key exists"):
             msa.append(DNA(''))
 
 

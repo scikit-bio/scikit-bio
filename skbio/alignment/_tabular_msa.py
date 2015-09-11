@@ -193,12 +193,22 @@ class TabularMSA(SkbioObject):
         self.reindex()
 
     @experimental(as_of='0.4.0-dev')
+    def get_cached_key(self):
+        if self._cached_key is not None:
+            return self._cached_key
+        else:
+            raise OperationError(
+                "MSA requires a key but none was provided, and no "
+                "cached key exists")
+
+    @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, key=None, keys=None):
         sequences = iter(sequences)
 
         self._seqs = []
         self._dtype = None
         self._shape = _Shape(sequence=0, position=0)
+        self._cached_key = None
 
         for seq in sequences:
             self._add_sequence(seq)
@@ -266,7 +276,6 @@ class TabularMSA(SkbioObject):
         >>> msa = TabularMSA([])
         >>> len(msa)
         0
-
         """
         return self.shape.sequence
 
@@ -528,6 +537,7 @@ class TabularMSA(SkbioObject):
 
         keys_ = None
         if key is not None:
+            self._cached_key = key
             keys_ = [resolve_key(seq, key) for seq in self._seqs]
         elif keys is not None:
             keys = list(keys)
@@ -577,15 +587,16 @@ class TabularMSA(SkbioObject):
         --------
 
         """
-        if key is not None and not self.has_keys():
-            raise OperationError(
-                "key was provided but MSA does not have keys.")
-        elif key is None and self.has_keys():
-            raise OperationError(
-                "MSA requires a key but none was provided.")
+        if key is None:
+            if self.has_keys():
+                key = self.get_cached_key()
         else:
-            self._add_sequence(sequence)
-            self.reindex(key=key)
+            if not self.has_keys():
+                raise OperationError(
+                    "key was provided but MSA does not have keys.")
+
+        self._add_sequence(sequence)
+        self.reindex(key=key)
 
     def _add_sequence(self, sequence):
         msa_is_empty = not len(self)
