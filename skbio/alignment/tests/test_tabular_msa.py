@@ -902,19 +902,15 @@ class TestAppend(unittest.TestCase):
         self.msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
     def test_simple(self):
+        expected = TabularMSA([DNA('ACGT'), DNA('TGCA'), DNA('AAAA')])
         self.msa.append(DNA('AAAA'))
-        self.assertEqual(self.msa.shape, (3, 4))
-        # TODO: Hack to get last seq. once __getitem__ is implemented use
-        # msa[-1]
-        seq = None
-        for seq in self.msa:
-            pass
-        self.assertEqual(seq, DNA('AAAA'))
+        self.assertEqual(self.msa, expected)
 
     def test_to_empty_msa(self):
+        expected = TabularMSA([DNA('ACGT')])
         msa = TabularMSA([])
         msa.append(DNA('ACGT'))
-        self.assertEqual(len(msa), 1)
+        self.assertEqual(msa, expected)
 
     def test_to_empty_msa_invalid_dtype(self):
         msa = TabularMSA([])
@@ -936,11 +932,17 @@ class TestAppend(unittest.TestCase):
             self.msa.append(DNA('ACGTA'))
 
     def test_with_key(self):
+        to_append = DNA('', metadata={'id': 'c'})
+        expected = TabularMSA(
+            [DNA('', metadata={'id': 'a'}),
+             DNA('', metadata={'id': 'b'}),
+             to_append],
+            key='id')
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
                          key='id')
-        msa.append(DNA('', metadata={'id': 'c'}), key='id')
-        npt.assert_array_equal(msa.keys, np.array(['a', 'b', 'c']))
+        msa.append(to_append, key='id')
+        self.assertEqual(msa, expected)
 
     def test_with_key_msa_has_no_keys(self):
         with six.assertRaisesRegex(self, OperationError,
@@ -949,11 +951,17 @@ class TestAppend(unittest.TestCase):
             self.msa.append(DNA('AAAA'), 'id')
 
     def test_no_key_msa_has_keys(self):
+        to_append = DNA('', metadata={'id': 'c'})
+        expected = TabularMSA(
+            [DNA('', metadata={'id': 'a'}),
+             DNA('', metadata={'id': 'b'}),
+             to_append],
+            key='id')
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
                          key='id')
-        msa.append(DNA('', metadata={'id': 'c'}))
-        npt.assert_array_equal(msa.keys, np.array(['a', 'b', 'c']))
+        msa.append(to_append)
+        self.assertEqual(msa, expected)
 
     def test_no_key_msa_has_keys_but_not_cached(self):
         msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
