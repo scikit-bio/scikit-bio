@@ -616,14 +616,27 @@ class TabularMSA(SkbioObject):
         sequence : alphabet-aware scikit-bio sequence object 
             Sequence to be appended. Must match the dtype of the MSA and the
             length of the second dimension of the MSA.
+        key : callable or metadata key, optional
+            If None, the MSA is checked to see if a previous key has been
+            cached. If not, an exception is raised. If a cached key is found
+            it is used to reindex the MSA.
 
         Raises
         ------
+        TypeError
+            If the sequence object is a type that doesn't have an alphabet
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
             If the length of the sequence does not match the number of 
             positions in the MSA. 
+        OperationError
+            If no key is provided, but the MSA has keys, and no cached key
+            is found.
+
+        See Also
+        --------
+        reindex
 
         Notes
         -----
@@ -632,7 +645,17 @@ class TabularMSA(SkbioObject):
 
         Examples
         --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('')])
+        >>> msa.append(DNA(''))
+        >>> msa == TabularMSA([DNA(''), DNA('')])
+        True
 
+        >>> msa = TabularMSA([DNA('', metadata={'id': 'a'})], key='id')
+        >>> msa.append(DNA('', metadata={'id': 'b'}), key='id')
+        >>> msa == TabularMSA([DNA('', metadata={'id': 'a'}),
+        ...                    DNA('', metadata={'id': 'b'})], key='id')
+        True
         """
         if key is None:
             if self.has_keys():
@@ -651,20 +674,21 @@ class TabularMSA(SkbioObject):
             dtype = type(sequence)
             if not issubclass(dtype, IUPACSequence):
                 raise TypeError(
-                    "`sequences` must contain scikit-bio sequence objects "
-                    "that have an alphabet, not type %r" % dtype.__name__)
+                    "`sequence` must be a scikit-bio sequence object "
+                    "that has an alphabet, not type %r" % dtype.__name__)
             self._dtype = dtype
             self._shape = _Shape(sequence=1, position=len(sequence))
             self._seqs = [sequence]
         elif type(sequence) is not self.dtype:
             raise TypeError(
-                "`sequences` cannot contain mixed types. Type %r does "
-                "not match type %r" %
+                "`sequence` Must match the type of any other sequences "
+                "already in the MSA. Type %r does not match type %r" %
                 (type(sequence).__name__, self.dtype.__name__))
         elif len(sequence) != self.shape.position:
             raise ValueError(
-                "`sequences` must contain sequences of the same "
-                "length: %r != %r" % (len(sequence), self.shape.position))
+                "`sequence` length must match the length of any other "
+                "sequences already in the MSA: %r != %r"
+                % (len(sequence), self.shape.position))
         else:
             self._shape = _Shape(sequence=self._shape.sequence + 1,
                                  position=self._shape.position)
