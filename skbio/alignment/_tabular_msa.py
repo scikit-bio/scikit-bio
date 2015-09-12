@@ -613,7 +613,7 @@ class TabularMSA(SkbioObject):
 
         Parameters
         ----------
-        sequence : IUPACSequence
+        sequence : alphabet-aware scikit-bio sequence object 
             Sequence to be appended. Must match the dtype of the MSA and the
             length of the second dimension of the MSA.
 
@@ -622,8 +622,8 @@ class TabularMSA(SkbioObject):
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
-            If the length of the sequence does not match the length of the
-            second dimension of the MSA.
+            If the length of the sequence does not match the number of 
+            positions in the MSA. 
 
         Notes
         -----
@@ -656,7 +656,7 @@ class TabularMSA(SkbioObject):
             self._dtype = dtype
             self._shape = _Shape(sequence=1, position=len(sequence))
             self._seqs = [sequence]
-        elif type(sequence) != self.dtype:
+        elif type(sequence) is not self.dtype:
             raise TypeError(
                 "`sequences` cannot contain mixed types. Type %r does "
                 "not match type %r" %
