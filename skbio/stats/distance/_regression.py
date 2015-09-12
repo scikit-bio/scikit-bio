@@ -143,6 +143,7 @@ def mrm(y, *args, **kwargs):
                                  strict=strict,
                                  lookup=lookup)
 
+
     # Linearize all predictor distance matrices into
     # a single matrix
     n = len(y.data)
@@ -150,36 +151,33 @@ def mrm(y, *args, **kwargs):
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
     n, p = X.shape
-    I = np.identity(n)
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
-    H = X.dot(XX1).dot(X.T)
     dfe, dfr = n - p,  p - 1
 
-    def regress(Y, computeR=False):
+    def regress(Y):
         B = XX1.dot(X.T.dot(Y))
-        Yhat = H.dot(Y)
-        SSE = Y.T.dot(I - H).dot(Y)
-        SSR = Y.T.dot(H - (1./n)).dot(Y)
+        Yhat = X.dot(B)
+        _E = Y - Yhat
+        mY = Y.mean()
+        SSE = (_E**2).sum()
+        SST = ((Y - mY)**2).sum()
+        SSR = SST - SSE
         MSR, MSE = SSR / dfr, SSE / dfe
         T = np.ravel(B) / np.sqrt(np.diag(XX1) * MSE)
         F = MSR / MSE
-        if computeR:
-            SST = Y.T.dot(I - (1./n)).dot(Y)
-            R2 = SSR / SST
-        else:
-            R2 = None
-        return Yhat, B, T, F, R2
+        R2 = SSR / SST
+        return Yhat, B, _E, T, F, R2
 
     # Permutation on residuals
-    Yhat, B, T, F, R2 = regress(Y, computeR=True)
-    E = Y - Yhat
+    Yhat, B, E, T, F, R2 = regress(Y)
+
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
-        Yhat_, B_, T_, F_,  _ = regress(Ynew, computeR=False)
+        Yhat_, B_, _, T_, F_,  _ = regress(Ynew)
         Ts[i, :], Fs[i] = T_, F_
     # Calculate result statistics
     pvals = ((abs(T) >= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
