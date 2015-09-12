@@ -64,7 +64,8 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             TabularMSA([42, DNA('')])
 
     def test_constructor_not_monomorphic(self):
-        with six.assertRaisesRegex(self, TypeError, 'Must match the type.*RNA.*DNA'):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Must match the type.*RNA.*DNA'):
             TabularMSA([DNA(''), RNA('')])
 
         with six.assertRaisesRegex(self, TypeError,
@@ -72,10 +73,12 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             TabularMSA([Protein(''), Protein(''), 42.0, Protein('')])
 
     def test_constructor_unequal_length(self):
-        with six.assertRaisesRegex(self, ValueError, 'must match the length.*1 != 0'):
+        with six.assertRaisesRegex(self, ValueError,
+                                   'must match the length.*1 != 0'):
             TabularMSA([Protein(''), Protein('P')])
 
-        with six.assertRaisesRegex(self, ValueError, 'must match the length.*1 != 3'):
+        with six.assertRaisesRegex(self, ValueError,
+                                   'must match the length.*1 != 3'):
             TabularMSA([Protein('PAW'), Protein('ABC'), Protein('A')])
 
     def test_constructor_non_iterable(self):
@@ -919,7 +922,8 @@ class TestAppend(unittest.TestCase):
             msa.append(Sequence(''))
 
     def test_wrong_dtype_rna(self):
-        with six.assertRaisesRegex(self, TypeError, 'Must match the type.*RNA.*DNA'):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Must match the type.*RNA.*DNA'):
             self.msa.append(RNA('UUUU'))
 
     def test_wrong_dtype_float(self):
@@ -928,7 +932,8 @@ class TestAppend(unittest.TestCase):
             self.msa.append(42.0)
 
     def test_wrong_length(self):
-        with six.assertRaisesRegex(self, ValueError, 'must match the length.*5 != 4'):
+        with six.assertRaisesRegex(self, ValueError,
+                                   'must match the length.*5 != 4'):
             self.msa.append(DNA('ACGTA'))
 
     def test_with_key(self):

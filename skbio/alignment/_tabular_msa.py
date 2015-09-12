@@ -613,7 +613,7 @@ class TabularMSA(SkbioObject):
 
         Parameters
         ----------
-        sequence : alphabet-aware scikit-bio sequence object 
+        sequence : alphabet-aware scikit-bio sequence object
             Sequence to be appended. Must match the dtype of the MSA and the
             length of the second dimension of the MSA.
         key : callable or metadata key, optional
@@ -628,8 +628,8 @@ class TabularMSA(SkbioObject):
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
-            If the length of the sequence does not match the number of 
-            positions in the MSA. 
+            If the length of the sequence does not match the number of
+            positions in the MSA.
         OperationError
             If no key is provided, but the MSA has keys, and no cached key
             is found.
