@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+ENV_NAME=${1}
+conda create -y -n ${ENV_NAME} python=3.4 pip
+source activate ${ENV_NAME}
+conda install -y --file ci/conda_requirements.txt
+pip install -r ci/pip_requirements.txt
+pip install --no-deps -e .

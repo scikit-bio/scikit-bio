@@ -55,7 +55,7 @@ Submitting code to scikit-bio
 
 scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
 
-**Note:** We recommend developing scikit-bio in a Python 3 environment because doctests must be written (and pass) in Python 3.
+**Note:** We recommend developing scikit-bio in a Python 3 environment because doctests must be written (and pass) in Python 3. See [Setting up a development environment](#setting-up-a-development-environment).
 
 1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
@@ -152,3 +152,54 @@ Getting help with git
 ---------------------
 
 If you're new to ``git``, you'll probably find [gitref.org](http://gitref.org/) helpful.
+
+Setting up a development environment
+------------------------------------
+
+The recommended way to set up a development environment for contributing to scikit-bio is using [Anaconda](https://store.continuum.io/cshop/anaconda/) by Continuum Analytics, with it's associated command line utility `conda`. The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package management and virtual environments, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
+
+The following steps can be used to manually set up a `conda` development environment with all prerequisites for developing scikit-bio. Alternatively, you can simply run the `create_dev_env` script from the scikit-bio directory:
+
+```
+./create_dev_env env_name
+```
+
+##### 1. Install Anaconda
+See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions.
+
+##### 2. Create a new virtual environment
+```
+conda create -y -n env_name python=3.4 pip
+```
+
+##### 3. Activate the environment
+This may be slightly different depending on the operating system. Refer to the Continuum site to find instructions for your OS.
+```
+source activate env_name
+```
+
+##### 4. Navigate to the scikit-bio directory
+See [the section on submitting](#submitting-code-to-scikit-bio).
+```
+cd /path/to/scikit-bio
+```
+
+##### 5. Install `conda` requirements
+```
+conda install -y --file ci/conda_requirements.txt
+```
+
+##### 6. Install `pip` requirements
+```
+pip install -r ci/pip_requirements.txt
+```
+
+##### 7. Install scikit-bio
+```
+pip install --no-deps -e .
+```
+
+##### 8. Test the installation
+```
+make test
+```
