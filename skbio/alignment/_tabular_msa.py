@@ -790,12 +790,41 @@ class TabularMSA(SkbioObject):
         seq1 -
         seq2 T
         <BLANKLINE>
+        >>> for position in msa.iter_positions(reverse=True):
+        ...     for seq in position:
+        ...         print(seq.metadata['id'], seq)
+        ...     print('')
+        seq1 -
+        seq2 T
+        <BLANKLINE>
+        seq1 -
+        seq2 G
+        <BLANKLINE>
+        seq1 T
+        seq2 G
+        <BLANKLINE>
+        seq1 G
+        seq2 C
+        <BLANKLINE>
+        seq1 C
+        seq2 C
+        <BLANKLINE>
+        seq1 C
+        seq2 A
+        <BLANKLINE>
+        seq1 A
+        seq2 A
+        <BLANKLINE>
         """
-        for i in range(self.shape.position):
+        if reverse:
+            iterable = reversed(range(self.shape.position))
+        else:
+            iterable = range(self.shape.position)
+        for i in iterable:
             # Inner function is required to close over the current index value
             # for use in the generator. This allows us to return generators
             # without needing to evaluate anything up front.
-            def position_with_captured_index_value(index):
+            def position_with_captured_index_value(index=i):
                 return (Sequence(seq[index]) for seq in self)
-            position = position_with_captured_index_value(i)
+            position = position_with_captured_index_value()
             yield position
