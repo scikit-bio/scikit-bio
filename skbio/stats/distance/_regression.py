@@ -177,7 +177,7 @@ def mrm(y, *args, **kwargs):
     for i in range(permutations):
         random_state.shuffle(E)
         Ynew = Yhat + E
-        Yhat_, B_, _, T_, F_,  _ = regress(Ynew)
+        Yhat_, B_, E, T_, F_,  _ = regress(Ynew)
         Ts[i, :], Fs[i] = T_, F_
     # Calculate result statistics
     pvals = ((abs(T) >= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
@@ -189,7 +189,8 @@ def mrm(y, *args, **kwargs):
     return (B, T, pvals,
             np.asscalar(F),
             np.asscalar(model_pval),
-            np.asscalar(R2))
+            np.asscalar(R2),
+            Ts, Fs)
 
 
 @experimental(as_of="0.4.0")
@@ -219,6 +220,7 @@ def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
     x = pd.Series(x)
     if ignore_nans:
         y = x[~pd.isnull(x)]
+
     cats = np.unique(y)
     for i in range(len(cats)):
         for j in range(i):
