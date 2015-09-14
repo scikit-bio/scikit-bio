@@ -914,5 +914,17 @@ class TestIterPositions(unittest.TestCase):
             self.assertEqual(obs, exp)
 
 
+class TestConsensus(unittest.TestCase):
+    def test_method_exists(self):
+        msa = TabularMSA([])
+        msa.consensus()
+
+    def test_simple(self):
+        msa = TabularMSA([DNA('AC--'),
+                          DNA('AT-C'),
+                          DNA('TT-C')])
+        observed = msa.consensus()
+        self.assertEqual(observed, DNA('AT-C'))
+
 if __name__ == "__main__":
     unittest.main()

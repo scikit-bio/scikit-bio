@@ -8,9 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-import collections
 import operator
 
+from collections import namedtuple, Counter
 from future.builtins import zip
 from future.utils import viewkeys, viewvalues
 import numpy as np
@@ -23,7 +23,7 @@ from skbio.util._decorator import experimental
 from skbio.util._misc import resolve_key
 
 
-_Shape = collections.namedtuple('Shape', ['sequence', 'position'])
+_Shape = namedtuple('Shape', ['sequence', 'position'])
 
 
 class TabularMSA(SkbioObject):
@@ -828,3 +828,57 @@ class TabularMSA(SkbioObject):
                 return (Sequence(seq[index]) for seq in self)
             position = position_with_captured_index_value()
             yield position
+
+    @experimental(as_of='0.4.0-dev')
+    def consensus(self):
+        """Return the consensus sequence for the TabularMSA.
+
+        Returns
+        -------
+        skbio.Sequence
+            The consensus sequence of the `TabularMSA`. In other words, at each
+            position the most common character is chosen, and those characters
+            are combined to create a new sequence. The sequence will not have
+            its metadata or positional metadata set; only the sequence will be set.
+            The type of biological sequence that is returned will be the same
+            type as the first sequence in the alignment, or ``Sequence`` if the
+            alignment is empty.
+
+        Notes
+        -----
+        If there are two characters that are equally abundant in the sequence
+        at a given position, the choice of which of those characters will be
+        present at that position in the result is arbitrary.
+
+        Examples
+        --------
+        >>> from skbio import TabularMSA 
+        >>> from skbio import DNA
+        >>> sequences = [DNA('AC--', metadata={'id': "seq1"}),
+        ...              DNA('AT-C', metadata={'id': "seq2"}),
+        ...              DNA('TT-C', metadata={'id': "seq3"})]
+        >>> msa = TabularMSA(sequences)
+        >>> msa.consensus()
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 AT-C
+
+        """
+
+        if self.dtype is not None:
+            constructor = self.dtype
+        else:
+            constructor = Sequence
+        return constructor(''.join(c.most_common(1)[0][0]
+                           for c in self._position_counters()))
+
+    def _position_counters(self):
+        return [Counter([str(seq) for seq in position])
+                for position in self.iter_positions()]
