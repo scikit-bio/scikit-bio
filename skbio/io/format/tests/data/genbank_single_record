@@ -1,0 +1,27 @@
+LOCUS       ECOALKP   63 bp   mRNA   linear   BCT   26-APR-1993
+DEFINITION  alkaline phosphatase signal mRNA, 5' end.
+ACCESSION   M14399
+VERSION     M14399.1  GI:145229
+KEYWORDS    alkaline phosphatase; signal peptide.
+SOURCE      Escherichia coli
+  ORGANISM  Escherichia coli
+            Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Escherichia.
+COMMENT     Original source text: E.coli, cDNA to mRNA.
+FEATURES             Location/Qualifiers
+       source        1..63
+                     /db_xref="taxon:562"
+                     /mol_type="mRNA"
+                     /organism="Escherichia coli"
+          CDS        1..>63
+                     /codon_start=1
+                     /db_xref="GI:145230"
+                     /db_xref="taxon:562"
+                     /db_xref="taxon:561"
+                     /note="alkaline phosphatase signal peptide"
+                     /protein_id="AAA23431.1"
+                     /transl_table=11
+                     /translation="MKQSTIALAVLPLLFTPVTKA"
+ORIGIN
+        1 gtgaaacaaa gcactattgc actggctgtc ttaccgttac tgtttacccc tgtgacaaaa
+       61 gcc
+//
