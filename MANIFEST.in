@@ -7,6 +7,7 @@ include README.rst
 include RELEASE.md
 include checklist.py
 include asv.conf.json
+include create_dev_env
 
 graft assets
 graft ci
