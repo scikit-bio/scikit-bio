@@ -839,10 +839,10 @@ class TabularMSA(SkbioObject):
             The consensus sequence of the `TabularMSA`. In other words, at each
             position the most common character is chosen, and those characters
             are combined to create a new sequence. The sequence will not have
-            its metadata or positional metadata set; only the sequence will be set.
-            The type of biological sequence that is returned will be the same
-            type as the first sequence in the alignment, or ``Sequence`` if the
-            alignment is empty.
+            its metadata or positional metadata set; only the sequence will be
+            set. The type of biological sequence that is returned will be the
+            same type as the first sequence in the alignment, or ``Sequence``
+            if the alignment is empty.
 
         Notes
         -----
@@ -852,7 +852,7 @@ class TabularMSA(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TabularMSA 
+        >>> from skbio import TabularMSA
         >>> from skbio import DNA
         >>> sequences = [DNA('AC--', metadata={'id': "seq1"}),
         ...              DNA('AT-C', metadata={'id': "seq2"}),
