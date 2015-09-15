@@ -34,8 +34,8 @@ class TabularMSA(SkbioObject):
         Aligned sequences in the MSA. Sequences must be the same type, length,
         and have an alphabet. For example, `sequences` could be an iterable of
         ``DNA``, ``RNA``, or ``Protein`` objects.
-    key : callable or metadata key, optional
-        If provided, defines a unique, hashable key for each sequence in
+    minter : callable or metadata key, optional
+        If provided, defines a unique, hashable key minter for each sequence in
         `sequences`. Can either be a callable accepting a single argument (each
         sequence) or a key into each sequence's ``metadata`` attribute.
     keys : iterable, optional
@@ -152,7 +152,7 @@ class TabularMSA(SkbioObject):
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'})]
-        >>> msa = TabularMSA(seqs, key='id')
+        >>> msa = TabularMSA(seqs, minter='id')
 
         Retrieve keys:
 
@@ -195,6 +195,16 @@ class TabularMSA(SkbioObject):
     @keys.deleter
     def keys(self):
         self.reindex()
+
+    @property
+    @experimental(as_of='0.4.0-dev')
+    def minter(self):
+        if self._minter is not None:
+            return self._minter
+        else:
+            raise OperationError(
+                "MSA requires a key minter but none was provided, and no "
+                "cached minter exists")
 
     @classmethod
     @experimental(as_of="0.4.0-dev")
@@ -239,27 +249,18 @@ class TabularMSA(SkbioObject):
         return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
-    def get_cached_key(self):
-        if self._cached_key is not None:
-            return self._cached_key
-        else:
-            raise OperationError(
-                "MSA requires a key but none was provided, and no "
-                "cached key exists")
-
-    @experimental(as_of='0.4.0-dev')
-    def __init__(self, sequences, key=None, keys=None):
+    def __init__(self, sequences, minter=None, keys=None):
         sequences = iter(sequences)
 
         self._seqs = []
         self._dtype = None
         self._shape = _Shape(sequence=0, position=0)
-        self._cached_key = None
+        self._minter = None
 
         for seq in sequences:
             self._add_sequence(seq)
 
-        self.reindex(key=key, keys=keys)
+        self.reindex(minter=minter, keys=keys)
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
@@ -416,7 +417,7 @@ class TabularMSA(SkbioObject):
 
         MSAs with different keys are not equal:
 
-        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], key=str)
+        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         >>> msa1 == msa5
         False
 
@@ -474,7 +475,7 @@ class TabularMSA(SkbioObject):
 
         MSAs with different keys are not equal:
 
-        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], key=str)
+        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         >>> msa1 != msa5
         True
 
@@ -501,7 +502,7 @@ class TabularMSA(SkbioObject):
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa.has_keys()
         False
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], key=str)
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         >>> msa.has_keys()
         True
 
@@ -509,15 +510,16 @@ class TabularMSA(SkbioObject):
         return self._keys is not None
 
     @experimental(as_of='0.4.0-dev')
-    def reindex(self, key=None, keys=None):
+    def reindex(self, minter=None, keys=None):
         """Reassign keys to sequences in the MSA.
 
         Parameters
         ----------
-        key : callable or metadata key, optional
-            If provided, defines a unique, hashable key for each sequence in
-            the MSA. Can either be a callable accepting a single argument (each
-            sequence) or a key into each sequence's ``metadata`` attribute.
+        minter : callable or metadata key, optional
+            If provided, defines a unique, hashable key minter for each
+            sequence in the MSA. Can either be a callable accepting a single
+            argument (each sequence) or a key into each sequence's ``metadata``
+            attribute.
         keys : iterable, optional
             An iterable of the same length as the number of sequences in the
             MSA. `keys` must contain unique, hashable elements. Each element
@@ -556,7 +558,7 @@ class TabularMSA(SkbioObject):
 
         Set keys on the MSA, using each sequence's ID:
 
-        >>> msa.reindex(key='id')
+        >>> msa.reindex(minter='id')
         >>> msa.has_keys()
         True
         >>> msa.keys
@@ -575,14 +577,14 @@ class TabularMSA(SkbioObject):
         array(['a', 'b'], dtype=object)
 
         """
-        if key is not None and keys is not None:
+        if minter is not None and keys is not None:
             raise ValueError(
-                "Cannot use both `key` and `keys` at the same time.")
+                "Cannot use both `minter` and `keys` at the same time.")
 
         keys_ = None
-        if key is not None:
-            self._cached_key = key
-            keys_ = [resolve_key(seq, key) for seq in self._seqs]
+        if minter is not None:
+            self._minter = minter
+            keys_ = [resolve_key(seq, minter) for seq in self._seqs]
         elif keys is not None:
             keys = list(keys)
             if len(keys) != len(self):
@@ -608,7 +610,7 @@ class TabularMSA(SkbioObject):
         self._keys = keys_
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, key=None):
+    def append(self, sequence, minter=None):
         """Append a sequence to the MSA.
 
         Parameters
@@ -616,8 +618,8 @@ class TabularMSA(SkbioObject):
         sequence : alphabet-aware scikit-bio sequence object
             Sequence to be appended. Must match the dtype of the MSA and the
             length of the second dimension of the MSA.
-        key : callable or metadata key, optional
-            If None, the MSA is checked to see if a previous key has been
+        minter : callable or metadata key, optional
+            If None, the MSA is checked to see if a previous minter has been
             cached. If not, an exception is raised. If a cached key is found
             it is used to reindex the MSA.
 
@@ -651,22 +653,22 @@ class TabularMSA(SkbioObject):
         >>> msa == TabularMSA([DNA(''), DNA('')])
         True
 
-        >>> msa = TabularMSA([DNA('', metadata={'id': 'a'})], key='id')
-        >>> msa.append(DNA('', metadata={'id': 'b'}), key='id')
+        >>> msa = TabularMSA([DNA('', metadata={'id': 'a'})], minter='id')
+        >>> msa.append(DNA('', metadata={'id': 'b'}), minter='id')
         >>> msa == TabularMSA([DNA('', metadata={'id': 'a'}),
-        ...                    DNA('', metadata={'id': 'b'})], key='id')
+        ...                    DNA('', metadata={'id': 'b'})], minter='id')
         True
         """
-        if key is None:
+        if minter is None:
             if self.has_keys():
-                key = self.get_cached_key()
+                minter = self.minter
         else:
             if not self.has_keys():
                 raise OperationError(
                     "key was provided but MSA does not have keys.")
 
         self._add_sequence(sequence)
-        self.reindex(key=key)
+        self.reindex(minter=minter)
 
     def _add_sequence(self, sequence):
         msa_is_empty = not len(self)

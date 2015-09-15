@@ -87,27 +87,27 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_non_unique_keys(self):
         with six.assertRaisesRegex(self, UniqueError, 'Duplicate keys:.*42'):
-            TabularMSA([DNA('ACGT'), DNA('TGCA')], key=lambda x: 42)
+            TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=lambda x: 42)
 
         with six.assertRaisesRegex(self, UniqueError, "Duplicate keys:.*'a'"):
             TabularMSA([DNA('', metadata={'id': 'a'}),
                         DNA('', metadata={'id': 'b'}),
                         DNA('', metadata={'id': 'a'})],
-                       key='id')
+                       minter='id')
 
         with six.assertRaisesRegex(self, UniqueError, 'Duplicate keys:.*42'):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=iter([42, 42]))
 
     def test_constructor_non_hashable_keys(self):
         with self.assertRaises(TypeError):
-            TabularMSA([DNA('ACGT'), DNA('TGCA')], key=lambda x: [42])
+            TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=lambda x: [42])
 
         with self.assertRaises(TypeError):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=iter([[42], [42]]))
 
-    def test_constructor_key_and_keys_both_provided(self):
-        with six.assertRaisesRegex(self, ValueError, 'both.*key.*keys'):
-            TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str, keys=['a', 'b'])
+    def test_constructor_minter_and_keys_both_provided(self):
+        with six.assertRaisesRegex(self, ValueError, 'both.*minter.*keys'):
+            TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str, keys=['a', 'b'])
 
     def test_constructor_keys_length_mismatch(self):
         with six.assertRaisesRegex(self, ValueError,
@@ -135,7 +135,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_empty_with_keys(self):
         # sequence empty
-        msa = TabularMSA([], key=lambda x: x)
+        msa = TabularMSA([], minter=lambda x: x)
         npt.assert_array_equal(msa.keys, np.array([]))
 
         msa = TabularMSA([], keys=iter([]))
@@ -143,7 +143,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         # position empty
         msa = TabularMSA([DNA('', metadata={'id': 42}),
-                          DNA('', metadata={'id': 43})], key='id')
+                          DNA('', metadata={'id': 43})], minter='id')
         npt.assert_array_equal(msa.keys, np.array([42, 43]))
 
         msa = TabularMSA([DNA(''), DNA('')], keys=iter([42, 43]))
@@ -170,7 +170,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_non_empty_with_keys(self):
         seqs = [DNA('ACG'), DNA('CGA'), DNA('GTT')]
-        msa = TabularMSA(seqs, key=str)
+        msa = TabularMSA(seqs, minter=str)
         self.assertIs(msa.dtype, DNA)
         self.assertEqual(msa.shape, (3, 3))
         npt.assert_array_equal(msa.keys, np.array(['ACG', 'CGA', 'GTT']))
@@ -181,7 +181,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_works_with_iterator(self):
         seqs = [DNA('ACG'), DNA('CGA'), DNA('GTT')]
-        msa = TabularMSA(iter(seqs), key=str)
+        msa = TabularMSA(iter(seqs), minter=str)
         self.assertIs(msa.dtype, DNA)
         self.assertEqual(msa.shape, (3, 3))
         npt.assert_array_equal(msa.keys, np.array(['ACG', 'CGA', 'GTT']))
@@ -216,7 +216,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
                                    'Keys do not exist.*reindex'):
             TabularMSA([]).keys
 
-        keys = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')], key=str).keys
+        keys = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')], minter=str).keys
         self.assertIsInstance(keys, np.ndarray)
         self.assertEqual(keys.dtype, object)
         npt.assert_array_equal(keys, np.array(['AC', 'AG', 'AT']))
@@ -235,7 +235,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_keys_update_subset_of_keys(self):
         # keys can be copied, modified, then re-set
-        msa = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')], key=str)
+        msa = TabularMSA([DNA('AC'), DNA('AG'), DNA('AT')], minter=str)
         npt.assert_array_equal(msa.keys, np.array(['AC', 'AG', 'AT']))
 
         new_keys = msa.keys.copy()
@@ -265,7 +265,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         npt.assert_array_equal(msa.keys, np.array([3, 4, 5]))
 
     def test_keys_setter_length_mismatch(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
@@ -277,7 +277,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         npt.assert_array_equal(msa.keys, keys)
 
     def test_keys_setter_non_unique_keys(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
@@ -288,7 +288,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         npt.assert_array_equal(msa.keys, keys)
 
     def test_keys_setter_non_hashable_keys(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
@@ -305,40 +305,40 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertFalse(msa.has_keys())
 
     def test_keys_deleter_with_keys(self):
-        msa = TabularMSA([RNA('UUU'), RNA('AAA')], key=str)
+        msa = TabularMSA([RNA('UUU'), RNA('AAA')], minter=str)
         self.assertTrue(msa.has_keys())
         del msa.keys
         self.assertFalse(msa.has_keys())
 
-    def test_get_cached_key_str(self):
+    def test_get_cached_minter_str(self):
         msa = TabularMSA([DNA('', metadata={'id': 42}),
-                          DNA('', metadata={'id': 43})], key='id')
-        key = msa.get_cached_key()
+                          DNA('', metadata={'id': 43})], minter='id')
+        key = msa.minter
         self.assertEqual(key, 'id')
 
-    def test_get_cached_key_callable(self):
-        def key_func(x):
+    def test_get_cached_minter_callable(self):
+        def minter_func(x):
             return x.metadata['id']
 
         msa = TabularMSA([DNA('', metadata={'id': 42}),
-                          DNA('', metadata={'id': 43})], key=key_func)
-        key = msa.get_cached_key()
-        self.assertEqual(key, key_func)
+                          DNA('', metadata={'id': 43})], minter=minter_func)
+        key = msa.minter
+        self.assertEqual(key, minter_func)
 
-    def test_get_cached_key_no_key_exists(self):
+    def test_get_cached_minter_no_minter_exists(self):
         msa = TabularMSA([DNA(''), DNA('')])
         with six.assertRaisesRegex(
                 self, OperationError,
-                "MSA requires a key but none was provided, and no "
-                "cached key exists"):
-            msa.get_cached_key()
+                "MSA requires a key minter but none was provided, and no "
+                "cached minter exists"):
+            msa.minter
 
     def test_bool(self):
         self.assertFalse(TabularMSA([]))
         self.assertFalse(TabularMSA([RNA('')]))
         self.assertFalse(
             TabularMSA([RNA('', metadata={'id': 1}),
-                        RNA('', metadata={'id': 2})], key='id'))
+                        RNA('', metadata={'id': 2})], minter='id'))
 
         self.assertTrue(TabularMSA([RNA('U')]))
         self.assertTrue(TabularMSA([RNA('--'), RNA('..')]))
@@ -376,28 +376,28 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         components = [
             # empties
             ([], {}),
-            ([], {'key': str}),
+            ([], {'minter': str}),
             ([RNA('')], {}),
-            ([RNA('')], {'key': str}),
+            ([RNA('')], {'minter': str}),
 
             # 1x1
-            ([RNA('U')], {'key': str}),
+            ([RNA('U')], {'minter': str}),
 
             # 2x3
-            ([RNA('AUG'), RNA('GUA')], {'key': str}),
+            ([RNA('AUG'), RNA('GUA')], {'minter': str}),
 
             ([RNA('AG'), RNA('GG')], {}),
             # has keys
-            ([RNA('AG'), RNA('GG')], {'key': str}),
+            ([RNA('AG'), RNA('GG')], {'minter': str}),
             # different dtype
-            ([DNA('AG'), DNA('GG')], {'key': str}),
+            ([DNA('AG'), DNA('GG')], {'minter': str}),
             # different keys
-            ([RNA('AG'), RNA('GG')], {'key': lambda x: str(x) + '42'}),
+            ([RNA('AG'), RNA('GG')], {'minter': lambda x: str(x) + '42'}),
             # different sequence metadata
-            ([RNA('AG', metadata={'id': 42}), RNA('GG')], {'key': str}),
+            ([RNA('AG', metadata={'id': 42}), RNA('GG')], {'minter': str}),
             # different sequence data, same keys
             ([RNA('AG'), RNA('GA')],
-             {'key': lambda x: 'AG' if 'AG' in x else 'GG'}),
+             {'minter': lambda x: 'AG' if 'AG' in x else 'GG'}),
         ]
 
         for seqs, kwargs in components:
@@ -423,19 +423,20 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_has_keys(self):
         self.assertFalse(TabularMSA([]).has_keys())
-        self.assertTrue(TabularMSA([], key=str).has_keys())
+        self.assertTrue(TabularMSA([], minter=str).has_keys())
 
         self.assertFalse(TabularMSA([DNA('')]).has_keys())
-        self.assertTrue(TabularMSA([DNA('')], key=str).has_keys())
+        self.assertTrue(TabularMSA([DNA('')], minter=str).has_keys())
 
         self.assertFalse(TabularMSA([DNA('ACG'), DNA('GCA')]).has_keys())
         self.assertTrue(
             TabularMSA([DNA('ACG', metadata={'id': 1}),
-                        DNA('GCA', metadata={'id': 2})], key='id').has_keys())
+                        DNA('GCA', metadata={'id': 2})],
+                       minter='id').has_keys())
 
         msa = TabularMSA([])
         self.assertFalse(msa.has_keys())
-        msa.reindex(key=str)
+        msa.reindex(minter=str)
         self.assertTrue(msa.has_keys())
         msa.reindex()
         self.assertFalse(msa.has_keys())
@@ -447,8 +448,8 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(msa, TabularMSA([]))
         self.assertFalse(msa.has_keys())
 
-        msa.reindex(key=str)
-        self.assertEqual(msa, TabularMSA([], key=str))
+        msa.reindex(minter=str)
+        self.assertEqual(msa, TabularMSA([], minter=str))
         npt.assert_array_equal(msa.keys, np.array([]))
 
         msa.reindex(keys=iter([]))
@@ -461,8 +462,8 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(msa, TabularMSA([DNA('')]))
         self.assertFalse(msa.has_keys())
 
-        msa.reindex(key=str)
-        self.assertEqual(msa, TabularMSA([DNA('')], key=str))
+        msa.reindex(minter=str)
+        self.assertEqual(msa, TabularMSA([DNA('')], minter=str))
         npt.assert_array_equal(msa.keys, np.array(['']))
 
         msa.reindex(keys=iter(['a']))
@@ -471,14 +472,14 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_reindex_non_empty(self):
         msa = TabularMSA([DNA('ACG', metadata={'id': 1}),
-                          DNA('AAA', metadata={'id': 2})], key=str)
+                          DNA('AAA', metadata={'id': 2})], minter=str)
         npt.assert_array_equal(msa.keys, np.array(['ACG', 'AAA']))
 
-        msa.reindex(key='id')
+        msa.reindex(minter='id')
         self.assertEqual(
             msa,
             TabularMSA([DNA('ACG', metadata={'id': 1}),
-                        DNA('AAA', metadata={'id': 2})], key='id'))
+                        DNA('AAA', metadata={'id': 2})], minter='id'))
         npt.assert_array_equal(msa.keys, np.array([1, 2]))
 
         msa.reindex(keys=iter('ab'))
@@ -502,19 +503,19 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         keys[1] = 42
         npt.assert_array_equal(msa.keys, np.array([1, 2, 3]))
 
-    def test_reindex_key_and_keys_both_provided(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+    def test_reindex_minter_and_keys_both_provided(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
-        with six.assertRaisesRegex(self, ValueError, 'both.*key.*keys'):
-            msa.reindex(key=str, keys=['a', 'b'])
+        with six.assertRaisesRegex(self, ValueError, 'both.*minter.*keys'):
+            msa.reindex(minter=str, keys=['a', 'b'])
 
         # original state is maintained
         npt.assert_array_equal(msa.keys, keys)
 
     def test_reindex_keys_length_mismatch(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
@@ -526,12 +527,12 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         npt.assert_array_equal(msa.keys, keys)
 
     def test_reindex_non_unique_keys(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
         with six.assertRaisesRegex(self, UniqueError, 'Duplicate keys:.*42'):
-            msa.reindex(key=lambda x: 42)
+            msa.reindex(minter=lambda x: 42)
 
         # original state is maintained
         npt.assert_array_equal(msa.keys, keys)
@@ -542,12 +543,12 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         npt.assert_array_equal(msa.keys, keys)
 
     def test_reindex_non_hashable_keys(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], key=str)
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
         keys = np.array(['ACGT', 'TGCA'])
         npt.assert_array_equal(msa.keys, keys)
 
         with self.assertRaises(TypeError):
-            msa.reindex(key=lambda x: [42])
+            msa.reindex(minter=lambda x: [42])
 
         # original state is maintained
         npt.assert_array_equal(msa.keys, keys)
@@ -557,7 +558,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         npt.assert_array_equal(msa.keys, keys)
 
-    def test_sort_no_msa_keys_and_key_not_specified(self):
+    def test_sort_no_msa_keys_and_minter_not_specified(self):
         msa = TabularMSA([])
         with self.assertRaises(OperationError):
             msa.sort()
@@ -885,7 +886,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_to_dict_non_empty(self):
         seqs = [Protein('PAW', metadata={'id': 42}),
                 Protein('WAP', metadata={'id': -999})]
-        msa = TabularMSA(seqs, key='id')
+        msa = TabularMSA(seqs, minter='id')
         self.assertEqual(msa.to_dict(), {42: seqs[0], -999: seqs[1]})
 
     def test_from_dict_to_dict_roundtrip(self):
@@ -942,37 +943,37 @@ class TestAppend(unittest.TestCase):
             [DNA('', metadata={'id': 'a'}),
              DNA('', metadata={'id': 'b'}),
              to_append],
-            key='id')
+            minter='id')
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
-                         key='id')
-        msa.append(to_append, key='id')
+                         minter='id')
+        msa.append(to_append, minter='id')
         self.assertEqual(msa, expected)
 
-    def test_with_key_msa_has_no_keys(self):
+    def test_with_minter_msa_has_no_keys(self):
         with six.assertRaisesRegex(self, OperationError,
                                    "key was provided but MSA does not have "
                                    "keys"):
             self.msa.append(DNA('AAAA'), 'id')
 
-    def test_no_key_msa_has_keys(self):
+    def test_no_minter_msa_has_keys(self):
         to_append = DNA('', metadata={'id': 'c'})
         expected = TabularMSA(
             [DNA('', metadata={'id': 'a'}),
              DNA('', metadata={'id': 'b'}),
              to_append],
-            key='id')
+            minter='id')
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
-                         key='id')
+                         minter='id')
         msa.append(to_append)
         self.assertEqual(msa, expected)
 
-    def test_no_key_msa_has_keys_but_not_cached(self):
+    def test_no_minter_msa_has_keys_but_not_cached(self):
         msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
         with six.assertRaisesRegex(self, OperationError,
-                                   "MSA requires a key but none was "
-                                   "provided, and no cached key exists"):
+                                   "MSA requires a key minter but none was "
+                                   "provided, and no cached minter exists"):
             msa.append(DNA(''))
 
 
