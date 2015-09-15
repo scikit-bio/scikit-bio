@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-
+import six
 from six import string_types, text_type
 
 import io
@@ -80,7 +80,7 @@ class Compressor(IOSource):
 
 class FilePathSource(IOSource):
     def can_read(self):
-        return isinstance(self.file, string_types)
+        return isinstance(self.file, six.string_types)
 
     def can_write(self):
         return self.can_read()
@@ -95,7 +95,7 @@ class FilePathSource(IOSource):
 class HTTPSource(IOSource):
     def can_read(self):
         return (
-            isinstance(self.file, string_types) and
+            isinstance(self.file, six.string_types) and
             requests.compat.urlparse(self.file).scheme in {'http', 'https'})
 
     def get_reader(self):
@@ -169,11 +169,17 @@ class IterableSource(IOSource):
             if head is None:
                 self.repaired = []
                 return True
-            if isinstance(head, text_type):
+            if isinstance(head, six.text_type):
                 self.repaired = itertools.chain([head], iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort
+                if six.PY2 and isinstance(head, bytes):
+                    raise IOSourceError(
+                        "Could not open source: %r (mode: %r).\n Prepend a "
+                        r"`u` to the strings (e.g. [u'line1\n', u'line2\n'])" %
+                        (self.file, self.options['mode']))
+
                 raise IOSourceError(
                     "Could not open source: %r (mode: %r)" %
                     (self.file, self.options['mode']))
