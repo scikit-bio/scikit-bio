@@ -120,45 +120,46 @@ The following steps can be used to manually set up a `conda` development environ
 ./create_dev_env env_name
 ```
 
-##### 1. Install Anaconda
-See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions.
+1. Install Anaconda
+ See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions
 
-##### 2. Create a new conda environment
-```
-conda create -y -n env_name python=3.4 pip
-```
+2. Create a new conda environment
+ ```
+ conda create -y -n env_name python=3.4 pip
+ ```
 
-##### 3. Activate the environment
-This may be slightly different depending on the operating system. Refer to the Continuum site to find instructions for your OS.
-```
-source activate env_name
-```
+3. Activate the environment
 
-##### 4. Navigate to the scikit-bio directory
-See [the section on submitting code](#submitting-code-to-scikit-bio).
-```
-cd /path/to/scikit-bio
-```
+ This may be slightly different depending on the operating system. Refer to the Continuum site to find instructions for your OS.
+ ```
+ source activate env_name
+ ```
 
-##### 5. Install `conda` requirements
-```
-conda install -y --file ci/conda_requirements.txt
-```
+4. Navigate to the scikit-bio directory
+ See [the section on submitting code](#submitting-code-to-scikit-bio).
+ ```
+ cd /path/to/scikit-bio
+ ```
 
-##### 6. Install `pip` requirements
-```
-pip install -r ci/pip_requirements.txt
-```
+5. Install `conda` requirements
+ ```
+ conda install -y --file ci/conda_requirements.txt
+ ```
 
-##### 7. Install scikit-bio
-```
-pip install --no-deps -e .
-```
+6. Install `pip` requirements
+ ```
+ pip install -r ci/pip_requirements.txt
+ ```
 
-##### 8. Test the installation
-```
-make test
-```
+7. Install scikit-bio
+ ```
+ pip install --no-deps -e .
+ ```
+
+8. Test the installation
+ ```
+ make test
+ ```
 
 Coding guidelines
 -----------------
