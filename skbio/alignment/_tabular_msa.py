@@ -34,6 +34,9 @@ class TabularMSA(SkbioObject):
         Aligned sequences in the MSA. Sequences must be the same type, length,
         and have an alphabet. For example, `sequences` could be an iterable of
         ``DNA``, ``RNA``, or ``Protein`` objects.
+    metadata : dict, optional
+        Arbitrary metadata which applies to the entire MSA. A shallow copy of
+        the ``dict`` will be made.
     minter : callable or metadata key, optional
         If provided, defines a unique, hashable key minter for each sequence in
         `sequences`. Can either be a callable accepting a single argument (each
@@ -206,6 +209,72 @@ class TabularMSA(SkbioObject):
                 "MSA requires a key minter but none was provided, and no "
                 "cached minter exists")
 
+    @property
+    @experimental(as_of='0.4.0-dev')
+    def metadata(self):
+        """``dict`` containing metadata which applies to the entire MSA.
+
+        Notes
+        -----
+        This property can be set and deleted. When setting new metadata a
+        shallow copy of the dictionary is made.
+
+        Examples
+        --------
+        >>> from pprint import pprint
+        >>> from skbio import DNA, TabularMSA
+
+        Create an MSA with metadata:
+
+        >>> msa = TabularMSA([DNA('TT-GA'), DNA('ATAGC')],
+        ...                  metadata={'id': 'msa-id',
+        ...                            'description': 'msa description'})
+
+        Retrieve metadata:
+
+        >>> pprint(msa.metadata) # using pprint to display dict in sorted order
+        {'description': 'msa description', 'id': 'msa-id'}
+
+        Update metadata:
+
+        >>> msa.metadata['id'] = 'new-id'
+        >>> msa.metadata['medline'] = 12345678
+        >>> pprint(msa.metadata)
+        {'description': 'msa description', 'id': 'new-id', 'medline': 12345678}
+
+        Set metadata:
+
+        >>> msa.metadata = {'abc': 123}
+        >>> msa.metadata
+        {'abc': 123}
+
+        Delete metadata:
+
+        >>> msa.has_metadata()
+        True
+        >>> del msa.metadata
+        >>> msa.metadata
+        {}
+        >>> msa.has_metadata()
+        False
+
+        """
+        if self._metadata is None:
+            # not using setter to avoid copy
+            self._metadata = {}
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        if not isinstance(metadata, dict):
+            raise TypeError("metadata must be a dict")
+        # shallow copy
+        self._metadata = metadata.copy()
+
+    @metadata.deleter
+    def metadata(self):
+        self._metadata = None
+
     @classmethod
     @experimental(as_of="0.4.0-dev")
     def from_dict(cls, dictionary):
@@ -249,7 +318,7 @@ class TabularMSA(SkbioObject):
         return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
-    def __init__(self, sequences, minter=None, keys=None):
+    def __init__(self, sequences, metadata=None, minter=None, keys=None):
         sequences = iter(sequences)
 
         self._seqs = []
@@ -259,6 +328,11 @@ class TabularMSA(SkbioObject):
 
         for seq in sequences:
             self._add_sequence(seq)
+
+        if metadata is None:
+            self._metadata = None
+        else:
+            self.metadata = metadata
 
         self.reindex(minter=minter, keys=keys)
 
@@ -377,7 +451,8 @@ class TabularMSA(SkbioObject):
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
-        ``TabularMSA`` objects are equal if their sequences and keys are equal.
+        ``TabularMSA`` objects are equal if their sequences, keys, and metadata
+        are equal.
 
         Parameters
         ----------
@@ -421,8 +496,28 @@ class TabularMSA(SkbioObject):
         >>> msa1 == msa5
         False
 
+        MSAs with different metadata are not equal:
+
+        >>> msa6 = TabularMSA([DNA('ACG'), DNA('AC-')],
+        ...                   metadata={'id': 'msa-id'})
+        >>> msa1 == msa6
+        False
+
         """
         if not isinstance(other, TabularMSA):
+            return False
+
+        # we're not simply comparing self.metadata to other.metadata in order
+        # to avoid creating "empty" metadata representations on the TabularMSA
+        # objects if they don't have metadata.
+        if self.has_metadata() and other.has_metadata():
+            if self.metadata != other.metadata:
+                return False
+        elif not (self.has_metadata() or other.has_metadata()):
+            # both don't have metadata
+            pass
+        else:
+            # one has metadata while the other does not
             return False
 
         # Use np.array_equal instead of (a == b).all():
@@ -434,8 +529,8 @@ class TabularMSA(SkbioObject):
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
-        ``TabularMSA`` objects are not equal if their sequences or keys are not
-        equal.
+        ``TabularMSA`` objects are not equal if their sequences, keys, or
+        metadata are not equal.
 
         Parameters
         ----------
@@ -447,37 +542,9 @@ class TabularMSA(SkbioObject):
         bool
             Indicates whether this MSA is not equal to `other`.
 
-        Examples
+        See Also
         --------
-        >>> from skbio import DNA, RNA, TabularMSA
-        >>> msa1 = TabularMSA([DNA('ACG'), DNA('AC-')])
-        >>> msa1 != msa1
-        False
-
-        MSAs with different sequence characters are not equal:
-
-        >>> msa2 = TabularMSA([DNA('ACG'), DNA('--G')])
-        >>> msa1 != msa2
-        True
-
-        MSAs with different types of sequences (different ``dtype``) are not
-        equal:
-
-        >>> msa3 = TabularMSA([RNA('ACG'), RNA('AC-')])
-        >>> msa1 != msa3
-        True
-
-        MSAs with different sequence metadata are not equal:
-
-        >>> msa4 = TabularMSA([DNA('ACG', metadata={'id': 'a'}), DNA('AC-')])
-        >>> msa1 != msa4
-        True
-
-        MSAs with different keys are not equal:
-
-        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
-        >>> msa1 != msa5
-        True
+        __eq__
 
         """
         return not (self == other)
@@ -508,6 +575,36 @@ class TabularMSA(SkbioObject):
 
         """
         return self._keys is not None
+
+    @experimental(as_of='0.4.0-dev')
+    def has_metadata(self):
+        """Determine if the MSA has metadata.
+
+        An MSA has metadata if its ``metadata`` dictionary is not empty (i.e.,
+        has at least one key-value pair).
+
+        Returns
+        -------
+        bool
+            Indicates whether the MSA has metadata
+
+        See Also
+        --------
+        metadata
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> seqs = [DNA('AC--G'), DNA('ATAAG')]
+        >>> msa = TabularMSA(seqs)
+        >>> msa.has_metadata()
+        False
+        >>> msa = TabularMSA(seqs, metadata={'id': 'msa-id'})
+        >>> msa.has_metadata()
+        True
+
+        """
+        return self._metadata is not None and bool(self.metadata)
 
     @experimental(as_of='0.4.0-dev')
     def reindex(self, minter=None, keys=None):
