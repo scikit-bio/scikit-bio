@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 import six
-from six import string_types, text_type
 
 import io
 import gzip
