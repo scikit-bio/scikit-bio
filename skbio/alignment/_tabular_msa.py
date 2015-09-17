@@ -857,6 +857,12 @@ class TabularMSA(SkbioObject):
         --------
         iter
 
+        Notes
+        -----
+        The `Sequence` instances returned do not represent biological
+        sequences. Each one is a generic sequence representing a column
+        created from a position in the MSA.
+
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
