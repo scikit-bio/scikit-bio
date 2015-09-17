@@ -206,8 +206,8 @@ class TabularMSA(SkbioObject):
             return self._minter
         else:
             raise OperationError(
-                "MSA requires a key minter but none was provided, and no "
-                "cached minter exists")
+                "Attempted use of key minter on MSA, but none exists. Use "
+                "`reindex` with the `minter` parameter to set one")
 
     @property
     @experimental(as_of='0.4.0-dev')

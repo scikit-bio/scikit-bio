@@ -369,8 +369,8 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         msa = TabularMSA([DNA(''), DNA('')])
         with six.assertRaisesRegex(
                 self, OperationError,
-                "MSA requires a key minter but none was provided, and no "
-                "cached minter exists"):
+                "Attempted use of key minter on MSA, but none exists. Use "
+                "`reindex` with the `minter` parameter to set one"):
             msa.minter
 
     def test_metadata_getter(self):
@@ -1113,8 +1113,9 @@ class TestAppend(unittest.TestCase):
     def test_no_minter_msa_has_keys_but_not_cached(self):
         msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
         with six.assertRaisesRegex(self, OperationError,
-                                   "MSA requires a key minter but none was "
-                                   "provided, and no cached minter exists"):
+                                   "Attempted use of key minter on MSA, but "
+                                   "none exists. Use `reindex` with the "
+                                   "`minter` parameter to set one"):
             msa.append(DNA(''))
 
 
