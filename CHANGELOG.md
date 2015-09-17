@@ -7,6 +7,7 @@
 * Added ``skbio.diversity.alpha.pielou_e`` function as an evenness metric of alpha diversity. ([#1068](https://github.com/biocore/scikit-bio/issues/1068))
 * Added `to_regex` method to `skbio.sequence._iupac_sequence` ABC - it returns a regex object that matches all non-degenerate versions of the sequence.
 * Added ``skbio.util.assert_ordination_results_equal`` function for comparing ``OrdinationResults`` objects in unit tests.
+* Added ``skbio.io.format.genbank`` for reading and writing GenBank/GenPept for ``DNA``, ``RNA``, ``Protein`` and ``Sequence`` classes.
 * Added ``skbio.util.RepresentationWarning`` for warning about substitutions, assumptions, or particular alterations that were made for the successful completion of a process.
 * ``TreeNode.tip_tip_distances`` now supports nodes without an associated length. In this case, a length of 0.0 is assumed and an ``skbio.util.RepresentationWarning`` is raised. Previous behavior was to raise a ``NoLengthError``. ([#791](https://github.com/biocore/scikit-bio/issues/791))
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.

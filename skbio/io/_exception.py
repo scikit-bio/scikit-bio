@@ -24,6 +24,11 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class GenBankFormatError(FileFormatError):
+    """Raised when a ``genbank`` formatted file cannot be parsed."""
+    pass
+
+
 class ClustalFormatError(FileFormatError):
     """Raised when a ``clustal`` formatted file cannot be parsed."""
     pass

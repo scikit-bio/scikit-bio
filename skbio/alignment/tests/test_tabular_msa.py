@@ -13,6 +13,7 @@ import itertools
 
 import six
 import numpy as np
+import pandas as pd
 import numpy.testing as npt
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
@@ -111,6 +112,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
                                    'Number.*keys.*number.*sequences: 0 != 2'):
             TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=iter([]))
 
+    def test_constructor_invalid_metadata(self):
+        with self.assertRaises(TypeError):
+            TabularMSA([], metadata=42)
+
     def test_constructor_empty_no_keys(self):
         # sequence empty
         msa = TabularMSA([])
@@ -183,6 +188,41 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(msa.shape, (3, 3))
         npt.assert_array_equal(msa.keys, np.array(['ACG', 'CGA', 'GTT']))
         self.assertEqual(list(msa), seqs)
+
+    def test_constructor_handles_missing_metadata_efficiently(self):
+        self.assertIsNone(TabularMSA([])._metadata)
+
+    def test_constructor_no_metadata(self):
+        self.assertFalse(TabularMSA([]).has_metadata())
+        self.assertFalse(
+            TabularMSA([DNA('', metadata={'id': 42})]).has_metadata())
+        self.assertFalse(
+            TabularMSA([DNA('AGC', metadata={'id': 42}),
+                        DNA('---', metadata={'id': 43})]).has_metadata())
+
+    def test_constructor_with_metadata(self):
+        msa = TabularMSA([], metadata={'foo': 'bar'})
+        self.assertEqual(msa.metadata, {'foo': 'bar'})
+
+        msa = TabularMSA([DNA('', metadata={'id': 42})],
+                         metadata={'foo': 'bar'})
+        self.assertEqual(msa.metadata, {'foo': 'bar'})
+
+        msa = TabularMSA([DNA('AGC'), DNA('---')], metadata={'foo': 'bar'})
+        self.assertEqual(msa.metadata, {'foo': 'bar'})
+
+    def test_constructor_makes_shallow_copy_of_metadata(self):
+        md = {'foo': 'bar', 42: []}
+        msa = TabularMSA([RNA('-.-'), RNA('.-.')], metadata=md)
+
+        self.assertEqual(msa.metadata, md)
+        self.assertIsNot(msa.metadata, md)
+
+        md['foo'] = 'baz'
+        self.assertEqual(msa.metadata, {'foo': 'bar', 42: []})
+
+        md[42].append(True)
+        self.assertEqual(msa.metadata, {'foo': 'bar', 42: [True]})
 
     def test_dtype(self):
         self.assertIsNone(TabularMSA([]).dtype)
@@ -307,6 +347,75 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         del msa.keys
         self.assertFalse(msa.has_keys())
 
+    def test_metadata_getter(self):
+        msa = TabularMSA([])
+        self.assertIsNone(msa._metadata)
+        self.assertEqual(msa.metadata, {})
+        self.assertIsNotNone(msa._metadata)
+        self.assertIsInstance(msa.metadata, dict)
+
+        msa = TabularMSA([], metadata={42: 'foo', ('hello', 'world'): 43})
+        self.assertEqual(msa.metadata, {42: 'foo', ('hello', 'world'): 43})
+        self.assertIsInstance(msa.metadata, dict)
+
+        msa.metadata[42] = 'bar'
+        self.assertEqual(msa.metadata, {42: 'bar', ('hello', 'world'): 43})
+
+    def test_metadata_setter(self):
+        msa = TabularMSA([DNA('A-A'), DNA('A-G')])
+        self.assertFalse(msa.has_metadata())
+
+        msa.metadata = {'hello': 'world'}
+        self.assertTrue(msa.has_metadata())
+        self.assertEqual(msa.metadata, {'hello': 'world'})
+
+        msa.metadata = {}
+        self.assertFalse(msa.has_metadata())
+
+    def test_metadata_setter_makes_shallow_copy(self):
+        msa = TabularMSA([RNA('-.-'), RNA('.-.')])
+        md = {'foo': 'bar', 42: []}
+        msa.metadata = md
+
+        self.assertEqual(msa.metadata, md)
+        self.assertIsNot(msa.metadata, md)
+
+        md['foo'] = 'baz'
+        self.assertEqual(msa.metadata, {'foo': 'bar', 42: []})
+
+        md[42].append(True)
+        self.assertEqual(msa.metadata, {'foo': 'bar', 42: [True]})
+
+    def test_metadata_setter_invalid_type(self):
+        msa = TabularMSA([Protein('PAW')], metadata={123: 456})
+
+        for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
+                   pd.DataFrame()):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
+                msa.metadata = md
+            self.assertEqual(msa.metadata, {123: 456})
+
+    def test_metadata_deleter(self):
+        msa = TabularMSA([Protein('PAW')], metadata={'foo': 'bar'})
+        self.assertEqual(msa.metadata, {'foo': 'bar'})
+
+        del msa.metadata
+        self.assertIsNone(msa._metadata)
+        self.assertFalse(msa.has_metadata())
+
+        # delete again
+        del msa.metadata
+        self.assertIsNone(msa._metadata)
+        self.assertFalse(msa.has_metadata())
+
+        msa = TabularMSA([])
+        self.assertIsNone(msa._metadata)
+        self.assertFalse(msa.has_metadata())
+        del msa.metadata
+        self.assertIsNone(msa._metadata)
+        self.assertFalse(msa.has_metadata())
+
     def test_bool(self):
         self.assertFalse(TabularMSA([]))
         self.assertFalse(TabularMSA([RNA('')]))
@@ -372,6 +481,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             # different sequence data, same keys
             ([RNA('AG'), RNA('GA')],
              {'key': lambda x: 'AG' if 'AG' in x else 'GG'}),
+            # different MSA metadata
+            ([RNA('AG'), RNA('GG')], {'metadata': {'foo': 42}}),
+            ([RNA('AG'), RNA('GG')], {'metadata': {'foo': 43}}),
+            ([RNA('AG'), RNA('GG')], {'metadata': {'foo': 42, 'bar': 43}}),
         ]
 
         for seqs, kwargs in components:
@@ -394,6 +507,34 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertReallyNotEqual(msa, [])
         self.assertReallyNotEqual(msa, {})
         self.assertReallyNotEqual(msa, '')
+
+    def test_eq_constructed_from_different_iterables_compare_equal(self):
+        msa1 = TabularMSA([DNA('ACGT')])
+        msa2 = TabularMSA((DNA('ACGT'),))
+        self.assertReallyEqual(msa1, msa2)
+
+    def test_eq_missing_metadata(self):
+        self.assertReallyEqual(TabularMSA([DNA('A')]),
+                               TabularMSA([DNA('A')], metadata={}))
+
+    def test_eq_handles_missing_metadata_efficiently(self):
+        msa1 = TabularMSA([DNA('ACGT')])
+        msa2 = TabularMSA([DNA('ACGT')])
+        self.assertReallyEqual(msa1, msa2)
+
+        self.assertIsNone(msa1._metadata)
+        self.assertIsNone(msa2._metadata)
+
+    def test_has_metadata(self):
+        msa = TabularMSA([])
+        self.assertFalse(msa.has_metadata())
+        # Handles metadata efficiently.
+        self.assertIsNone(msa._metadata)
+
+        self.assertFalse(TabularMSA([], metadata={}).has_metadata())
+
+        self.assertTrue(TabularMSA([], metadata={'': ''}).has_metadata())
+        self.assertTrue(TabularMSA([], metadata={'foo': 42}).has_metadata())
 
     def test_has_keys(self):
         self.assertFalse(TabularMSA([]).has_keys())
