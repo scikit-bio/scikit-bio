@@ -85,7 +85,9 @@ def mrm(y, *args, **kwargs):
        Edition. Elsevier.
     .. [2] Legendre, P. Lapointe, F., Casgrain P. (1994) Modeling Brain
        Evolution from Behavior: A Permutational Regression Approach
-    .. [3] https://cran.r-project.org/web/packages/ecodist/index.html
+    .. [3] Lichstein, J. (2007) Multiple regression on distance matrices: a
+           multivariate spatial analysis tool
+    .. [4] https://cran.r-project.org/web/packages/ecodist/index.html
 
     Examples
     --------
@@ -142,7 +144,6 @@ def mrm(y, *args, **kwargs):
         y, xargs[i] = _order_dms(y, xargs[i],
                                  strict=strict,
                                  lookup=lookup)
-
 
     # Linearize all predictor distance matrices into
     # a single matrix
