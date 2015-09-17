@@ -752,8 +752,8 @@ class TabularMSA(SkbioObject):
         Returns
         -------
         GeneratorType
-            Generator of generators of positional values in the `TabularMSA`
-            (effectively the transpose of the MSA).
+            Generator of `Sequence` instances representing positional columns
+            in the `TabularMSA` (effectively the transpose of the MSA).
 
         See Also
         --------
@@ -762,69 +762,77 @@ class TabularMSA(SkbioObject):
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
-        >>> sequences = [DNA('ACCGT--', metadata={'id': "seq1"}),
-        ...              DNA('AACCGGT', metadata={'id': "seq2"})]
+        >>> sequences = [DNA('ACGT'),
+        ...              DNA('TGCA')]
         >>> msa = TabularMSA(sequences)
         >>> for position in msa.iter_positions():
-        ...     for seq in position:
-        ...         print(seq.metadata['id'], seq)
+        ...     position
         ...     print('')
-        seq1 A
-        seq2 A
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 AT
         <BLANKLINE>
-        seq1 C
-        seq2 A
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 CG
         <BLANKLINE>
-        seq1 C
-        seq2 C
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 GC
         <BLANKLINE>
-        seq1 G
-        seq2 C
-        <BLANKLINE>
-        seq1 T
-        seq2 G
-        <BLANKLINE>
-        seq1 -
-        seq2 G
-        <BLANKLINE>
-        seq1 -
-        seq2 T
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 TA
         <BLANKLINE>
         >>> for position in msa.iter_positions(reverse=True):
-        ...     for seq in position:
-        ...         print(seq.metadata['id'], seq)
+        ...     position
         ...     print('')
-        seq1 -
-        seq2 T
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 TA
         <BLANKLINE>
-        seq1 -
-        seq2 G
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 GC
         <BLANKLINE>
-        seq1 T
-        seq2 G
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 CG
         <BLANKLINE>
-        seq1 G
-        seq2 C
-        <BLANKLINE>
-        seq1 C
-        seq2 C
-        <BLANKLINE>
-        seq1 C
-        seq2 A
-        <BLANKLINE>
-        seq1 A
-        seq2 A
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 AT
         <BLANKLINE>
         """
         if reverse:
-            iterable = reversed(range(self.shape.position))
+            indices = reversed(range(self.shape.position))
         else:
-            iterable = range(self.shape.position)
-        for i in iterable:
-            # Inner function is required to close over the current index value
-            # for use in the generator. This allows us to return generators
-            # without needing to evaluate anything up front.
-            def position_with_captured_index_value(index=i):
-                return (Sequence(seq[index]) for seq in self)
-            position = position_with_captured_index_value()
+            indices = range(self.shape.position)
+        for index in indices:
+            column = np.array([seq[index].values for seq in self])
+            position = Sequence(column)
             yield position

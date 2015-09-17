@@ -878,10 +878,8 @@ class TestIterPositions(unittest.TestCase):
     def setUp(self):
         self.msa_empty = TabularMSA(())
         self.msa = TabularMSA((DNA('ACGT'), DNA('TGCA')))
-        self.expected = [[Sequence('A'), Sequence('T')],
-                         [Sequence('C'), Sequence('G')],
-                         [Sequence('G'), Sequence('C')],
-                         [Sequence('T'), Sequence('A')]]
+        self.expected = [Sequence('AT'), Sequence('CG'), Sequence('GC'),
+                         Sequence('TA')]
 
     def test_method_exists(self):
         self.msa.iter_positions()
@@ -900,7 +898,6 @@ class TestIterPositions(unittest.TestCase):
         self.assertEqual(len(observed), len(self.expected))
 
         for obs, exp in zip(observed, self.expected):
-            obs = list(obs)
             self.assertEqual(obs, exp)
 
     def test_reverse(self):
@@ -910,7 +907,6 @@ class TestIterPositions(unittest.TestCase):
         self.assertEqual(len(observed), len(expected))
 
         for obs, exp in zip(observed, expected):
-            obs = list(obs)
             self.assertEqual(obs, exp)
 
 
