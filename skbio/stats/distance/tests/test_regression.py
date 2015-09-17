@@ -75,7 +75,8 @@ class RegressionTests(TestCase):
         npt.assert_allclose(T.values,
                             np.array([-0.43039376, 10.96965511]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.45454545, 0.27272727]))
+                            np.array([0.909091, 0.272727]),
+                            rtol=1e-6, atol=1e-6)
         self.assertAlmostEqual(F, 120.33333333340981)
         self.assertAlmostEqual(model_pval, 0.2727272727272727)
         self.assertAlmostEqual(R2, 0.9917582417582471)
@@ -89,7 +90,8 @@ class RegressionTests(TestCase):
         npt.assert_allclose(T.values,
                             np.array([-0.43039376, 10.96965511]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.45454545, 0.27272727]))
+                            np.array([0.909091, 0.272727]),
+                            rtol=1e-6, atol=1e-6)
         self.assertAlmostEqual(F, 120.33333333340981)
         self.assertAlmostEqual(model_pval, 0.2727272727272727)
         self.assertAlmostEqual(R2, 0.9917582417582471)
@@ -104,9 +106,10 @@ class RegressionTests(TestCase):
         npt.assert_allclose(T.values,
                             np.array([-0.98072414, 49.6360995]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.90909091, 0.36363636]))
+                            np.array([1., 0.090909]),
+                            rtol=1e-6, atol=1e-6)
         self.assertAlmostEqual(F, 2463.7423732163857)
-        self.assertAlmostEqual(model_pval, 0.36363636363636365)
+        self.assertAlmostEqual(model_pval, .09090909)
         self.assertAlmostEqual(R2, 0.99676341673522)
 
         B, T, pvals, F, model_pval, R2 = mrm(self.y2, self.x2, self.x3,
@@ -118,8 +121,8 @@ class RegressionTests(TestCase):
                             np.array([-0.91738343, 46.43031958,
                                       46.43031958]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.4950495, 0.14851485,
-                                      0.14851485]))
+                            np.array([1., 0.009901, 0.009901]),
+                            rtol=1e-6, atol=1e-6)
 
         assert_index_equal(B.index,
                            pd.Index(['intercept', 0, 1]))
@@ -129,7 +132,7 @@ class RegressionTests(TestCase):
                            pd.Index(['intercept', 0, 1]))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
-        self.assertAlmostEqual(model_pval, 0.1485148514851485)
+        self.assertAlmostEqual(model_pval, 0.00990099)
         self.assertAlmostEqual(R2, 0.9967634167352184)
 
     # Tests for reordering of ids in distance matrices
@@ -143,8 +146,9 @@ class RegressionTests(TestCase):
                             np.array([-0.91738343, 46.43031958,
                                       46.43031958]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.4950495, 0.14851485,
-                                      0.14851485]))
+                            np.array([
+                                1., 0.009901, 0.009901]),
+                            rtol=1e-6, atol=1e-6)
         assert_index_equal(B.index,
                            pd.Index(['intercept', 0, 1]))
         assert_index_equal(T.index,
@@ -153,7 +157,7 @@ class RegressionTests(TestCase):
                            pd.Index(['intercept', 0, 1]))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
-        self.assertAlmostEqual(model_pval, 0.1485148514851485)
+        self.assertAlmostEqual(model_pval, 0.009901)
         self.assertAlmostEqual(R2, 0.9967634167352184)
 
     # Tests for bad inputs (i.e. bad distance matrices)
@@ -190,7 +194,7 @@ class RegressionTests(TestCase):
         npt.assert_allclose(T.values,
                             np.array([-0.43039376, 10.96965511]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.45454545, 0.27272727]))
+                            np.array([0.909091, 0.27272727]))
 
         assert_index_equal(B.index,
                            pd.Index(['intercept', 0]))
@@ -214,8 +218,8 @@ class RegressionTests(TestCase):
                             np.array([-0.91738343, 46.43031958,
                                       46.43031958]))
         npt.assert_allclose(pvals.values,
-                            np.array([0.4950495, 0.14851485,
-                                      0.14851485]))
+                            np.array([1., 0.009901, 0.009901]),
+                            rtol=1e-6, atol=1e-6)
         assert_index_equal(B.index,
                            pd.Index(['intercept', 0, 1]))
         assert_index_equal(T.index,
@@ -224,7 +228,7 @@ class RegressionTests(TestCase):
                            pd.Index(['intercept', 0, 1]))
 
         self.assertAlmostEqual(F, 1077.8872882816077)
-        self.assertAlmostEqual(model_pval, 0.1485148514851485)
+        self.assertAlmostEqual(model_pval, 0.009901)
         self.assertAlmostEqual(R2, 0.9967634167352184)
 
         # B, T, pvals, F, model_pval, R2 = mrm(self.y4, self.x6, self.x5,

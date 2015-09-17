@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-
+import copy
 import numpy as np
 import pandas as pd
 from skbio.util._decorator import experimental
@@ -150,6 +150,7 @@ def mrm(y, *args, **kwargs):
     X = np.vstack([np.ones((1, n*(n-1)/2))] +
                   [k.data[np.triu_indices(n, 1)] for k in xargs]).T
     Y = np.atleast_2d(y[np.triu_indices(n, 1)]).T
+    cY = copy.deepcopy(Y)
     n, p = X.shape
     # Define regression function
     XX1 = np.linalg.pinv(X.T.dot(X))
@@ -169,19 +170,18 @@ def mrm(y, *args, **kwargs):
         R2 = SSR / SST
         return Yhat, B, _E, T, F, R2
 
-    # Permutation on residuals
+    # Permutation on labels
     Yhat, B, E, T, F, R2 = regress(Y)
 
     Fs = np.zeros(permutations)
     Ts = np.zeros((permutations, p))
     for i in range(permutations):
-        random_state.shuffle(E)
-        Ynew = Yhat + E
-        Yhat_, B_, E, T_, F_,  _ = regress(Ynew)
+        random_state.shuffle(cY)
+        _, _, _, T_, F_,  _ = regress(cY)
         Ts[i, :], Fs[i] = T_, F_
     # Calculate result statistics
-    pvals = ((abs(T) >= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
-    model_pval = ((F >= Fs).sum() + 1) / (permutations + 1)
+    pvals = ((abs(T) <= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
+    model_pval = ((F <= Fs).sum() + 1) / (permutations + 1)
     labs = ['intercept'] + list(labels)
     B = pd.Series(np.ravel(B), index=labs)
     T = pd.Series(np.ravel(T), index=labs)
@@ -189,8 +189,7 @@ def mrm(y, *args, **kwargs):
     return (B, T, pvals,
             np.asscalar(F),
             np.asscalar(model_pval),
-            np.asscalar(R2),
-            Ts, Fs)
+            np.asscalar(R2))
 
 
 @experimental(as_of="0.4.0")
