@@ -71,10 +71,7 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
  git pull upstream master
  ```
 
-5. Install scikit-bio in "development mode" so that your changes are reflected in the installed package without having to reinstall the package each time:
-
- See [Setting up a development environment](#setting-up-a-development-environment)
-
+5. Install scikit-bio for development. See [Setting up a development environment](#setting-up-a-development-environment).
 
 6. Create a new topic branch that you will make your changes in with ``git checkout -b``:
 
@@ -113,12 +110,6 @@ Setting up a development environment
 ------------------------------------
 
 The recommended way to set up a development environment for contributing to scikit-bio is using [Anaconda](https://store.continuum.io/cshop/anaconda/) by Continuum Analytics, with its associated command line utility `conda`. The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package and environment management, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
-
-The following steps can be used to manually set up a `conda` development environment with all prerequisites for developing scikit-bio. Alternatively, you can simply run the `create_dev_env` script from the scikit-bio directory:
-
-```
-./create_dev_env env_name
-```
 
 1. Install Anaconda
 
