@@ -61,19 +61,13 @@ def mrm(y, *args, **kwargs):
 
     Returns
     -------
-    B : pd.Series
-        Array of coefficients
-    T : pd.Series
-        Array of pseudo t-statistics for each coefficient
-    pvals : pd.Series
-        Array of p-values for each coefficient calculated
-        using pseudo T-tests
-    F : float
-        pseudo F-statistic for lack of fit
-    model_pval : float
-        pvalue from pseudo F-test for lack of fit
-    R2: float
-        Coefficient of determination squared
+    coefs : pd.DataFrame
+       Contains information for each of the coefficients
+       including the coefficient, the t-statistic and the p-value
+       the coefficient contributes to the models
+    summary : pd.Series
+       Contains summary statistics, such as F-statistic,
+       lack-of-fit p-value and R^2
 
     See Also
     --------
@@ -184,13 +178,18 @@ def mrm(y, *args, **kwargs):
     pvals = ((abs(T) <= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
     model_pval = ((F <= Fs).sum() + 1) / (permutations + 1)
     labs = ['intercept'] + list(labels)
-    B = pd.Series(np.ravel(B), index=labs)
-    T = pd.Series(np.ravel(T), index=labs)
-    pvals = pd.Series(np.ravel(pvals), index=labs)
-    return (B, T, pvals,
-            np.asscalar(F),
-            np.asscalar(model_pval),
-            np.asscalar(R2))
+    coefs = pd.DataFrame([np.ravel(B),
+                          np.ravel(T),
+                          np.ravel(pvals)],
+                          index=labs,
+                          columns=['coefficient',
+                                   't-statistic',
+                                   'p-value'])
+    summary = pd.Series([F, model_pval, R2],
+                        index=['F-statistic',
+                               'lack-of-fit p-value',
+                               'R^2'])
+    return (coefs, summary)
 
 
 @experimental(as_of="0.4.0")
