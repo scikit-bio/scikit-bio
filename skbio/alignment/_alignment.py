@@ -695,9 +695,6 @@ class Alignment(SequenceCollection):
     ----------
     seqs : list of `skbio.Sequence` objects
         The `skbio.Sequence` objects to load into a new `Alignment` object.
-    validate : bool, optional
-        If True, runs the `is_valid` method after construction and raises
-        `SequenceCollectionError` if ``is_valid == False``.
     score : float, optional
         The score of the alignment, if applicable (usually only if the
         alignment was just constructed).
@@ -711,7 +708,7 @@ class Alignment(SequenceCollection):
     Raises
     ------
     skbio.SequenceCollectionError
-        If ``validate == True`` and ``is_valid == False``.
+        If not a valid skbio.SequenceCollection.
     skbio.AlignmentError
         If not all the sequences have the same length.
 
