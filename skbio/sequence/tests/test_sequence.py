@@ -1214,6 +1214,11 @@ class TestSequence(TestCase):
         self.assertIsNone(subseq._metadata)
         self.assertIsNone(subseq._positional_metadata)
 
+    def test_getitem_empty_positional_metadata(self):
+        seq = Sequence('ACGT')
+        seq.positional_metadata  # This will create empty positional_metadata
+        self.assertEqual(Sequence('A'), seq[0])
+
     def test_len(self):
         self.assertEqual(len(Sequence("")), 0)
         self.assertEqual(len(Sequence("a")), 1)
@@ -1417,6 +1422,20 @@ class TestSequence(TestCase):
 
         with self.assertRaises(TypeError):
             seq._to(metadata={'id': 'bar'}, unrecognized_kwarg='baz')
+
+    def test_to_no_positional_metadata(self):
+        seq = Sequence('ACGT')
+        seq.positional_metadata  # This will create empty positional metadata
+        result = seq._to(sequence='TGA')
+        self.assertIsNone(result._positional_metadata)
+        self.assertEqual(result, Sequence('TGA'))
+
+    def test_to_no_metadata(self):
+        seq = Sequence('ACGT')
+        seq.metadata  # This will create empty metadata
+        result = seq._to(sequence='TGA')
+        self.assertIsNone(result._metadata)
+        self.assertEqual(result, Sequence('TGA'))
 
     def test_count(self):
         def construct_char_array(s):
