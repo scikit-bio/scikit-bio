@@ -17,6 +17,7 @@ import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
 from skbio.util._decorator import experimental
 from skbio.util._misc import resolve_key
@@ -841,3 +842,101 @@ class TabularMSA(SkbioObject):
 
         """
         return dict(zip(self.keys, self._seqs))
+
+    @experimental(as_of='0.4.0-dev')
+    def iter_positions(self, reverse=False):
+        """Generator of MSA positions (i.e., columns)
+
+        Returns
+        -------
+        GeneratorType
+            Generator of `Sequence` instances representing positional columns
+            in the `TabularMSA` (effectively the transpose of the MSA).
+
+        See Also
+        --------
+        iter
+
+        Notes
+        -----
+        The `Sequence` instances returned do not represent biological
+        sequences. Each one is a generic sequence representing a column
+        created from a position in the MSA.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> sequences = [DNA('ACGT'),
+        ...              DNA('TGCA')]
+        >>> msa = TabularMSA(sequences)
+        >>> for position in msa.iter_positions():
+        ...     position
+        ...     print('')
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 AT
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 CG
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 GC
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 TA
+        <BLANKLINE>
+        >>> for position in msa.iter_positions(reverse=True):
+        ...     position
+        ...     print('')
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 TA
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 GC
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 CG
+        <BLANKLINE>
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 AT
+        <BLANKLINE>
+        """
+        if reverse:
+            indices = reversed(range(self.shape.position))
+        else:
+            indices = range(self.shape.position)
+        for index in indices:
+            column = np.array([seq[index].values for seq in self])
+            position = Sequence(column)
+            yield position
