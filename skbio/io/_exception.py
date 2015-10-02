@@ -29,6 +29,11 @@ class GenBankFormatError(FileFormatError):
     pass
 
 
+class BLAST6FormatError(FileFormatError):
+    """Raised when a ``blast+6`` formatted file cannot be parsed."""
+    pass
+
+
 class ClustalFormatError(FileFormatError):
     """Raised when a ``clustal`` formatted file cannot be parsed."""
     pass

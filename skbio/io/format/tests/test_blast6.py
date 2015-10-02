@@ -8,6 +8,7 @@
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from six import assertRaisesRegex
 
 import unittest
 
@@ -16,6 +17,7 @@ import numpy as np
 
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 from skbio.io.format.blast6 import _blast6_to_data_frame
+from skbio.io import BLAST6FormatError
 
 
 class TestBlast6Reader(unittest.TestCase):
@@ -76,20 +78,50 @@ class TestBlast6Reader(unittest.TestCase):
         exp = pd.DataFrame([['subject2']], columns=['sacc'])
         assert_data_frame_almost_equal(df, exp)
 
+    def test_valid_nan_handling(self):
+        fp = get_data_path('blast6_custom_mixed_nans')
+        df = _blast6_to_data_frame(fp, columns=['qacc', 'qseq', 'btop',
+                                                'sframe', 'ppos', 'positive',
+                                                'gaps'])
+        exp = pd.DataFrame([[np.nan, 'PAAWWWWW', 8, 1, 100.00, 8, 0],
+                            ['query1', np.nan, 8, 1, 100.00, 8, 0],
+                            [np.nan, 'PAAWWWWW', 8, 1, 100.00, 8, 0]],
+                           columns=['qacc', 'qseq', 'btop', 'sframe', 'ppos',
+                                    'positive', 'gaps'])
+        assert_data_frame_almost_equal(df, exp)
+
+    def test_custom_and_default_passed_error(self):
+        fp = get_data_path('blast6_default_single_line')
+        with assertRaisesRegex(self, ValueError,
+                               "`columns` and `default_columns`"):
+            _blast6_to_data_frame(fp, columns=['qseqid'], default_columns=True)
+
+    def test_no_columns_passed_error(self):
+        fp = get_data_path('blast6_default_single_line')
+        with assertRaisesRegex(self, ValueError,
+                               "Either `columns` or `default_columns`"):
+            _blast6_to_data_frame(fp)
+
     def test_wrong_amount_of_columns_error(self):
         fp = get_data_path('blast6_invalid_number_of_columns')
-        with self.assertRaises(ValueError):
+        with assertRaisesRegex(self, BLAST6FormatError,
+                               "The specified number of columns"):
             _blast6_to_data_frame(fp, default_columns=True)
 
     def test_wrong_column_types_error(self):
         fp = get_data_path('blast6_invalid_column_types')
-        with self.assertRaises(ValueError):
+        with assertRaisesRegex(self, BLAST6FormatError,
+                               "Could not convert column"):
             _blast6_to_data_frame(fp, default_columns=True)
 
-    def test_values_under_wrong_column_error(self):
-        fp = get_data_path('blast6_values_under_wrong_column')
-        with self.assertRaises(ValueError):
-            _blast6_to_data_frame(fp, default_columns=True)
+    def test_wrong_column_name_error(self):
+        fp = get_data_path('blast6_default_single_line')
+        with assertRaisesRegex(self, ValueError,
+                               "The valid column names are"):
+            _blast6_to_data_frame(fp, columns=['qseqid', 'sseqid', 'pident',
+                                               'length', 'mismatch', 'gapopen',
+                                               'qstart', 'qend', 'sstart',
+                                               'send', 'abcd', 'bitscore'])
 
 if __name__ == '__main__':
     unittest.main()

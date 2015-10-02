@@ -51,6 +51,7 @@ User exceptions and warnings
    UnrecognizedFormatError
    IOSourceError
    FileFormatError
+   BLAST6FormatError
    ClustalFormatError
    FASTAFormatError
    FASTQFormatError
@@ -196,8 +197,8 @@ from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
-                         ClustalFormatError, FASTAFormatError,
-                         GenBankFormatError,
+                         BLAST6FormatError, ClustalFormatError,
+                         FASTAFormatError, GenBankFormatError,
                          IOSourceError, FASTQFormatError, LSMatFormatError,
                          NewickFormatError, OrdinationFormatError,
                          PhylipFormatError, QSeqFormatError, QUALFormatError)
@@ -210,6 +211,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'UnrecognizedFormatError', 'IOSourceError',
 
            'FileFormatError',
+           'BLAST6FormatError',
            'ClustalFormatError',
            'FASTAFormatError',
            'FASTQFormatError',
