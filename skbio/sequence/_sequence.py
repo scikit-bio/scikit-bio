@@ -2190,9 +2190,9 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         if sequence is None:
             sequence = self._bytes
-        if metadata is None:
+        if metadata is None and self.has_metadata():
             metadata = self._metadata
-        if positional_metadata is None:
+        if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
         return self._constructor(sequence=sequence, metadata=metadata,
                                  positional_metadata=positional_metadata)

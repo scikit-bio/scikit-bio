@@ -63,6 +63,7 @@
 
 ### Bug Fixes
 
+* ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/biocore/scikit-bio/issues/1133))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
 
