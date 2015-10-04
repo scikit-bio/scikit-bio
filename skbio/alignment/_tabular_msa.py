@@ -841,3 +841,27 @@ class TabularMSA(SkbioObject):
 
         """
         return dict(zip(self.keys, self._seqs))
+
+    @experimental(as_of='0.4.0-dev')
+    def sample(self, n, replace=False, axis=0):
+        """Sample rows or columns from this ``TabularMSA``.
+
+        Parameters
+        ----------
+        n : int
+            Number of rows or columns to sample.
+        replace : bool
+            Whether to sample with replacement or not.
+        axis : int
+            Must be `0` or `1` and specifies the axis from which to sample.
+
+        Returns
+        -------
+        TabularMSA
+            A ``TabularMSA`` with the sampled rows or columns.
+
+        Raises
+        ------
+
+        """
+        return TabularMSA([])

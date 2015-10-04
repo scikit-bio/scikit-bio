@@ -1014,6 +1014,107 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertIs(d1['a'], d2['a'])
         self.assertIs(d1[42], d2[42])
 
+    def test_sample_n_negative(self):
+        msa = TabularMSA([DNA('TCA')])
+
+        with six.assertRaisesRegex(self, ValueError, 'must be positive'):
+            msa.sample(-1, replace=False, axis=0)
+
+        with six.assertRaisesRegex(self, ValueError, 'must be positive'):
+            msa.sample(-1, replace=True, axis=0)
+
+        with six.assertRaisesRegex(self, ValueError, 'must be positive'):
+            msa.sample(-1, replace=False, axis=1)
+
+        with six.assertRaisesRegex(self, ValueError, 'must be positive'):
+            msa.sample(-1, replace=True, axis=1)
+
+    def test_sample_n_zero(self):
+        msa = TabularMSA([])
+
+        with six.assertRaisesRegex(self, ValueError, 'positive and non-zero'):
+            msa.sample(0, replace=False, axis=0)
+
+        with six.assertRaisesRegex(self, ValueError, 'positive and non-zero'):
+            msa.sample(0, replace=True, axis=0)
+
+        with six.assertRaisesRegex(self, ValueError, 'positive and non-zero'):
+            msa.sample(0, replace=False, axis=1)
+
+        with six.assertRaisesRegex(self, ValueError, 'positive and non-zero'):
+            msa.sample(0, replace=True, axis=1)
+
+    def test_sample_4_without_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+
+        with six.assertRaisesRegex(self, ValueError,
+                '4 sequences from alignment of size 3 without replacement'):
+            msa.sample(4, replace=False, axis=0)
+
+        with six.assertRaisesRegex(self, ValueError,
+                '4 sequences from alignment of size 3 without replacement'):
+            msa.sample(4, replace=False, axis=1)
+
+    def test_sample_4_with_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+
+        sampled_msa1 = msa.sample(4, replace=True, axis=0)
+
+        no_sequences, no_positions = sampled_msa1.shape
+        self.assertEqual(no_sequences, 4)
+        self.assertEqual(no_positions, 3)
+
+        self.assertTrue(set(sampled_msa1.keys).issubset(set(msa.keys)))
+
+        sampled_msa2 = msa.sample(4, replace=True, axis=1)
+
+        no_sequences, no_positions = sampled_msa2.shape
+        self.assertEqual(no_sequences, 4)
+        self.assertEqual(no_positions, 3)
+
+        self.assertEqual(msa.keys, sampled_msa2.keys)
+
+    def test_sample_2_sequences_without_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+        sampled_msa = msa.sample(2, replace=False, axis=0)
+
+        no_sequences, no_positions = sampled_msa.shape
+        self.assertEqual(no_sequences, 2)
+        self.assertEqual(no_positions, 3)
+
+        self.assertTrue(set(sampled_msa.keys).issubset(set(msa.keys)))
+        self.assertNotEqual(set(sampled_msa.keys), set(msa.keys))
+
+    def test_sample_3_sequences_without_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+        sampled_msa = msa.sample(3, replace=False, axis=0)
+
+        no_sequences, no_positions = sampled_msa.shape
+        self.assertEqual(no_sequences, 3)
+        self.assertEqual(no_positions, 3)
+
+        self.assertSetEqual(msa.keys, sampled_msa.keys)
+
+    def test_sample_2_positions_without_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+        sampled_msa = msa.sample(2, replace=False, axis=0)
+
+        no_sequences, no_positions = sampled_msa.shape
+        self.assertEqual(no_sequences, 3)
+        self.assertEqual(no_positions, 2)
+
+        self.assertEqual(msa.keys, sampled_msa.keys)
+        self.assertNotEqual(msa, sampled_msa)
+
+    def test_sample_3_positions_without_replacement(self):
+        msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
+        sampled_msa = msa.sample(3, replace=False, axis=0)
+
+        no_sequences, no_positions = sampled_msa.shape
+        self.assertEqual(no_sequences, 3)
+        self.assertEqual(no_positions, 3)
+
+        self.assertSetEqual(msa.keys, sampled_msa.keys)
 
 if __name__ == "__main__":
     unittest.main()
