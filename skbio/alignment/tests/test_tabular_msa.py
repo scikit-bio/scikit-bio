@@ -1064,15 +1064,11 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(no_sequences, 4)
         self.assertEqual(no_positions, 3)
 
-        self.assertTrue(set(sampled_msa1.keys).issubset(set(msa.keys)))
-
         sampled_msa2 = msa.sample(4, replace=True, axis=1)
 
         no_sequences, no_positions = sampled_msa2.shape
         self.assertEqual(no_sequences, 4)
         self.assertEqual(no_positions, 3)
-
-        self.assertEqual(msa.keys, sampled_msa2.keys)
 
     def test_sample_2_sequences_without_replacement(self):
         msa = TabularMSA([DNA('TCA'), DNA('AAA'), DNA('GAC')])
