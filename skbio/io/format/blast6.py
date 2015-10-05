@@ -285,7 +285,8 @@ def _blast6_to_data_frame(fh, columns=None, default_columns=False):
     if default_columns:
         columns = _default_columns
 
-    df = pd.read_csv(fh, na_values='N/A', sep='\t', header=None)
+    df = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
+                     keep_default_na=False)
 
     if len(df.columns) != len(columns):
         raise BLAST6FormatError("The specified number of columns: %d does not"
