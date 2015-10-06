@@ -123,7 +123,12 @@ class TabularMSA(SkbioObject):
         3
 
         """
-        return self._shape
+        len_sequence = len(self)
+        if len_sequence > 0:
+            len_position = len(self._seqs[0])
+        else:
+            len_position = 0
+        return _Shape(sequence=len_sequence, position=len_position)
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -371,7 +376,6 @@ class TabularMSA(SkbioObject):
     def __init__(self, sequences, metadata=None, minter=None, keys=None):
         self._seqs = []
         self._dtype = None
-        self._shape = _Shape(sequence=0, position=0)
         self._minter = None
 
         for seq in sequences:
@@ -446,7 +450,7 @@ class TabularMSA(SkbioObject):
         >>> len(msa)
         0
         """
-        return self.shape.sequence
+        return len(self._seqs)
 
     @experimental(as_of='0.4.0-dev')
     def __iter__(self):
@@ -852,7 +856,6 @@ class TabularMSA(SkbioObject):
                     "`sequence` must be a scikit-bio sequence object "
                     "that has an alphabet, not type %r" % dtype.__name__)
             self._dtype = dtype
-            self._shape = _Shape(sequence=1, position=len(sequence))
             self._seqs = [sequence]
         elif dtype is not self.dtype:
             raise TypeError(
@@ -865,8 +868,6 @@ class TabularMSA(SkbioObject):
                 "sequences already in the MSA: %r != %r"
                 % (len(sequence), self.shape.position))
         else:
-            self._shape = _Shape(sequence=self._shape.sequence + 1,
-                                 position=self._shape.position)
             self._seqs.append(sequence)
 
     def sort(self, key=None, reverse=False):
