@@ -252,7 +252,7 @@ class TabularMSA(SkbioObject):
 
         """
 
-        if self._minter is not None:
+        if self.has_minter():
             return self._minter
         else:
             raise OperationError(
@@ -625,6 +625,34 @@ class TabularMSA(SkbioObject):
         return self._keys is not None
 
     @experimental(as_of='0.4.0-dev')
+    def has_minter(self):
+        """Determine if minter exists on the MSA.
+
+        Returns
+        -------
+        bool
+            Indicates whether the MSA has a minter.
+
+        See Also
+        --------
+        keys
+        reindex
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa.has_minter()
+        False
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
+        >>> msa.has_minter()
+        True
+
+        """
+
+        return self._minter is not None
+
+    @experimental(as_of='0.4.0-dev')
     def has_metadata(self):
         """Determine if the MSA has metadata.
 
@@ -729,7 +757,7 @@ class TabularMSA(SkbioObject):
         keys_ = None
         if minter is not None:
             self._minter = minter
-            keys_ = [resolve_key(seq, minter) for seq in self._seqs]
+            keys_ = [resolve_key(seq, self._minter) for seq in self._seqs]
         elif keys is not None:
             keys = list(keys)
             if len(keys) != len(self):
