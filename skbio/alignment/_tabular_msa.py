@@ -374,7 +374,7 @@ class TabularMSA(SkbioObject):
         self._shape = _Shape(sequence=0, position=0)
         self._minter = None
 
-        for seq in iter(sequences):
+        for seq in sequences:
             self._add_sequence(seq)
 
         if metadata is None:
