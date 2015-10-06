@@ -350,13 +350,13 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         del msa.keys
         self.assertFalse(msa.has_keys())
 
-    def test_get_cached_minter_str(self):
+    def test_minter_str(self):
         msa = TabularMSA([DNA('', metadata={'id': 42}),
                           DNA('', metadata={'id': 43})], minter='id')
         key = msa.minter
         self.assertEqual(key, 'id')
 
-    def test_get_cached_minter_callable(self):
+    def test_minter_callable(self):
         def minter_func(x):
             return x.metadata['id']
 
@@ -365,7 +365,25 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         key = msa.minter
         self.assertEqual(key, minter_func)
 
-    def test_get_cached_minter_no_minter_exists(self):
+    def test_has_minter_constructor_no_minter(self):
+        msa = TabularMSA([])
+        self.assertFalse(msa.has_minter())
+
+    def test_has_minter_constructor_has_minter(self):
+        msa = TabularMSA([], minter=str)
+        self.assertTrue(msa.has_minter())
+
+    def test_has_minter_reindex_no_minter(self):
+        msa = TabularMSA([])
+        msa.reindex()
+        self.assertFalse(msa.has_minter())
+
+    def test_has_minter_reindex_has_minter(self):
+        msa = TabularMSA([])
+        msa.reindex(minter=str)
+        self.assertTrue(msa.has_minter())
+
+    def test_minter_no_minter_exists(self):
         msa = TabularMSA([DNA(''), DNA('')])
         with six.assertRaisesRegex(
                 self, OperationError,
