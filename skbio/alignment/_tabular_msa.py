@@ -769,8 +769,8 @@ class TabularMSA(SkbioObject):
 
     def _add_sequence(self, sequence):
         msa_is_empty = not len(self)
+        dtype = type(sequence)
         if msa_is_empty:
-            dtype = type(sequence)
             if not issubclass(dtype, IUPACSequence):
                 raise TypeError(
                     "`sequence` must be a scikit-bio sequence object "
@@ -778,11 +778,11 @@ class TabularMSA(SkbioObject):
             self._dtype = dtype
             self._shape = _Shape(sequence=1, position=len(sequence))
             self._seqs = [sequence]
-        elif type(sequence) is not self.dtype:
+        elif dtype is not self.dtype:
             raise TypeError(
                 "`sequence` Must match the type of any other sequences "
                 "already in the MSA. Type %r does not match type %r" %
-                (type(sequence).__name__, self.dtype.__name__))
+                (dtype.__name__, self.dtype.__name__))
         elif len(sequence) != self.shape.position:
             raise ValueError(
                 "`sequence` length must match the length of any other "
