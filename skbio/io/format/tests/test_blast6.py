@@ -70,6 +70,7 @@ class TestBlast6Reader(unittest.TestCase):
                              'query2']], columns=['sacc', 'score', 'gapopen',
                                                   'qcovs', 'sblastnames',
                                                   'sallacc', 'qaccver'])
+        exp['sblastnames'] = exp['sblastnames'].astype(object)
         assert_data_frame_almost_equal(df, exp)
 
     def test_valid_minimal(self):
@@ -106,12 +107,6 @@ class TestBlast6Reader(unittest.TestCase):
         fp = get_data_path('blast6_invalid_number_of_columns')
         with assertRaisesRegex(self, BLAST6FormatError,
                                "The specified number of columns"):
-            _blast6_to_data_frame(fp, default_columns=True)
-
-    def test_wrong_column_types_error(self):
-        fp = get_data_path('blast6_invalid_column_types')
-        with assertRaisesRegex(self, BLAST6FormatError,
-                               "Could not convert column"):
             _blast6_to_data_frame(fp, default_columns=True)
 
     def test_wrong_column_name_error(self):

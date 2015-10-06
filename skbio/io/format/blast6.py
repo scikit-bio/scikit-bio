@@ -250,7 +250,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import pandas as pd
-import numpy as np
 
 from skbio.io import create_format, BLAST6FormatError
 
@@ -285,28 +284,27 @@ def _blast6_to_data_frame(fh, columns=None, default_columns=False):
     if default_columns:
         columns = _default_columns
 
-    df = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
-                     keep_default_na=False)
+    else:
+        for column in columns:
+            if column not in _possible_columns:
+                possible_columns = []
+                for key in _possible_columns:
+                    possible_columns.append(key)
+                raise ValueError("Your column name: %s is not valid."
+                                 "The valid column names are:\n%s"
+                                 "" % (column, possible_columns))
 
-    if len(df.columns) != len(columns):
+    lineone = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
+                          keep_default_na=False, nrows=1)
+
+    if len(lineone.columns) != len(columns):
         raise BLAST6FormatError("The specified number of columns: %d does not"
                                 " match the number of columns in the file: "
-                                "%d." % (len(columns), len(df.columns)))
-    df.columns = columns
-    for column in df:
-        if column not in _possible_columns:
-            possible_columns = []
-            for key in _possible_columns:
-                possible_columns.append(key)
-            raise ValueError("Your column name: %s is not valid."
-                             "The valid column names are:\n%s"
-                             "" % (column, possible_columns))
-        df.replace('nan', np.nan, inplace=True)
-        try:
-            df[column] = df[column].astype(_possible_columns[column])
-        except ValueError as e:
-            raise BLAST6FormatError('Could not convert column %r into dtype'
-                                    '%r. Original Pandas error message: '
-                                    '"%s"' % (column,
-                                              _possible_columns[column], e))
+                                "%d." % (len(columns), len(lineone.columns)))
+
+    fh.seek(0)
+    df = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
+                     keep_default_na=False, names=columns,
+                     dtype=_possible_columns)
+
     return df
