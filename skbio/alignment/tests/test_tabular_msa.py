@@ -397,6 +397,12 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             msa.reindex(minter='invalid')
         self.assertEqual('id', msa.minter)
 
+    def test_minter_access_error_when_set_with_keys(self):
+        msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
+        with self.assertRaisesRegex(OperationError,
+                                    "Minter.*does not exist.*"):
+            msa.minter
+
     def test_has_minter_constructor_no_minter(self):
         msa = TabularMSA([])
         self.assertFalse(msa.has_minter())
