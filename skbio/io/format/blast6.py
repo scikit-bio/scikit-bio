@@ -255,19 +255,22 @@ from skbio.io import create_format, BLAST6FormatError
 
 blast6 = create_format('blast+6')
 
-_possible_columns = {'qseqid': str, 'qgi': int, 'qacc': str, 'qaccver': str,
-                     'qlen': int, 'sseqid': str, 'sallseqid': str, 'sgi': int,
-                     'sallgi': int, 'sacc': str, 'saccver': str,
-                     'sallacc': str, 'slen': int, 'qstart': int, 'qend': int,
-                     'sstart': int, 'send': int, 'qseq': str, 'sseq': str,
-                     'evalue': float, 'bitscore': float, 'score': int,
-                     'length': int, 'pident': float, 'nident': int,
-                     'mismatch': int, 'positive': int, 'gapopen': int,
-                     'gaps': int, 'ppos': float, 'frames': str, 'qframe': int,
-                     'sframe': int, 'btop': int, 'staxids': str,
-                     'sscinames': str, 'scomnames': str, 'sblastnames': str,
-                     'sskingdoms': str, 'stitle': str, 'salltitles': str,
-                     'sstrand': str, 'qcovs': int, 'qcovhsp': int}
+_possible_columns = {'qseqid': str, 'qgi': float, 'qacc': str, 'qaccver': str,
+                     'qlen': float, 'sseqid': str, 'sallseqid': str,
+                     'sgi': float, 'sallgi': float, 'sacc': str,
+                     'saccver': str, 'sallacc': str, 'slen': float,
+                     'qstart': float, 'qend': float, 'sstart': float,
+                     'send': float, 'qseq': str, 'sseq': str,
+                     'evalue': float, 'bitscore': float, 'score': float,
+                     'length': float, 'pident': float, 'nident': float,
+                     'mismatch': float, 'positive': float, 'gapopen': float,
+                     'gaps': float, 'ppos': float, 'frames': str,
+                     'qframe': float, 'sframe': float, 'btop': float,
+                     'staxids': str, 'sscinames': str, 'scomnames': str,
+                     'sblastnames': str, 'sskingdoms': str, 'stitle': str,
+                     'salltitles': str, 'sstrand': str, 'qcovs': float,
+                     'qcovhsp': float}
+
 _default_columns = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',
                     'gapopen', 'qstart', 'qend', 'sstart', 'send',
                     'evalue', 'bitscore']
