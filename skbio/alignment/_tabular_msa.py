@@ -38,9 +38,10 @@ class TabularMSA(SkbioObject):
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
     minter : callable or metadata key, optional
-        If provided, defines a unique, hashable key minter for each sequence in
-        `sequences`. Can either be a callable accepting a single argument (each
-        sequence) or a key into each sequence's ``metadata`` attribute.
+        If provided, defines a minter which provides a unique, hashable key
+        for each sequence in `sequences`. Can either be a callable accepting
+        a single argument (each sequence) or a key into each sequence's
+        ``metadata`` attribute.
     keys : iterable, optional
         An iterable of the same length as `sequences` containing unique,
         hashable elements. Each element will be used as the respective key for
@@ -202,12 +203,61 @@ class TabularMSA(SkbioObject):
     @property
     @experimental(as_of='0.4.0-dev')
     def minter(self):
+        """Minter for providing keys for the MSA.
+
+        Returns
+        -------
+        callable or metadata key
+            minter for providing keys.
+
+        Raises
+        ------
+        OperationError
+            If minter does not exist.
+
+        See Also
+        --------
+        reindex
+        keys
+
+        Notes
+        -----
+        This property is read-only, but can be set indirectly using the
+        constructor or the ``reindex`` method.
+
+        Examples
+        --------
+        Create a ``TabularMSA`` object using minter to key by sequence
+        identifier:
+
+        >>> from skbio import DNA, TabularMSA
+        >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
+        ...         DNA('AC-', metadata={'id': 'b'})]
+        >>> msa = TabularMSA(seqs, minter='id')
+
+        Retrieve keys:
+
+        >>> msa.keys
+        array(['a', 'b'], dtype=object)
+
+        Use ``reindex`` to set callable minter:
+
+        >>> msa.reindex(minter=lambda seq: 'key_' + seq.metadata['id'])
+
+        Retrieve keys. Note that the minter manually indexed into the metadata
+        and prepended each id with `key_`:
+
+        >>> msa.keys
+        array(['key_a', 'key_b'], dtype=object)
+
+        """
+
         if self._minter is not None:
             return self._minter
         else:
             raise OperationError(
-                "Attempted use of key minter on MSA, but none exists. Use "
-                "`reindex` with the `minter` parameter to set one")
+                "Minter does not exist. Use reindex with the minter parameter "
+                "to set one.")
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -613,10 +663,10 @@ class TabularMSA(SkbioObject):
         Parameters
         ----------
         minter : callable or metadata key, optional
-            If provided, defines a unique, hashable key minter for each
-            sequence in the MSA. Can either be a callable accepting a single
-            argument (each sequence) or a key into each sequence's ``metadata``
-            attribute.
+            If provided, defines a minter which provides a unique, hashable
+            key for each sequence in the MSA. Can either be a callable
+            accepting a single argument (each sequence) or a key into each
+            sequence's ``metadata`` attribute.
         keys : iterable, optional
             An iterable of the same length as the number of sequences in the
             MSA. `keys` must contain unique, hashable elements. Each element
@@ -714,7 +764,7 @@ class TabularMSA(SkbioObject):
         ----------
         sequence : alphabet-aware scikit-bio sequence object
             Sequence to be appended. Must match the dtype of the MSA and the
-            length of the second dimension of the MSA.
+            number of positions in the MSA.
         minter : callable or metadata key, optional
             If None, the MSA is checked to see if a previous minter has been
             cached. If not, an exception is raised. If a cached key is found
