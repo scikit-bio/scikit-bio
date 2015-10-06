@@ -350,6 +350,11 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         del msa.keys
         self.assertFalse(msa.has_keys())
 
+    def test_keys_removed_after_reindex(self):
+        msa = TabularMSA([], keys=[])
+        msa.reindex()
+        self.assertFalse(msa.has_keys())
+
     def test_minter_str(self):
         msa = TabularMSA([DNA('', metadata={'id': 42}),
                           DNA('', metadata={'id': 43})], minter='id')
@@ -364,6 +369,33 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
                           DNA('', metadata={'id': 43})], minter=minter_func)
         key = msa.minter
         self.assertEqual(key, minter_func)
+
+    def test_minter_no_minter_exists(self):
+        msa = TabularMSA([DNA(''), DNA('')])
+        with six.assertRaisesRegex(
+                self, OperationError,
+                "Minter does not exist. Use reindex with the minter parameter "
+                "to set one."):
+            msa.minter
+
+    def test_minter_removed_after_adding_keys(self):
+        msa = TabularMSA([], minter=str)
+        msa.reindex(keys=[])
+        self.assertFalse(msa.has_minter())
+        self.assertTrue(msa.has_keys())
+
+    def test_minter_removed_after_reindex(self):
+        msa = TabularMSA([], minter=str)
+        msa.reindex()
+        self.assertFalse(msa.has_minter())
+
+    def test_minter_invalid_does_not_change_msa(self):
+        msa = TabularMSA([DNA('', metadata={'id': 'a'}),
+                          DNA('', metadata={'id': 'b'})],
+                         minter='id')
+        with self.assertRaises(KeyError):
+            msa.reindex(minter='invalid')
+        self.assertEqual('id', msa.minter)
 
     def test_has_minter_constructor_no_minter(self):
         msa = TabularMSA([])
@@ -382,14 +414,6 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         msa = TabularMSA([])
         msa.reindex(minter=str)
         self.assertTrue(msa.has_minter())
-
-    def test_minter_no_minter_exists(self):
-        msa = TabularMSA([DNA(''), DNA('')])
-        with six.assertRaisesRegex(
-                self, OperationError,
-                "Minter does not exist. Use reindex with the minter parameter "
-                "to set one."):
-            msa.minter
 
     def test_metadata_getter(self):
         msa = TabularMSA([])

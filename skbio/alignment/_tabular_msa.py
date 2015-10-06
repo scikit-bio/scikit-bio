@@ -754,17 +754,16 @@ class TabularMSA(SkbioObject):
             raise ValueError(
                 "Cannot use both `minter` and `keys` at the same time.")
 
-        keys_ = None
         if minter is not None:
-            self._minter = minter
-            keys_ = [resolve_key(seq, self._minter) for seq in self._seqs]
+            keys_ = [resolve_key(seq, minter) for seq in self._seqs]
         elif keys is not None:
-            keys = list(keys)
-            if len(keys) != len(self):
+            keys_ = list(keys)
+            if len(keys_) != len(self):
                 raise ValueError(
                     "Number of elements in `keys` must match number of "
-                    "sequences: %d != %d" % (len(keys), len(self)))
-            keys_ = keys
+                    "sequences: %d != %d" % (len(keys_), len(self)))
+        else:
+            keys_ = None
 
         if keys_ is not None:
             # Hashability of keys is implicitly checked here.
@@ -781,6 +780,7 @@ class TabularMSA(SkbioObject):
             keys_.flags.writeable = False
 
         self._keys = keys_
+        self._minter = minter
 
     @experimental(as_of='0.4.0-dev')
     def append(self, sequence, minter=None):
