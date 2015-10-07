@@ -17,6 +17,7 @@ import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
 from skbio.util._decorator import experimental
 from skbio.util._misc import resolve_key
@@ -841,3 +842,10 @@ class TabularMSA(SkbioObject):
 
         """
         return dict(zip(self.keys, self._seqs))
+
+    def _get_position(self, i):
+        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
+        # TODO: when positional metadata exists, do something like below:
+        # if self.has_positional_metadata():
+        #     seq.metadata = dict(self.positional_metadata.iloc[i])
+        return seq
