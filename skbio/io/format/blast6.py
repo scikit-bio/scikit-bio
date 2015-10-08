@@ -284,7 +284,7 @@ def _blast6_to_data_frame(fh, columns=None, default_columns=False):
     else:
         for column in columns:
             if column not in _possible_columns:
-                raise ValueError("Unrecognized column %r."
+                raise ValueError("Unrecognized column (%r)."
                                  " Supported columns:\n%r" %
                                  (column, set(_possible_columns.keys())))
 
