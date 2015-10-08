@@ -17,7 +17,6 @@ import numpy as np
 
 from skbio.util import get_data_path, assert_data_frame_almost_equal
 from skbio.io.format.blast6 import _blast6_to_data_frame
-from skbio.io import BLAST6FormatError
 
 
 class TestBlast6Reader(unittest.TestCase):
@@ -102,14 +101,19 @@ class TestBlast6Reader(unittest.TestCase):
 
     def test_wrong_amount_of_columns_error(self):
         fp = get_data_path('blast6_invalid_number_of_columns')
-        with assertRaisesRegex(self, BLAST6FormatError,
-                               "The specified number of columns"):
+        with assertRaisesRegex(self, ValueError,
+                               "Specified number of columns \(12\).*\(10\)"):
+            _blast6_to_data_frame(fp, default_columns=True)
+
+    def test_different_data_in_same_column(self):
+        fp = get_data_path('blast6_invalid_type_in_column')
+        with self.assertRaises(ValueError):
             _blast6_to_data_frame(fp, default_columns=True)
 
     def test_wrong_column_name_error(self):
         fp = get_data_path('blast6_default_single_line')
         with assertRaisesRegex(self, ValueError,
-                               "The valid column names are"):
+                               "Unrecognized column 'abcd'"):
             _blast6_to_data_frame(fp, columns=['qseqid', 'sseqid', 'pident',
                                                'length', 'mismatch', 'gapopen',
                                                'qstart', 'qend', 'sstart',

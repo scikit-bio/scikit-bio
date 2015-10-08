@@ -4,22 +4,22 @@ BLAST+6 format (:mod:`skbio.io.format.blast6`)
 
 .. currentmodule:: skbio.io.format.blast6
 
-The BLAST+6 format (``blast+6``) stores strings, integers, and floats relating
-to the similarities between multiple DNA sequences. These values are stored in
-a simple tabular format with no labels on individual columns. The values are
-separated by the tab character.
+The BLAST+6 format (``blast+6``) stores the results of a BLAST [1]_ database
+search. The results are stored in a simple tabular format with no column
+headers. Values are separated by the tab character.
 
 An example BLAST+6-formatted file comparing two protein sequences, taken
-from [1]_::
+from [2]_ (tab characters represented by ``<tab>``)::
 
     moaC<tab>gi|15800534|ref|NP_286546.1|<tab>100.00<tab>161<tab>0<tab>0<tab>1\
-    <tab>161<tab>1<tab>161<tab>3e-114<tab>330
+<tab>161<tab>1<tab>161<tab>3e-114<tab>330
     moaC<tab>gi|170768970|ref|ZP_02903423.1|<tab>99.38<tab>161<tab>1<tab>0\
-    <tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
+<tab>1<tab>161<tab>1<tab>161<tab>9e-114<tab>329
 
 Format Support
 --------------
 **Has Sniffer: No**
+
 **State: Experimental as of 0.4.0-dev.**
 
 +------+------+---------------------------------------------------------------+
@@ -30,37 +30,18 @@ Format Support
 
 Format Specification
 --------------------
-BLAST+6 format is a tabular text-based format produced by BLAST+ format 6,
-containing data related to passed sequences, tab-separated, with no column
-labels or headers of any kind. This format includes both BLAST+ output format
-6 and BLAST output format 8.
+BLAST+6 format is a tabular text-based format produced by both BLAST+ output
+format 6 (``-outfmt 6``) and legacy BLAST output format 8 (``-m 8``). It is
+tab-separated and has no column headers. With BLAST+, users can specify the
+columns that are present in their BLAST output file by specifying column names
+(e.g., ``-outfmt "6 qseqid sseqid bitscore qstart sstart"``), if the default
+columns output by BLAST are not desired.
 
-When blasting sequences using Ubuntu's command line, the user may specify what
-data is returned.
+BLAST Column Types
+^^^^^^^^^^^^^^^^^^
+The following column types are output by BLAST and supported by scikit-bio.
+This information is taken from [3]_.
 
-For example::
-
-    $ blastp -query queries.fasta -subject subjects.fasta -evalue 0.0001\
-    -max_target_seqs 2 -outfmt "6 qseqid sseqid bitscore qstart sstart"
-    $ query1	subject2	16.9	1	3
-
-In this case, the blastp command returns custom values, which were specified
-by the user to be qseqid, sseqid, bitscore, qstart, and sstart. These names
-are retained, but as the returned values show, these names do not mark the
-columns. The user can also pass ``-outfmt 6`` instead, which will set the
-columns to their default values.
-
-For example::
-
-    $ blastp -query queries.fasta -subject subjects.fasta -evalue 0.0001\
-    -max_target_seqs 2 -outfmt 6
-    $ query1	subject2	100.00	8	0	0	1	8	3	10	9e-05	16.9
-
-If the user does not pass custom values, the blastp command will use its
-default column values.
-
-Types of Data
-^^^^^^^^^^^^^
 +-----------+------------------------------------+-----+
 |Name       |Description                         |Type |
 +===========+====================================+=====+
@@ -164,30 +145,38 @@ Types of Data
 |qcovhsp    |Query Coverage Per HSP              |int  |
 +-----------+------------------------------------+-----+
 
-When a blastp data type returns NA values, blastp displays it as
-``'N/A'``. When read into a pd.DataFrame, these values are converted
-into ``np.nan``.
+.. note:: When a BLAST+6-formatted file contains ``N/A`` values, scikit-bio
+   will convert these values into ``np.nan``, matching pandas' convention for
+   representing missing data.
 
-List of data and descriptions taken from BLAST Command Line Applications User
-Manual [2]_.
+.. note:: scikit-bio stores columns of type ``int`` as type ``float`` in the
+   returned ``pd.DataFrame``. This is necessary in order to allow ``N/A``
+   values in integer columns (this is currently a limitation of pandas).
 
 Format Parameters
 -----------------
-The following format parameters are available in ``blast+6`` format only:
+The following format parameters are available in ``blast+6`` format:
 
--``default_columns``: ``False`` by default. If ``True``, will set the column
- labels to the default BLAST+ column labels, which are qseqid, sseqid, pident,
- length, mismatch, gapopen, qstart, qend, sstart, send, evalue, and bitscore.
+- ``default_columns``: ``False`` by default. If ``True``, will use the default
+  columns output by BLAST, which are qseqid, sseqid, pident, length, mismatch,
+  gapopen, qstart, qend, sstart, send, evalue, and bitscore.
 
--``columns``: ``None`` by default. Accepts a list of labels which will be
- assigned to the returned pd.Dataframe.
+  .. warning::  When reading legacy BLAST files, you must pass
+     ``default_columns=True`` because legacy BLAST does not allow users to
+     specify which columns are present in the output file.
+
+- ``columns``: ``None`` by default. If provided, must be a list of column names
+  in the order they will appear in the file.
+
+.. note:: Either ``default_columns`` or ``columns`` must be provided, as
+   ``blast+6`` does not contain column headers.
 
 Examples
 --------
-An example of reading in ``blast+6`` format with default column labels.
+Suppose we have a ``blast+6`` file with default columns:
 
 >>> from io import StringIO
->>> import skbio.io as io
+>>> import skbio.io
 >>> import pandas as pd
 >>> fs = '\\n'.join([
 ...     'moaC\\tgi|15800534|ref|NP_286546.1|\\t100.00\\t161\\t0\\t0\\t1\\t161\
@@ -197,10 +186,11 @@ An example of reading in ``blast+6`` format with default column labels.
 ... ])
 >>> fh = StringIO(fs)
 
-Load BLAST+6 data into a pd.Dataframe and specify that default columns should
-be used.
+Read the file into a ``pd.DataFrame`` and specify that default columns should
+be used:
 
->>> df = io.read(fh, format="blast+6", into=pd.DataFrame, default_columns=True)
+>>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
+...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
   qseqid                           sseqid  pident  length  mismatch  gapopen \\
 0   moaC     gi|15800534|ref|NP_286546.1|  100.00     161         0        0
@@ -210,10 +200,10 @@ be used.
 0       1   161       1   161  3.000000e-114       330
 1       1   161       1   161  9.000000e-114       329
 
-An example of reading in ``blast+6`` format with custom column labels.
+Suppose we have a ``blast+6`` file with user-supplied (non-default) columns:
 
 >>> from io import StringIO
->>> import skbio.io as io
+>>> import skbio.io
 >>> import pandas as pd
 >>> fs = '\\n'.join([
 ...     'moaC\\t100.00\\t0\\t161\\t0\\t161\\t330\\t1',
@@ -221,11 +211,12 @@ An example of reading in ``blast+6`` format with custom column labels.
 ... ])
 >>> fh = StringIO(fs)
 
-Load BLAST+6 data into a pd.Dataframe and specify your column types.
+Read the file into a ``pd.DataFrame`` and specify which columns are present
+in the file:
 
->>> df = io.read(fh, format="blast+6", into=pd.DataFrame,
-...           columns=['qseqid', 'pident', 'mismatch', 'length', 'gapopen',
-...                    'qend', 'bitscore', 'sstart'])
+>>> df = skbio.io.read(fh, format="blast+6", into=pd.DataFrame,
+...                    columns=['qseqid', 'pident', 'mismatch', 'length',
+...                             'gapopen', 'qend', 'bitscore', 'sstart'])
 >>> df # doctest: +NORMALIZE_WHITESPACE
   qseqid  pident  mismatch  length  gapopen  qend  bitscore  sstart
 0   moaC  100.00         0     161        0   161       330       1
@@ -233,9 +224,11 @@ Load BLAST+6 data into a pd.Dataframe and specify your column types.
 
 References
 ----------
-.. [1] http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-\
+.. [1] Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990)
+   "Basic local alignment search tool." J. Mol. Biol. 215:403-410.
+.. [2] http://blastedbio.blogspot.com/2014/11/column-headers-in-blast-tabular-\
 and-csv.html
-.. [2] http://www.ncbi.nlm.nih.gov/books/NBK279675/
+.. [3] http://www.ncbi.nlm.nih.gov/books/NBK279675/
 """
 
 # ----------------------------------------------------------------------------
@@ -249,9 +242,11 @@ and-csv.html
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import functools
+
 import pandas as pd
 
-from skbio.io import create_format, BLAST6FormatError
+from skbio.io import create_format
 
 blast6 = create_format('blast+6')
 
@@ -286,28 +281,21 @@ def _blast6_to_data_frame(fh, columns=None, default_columns=False):
                          " provided.")
     if default_columns:
         columns = _default_columns
-
     else:
         for column in columns:
             if column not in _possible_columns:
-                possible_columns = []
-                for key in _possible_columns:
-                    possible_columns.append(key)
-                raise ValueError("Your column name: %s is not valid."
-                                 "The valid column names are:\n%s"
-                                 "" % (column, possible_columns))
+                raise ValueError("Unrecognized column %r."
+                                 " Supported columns:\n%r" %
+                                 (column, set(_possible_columns.keys())))
 
-    lineone = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
-                          keep_default_na=False, nrows=1)
+    read_csv = functools.partial(pd.read_csv, na_values='N/A', sep='\t',
+                                 header=None, keep_default_na=False)
+    lineone = read_csv(fh, nrows=1)
 
     if len(lineone.columns) != len(columns):
-        raise BLAST6FormatError("The specified number of columns: %d does not"
-                                " match the number of columns in the file: "
-                                "%d." % (len(columns), len(lineone.columns)))
+        raise ValueError("Specified number of columns (%d) does not"
+                         " match the number of columns in the file (%d)."
+                         % (len(columns), len(lineone.columns)))
 
     fh.seek(0)
-    df = pd.read_csv(fh, na_values='N/A', sep='\t', header=None,
-                     keep_default_na=False, names=columns,
-                     dtype=_possible_columns)
-
-    return df
+    return read_csv(fh, names=columns, dtype=_possible_columns)
