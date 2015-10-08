@@ -778,11 +778,7 @@ class TabularMSA(SkbioObject):
             keys_ = None
 
         if keys_ is not None:
-            # Hashability of keys is implicitly checked here.
-            duplicates = find_duplicates(keys_)
-            if duplicates:
-                raise UniqueError(
-                    "Keys must be unique. Duplicate keys: %r" % duplicates)
+            self._fail_if_duplicate_keys(keys_)
 
             # Create an immutable ndarray to ensure key invariants are
             # preserved. Use object dtype to preserve original key types. This
@@ -793,6 +789,13 @@ class TabularMSA(SkbioObject):
 
         self._keys = keys_
         self._minter = minter
+
+    def _fail_if_duplicate_keys(self, keys):
+        # Hashability of keys is implicitly checked here.
+        duplicates = find_duplicates(keys)
+        if duplicates:
+            raise UniqueError(
+                "Keys must be unique. Duplicate keys: %r" % duplicates)
 
     @experimental(as_of='0.4.0-dev')
     def append(self, sequence, minter=None):
