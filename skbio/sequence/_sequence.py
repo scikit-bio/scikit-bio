@@ -547,6 +547,148 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
+    @classmethod
+    @experimental(as_of="0.4.0-dev")
+    def concat(cls, sequences, how='strict'):
+        """Concatenate an iterable of ``Sequence`` objects.
+
+        Parameters
+        ----------
+        seqs : iterable (Sequence)
+            An iterable of ``Sequence`` objects or appropriate subclasses.
+        how : {'strict', 'inner', 'outer'}, optional
+            How to intersect the `positional_metadata` of the sequences.
+            If 'strict': the `positional_metadata` must have the exact same
+            columns; 'inner': an inner-join of the columns (only the shared set
+            of columns are used); 'outer': an outer-join of the columns
+            (all columns are used: missing values will be padded with NaN).
+
+        Returns
+        -------
+        Sequence
+            The returned sequence will be an instance of the class which
+            called this class-method.
+
+        Raises
+        ------
+        ValueError
+            If `how` is not one of: 'strict', 'inner', or 'outer'.
+        ValueError
+            If `how` is 'strict' and the `positional_metadata` of each sequence
+            does not have the same columns.
+        TypeError
+            If the sequences cannot be cast as the calling class.
+
+        Notes
+        -----
+            The sequence-wide metadata (``Sequence.metadata``) is not retained
+            during concatentation.
+
+            Sequence objects can be cast to a different type only when the new
+            type is an ancestor or child of the original type. Casting between
+            sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
+            allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
+            would be.
+
+        Examples
+        --------
+        Concatenate two DNA sequences into a new DNA object:
+
+        >>> from skbio import DNA, Sequence
+        >>> s1 = DNA("ACGT")
+        >>> s2 = DNA("GGAA")
+        >>> DNA.concat([s1, s2])
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+
+        Concatenate DNA sequences into a Sequence object (type coercion):
+
+        >>> Sequence.concat([s1, s2])
+        Sequence
+        -------------
+        Stats:
+            length: 8
+        -------------
+        0 ACGTGGAA
+
+        Positional metadata is conserved:
+
+        >>> s1 = DNA('AcgT', lowercase='one')
+        >>> s2 = DNA('GGaA', lowercase='one',
+        ...          positional_metadata={'two': [1, 2, 3, 4]})
+        >>> result = DNA.concat([s1, s2], how='outer')
+        >>> result
+        DNA
+        -----------------------------
+        Positional metadata:
+            'one': <dtype: bool>
+            'two': <dtype: float64>
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+        >>> result.positional_metadata
+             one  two
+        0  False  NaN
+        1   True  NaN
+        2   True  NaN
+        3  False  NaN
+        4  False    1
+        5  False    2
+        6   True    3
+        7  False    4
+
+        """
+        if how not in {'strict', 'inner', 'outer'}:
+            raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
+
+        seqs = list(sequences)
+        for seq in seqs:
+            seq._assert_can_cast_to(cls)
+
+        if how == 'strict':
+            how = 'inner'
+            cols = []
+            for s in seqs:
+                if s.has_positional_metadata():
+                    cols.append(frozenset(s.positional_metadata))
+                else:
+                    cols.append(frozenset())
+            if len(set(cols)) > 1:
+                raise ValueError("The positional metadata of the sequences do"
+                                 " not have matching columns. Consider setting"
+                                 " how='inner' or how='outer'")
+        seq_data = []
+        pm_data = []
+        for seq in seqs:
+            seq_data.append(seq._bytes)
+            pm_data.append(seq.positional_metadata)
+            if not seq.has_positional_metadata():
+                del seq.positional_metadata
+
+        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        bytes_ = np.concatenate(seq_data)
+
+        return cls(bytes_, positional_metadata=pm)
+
+    @classmethod
+    def _assert_can_cast_to(cls, target):
+        if not (issubclass(cls, target) or issubclass(target, cls)):
+            raise TypeError("Cannot cast %r as %r." %
+                            (cls.__name__, target.__name__))
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
@@ -567,6 +709,9 @@ class Sequence(collections.Sequence, SkbioObject):
                     "np.uint8 or '|S1'. Invalid dtype: %s" %
                     sequence.dtype)
         elif isinstance(sequence, Sequence):
+            # Sequence casting is acceptable between direct
+            # decendants/ancestors
+            sequence._assert_can_cast_to(type(self))
             # we're not simply accessing sequence.metadata in order to avoid
             # creating "empty" metadata representations on both sequence
             # objects if they don't have metadata. same strategy is used below
