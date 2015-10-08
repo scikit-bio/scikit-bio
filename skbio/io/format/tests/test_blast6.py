@@ -113,7 +113,7 @@ class TestBlast6Reader(unittest.TestCase):
     def test_wrong_column_name_error(self):
         fp = get_data_path('blast6_default_single_line')
         with assertRaisesRegex(self, ValueError,
-                               "Unrecognized column 'abcd'"):
+                               "Unrecognized column.*'abcd'"):
             _blast6_to_data_frame(fp, columns=['qseqid', 'sseqid', 'pident',
                                                'length', 'mismatch', 'gapopen',
                                                'qstart', 'qend', 'sstart',
