@@ -31,6 +31,11 @@ class SequenceSubclass(Sequence):
     pass
 
 
+class SequenceSubclassTwo(Sequence):
+    """Used for testing purposes."""
+    pass
+
+
 class TestSequence(TestCase):
     def setUp(self):
         self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
@@ -50,6 +55,113 @@ class TestSequence(TestCase):
             # ndarray of implicit float dtype
             np.array([]),
             np.array([], dtype=int)]
+
+    def test_concat_bad_how(self):
+        seq1 = seq2 = Sequence("123")
+        with self.assertRaises(ValueError):
+            Sequence.concat([seq1, seq2], how='foo')
+
+    def test_concat_on_subclass(self):
+        seq1 = SequenceSubclass("123")
+        seq2 = Sequence("123")
+        result = SequenceSubclass.concat([seq1, seq2])
+        self.assertIs(type(result), SequenceSubclass)
+        self.assertEqual(result, SequenceSubclass("123123"))
+
+    def test_concat_on_bad_subclass(self):
+        seq1 = Sequence("123")
+        seq2 = SequenceSubclassTwo("123")
+        with self.assertRaises(TypeError):
+            SequenceSubclass.concat([seq1, seq2])
+
+    def test_concat_default_how(self):
+        seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
+        seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
+        seqbad = Sequence("9", positional_metadata={'b': [9]})
+        result1 = Sequence.concat([seq1, seq2])
+        result2 = Sequence.concat([seq1, seq2], how='strict')
+        self.assertEqual(result1, result2)
+        with six.assertRaisesRegex(self, ValueError,
+                                   '.*positional.*metadata.*inner.*outer.*'):
+            Sequence.concat([seq1, seq2, seqbad])
+
+    def test_concat_strict_simple(self):
+        expected = Sequence(
+            "12345678", positional_metadata={'a': [1, 1, 1, 1, 2, 2, 2, 2]})
+        seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
+        seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
+        result = Sequence.concat([seq1, seq2], how='strict')
+        self.assertEqual(result, expected)
+        self.assertFalse(result.has_metadata())
+
+    def test_concat_strict_many(self):
+        odd_key = frozenset()
+        expected = Sequence("13579",
+                            positional_metadata={'a': list('skbio'),
+                                                 odd_key: [1, 2, 3, 4, 5]})
+        result = Sequence.concat([
+                Sequence("1", positional_metadata={'a': ['s'], odd_key: [1]}),
+                Sequence("3", positional_metadata={'a': ['k'], odd_key: [2]}),
+                Sequence("5", positional_metadata={'a': ['b'], odd_key: [3]}),
+                Sequence("7", positional_metadata={'a': ['i'], odd_key: [4]}),
+                Sequence("9", positional_metadata={'a': ['o'], odd_key: [5]})
+            ], how='strict')
+        self.assertEqual(result, expected)
+        self.assertFalse(result.has_metadata())
+
+    def test_concat_strict_fail(self):
+        seq1 = Sequence("1", positional_metadata={'a': [1]})
+        seq2 = Sequence("2", positional_metadata={'b': [2]})
+        with six.assertRaisesRegex(self, ValueError,
+                                   '.*positional.*metadata.*inner.*outer.*'):
+            Sequence.concat([seq1, seq2], how='strict')
+
+    def test_concat_outer_simple(self):
+        seq1 = Sequence("1234")
+        seq2 = Sequence("5678")
+        result = Sequence.concat([seq1, seq2], how='outer')
+        self.assertEqual(result, Sequence("12345678"))
+        self.assertFalse(result.has_metadata())
+
+    def test_concat_outer_missing(self):
+        a = {}
+        b = {}
+        seq1 = Sequence("12", positional_metadata={'a': ['1', '2']})
+        seq2 = Sequence("34", positional_metadata={'b': [3, 4], 'c': [a, b]})
+        seq3 = Sequence("56")
+        seq4 = Sequence("78", positional_metadata={'a': [7, 8]})
+        seq5 = Sequence("90", positional_metadata={'b': [9, 0]})
+
+        result = Sequence.concat([seq1, seq2, seq3, seq4, seq5], how='outer')
+        expected = Sequence("1234567890", positional_metadata={
+                                'a': ['1', '2', np.nan, np.nan, np.nan, np.nan,
+                                      7, 8, np.nan, np.nan],
+                                'b': [np.nan, np.nan, 3, 4, np.nan, np.nan,
+                                      np.nan, np.nan, 9, 0],
+                                'c': [np.nan, np.nan, a, b, np.nan, np.nan,
+                                      np.nan, np.nan, np.nan, np.nan]
+                            })
+        self.assertEqual(result, expected)
+        self.assertFalse(result.has_metadata())
+
+    def test_concat_inner_simple(self):
+        seq1 = Sequence("1234")
+        seq2 = Sequence("5678", positional_metadata={'discarded': [1] * 4})
+        result = Sequence.concat([seq1, seq2], how='inner')
+        self.assertEqual(result, Sequence("12345678"))
+        self.assertFalse(result.has_metadata())
+
+    def test_concat_inner_missing(self):
+        seq1 = Sequence("12", positional_metadata={'a': ['1', '2'],
+                                                   'c': [{}, {}]})
+        seq2 = Sequence("34", positional_metadata={'a': [3, 4], 'b': [3, 4]})
+        seq3 = Sequence("56", positional_metadata={'a': [5, 6], 'b': [5, 6]})
+
+        result = Sequence.concat([seq1, seq2, seq3], how='inner')
+        expected = Sequence("123456", positional_metadata={'a': ['1', '2', 3,
+                                                                 4, 5, 6]})
+        self.assertEqual(result, expected)
+        self.assertFalse(result.has_metadata())
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
@@ -198,6 +310,16 @@ class TestSequence(TestCase):
             Sequence(seq),
             Sequence('ACGT', metadata={'id': 'foo', 'description': 'bar baz'},
                      positional_metadata={'quality': range(4)}))
+
+    def test_init_from_non_descendant_sequence_object(self):
+        seq = SequenceSubclass('ACGT')
+        with self.assertRaises(TypeError) as cm:
+            SequenceSubclassTwo(seq)
+
+        error = str(cm.exception)
+        self.assertIn("SequenceSubclass", error)
+        self.assertIn("SequenceSubclassTwo", error)
+        self.assertIn("cast", error)
 
     def test_init_from_contiguous_sequence_bytes_view(self):
         bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
@@ -1214,6 +1336,11 @@ class TestSequence(TestCase):
         self.assertIsNone(subseq._metadata)
         self.assertIsNone(subseq._positional_metadata)
 
+    def test_getitem_empty_positional_metadata(self):
+        seq = Sequence('ACGT')
+        seq.positional_metadata  # This will create empty positional_metadata
+        self.assertEqual(Sequence('A'), seq[0])
+
     def test_len(self):
         self.assertEqual(len(Sequence("")), 0)
         self.assertEqual(len(Sequence("a")), 1)
@@ -1417,6 +1544,20 @@ class TestSequence(TestCase):
 
         with self.assertRaises(TypeError):
             seq._to(metadata={'id': 'bar'}, unrecognized_kwarg='baz')
+
+    def test_to_no_positional_metadata(self):
+        seq = Sequence('ACGT')
+        seq.positional_metadata  # This will create empty positional metadata
+        result = seq._to(sequence='TGA')
+        self.assertIsNone(result._positional_metadata)
+        self.assertEqual(result, Sequence('TGA'))
+
+    def test_to_no_metadata(self):
+        seq = Sequence('ACGT')
+        seq.metadata  # This will create empty metadata
+        result = seq._to(sequence='TGA')
+        self.assertIsNone(result._metadata)
+        self.assertEqual(result, Sequence('TGA'))
 
     def test_count(self):
         def construct_char_array(s):
