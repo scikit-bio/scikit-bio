@@ -207,65 +207,6 @@ class TabularMSA(SkbioObject):
 
     @property
     @experimental(as_of='0.4.0-dev')
-    def minter(self):
-        """Minter for providing keys for the MSA.
-
-        Returns
-        -------
-        callable or metadata key
-            minter for providing keys.
-
-        Raises
-        ------
-        OperationError
-            If minter does not exist.
-
-        See Also
-        --------
-        reindex
-        keys
-
-        Notes
-        -----
-        This property is read-only, but can be set indirectly using the
-        constructor or the ``reindex`` method.
-
-        Examples
-        --------
-        Create a ``TabularMSA`` object using minter to key by sequence
-        identifier:
-
-        >>> from skbio import DNA, TabularMSA
-        >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
-        ...         DNA('AC-', metadata={'id': 'b'})]
-        >>> msa = TabularMSA(seqs, minter='id')
-
-        Retrieve keys:
-
-        >>> msa.keys
-        array(['a', 'b'], dtype=object)
-
-        Use ``reindex`` to set callable minter:
-
-        >>> msa.reindex(minter=lambda seq: 'key_' + seq.metadata['id'])
-
-        Retrieve keys. Note that the minter manually indexed into the metadata
-        and prepended each id with `key_`:
-
-        >>> msa.keys
-        array(['key_a', 'key_b'], dtype=object)
-
-        """
-
-        if self.has_minter():
-            return self._minter
-        else:
-            raise OperationError(
-                "Minter does not exist. Use reindex with the minter parameter "
-                "to set one.")
-
-    @property
-    @experimental(as_of='0.4.0-dev')
     def metadata(self):
         """``dict`` containing metadata which applies to the entire MSA.
 
