@@ -798,7 +798,7 @@ class TabularMSA(SkbioObject):
                 "Keys must be unique. Duplicate keys: %r" % duplicates)
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, minter=None):
+    def append(self, sequence, key=None, minter=None):
         """Append a sequence to the MSA.
 
         Parameters
@@ -847,16 +847,36 @@ class TabularMSA(SkbioObject):
         ...                    DNA('', metadata={'id': 'b'})], minter='id')
         True
         """
-        if minter is None:
-            if self.has_keys():
-                minter = self.minter
+
+        keying = key is not None or minter is not None
+
+        if keying:
+            if key is not None and minter is not None:
+                    raise OperationError(
+                        "Cannot provide key and minter.")
+            elif self.has_keys():
+                if key is not None:
+                    new_key = key
+                elif minter is not None:
+                    new_key = resolve_key(sequence, minter)
+                else:
+                    raise Exception("Explicitly handle impossible branch")
+                self._add_key(new_key)
+            else:
+                if key is not None:
+                    raise OperationError(
+                        "key was provided but MSA does not have keys.")
+                elif minter is not None:
+                    raise OperationError(
+                        "minter was provided but MSA does not have keys.")
+                else:
+                    raise Exception("Explicitly handle impossible branch")
         else:
-            if not self.has_keys():
+            if self.has_keys():
                 raise OperationError(
-                    "key was provided but MSA does not have keys.")
+                    "MSA has keys but no key or minter was privided.")
 
         self._add_sequence(sequence)
-        self.reindex(minter=minter)
 
     def _add_sequence(self, sequence):
         msa_is_empty = not len(self)
@@ -880,6 +900,12 @@ class TabularMSA(SkbioObject):
                 % (len(sequence), self.shape.position))
         else:
             self._seqs.append(sequence)
+
+    def _add_key(self, key):
+        keys = list(self._keys)
+        keys.append(key)
+        self._fail_if_duplicate_keys(keys)
+        self._keys = keys
 
     def sort(self, key=None, reverse=False):
         """Sort sequences in-place.

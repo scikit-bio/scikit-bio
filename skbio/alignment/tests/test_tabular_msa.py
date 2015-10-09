@@ -1108,11 +1108,14 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 class TestAppend(unittest.TestCase):
     def setUp(self):
         self.msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        self.append_seq = DNA('GGGG')
 
-    def test_simple(self):
-        expected = TabularMSA([DNA('ACGT'), DNA('TGCA'), DNA('AAAA')])
-        self.msa.append(DNA('AAAA'))
-        self.assertEqual(self.msa, expected)
+        self.msa_with_keys = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
+        self.append_seq_with_keys = DNA('')
+        self.append_key = 'c'
+        self.msa_with_keys_after_append = \
+            TabularMSA([DNA(''), DNA(''), self.append_seq_with_keys],
+                       keys=['a', 'b', self.append_key])
 
     def test_to_empty_msa(self):
         expected = TabularMSA([DNA('ACGT')])
@@ -1141,7 +1144,7 @@ class TestAppend(unittest.TestCase):
                                    'must match the length.*5 != 4'):
             self.msa.append(DNA('ACGTA'))
 
-    def test_with_key(self):
+    def test_with_minter(self):
         to_append = DNA('', metadata={'id': 'c'})
         expected = TabularMSA(
             [DNA('', metadata={'id': 'a'}),
@@ -1154,31 +1157,48 @@ class TestAppend(unittest.TestCase):
         msa.append(to_append, minter='id')
         self.assertEqual(msa, expected)
 
-    def test_with_minter_msa_has_no_keys(self):
+    def test_no_key_no_minter_msa_does_not_have_keys(self):
+        self.msa.append(DNA('AAAA'))
+        expected = TabularMSA([DNA('ACGT'), DNA('TGCA'), DNA('AAAA')])
+        self.assertEqual(self.msa, expected)
+
+    def test_no_key_no_minter_msa_has_keys(self):
+        with six.assertRaisesRegex(self, OperationError,
+                                   "MSA has keys but no key or minter was "
+                                   "privided."):
+            self.msa_with_keys.append(self.append_seq)
+
+    def test_with_key_no_minter_msa_does_not_have_keys(self):
         with six.assertRaisesRegex(self, OperationError,
                                    "key was provided but MSA does not have "
                                    "keys"):
-            self.msa.append(DNA('AAAA'), 'id')
+            self.msa.append(self.append_seq, key='')
 
-    def test_no_minter_msa_has_keys(self):
-        to_append = DNA('', metadata={'id': 'c'})
-        expected = TabularMSA(
-            [DNA('', metadata={'id': 'a'}),
-             DNA('', metadata={'id': 'b'}),
-             to_append],
-            minter='id')
-        msa = TabularMSA([DNA('', metadata={'id': 'a'}),
-                          DNA('', metadata={'id': 'b'})],
-                         minter='id')
-        msa.append(to_append)
-        self.assertEqual(msa, expected)
+    def test_with_key_no_minter_msa_has_keys(self):
+        self.msa_with_keys.append(self.append_seq_with_keys,
+                                  key=self.append_key)
+        self.assertEqual(self.msa_with_keys, self.msa_with_keys_after_append)
 
-    def test_no_minter_msa_has_keys_but_not_cached(self):
-        msa = TabularMSA([DNA(''), DNA('')], keys=['a', 'b'])
+    def test_no_key_with_minter_msa_does_not_have_keys(self):
         with six.assertRaisesRegex(self, OperationError,
-                                   "Minter does not exist. Use reindex with "
-                                   "the minter parameter to set one."):
-            msa.append(DNA(''))
+                                   "minter was provided but MSA does not have "
+                                   "keys"):
+            self.msa.append(self.append_seq, minter='')
+
+    def test_no_key_with_minter_msa_has_keys(self):
+        self.msa_with_keys.append(self.append_seq_with_keys,
+                                  minter=lambda seq: self.append_key)
+        self.assertEqual(self.msa_with_keys, self.msa_with_keys_after_append)
+
+    def test_with_key_and_minter_msa_does_not_have_keys(self):
+        with six.assertRaisesRegex(self, OperationError,
+                                   "Cannot provide key and minter"):
+            self.msa.append(self.append_seq, key='', minter='')
+
+    def test_with_key_and_minter_msa_has_keys(self):
+        with six.assertRaisesRegex(self, OperationError,
+                                   "Cannot provide key and minter"):
+            self.msa_with_keys.append(self.append_seq, key='', minter='')
 
 
 if __name__ == "__main__":
