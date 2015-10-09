@@ -848,33 +848,27 @@ class TabularMSA(SkbioObject):
         True
         """
 
-        keying = key is not None or minter is not None
+        if key is not None and minter is not None:
+            raise OperationError("Cannot provide key and minter.")
 
-        if keying:
-            if key is not None and minter is not None:
-                    raise OperationError(
-                        "Cannot provide key and minter.")
-            elif self.has_keys():
-                if key is not None:
-                    new_key = key
-                elif minter is not None:
-                    new_key = resolve_key(sequence, minter)
-                else:
-                    raise Exception("Explicitly handle impossible branch")
-                self._add_key(new_key)
-            else:
-                if key is not None:
-                    raise OperationError(
-                        "key was provided but MSA does not have keys.")
-                elif minter is not None:
-                    raise OperationError(
-                        "minter was provided but MSA does not have keys.")
-                else:
-                    raise Exception("Explicitly handle impossible branch")
-        else:
-            if self.has_keys():
+        if self.has_keys():
+            if key is None and minter is None:
                 raise OperationError(
                     "MSA has keys but no key or minter was privided.")
+            elif key is not None:
+                new_key = key
+            elif minter is not None:
+                new_key = resolve_key(sequence, minter)
+            else:
+                raise Exception("Explicitly handle impossible branch")
+            self._add_key(new_key)
+        else:
+            if key is not None:
+                raise OperationError(
+                    "key was provided but MSA does not have keys.")
+            elif minter is not None:
+                raise OperationError(
+                    "minter was provided but MSA does not have keys.")
 
         self._add_sequence(sequence)
 
