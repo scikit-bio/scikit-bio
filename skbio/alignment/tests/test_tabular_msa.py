@@ -67,11 +67,11 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_not_monomorphic(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'Must match the type.*RNA.*DNA'):
+                                   'must match the type.*RNA.*DNA'):
             TabularMSA([DNA(''), RNA('')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'Must match the type.*float.*Protein'):
+                                   'must match the type.*float.*Protein'):
             TabularMSA([Protein(''), Protein(''), 42.0, Protein('')])
 
     def test_constructor_unequal_length(self):
@@ -1088,12 +1088,12 @@ class TestAppend(unittest.TestCase):
 
     def test_wrong_dtype_rna(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'Must match the type.*RNA.*DNA'):
+                                   'must match the type.*RNA.*DNA'):
             self.msa.append(RNA('UUUU'))
 
     def test_wrong_dtype_float(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'Must match the type.*float.*DNA'):
+                                   'must match the type.*float.*DNA'):
             self.msa.append(42.0)
 
     def test_wrong_length(self):
