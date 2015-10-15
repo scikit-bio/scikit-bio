@@ -367,17 +367,6 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
                           DNA('', metadata={'id': 43})], minter=minter_func)
         npt.assert_array_equal(msa.keys, np.array([42, 43]))
 
-    def test_minter_removed_after_adding_keys(self):
-        msa = TabularMSA([], minter=str)
-        msa.reindex(keys=[])
-        self.assertFalse(msa.has_minter())
-        self.assertTrue(msa.has_keys())
-
-    def test_minter_removed_after_reindex(self):
-        msa = TabularMSA([], minter=str)
-        msa.reindex()
-        self.assertFalse(msa.has_minter())
-
     def test_minter_invalid_does_not_change_msa(self):
         msa = TabularMSA([DNA('', metadata={'id': 'a'}),
                           DNA('', metadata={'id': 'b'})],
@@ -385,24 +374,6 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         with self.assertRaises(KeyError):
             msa.reindex(minter='invalid')
         npt.assert_array_equal(msa.keys, np.array(['a', 'b']))
-
-    def test_has_minter_constructor_no_minter(self):
-        msa = TabularMSA([])
-        self.assertFalse(msa.has_minter())
-
-    def test_has_minter_constructor_has_minter(self):
-        msa = TabularMSA([], minter=str)
-        self.assertTrue(msa.has_minter())
-
-    def test_has_minter_reindex_no_minter(self):
-        msa = TabularMSA([])
-        msa.reindex()
-        self.assertFalse(msa.has_minter())
-
-    def test_has_minter_reindex_has_minter(self):
-        msa = TabularMSA([])
-        msa.reindex(minter=str)
-        self.assertTrue(msa.has_minter())
 
     def test_metadata_getter(self):
         msa = TabularMSA([])

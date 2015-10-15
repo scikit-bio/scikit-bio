@@ -318,7 +318,6 @@ class TabularMSA(SkbioObject):
     def __init__(self, sequences, metadata=None, minter=None, keys=None):
         self._seqs = []
         self._dtype = None
-        self._minter = None
 
         for seq in sequences:
             self._add_sequence(seq)
@@ -579,34 +578,6 @@ class TabularMSA(SkbioObject):
         return self._keys is not None
 
     @experimental(as_of='0.4.0-dev')
-    def has_minter(self):
-        """Determine if minter exists on the MSA.
-
-        Returns
-        -------
-        bool
-            Indicates whether the MSA has a minter.
-
-        See Also
-        --------
-        keys
-        reindex
-
-        Examples
-        --------
-        >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
-        >>> msa.has_minter()
-        False
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
-        >>> msa.has_minter()
-        True
-
-        """
-
-        return self._minter is not None
-
-    @experimental(as_of='0.4.0-dev')
     def has_metadata(self):
         """Determine if the MSA has metadata.
 
@@ -730,7 +701,6 @@ class TabularMSA(SkbioObject):
             keys_.flags.writeable = False
 
         self._keys = keys_
-        self._minter = minter
 
     def _fail_if_duplicate_keys(self, keys):
         # Hashability of keys is implicitly checked here.
