@@ -760,12 +760,13 @@ class TabularMSA(SkbioObject):
         """
 
         if key is not None and minter is not None:
-            raise OperationError("Cannot provide key and minter.")
+            raise OperationError(
+                "Cannot use both `minter` and `key` at the same time.")
 
         if self.has_keys():
             if key is None and minter is None:
                 raise OperationError(
-                    "MSA has keys but no key or minter was privided.")
+                    "MSA has keys but no key or minter was provided.")
             elif key is not None:
                 new_key = key
             elif minter is not None:
@@ -795,13 +796,13 @@ class TabularMSA(SkbioObject):
             self._seqs = [sequence]
         elif dtype is not self.dtype:
             raise TypeError(
-                "`sequence` Must match the type of any other sequences "
+                "`sequence` must match the type of any other sequences "
                 "already in the MSA. Type %r does not match type %r" %
                 (dtype.__name__, self.dtype.__name__))
         elif len(sequence) != self.shape.position:
             raise ValueError(
-                "`sequence` length must match the length of any other "
-                "sequences already in the MSA: %r != %r"
+                "`sequence` length must match the number of positions in the "
+                "MSA: %d != %d"
                 % (len(sequence), self.shape.position))
         else:
             self._seqs.append(sequence)

@@ -53,7 +53,8 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
     def test_from_dict_invalid_input(self):
         # Basic test to make sure error-checking in the TabularMSA constructor
         # is being invoked.
-        with six.assertRaisesRegex(self, ValueError, 'must match the length'):
+        with six.assertRaisesRegex(
+                self, ValueError, 'must match the number of positions'):
             TabularMSA.from_dict({'a': DNA('ACG'), 'b': DNA('ACGT')})
 
     def test_constructor_invalid_dtype(self):
@@ -74,12 +75,14 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             TabularMSA([Protein(''), Protein(''), 42.0, Protein('')])
 
     def test_constructor_unequal_length(self):
-        with six.assertRaisesRegex(self, ValueError,
-                                   'must match the length.*1 != 0'):
+        with six.assertRaisesRegex(
+                self, ValueError,
+                'must match the number of positions.*1 != 0'):
             TabularMSA([Protein(''), Protein('P')])
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'must match the length.*1 != 3'):
+        with six.assertRaisesRegex(
+                self, ValueError,
+                'must match the number of positions.*1 != 3'):
             TabularMSA([Protein('PAW'), Protein('ABC'), Protein('A')])
 
     def test_constructor_non_iterable(self):
@@ -1094,8 +1097,9 @@ class TestAppend(unittest.TestCase):
             self.msa.append(42.0)
 
     def test_wrong_length(self):
-        with six.assertRaisesRegex(self, ValueError,
-                                   'must match the length.*5 != 4'):
+        with six.assertRaisesRegex(
+                self, ValueError,
+                'must match the number of positions.*5 != 4'):
             self.msa.append(DNA('ACGTA'))
 
     def test_with_minter(self):
@@ -1119,7 +1123,7 @@ class TestAppend(unittest.TestCase):
     def test_no_key_no_minter_msa_has_keys(self):
         with six.assertRaisesRegex(self, OperationError,
                                    "MSA has keys but no key or minter was "
-                                   "privided."):
+                                   "provided."):
             self.msa_with_keys.append(self.append_seq)
 
     def test_with_key_no_minter_msa_does_not_have_keys(self):
@@ -1145,13 +1149,11 @@ class TestAppend(unittest.TestCase):
         self.assertEqual(self.msa_with_keys, self.msa_with_keys_after_append)
 
     def test_with_key_and_minter_msa_does_not_have_keys(self):
-        with six.assertRaisesRegex(self, OperationError,
-                                   "Cannot provide key and minter"):
+        with six.assertRaisesRegex(self, OperationError, "both.*minter.*key"):
             self.msa.append(self.append_seq, key='', minter='')
 
     def test_with_key_and_minter_msa_has_keys(self):
-        with six.assertRaisesRegex(self, OperationError,
-                                   "Cannot provide key and minter"):
+        with six.assertRaisesRegex(self, OperationError, "both.*minter.*key"):
             self.msa_with_keys.append(self.append_seq, key='', minter='')
 
 
