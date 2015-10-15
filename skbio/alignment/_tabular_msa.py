@@ -51,7 +51,7 @@ class TabularMSA(SkbioObject):
     Raises
     ------
     ValueError
-        If `key` and `keys` are both provided.
+        If `minter` and `keys` are both provided.
     ValueError
         If `keys` is not the same length as `sequences`.
     UniqueError
@@ -65,7 +65,7 @@ class TabularMSA(SkbioObject):
 
     Notes
     -----
-    If `key` or `keys` are not provided, keys will not be set and certain
+    If `minter` or `keys` are not provided, keys will not be set and certain
     operations requiring keys will raise an ``OperationError``.
 
     """
@@ -618,7 +618,7 @@ class TabularMSA(SkbioObject):
         Raises
         ------
         ValueError
-            If `key` and `keys` are both provided.
+            If `minter` and `keys` are both provided.
         ValueError
             If `keys` is not the same length as the number of sequences in the
             MSA.
@@ -632,8 +632,8 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        If `key` or `keys` are not provided, keys will not be set and certain
-        operations requiring keys will raise an ``OperationError``.
+        If `minter` or `keys` are not provided, keys will not be set and
+        certain operations requiring keys will raise an ``OperationError``.
 
         Examples
         --------
