@@ -21,7 +21,7 @@ from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
 from skbio.stats._misc import _pprint_strs
-from skbio.util._decorator import experimental
+from skbio.util._decorator import stable, experimental
 
 
 class SkbioObject(with_metaclass(ABCMeta, object)):
@@ -35,6 +35,137 @@ class SkbioObject(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def __str__(self):
         pass
+
+
+class MetadataMixin(object):
+    @property
+    @stable(as_of="0.4.0")
+    def metadata(self):
+        """``dict`` containing metadata which applies to the entire object.
+
+        Notes
+        -----
+        This property can be set and deleted. When setting new metadata a
+        shallow copy of the dictionary is made.
+
+        Examples
+        --------
+        .. note:: scikit-bio objects with metadata share a common interface for
+           accessing and manipulating their metadata. The following examples
+           use scikit-bio's ``Sequence`` class to demonstrate metadata
+           behavior. These examples apply to all other scikit-bio objects
+           storing metadata.
+
+        Create a sequence with metadata:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ACGT', metadata={'id': 'seq-id',
+        ...                                  'description': 'seq description'})
+
+        Retrieve metadata:
+
+        >>> pprint(seq.metadata) # using pprint to display dict in sorted order
+        {'description': 'seq description', 'id': 'seq-id'}
+
+        Update metadata:
+
+        >>> seq.metadata['id'] = 'new-id'
+        >>> seq.metadata['pubmed'] = 12345
+        >>> pprint(seq.metadata)
+        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
+
+        Set metadata:
+
+        >>> seq.metadata = {'abc': 123}
+        >>> seq.metadata
+        {'abc': 123}
+
+        Delete metadata:
+
+        >>> seq.has_metadata()
+        True
+        >>> del seq.metadata
+        >>> seq.metadata
+        {}
+        >>> seq.has_metadata()
+        False
+
+        """
+        if self._metadata is None:
+            # Not using setter to avoid copy.
+            self._metadata = {}
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        if not isinstance(metadata, dict):
+            raise TypeError("metadata must be a dict")
+        # Shallow copy.
+        self._metadata = metadata.copy()
+
+    @metadata.deleter
+    def metadata(self):
+        self._metadata = None
+
+    def __init__(self, metadata=None):
+        if metadata is None:
+            self._metadata = None
+        else:
+            self.metadata = metadata
+
+    def __eq__(self, other):
+        # We're not simply comparing self.metadata to other.metadata in order
+        # to avoid creating "empty" metadata representations on the objects if
+        # they don't have metadata.
+        if self.has_metadata() and other.has_metadata():
+            if self.metadata != other.metadata:
+                return False
+        elif not (self.has_metadata() or other.has_metadata()):
+            # Both don't have metadata.
+            pass
+        else:
+            # One has metadata while the other does not.
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    @stable(as_of="0.4.0")
+    def has_metadata(self):
+        """Determine if the object has metadata.
+
+        An object has metadata if its ``metadata`` dictionary is not empty
+        (i.e., has at least one key-value pair).
+
+        Returns
+        -------
+        bool
+            Indicates whether the object has metadata.
+
+        Examples
+        --------
+        .. note:: scikit-bio objects with metadata share a common interface for
+           accessing and manipulating their metadata. The following examples
+           use scikit-bio's ``Sequence`` class to demonstrate metadata
+           behavior. These examples apply to all other scikit-bio objects
+           storing metadata.
+
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ACGT')
+        >>> seq.has_metadata()
+        False
+        >>> seq = Sequence('ACGT', metadata={})
+        >>> seq.has_metadata()
+        False
+        >>> seq = Sequence('ACGT', metadata={'id': 'seq-id'})
+        >>> seq.has_metadata()
+        True
+
+        """
+        return self._metadata is not None and bool(self.metadata)
 
 
 class OrdinationResults(SkbioObject):

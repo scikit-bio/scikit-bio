@@ -12,6 +12,8 @@ from future.utils import PY3
 import os
 import inspect
 
+import six
+import pandas as pd
 import pandas.util.testing as pdt
 from nose import core
 from nose.tools import nottest
@@ -64,6 +66,167 @@ class ReallyEqualMixin(object):
         if not PY3:
             self.assertNotEqual(0, cmp(a, b))  # noqa
             self.assertNotEqual(0, cmp(b, a))  # noqa
+
+
+class MetadataMixinTests(object):
+    def test_constructor_invalid_type(self):
+        for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
+                self.constructor(metadata=md)
+
+    def test_constructor_no_metadata(self):
+        for md in None, {}:
+            obj = self.constructor(metadata=md)
+
+            self.assertFalse(obj.has_metadata())
+            self.assertEqual(obj.metadata, {})
+
+    def test_constructor_with_metadata(self):
+        obj = self.constructor(metadata={'foo': 'bar'})
+        self.assertEqual(obj.metadata, {'foo': 'bar'})
+
+        obj = self.constructor(metadata={'': '', 123: {'a': 'b', 'c': 'd'}})
+        self.assertEqual(obj.metadata, {'': '', 123: {'a': 'b', 'c': 'd'}})
+
+    def test_constructor_handles_missing_metadata_efficiently(self):
+        self.assertIsNone(self.constructor()._metadata)
+        self.assertIsNone(self.constructor(metadata=None)._metadata)
+
+    def test_constructor_makes_shallow_copy_of_metadata(self):
+        md = {'foo': 'bar', 42: []}
+        obj = self.constructor(metadata=md)
+
+        self.assertEqual(obj.metadata, md)
+        self.assertIsNot(obj.metadata, md)
+
+        md['foo'] = 'baz'
+        self.assertEqual(obj.metadata, {'foo': 'bar', 42: []})
+
+        md[42].append(True)
+        self.assertEqual(obj.metadata, {'foo': 'bar', 42: [True]})
+
+    def test_eq(self):
+        self.assertReallyEqual(self.constructor(metadata={'foo': 42}),
+                               self.constructor(metadata={'foo': 42}))
+
+        self.assertReallyEqual(self.constructor(metadata={'foo': 42, 123: {}}),
+                               self.constructor(metadata={'foo': 42, 123: {}}))
+
+    def test_eq_missing_metadata(self):
+        self.assertReallyEqual(self.constructor(), self.constructor())
+        self.assertReallyEqual(self.constructor(),
+                               self.constructor(metadata={}))
+        self.assertReallyEqual(self.constructor(metadata={}),
+                               self.constructor(metadata={}))
+
+    def test_eq_handles_missing_metadata_efficiently(self):
+        obj1 = self.constructor()
+        obj2 = self.constructor()
+        self.assertReallyEqual(obj1, obj2)
+
+        self.assertIsNone(obj1._metadata)
+        self.assertIsNone(obj2._metadata)
+
+    def test_ne(self):
+        # Both have metadata.
+        obj1 = self.constructor(metadata={'id': 'foo'})
+        obj2 = self.constructor(metadata={'id': 'bar'})
+        self.assertReallyNotEqual(obj1, obj2)
+
+        # One has metadata.
+        obj1 = self.constructor(metadata={'id': 'foo'})
+        obj2 = self.constructor()
+        self.assertReallyNotEqual(obj1, obj2)
+
+    def test_metadata_getter(self):
+        obj = self.constructor(metadata={42: 'foo', ('hello', 'world'): 43})
+
+        self.assertIsInstance(obj.metadata, dict)
+        self.assertEqual(obj.metadata, {42: 'foo', ('hello', 'world'): 43})
+
+        obj.metadata[42] = 'bar'
+        self.assertEqual(obj.metadata, {42: 'bar', ('hello', 'world'): 43})
+
+    def test_metadata_getter_no_metadata(self):
+        obj = self.constructor()
+
+        self.assertIsNone(obj._metadata)
+        self.assertIsInstance(obj.metadata, dict)
+        self.assertEqual(obj.metadata, {})
+        self.assertIsNotNone(obj._metadata)
+
+    def test_metadata_setter(self):
+        obj = self.constructor()
+
+        self.assertFalse(obj.has_metadata())
+
+        obj.metadata = {'hello': 'world'}
+        self.assertTrue(obj.has_metadata())
+        self.assertEqual(obj.metadata, {'hello': 'world'})
+
+        obj.metadata = {}
+        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
+
+    def test_metadata_setter_makes_shallow_copy(self):
+        obj = self.constructor()
+
+        md = {'foo': 'bar', 42: []}
+        obj.metadata = md
+
+        self.assertEqual(obj.metadata, md)
+        self.assertIsNot(obj.metadata, md)
+
+        md['foo'] = 'baz'
+        self.assertEqual(obj.metadata, {'foo': 'bar', 42: []})
+
+        md[42].append(True)
+        self.assertEqual(obj.metadata, {'foo': 'bar', 42: [True]})
+
+    def test_metadata_setter_invalid_type(self):
+        obj = self.constructor(metadata={123: 456})
+
+        for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
+                   pd.DataFrame()):
+            with six.assertRaisesRegex(self, TypeError,
+                                       'metadata must be a dict'):
+                obj.metadata = md
+            self.assertEqual(obj.metadata, {123: 456})
+
+    def test_metadata_deleter(self):
+        obj = self.constructor(metadata={'foo': 'bar'})
+
+        self.assertEqual(obj.metadata, {'foo': 'bar'})
+
+        del obj.metadata
+        self.assertIsNone(obj._metadata)
+        self.assertFalse(obj.has_metadata())
+
+        # Delete again.
+        del obj.metadata
+        self.assertIsNone(obj._metadata)
+        self.assertFalse(obj.has_metadata())
+
+        obj = self.constructor()
+
+        self.assertIsNone(obj._metadata)
+        self.assertFalse(obj.has_metadata())
+        del obj.metadata
+        self.assertIsNone(obj._metadata)
+        self.assertFalse(obj.has_metadata())
+
+    def test_has_metadata(self):
+        obj = self.constructor()
+
+        self.assertFalse(obj.has_metadata())
+        # Handles metadata efficiently.
+        self.assertIsNone(obj._metadata)
+
+        self.assertFalse(self.constructor(metadata={}).has_metadata())
+
+        self.assertTrue(self.constructor(metadata={'': ''}).has_metadata())
+        self.assertTrue(self.constructor(metadata={'foo': 42}).has_metadata())
 
 
 @nottest
