@@ -124,12 +124,12 @@ class TabularMSA(SkbioObject):
         3
 
         """
-        len_sequence = len(self)
-        if len_sequence > 0:
-            len_position = len(self._seqs[0])
+        sequence_count = len(self)
+        if sequence_count > 0:
+            position_count = len(self._seqs[0])
         else:
-            len_position = 0
-        return _Shape(sequence=len_sequence, position=len_position)
+            position_count = 0
+        return _Shape(sequence=sequence_count, position=position_count)
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -683,7 +683,7 @@ class TabularMSA(SkbioObject):
             keys_ = None
 
         if keys_ is not None:
-            self._fail_if_duplicate_keys(keys_)
+            self._assert_valid_keys(keys_)
 
             # Create an immutable ndarray to ensure key invariants are
             # preserved. Use object dtype to preserve original key types. This
@@ -694,7 +694,7 @@ class TabularMSA(SkbioObject):
 
         self._keys = keys_
 
-    def _fail_if_duplicate_keys(self, keys):
+    def _assert_valid_keys(self, keys):
         # Hashability of keys is implicitly checked here.
         duplicates = find_duplicates(keys)
         if duplicates:
@@ -702,7 +702,7 @@ class TabularMSA(SkbioObject):
                 "Keys must be unique. Duplicate keys: %r" % duplicates)
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, key=None, minter=None):
+    def append(self, sequence, minter=None, key=None):
         """Append a sequence to the MSA.
 
         Parameters
@@ -713,8 +713,12 @@ class TabularMSA(SkbioObject):
         minter : callable or metadata key, optional
             Used to create a key for the sequence being appended. If callable,
             it generates a key directly. Otherwise it's treated as a key into
-            the sequence metadata pointing at a value to use as the key for
-            this sequence in the MSA.
+            the sequence metadata. If the key is a duplicate of any key
+            already in the MSA, an error is raised. Note that `minter` cannot
+            be combined with `key`.
+        key : hashable, optional
+            Key for the MSA to use for the appended sequence. Note that
+            `key` cannot be combined with `minter`.
 
         Raises
         ------
@@ -763,6 +767,7 @@ class TabularMSA(SkbioObject):
             raise OperationError(
                 "Cannot use both `minter` and `key` at the same time.")
 
+        new_key = None
         if self.has_keys():
             if key is None and minter is None:
                 raise OperationError(
@@ -771,9 +776,6 @@ class TabularMSA(SkbioObject):
                 new_key = key
             elif minter is not None:
                 new_key = resolve_key(sequence, minter)
-            else:
-                raise Exception("Explicitly handle impossible branch")
-            self._add_key(new_key)
         else:
             if key is not None:
                 raise OperationError(
@@ -782,9 +784,9 @@ class TabularMSA(SkbioObject):
                 raise OperationError(
                     "minter was provided but MSA does not have keys.")
 
-        self._add_sequence(sequence)
+        self._add_sequence(sequence, new_key)
 
-    def _add_sequence(self, sequence):
+    def _add_sequence(self, sequence, key=None):
         msa_is_empty = not len(self)
         dtype = type(sequence)
         if msa_is_empty:
@@ -807,11 +809,13 @@ class TabularMSA(SkbioObject):
         else:
             self._seqs.append(sequence)
 
+        if key is not None:
+            self._add_key(key)
+
     def _add_key(self, key):
-        keys = list(self._keys)
+        keys = list(self.keys)
         keys.append(key)
-        self._fail_if_duplicate_keys(keys)
-        self._keys = keys
+        self.keys = keys
 
     def sort(self, key=None, reverse=False):
         """Sort sequences in-place.
