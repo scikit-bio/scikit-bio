@@ -353,31 +353,6 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         del msa.keys
         self.assertFalse(msa.has_keys())
 
-    def test_keys_removed_after_reindex(self):
-        msa = TabularMSA([], keys=[])
-        msa.reindex()
-        self.assertFalse(msa.has_keys())
-
-    def test_minter_str(self):
-        msa = TabularMSA([DNA('', metadata={'id': 42}),
-                          DNA('', metadata={'id': 43})], minter='id')
-        npt.assert_array_equal(msa.keys, np.array([42, 43]))
-
-    def test_minter_callable(self):
-        def minter_func(x):
-            return x.metadata['id']
-        msa = TabularMSA([DNA('', metadata={'id': 42}),
-                          DNA('', metadata={'id': 43})], minter=minter_func)
-        npt.assert_array_equal(msa.keys, np.array([42, 43]))
-
-    def test_minter_invalid_does_not_change_msa(self):
-        msa = TabularMSA([DNA('', metadata={'id': 'a'}),
-                          DNA('', metadata={'id': 'b'})],
-                         minter='id')
-        with self.assertRaises(KeyError):
-            msa.reindex(minter='invalid')
-        npt.assert_array_equal(msa.keys, np.array(['a', 'b']))
-
     def test_metadata_getter(self):
         msa = TabularMSA([])
         self.assertIsNone(msa._metadata)
@@ -719,7 +694,7 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         npt.assert_array_equal(msa.keys, keys)
 
-    def test_sort_no_msa_keys_and_minter_not_specified(self):
+    def test_sort_no_msa_keys_and_key_not_specified(self):
         msa = TabularMSA([])
         with self.assertRaises(OperationError):
             msa.sort()
