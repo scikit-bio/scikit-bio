@@ -1144,6 +1144,11 @@ class TestAppend(unittest.TestCase):
                                       minter='')
         self.assertEqual(self.msa, self.msa_unmodified)
 
+    def test_do_not_mutate_if_invalid_key(self):
+        with six.assertRaisesRegex(self, TypeError, "unhashable.*dict"):
+            self.msa_with_keys.append(self.append_seq_with_keys, key={})
+        self.assertEqual(self.msa_with_keys, self.msa_with_keys_unmodified)
+
 
 if __name__ == "__main__":
     unittest.main()

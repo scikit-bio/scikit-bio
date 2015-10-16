@@ -807,15 +807,22 @@ class TabularMSA(SkbioObject):
                 "MSA: %d != %d"
                 % (len(sequence), self.shape.position))
         else:
-            self._seqs.append(sequence)
+            self._append_sequence_with_key(sequence, key)
 
+    def _append_sequence_with_key(self, sequence, key=None):
         if key is not None:
-            self._add_key(key)
-
-    def _add_key(self, key):
-        keys = list(self.keys)
-        keys.append(key)
-        self.keys = keys
+            # We want to make sure the MSA is not mutated if the key is
+            # invalid, but in the current implementation, we can't set
+            # the keys without appending the sequence first (because of length
+            # mismatch). So, validate the key, append the sequence, then set
+            # the keys.
+            keys = list(self.keys)
+            keys.append(key)
+            self._assert_valid_keys(keys)
+            self._seqs.append(sequence)
+            self.keys = keys
+        else:
+            self._seqs.append(sequence)
 
     def sort(self, key=None, reverse=False):
         """Sort sequences in-place.
