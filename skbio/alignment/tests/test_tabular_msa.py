@@ -1106,7 +1106,7 @@ class TestAppend(unittest.TestCase):
         with six.assertRaisesRegex(self, OperationError,
                                    "MSA has keys but no key or minter was "
                                    "provided."):
-            self.msa_with_keys.append(self.append_seq)
+            self.msa_with_keys.append(self.append_seq_with_keys)
         self.assertEqual(self.msa_with_keys, self.msa_with_keys_unmodified)
 
     def test_with_key_no_minter_msa_does_not_have_keys(self):
@@ -1140,7 +1140,8 @@ class TestAppend(unittest.TestCase):
 
     def test_with_key_and_minter_msa_has_keys(self):
         with six.assertRaisesRegex(self, OperationError, "both.*minter.*key"):
-            self.msa_with_keys.append(self.append_seq, key='', minter='')
+            self.msa_with_keys.append(self.append_seq_with_keys, key='',
+                                      minter='')
         self.assertEqual(self.msa, self.msa_unmodified)
 
 
