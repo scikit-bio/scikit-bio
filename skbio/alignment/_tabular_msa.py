@@ -764,7 +764,7 @@ class TabularMSA(SkbioObject):
         """
 
         if key is not None and minter is not None:
-            raise OperationError(
+            raise ValueError(
                 "Cannot use both `minter` and `key` at the same time.")
 
         new_key = None
