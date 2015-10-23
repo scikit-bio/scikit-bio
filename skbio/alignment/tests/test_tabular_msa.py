@@ -1065,6 +1065,12 @@ class TestAppend(unittest.TestCase):
             msa.append(Sequence(''))
         self.assertEqual(msa, TabularMSA([]))
 
+    def test_to_empty_msa_with_key(self):
+        msa = TabularMSA([], keys=[])
+        msa.append(DNA('ACGT', metadata={'id': 'a'}), key='a')
+        self.assertEqual(msa, TabularMSA([DNA('ACGT', metadata={'id': 'a'})],
+                                         keys=['a']))
+
     def test_wrong_dtype_rna(self):
         with six.assertRaisesRegex(self, TypeError,
                                    'must match the type.*RNA.*DNA'):

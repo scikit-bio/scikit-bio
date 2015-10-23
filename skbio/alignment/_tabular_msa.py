@@ -796,6 +796,8 @@ class TabularMSA(SkbioObject):
                     "that has an alphabet, not type %r" % dtype.__name__)
             self._dtype = dtype
             self._seqs = [sequence]
+            if key is not None:
+                self.keys = [key]
         elif dtype is not self.dtype:
             raise TypeError(
                 "`sequence` must match the type of any other sequences "
