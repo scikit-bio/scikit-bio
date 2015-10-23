@@ -183,7 +183,7 @@ from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
                FormatIdentificationWarning)
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
-from skbio.util._decorator import stable
+from skbio.util._decorator import stable, classonlymethod
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -619,7 +619,7 @@ class IORegistry(object):
         """Add read method if any formats have a reader for `cls`."""
         read_formats = registry.list_read_formats(cls)
 
-        @classmethod
+        @classonlymethod
         def read(cls, file, format=None, **kwargs):
             return registry.read(file, into=cls, format=format, **kwargs)
 
