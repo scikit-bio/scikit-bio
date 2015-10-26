@@ -71,7 +71,8 @@ try:
 except ImportError:
     raise RuntimeError(
         "numpydoc v0.6 or later required. Install it with:\n"
-        "  pip install git+git://github.com/numpy/numpydoc.git")
+        "  pip install git+git://github.com/numpy/numpydoc.git@1a848331c2cf53"
+        "d4fe356f4607799524bcc577ed")
 
 @property
 def _extras(self):
