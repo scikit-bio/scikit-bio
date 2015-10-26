@@ -275,7 +275,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         self._dtype = dtype
         self._shape = _Shape(sequence=len(seqs), position=length)
 
-        super(TabularMSA, self).__init__(metadata=metadata)
+        MetadataMixin.__init__(self, metadata=metadata)
 
         self.reindex(key=key, keys=keys)
 
@@ -451,7 +451,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         if not isinstance(other, TabularMSA):
             return False
 
-        if not super(TabularMSA, self).__eq__(other):
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         # Use np.array_equal instead of (a == b).all():

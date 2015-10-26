@@ -671,7 +671,7 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
 
             self._set_bytes(sequence)
 
-        super(Sequence, self).__init__(metadata=metadata)
+        MetadataMixin.__init__(self, metadata=metadata)
 
         if positional_metadata is None:
             self._positional_metadata = None
@@ -808,7 +808,7 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
         if self.__class__ != other.__class__:
             return False
 
-        if not super(Sequence, self).__eq__(other):
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         if self._string != other._string:
