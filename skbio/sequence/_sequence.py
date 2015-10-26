@@ -24,7 +24,7 @@ import pandas as pd
 
 from skbio._base import SkbioObject, MetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
-from skbio.util._decorator import stable, experimental
+from skbio.util._decorator import stable, experimental, classonlymethod
 
 
 class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
@@ -472,7 +472,7 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def concat(cls, sequences, how='strict'):
         """Concatenate an iterable of ``Sequence`` objects.

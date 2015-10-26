@@ -19,7 +19,7 @@ from skbio._base import SkbioObject, MetadataMixin
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
@@ -200,7 +200,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
     def keys(self):
         self.reindex()
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def from_dict(cls, dictionary):
         """Create a ``TabularMSA`` from a ``dict``.
