@@ -563,15 +563,15 @@ class TabularMSA(SkbioObject):
         return not (self == other)
 
     @experimental(as_of='0.4.0-dev')
-    def gap_frequencies(self, axis='position', relative=False):
-        """Compute frequency of gap characters along an axis.
+    def gap_frequencies(self, axis='sequence', relative=False):
+        """Compute frequency of gap characters across an axis.
 
         Parameters
         ----------
-        axis : {'position', 'sequence'}, optional
-            Axis to compute gap character frequencies along. If 'position' or
-            1, frequencies are computed for each position in the MSA. If
-            'sequence' or 0, frequencies are computed for each sequence.
+        axis : {'sequence', 'position'}, optional
+            Axis to compute gap character frequencies across. If 'sequence' or
+            0, frequencies are computed for each position in the MSA. If
+            'position' or 1, frequencies are computed for each sequence.
         relative : bool, optional
             If ``True``, return the relative frequency of gap characters
             instead of the count.
@@ -579,8 +579,8 @@ class TabularMSA(SkbioObject):
         Returns
         -------
         1D np.ndarray (int or float)
-            Vector of gap character frequencies along the specified axis. Will
-            have int dtype if ``relative=False`` and float dtype if
+            Vector of gap character frequencies across the specified axis. Will
+            have ``int`` dtype if ``relative=False`` and ``float`` dtype if
             ``relative=True``.
 
         Raises
@@ -590,13 +590,14 @@ class TabularMSA(SkbioObject):
 
         Notes
         -----
-        If there are no positions in the MSA, ``axis='sequence'``, **and**
+        If there are no positions in the MSA, ``axis='position'``, **and**
         ``relative=True``, the relative frequency of gap characters in each
         sequence will be ``np.nan``.
 
         Examples
         --------
-        Compute frequency of gap characters for each position in the MSA:
+        Compute frequency of gap characters for each position in the MSA (i.e.,
+        *across* the sequence axis):
 
         >>> from skbio import DNA, TabularMSA
         >>> msa = TabularMSA([DNA('ACG'),
@@ -606,26 +607,27 @@ class TabularMSA(SkbioObject):
         >>> msa.gap_frequencies()
         array([0, 1, 3])
 
-        Compute relative frequencies:
+        Compute relative frequencies across the same axis:
 
         >>> msa.gap_frequencies(relative=True)
         array([ 0.  ,  0.25,  0.75])
 
-        Compute frequency of gap characters for each sequence:
+        Compute frequency of gap characters for each sequence (i.e., *across*
+        the position axis):
 
-        >>> msa.gap_frequencies(axis='sequence')
+        >>> msa.gap_frequencies(axis='position')
         array([0, 2, 1, 1])
 
         """
         if axis == 'sequence' or axis == 0:
-            seq_iterator = self
-            length = self.shape.position
-        elif axis == 'position' or axis == 1:
             # TODO: use TabularMSA.iter_positions when it is implemented
             # (#1100).
             seq_iterator = (self._get_position(i)
                             for i in range(self.shape.position))
             length = self.shape.sequence
+        elif axis == 'position' or axis == 1:
+            seq_iterator = self
+            length = self.shape.position
         else:
             raise ValueError(
                 "`axis` must be 'sequence' (0) or 'position' (1), not %r"
