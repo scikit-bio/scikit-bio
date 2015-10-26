@@ -9,72 +9,41 @@
 from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
+from io import StringIO
+import os
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
+from skbio import TreeNode
+from skbio.util import get_data_path
+from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
-    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
-    osd, robbins, shannon, simpson, simpson_e, singles, strong)
-from skbio.diversity.alpha._base import _validate
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
+    esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 
 
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-
-    def test_validate(self):
-        # python list
-        obs = _validate([0, 2, 1, 3])
-        npt.assert_array_equal(obs, np.array([0, 2, 1, 3]))
-        self.assertEqual(obs.dtype, int)
-
-        # numpy array (no copy made)
-        data = np.array([0, 2, 1, 3])
-        obs = _validate(data)
-        npt.assert_array_equal(obs, data)
-        self.assertEqual(obs.dtype, int)
-        self.assertTrue(obs is data)
-
-        # single element
-        obs = _validate([42])
-        npt.assert_array_equal(obs, np.array([42]))
-        self.assertEqual(obs.dtype, int)
-        self.assertEqual(obs.shape, (1,))
-
-        # suppress casting to int
-        obs = _validate([42.2, 42.1, 0], suppress_cast=True)
-        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
-        self.assertEqual(obs.dtype, float)
-
-        # all zeros
-        obs = _validate([0, 0, 0])
-        npt.assert_array_equal(obs, np.array([0, 0, 0]))
-        self.assertEqual(obs.dtype, int)
-
-        # all zeros (single value)
-        obs = _validate([0])
-        npt.assert_array_equal(obs, np.array([0]))
-        self.assertEqual(obs.dtype, int)
-
-    def test_validate_invalid_input(self):
-        # wrong dtype
-        with self.assertRaises(TypeError):
-            _validate([0, 2, 1.2, 3])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaises(ValueError):
-            _validate([[0, 2, 1, 3], [4, 5, 6, 7]])
-
-        # wrong number of dimensions (scalar)
-        with self.assertRaises(ValueError):
-            _validate(1)
-
-        # negative values
-        with self.assertRaises(ValueError):
-            _validate([0, 0, 2, -1, 3])
+        self.b1 = np.array(
+           [[1, 3, 0, 1, 0],
+            [0, 2, 0, 4, 4],
+            [0, 0, 6, 2, 1],
+            [0, 0, 1, 1, 1]])
+        self.sids1 = list('ABCD')
+        self.oids1 = ['OTU%d' % i for i in range(1, 6)]
+        self.t1 = TreeNode.read(StringIO(
+            u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            u'0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+        self.t1_w_extra_tips = TreeNode.read(
+           StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                    u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                    u')root;'))
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)
@@ -114,10 +83,6 @@ class BaseTests(TestCase):
         exp = 1 / dominance(arr)
         self.assertAlmostEqual(enspie(arr), exp)
 
-    def test_equitability(self):
-        self.assertAlmostEqual(equitability(np.array([5, 5])), 1)
-        self.assertAlmostEqual(equitability(np.array([1, 1, 1, 1, 0])), 1)
-
     def test_esty_ci(self):
         def _diversity(indices, f):
             """Calculate diversity index for each window of size 1.
@@ -151,6 +116,180 @@ class BaseTests(TestCase):
 
         npt.assert_array_almost_equal(observed_lower, expected_lower)
         npt.assert_array_almost_equal(observed_upper, expected_upper)
+
+    def test_faith_pd_none_observed(self):
+        actual = faith_pd(np.array([], dtype=int), np.array([], dtype=int),
+                          self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd([0, 0, 0, 0, 0], self.oids1, self.t1)
+        expected = 0.0
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_all_observed(self):
+        actual = faith_pd([1, 1, 1, 1, 1], self.oids1, self.t1)
+        expected = sum(n.length for n in self.t1.traverse()
+                       if n.length is not None)
+        self.assertAlmostEqual(actual, expected)
+
+        actual = faith_pd([1, 2, 3, 4, 5], self.oids1, self.t1)
+        expected = sum(n.length for n in self.t1.traverse()
+                       if n.length is not None)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd(self):
+        # expected results derived from QIIME 1.9.1, which
+        # is a completely different implementation skbio's initial
+        # phylogenetic diversity implementation
+        actual = faith_pd(self.b1[0], self.oids1, self.t1)
+        expected = 4.5
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[1], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[2], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[3], self.oids1, self.t1)
+        expected = 4.75
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_extra_tips(self):
+        # results are the same despite presences of unobserved tips in tree
+        actual = faith_pd(self.b1[0], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[0], self.oids1, self.t1)
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[1], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[1], self.oids1, self.t1)
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[2], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[2], self.oids1, self.t1)
+        self.assertAlmostEqual(actual, expected)
+        actual = faith_pd(self.b1[3], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[3], self.oids1, self.t1)
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_minimal_trees(self):
+        # expected values computed by hand
+        # zero tips
+        tree = TreeNode.read(StringIO(u'root;'))
+        actual = faith_pd(np.array([], dtype=int), [], tree)
+        expected = 0.0
+        self.assertEqual(actual, expected)
+
+        # two tips
+        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
+        actual = faith_pd([1, 0], ['OTU1', 'OTU2'], tree)
+        expected = 0.25
+        self.assertEqual(actual, expected)
+
+    def test_faith_pd_qiime_tiny_test(self):
+        # the following table and tree are derived from the QIIME 1.9.1
+        # "tiny-test" data
+        tt_table_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'otu-table.tsv'), 'data')
+        tt_tree_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'tree.nwk'), 'data')
+
+        self.q_table = pd.read_csv(tt_table_fp, sep='\t', skiprows=1,
+                                   index_col=0)
+        self.q_tree = TreeNode.read(tt_tree_fp)
+
+        expected_fp = get_data_path(
+            os.path.join('qiime-191-tt', 'faith-pd.txt'), 'data')
+        expected = pd.read_csv(expected_fp, sep='\t', index_col=0)
+        for sid in self.q_table.columns:
+            actual = faith_pd(self.q_table[sid], otu_ids=self.q_table.index,
+                              tree=self.q_tree)
+            self.assertAlmostEqual(actual, expected['PD_whole_tree'][sid])
+
+    def test_faith_pd_root_not_observed(self):
+        # expected values computed by hand
+        tree = TreeNode.read(
+            StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
+                     u'root;'))
+        otu_ids = ['OTU%d' % i for i in range(1, 5)]
+        # root node not observed, but branch between (OTU1, OTU2) and root
+        # is considered observed
+        actual = faith_pd([1, 1, 0, 0], otu_ids, tree)
+        expected = 0.6
+        self.assertAlmostEqual(actual, expected)
+
+        # root node not observed, but branch between (OTU3, OTU4) and root
+        # is considered observed
+        actual = faith_pd([0, 0, 1, 1], otu_ids, tree)
+        expected = 2.3
+        self.assertAlmostEqual(actual, expected)
+
+    def test_faith_pd_invalid_input(self):
+        # Many of these tests are duplicated from
+        # skbio.diversity.tests.test_base, but I think it's important to
+        # confirm that they are being run when faith_pd is called.
+
+        # tree has duplicated tip ids
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU2:0.75):1.25):0.0)root;'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(DuplicateNodeError, faith_pd, counts, otu_ids, t)
+
+        # unrooted tree as input
+        t = TreeNode.read(StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                   u'OTU4:0.7);'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # otu_ids has duplicated ids
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU2']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # len of vectors not equal
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+        counts = [1, 2]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # negative counts
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+        counts = [1, 2, -3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # tree with no branch lengths
+        t = TreeNode.read(
+            StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # tree missing some branch lengths
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU3']
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
+
+        # otu_ids not present in tree
+        t = TreeNode.read(
+            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+        counts = [1, 2, 3]
+        otu_ids = ['OTU1', 'OTU2', 'OTU42']
+        self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)
 
     def test_fisher_alpha(self):
         exp = 2.7823795367398798
@@ -250,6 +389,26 @@ class BaseTests(TestCase):
 
     def test_osd(self):
         self.assertEqual(osd(self.counts), (9, 3, 3))
+
+    def test_pielou_e(self):
+        # Calculate "by hand".
+        arr = np.array([1, 2, 3, 1])
+        h = shannon(arr, np.e)
+        s = 4
+        expected = h / np.log(s)
+        self.assertAlmostEqual(pielou_e(arr), expected)
+
+        self.assertAlmostEqual(pielou_e(self.counts), 0.92485490560)
+
+        self.assertEqual(pielou_e([1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1]), 1.0)
+        self.assertEqual(pielou_e([1, 1, 1, 1, 0, 0]), 1.0)
+
+        # Examples from
+        # http://ww2.mdsg.umd.edu/interactive_lessons/biofilm/diverse.htm#3
+        self.assertAlmostEqual(pielou_e([1, 1, 196, 1, 1]), 0.078, 3)
+        self.assertTrue(np.isnan(pielou_e([0, 0, 200, 0, 0])))
+        self.assertTrue(np.isnan(pielou_e([0, 0, 0, 0, 0])))
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)

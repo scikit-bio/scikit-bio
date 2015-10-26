@@ -25,7 +25,7 @@ from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 from skbio.util import RepresentationWarning
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 
 
 def distance_from_r(m1, m2):
@@ -651,6 +651,46 @@ class TreeNode(SkbioObject):
             return len(list(self.tips()))
         else:
             return len(list(self.traverse(include_self=True)))
+
+    @experimental(as_of="0.4.0-dev")
+    def observed_node_counts(self, tip_counts):
+        """Returns counts of node observations from counts of tip observations
+
+        Parameters
+        ----------
+        tip_counts : dict of ints
+            Counts of observations of tips. Keys correspond to tip names in
+            ``self``, and counts are unsigned ints.
+
+        Returns
+        -------
+        dict
+            Counts of observations of nodes. Keys correspond to node names
+            (internal nodes or tips), and counts are unsigned ints.
+
+        Raises
+        ------
+        ValueError
+            If a count less than one is observed.
+        MissingNodeError
+            If a count is provided for a tip not in the tree, or for an
+            internal node.
+
+        """
+        result = defaultdict(int)
+        for tip_name, count in tip_counts.items():
+            if count < 1:
+                raise ValueError("All tip counts must be greater than zero.")
+            else:
+                t = self.find(tip_name)
+                if not t.is_tip():
+                    raise MissingNodeError(
+                        "Counts can only be for tips in the tree. %s is an "
+                        "internal node." % t.name)
+                result[t] += count
+                for internal_node in t.ancestors():
+                    result[internal_node] += count
+        return result
 
     @experimental(as_of="0.4.0")
     def subtree(self, tip_list=None):
@@ -1782,7 +1822,7 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
         """Construct a tree from a taxonomy
@@ -1876,7 +1916,7 @@ class TreeNode(SkbioObject):
             node = node.children[0]
         return distance
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_linkage_matrix(cls, linkage_matrix, id_list):
         """Return tree from SciPy linkage matrix.

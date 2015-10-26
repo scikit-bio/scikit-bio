@@ -8,9 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
-from ._rna import RNA
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._iupac_sequence import IUPACSequence
 
@@ -198,8 +198,9 @@ class DNA(IUPACSequence, NucleotideMixin):
             positional_metadata = self.positional_metadata
 
         # turn off validation because `seq` is guaranteed to be valid
-        return RNA(seq, metadata=metadata,
-                   positional_metadata=positional_metadata, validate=False)
+        return skbio.RNA(seq, metadata=metadata,
+                         positional_metadata=positional_metadata,
+                         validate=False)
 
     @stable(as_of="0.4.0")
     def translate(self, *args, **kwargs):
@@ -222,6 +223,7 @@ class DNA(IUPACSequence, NucleotideMixin):
 
         See Also
         --------
+        RNA.reverse_transcribe
         RNA.translate
         translate_six_frames
         transcribe

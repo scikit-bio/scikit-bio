@@ -43,9 +43,9 @@ class TestUtils(TestCase):
 
     def test_corr(self):
         obs = corr(self.small_mat)
-        npt.assert_almost_equal(np.array([[0.33333333, 0, -0.33333333],
-                                          [0, 0, 0],
-                                          [-0.33333333, 0, 0.33333333]]),
+        npt.assert_almost_equal(np.array([[1, 1, -0.94491118],
+                                          [1, 1, -0.94491118],
+                                          [-0.94491118, -0.94491118, 1]]),
                                 obs)
 
     def test_corr_shape_mismatch(self):

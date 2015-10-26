@@ -13,7 +13,9 @@ where each count is, for example, the number of observations of a particular
 Operational Taxonomic Unit, or OTU. We use the term "OTU" here very loosely, as
 these could be counts of any type of feature/observation (e.g., bacterial
 species). We'll refer to this vector as the *counts vector* or simply *counts*
-throughout the documentation.
+throughout the documentation. Some of these metrics incorporate phylogeny.
+These metrics take a tree (``skbio.TreeNode``) and a list of OTU ids mapping
+the counts to tips in the tree, in addition to the counts vector.
 
 The counts vector must be one-dimensional and contain integers representing the
 number of individuals seen (or *counted*) for a particular OTU. Negative values
@@ -68,8 +70,8 @@ Functions
    dominance
    doubles
    enspie
-   equitability
    esty_ci
+   faith_pd
    fisher_alpha
    gini_index
    goods_coverage
@@ -84,6 +86,7 @@ Functions
    michaelis_menten_fit
    observed_otus
    osd
+   pielou_e
    robbins
    shannon
    simpson
@@ -94,6 +97,7 @@ Functions
 Examples
 --------
 
+>>> from skbio.diversity.alpha import observed_otus
 >>> import numpy as np
 
 Assume we have the following abundance data for a sample, represented as a
@@ -123,10 +127,28 @@ exactly one time (i.e., are *singleton* OTUs), and ``doubles``, which tells us
 how many OTUs are observed exactly two times (i.e., are *doubleton* OTUs).
 Let's see how many singletons and doubletons there are in the sample:
 
+>>> from skbio.diversity.alpha import singles, doubles
 >>> singles(counts)
 2
 >>> doubles(counts)
 1
+
+Phylogenetic diversity metrics additionally incorporate the relative
+relatedness of the OTUs in the calculation, and therefore require a tree and
+a mapping of counts to OTU (tip) ids in the tree. Here we'll apply Faith's
+Phylogenetic Diversity (PD) metric to the sample:
+
+>>> from skbio import TreeNode
+>>> from skbio.diversity.alpha import faith_pd
+>>> from io import StringIO
+>>> tree = TreeNode.read(StringIO(
+...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
+...                      u'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+>>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7', 'OTU8']
+>>> faith_pd(counts, otu_ids, tree)
+6.95
+
 
 """
 
@@ -145,19 +167,20 @@ from skbio.util import TestRunner
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
 from ._base import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, equitability,
-    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q, margalef,
-    mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit, observed_otus,
-    osd, robbins, shannon, simpson, simpson_e, singles, strong)
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
+    esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
+    observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
+    singles, strong)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
 __all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
-           'dominance', 'doubles', 'enspie', 'equitability', 'esty_ci',
-           'fisher_alpha', 'goods_coverage', 'heip_e', 'kempton_taylor_q',
-           'margalef', 'mcintosh_d', 'mcintosh_e', 'menhinick',
-           'michaelis_menten_fit', 'observed_otus', 'osd', 'robbins',
-           'shannon', 'simpson', 'simpson_e', 'singles', 'strong',
-           'gini_index', 'lladser_pe', 'lladser_ci']
+           'dominance', 'doubles', 'enspie', 'esty_ci',
+           'faith_pd', 'fisher_alpha', 'goods_coverage', 'heip_e',
+           'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
+           'menhinick', 'michaelis_menten_fit', 'observed_otus', 'osd',
+           'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e', 'singles',
+           'strong', 'gini_index', 'lladser_pe', 'lladser_ci']
 
 test = TestRunner(__file__).test

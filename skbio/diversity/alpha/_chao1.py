@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._base import _validate, osd
+from ._base import osd
+from skbio.diversity.alpha._base import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 
@@ -63,7 +64,7 @@ def chao1(counts, bias_corrected=True):
        a population. Scandinavian Journal of Statistics 11, 265-270.
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     o, s, d = osd(counts)
 
     if not bias_corrected and s and d:
@@ -117,7 +118,7 @@ def chao1_ci(counts, bias_corrected=True, zscore=1.96):
     .. [1] http://viceroy.eeb.uconn.edu/estimates/
 
     """
-    counts = _validate(counts)
+    counts = _validate_counts_vector(counts)
     o, s, d = osd(counts)
     if s:
         chao = chao1(counts, bias_corrected)

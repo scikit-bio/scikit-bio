@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 import unittest
 import tempfile
@@ -533,9 +534,19 @@ class TestIterableReaderWriter(unittest.TestCase):
             self.assertIsInstance(result, io.TextIOBase)
             self.assertEqual(result.readlines(), l)
 
+    def test_open_invalid_iterable_missing_u(self):
+        is_py2 = six.PY2
+        six.PY2 = True
+        try:
+            with six.assertRaisesRegex(self, skbio.io.IOSourceError,
+                                       ".*Prepend.*`u`.*"):
+                skbio.io.open([b'abc'])
+        finally:
+            six.PY2 = is_py2
+
     def test_open_invalid_iterable(self):
         with self.assertRaises(skbio.io.IOSourceError):
-            skbio.io.open([b'abc'])
+            skbio.io.open([1, 2, 3])
 
     def test_open_empty_iterable(self):
         with skbio.io.open([]) as result:
