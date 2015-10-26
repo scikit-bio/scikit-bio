@@ -36,7 +36,7 @@ class TestSkbioObject(unittest.TestCase):
 class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                         MetadataMixinTests):
     def setUp(self):
-        self.constructor = MetadataMixin
+        self._metadata_constructor_ = MetadataMixin
 
 
 class TestOrdinationResults(unittest.TestCase):

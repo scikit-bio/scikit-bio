@@ -35,7 +35,7 @@ class Unorderable(object):
 
 class TestTabularMSA(unittest.TestCase, ReallyEqualMixin, MetadataMixinTests):
     def setUp(self):
-        self.constructor = functools.partial(TabularMSA, [])
+        self._metadata_constructor_ = functools.partial(TabularMSA, [])
 
     def test_from_dict_empty(self):
         self.assertEqual(TabularMSA.from_dict({}), TabularMSA([], keys=[]))

@@ -58,7 +58,7 @@ class TestSequence(TestCase, ReallyEqualMixin, MetadataMixinTests):
             np.array([]),
             np.array([], dtype=int)]
 
-        self.constructor = functools.partial(Sequence, '')
+        self._metadata_constructor_ = functools.partial(Sequence, '')
 
     def test_concat_bad_how(self):
         seq1 = seq2 = Sequence("123")
