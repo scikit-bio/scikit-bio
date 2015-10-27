@@ -234,6 +234,8 @@ import_module('skbio.io.format.newick')
 import_module('skbio.io.format.ordination')
 import_module('skbio.io.format.phylip')
 import_module('skbio.io.format.qseq')
+import_module('skbio.io.format.go_annotation')
+import_module('skbio.io.format.obo')
 import_module('skbio.io.format.genbank')
 
 # This is meant to be a handy indicator to the user that they have done
