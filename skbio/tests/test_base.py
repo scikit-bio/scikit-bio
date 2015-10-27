@@ -20,7 +20,8 @@ from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_true
 
 from skbio import OrdinationResults
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin
+from skbio.util._testing import ReallyEqualMixin, MetadataMixinTests
 
 
 class TestSkbioObject(unittest.TestCase):
@@ -30,6 +31,12 @@ class TestSkbioObject(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             Foo()
+
+
+class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                        MetadataMixinTests):
+    def setUp(self):
+        self._metadata_constructor_ = MetadataMixin
 
 
 class TestOrdinationResults(unittest.TestCase):

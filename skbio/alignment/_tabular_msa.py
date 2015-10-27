@@ -15,18 +15,18 @@ from future.builtins import zip, range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
 
-class TabularMSA(SkbioObject):
+class TabularMSA(MetadataMixin, SkbioObject):
     """Store a multiple sequence alignment in tabular (row/column) form.
 
     Parameters
@@ -200,73 +200,7 @@ class TabularMSA(SkbioObject):
     def keys(self):
         self.reindex()
 
-    @property
-    @experimental(as_of='0.4.0-dev')
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire MSA.
-
-        Notes
-        -----
-        This property can be set and deleted. When setting new metadata a
-        shallow copy of the dictionary is made.
-
-        Examples
-        --------
-        >>> from pprint import pprint
-        >>> from skbio import DNA, TabularMSA
-
-        Create an MSA with metadata:
-
-        >>> msa = TabularMSA([DNA('TT-GA'), DNA('ATAGC')],
-        ...                  metadata={'id': 'msa-id',
-        ...                            'description': 'msa description'})
-
-        Retrieve metadata:
-
-        >>> pprint(msa.metadata) # using pprint to display dict in sorted order
-        {'description': 'msa description', 'id': 'msa-id'}
-
-        Update metadata:
-
-        >>> msa.metadata['id'] = 'new-id'
-        >>> msa.metadata['medline'] = 12345678
-        >>> pprint(msa.metadata)
-        {'description': 'msa description', 'id': 'new-id', 'medline': 12345678}
-
-        Set metadata:
-
-        >>> msa.metadata = {'abc': 123}
-        >>> msa.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> msa.has_metadata()
-        True
-        >>> del msa.metadata
-        >>> msa.metadata
-        {}
-        >>> msa.has_metadata()
-        False
-
-        """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def from_dict(cls, dictionary):
         """Create a ``TabularMSA`` from a ``dict``.
@@ -341,10 +275,7 @@ class TabularMSA(SkbioObject):
         self._dtype = dtype
         self._shape = _Shape(sequence=len(seqs), position=length)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
+        MetadataMixin.__init__(self, metadata=metadata)
 
         self.reindex(key=key, keys=keys)
 
@@ -520,17 +451,7 @@ class TabularMSA(SkbioObject):
         if not isinstance(other, TabularMSA):
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the TabularMSA
-        # objects if they don't have metadata.
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         # Use np.array_equal instead of (a == b).all():
@@ -679,36 +600,6 @@ class TabularMSA(SkbioObject):
 
         """
         return self._keys is not None
-
-    @experimental(as_of='0.4.0-dev')
-    def has_metadata(self):
-        """Determine if the MSA has metadata.
-
-        An MSA has metadata if its ``metadata`` dictionary is not empty (i.e.,
-        has at least one key-value pair).
-
-        Returns
-        -------
-        bool
-            Indicates whether the MSA has metadata
-
-        See Also
-        --------
-        metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA, TabularMSA
-        >>> seqs = [DNA('AC--G'), DNA('ATAAG')]
-        >>> msa = TabularMSA(seqs)
-        >>> msa.has_metadata()
-        False
-        >>> msa = TabularMSA(seqs, metadata={'id': 'msa-id'})
-        >>> msa.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
 
     @experimental(as_of='0.4.0-dev')
     def reindex(self, key=None, keys=None):
