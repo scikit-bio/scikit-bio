@@ -17,7 +17,9 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import OperationError, UniqueError
+from skbio.util._decorator import classproperty, overrides
 from skbio.util._testing import ReallyEqualMixin, MetadataMixinTests
 
 
@@ -885,6 +887,269 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin, MetadataMixinTests):
         self.assertEqual(d2, d1)
         self.assertIs(d1['a'], d2['a'])
         self.assertIs(d1[42], d2[42])
+
+
+class TestGapFrequencies(unittest.TestCase):
+    def test_default_behavior(self):
+        msa = TabularMSA([DNA('AA.'),
+                          DNA('-A-')])
+
+        freqs = msa.gap_frequencies()
+
+        npt.assert_array_equal(np.array([1, 0, 2]), freqs)
+
+    def test_invalid_axis_str(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*'foo'"):
+            TabularMSA([]).gap_frequencies(axis='foo')
+
+    def test_invalid_axis_int(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*2"):
+            TabularMSA([]).gap_frequencies(axis=2)
+
+    def test_position_axis_str_and_int_equivalent(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('A.G-'),
+                          DNA('----')])
+
+        str_freqs = msa.gap_frequencies(axis='position')
+        int_freqs = msa.gap_frequencies(axis=1)
+
+        npt.assert_array_equal(str_freqs, int_freqs)
+        npt.assert_array_equal(np.array([0, 2, 4]), str_freqs)
+
+    def test_sequence_axis_str_and_int_equivalent(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('A.G-'),
+                          DNA('----')])
+
+        str_freqs = msa.gap_frequencies(axis='sequence')
+        int_freqs = msa.gap_frequencies(axis=0)
+
+        npt.assert_array_equal(str_freqs, int_freqs)
+        npt.assert_array_equal(np.array([1, 2, 1, 2]), str_freqs)
+
+    def test_correct_dtype_absolute_empty(self):
+        msa = TabularMSA([])
+
+        freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([]), freqs)
+        self.assertEqual(int, freqs.dtype)
+
+    def test_correct_dtype_relative_empty(self):
+        msa = TabularMSA([])
+
+        freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([]), freqs)
+        self.assertEqual(float, freqs.dtype)
+
+    def test_correct_dtype_absolute_non_empty(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-.')])
+
+        freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([0, 2]), freqs)
+        self.assertEqual(int, freqs.dtype)
+
+    def test_correct_dtype_relative_non_empty(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-.')])
+
+        freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([0.0, 1.0]), freqs)
+        self.assertEqual(float, freqs.dtype)
+
+    def test_no_sequences_absolute(self):
+        msa = TabularMSA([])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence')
+        pos_freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([]), seq_freqs)
+        npt.assert_array_equal(np.array([]), pos_freqs)
+
+    def test_no_sequences_relative(self):
+        msa = TabularMSA([])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([]), seq_freqs)
+        npt.assert_array_equal(np.array([]), pos_freqs)
+
+    def test_no_positions_absolute(self):
+        msa = TabularMSA([DNA('')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence')
+        pos_freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([]), seq_freqs)
+        npt.assert_array_equal(np.array([0]), pos_freqs)
+
+    def test_no_positions_relative(self):
+        msa = TabularMSA([DNA('')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([]), seq_freqs)
+        npt.assert_array_equal(np.array([np.nan]), pos_freqs)
+
+    def test_single_sequence_absolute(self):
+        msa = TabularMSA([DNA('.T')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence')
+        pos_freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([1, 0]), seq_freqs)
+        npt.assert_array_equal(np.array([1]), pos_freqs)
+
+    def test_single_sequence_relative(self):
+        msa = TabularMSA([DNA('.T')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([1.0, 0.0]), seq_freqs)
+        npt.assert_array_equal(np.array([0.5]), pos_freqs)
+
+    def test_single_position_absolute(self):
+        msa = TabularMSA([DNA('.'),
+                          DNA('T')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence')
+        pos_freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([1]), seq_freqs)
+        npt.assert_array_equal(np.array([1, 0]), pos_freqs)
+
+    def test_single_position_relative(self):
+        msa = TabularMSA([DNA('.'),
+                          DNA('T')])
+
+        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([0.5]), seq_freqs)
+        npt.assert_array_equal(np.array([1.0, 0.0]), pos_freqs)
+
+    def test_position_axis_absolute(self):
+        msa = TabularMSA([
+                DNA('ACGT'),   # no gaps
+                DNA('A.G-'),   # some gaps (mixed gap chars)
+                DNA('----'),   # all gaps
+                DNA('....')])  # all gaps
+
+        freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([0, 2, 4, 4]), freqs)
+
+    def test_position_axis_relative(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('A.G-'),
+                          DNA('CCC.'),
+                          DNA('----'),
+                          DNA('....')])
+
+        freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([0.0, 0.5, 0.25, 1.0, 1.0]), freqs)
+
+    def test_sequence_axis_absolute(self):
+        msa = TabularMSA([DNA('AC-.'),
+                          DNA('A.-.'),
+                          DNA('G--.')])
+
+        freqs = msa.gap_frequencies(axis='sequence')
+
+        npt.assert_array_equal(np.array([0, 2, 3, 3]), freqs)
+
+    def test_sequence_axis_relative(self):
+        msa = TabularMSA([DNA('AC--.'),
+                          DNA('A.A-.'),
+                          DNA('G-A-.')])
+
+        freqs = msa.gap_frequencies(axis='sequence', relative=True)
+
+        npt.assert_array_equal(np.array([0.0, 2/3, 1/3, 1.0, 1.0]), freqs)
+
+    def test_relative_frequencies_precise(self):
+        class CustomSequence(IUPACSequence):
+            @classproperty
+            @overrides(IUPACSequence)
+            def gap_chars(cls):
+                return set('0123456789')
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def nondegenerate_chars(cls):
+                return set('')
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def degenerate_map(cls):
+                return {}
+
+        msa = TabularMSA([CustomSequence('0123456789')])
+
+        freqs = msa.gap_frequencies(axis='position', relative=True)
+
+        npt.assert_array_equal(np.array([1.0]), freqs)
+
+    def test_custom_gap_characters(self):
+        class CustomSequence(IUPACSequence):
+            @classproperty
+            @overrides(IUPACSequence)
+            def gap_chars(cls):
+                return set('#$*')
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def nondegenerate_chars(cls):
+                return set('ABC-.')
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def degenerate_map(cls):
+                return {'D': 'ABC-.'}
+
+        msa = TabularMSA([CustomSequence('ABCD'),
+                          CustomSequence('-.-.'),
+                          CustomSequence('A#C*'),
+                          CustomSequence('####'),
+                          CustomSequence('$$$$')])
+
+        freqs = msa.gap_frequencies(axis='position')
+
+        npt.assert_array_equal(np.array([0, 0, 2, 4, 4]), freqs)
+
+
+class TestIsSequenceAxis(unittest.TestCase):
+    def setUp(self):
+        self.msa = TabularMSA([])
+
+    def test_invalid_str(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*'foo'"):
+            self.msa._is_sequence_axis('foo')
+
+    def test_invalid_int(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*2"):
+            self.msa._is_sequence_axis(2)
+
+    def test_positive_str(self):
+        self.assertTrue(self.msa._is_sequence_axis('sequence'))
+
+    def test_positive_int(self):
+        self.assertTrue(self.msa._is_sequence_axis(0))
+
+    def test_negative_str(self):
+        self.assertFalse(self.msa._is_sequence_axis('position'))
+
+    def test_negative_int(self):
+        self.assertFalse(self.msa._is_sequence_axis(1))
 
 
 if __name__ == "__main__":
