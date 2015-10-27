@@ -540,19 +540,15 @@ class TabularMSA(MetadataMixin, SkbioObject):
         array([0, 2, 1, 1])
 
         """
-        if axis == 'sequence' or axis == 0:
+        if self._is_sequence_axis(axis):
             # TODO: use TabularMSA.iter_positions when it is implemented
             # (#1100).
             seq_iterator = (self._get_position(i)
                             for i in range(self.shape.position))
             length = self.shape.sequence
-        elif axis == 'position' or axis == 1:
+        else:
             seq_iterator = self
             length = self.shape.position
-        else:
-            raise ValueError(
-                "`axis` must be 'sequence' (0) or 'position' (1), not %r"
-                % axis)
 
         gap_freqs = []
         for seq in seq_iterator:
@@ -831,3 +827,13 @@ class TabularMSA(MetadataMixin, SkbioObject):
         # if self.has_positional_metadata():
         #     seq.metadata = dict(self.positional_metadata.iloc[i])
         return seq
+
+    def _is_sequence_axis(self, axis):
+        if axis == 'sequence' or axis == 0:
+            return True
+        elif axis == 'position' or axis == 1:
+            return False
+        else:
+            raise ValueError(
+                "`axis` must be 'sequence' (0) or 'position' (1), not %r"
+                % axis)

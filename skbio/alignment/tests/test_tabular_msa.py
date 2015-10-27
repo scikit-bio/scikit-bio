@@ -1127,5 +1127,30 @@ class TestGapFrequencies(unittest.TestCase):
         npt.assert_array_equal(np.array([0, 0, 2, 4, 4]), freqs)
 
 
+class TestIsSequenceAxis(unittest.TestCase):
+    def setUp(self):
+        self.msa = TabularMSA([])
+
+    def test_invalid_str(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*'foo'"):
+            self.msa._is_sequence_axis('foo')
+
+    def test_invalid_int(self):
+        with six.assertRaisesRegex(self, ValueError, "axis.*2"):
+            self.msa._is_sequence_axis(2)
+
+    def test_positive_str(self):
+        self.assertTrue(self.msa._is_sequence_axis('sequence'))
+
+    def test_positive_int(self):
+        self.assertTrue(self.msa._is_sequence_axis(0))
+
+    def test_negative_str(self):
+        self.assertFalse(self.msa._is_sequence_axis('position'))
+
+    def test_negative_int(self):
+        self.assertFalse(self.msa._is_sequence_axis(1))
+
+
 if __name__ == "__main__":
     unittest.main()
