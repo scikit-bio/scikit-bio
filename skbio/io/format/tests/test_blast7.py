@@ -165,8 +165,8 @@ class TestBlast7Reader(unittest.TestCase):
     def test_differing_fields_error(self):
         fp = get_data_path("blast7_invalid_differing_fields")
         with assertRaisesRegex(self, BLAST7FormatError,
-                               "Fields \['qseqid', 'sseqid', 'qstart'\] do.*"
-                               "\['qseqid', 'sseqid'\]"):
+                               "Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]
+                               " do.*\[.*'qseqid', .*'sseqid'\]"):
             _blast7_to_data_frame(fp)
 
     def test_no_data_error(self):
