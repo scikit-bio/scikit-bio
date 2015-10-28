@@ -6,6 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+
 from collections import Mapping
 
 
@@ -17,30 +19,30 @@ class Feature(Mapping):
     kwargs :
     '''
     def __init__(self, **kwargs):
-        for attr in kwargs:
-            setattr(self, attr, kwargs[attr])
+        self.__d = dict(**kwargs)
 
-    def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
-        for attr, value in other:
-            if getattr(self, attr) != value:
-                return False
-        return True
+    # def __eq__(self, other):
+    #     if self.__class__ != other.__class__:
+    #         return False
+    #     for attr, value in other:
+    #         if getattr(self, attr) != value:
+    #             return False
+    #     return True
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    # def __ne__(self, other):
+    #     return not (self == other)
 
     def __iter__(self):
-        for attr, value in self.__dict__.iteritems():
-            yield attr, value
-
-    def __getitem__(self, attr):
-        return getattr(self, attr)
+        return iter(self.__d)
 
     def __len__(self):
-        return len(self.__dict__)
+        return len(self.__d)
+
+    def __getitem__(self, key):
+        return self.__d[key]
 
     def __repr__(self):
-        return '__'.join('{0}:{1}'.format(attr, value)
-                         for attr, value in self)
+        return ';'.join('{0}:{1}'.format(k, self[k]) for k in self)
+
+    def __hash__(self):
+        return hash(frozenset(self.items()))
