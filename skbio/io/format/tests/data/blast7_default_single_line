@@ -1,0 +1,10 @@
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject1
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject2
+# Fields: query id, subject id, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score
+# 1 hits found
+query1	subject2	100.00	8	0	0	1	8	3	10	9e-05	16.9

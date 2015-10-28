@@ -98,7 +98,8 @@ class DissimilarityMatrix(SkbioObject):
             ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
-
+        if data.ndim == 1:
+            data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)

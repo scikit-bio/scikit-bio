@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 from functools import partial
 
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist
 
 from skbio.diversity.beta._unifrac import unweighted_unifrac, weighted_unifrac
 from skbio.stats.distance import DistanceMatrix
@@ -73,8 +73,7 @@ def pw_distances(metric, counts, ids=None, **kwargs):
         metric = partial(metric, **kwargs)
 
     distances = pdist(counts, metric)
-    return DistanceMatrix(
-        squareform(distances, force='tomatrix', checks=False), ids)
+    return DistanceMatrix(distances, ids)
 
 pw_distances_from_table_deprecation_reason = (
     "In the future, pw_distance will take a biom.table.Table object "

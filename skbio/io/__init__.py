@@ -16,6 +16,7 @@ see the associated documentation.
    :toctree: generated/
 
    blast6
+   blast7
    clustal
    fasta
    fastq
@@ -51,6 +52,7 @@ User exceptions and warnings
    UnrecognizedFormatError
    IOSourceError
    FileFormatError
+   BLAST7FormatError
    ClustalFormatError
    FASTAFormatError
    FASTQFormatError
@@ -196,9 +198,9 @@ from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
-                         ClustalFormatError, FASTAFormatError,
-                         GenBankFormatError, IOSourceError, FASTQFormatError,
-                         LSMatFormatError, NewickFormatError,
+                         BLAST7FormatError, ClustalFormatError,
+                         FASTAFormatError, GenBankFormatError, IOSourceError,
+                         FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError)
 from .registry import write, read, sniff, create_format, io_registry
@@ -210,6 +212,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'UnrecognizedFormatError', 'IOSourceError',
 
            'FileFormatError',
+           'BLAST7FormatError',
            'ClustalFormatError',
            'FASTAFormatError',
            'FASTQFormatError',
@@ -226,6 +229,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
 import_module('skbio.io.format.blast6')
+import_module('skbio.io.format.blast7')
 import_module('skbio.io.format.clustal')
 import_module('skbio.io.format.fasta')
 import_module('skbio.io.format.fastq')

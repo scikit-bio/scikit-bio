@@ -1,0 +1,21 @@
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject1
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject3
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query2
+# Subject: subject1
+# Fields: query id, subject id
+# 1 hits found
+query1	subject1	subject2	query2
+# BLASTP 2.2.31+
+# Query: query2
+# Subject: subject1
+# Fields: query id, subject id
+# 1 hits found
+query2	subject2
+# BLAST processed 2 queries
