@@ -24,6 +24,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
+from skbio.util import assert_data_frame_almost_equal
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -332,6 +333,13 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_svg(self):
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
+
+    def test_to_dataframe(self):
+        dm = self.dm_3x3
+        df = dm.to_dataframe()
+        exp = pd.DataFrame(data=self.dm_3x3_data, index=self.dm_3x3.ids,
+                           columns=self.dm_3x3.ids)
+        assert_data_frame_almost_equal(df, exp)
 
     def test_str(self):
         for dm in self.dms:
