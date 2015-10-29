@@ -272,7 +272,7 @@ from skbio.io import create_format, GenBankFormatError
 from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str
-from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.sequence import Sequence, DNA, RNA, Protein, Feature
 
 
 genbank = create_format('genbank')
@@ -429,8 +429,7 @@ def _parse_single_genbank(chunks):
         elif header == 'ORIGIN':
             sequence = parsed
         elif header == 'FEATURES':
-            metadata[header] = parsed[0]
-            positional_metadata = pd.concat(parsed[1], axis=1)
+            positional_metadata = pd.concat(parsed, axis=1)
         else:
             metadata[header] = parsed
     return sequence, metadata, positional_metadata
@@ -445,17 +444,22 @@ def _serialize_single_genbank(obj, fh):
     '''
     md = obj.metadata
     for header in _HEADERS:
+        serializer = _SERIALIZER_TABLE.get(
+            header, _serialize_section_default)
         if header in md:
-            serializer = _SERIALIZER_TABLE.get(
-                header, _serialize_section_default)
             out = serializer(header, md[header])
+        elif header == 'FEATURES':
+            out = serializer(header, obj.positional_metadata.columns)
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
-            if iter(out) is iter(out):
-                for s in out:
-                    fh.write(s)
-            else:
-                fh.write(out)
+        else:
+            continue
+        if iter(out) is iter(out):
+            for s in out:
+                fh.write(s)
+        else:
+            fh.write(out)
+
     # always write RNA seq as DNA
     if isinstance(obj, RNA):
         obj = obj.reverse_transcribe()
@@ -609,7 +613,6 @@ def _parse_features(lines, length):
     '''Parse FEATURES field.
     '''
     features = []
-    positional_metadata = []
     # skip the 1st FEATURES line
     if lines[0].startswith('FEATURES'):
         lines = lines[1:]
@@ -619,12 +622,11 @@ def _parse_features(lines, length):
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
-    for i, section in enumerate(section_splitter(lines)):
+    for section in section_splitter(lines):
         # print(i) ; continue
-        feature, pmd = _parse_single_feature(section, length, i)
+        feature = _parse_single_feature(section, length)
         features.append(feature)
-        positional_metadata.append(pmd)
-    return features, positional_metadata
+    return features
 
 
 def _serialize_features(header, obj, indent=21):
@@ -639,18 +641,23 @@ def _serialize_features(header, obj, indent=21):
             yield _serialize_single_feature(feature, indent)
 
 
-def _parse_single_feature(lines, length, index):
+def _parse_single_feature(lines, length):
     '''Parse a feature.
+
+    Parameters
+    ----------
+    lines : list
+        list of lines
+    length : int
+        sequence length
 
     Returns
     -------
-    tuple
-        Tuple of a dict of `metadata` and a pandas.Series of
-        `positional_metadata` for the feature.
+    a pandas.Series of `positional_metadata` for the feature with its name
+    a frozen dict of `metadata`.
 
     '''
-    feature = {}
-    feature['index_'] = index
+    feature_md = {}
     # each component of a feature starts with '/', except the 1st
     # component of location.
     section_splitter = _yield_section(
@@ -662,10 +669,10 @@ def _parse_single_feature(lines, length, index):
             first = False
             type, location = _parse_section_default(
                 section, join_delimitor='', return_label=True)
-            feature['type_'] = type
-            feature['location'] = location
-            loc, loc_pmd = _parse_loc_str(location, length)
-            feature.update(loc)
+            feature_md['type_'] = type
+            feature_md['location'] = location
+            loc, pmd = _parse_loc_str(location, length)
+            feature_md.update(loc)
         else:
             # following sections are Qualifiers
             k, v = _parse_section_default(
@@ -674,13 +681,18 @@ def _parse_single_feature(lines, length, index):
             k = k[1:]
 
             # some Qualifiers can appear multiple times
-            if k in feature:
-                if not isinstance(feature[k], list):
-                    feature[k] = [feature[k]]
-                feature[k].append(v)
+            if k in feature_md:
+                if not isinstance(feature_md[k], list):
+                    feature_md[k] = [feature_md[k]]
+                feature_md[k].append(v)
             else:
-                feature[k] = v
-    return feature, loc_pmd
+                feature_md[k] = v
+    # convert list to tuple so it is hashable
+    for k in feature_md:
+        if isinstance(feature_md[k], list):
+            feature_md[k] = tuple(feature_md[k])
+    feature = pd.Series(pmd, name=Feature(**feature_md))
+    return feature
 
 
 def _serialize_single_feature(obj, indent=21):
@@ -690,7 +702,7 @@ def _serialize_single_feature(obj, indent=21):
         if k.endswith('_') or k in ('location', 'type'):
             continue
         v = obj[k]
-        if isinstance(v, list):
+        if isinstance(v, tuple):
             for vi in v:
                 qualifiers.append(_serialize_qualifier(k, vi))
         else:
@@ -771,7 +783,7 @@ def _parse_loc_str(loc_str, length):
                 loc_str)
         pmd[index] = True
 
-    return res, pd.Series(pmd)
+    return res, pmd
 
 
 def _parse_origin(lines):
