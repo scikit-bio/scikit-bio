@@ -167,14 +167,13 @@ Metadata:
     'ACCESSION': '3K1V_A'
     'COMMENT': 'SEQRES.'
     'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
-    'FEATURES': <class 'list'>
     'KEYWORDS': '.'
     'LOCUS': <class 'dict'>
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
 Positional metadata:
-    0: <dtype: bool>
+    <class 'skbio.sequence._feature.Feature'>: <dtype: bool>
 Stats:
     length: 34
     has gaps: False
@@ -197,14 +196,13 @@ Metadata:
     'ACCESSION': '3K1V_A'
     'COMMENT': 'SEQRES.'
     'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
-    'FEATURES': <class 'list'>
     'KEYWORDS': '.'
     'LOCUS': <class 'dict'>
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
 Positional metadata:
-    0: <dtype: bool>
+    <class 'skbio.sequence._feature.Feature'>: <dtype: bool>
 Stats:
     length: 34
     has gaps: False
