@@ -412,6 +412,10 @@ class DissimilarityMatrix(SkbioObject):
         return data
 
     @experimental(as_of="0.4.0")
+    def to_dataframe(self):
+        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
