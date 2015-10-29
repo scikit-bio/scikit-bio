@@ -14,23 +14,23 @@ from collections import Mapping
 class Feature(Mapping):
     '''Store the metadata of a sequence feature.
 
+    It is implemented as frozendict and can be used similarly
+    as built-in ``dict``.
+
     Parameters
     ----------
-    kwargs :
+    args : tuple
+        Positional arguments that can be passed to ``dict``
+    kwargs : dict
+        Keyword arguments of feature name and feature value, which can
+        be passed to ``dict``.
     '''
-    def __init__(self, **kwargs):
-        self.__d = dict(**kwargs)
-
-    # def __eq__(self, other):
-    #     if self.__class__ != other.__class__:
-    #         return False
-    #     for attr, value in other:
-    #         if getattr(self, attr) != value:
-    #             return False
-    #     return True
-
-    # def __ne__(self, other):
-    #     return not (self == other)
+    def __init__(self, *args, **kwargs):
+        self.__d = dict(*args, **kwargs)
+        self._hash = None
+        # make sure the values in the dict are also hashable/immutable
+        for k in self.__d:
+            hash(self.__d[k])
 
     def __iter__(self):
         return iter(self.__d)
@@ -45,4 +45,6 @@ class Feature(Mapping):
         return ';'.join('{0}:{1}'.format(k, self[k]) for k in self)
 
     def __hash__(self):
-        return hash(frozenset(self.items()))
+        if self._hash is None:
+            self._hash = hash(frozenset(self.items()))
+        return self._hash
