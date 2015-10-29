@@ -178,13 +178,14 @@ def mrm(y, *args, **kwargs):
     pvals = ((abs(T) <= abs(Ts)).sum(axis=0) + 1) / (permutations + 1)
     model_pval = ((F <= Fs).sum() + 1) / (permutations + 1)
     labs = ['intercept'] + list(labels)
-    coefs = pd.DataFrame([np.ravel(B),
-                          np.ravel(T),
-                          np.ravel(pvals)],
-                          index=labs,
-                          columns=['coefficient',
-                                   't-statistic',
-                                   'p-value'])
+    data = np.array([np.ravel(B),
+                     np.ravel(T),
+                     np.ravel(pvals)]).T
+    coefs = pd.DataFrame(data,
+                         index=labs,
+                         columns=['coefficient',
+                                  't-statistic',
+                                  'p-value'])
     summary = pd.Series([F, model_pval, R2],
                         index=['F-statistic',
                                'lack-of-fit p-value',
@@ -227,4 +228,4 @@ def make_categorical_dms(x, metric=cityblock, ignore_nans=True):
             dm = DistanceMatrix.from_iterable(np.vstack([a, b]).T,
                                               metric=metric,
                                               keys=x.index)
-            yield (dm, '%s_%s' % (str(cats[i]), str(cats[j])))
+            yield (dm, '%s:%s' % (str(cats[i]), str(cats[j])))
