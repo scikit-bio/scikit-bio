@@ -62,7 +62,8 @@ class DissimilarityMatrix(SkbioObject):
     data : array_like or DissimilarityMatrix
         Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray``. Can instead be a `DissimilarityMatrix` (or
+        using ``numpy.asarray`` or a one-dimensional vector of dissimilarities
+        (floats). Can instead be a `DissimilarityMatrix` (or
         subclass) instance, in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
@@ -98,7 +99,8 @@ class DissimilarityMatrix(SkbioObject):
             ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
-
+        if data.ndim == 1:
+            data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)

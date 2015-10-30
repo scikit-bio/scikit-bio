@@ -4,6 +4,7 @@
 
 ### Features
 * Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/biocore/scikit-bio/issues/757))
+* Added support for one-dimensional vector of dissimilarities in `skbio.stats.distance`
 * Added `skbio.io.format.blast6` for reading BLAST+ output format 6 or BLAST output format 8 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
 * Added `inner`, `ilr`, `ilr_inv` and `clr_inv`, ``skbio.stats.composition``, which enables linear transformations on compositions ([#892](https://github.com/biocore/scikit-bio/issues/892)
 * Added ``skbio.diversity.alpha.pielou_e`` function as an evenness metric of alpha diversity. ([#1068](https://github.com/biocore/scikit-bio/issues/1068))
