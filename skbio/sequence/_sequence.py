@@ -22,12 +22,14 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject, MetadataMixin
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
-from skbio.util._decorator import stable, experimental, classonlymethod
+from skbio.util._decorator import (stable, experimental, classonlymethod,
+                                   overrides)
 
 
-class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
+class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
+               SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet and are thus the most
@@ -345,111 +347,6 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
-    @stable(as_of="0.4.0")
-    def positional_metadata(self):
-        """``pd.DataFrame`` containing metadata on a per-character basis.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        Create a DNA sequence with positional metadata:
-
-        >>> from skbio import DNA
-        >>> seq = DNA(
-        ...     'ACGT',
-        ...     positional_metadata={'quality': [3, 3, 20, 11],
-        ...                          'exons': [True, True, False, True]})
-        >>> seq
-        DNA
-        -----------------------------
-        Positional metadata:
-            'exons': <dtype: bool>
-            'quality': <dtype: int64>
-        Stats:
-            length: 4
-            has gaps: False
-            has degenerates: False
-            has non-degenerates: True
-            GC-content: 50.00%
-        -----------------------------
-        0 ACGT
-
-        Retrieve positional metadata:
-
-        >>> seq.positional_metadata
-           exons  quality
-        0   True        3
-        1   True        3
-        2  False       20
-        3   True       11
-
-        Update positional metadata:
-
-        >>> seq.positional_metadata['gaps'] = seq.gaps()
-        >>> seq.positional_metadata
-           exons  quality   gaps
-        0   True        3  False
-        1   True        3  False
-        2  False       20  False
-        3   True       11  False
-
-        Set positional metadata:
-
-        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
-        >>> seq.positional_metadata
-          degenerates
-        0       False
-        1       False
-        2       False
-        3       False
-
-        Delete positional metadata:
-
-        >>> seq.has_positional_metadata()
-        True
-        >>> del seq.positional_metadata
-        >>> seq.positional_metadata
-        Empty DataFrame
-        Columns: []
-        Index: [0, 1, 2, 3]
-        >>> seq.has_positional_metadata()
-        False
-
-        """
-        if self._positional_metadata is None:
-            # not using setter to avoid copy
-            self._positional_metadata = pd.DataFrame(
-                index=np.arange(len(self)))
-        return self._positional_metadata
-
-    @positional_metadata.setter
-    def positional_metadata(self, positional_metadata):
-        try:
-            # copy=True to copy underlying data buffer
-            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
-            raise TypeError('Positional metadata invalid. Must be consumable '
-                            'by pd.DataFrame. Original pandas error message: '
-                            '"%s"' % e)
-
-        num_rows = len(positional_metadata.index)
-        if num_rows != len(self):
-            raise ValueError(
-                "Number of positional metadata values (%d) must match the "
-                "number of characters in the sequence (%d)." %
-                (num_rows, len(self)))
-
-        positional_metadata.reset_index(drop=True, inplace=True)
-        self._positional_metadata = positional_metadata
-
-    @positional_metadata.deleter
-    def positional_metadata(self):
-        self._positional_metadata = None
-
-    @property
     @experimental(as_of="0.4.0-dev")
     def observed_chars(self):
         """Set of observed characters in the sequence.
@@ -614,6 +511,10 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
             raise TypeError("Cannot cast %r as %r." %
                             (cls.__name__, target.__name__))
 
+    @overrides(PositionalMetadataMixin)
+    def _positional_metadata_axis_len(self):
+        return len(self)
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
@@ -672,11 +573,8 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
             self._set_bytes(sequence)
 
         MetadataMixin.__init__(self, metadata=metadata)
-
-        if positional_metadata is None:
-            self._positional_metadata = None
-        else:
-            self.positional_metadata = positional_metadata
+        PositionalMetadataMixin.__init__(
+            self, positional_metadata=positional_metadata)
 
         if lowercase is False:
             pass
@@ -814,15 +712,7 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
         if self._string != other._string:
             return False
 
-        if self.has_positional_metadata() and other.has_positional_metadata():
-            if not self.positional_metadata.equals(other.positional_metadata):
-                return False
-        elif not (self.has_positional_metadata() or
-                  other.has_positional_metadata()):
-            # both don't have positional metadata
-            pass
-        else:
-            # one has positional metadata while the other does not
+        if not PositionalMetadataMixin.__eq__(self, other):
             return False
 
         return True
@@ -1249,29 +1139,6 @@ class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
 
         """
         return self._copy(True, memo)
-
-    @stable(as_of="0.4.0")
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
 
     @stable(as_of="0.4.0")
     def copy(self, deep=False):
