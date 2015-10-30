@@ -682,24 +682,23 @@ class TabularMSA(SkbioObject):
         else:
             keys_ = None
 
-        if keys_ is not None:
-            self._assert_valid_keys(keys_)
+        self._keys = self._munge_keys(keys_)
+
+    def _munge_keys(self, keys):
+        if keys is not None:
+            # Hashability of keys is implicitly checked here.
+            duplicates = find_duplicates(keys)
+            if duplicates:
+                raise UniqueError(
+                    "Keys must be unique. Duplicate keys: %r" % duplicates)
 
             # Create an immutable ndarray to ensure key invariants are
             # preserved. Use object dtype to preserve original key types. This
             # is important, for example, because np.array(['a', 42]) will
             # upcast to ['a', '42'].
-            keys_ = np.array(keys_, dtype=object, copy=True)
-            keys_.flags.writeable = False
-
-        self._keys = keys_
-
-    def _assert_valid_keys(self, keys):
-        # Hashability of keys is implicitly checked here.
-        duplicates = find_duplicates(keys)
-        if duplicates:
-            raise UniqueError(
-                "Keys must be unique. Duplicate keys: %r" % duplicates)
+            keys = np.array(keys, dtype=object, copy=True)
+            keys.flags.writeable = False
+        return keys
 
     @experimental(as_of='0.4.0-dev')
     def append(self, sequence, minter=None, key=None):
@@ -809,21 +808,10 @@ class TabularMSA(SkbioObject):
                 "MSA: %d != %d"
                 % (len(sequence), self.shape.position))
         else:
-            self._append_sequence_with_key(sequence, key)
-
-    def _append_sequence_with_key(self, sequence, key=None):
-        if key is not None:
-            # We want to make sure the MSA is not mutated if the key is
-            # invalid, but in the current implementation, we can't set
-            # the keys without appending the sequence first (because of length
-            # mismatch). So, validate the key, append the sequence, then set
-            # the keys.
-            keys = list(self.keys)
-            keys.append(key)
-            self._assert_valid_keys(keys)
-            self._seqs.append(sequence)
-            self.keys = keys
-        else:
+            if key is not None:
+                keys = list(self.keys)
+                keys.append(key)
+                self._keys = self._munge_keys(keys)
             self._seqs.append(sequence)
 
     def sort(self, key=None, reverse=False):
