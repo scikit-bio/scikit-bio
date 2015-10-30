@@ -38,10 +38,11 @@ class TabularMSA(MetadataMixin, SkbioObject):
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
-    key : callable or metadata key, optional
-        If provided, defines a unique, hashable key for each sequence in
-        `sequences`. Can either be a callable accepting a single argument (each
-        sequence) or a key into each sequence's ``metadata`` attribute.
+    minter : callable or metadata key, optional
+        If provided, defines a minter which provides a unique, hashable key
+        for each sequence in `sequences`. Can either be a callable accepting
+        a single argument (each sequence) or a key into each sequence's
+        ``metadata`` attribute.
     keys : iterable, optional
         An iterable of the same length as `sequences` containing unique,
         hashable elements. Each element will be used as the respective key for
@@ -50,7 +51,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
     Raises
     ------
     ValueError
-        If `key` and `keys` are both provided.
+        If `minter` and `keys` are both provided.
     ValueError
         If `keys` is not the same length as `sequences`.
     UniqueError
@@ -64,7 +65,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
 
     Notes
     -----
-    If `key` or `keys` are not provided, keys will not be set and certain
+    If `minter` or `keys` are not provided, keys will not be set and certain
     operations requiring keys will raise an ``OperationError``.
 
     """
@@ -123,7 +124,12 @@ class TabularMSA(MetadataMixin, SkbioObject):
         3
 
         """
-        return self._shape
+        sequence_count = len(self)
+        if sequence_count > 0:
+            position_count = len(self._seqs[0])
+        else:
+            position_count = 0
+        return _Shape(sequence=sequence_count, position=position_count)
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -156,7 +162,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'})]
-        >>> msa = TabularMSA(seqs, key='id')
+        >>> msa = TabularMSA(seqs, minter='id')
 
         Retrieve keys:
 
@@ -243,41 +249,16 @@ class TabularMSA(MetadataMixin, SkbioObject):
         return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
-    def __init__(self, sequences, metadata=None, key=None, keys=None):
-        sequences = iter(sequences)
-        seq = next(sequences, None)
+    def __init__(self, sequences, metadata=None, minter=None, keys=None):
+        self._seqs = []
+        self._dtype = None
 
-        dtype = None
-        length = 0
-        seqs = []
-        if seq is not None:
-            seqs.append(seq)
-            dtype = type(seq)
-            if not issubclass(dtype, IUPACSequence):
-                raise TypeError(
-                    "`sequences` must contain scikit-bio sequence objects "
-                    "that have an alphabet, not type %r" % dtype.__name__)
-            length = len(seq)
-
-            for seq in sequences:
-                if type(seq) is not dtype:
-                    raise TypeError(
-                        "`sequences` cannot contain mixed types. Type %r does "
-                        "not match type %r" %
-                        (type(seq).__name__, dtype.__name__))
-                if len(seq) != length:
-                    raise ValueError(
-                        "`sequences` must contain sequences of the same "
-                        "length: %r != %r" % (len(seq), length))
-                seqs.append(seq)
-
-        self._seqs = seqs
-        self._dtype = dtype
-        self._shape = _Shape(sequence=len(seqs), position=length)
+        for seq in sequences:
+            self._add_sequence(seq)
 
         MetadataMixin.__init__(self, metadata=metadata)
 
-        self.reindex(key=key, keys=keys)
+        self.reindex(minter=minter, keys=keys)
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
@@ -340,9 +321,8 @@ class TabularMSA(MetadataMixin, SkbioObject):
         >>> msa = TabularMSA([])
         >>> len(msa)
         0
-
         """
-        return self.shape.sequence
+        return len(self._seqs)
 
     @experimental(as_of='0.4.0-dev')
     def __iter__(self):
@@ -436,7 +416,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
 
         MSAs with different keys are not equal:
 
-        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], key=str)
+        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         >>> msa1 == msa5
         False
 
@@ -590,7 +570,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa.has_keys()
         False
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], key=str)
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         >>> msa.has_keys()
         True
 
@@ -598,15 +578,16 @@ class TabularMSA(MetadataMixin, SkbioObject):
         return self._keys is not None
 
     @experimental(as_of='0.4.0-dev')
-    def reindex(self, key=None, keys=None):
+    def reindex(self, minter=None, keys=None):
         """Reassign keys to sequences in the MSA.
 
         Parameters
         ----------
-        key : callable or metadata key, optional
-            If provided, defines a unique, hashable key for each sequence in
-            the MSA. Can either be a callable accepting a single argument (each
-            sequence) or a key into each sequence's ``metadata`` attribute.
+        minter : callable or metadata key, optional
+            If provided, defines a minter which provides a unique, hashable
+            key for each sequence in the MSA. Can either be a callable
+            accepting a single argument (each sequence) or a key into each
+            sequence's ``metadata`` attribute.
         keys : iterable, optional
             An iterable of the same length as the number of sequences in the
             MSA. `keys` must contain unique, hashable elements. Each element
@@ -615,7 +596,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         Raises
         ------
         ValueError
-            If `key` and `keys` are both provided.
+            If `minter` and `keys` are both provided.
         ValueError
             If `keys` is not the same length as the number of sequences in the
             MSA.
@@ -629,8 +610,8 @@ class TabularMSA(MetadataMixin, SkbioObject):
 
         Notes
         -----
-        If `key` or `keys` are not provided, keys will not be set and certain
-        operations requiring keys will raise an ``OperationError``.
+        If `minter` or `keys` are not provided, keys will not be set and
+        certain operations requiring keys will raise an ``OperationError``.
 
         Examples
         --------
@@ -645,7 +626,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
 
         Set keys on the MSA, using each sequence's ID:
 
-        >>> msa.reindex(key='id')
+        >>> msa.reindex(minter='id')
         >>> msa.has_keys()
         True
         >>> msa.keys
@@ -664,24 +645,27 @@ class TabularMSA(MetadataMixin, SkbioObject):
         array(['a', 'b'], dtype=object)
 
         """
-        if key is not None and keys is not None:
+        if minter is not None and keys is not None:
             raise ValueError(
-                "Cannot use both `key` and `keys` at the same time.")
+                "Cannot use both `minter` and `keys` at the same time.")
 
-        keys_ = None
-        if key is not None:
-            keys_ = [resolve_key(seq, key) for seq in self._seqs]
+        if minter is not None:
+            keys_ = [resolve_key(seq, minter) for seq in self._seqs]
         elif keys is not None:
-            keys = list(keys)
-            if len(keys) != len(self):
+            keys_ = list(keys)
+            if len(keys_) != len(self):
                 raise ValueError(
                     "Number of elements in `keys` must match number of "
-                    "sequences: %d != %d" % (len(keys), len(self)))
-            keys_ = keys
+                    "sequences: %d != %d" % (len(keys_), len(self)))
+        else:
+            keys_ = None
 
-        if keys_ is not None:
+        self._keys = self._munge_keys(keys_)
+
+    def _munge_keys(self, keys):
+        if keys is not None:
             # Hashability of keys is implicitly checked here.
-            duplicates = find_duplicates(keys_)
+            duplicates = find_duplicates(keys)
             if duplicates:
                 raise UniqueError(
                     "Keys must be unique. Duplicate keys: %r" % duplicates)
@@ -690,12 +674,124 @@ class TabularMSA(MetadataMixin, SkbioObject):
             # preserved. Use object dtype to preserve original key types. This
             # is important, for example, because np.array(['a', 42]) will
             # upcast to ['a', '42'].
-            keys_ = np.array(keys_, dtype=object, copy=True)
-            keys_.flags.writeable = False
-
-        self._keys = keys_
+            keys = np.array(keys, dtype=object, copy=True)
+            keys.flags.writeable = False
+        return keys
 
     @experimental(as_of='0.4.0-dev')
+    def append(self, sequence, minter=None, key=None):
+        """Append a sequence to the MSA.
+
+        Parameters
+        ----------
+        sequence : alphabet-aware scikit-bio sequence object
+            Sequence to be appended. Must match the dtype of the MSA and the
+            number of positions in the MSA.
+        minter : callable or metadata key, optional
+            Used to create a key for the sequence being appended. If callable,
+            it generates a key directly. Otherwise it's treated as a key into
+            the sequence metadata. If the key is a duplicate of any key
+            already in the MSA, an error is raised. Note that `minter` cannot
+            be combined with `key`.
+        key : hashable, optional
+            Key for the MSA to use for the appended sequence. Note that
+            `key` cannot be combined with `minter`.
+
+        Raises
+        ------
+        OperationError
+            If both key and minter are provided.
+        OperationError
+            If MSA has keys but no key or minter was provided for the sequence
+            being appended.
+        OperationError
+            If key was provided but the MSA does not have keys.
+        OperationError
+            If minter was provided but the MSA does not have keys.
+        TypeError
+            If the sequence object is a type that doesn't have an alphabet
+        TypeError
+            If the type of the sequence does not match the dtype of the MSA.
+        ValueError
+            If the length of the sequence does not match the number of
+            positions in the MSA.
+
+        See Also
+        --------
+        reindex
+
+        Notes
+        -----
+        The MSA is not automatically re-aligned when a sequence is appended.
+        Therefore, this operation is not necessarily meaningful on its own.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('')])
+        >>> msa.append(DNA(''))
+        >>> msa == TabularMSA([DNA(''), DNA('')])
+        True
+
+        >>> msa = TabularMSA([DNA('', metadata={'id': 'a'})], minter='id')
+        >>> msa.append(DNA('', metadata={'id': 'b'}), minter='id')
+        >>> msa == TabularMSA([DNA('', metadata={'id': 'a'}),
+        ...                    DNA('', metadata={'id': 'b'})], minter='id')
+        True
+        """
+
+        if key is not None and minter is not None:
+            raise ValueError(
+                "Cannot use both `minter` and `key` at the same time.")
+
+        new_key = None
+        if self.has_keys():
+            if key is None and minter is None:
+                raise OperationError(
+                    "MSA has keys but no key or minter was provided.")
+            elif key is not None:
+                new_key = key
+            elif minter is not None:
+                new_key = resolve_key(sequence, minter)
+        else:
+            if key is not None:
+                raise OperationError(
+                    "key was provided but MSA does not have keys.")
+            elif minter is not None:
+                raise OperationError(
+                    "minter was provided but MSA does not have keys.")
+
+        self._add_sequence(sequence, new_key)
+
+    def _add_sequence(self, sequence, key=None):
+        msa_is_empty = not len(self)
+        dtype = type(sequence)
+        if msa_is_empty:
+            if not issubclass(dtype, IUPACSequence):
+                raise TypeError(
+                    "`sequence` must be a scikit-bio sequence object "
+                    "that has an alphabet, not type %r" % dtype.__name__)
+            if key is not None:
+                self._keys = self._munge_keys([key])
+            self._dtype = dtype
+            self._seqs = [sequence]
+        elif dtype is not self.dtype:
+            raise TypeError(
+                "`sequence` must match the type of any other sequences "
+                "already in the MSA. Type %r does not match type %r" %
+                (dtype.__name__, self.dtype.__name__))
+        elif len(sequence) != self.shape.position:
+            raise ValueError(
+                "`sequence` length must match the number of positions in the "
+                "MSA: %d != %d"
+                % (len(sequence), self.shape.position))
+        else:
+            if key is not None:
+                keys = list(self.keys)
+                keys.append(key)
+                self._keys = self._munge_keys(keys)
+            self._seqs.append(sequence)
+
     def sort(self, key=None, reverse=False):
         """Sort sequences in-place.
 
