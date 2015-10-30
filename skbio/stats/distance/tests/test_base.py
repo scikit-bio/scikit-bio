@@ -471,6 +471,14 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
 
+    def test_init_from_condensed_form(self):
+        data = [1, 2, 3]
+        exp = DistanceMatrix([[0, 1, 2],
+                              [1, 0, 3],
+                              [2, 3, 0]], ['0', '1', '2'])
+        res = DistanceMatrix(data)
+        self.assertEqual(exp, res)
+
     def test_init_invalid_input(self):
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
