@@ -11,22 +11,22 @@ from __future__ import absolute_import, division, print_function
 import collections
 import operator
 
-from future.builtins import zip
+from future.builtins import zip, range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
 
-class TabularMSA(SkbioObject):
+class TabularMSA(MetadataMixin, SkbioObject):
     """Store a multiple sequence alignment in tabular (row/column) form.
 
     Parameters
@@ -206,73 +206,7 @@ class TabularMSA(SkbioObject):
     def keys(self):
         self.reindex()
 
-    @property
-    @experimental(as_of='0.4.0-dev')
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire MSA.
-
-        Notes
-        -----
-        This property can be set and deleted. When setting new metadata a
-        shallow copy of the dictionary is made.
-
-        Examples
-        --------
-        >>> from pprint import pprint
-        >>> from skbio import DNA, TabularMSA
-
-        Create an MSA with metadata:
-
-        >>> msa = TabularMSA([DNA('TT-GA'), DNA('ATAGC')],
-        ...                  metadata={'id': 'msa-id',
-        ...                            'description': 'msa description'})
-
-        Retrieve metadata:
-
-        >>> pprint(msa.metadata) # using pprint to display dict in sorted order
-        {'description': 'msa description', 'id': 'msa-id'}
-
-        Update metadata:
-
-        >>> msa.metadata['id'] = 'new-id'
-        >>> msa.metadata['medline'] = 12345678
-        >>> pprint(msa.metadata)
-        {'description': 'msa description', 'id': 'new-id', 'medline': 12345678}
-
-        Set metadata:
-
-        >>> msa.metadata = {'abc': 123}
-        >>> msa.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> msa.has_metadata()
-        True
-        >>> del msa.metadata
-        >>> msa.metadata
-        {}
-        >>> msa.has_metadata()
-        False
-
-        """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def from_dict(cls, dictionary):
         """Create a ``TabularMSA`` from a ``dict``.
@@ -322,10 +256,7 @@ class TabularMSA(SkbioObject):
         for seq in sequences:
             self._add_sequence(seq)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
+        MetadataMixin.__init__(self, metadata=metadata)
 
         self.reindex(minter=minter, keys=keys)
 
@@ -500,17 +431,7 @@ class TabularMSA(SkbioObject):
         if not isinstance(other, TabularMSA):
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the TabularMSA
-        # objects if they don't have metadata.
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         # Use np.array_equal instead of (a == b).all():
@@ -543,6 +464,93 @@ class TabularMSA(SkbioObject):
         return not (self == other)
 
     @experimental(as_of='0.4.0-dev')
+    def gap_frequencies(self, axis='sequence', relative=False):
+        """Compute frequency of gap characters across an axis.
+
+        Parameters
+        ----------
+        axis : {'sequence', 'position'}, optional
+            Axis to compute gap character frequencies across. If 'sequence' or
+            0, frequencies are computed for each position in the MSA. If
+            'position' or 1, frequencies are computed for each sequence.
+        relative : bool, optional
+            If ``True``, return the relative frequency of gap characters
+            instead of the count.
+
+        Returns
+        -------
+        1D np.ndarray (int or float)
+            Vector of gap character frequencies across the specified axis. Will
+            have ``int`` dtype if ``relative=False`` and ``float`` dtype if
+            ``relative=True``.
+
+        Raises
+        ------
+        ValueError
+            If `axis` is invalid.
+
+        Notes
+        -----
+        If there are no positions in the MSA, ``axis='position'``, **and**
+        ``relative=True``, the relative frequency of gap characters in each
+        sequence will be ``np.nan``.
+
+        Examples
+        --------
+        Compute frequency of gap characters for each position in the MSA (i.e.,
+        *across* the sequence axis):
+
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'),
+        ...                   DNA('A--'),
+        ...                   DNA('AC.'),
+        ...                   DNA('AG.')])
+        >>> msa.gap_frequencies()
+        array([0, 1, 3])
+
+        Compute relative frequencies across the same axis:
+
+        >>> msa.gap_frequencies(relative=True)
+        array([ 0.  ,  0.25,  0.75])
+
+        Compute frequency of gap characters for each sequence (i.e., *across*
+        the position axis):
+
+        >>> msa.gap_frequencies(axis='position')
+        array([0, 2, 1, 1])
+
+        """
+        if self._is_sequence_axis(axis):
+            # TODO: use TabularMSA.iter_positions when it is implemented
+            # (#1100).
+            seq_iterator = (self._get_position(i)
+                            for i in range(self.shape.position))
+            length = self.shape.sequence
+        else:
+            seq_iterator = self
+            length = self.shape.position
+
+        gap_freqs = []
+        for seq in seq_iterator:
+            # Not using Sequence.frequencies(relative=relative) because each
+            # gap character's relative frequency is computed separately and
+            # must be summed. This is less precise than summing the absolute
+            # frequencies of gap characters and dividing by the length. Likely
+            # not a big deal for typical gap characters ('-', '.') but can be
+            # problematic as the number of gap characters grows (we aren't
+            # guaranteed to always have two gap characters). See unit tests for
+            # an example.
+            freqs = seq.frequencies(chars=self.dtype.gap_chars)
+            gap_freqs.append(sum(viewvalues(freqs)))
+
+        gap_freqs = np.asarray(gap_freqs, dtype=float if relative else int)
+
+        if relative:
+            gap_freqs /= length
+
+        return gap_freqs
+
+    @experimental(as_of='0.4.0-dev')
     def has_keys(self):
         """Determine if keys exist on the MSA.
 
@@ -568,36 +576,6 @@ class TabularMSA(SkbioObject):
 
         """
         return self._keys is not None
-
-    @experimental(as_of='0.4.0-dev')
-    def has_metadata(self):
-        """Determine if the MSA has metadata.
-
-        An MSA has metadata if its ``metadata`` dictionary is not empty (i.e.,
-        has at least one key-value pair).
-
-        Returns
-        -------
-        bool
-            Indicates whether the MSA has metadata
-
-        See Also
-        --------
-        metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA, TabularMSA
-        >>> seqs = [DNA('AC--G'), DNA('ATAAG')]
-        >>> msa = TabularMSA(seqs)
-        >>> msa.has_metadata()
-        False
-        >>> msa = TabularMSA(seqs, metadata={'id': 'msa-id'})
-        >>> msa.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
 
     @experimental(as_of='0.4.0-dev')
     def reindex(self, minter=None, keys=None):
@@ -945,3 +923,13 @@ class TabularMSA(SkbioObject):
         # if self.has_positional_metadata():
         #     seq.metadata = dict(self.positional_metadata.iloc[i])
         return seq
+
+    def _is_sequence_axis(self, axis):
+        if axis == 'sequence' or axis == 0:
+            return True
+        elif axis == 'position' or axis == 1:
+            return False
+        else:
+            raise ValueError(
+                "`axis` must be 'sequence' (0) or 'position' (1), not %r"
+                % axis)

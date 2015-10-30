@@ -15,6 +15,7 @@ see the associated documentation.
 .. autosummary::
    :toctree: generated/
 
+   blast6
    clustal
    fasta
    fastq
@@ -196,10 +197,10 @@ from skbio.util import TestRunner
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
                          ClustalFormatError, FASTAFormatError,
-                         GenBankFormatError,
-                         IOSourceError, FASTQFormatError, LSMatFormatError,
-                         NewickFormatError, OrdinationFormatError,
-                         PhylipFormatError, QSeqFormatError, QUALFormatError)
+                         GenBankFormatError, IOSourceError, FASTQFormatError,
+                         LSMatFormatError, NewickFormatError,
+                         OrdinationFormatError, PhylipFormatError,
+                         QSeqFormatError, QUALFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -224,6 +225,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
+import_module('skbio.io.format.blast6')
 import_module('skbio.io.format.clustal')
 import_module('skbio.io.format.fasta')
 import_module('skbio.io.format.fastq')

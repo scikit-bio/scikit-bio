@@ -21,7 +21,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
@@ -412,6 +412,10 @@ class DissimilarityMatrix(SkbioObject):
         return data
 
     @experimental(as_of="0.4.0")
+    def to_dataframe(self):
+        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+
+    @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
 
@@ -656,7 +660,7 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DistanceMatrix from all pairs in an iterable given a metric.

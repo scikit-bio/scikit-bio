@@ -22,12 +22,12 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
-from skbio.util._decorator import stable, experimental
+from skbio.util._decorator import stable, experimental, classonlymethod
 
 
-class Sequence(collections.Sequence, SkbioObject):
+class Sequence(MetadataMixin, collections.Sequence, SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet and are thus the most
@@ -346,81 +346,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @property
     @stable(as_of="0.4.0")
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire sequence.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        >>> from pprint import pprint
-        >>> from skbio import Sequence
-
-        Create a sequence with metadata:
-
-        >>> s = Sequence('ACGTACGTACGTACGT',
-        ...              metadata={'id': 'seq-id',
-        ...                        'description': 'seq description'})
-        >>> s
-        Sequence
-        ------------------------------------
-        Metadata:
-            'description': 'seq description'
-            'id': 'seq-id'
-        Stats:
-            length: 16
-        ------------------------------------
-        0 ACGTACGTAC GTACGT
-
-        Retrieve metadata:
-
-        >>> pprint(s.metadata) # using pprint to display dict in sorted order
-        {'description': 'seq description', 'id': 'seq-id'}
-
-        Update metadata:
-
-        >>> s.metadata['id'] = 'new-id'
-        >>> s.metadata['pubmed'] = 12345
-        >>> pprint(s.metadata)
-        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
-
-        Set metadata:
-
-        >>> s.metadata = {'abc': 123}
-        >>> s.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> s.has_metadata()
-        True
-        >>> del s.metadata
-        >>> s.metadata
-        {}
-        >>> s.has_metadata()
-        False
-
-        """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @property
-    @stable(as_of="0.4.0")
     def positional_metadata(self):
         """``pd.DataFrame`` containing metadata on a per-character basis.
 
@@ -547,7 +472,7 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def concat(cls, sequences, how='strict'):
         """Concatenate an iterable of ``Sequence`` objects.
@@ -692,7 +617,6 @@ class Sequence(collections.Sequence, SkbioObject):
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
-
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -747,10 +671,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
             self._set_bytes(sequence)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
+        MetadataMixin.__init__(self, metadata=metadata)
 
         if positional_metadata is None:
             self._positional_metadata = None
@@ -887,18 +808,7 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.__class__ != other.__class__:
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the sequence
-        # objects if they don't have metadata. same strategy is used below for
-        # positional metadata
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         if self._string != other._string:
@@ -1339,28 +1249,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         return self._copy(True, memo)
-
-    @stable(as_of="0.4.0")
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
 
     @stable(as_of="0.4.0")
     def has_positional_metadata(self):
