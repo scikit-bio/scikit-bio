@@ -14,6 +14,7 @@ from abc import ABCMeta, abstractmethod
 from functools import partial
 
 import numpy as np
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
@@ -166,6 +167,197 @@ class MetadataMixin(object):
 
         """
         return self._metadata is not None and bool(self.metadata)
+
+
+class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
+    @abstractmethod
+    def _positional_metadata_axis_len_(self):
+        """Return length of axis that positional metadata applies to.
+
+        Returns
+        -------
+        int
+            Positional metadata axis length.
+
+        """
+        pass
+
+    @property
+    @stable(as_of="0.4.0")
+    def positional_metadata(self):
+        """``pd.DataFrame`` containing metadata along an axis.
+
+        Notes
+        -----
+        This property can be set and deleted. When setting new positional
+        metadata a shallow copy is made.
+
+        Examples
+        --------
+        .. note:: scikit-bio objects with positional metadata share a common
+           interface for accessing and manipulating their positional metadata.
+           The following examples use scikit-bio's ``DNA`` class to demonstrate
+           positional metadata behavior. These examples apply to all other
+           scikit-bio objects storing positional metadata.
+
+        Create a DNA sequence with positional metadata:
+
+        >>> from skbio import DNA
+        >>> seq = DNA(
+        ...     'ACGT',
+        ...     positional_metadata={'quality': [3, 3, 20, 11],
+        ...                          'exons': [True, True, False, True]})
+        >>> seq
+        DNA
+        -----------------------------
+        Positional metadata:
+            'exons': <dtype: bool>
+            'quality': <dtype: int64>
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGT
+
+        Retrieve positional metadata:
+
+        >>> seq.positional_metadata
+           exons  quality
+        0   True        3
+        1   True        3
+        2  False       20
+        3   True       11
+
+        Update positional metadata:
+
+        >>> seq.positional_metadata['gaps'] = seq.gaps()
+        >>> seq.positional_metadata
+           exons  quality   gaps
+        0   True        3  False
+        1   True        3  False
+        2  False       20  False
+        3   True       11  False
+
+        Set positional metadata:
+
+        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
+        >>> seq.positional_metadata
+          degenerates
+        0       False
+        1       False
+        2       False
+        3       False
+
+        Delete positional metadata:
+
+        >>> seq.has_positional_metadata()
+        True
+        >>> del seq.positional_metadata
+        >>> seq.positional_metadata
+        Empty DataFrame
+        Columns: []
+        Index: [0, 1, 2, 3]
+        >>> seq.has_positional_metadata()
+        False
+
+        """
+        if self._positional_metadata is None:
+            # Not using setter to avoid copy.
+            self._positional_metadata = pd.DataFrame(
+                index=np.arange(self._positional_metadata_axis_len_()))
+        return self._positional_metadata
+
+    @positional_metadata.setter
+    def positional_metadata(self, positional_metadata):
+        try:
+            # Pass copy=True to copy underlying data buffer.
+            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
+        except pd.core.common.PandasError as e:
+            raise TypeError(
+                "Invalid positional metadata. Must be consumable by "
+                "`pd.DataFrame` constructor. Original pandas error message: "
+                "\"%s\"" % e)
+
+        num_rows = len(positional_metadata.index)
+        axis_len = self._positional_metadata_axis_len_()
+        if num_rows != axis_len:
+            raise ValueError(
+                "Number of positional metadata values (%d) must match the "
+                "positional metadata axis length (%d)."
+                % (num_rows, axis_len))
+
+        positional_metadata.reset_index(drop=True, inplace=True)
+        self._positional_metadata = positional_metadata
+
+    @positional_metadata.deleter
+    def positional_metadata(self):
+        self._positional_metadata = None
+
+    def __init__(self, positional_metadata=None):
+        if positional_metadata is None:
+            self._positional_metadata = None
+        else:
+            self.positional_metadata = positional_metadata
+
+    def __eq__(self, other):
+        # We're not simply comparing self.positional_metadata to
+        # other.positional_metadata in order to avoid creating "empty"
+        # positional metadata representations on the objects if they don't have
+        # positional metadata.
+        if self.has_positional_metadata() and other.has_positional_metadata():
+            if not self.positional_metadata.equals(other.positional_metadata):
+                return False
+        elif not (self.has_positional_metadata() or
+                  other.has_positional_metadata()):
+            # Both don't have positional metadata.
+            pass
+        else:
+            # One has positional metadata while the other does not.
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    @stable(as_of="0.4.0")
+    def has_positional_metadata(self):
+        """Determine if the object has positional metadata.
+
+        An object has positional metadata if its ``positional_metadata``
+        ``pd.DataFrame`` has at least one column.
+
+        Returns
+        -------
+        bool
+            Indicates whether the object has positional metadata.
+
+        Examples
+        --------
+        .. note:: scikit-bio objects with positional metadata share a common
+           interface for accessing and manipulating their positional metadata.
+           The following examples use scikit-bio's ``DNA`` class to demonstrate
+           positional metadata behavior. These examples apply to all other
+           scikit-bio objects storing positional metadata.
+
+        >>> import pandas as pd
+        >>> from skbio import DNA
+        >>> seq = DNA('ACGT')
+        >>> seq.has_positional_metadata()
+        False
+        >>> seq = DNA('ACGT', positional_metadata=pd.DataFrame(index=range(4)))
+        >>> seq.has_positional_metadata()
+        False
+        >>> seq = DNA('ACGT', positional_metadata={'quality': range(4)})
+        >>> seq.has_positional_metadata()
+        True
+
+        """
+        return (self._positional_metadata is not None and
+                len(self.positional_metadata.columns) > 0)
 
 
 class OrdinationResults(SkbioObject):
