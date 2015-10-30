@@ -411,8 +411,29 @@ class DissimilarityMatrix(SkbioObject):
         plt.close(fig)
         return data
 
-    @experimental(as_of="0.4.0")
-    def to_dataframe(self):
+    @experimental(as_of="0.4.0-dev")
+    def to_data_frame(self):
+        """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
+
+        Returns
+        -------
+        pd.DataFrame
+            ``pd.DataFrame`` with IDs on index and columns.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2],
+        ...                      [1, 0, 3],
+        ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> df = dm.to_data_frame()
+        >>> df
+           a  b  c
+        a  0  1  2
+        b  1  0  3
+        c  2  3  0
+
+        """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
     @experimental(as_of="0.4.0")

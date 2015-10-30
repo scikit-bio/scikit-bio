@@ -334,11 +334,24 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
 
-    def test_to_dataframe(self):
-        dm = self.dm_3x3
-        df = dm.to_dataframe()
-        exp = pd.DataFrame(data=self.dm_3x3_data, index=self.dm_3x3.ids,
-                           columns=self.dm_3x3.ids)
+    def test_to_data_frame_1x1(self):
+        df = self.dm_1x1.to_data_frame()
+        exp = pd.DataFrame([[0.0]], index=['a'], columns=['a'])
+        assert_data_frame_almost_equal(df, exp)
+
+    def test_to_data_frame_3x3(self):
+        df = self.dm_3x3.to_data_frame()
+        exp = pd.DataFrame([[0.0, 0.01, 4.2],
+                            [0.01, 0.0, 12.0],
+                            [4.2, 12.0, 0.0]],
+                           index=['a', 'b', 'c'], columns=['a', 'b', 'c'])
+        assert_data_frame_almost_equal(df, exp)
+
+    def test_to_data_frame_default_ids(self):
+        df = DissimilarityMatrix(self.dm_2x2_data).to_data_frame()
+        exp = pd.DataFrame([[0.0, 0.123],
+                            [0.123, 0.0]],
+                           index=['0', '1'], columns=['0', '1'])
         assert_data_frame_almost_equal(df, exp)
 
     def test_str(self):
