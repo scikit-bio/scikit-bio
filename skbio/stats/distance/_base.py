@@ -63,8 +63,9 @@ class DissimilarityMatrix(SkbioObject):
         Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
         using ``numpy.asarray`` or a one-dimensional vector of dissimilarities
-        (floats). Can instead be a `DissimilarityMatrix` (or
-        subclass) instance, in which case the instance's data will be used.
+        (floats), as defined by `scipy.spatial.distance.squareform`. Can
+        instead be a `DissimilarityMatrix` (or subclass) instance,
+        in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
     ids : sequence of str, optional
@@ -76,6 +77,7 @@ class DissimilarityMatrix(SkbioObject):
     See Also
     --------
     DistanceMatrix
+    scipy.spatial.distance.squareform
 
     Notes
     -----
