@@ -968,6 +968,13 @@ class TestAppend(unittest.TestCase):
         self.assertEqual(msa, TabularMSA([DNA('ACGT', metadata={'id': 'a'})],
                                          keys=['a']))
 
+    def test_to_empty_invalid_key_does_not_mutate_msa(self):
+        msa = TabularMSA([], keys=[])
+        with self.assertRaises(TypeError):
+            unhashable_key = {}
+            msa.append(DNA('ACGT'), key=unhashable_key)
+        self.assertEqual(msa, TabularMSA([], keys=[]))
+
     def test_wrong_dtype_rna(self):
         with six.assertRaisesRegex(self, TypeError,
                                    'must match the type.*RNA.*DNA'):

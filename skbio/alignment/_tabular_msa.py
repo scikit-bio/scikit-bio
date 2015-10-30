@@ -771,10 +771,10 @@ class TabularMSA(MetadataMixin, SkbioObject):
                 raise TypeError(
                     "`sequence` must be a scikit-bio sequence object "
                     "that has an alphabet, not type %r" % dtype.__name__)
+            if key is not None:
+                self._keys = self._munge_keys([key])
             self._dtype = dtype
             self._seqs = [sequence]
-            if key is not None:
-                self.keys = [key]
         elif dtype is not self.dtype:
             raise TypeError(
                 "`sequence` must match the type of any other sequences "
