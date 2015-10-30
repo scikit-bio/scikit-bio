@@ -512,7 +512,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                             (cls.__name__, target.__name__))
 
     @overrides(PositionalMetadataMixin)
-    def _positional_metadata_axis_len(self):
+    def _positional_metadata_axis_len_(self):
         return len(self)
 
     @stable(as_of="0.4.0")

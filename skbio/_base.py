@@ -171,7 +171,7 @@ class MetadataMixin(object):
 
 class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
     @abstractmethod
-    def _positional_metadata_axis_len(self):
+    def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.
 
         Returns
@@ -267,7 +267,7 @@ class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
         if self._positional_metadata is None:
             # Not using setter to avoid copy.
             self._positional_metadata = pd.DataFrame(
-                index=np.arange(self._positional_metadata_axis_len()))
+                index=np.arange(self._positional_metadata_axis_len_()))
         return self._positional_metadata
 
     @positional_metadata.setter
@@ -282,7 +282,7 @@ class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
                 "\"%s\"" % e)
 
         num_rows = len(positional_metadata.index)
-        axis_len = self._positional_metadata_axis_len()
+        axis_len = self._positional_metadata_axis_len_()
         if num_rows != axis_len:
             raise ValueError(
                 "Number of positional metadata values (%d) must match the "

@@ -46,7 +46,7 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
     def setUp(self):
         class ExamplePositionalMetadataMixin(PositionalMetadataMixin):
             @overrides(PositionalMetadataMixin)
-            def _positional_metadata_axis_len(self):
+            def _positional_metadata_axis_len_(self):
                 return self._axis_len
 
             def __init__(self, axis_len, positional_metadata=None):
