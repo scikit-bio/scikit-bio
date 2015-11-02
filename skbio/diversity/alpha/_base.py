@@ -15,7 +15,8 @@ from scipy.optimize import fmin_powell, minimize_scalar
 from skbio.stats import subsample_counts
 from skbio.util._decorator import experimental
 from skbio.diversity._base import (_validate_counts_vector,
-                                   _validate_otu_ids_and_tree)
+                                   _validate_otu_ids_and_tree,
+                                   _counts_and_index)
 
 
 @experimental(as_of="0.4.0")
@@ -259,7 +260,7 @@ def esty_ci(counts):
 
 
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree, validate=True):
+def faith_pd(counts, otu_ids, tree, validate=True, indexed=None):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
@@ -316,9 +317,22 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     if validate:
         counts = _validate_counts_vector(counts)
         _validate_otu_ids_and_tree(counts, otu_ids, tree)
-    observed_otus = {o: c for o, c in zip(otu_ids, counts) if c >= 1}
-    observed_nodes = tree.observed_node_counts(observed_otus)
-    result = sum(o.length for o in observed_nodes if o.length is not None)
+
+    counts = np.asarray(counts)
+    otu_ids = np.asarray(otu_ids)
+
+    if counts.sum() == 0:
+        return 0.0
+
+    # If Faith's PD is being calculated for a large number of samples, the
+    # count_array could be produced a single time for the samples. This would
+    # be much faster than producing it for each sample.
+    count_array, indexed = _counts_and_index(counts, otu_ids, tree, indexed)
+    length = indexed['length']
+
+    count_array = np.where(count_array > 0, 1, 0)
+    result = (length * count_array.T).sum()
+
     return result
 
 
