@@ -24,8 +24,6 @@ Functions
     pw_distances_from_table
     unweighted_unifrac
     weighted_unifrac
-    unweighted_unifrac_fast
-    weighted_unifrac_fast
 
 Examples
 --------
@@ -200,10 +198,8 @@ from skbio.util import TestRunner
 
 from ._base import pw_distances, pw_distances_from_table
 from ._unifrac import unweighted_unifrac, weighted_unifrac
-from ._fast_unifrac import unweighted_unifrac_fast, weighted_unifrac_fast
 
 __all__ = ["pw_distances", "pw_distances_from_table", "unweighted_unifrac",
-           "weighted_unifrac", "unweighted_unifrac_fast",
-           "weighted_unifrac_fast"]
+           "weighted_unifrac"]
 
 test = TestRunner(__file__).test

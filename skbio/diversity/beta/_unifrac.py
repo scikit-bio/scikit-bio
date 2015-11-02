@@ -8,13 +8,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
+
 from skbio.util._decorator import experimental
 from skbio.diversity._base import (_validate_counts_vectors,
-                                   _validate_otu_ids_and_tree)
-
-
-def _observed_otu_counts(counts, otu_ids):
-    return {o: c for o, c in zip(otu_ids, counts) if c >= 1}
+                                   _validate_otu_ids_and_tree,
+                                   _counts_and_index)
+from skbio.diversity._base_cy import _tip_distances
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
@@ -24,7 +24,7 @@ def _validate(u_counts, v_counts, otu_ids, tree):
 
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       validate=True, **kwargs):
+                       validate=True, indexed=None, **kwargs):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -96,31 +96,37 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
        73, 1576-1585 (2007).
 
     .. [3] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
-        R. UniFrac: an effective distance metric for microbial community
-        comparison. ISME J. 5, 169-172 (2011).
+       R. UniFrac: an effective distance metric for microbial community
+       comparison. ISME J. 5, 169-172 (2011).
 
     """
     if validate:
-        _validate(u_counts=u_counts, v_counts=v_counts,
-                  otu_ids=otu_ids, tree=tree)
-    u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
-    v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
-    u_obs_nodes = set(tree.observed_node_counts(u_obs_otu_counts))
-    v_obs_nodes = set(tree.observed_node_counts(v_obs_otu_counts))
-    obs_branch_length = sum(o.length or 0.0 for o in u_obs_nodes | v_obs_nodes)
-    if obs_branch_length == 0:
-        # boundary case where both communities have no members
-        return 0.0
-    shared_branch_length = sum(
-        o.length or 0.0 for o in u_obs_nodes & v_obs_nodes)
-    unique_branch_length = obs_branch_length - shared_branch_length
-    unweighted_unifrac = unique_branch_length / obs_branch_length
-    return unweighted_unifrac
+        _validate(u_counts, v_counts, otu_ids, tree)
+
+    # cast to numpy types
+    u_counts = np.asarray(u_counts)
+    v_counts = np.asarray(v_counts)
+    otu_ids = np.asarray(otu_ids)
+
+    boundary = _boundary_case(u_counts.sum(), v_counts.sum())
+    if boundary is not None:
+        return boundary
+
+    # aggregate state information up the tree (stored in counts_array), and
+    # retrieve the aggregated state information for each input count vector
+    counts = np.vstack([u_counts, v_counts])
+    count_array, indexed = _counts_and_index(counts, otu_ids, tree, indexed)
+    u_counts = count_array[:, 0]
+    v_counts = count_array[:, 1]
+
+    length = indexed['length']
+
+    return _unweighted_unifrac(length, u_counts, v_counts)
 
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     validate=True, **kwargs):
+                     validate=True, indexed=None, **kwargs):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -191,44 +197,241 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
        73, 1576-1585 (2007).
 
     .. [2] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
-        R. UniFrac: an effective distance metric for microbial community
-        comparison. ISME J. 5, 169-172 (2011).
+       R. UniFrac: an effective distance metric for microbial community
+       comparison. ISME J. 5, 169-172 (2011).
 
     """
     if validate:
-        _validate(u_counts=u_counts, v_counts=v_counts,
-                  otu_ids=otu_ids, tree=tree)
-    u_obs_otu_counts = _observed_otu_counts(u_counts, otu_ids)
-    u_total_count = sum(u_counts)
-    v_obs_otu_counts = _observed_otu_counts(v_counts, otu_ids)
-    v_total_count = sum(v_counts)
-    u_obs_nodes = tree.observed_node_counts(u_obs_otu_counts)
-    v_obs_nodes = tree.observed_node_counts(v_obs_otu_counts)
-    uv_obs_nodes = set(u_obs_nodes) | set(v_obs_nodes)
-    if len(uv_obs_nodes) == 0:
-        # boundary case where both communities have no members
-        return 0.0
-    weighted_unifrac = 0
-    D = 0
-    for o in uv_obs_nodes:
-        # handle the case of o.length is None
-        b = o.length or 0
-        u_branch_weight = _sample_branch_weight(u_obs_nodes[o], u_total_count)
-        v_branch_weight = _sample_branch_weight(v_obs_nodes[o], v_total_count)
-        branch_weight = abs(u_branch_weight - v_branch_weight)
-        weighted_unifrac += b * branch_weight
-        if normalized and o.is_tip():
-            d = o.accumulate_to_ancestor(tree.root())
-            normed_weight = u_branch_weight + v_branch_weight
-            D += (d * normed_weight)
+        _validate(u_counts, v_counts, otu_ids, tree)
+
+    # convert to numpy types
+    u_counts = np.asarray(u_counts)
+    v_counts = np.asarray(v_counts)
+    otu_ids = np.asarray(otu_ids)
+
+    u_sum = u_counts.sum()
+    v_sum = v_counts.sum()
+
+    # check boundary conditions and shortcut if necessary
+    boundary = _boundary_case(u_sum, v_sum, normalized, unweighted=False)
+    if boundary is not None:
+        return boundary
+
+    # aggregate state information up the tree (stored in counts_array), and
+    # retrieve the aggregated state information for each input count vector
+    counts = np.vstack([u_counts, v_counts])
+    count_array, indexed = _counts_and_index(counts, otu_ids, tree, indexed)
+    u_counts = count_array[:, 0]
+    v_counts = count_array[:, 1]
+
+    # fetch the lengths
+    length = indexed['length']
+
+    u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
     if normalized:
-        return weighted_unifrac / D
-    else:
-        return weighted_unifrac
+        # get the index positions for tips in counts_array, and determine the
+        # tip distances to the root
+        tip_indices = np.array([n.id for n in indexed['id_index'].values()
+                                if n.is_tip()])
+        tip_ds = _tip_distances(length, tree, tip_indices)
+        u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+
+    return u
+
+def _unweighted_unifrac(m, i, j):
+    """
+
+    Parameters
+    ----------
+    m : np.array
+        A 1D vector that represents the lengths in the tree in postorder.
+    i,j : np.array
+        A slice of states from m in postorder.
+
+    Returns
+    -------
+    float
+        Unweighted unifrac metric
+
+    Notes
+    -----
+    This is cogent.maths.unifrac.fast_tree.unifrac, but there are
+    other metrics that can (should?) be ported like:
+     - unnormalized_unifrac
+     - G
+     - unnormalized_G
+    """
+    _or = np.logical_or(i, j),
+    _and = np.logical_and(i, j)
+    return 1 - ((m * _and).sum() / (m * _or).sum())
 
 
-def _sample_branch_weight(observed_nodes, total_count):
-    if total_count == 0:
-        return 0
+def _weighted_unifrac(m, i, j, i_sum, j_sum):
+    """Calculates weighted unifrac(i, j) from m
+
+    Parameters
+    ----------
+    m : np.array
+        A 1D vector that represents the lengths in the tree in postorder.
+    i, j : np.array
+        A slice of states from m in postorder.
+    i_sum, j_sum: float
+        Counts of the observations in each environment
+
+    Returns
+    -------
+    float
+        The weighted unifrac score
+    """
+    if i_sum:
+        i_ = i / i_sum
     else:
-        return observed_nodes / total_count
+        i_ = 0.0
+
+    if j_sum:
+        j_ = j / j_sum
+    else:
+        j_ = 0.0
+
+    return (m * abs(i_ - j_)).sum()
+
+
+def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
+               normalized=False, **kwargs):
+    """Construct a metric for use with skbio.diversity.beta.pw_distances
+
+    Parameters
+    ----------
+    counts : np.ndarray
+        A matrix of environment counts where each row is an environment, and
+        each column is an observation. The observations are expected to be in
+        index order w.r.t. obs_ids, but do not need to be in tree order.
+    obs_ids : np.ndarray
+        A vector of observation IDs. These IDs must map to tips in the tree.
+    tree : skbio.tree.TreeNode
+        A tree that represents the relationships between the observations.
+    indexed : dict, optional;
+        The result of skbio.diversity.beta.index_tree
+    metric : function, {unweighted_unifrac_fast, weighted_unifrac_fast}
+        The specific metric to use.
+    normalized : bool
+        Whether the weighted unifrac calculation should be normalized.
+
+    Notes
+    -------
+    example usage
+
+    metric, counts, length = make_unweighted_pdist(input_counts, tip_ids, tree)
+    mat = pw_distances(metric, counts, ids=['%d' % i for i in range(10)])
+    """
+    count_array, indexed = _counts_and_index(counts, obs_ids, tree, indexed)
+    length = indexed['length']
+
+    if metric is _unweighted_unifrac:
+        def f(u_counts, v_counts):
+            boundary = _boundary_case(u_counts.sum(), v_counts.sum())
+            if boundary is not None:
+                return boundary
+            return _unweighted_unifrac(length, u_counts, v_counts)
+
+    elif metric is _weighted_unifrac:
+        # This block is duplicated in weighted_unifrac_fast -- possibly should
+        # be decomposed.
+        # There is a lot in common with both of these methods, but pulling the
+        # normalized check out reduces branching logic.
+        tip_idx = np.array([n.id for n in indexed['id_index'].values()
+                            if n.is_tip()])
+        if normalized:
+            def f(u_counts, v_counts):
+                u_sum = np.take(u_counts, tip_idx).sum()
+                v_sum = np.take(v_counts, tip_idx).sum()
+
+                boundary = _boundary_case(u_sum, v_sum, normalized,
+                                          unweighted=False)
+                if boundary is not None:
+                    return boundary
+
+                tip_ds = _tip_distances(length, tree, tip_idx)
+
+                u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
+                u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+                return u
+        else:
+            def f(u_counts, v_counts):
+                u_sum = np.take(u_counts, tip_idx).sum()
+                v_sum = np.take(v_counts, tip_idx).sum()
+
+                boundary = _boundary_case(u_sum, v_sum, unweighted=False)
+                if boundary is not None:
+                    return boundary
+
+                u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
+                return u
+    else:
+        raise AttributeError("Unknown metric: %s" % metric)
+
+    return f, count_array.T, length
+
+def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
+    """Test for boundary conditions
+
+    Parameters
+    ----------
+    u_sum, v_sum: float
+        The sum of the observations in both environments.
+    normalized: bool
+        Indicates if the method is normalized.
+    unweighted: bool
+        Indicates if the method is weighted.
+
+    Returns
+    -------
+    float or None
+        Specifically, one of `[0.0, 1.0, None]`. `None` indicates that a
+        boundary condition was not observed.
+
+    Notes
+    -----
+    The following boundary conditions are tested:
+
+        * if u_sum or v_sum are zero
+        * if both u_sum and v_sum are zero
+        * both of the above conditions with respect to normalized and weighted
+    """
+    if u_sum and v_sum:
+        return None
+
+    if u_sum + v_sum:
+        # u or v counts are all zeros
+        if unweighted or normalized:
+            # u or v counts are all zeros
+            return 1.0
+        # NOTE: we cannot handle the unnormalized case here yet as it
+        # requires operations on the tree vector
+    else:
+        # u and v are zero
+        return 0.0
+
+    return None
+
+def _branch_correct(tip_dists, i, j, i_sum, j_sum):
+    """Calculates weighted unifrac branch length correction.
+
+    Parameters
+    ----------
+    tip_dists : np.ndarray
+        1D column vector of branch lengths in post order form. Only tips
+        should be non-zero as this represents the distance from each tip to
+        root.
+    i, j : np.ndarray
+        Aggregated environment counts. This vector is expected to be in index
+        order with tip_dists
+    i_sum, j_sum: float
+        Counts of the observations in each environment
+
+    Returns
+    -------
+    np.ndarray
+        The corrected branch lengths
+    """
+    return (tip_dists.ravel() * ((i / i_sum) + (j / j_sum))).sum()

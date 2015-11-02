@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.diversity._base_cy import _nodes_by_counts
 
 
 def _validate_counts_vector(counts, suppress_cast=False):
@@ -31,7 +32,6 @@ def _validate_counts_vector(counts, suppress_cast=False):
 
     return counts
 
-
 def _validate_counts_vectors(*args, **kwargs):
     results = []
     lens = []
@@ -47,7 +47,6 @@ def _validate_counts_vectors(*args, **kwargs):
                          "equal length.")
 
     return results
-
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     # all otu_ids are unique
@@ -87,3 +86,42 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
         raise MissingNodeError("All otu_ids must be present as tip names in "
                                "tree. Tree is missing tips with names: %s"
                                % " ".join(missing_tip_names))
+
+def _index_tree(tree):
+    """Index a tree to allow for bulk numpy aggregations
+
+    Paramters
+    ---------
+    tree : TreeNode
+        A tree to index
+
+    Returns
+    -------
+        dict of array
+            {id_index: {id: TreeNode},
+             child_index: [(node_id, left_child_id, right_child_id)],
+             attr_1: array(...),
+             ...
+             attr_N: array(...)}
+
+    Notes
+    -----
+    This wraps `TreeNode.to_array`, but replaces any `nan` in the length array
+    with 0.0 which can arise from an edge not having a length, notably the
+    root node parent edge.
+    """
+    indexed = tree.to_array()
+    length = indexed['length']
+    indexed['length'] = np.where(np.isnan(length), 0.0, length)
+
+    return indexed
+
+def _counts_and_index(counts, otu_ids, tree, indexed):
+    """Get the counts array and the indexed tree"""
+    if indexed is None:
+        indexed = _index_tree(tree)
+
+    counts = np.atleast_2d(counts)
+    count_array = _nodes_by_counts(counts, otu_ids, indexed)
+
+    return count_array, indexed
