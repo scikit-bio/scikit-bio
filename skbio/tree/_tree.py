@@ -2066,7 +2066,7 @@ class TreeNode(SkbioObject):
         -------
         dict of array
             {id_index: {id: TreeNode},
-             child_index: [(node_id, left_child_id, right_child_id)],
+             child_index: ((node_id, left_child_id, right_child_id)),
              attr_1: array(...),
              ...
              attr_N: array(...)}
@@ -2088,7 +2088,10 @@ class TreeNode(SkbioObject):
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
         >>> res['child_index']
-        [(4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6)]
+        array([[4, 0, 2],
+               [5, 3, 3],
+               [6, 4, 5],
+               [7, 6, 6]])
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
@@ -2320,6 +2323,7 @@ class TreeNode(SkbioObject):
                     raise TreeError("No support for single descedent nodes")
                 else:
                     tip_info = [(max(c.MaxDistTips), c) for c in n.children]
+
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
                     tip_a, child_a = tip_info[best_idx[0]]
@@ -2714,10 +2718,12 @@ class TreeNode(SkbioObject):
         -------
         dict
             A mapping {node_id: TreeNode}
-        list of tuple of (int, int, int)
-            The first index in each tuple is the corresponding node_id. The
-            second index is the left most leaf index. The third index is the
-            right most leaf index
+        np.array of ints
+            This arrays describes the IDs of every internal node, and the ID
+            range of the immediate descendents. The first column in the array
+            corresponds to node_id. The second column is the left most
+            descendent's ID. The third column is the right most descendent's
+            ID.
         """
         self.assign_ids()
 
@@ -2743,7 +2749,7 @@ class TreeNode(SkbioObject):
                                 self.children[0].id,
                                 self.children[-1].id))
 
-        return id_index, child_index
+        return id_index, np.vstack(child_index)
 
     @experimental(as_of="0.4.0")
     def assign_ids(self):

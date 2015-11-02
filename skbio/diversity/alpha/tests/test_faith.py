@@ -10,13 +10,16 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import main, TestCase
 
-from skbio.diversity.beta.tests.test_unifrac_base import StatsTests
-from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
+from skbio.diversity.alpha.tests.test_faith_base import FaithTests
+from skbio.diversity.alpha import faith_pd, faith_pd_fast
 
 
-class UniFracTests(StatsTests, TestCase):
-    _method = {'unweighted_unifrac': unweighted_unifrac,
-               'weighted_unifrac': weighted_unifrac}
+class FaithTests(FaithTests, TestCase):
+    _method = {'faith_pd': faith_pd}
+
+
+class FaithFastTests(FaithTests, TestCase):
+    _method = {'faith_pd': faith_pd_fast}
 
 
 if __name__ == '__main__':
