@@ -15,18 +15,18 @@ from future.builtins import zip, range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 
-from skbio._base import SkbioObject, MetadataMixin
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
 from skbio.util import find_duplicates, OperationError, UniqueError
-from skbio.util._decorator import experimental, classonlymethod
+from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
 
-class TabularMSA(MetadataMixin, SkbioObject):
+class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """Store a multiple sequence alignment in tabular (row/column) form.
 
     Parameters
@@ -38,6 +38,11 @@ class TabularMSA(MetadataMixin, SkbioObject):
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
+    positional_metadata : pd.DataFrame consumable, optional
+        Arbitrary metadata which applies to each position in the MSA. Must be
+        able to be passed directly to ``pd.DataFrame`` constructor. Each column
+        of metadata must be the same length as the number of positions in the
+        MSA. A shallow copy of the positional metadata will be made.
     minter : callable or metadata key, optional
         If provided, defines a minter which provides a unique, hashable key
         for each sequence in `sequences`. Can either be a callable accepting
@@ -89,7 +94,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
         True
 
         """
-        return self._dtype
+        return type(self._seqs[0]) if len(self) > 0 else None
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -249,14 +254,15 @@ class TabularMSA(MetadataMixin, SkbioObject):
         return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
-    def __init__(self, sequences, metadata=None, minter=None, keys=None):
+    def __init__(self, sequences, metadata=None, positional_metadata=None,
+                 minter=None, keys=None):
         self._seqs = []
-        self._dtype = None
-
         for seq in sequences:
             self._add_sequence(seq)
 
         MetadataMixin.__init__(self, metadata=metadata)
+        PositionalMetadataMixin.__init__(
+            self, positional_metadata=positional_metadata)
 
         self.reindex(minter=minter, keys=keys)
 
@@ -375,8 +381,8 @@ class TabularMSA(MetadataMixin, SkbioObject):
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
-        ``TabularMSA`` objects are equal if their sequences, keys, and metadata
-        are equal.
+        ``TabularMSA`` objects are equal if their sequences, keys, metadata,
+        and positional metadata are equal.
 
         Parameters
         ----------
@@ -391,40 +397,41 @@ class TabularMSA(MetadataMixin, SkbioObject):
         Examples
         --------
         >>> from skbio import DNA, RNA, TabularMSA
-        >>> msa1 = TabularMSA([DNA('ACG'), DNA('AC-')])
-        >>> msa1 == msa1
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa == msa
         True
 
         MSAs with different sequence characters are not equal:
 
-        >>> msa2 = TabularMSA([DNA('ACG'), DNA('--G')])
-        >>> msa1 == msa2
+        >>> msa == TabularMSA([DNA('ACG'), DNA('--G')])
         False
 
         MSAs with different types of sequences (different ``dtype``) are not
         equal:
 
-        >>> msa3 = TabularMSA([RNA('ACG'), RNA('AC-')])
-        >>> msa1 == msa3
+        >>> msa == TabularMSA([RNA('ACG'), RNA('AC-')])
         False
 
         MSAs with different sequence metadata are not equal:
 
-        >>> msa4 = TabularMSA([DNA('ACG', metadata={'id': 'a'}), DNA('AC-')])
-        >>> msa1 == msa4
+        >>> msa == TabularMSA([DNA('ACG', metadata={'id': 'a'}), DNA('AC-')])
         False
 
         MSAs with different keys are not equal:
 
-        >>> msa5 = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
-        >>> msa1 == msa5
+        >>> msa == TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         False
 
         MSAs with different metadata are not equal:
 
-        >>> msa6 = TabularMSA([DNA('ACG'), DNA('AC-')],
+        >>> msa == TabularMSA([DNA('ACG'), DNA('AC-')],
         ...                   metadata={'id': 'msa-id'})
-        >>> msa1 == msa6
+        False
+
+        MSAs with different positional metadata are not equal:
+
+        >>> msa == TabularMSA([DNA('ACG'), DNA('AC-')],
+        ...                   positional_metadata={'prob': [3, 2, 1]})
         False
 
         """
@@ -432,6 +439,9 @@ class TabularMSA(MetadataMixin, SkbioObject):
             return False
 
         if not MetadataMixin.__eq__(self, other):
+            return False
+
+        if not PositionalMetadataMixin.__eq__(self, other):
             return False
 
         # Use np.array_equal instead of (a == b).all():
@@ -443,8 +453,8 @@ class TabularMSA(MetadataMixin, SkbioObject):
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
-        ``TabularMSA`` objects are not equal if their sequences, keys, or
-        metadata are not equal.
+        ``TabularMSA`` objects are not equal if their sequences, keys,
+        metadata, or positional metadata are not equal.
 
         Parameters
         ----------
@@ -773,7 +783,6 @@ class TabularMSA(MetadataMixin, SkbioObject):
                     "that has an alphabet, not type %r" % dtype.__name__)
             if key is not None:
                 self._keys = self._munge_keys([key])
-            self._dtype = dtype
             self._seqs = [sequence]
         elif dtype is not self.dtype:
             raise TypeError(
@@ -919,9 +928,8 @@ class TabularMSA(MetadataMixin, SkbioObject):
 
     def _get_position(self, i):
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
-        # TODO: when positional metadata exists, do something like below:
-        # if self.has_positional_metadata():
-        #     seq.metadata = dict(self.positional_metadata.iloc[i])
+        if self.has_positional_metadata():
+            seq.metadata = dict(self.positional_metadata.iloc[i])
         return seq
 
     def _is_sequence_axis(self, axis):
@@ -933,3 +941,7 @@ class TabularMSA(MetadataMixin, SkbioObject):
             raise ValueError(
                 "`axis` must be 'sequence' (0) or 'position' (1), not %r"
                 % axis)
+
+    @overrides(PositionalMetadataMixin)
+    def _positional_metadata_axis_len_(self):
+        return self.shape.position
