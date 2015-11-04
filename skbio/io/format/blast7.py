@@ -4,17 +4,13 @@ BLAST+7 format (:mod:`skbio.io.format.blast7`)
 
 .. currentmodule:: skbio.io.format.blast7
 
-There are 2 BLAST data format types supported by the reader and sniffer:
-BLAST+7 and Legacy BLAST 9. Both are refered to as ``blast+7``. BLAST+7 is
-relatively structurally equal to Legacy BLAST format 9, however, this format
-has a few differences.
+The BLAST+7 format (``blast+7``) stores the results of a BLAST [1]_ database
+search. This format is produced by both BLAST+ output
+format 7 and legacy BLAST output format 9. The results
+are stored in a simple tabular format with headers. Values are separated by the
+tab character.
 
-Both formats store the results of a BLAST [1]_ database search. The results
-are stored in a simple tabular format with the BLAST version, query, fields,
-and database and/or subject specified. Values are separated by the tab
-character.
-
-An example BLAST+7-formatted file comparing two protein sequences, taken
+An example BLAST+7-formatted file comparing two nucleotide sequences, taken
 from [2]_ (tab characters represented by ``<tab>``):
 
 .. code-block:: none
@@ -31,26 +27,6 @@ art, s. end
     AE000111<tab>AE000425<tab>6e-26<tab>5587<tab>5671<tab>8552<tab>8468
     AE000111<tab>AE000171<tab>3e-24<tab>5587<tab>5671<tab>2214<tab>2130
 
-An example Legacy BLAST 9-formatted file comparing two protein sequences, taken
-from [3]_ (tab characters represented by ``<tab>``)::
-
-    # BLASTN 2.2.3 [May-13-2002]
-    # Database: other_vertebrate
-    # Query: AF178033
-    # Fields:
-    Query id,Subject id,% identity,alignment length,mismatches,gap openings,q.\
- start,q. end,s. start,s. end,e-value,bit score
-    AF178033<tab>EMORG:AF178033<tab>100.00<tab>811<tab>0<tab>0<tab>1<tab>811<t\
-ab>1<tab>811<tab>0.0<tab>1566.6
-    AF178033<tab>EMORG:AF031394<tab>99.63<tab>811<tab>3<tab>0<tab>1<tab>811<ta\
-b>99<tab>909<tab>0.0<tab>1542.8
-    AF178033<tab>EMORG:AF031393<tab>95.07<tab>811<tab>40<tab>0<tab>1<tab>811<t\
-ab>99<tab>909<tab>0.0<tab>1249.4
-    AF178033<tab>EMORG:AF178031<tab>94.82<tab>811<tab>42<tab>0<tab>1<tab>811<t\
-ab>1<tab>811<tab>0.0<tab>1233.5
-    AF178033<tab>EMORG:AF178032<tab>94.57<tab>811<tab>44<tab>0<tab>1<tab>811<t\
-ab>1<tab>811<tab>0.0<tab>1217.7
-
 Format Support
 ==============
 **Has Sniffer: Yes**
@@ -65,26 +41,11 @@ Format Support
 
 Format Specification
 ====================
-Format Types
-------------
-BLAST+7
-^^^^^^^
-BLAST+7 format is a tabular text-based format produced by BLAST+ output
-format 7 (``-outfmt 7``). Data is tab-separated and has no column headers.
-Each comparison between a subject and either a query or a database is
-displayed, even if there are no similarities. For example:
+There are two BLAST+7 file formats supported by scikit-bio: BLAST+ output
+format 7 (``-outfmt 7``) and legacy BLAST output format 9 (``-m 9``). Both file
+formats are structurally similar, with minor differences.
 
-.. code-block:: none
-
-    # BLASTP 2.2.31+
-    # Query: query1
-    # Subject: subject1
-    # 0 hits found
-
-Each pass through different combinations of query and subject contains the
-first 3 lines shown above, but if similarities are found, the next line will
-differ and other information will be added.
-For example::
+Example BLAST+ output format 7 file::
 
     # BLASTP 2.2.31+
     # Query: query1
@@ -95,19 +56,17 @@ frame, query acc.ver, subject acc.ver
     1	8	3	10	8	0	1	query1	subject2
     2	5	2	15	8	0	2	query1	subject2
 
-When data is found, a "Fields" line is added, expressing the types of returned
-data, ordered respectively, the "hits found" line expresses how many rows of
-data are returned, and at the bottom, the data is shown, separated by the tab
-character.
+.. note:: Database searches without hits may occur in BLAST+ output format 7
+   files. scikit-bio ignores these "empty" records:
 
-Legacy BLAST 9
-^^^^^^^^^^^^^^
-Legacy BLAST 9 format is a tabular text-based format produced by Legacy
-BLAST output format 9 (``-m 9``). Data is tab-separated and has no column
-headers. Only one data block is shown, as ``blastall`` (the command that
-returns Legacy BLAST data) only compares to a single database.
+   .. code-block:: none
 
-An example of a Legacy BLAST 9 file:
+       # BLASTP 2.2.31+
+       # Query: query1
+       # Subject: subject1
+       # 0 hits found
+
+Example legacy BLAST output format 9 file:
 
 .. code-block:: none
 
@@ -120,121 +79,110 @@ An example of a Legacy BLAST 9 file:
     AF178033    EMORG:AF178033  100.00  811 0   0   1   811 1   811 0.0 1566.6
     AF178033    EMORG:AF031394  99.63   811 3   0   1   811 99  909 0.0 1542.8
 
-This format differs from BLAST+7 in a few ways: the fields are displayed on a
-new line after "# Fields:", fields are not customizable, so they will always
-be the default fields, Query id and Subject id are capitalized, and when
-listing fields, there are no spaces after commas.
+.. note:: scikit-bio supports reading files that contain both these file
+   formats.
 
-.. note:: Both data types ignore lines starting with "#", except for the
-   "# Fields:" line in BLAST+7. They both only find the fields and data, as
-   those are the only items present in the returned DataFrame.
-
-.. note:: The reader supports both BLAST+7 and Legacy BLAST 9, and even a file
-   with both present.
+.. note:: scikit-bio requires fields to be the same within a file.
 
 BLAST Column Types
 ------------------
 The following column types are output by BLAST and supported by scikit-bio.
-This table contains the outputs and their corresponding widely used name,
-which is displayed on the returned DataFrame. For more information as to
-meaning and data types of these fields, please see
-:mod:`skbio.io.format.blast6`.
+For more information on these column types, see :mod:`skbio.io.format.blast6`.
 
-+-------------------+------------+
-|Fields Name        |DataFrame C\|
-|                   |olumn Name  |
-+===================+============+
-|query id           |qseqid      |
-+-------------------+------------+
-|query gi           |qgi         |
-+-------------------+------------+
-|query acc.         |qacc        |
-+-------------------+------------+
-|query acc.ver      |qaccver     |
-+-------------------+------------+
-|query length       |qlen        |
-+-------------------+------------+
-|subject id         |sseqid      |
-+-------------------+------------+
-|subject ids        |sallseqid   |
-+-------------------+------------+
-|subject gi         |sgi         |
-+-------------------+------------+
-|subject gis        |sallgi      |
-+-------------------+------------+
-|subject acc.       |sacc        |
-+-------------------+------------+
-|subject acc.ver    |saccver     |
-+-------------------+------------+
-|subject accs       |sallacc     |
-+-------------------+------------+
-|subject length     |slen        |
-+-------------------+------------+
-|q\. start          |qstart      |
-+-------------------+------------+
-|q\. end            |qend        |
-+-------------------+------------+
-|s\. start          |sstart      |
-+-------------------+------------+
-|s\. end            |send        |
-+-------------------+------------+
-|query seq          |qseq        |
-+-------------------+------------+
-|subject seq        |sseq        |
-+-------------------+------------+
-|evalue             |evalue      |
-+-------------------+------------+
-|bit score          |bitscore    |
-+-------------------+------------+
-|score              |score       |
-+-------------------+------------+
-|alignment length   |length      |
-+-------------------+------------+
-|% identity         |pident      |
-+-------------------+------------+
-|identical          |nident      |
-+-------------------+------------+
-|mismatches         |mismatch    |
-+-------------------+------------+
-|positives          |positive    |
-+-------------------+------------+
-|gap opens          |gapopen     |
-+-------------------+------------+
-|gaps               |gaps        |
-+-------------------+------------+
-|% positives        |ppos        |
-+-------------------+------------+
-|query/sbjct frames |frames      |
-+-------------------+------------+
-|query frame        |qframe      |
-+-------------------+------------+
-|sbjct frame        |sframe      |
-+-------------------+------------+
-|BTOP               |btop        |
-+-------------------+------------+
-|subject tax ids    |staxids     |
-+-------------------+------------+
-|subject sci names  |sscinames   |
-+-------------------+------------+
-|subject com names  |scomnames   |
-+-------------------+------------+
-|subject blast names|sblastnames |
-+-------------------+------------+
-|subject super king\|sskingdoms  |
-|doms               |            |
-+-------------------+------------+
-|subject title      |stitle      |
-+-------------------+------------+
-|subject strand     |sstrand     |
-+-------------------+------------+
-|subject titles     |salltitles  |
-+-------------------+------------+
-|% query coverage p\|qcovs       |
-|er subject         |            |
-+-------------------+------------+
-|% query coverage p\|qcovhsp     |
-|er hsp             |            |
-+-------------------+------------+
++-------------------+----------------------+
+|Fields Name        |DataFrame Column Name |
++===================+======================+
+|query id           |qseqid                |
++-------------------+----------------------+
+|query gi           |qgi                   |
++-------------------+----------------------+
+|query acc.         |qacc                  |
++-------------------+----------------------+
+|query acc.ver      |qaccver               |
++-------------------+----------------------+
+|query length       |qlen                  |
++-------------------+----------------------+
+|subject id         |sseqid                |
++-------------------+----------------------+
+|subject ids        |sallseqid             |
++-------------------+----------------------+
+|subject gi         |sgi                   |
++-------------------+----------------------+
+|subject gis        |sallgi                |
++-------------------+----------------------+
+|subject acc.       |sacc                  |
++-------------------+----------------------+
+|subject acc.ver    |saccver               |
++-------------------+----------------------+
+|subject accs       |sallacc               |
++-------------------+----------------------+
+|subject length     |slen                  |
++-------------------+----------------------+
+|q\. start          |qstart                |
++-------------------+----------------------+
+|q\. end            |qend                  |
++-------------------+----------------------+
+|s\. start          |sstart                |
++-------------------+----------------------+
+|s\. end            |send                  |
++-------------------+----------------------+
+|query seq          |qseq                  |
++-------------------+----------------------+
+|subject seq        |sseq                  |
++-------------------+----------------------+
+|evalue             |evalue                |
++-------------------+----------------------+
+|bit score          |bitscore              |
++-------------------+----------------------+
+|score              |score                 |
++-------------------+----------------------+
+|alignment length   |length                |
++-------------------+----------------------+
+|% identity         |pident                |
++-------------------+----------------------+
+|identical          |nident                |
++-------------------+----------------------+
+|mismatches         |mismatch              |
++-------------------+----------------------+
+|positives          |positive              |
++-------------------+----------------------+
+|gap opens          |gapopen               |
++-------------------+----------------------+
+|gaps               |gaps                  |
++-------------------+----------------------+
+|% positives        |ppos                  |
++-------------------+----------------------+
+|query/sbjct frames |frames                |
++-------------------+----------------------+
+|query frame        |qframe                |
++-------------------+----------------------+
+|sbjct frame        |sframe                |
++-------------------+----------------------+
+|BTOP               |btop                  |
++-------------------+----------------------+
+|subject tax ids    |staxids               |
++-------------------+----------------------+
+|subject sci names  |sscinames             |
++-------------------+----------------------+
+|subject com names  |scomnames             |
++-------------------+----------------------+
+|subject blast names|sblastnames           |
++-------------------+----------------------+
+|subject super king\|sskingdoms            |
+|doms               |                      |
++-------------------+----------------------+
+|subject title      |stitle                |
++-------------------+----------------------+
+|subject strand     |sstrand               |
++-------------------+----------------------+
+|subject titles     |salltitles            |
++-------------------+----------------------+
+|% query coverage p\|qcovs                 |
+|er subject         |                      |
++-------------------+----------------------+
+|% query coverage p\|qcovhsp               |
+|er hsp             |                      |
++-------------------+----------------------+
 
 Examples
 ========
@@ -267,7 +215,7 @@ Read the file into a ``pd.DataFrame``:
 2  AE000111  AE000171  3.000000e-24    5587   5671    2214   2130
 3  AE000111  AE000425  6.000000e-26    5587   5671    8552   8468
 
-Suppose we have a Legacy BLAST 9 file:
+Suppose we have a legacy BLAST 9 file:
 
 >>> from io import StringIO
 >>> import skbio.io
@@ -307,8 +255,6 @@ References
 .. [1] Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990)
    "Basic local alignment search tool." J. Mol. Biol. 215:403-410.
 .. [2] http://www.ncbi.nlm.nih.gov/books/NBK279682/
-.. [3] http://www.compbio.ox.ac.uk/analysis_tools/BLAST/BLAST_blastall/blastal\
-l_examples.shtml
 """
 
 # ----------------------------------------------------------------------------
@@ -365,91 +311,86 @@ def _blast7_sniffer(fh):
     #   -First line contains "BLAST"
     #   -Second line contains "Query" or "Database"
     #   -Third line starts with "Subject" or "Query"
-    lines = list(zip(range(3), fh))
+    lines = [line for _, line in zip(range(3), fh)]
     if len(lines) < 3:
         return False, {}
-    try:
-        if (lines[0][1][:7] == "# BLAST" and
-            (lines[1][1][:8] == "# Query:" or
-             lines[1][1][:11] == "# Database:") and
-            (lines[2][1][:10] == "# Subject:" or
-             lines[2][1][:8] == "# Query:" or
-             lines[2][1][:11] == "# Database:")):
-            return True, {}
-        else:
-            return False, {}
-    except IndexError:
+
+    if not lines[0].startswith("# BLAST"):
         return False, {}
+    if not (lines[1].startswith("# Query:") or
+            lines[1].startswith("# Database:")):
+        return False, {}
+    if not (lines[2].startswith("# Subject:") or
+            lines[2].startswith("# Query:") or
+            lines[2].startswith("# Database:")):
+        return False, {}
+
+    return True, {}
 
 
 @blast7.reader(pd.DataFrame, monkey_patch=False)
 def _blast7_to_data_frame(fh):
-    dtypes = None
-    x = 0
-    y = 0
+    line_num = 0
+    columns = None
     skiprows = []
     for line in fh:
-        if x == 1 and not dtypes:
-            dtypes = _remove_newline_give_dtypes(line, x=x)
-            x = 0
-            skiprows.append(y)
-        elif x == 1:
-            next_dtypes = _remove_newline_give_dtypes(line, x=x)
-            if dtypes != next_dtypes:
-                raise BLAST7FormatError("Fields %r do not equal fields %r"
-                                        % (dtypes, next_dtypes))
-            x = 0
-            skiprows.append(y)
         if line == "# Fields: \n":
             # Identifies Legacy BLAST 9 data
-            x = 1
-        elif line[:10] == "# Fields: ":
+            line = next(fh)
+            line_num += 1
+            if not columns:
+                columns = _parse_fields(line, legacy=True)
+                skiprows.append(line_num)
+            else:
+                next_columns = _parse_fields(line, legacy=True)
+                if columns != next_columns:
+                    raise BLAST7FormatError("Fields %r do not equal fields %r"
+                                            % (columns, next_columns))
+                skiprows.append(line_num)
+        elif line.startswith("# Fields: "):
             # Identifies BLAST+7 data
-            x = 2
-        if x == 2 and not dtypes:
-            dtypes = _remove_newline_give_dtypes(line)
-            x = 0
-        elif x == 2:
-            # Affirms data types do not differ throught file
-            next_dtypes = _remove_newline_give_dtypes(line)
-            if dtypes != next_dtypes:
-                raise BLAST7FormatError("Fields %r do not equal fields %r"
-                                        % (dtypes, next_dtypes))
-            x = 0
-        y += 1
-    if not dtypes:
+            if not columns:
+                columns = _parse_fields(line)
+            else:
+                # Affirms data types do not differ throught file
+                next_columns = _parse_fields(line)
+                if columns != next_columns:
+                    raise BLAST7FormatError("Fields %r do not equal fields %r"
+                                            % (columns, next_columns))
+        line_num += 1
+    if not columns:
         # Affirms file contains BLAST data
         raise BLAST7FormatError("File contains no BLAST data.")
     fh.seek(0)
     try:
-        df = pd.read_csv(fh, names=dtypes, sep='\t', comment='#',
+        df = pd.read_csv(fh, names=columns, sep='\t', comment='#',
                          dtype=_possible_columns, na_values='N/A',
                          keep_default_na=False, skiprows=skiprows)
     except ValueError:
         # Catches first possibility of incorrect number of columns
         raise BLAST7FormatError("Number of data columns does not equal number"
-                                " of fields (%r)." % (len(dtypes)))
+                                " of fields (%r)." % (len(columns)))
     if df.index.dtype != np.int64:
         # Catches second possibility of incorrect number of columns
         raise BLAST7FormatError("Number of data columns does not equal number"
-                                " of fields (%r)." % (len(dtypes)))
+                                " of fields (%r)." % (len(columns)))
     return df
 
 
-def _remove_newline_give_dtypes(line, x=2):
-    # Removes "\n" from fields line and returns fields as a list (dtypes)
+def _parse_fields(line, legacy=False):
+    # Removes "\n" from fields line and returns fields as a list (columns)
     line = line.rstrip('\n')
-    if x == 1:
+    if legacy:
         fields = line.split(',')
-    elif x == 2:
+    else:
         line = line[10:]
         fields = line.split(', ')
     try:
-        dtypes = [column_converter[field] for field in fields]
+        columns = [column_converter[field] for field in fields]
     except KeyError as e:
         # Affirms all column names are supported
         raise BLAST7FormatError("Unrecognized field: %r."
                                 " Supported fields: %r"
                                 % (str(e).strip("'"),
                                    set(_possible_columns.keys())))
-    return dtypes
+    return columns
