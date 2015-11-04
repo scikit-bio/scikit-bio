@@ -3,20 +3,32 @@ import numpy as np
 from scipy.stats import hypergeom
 from statsmodels.stats.multitest import fdrcorrection
 
-import goenrich.export
+from skbio.goenrich import export
 
 def analyze(O, query, background_attribute, **kwargs):
     """ run enrichment analysis for query
 
-    >>> O = goenrich.obo.ontology('db/go-basic.obo')
-    >>> gene2go = goenrich.read.gene2go('db/gene2go.gz')
-    >>> values = {k: set(v) for k,v in gene2go.groupby('GO_ID')['GeneID']}
-    >>> goenrich.enrich.propagate(O, values, 'gene2go')
-    >>> df = goenrich.enrich.analyze(O, query, ...)
+    .. code-block:: python
 
-    :param O: Ontology graph after backgroud was set
-    :param query: array like of ids
-    :returns: pandas.DataFrame with results
+        >>> O = goenrich.obo.ontology('db/go-basic.obo')
+        >>> gene2go = goenrich.read.gene2go('db/gene2go.gz')
+        >>> values = {k: set(v) for k,v in gene2go.groupby('GO_ID')['GeneID']}
+        >>> goenrich.enrich.propagate(O, values, 'gene2go')
+        >>> df = goenrich.enrich.analyze(O, query, ...)
+
+    Parameters
+    ----------
+
+    O : nx.DiGraph
+        Ontology graph after backgroud was set
+    query : array-like
+        query ids
+
+    Returns
+    -------
+    
+    pd.DataFrame
+        enrichment result table
     """
     options = {
             'show' : 'top20'
@@ -29,7 +41,7 @@ def analyze(O, query, background_attribute, **kwargs):
     ps, xs, ns = calculate_pvalues(nodes, _query, background_attribute,
             M, **options)
     qs, rejs = multiple_testing_correction(ps, **options)
-    df = goenrich.export.to_frame(nodes, term=terms, q=qs, rejected=rejs,
+    df = export.to_frame(nodes, term=terms, q=qs, rejected=rejs,
             p=ps, x=xs, n=ns, M=M, N=N)
     if 'gvfile' in options:
         show = options['show']
@@ -44,7 +56,7 @@ def analyze(O, query, background_attribute, **kwargs):
                 G.node[term].update({'name' : node['name'], 'x' : x,
                     'q' : q, 'n' : n, 'significant' : rej})
         G.reverse(copy=False)
-        goenrich.export.to_graphviz(G, **options)
+        export.to_graphviz(G, **options)
     return df
     
 def propagate(O, values, attribute):

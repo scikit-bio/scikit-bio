@@ -20,6 +20,7 @@ API Reference
    diversity
    stats
    util
+   goenrich
 
 User Documentation
 ------------------

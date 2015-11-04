@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-import goenrich
+import skbio.goenrich
 
 def to_frame(nodes, **kwargs):
     """ export node attributes and key-values pairs to pd.DataFrame
