@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import copy
 import operator
 
 from future.builtins import zip, range
@@ -260,8 +261,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         for seq in sequences:
             self._add_sequence(seq)
 
-        MetadataMixin.__init__(self, metadata=metadata)
-        PositionalMetadataMixin.__init__(
+        MetadataMixin._init_(self, metadata=metadata)
+        PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
 
         self.reindex(minter=minter, keys=keys)
@@ -438,10 +439,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if not isinstance(other, TabularMSA):
             return False
 
-        if not MetadataMixin.__eq__(self, other):
+        if not MetadataMixin._eq_(self, other):
             return False
 
-        if not PositionalMetadataMixin.__eq__(self, other):
+        if not PositionalMetadataMixin._eq_(self, other):
             return False
 
         # Use np.array_equal instead of (a == b).all():
@@ -472,6 +473,68 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         return not (self == other)
+
+    @experimental(as_of='0.4.0-dev')
+    def __copy__(self):
+        """Return a shallow copy of this MSA.
+
+        Returns
+        -------
+        TabularMSA
+            Shallow copy of this MSA.
+
+        See Also
+        --------
+        __deepcopy__
+
+        """
+        seqs = copy.copy(self._seqs)
+
+        keys = None
+        if self.has_keys():
+            keys = self.keys
+
+        msa_copy = self.__class__(sequences=seqs, keys=keys, metadata=None,
+                                  positional_metadata=None)
+
+        msa_copy._metadata = MetadataMixin._copy_(self)
+        msa_copy._positional_metadata = PositionalMetadataMixin._copy_(self)
+
+        return msa_copy
+
+    @experimental(as_of='0.4.0-dev')
+    def __deepcopy__(self, memo):
+        """Return a deep copy of this MSA.
+
+        Returns
+        -------
+        TabularMSA
+            Deep copy of this MSA.
+
+        See Also
+        --------
+        __copy__
+
+        """
+        seqs = copy.deepcopy(self._seqs, memo)
+
+        keys = None
+        if self.has_keys():
+            keys = self.keys
+
+        # Constructor makes shallow copy of keys but this should be sufficient
+        # even for a deep copy since keys must be hashable (read: immutable).
+        # Technically it is possible to create a hashable, mutable key but the
+        # user has bigger problems at that point... the concept of keys is
+        # going to change soon so may want to revisit then.
+        msa_copy = self.__class__(sequences=seqs, keys=keys, metadata=None,
+                                  positional_metadata=None)
+
+        msa_copy._metadata = MetadataMixin._deepcopy_(self, memo)
+        msa_copy._positional_metadata = \
+            PositionalMetadataMixin._deepcopy_(self, memo)
+
+        return msa_copy
 
     @experimental(as_of='0.4.0-dev')
     def gap_frequencies(self, axis='sequence', relative=False):

@@ -73,6 +73,9 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
 
+### Deprecated functionality [stable]
+* `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
+
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
 

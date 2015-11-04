@@ -38,7 +38,27 @@ class TestSkbioObject(unittest.TestCase):
 class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                         MetadataMixinTests):
     def setUp(self):
-        self._metadata_constructor_ = MetadataMixin
+        class ExampleMetadataMixin(MetadataMixin):
+            def __init__(self, metadata=None):
+                MetadataMixin._init_(self, metadata=metadata)
+
+            def __eq__(self, other):
+                return MetadataMixin._eq_(self, other)
+
+            def __ne__(self, other):
+                return MetadataMixin._ne_(self, other)
+
+            def __copy__(self):
+                copy = self.__class__(metadata=None)
+                copy._metadata = MetadataMixin._copy_(self)
+                return copy
+
+            def __deepcopy__(self, memo):
+                copy = self.__class__(metadata=None)
+                copy._metadata = MetadataMixin._deepcopy_(self, memo)
+                return copy
+
+        self._metadata_constructor_ = ExampleMetadataMixin
 
 
 class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
@@ -52,8 +72,26 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
             def __init__(self, axis_len, positional_metadata=None):
                 self._axis_len = axis_len
 
-                PositionalMetadataMixin.__init__(
+                PositionalMetadataMixin._init_(
                     self, positional_metadata=positional_metadata)
+
+            def __eq__(self, other):
+                return PositionalMetadataMixin._eq_(self, other)
+
+            def __ne__(self, other):
+                return PositionalMetadataMixin._ne_(self, other)
+
+            def __copy__(self):
+                copy = self.__class__(self._axis_len, positional_metadata=None)
+                copy._positional_metadata = \
+                    PositionalMetadataMixin._copy_(self)
+                return copy
+
+            def __deepcopy__(self, memo):
+                copy = self.__class__(self._axis_len, positional_metadata=None)
+                copy._positional_metadata = \
+                    PositionalMetadataMixin._deepcopy_(self, memo)
+                return copy
 
         self._positional_metadata_constructor_ = ExamplePositionalMetadataMixin
 
