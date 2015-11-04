@@ -118,7 +118,8 @@ setup(name='scikit-bio',
           'pandas >= 0.16.2',
           'scipy >= 0.15.1',
           'six >= 1.9.0',
-          'networkx >= 1.0.0'
+          'networkx >= 1.0.0',
+          'statsmodels >= 0.6.0'
       ],
       extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
                                "python-dateutil", "check-manifest"],

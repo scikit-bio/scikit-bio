@@ -13,3 +13,5 @@ pyflakes
 flake8
 python-dateutil
 decorator
+statsmodels
+network

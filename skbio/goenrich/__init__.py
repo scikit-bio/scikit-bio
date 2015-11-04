@@ -5,34 +5,22 @@ Gene ontology enrichment analysis (:mod:`skbio.goenrich`)
 .. currentmodule:: skbio.goenrich
 
 Utility functions for programmatic gene ontology (GO) enrichment
-analysis.
+analysis.asdf
 
-Enrichment
-----------
+Submodules
+-----------
 
-.. currentmodule:: skbio.goenrich.enrich
 .. autosummary::
+   :toctree: generated/
     
-   analyze 
-
-Export
-------
-
-.. autosummary::
-
+    enrich 
     export
-
-Tools
------
-
-.. autosummary::
-
     tools
 
 """
 
 # ----------------------------------------------------------------------------
-# Copyright (c) 2013--, scikit-bio development team.
+# Copyright (c) 2013--2015, scikit-bio development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #

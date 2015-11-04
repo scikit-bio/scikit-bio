@@ -1,3 +1,21 @@
+r"""
+goenrich export (:mod:`skbio.goenrich.export`)
+==============================================
+
+.. currentmodule:: skbio.goenrich.export
+
+This module provides utility functions to deal with files and I/O in
+general.asdf
+
+Functions
+---------
+
+.. autosummary::
+    :toctree:
+
+    to_frame
+    to_graphviz
+"""
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -9,9 +27,16 @@ def to_frame(nodes, **kwargs):
 
     >>> to_frame(nodes, term = terms, pvalues = ps, ...)
 
-    :param nodes: list of dictionaries with node attributes
-    :param **kwargs: additional columns
-    :returns: a pd.DataFrame
+    Parameters
+    ----------
+    nodes :  list of dict
+        list of dictionaries with node attributes
+    **kwargs :
+        additional columns
+
+    Returns
+    -------
+    df : pd.DataFrame
     """
     names, namespaces = zip(*[(n['name'], n['namespace']) for n in nodes])
     kwargs.update({'name' : names, 'namespace' : namespaces})
@@ -24,9 +49,14 @@ def to_graphviz(G, gvfile, graph_label='', **kwargs):
     >>> import subprocess
     >>> subprocess.call(['dot', '-Tpng', 'filpath.dot', '>', 'filepath.png'])
 
-    :param G: the graph to be exported
-    :param gvfile: file or filepath
-    :param graph_label: For empty label pass graph_label=''.
+    Parameters
+    ----------
+    G : nx.Graph
+        the graph to be exported
+    gvfile : filehandle, filepath
+        output path
+    graph_label : str
+        For an empty label pass graph_label=''.
     """
     for n in G:
         node = G.node[n]

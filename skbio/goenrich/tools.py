@@ -1,5 +1,19 @@
-"""
-helper functions for `goenrich`
+r"""
+goenrich tools (:mod:`skbio.goenrich.tools`)
+============================================
+
+.. currentmodule:: skbio.goenrich.tools
+
+This module provides utility functions to deal with files and I/O in
+general.
+
+Functions
+---------
+
+.. autosummary::
+    :toctree: generated/
+
+    generate_background
 """
 import pandas as pd
 

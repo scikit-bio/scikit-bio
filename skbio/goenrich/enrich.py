@@ -1,3 +1,20 @@
+r"""
+goenrich enrich (:mod:`skbio.goenrich.enrich`)
+==============================================
+
+.. currentmodule:: skbio.goenrich.enrich
+
+This module provides utility functions to deal with files and I/O in
+general.
+
+Functions
+---------
+
+.. autosummary::
+    :toctree: generated/
+
+    analyze
+"""
 import networkx as nx
 import numpy as np
 from scipy.stats import hypergeom
