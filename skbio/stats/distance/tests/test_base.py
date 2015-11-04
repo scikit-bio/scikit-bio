@@ -490,6 +490,23 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         res = DistanceMatrix.from_iterable(["boo"], lambda _: 100)
         self.assertEqual(res, exp)
 
+    def test_from_iterable_with_keys(self):
+        iterable = (x for x in range(4))
+
+        exp = DistanceMatrix([[0, 1, 2, 3],
+                              [1, 0, 1, 2],
+                              [2, 1, 0, 1],
+                              [3, 2, 1, 0]], ['0', '1', '4', '9'])
+        res = DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a),
+                                           keys=iter(['0', '1', '4', '9']))
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_with_key_and_keys(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(ValueError):
+            DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a),
+                                         key=str, keys=['1', '2', '3', '4'])
+
     def test_condensed_form(self):
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):
             obs = dm.condensed_form()

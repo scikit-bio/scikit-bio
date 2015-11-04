@@ -13,8 +13,10 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio import DistanceMatrix
-from skbio.diversity.beta import pw_distances, pw_distances_from_table
+from skbio.io._fileobject import StringIO
+from skbio import DistanceMatrix, TreeNode
+from skbio.diversity.beta import (pw_distances, pw_distances_from_table,
+                                  unweighted_unifrac, weighted_unifrac)
 
 
 class HelperBiomTable(object):
@@ -44,6 +46,9 @@ class BaseTests(TestCase):
                    [2, 3],
                    [0, 1]]
         self.ids1 = list('ABC')
+        self.tree1 = TreeNode.read(StringIO(
+            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'))
+        self.otu_ids1 = ['O1', 'O2']
 
         self.t2 = [[23, 64, 14, 0, 0, 3, 1],
                    [0, 3, 35, 42, 0, 12, 1],
@@ -71,7 +76,7 @@ class BaseTests(TestCase):
                           'euclidean')
 
     def test_pw_distances_euclidean(self):
-        actual_dm = pw_distances(self.t1, self.ids1, 'euclidean')
+        actual_dm = pw_distances('euclidean', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -83,7 +88,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 2.82842712)
         npt.assert_almost_equal(actual_dm['C', 'B'], 2.82842712)
 
-        actual_dm = pw_distances(self.t2, self.ids2, 'euclidean')
+        actual_dm = pw_distances('euclidean', self.t2, self.ids2)
         expected_data = [
             [0., 80.8455317, 84.0297566, 36.3042697, 86.0116271, 78.9176786],
             [80.8455317, 0., 71.0844568, 74.4714710, 69.3397433, 14.422205],
@@ -98,7 +103,7 @@ class BaseTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_pw_distances_braycurtis(self):
-        actual_dm = pw_distances(self.t1, self.ids1, 'braycurtis')
+        actual_dm = pw_distances('braycurtis', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -110,7 +115,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 0.66666667)
         npt.assert_almost_equal(actual_dm['C', 'B'], 0.66666667)
 
-        actual_dm = pw_distances(self.t2, self.ids2, 'braycurtis')
+        actual_dm = pw_distances('braycurtis', self.t2, self.ids2)
         expected_data = [
             [0., 0.78787879, 0.86666667, 0.30927835, 0.85714286, 0.81521739],
             [0.78787879, 0., 0.78142077, 0.86813187, 0.75, 0.1627907],
@@ -124,9 +129,65 @@ class BaseTests(TestCase):
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
 
+    def test_pw_distances_unweighted_unifrac(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('unweighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = pw_distances(unweighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.0, 0.25/1.0],
+            [0.0, 0.0, 0.25/1.0],
+            [0.25/1.0, 0.25/1.0, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_pw_distances_weighted_unifrac(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.1750000, 0.12499999],
+            [0.1750000, 0.0, 0.3000000],
+            [0.12499999, 0.3000000, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_pw_distances_weighted_unifrac_normalized(self):
+        # expected values calculated by hand
+        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1,
+                           normalized=True)
+        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
+                           otu_ids=self.otu_ids1, tree=self.tree1,
+                           normalized=True)
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.128834, 0.085714],
+            [0.128834, 0.0, 0.2142857],
+            [0.085714, 0.2142857, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.ids1)
+        for id1 in self.ids1:
+            for id2 in self.ids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
     def test_pw_distances_from_table_euclidean(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances(self.t1, self.ids1, 'euclidean')
+        m_dm = pw_distances('euclidean', self.t1, self.ids1,)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table1,
             'euclidean')
@@ -134,7 +195,7 @@ class BaseTests(TestCase):
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances(self.t2, self.ids2, 'euclidean')
+        m_dm = pw_distances('euclidean', self.t2, self.ids2)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table2,
             'euclidean')
@@ -144,18 +205,16 @@ class BaseTests(TestCase):
 
     def test_pw_distances_from_table_braycurtis(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances(self.t1, self.ids1, 'braycurtis')
+        m_dm = pw_distances('braycurtis', self.t1, self.ids1)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table1,
-            'braycurtis')
+            DeprecationWarning, pw_distances_from_table, self.table1)
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances(self.t2, self.ids2, 'braycurtis')
+        m_dm = pw_distances('braycurtis', self.t2, self.ids2,)
         t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table2,
-            'braycurtis')
+            DeprecationWarning, pw_distances_from_table, self.table2)
         for id1 in self.ids2:
             for id2 in self.ids2:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])

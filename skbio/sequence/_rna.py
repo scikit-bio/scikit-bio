@@ -135,6 +135,73 @@ class RNA(IUPACSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
+    @stable(as_of="0.4.0-dev")
+    def reverse_transcribe(self):
+        """Reverse transcribe RNA into DNA.
+
+        It returns the coding DNA strand of the RNA sequence, i.e. uracil (U)
+        is replaced with thymine (T) in the reverse transcribed sequence.
+
+        Returns
+        -------
+        DNA
+            Reverse transcribed sequence.
+
+        See Also
+        --------
+        DNA.transcribe
+        translate
+        translate_six_frames
+
+        Notes
+        -----
+        RNA sequence's metadata and positional metadata are included in the
+        transcribed DNA sequence.
+
+        Examples
+        --------
+        Reverse transcribe RNA into DNA:
+
+        >>> from skbio import RNA
+        >>> rna = RNA('UAACGUUA')
+        >>> rna
+        RNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 UAACGUUA
+        >>> rna.reverse_transcribe()
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 25.00%
+        -----------------------------
+        0 TAACGTTA
+        """
+        seq = self._string.replace(b'U', b'T')
+
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
+        # turn off validation because `seq` is guaranteed to be valid
+        return skbio.DNA(seq, metadata=metadata,
+                         positional_metadata=positional_metadata,
+                         validate=False)
+
     @stable(as_of="0.4.0")
     def translate(self, genetic_code=1, *args, **kwargs):
         """Translate RNA sequence into protein sequence.

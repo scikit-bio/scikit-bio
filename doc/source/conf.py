@@ -4,12 +4,59 @@
 import glob
 import sys
 import os
+import types
+import re
 
 # Check that dependencies are installed and the correct version if necessary
 sphinx_version = '1.2.2'
 import sphinx
 if sphinx.__version__ != sphinx_version:
     raise RuntimeError("Sphinx %s required" % sphinx_version)
+
+import sphinx.ext.autosummary as autosummary
+
+class NewAuto(autosummary.Autosummary):
+    def get_items(self, names):
+        # Camel to snake case from http://stackoverflow.com/a/1176023/579416
+        first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+        all_cap_re = re.compile('([a-z0-9])([A-Z])')
+        def fix_item(display_name, sig, summary, real_name):
+            class_name = real_name.split('.')[-2]
+            s1 = first_cap_re.sub(r'\1_\2', class_name)
+            nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
+            if len(nice_name) > 10:
+                nice_name = ''.join([e[0] for e in nice_name.split('_')])
+            def fmt(string):
+                count = string.count('%s')
+                return string % tuple([nice_name] * count)
+
+            specials = {
+                '__eq__': fmt('%s1 == %s2'),
+                '__ne__': fmt('%s1 != %s2'),
+                '__gt__': fmt('%s1 > %s2'),
+                '__lt__': fmt('%s1 < %s2'),
+                '__ge__': fmt('%s1 >= %s2'),
+                '__le__': fmt('%s1 <= %s2'),
+                '__getitem__': fmt('%s[x]'),
+                '__iter__': fmt('iter(%s)'),
+                '__contains__': fmt('x in %s'),
+                '__bool__': fmt('bool(%s)'),
+                '__str__': fmt('str(%s)'),
+                '__reversed__': fmt('reversed(%s)'),
+                '__len__': fmt('len(%s)'),
+                '__copy__': fmt('copy.copy(%s)'),
+                '__deepcopy__': fmt('copy.deepcopy(%s)'),
+            }
+            if display_name in specials:
+                return specials[display_name], '', summary, real_name
+            return display_name, sig, summary, real_name
+
+        skip = ['__nonzero__']
+
+        return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
+                if e[0] not in skip]
+
+autosummary.Autosummary = NewAuto
 
 import sphinx_bootstrap_theme
 
@@ -25,6 +72,26 @@ except ImportError:
     raise RuntimeError(
         "numpydoc v0.6 or later required. Install it with:\n"
         "  pip install git+git://github.com/numpy/numpydoc.git")
+
+@property
+def _extras(self):
+    # This will be accessed in a for-loop, so memoize to prevent quadratic
+    # behavior.
+    if not hasattr(self, '__memoized_extras'):
+        # We want every dunder that has a function type (not class slot),
+        # meaning we created the dunder, not Python.
+        # We don't ever care about __init__ and the user will see plenty of
+        # __repr__ calls, so why waste space.
+        self.__memoized_extras = [
+            a for a, v in inspect.getmembers(self._cls)
+            if type(v) == types.FunctionType and a.startswith('__')
+            and a not in ['__init__', '__repr__']
+        ]
+    return self.__memoized_extras
+
+# The extra_public_methods depends on what class we are looking at.
+numpydoc.docscrape.ClassDoc.extra_public_methods = _extras
+
 
 import skbio
 from skbio.util._decorator import classproperty

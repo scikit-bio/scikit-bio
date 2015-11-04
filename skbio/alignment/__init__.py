@@ -19,6 +19,7 @@ Data Structures
 
    SequenceCollection
    Alignment
+   TabularMSA
 
 Optimized (i.e., production-ready) Alignment Algorithms
 -------------------------------------------------------
@@ -209,6 +210,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
+from ._tabular_msa import TabularMSA
 from ._alignment import Alignment, SequenceCollection
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
@@ -220,7 +222,7 @@ from skbio.alignment._ssw_wrapper import (
     StripedSmithWaterman, AlignmentStructure)
 from ._exception import (SequenceCollectionError, AlignmentError)
 
-__all__ = ['Alignment', 'SequenceCollection',
+__all__ = ['TabularMSA', 'Alignment', 'SequenceCollection',
            'StripedSmithWaterman', 'AlignmentStructure',
            'local_pairwise_align_ssw', 'SequenceCollectionError',
            'AlignmentError', 'global_pairwise_align',

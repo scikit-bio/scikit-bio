@@ -43,7 +43,8 @@ Exceptions
 .. autosummary::
    :toctree: generated/
 
-   TestingUtilError
+   OperationError
+   UniqueError
 
 Warnings
 --------
@@ -67,17 +68,17 @@ Warnings
 from __future__ import absolute_import, division, print_function
 
 from ._warning import EfficiencyWarning, RepresentationWarning
-from ._exception import TestingUtilError
+from ._exception import OperationError, UniqueError
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import (get_data_path, TestRunner,
                        assert_ordination_results_equal,
                        assert_data_frame_almost_equal)
 
-__all__ = ['EfficiencyWarning', 'RepresentationWarning', 'TestingUtilError',
-           'cardinal_to_ordinal', 'create_dir', 'find_duplicates', 'flatten',
-           'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', 'assert_ordination_results_equal',
-           'assert_data_frame_almost_equal']
+__all__ = ['EfficiencyWarning', 'RepresentationWarning', 'OperationError',
+           'UniqueError', 'cardinal_to_ordinal', 'create_dir',
+           'find_duplicates', 'flatten', 'is_casava_v180_or_later',
+           'remove_files', 'safe_md5', 'get_data_path', 'TestRunner',
+           'assert_ordination_results_equal', 'assert_data_frame_almost_equal']
 
 test = TestRunner(__file__).test
