@@ -3,6 +3,7 @@
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
 ### Features
+* Added `skbio.stats.composition.ancom` function, a test for differential abundance [#1054](https://github.com/biocore/scikit-bio/issues/1054)
 * Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/biocore/scikit-bio/issues/757))
 * Added support for one-dimensional vector of dissimilarities in `skbio.stats.distance.DissimilarityMatrix`
 constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
