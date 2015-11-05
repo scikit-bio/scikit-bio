@@ -20,7 +20,10 @@ from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_true
 
 from skbio import OrdinationResults
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio.util._decorator import overrides
+from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
+                                 PositionalMetadataMixinTests)
 
 
 class TestSkbioObject(unittest.TestCase):
@@ -30,6 +33,29 @@ class TestSkbioObject(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             Foo()
+
+
+class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                        MetadataMixinTests):
+    def setUp(self):
+        self._metadata_constructor_ = MetadataMixin
+
+
+class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                                  PositionalMetadataMixinTests):
+    def setUp(self):
+        class ExamplePositionalMetadataMixin(PositionalMetadataMixin):
+            @overrides(PositionalMetadataMixin)
+            def _positional_metadata_axis_len_(self):
+                return self._axis_len
+
+            def __init__(self, axis_len, positional_metadata=None):
+                self._axis_len = axis_len
+
+                PositionalMetadataMixin.__init__(
+                    self, positional_metadata=positional_metadata)
+
+        self._positional_metadata_constructor_ = ExamplePositionalMetadataMixin
 
 
 class TestOrdinationResults(unittest.TestCase):

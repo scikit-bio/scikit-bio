@@ -50,10 +50,9 @@ relax this rule to allow for longer sequence identifiers. See the
 The format described here is "sequential" format. The original PHYLIP format
 specification [3]_ describes both sequential and interleaved formats.
 
-.. note:: scikit-bio currently only supports writing strict, sequential
-   PHYLIP-formatted files from an ``skbio.alignment.Alignment``. It does not
-   yet support reading PHYLIP-formatted files, nor does it support relaxed or
-   interleaved PHYLIP formats.
+.. note:: scikit-bio currently supports reading and writing strict, sequential
+   PHYLIP-formatted files. Relaxed and/or interleaved PHYLIP formats are not
+   supported.
 
 Header Section
 ^^^^^^^^^^^^^^
@@ -83,9 +82,10 @@ an ID, all characters except newlines are supported, including spaces,
 underscores, and numbers.
 
 .. note:: While not explicitly stated in the original PHYLIP format
-   description, scikit-bio only supports writing unique sequence identifiers
-   (i.e., duplicates are not allowed). Uniqueness is required because an
-   ``skbio.alignment.Alignment`` cannot be created with duplicate IDs.
+   description, scikit-bio only supports reading and writing unique sequence
+   identifiers (i.e., duplicates are not allowed). Uniqueness is required
+   because an ``skbio.alignment.Alignment`` cannot be created with duplicate
+   IDs.
 
    scikit-bio supports the empty string (``''``) as a valid sequence ID. An
    empty ID will be padded with 10 spaces.
@@ -100,14 +100,15 @@ PHYLIP specification uses ``-`` as a gap character, though older versions also
 supported ``.``. The sequence characters may contain optional spaces (e.g., to
 improve readability), and both upper and lower case characters are supported.
 
-.. note:: scikit-bio will write a PHYLIP-formatted file even if the alignment's
-   sequence characters are not valid IUPAC characters. This differs from the
-   PHYLIP specification, which states that a PHYLIP-formatted file can only
-   contain valid IUPAC characters. To check whether all characters are valid
-   before writing, the user can call ``Alignment.is_valid()``.
+.. note:: scikit-bio will read/write a PHYLIP-formatted file as long as the
+   alignment's sequence characters are valid for the type of in-memory sequence
+   object being read into or written from. This differs from the PHYLIP
+   specification, which states that a PHYLIP-formatted file can only contain
+   valid IUPAC characters. See the ``constructor`` format parameter below for
+   details.
 
    Since scikit-bio supports both ``-`` and ``.`` as gap characters (e.g., in
-   ``skbio.alignment.Alignment``), both are supported when writing a
+   ``skbio.alignment.Alignment``), both are supported when reading/writing a
    PHYLIP-formatted file.
 
    When writing a PHYLIP-formatted file, scikit-bio will split up each sequence
@@ -116,7 +117,21 @@ improve readability), and both upper and lower case characters are supported.
    format). It will *not* be wrapped across multiple lines. Sequences are
    chunked in this manner for improved readability, and because most example
    PHYLIP files are chunked in a similar way (e.g., see the example file
-   above). Note that this chunking is not required by the PHYLIP format.
+   above). Note that this chunking is not required when reading
+   PHYLIP-formatted files, nor by the PHYLIP format specification itself.
+
+Format Parameters
+-----------------
+The only supported format parameter is ``constructor``, which specifies the
+type of in-memory sequence object to read each aligned sequence into. This is
+``Sequence`` by default. ``constructor`` can only be used with the
+``Alignment`` PHYLIP reader. ``constructor`` should be a subclass of
+``Sequence``. For example, if you know that the PHYLIP file you're reading
+contains DNA sequences, you would pass ``constructor=DNA`` to the reader call.
+
+.. note:: The PHYLIP sniffer will not attempt to guess the ``constructor``
+   parameter, so it will always default to ``Sequence`` if another type is not
+   provided to the reader.
 
 Examples
 --------
@@ -241,7 +256,6 @@ def _phylip_to_alignment(fh, constructor=Sequence):
 
 @phylip.writer(Alignment)
 def _alignment_to_phylip(obj, fh):
-
     if obj.is_empty():
         raise PhylipFormatError(
             "Alignment can only be written in PHYLIP format if there is at "
@@ -332,4 +346,4 @@ def _line_generator(fh):
     """Just remove linebreak characters and yield lines.
     """
     for line in fh:
-        yield line[:-1]
+        yield line.rstrip('\n')

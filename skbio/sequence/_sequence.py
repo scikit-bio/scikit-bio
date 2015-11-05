@@ -7,17 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
+from future.builtins import range, zip
 from future.utils import viewitems
 import six
 
-import itertools
-import math
 import re
 import collections
 import copy
 import numbers
-import textwrap
 from contextlib import contextmanager
 
 import numpy as np
@@ -25,13 +22,14 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject
-from skbio.sequence._base import ElasticLines
-from skbio.util._misc import chunk_str
-from skbio.util._decorator import stable, experimental
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio.sequence._repr import _SequenceReprBuilder
+from skbio.util._decorator import (stable, experimental, classonlymethod,
+                                   overrides)
 
 
-class Sequence(collections.Sequence, SkbioObject):
+class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
+               SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet and are thus the most
@@ -69,6 +67,7 @@ class Sequence(collections.Sequence, SkbioObject):
     values
     metadata
     positional_metadata
+    observed_chars
 
     See Also
     --------
@@ -319,6 +318,7 @@ class Sequence(collections.Sequence, SkbioObject):
     3      []       10
 
     """
+    _number_of_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -347,193 +347,177 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
-    @stable(as_of="0.4.0")
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire sequence.
+    @experimental(as_of="0.4.0-dev")
+    def observed_chars(self):
+        """Set of observed characters in the sequence.
 
         Notes
         -----
-        This property can be set and deleted.
+        This property is not writeable.
 
         Examples
         --------
-        >>> from pprint import pprint
         >>> from skbio import Sequence
-
-        Create a sequence with metadata:
-
-        >>> s = Sequence('ACGTACGTACGTACGT',
-        ...              metadata={'id': 'seq-id',
-        ...                        'description': 'seq description'})
-        >>> s
-        Sequence
-        ------------------------------------
-        Metadata:
-            'description': 'seq description'
-            'id': 'seq-id'
-        Stats:
-            length: 16
-        ------------------------------------
-        0 ACGTACGTAC GTACGT
-
-        Retrieve metadata:
-
-        >>> pprint(s.metadata) # using pprint to display dict in sorted order
-        {'description': 'seq description', 'id': 'seq-id'}
-
-        Update metadata:
-
-        >>> s.metadata['id'] = 'new-id'
-        >>> s.metadata['pubmed'] = 12345
-        >>> pprint(s.metadata)
-        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
-
-        Set metadata:
-
-        >>> s.metadata = {'abc': 123}
-        >>> s.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> s.has_metadata()
+        >>> s = Sequence('AACGAC')
+        >>> s.observed_chars == {'G', 'A', 'C'}
         True
-        >>> del s.metadata
-        >>> s.metadata
-        {}
-        >>> s.has_metadata()
-        False
 
         """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @property
-    @stable(as_of="0.4.0")
-    def positional_metadata(self):
-        """``pd.DataFrame`` containing metadata on a per-character basis.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        Create a DNA sequence with positional metadata:
-
-        >>> from skbio import DNA
-        >>> seq = DNA(
-        ...     'ACGT',
-        ...     positional_metadata={'quality': [3, 3, 20, 11],
-        ...                          'exons': [True, True, False, True]})
-        >>> seq
-        DNA
-        -----------------------------
-        Positional metadata:
-            'exons': <dtype: bool>
-            'quality': <dtype: int64>
-        Stats:
-            length: 4
-            has gaps: False
-            has degenerates: False
-            has non-degenerates: True
-            GC-content: 50.00%
-        -----------------------------
-        0 ACGT
-
-        Retrieve positional metadata:
-
-        >>> seq.positional_metadata
-           exons  quality
-        0   True        3
-        1   True        3
-        2  False       20
-        3   True       11
-
-        Update positional metadata:
-
-        >>> seq.positional_metadata['gaps'] = seq.gaps()
-        >>> seq.positional_metadata
-           exons  quality   gaps
-        0   True        3  False
-        1   True        3  False
-        2  False       20  False
-        3   True       11  False
-
-        Set positional metadata:
-
-        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
-        >>> seq.positional_metadata
-          degenerates
-        0       False
-        1       False
-        2       False
-        3       False
-
-        Delete positional metadata:
-
-        >>> seq.has_positional_metadata()
-        True
-        >>> del seq.positional_metadata
-        >>> seq.positional_metadata
-        Empty DataFrame
-        Columns: []
-        Index: [0, 1, 2, 3]
-        >>> seq.has_positional_metadata()
-        False
-
-        """
-        if self._positional_metadata is None:
-            # not using setter to avoid copy
-            self._positional_metadata = pd.DataFrame(
-                index=np.arange(len(self)))
-        return self._positional_metadata
-
-    @positional_metadata.setter
-    def positional_metadata(self, positional_metadata):
-        try:
-            # copy=True to copy underlying data buffer
-            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
-            raise TypeError('Positional metadata invalid. Must be consumable '
-                            'by pd.DataFrame. Original pandas error message: '
-                            '"%s"' % e)
-
-        num_rows = len(positional_metadata.index)
-        if num_rows != len(self):
-            raise ValueError(
-                "Number of positional metadata values (%d) must match the "
-                "number of characters in the sequence (%d)." %
-                (num_rows, len(self)))
-
-        positional_metadata.reset_index(drop=True, inplace=True)
-        self._positional_metadata = positional_metadata
-
-    @positional_metadata.deleter
-    def positional_metadata(self):
-        self._positional_metadata = None
+        return set(str(self))
 
     @property
     def _string(self):
         return self._bytes.tostring()
 
+    @classonlymethod
+    @experimental(as_of="0.4.0-dev")
+    def concat(cls, sequences, how='strict'):
+        """Concatenate an iterable of ``Sequence`` objects.
+
+        Parameters
+        ----------
+        seqs : iterable (Sequence)
+            An iterable of ``Sequence`` objects or appropriate subclasses.
+        how : {'strict', 'inner', 'outer'}, optional
+            How to intersect the `positional_metadata` of the sequences.
+            If 'strict': the `positional_metadata` must have the exact same
+            columns; 'inner': an inner-join of the columns (only the shared set
+            of columns are used); 'outer': an outer-join of the columns
+            (all columns are used: missing values will be padded with NaN).
+
+        Returns
+        -------
+        Sequence
+            The returned sequence will be an instance of the class which
+            called this class-method.
+
+        Raises
+        ------
+        ValueError
+            If `how` is not one of: 'strict', 'inner', or 'outer'.
+        ValueError
+            If `how` is 'strict' and the `positional_metadata` of each sequence
+            does not have the same columns.
+        TypeError
+            If the sequences cannot be cast as the calling class.
+
+        Notes
+        -----
+            The sequence-wide metadata (``Sequence.metadata``) is not retained
+            during concatenation.
+
+            Sequence objects can be cast to a different type only when the new
+            type is an ancestor or child of the original type. Casting between
+            sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
+            allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
+            would be.
+
+        Examples
+        --------
+        Concatenate two DNA sequences into a new DNA object:
+
+        >>> from skbio import DNA, Sequence
+        >>> s1 = DNA("ACGT")
+        >>> s2 = DNA("GGAA")
+        >>> DNA.concat([s1, s2])
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+
+        Concatenate DNA sequences into a Sequence object (type coercion):
+
+        >>> Sequence.concat([s1, s2])
+        Sequence
+        -------------
+        Stats:
+            length: 8
+        -------------
+        0 ACGTGGAA
+
+        Positional metadata is conserved:
+
+        >>> s1 = DNA('AcgT', lowercase='one')
+        >>> s2 = DNA('GGaA', lowercase='one',
+        ...          positional_metadata={'two': [1, 2, 3, 4]})
+        >>> result = DNA.concat([s1, s2], how='outer')
+        >>> result
+        DNA
+        -----------------------------
+        Positional metadata:
+            'one': <dtype: bool>
+            'two': <dtype: float64>
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+        >>> result.positional_metadata
+             one  two
+        0  False  NaN
+        1   True  NaN
+        2   True  NaN
+        3  False  NaN
+        4  False    1
+        5  False    2
+        6   True    3
+        7  False    4
+
+        """
+        if how not in {'strict', 'inner', 'outer'}:
+            raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
+
+        seqs = list(sequences)
+        for seq in seqs:
+            seq._assert_can_cast_to(cls)
+
+        if how == 'strict':
+            how = 'inner'
+            cols = []
+            for s in seqs:
+                if s.has_positional_metadata():
+                    cols.append(frozenset(s.positional_metadata))
+                else:
+                    cols.append(frozenset())
+            if len(set(cols)) > 1:
+                raise ValueError("The positional metadata of the sequences do"
+                                 " not have matching columns. Consider setting"
+                                 " how='inner' or how='outer'")
+        seq_data = []
+        pm_data = []
+        for seq in seqs:
+            seq_data.append(seq._bytes)
+            pm_data.append(seq.positional_metadata)
+            if not seq.has_positional_metadata():
+                del seq.positional_metadata
+
+        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        bytes_ = np.concatenate(seq_data)
+
+        return cls(bytes_, positional_metadata=pm)
+
+    @classmethod
+    def _assert_can_cast_to(cls, target):
+        if not (issubclass(cls, target) or issubclass(target, cls)):
+            raise TypeError("Cannot cast %r as %r." %
+                            (cls.__name__, target.__name__))
+
+    @overrides(PositionalMetadataMixin)
+    def _positional_metadata_axis_len_(self):
+        return len(self)
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
-
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -550,6 +534,9 @@ class Sequence(collections.Sequence, SkbioObject):
                     "np.uint8 or '|S1'. Invalid dtype: %s" %
                     sequence.dtype)
         elif isinstance(sequence, Sequence):
+            # Sequence casting is acceptable between direct
+            # decendants/ancestors
+            sequence._assert_can_cast_to(type(self))
             # we're not simply accessing sequence.metadata in order to avoid
             # creating "empty" metadata representations on both sequence
             # objects if they don't have metadata. same strategy is used below
@@ -585,15 +572,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
             self._set_bytes(sequence)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
-
-        if positional_metadata is None:
-            self._positional_metadata = None
-        else:
-            self.positional_metadata = positional_metadata
+        MetadataMixin.__init__(self, metadata=metadata)
+        PositionalMetadataMixin.__init__(
+            self, positional_metadata=positional_metadata)
 
         if lowercase is False:
             pass
@@ -725,32 +706,13 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.__class__ != other.__class__:
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the sequence
-        # objects if they don't have metadata. same strategy is used below for
-        # positional metadata
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin.__eq__(self, other):
             return False
 
         if self._string != other._string:
             return False
 
-        if self.has_positional_metadata() and other.has_positional_metadata():
-            if not self.positional_metadata.equals(other.positional_metadata):
-                return False
-        elif not (self.has_positional_metadata() or
-                  other.has_positional_metadata()):
-            # both don't have positional metadata
-            pass
-        else:
-            # one has positional metadata while the other does not
+        if not PositionalMetadataMixin.__eq__(self, other):
             return False
 
         return True
@@ -938,7 +900,7 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.size
 
     @stable(as_of="0.4.0")
-    def __nonzero__(self):
+    def __bool__(self):
         """Returns truth value (truthiness) of sequence.
 
         Returns
@@ -956,6 +918,8 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         return len(self) > 0
+
+    __nonzero__ = __bool__
 
     @stable(as_of="0.4.0")
     def __iter__(self):
@@ -1175,51 +1139,6 @@ class Sequence(collections.Sequence, SkbioObject):
 
         """
         return self._copy(True, memo)
-
-    @stable(as_of="0.4.0")
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
-
-    @stable(as_of="0.4.0")
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
 
     @stable(as_of="0.4.0")
     def copy(self, deep=False):
@@ -1764,6 +1683,138 @@ class Sequence(collections.Sequence, SkbioObject):
         else:
             return int(self.mismatches(other).sum())
 
+    @experimental(as_of="0.4.0-dev")
+    def frequencies(self, chars=None, relative=False):
+        """Compute frequencies of characters in the sequence.
+
+        Parameters
+        ----------
+        chars : str or set of str, optional
+            Characters to compute the frequencies of. May be a ``str``
+            containing a single character or a ``set`` of single-character
+            strings. If ``None``, frequencies will be computed for all
+            characters present in the sequence.
+        relative : bool, optional
+            If ``True``, return the relative frequency of each character
+            instead of its count. If `chars` is provided, relative frequencies
+            will be computed with respect to the number of characters in the
+            sequence, **not** the total count of characters observed in
+            `chars`. Thus, the relative frequencies will not necessarily sum to
+            1.0 if `chars` is provided.
+
+        Returns
+        -------
+        dict
+            Frequencies of characters in the sequence.
+
+        Raises
+        ------
+        TypeError
+            If `chars` is not a ``str`` or ``set`` of ``str``.
+        ValueError
+            If `chars` is not a single-character ``str`` or a ``set`` of
+            single-character strings.
+        ValueError
+            If `chars` contains characters outside the allowable range of
+            characters in a ``Sequence`` object.
+
+        See Also
+        --------
+        kmer_frequencies
+        iter_kmers
+
+        Notes
+        -----
+        If the sequence is empty (i.e., length zero), ``relative=True``,
+        **and** `chars` is provided, the relative frequency of each specified
+        character will be ``np.nan``.
+
+        If `chars` is not provided, this method is equivalent to, but faster
+        than, ``seq.kmer_frequencies(k=1)``.
+
+        If `chars` is not provided, it is equivalent to, but faster than,
+        passing ``chars=seq.observed_chars``.
+
+        Examples
+        --------
+        Compute character frequencies of a sequence:
+
+        >>> from pprint import pprint
+        >>> from skbio import Sequence
+        >>> seq = Sequence('AGAAGACC')
+        >>> freqs = seq.frequencies()
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'A': 4, 'C': 2, 'G': 2}
+
+        Compute relative character frequencies:
+
+        >>> freqs = seq.frequencies(relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'G': 0.25}
+
+        Compute relative frequencies of characters A, C, and T:
+
+        >>> freqs = seq.frequencies(chars={'A', 'C', 'T'}, relative=True)
+        >>> pprint(freqs)
+        {'A': 0.5, 'C': 0.25, 'T': 0.0}
+
+        Note that since character T is not in the sequence we receive a
+        relative frequency of 0.0. The relative frequencies of A and C are
+        relative to the number of characters in the sequence (8), **not** the
+        number of A and C characters (4 + 2 = 6).
+
+        """
+        freqs = np.bincount(self._bytes,
+                            minlength=self._number_of_extended_ascii_codes)
+
+        if chars is not None:
+            chars, indices = self._chars_to_indices(chars)
+        else:
+            indices, = np.nonzero(freqs)
+            # Downcast from int64 to uint8 then convert to str. This is safe
+            # because we are guaranteed to have indices in the range 0 to 255
+            # inclusive.
+            chars = indices.astype(np.uint8).tostring().decode('ascii')
+
+        obs_counts = freqs[indices]
+        if relative:
+            obs_counts = obs_counts / len(self)
+
+        # Use tolist() for minor performance gain.
+        return dict(zip(chars, obs_counts.tolist()))
+
+    def _chars_to_indices(self, chars):
+        """Helper for Sequence.frequencies."""
+        if isinstance(chars, six.string_types) or \
+                isinstance(chars, six.binary_type):
+            chars = set([chars])
+        elif not isinstance(chars, set):
+            raise TypeError(
+                "`chars` must be of type `set`, not %r" % type(chars).__name__)
+
+        # Impose an (arbitrary) ordering to `chars` so that we can return
+        # `indices` in that same order.
+        chars = list(chars)
+        indices = []
+        for char in chars:
+            if not (isinstance(char, six.string_types) or
+                    isinstance(char, six.binary_type)):
+                raise TypeError(
+                    "Each element of `chars` must be string-like, not %r" %
+                    type(char).__name__)
+            if len(char) != 1:
+                raise ValueError(
+                    "Each element of `chars` must contain a single "
+                    "character (found %d characters)" % len(char))
+
+            index = ord(char)
+            if index >= self._number_of_extended_ascii_codes:
+                raise ValueError(
+                    "Character %r in `chars` is outside the range of "
+                    "allowable characters in a `Sequence` object." % char)
+            indices.append(index)
+        return chars, indices
+
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
         """Generate kmers of length `k` from the biological sequence.
@@ -1841,11 +1892,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Returns
         -------
-        collections.Counter or collections.defaultdict
+        dict
             Frequencies of words of length `k` contained in the biological
-            sequence. This will be a ``collections.Counter`` if `relative` is
-            ``False`` and a ``collections.defaultdict`` if `relative` is
-            ``True``.
+            sequence.
 
         Raises
         ------
@@ -1854,19 +1903,19 @@ class Sequence(collections.Sequence, SkbioObject):
 
         Examples
         --------
-        >>> from collections import defaultdict, Counter
+        >>> from pprint import pprint
         >>> from skbio import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> freqs = s.kmer_frequencies(3, overlap=False)
-        >>> freqs == Counter({'TTA': 2, 'ACA': 1, 'CAT': 1})
-        True
+        >>> pprint(freqs) # using pprint to display dict in sorted order
+        {'ACA': 1, 'CAT': 1, 'TTA': 2}
         >>> freqs = s.kmer_frequencies(3, relative=True, overlap=False)
-        >>> freqs == defaultdict(float, {'ACA': 0.25, 'TTA': 0.5, 'CAT': 0.25})
-        True
+        >>> pprint(freqs)
+        {'ACA': 0.25, 'CAT': 0.25, 'TTA': 0.5}
 
         """
         kmers = self.iter_kmers(k, overlap=overlap)
-        freqs = collections.Counter((str(seq) for seq in kmers))
+        freqs = dict(collections.Counter((str(seq) for seq in kmers)))
 
         if relative:
             if overlap:
@@ -1874,7 +1923,7 @@ class Sequence(collections.Sequence, SkbioObject):
             else:
                 num_kmers = len(self) // k
 
-            relative_freqs = collections.defaultdict(float)
+            relative_freqs = {}
             for kmer, count in viewitems(freqs):
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs
@@ -2041,9 +2090,9 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         if sequence is None:
             sequence = self._bytes
-        if metadata is None:
+        if metadata is None and self.has_metadata():
             metadata = self._metadata
-        if positional_metadata is None:
+        if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
         return self._constructor(sequence=sequence, metadata=metadata,
                                  positional_metadata=positional_metadata)
@@ -2165,208 +2214,3 @@ def _slices_from_iter(array, indexables):
                              "containing %r." % i)
 
         yield array[i]
-
-
-class _SequenceReprBuilder(object):
-    """Build a ``Sequence`` repr.
-
-    Parameters
-    ----------
-    seq : Sequence
-        Sequence to repr.
-    width : int
-        Maximum width of the repr.
-    indent : int
-        Number of spaces to use for indented lines.
-    chunk_size: int
-        Number of characters in each chunk of a sequence.
-
-    """
-    def __init__(self, seq, width, indent, chunk_size):
-        self._seq = seq
-        self._width = width
-        self._indent = ' ' * indent
-        self._chunk_size = chunk_size
-
-    def build(self):
-        lines = ElasticLines()
-
-        cls_name = self._seq.__class__.__name__
-        lines.add_line(cls_name)
-        lines.add_separator()
-
-        if self._seq.has_metadata():
-            lines.add_line('Metadata:')
-            # Python 3 doesn't allow sorting of mixed types so we can't just
-            # use sorted() on the metadata keys. Sort first by type then sort
-            # by value within each type.
-            for key in self._sorted_keys_grouped_by_type(self._seq.metadata):
-                value = self._seq.metadata[key]
-                lines.add_lines(self._format_metadata_key_value(key, value))
-
-        if self._seq.has_positional_metadata():
-            lines.add_line('Positional metadata:')
-            for key in self._seq.positional_metadata.columns.values.tolist():
-                dtype = self._seq.positional_metadata[key].dtype
-                lines.add_lines(
-                    self._format_positional_metadata_column(key, dtype))
-
-        lines.add_line('Stats:')
-        for label, value in self._seq._repr_stats():
-            lines.add_line('%s%s: %s' % (self._indent, label, value))
-        lines.add_separator()
-
-        num_lines, num_chars, column_width = self._find_optimal_seq_chunking()
-
-        # display entire sequence if we can, else display the first two and
-        # last two lines separated by ellipsis
-        if num_lines <= 5:
-            lines.add_lines(self._format_chunked_seq(
-                range(num_lines), num_chars, column_width))
-        else:
-            lines.add_lines(self._format_chunked_seq(
-                range(2), num_chars, column_width))
-            lines.add_line('...')
-            lines.add_lines(self._format_chunked_seq(
-                range(num_lines - 2, num_lines), num_chars, column_width))
-
-        return lines.to_str()
-
-    def _sorted_keys_grouped_by_type(self, dict_):
-        """Group keys within a dict by their type and sort within type."""
-        type_sorted = sorted(dict_, key=self._type_sort_key)
-        type_and_value_sorted = []
-        for _, group in itertools.groupby(type_sorted, self._type_sort_key):
-            type_and_value_sorted.extend(sorted(group))
-        return type_and_value_sorted
-
-    def _type_sort_key(self, key):
-        return repr(type(key))
-
-    def _format_metadata_key_value(self, key, value):
-        """Format metadata key:value, wrapping across lines if necessary."""
-        key_fmt = self._format_key(key)
-
-        supported_type = True
-        if isinstance(value, (six.text_type, six.binary_type)):
-            # for stringy values, there may be u'' or b'' depending on the type
-            # of `value` and version of Python. find the starting quote
-            # character so that wrapped text will line up with that instead of
-            # the string literal prefix character. for example:
-            #
-            #     'foo': u'abc def ghi
-            #              jkl mno'
-            value_repr = repr(value)
-            extra_indent = 1
-            if not (value_repr.startswith("'") or value_repr.startswith('"')):
-                extra_indent = 2
-        # handles any number, this includes bool
-        elif value is None or isinstance(value, numbers.Number):
-            value_repr = repr(value)
-            extra_indent = 0
-        else:
-            supported_type = False
-
-        if not supported_type or len(value_repr) > 140:
-            value_repr = str(type(value))
-            # extra indent of 1 so that wrapped text lines up past the bracket:
-            #
-            #     'foo': <type
-            #             'dict'>
-            extra_indent = 1
-
-        return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
-
-    def _format_key(self, key):
-        """Format metadata key.
-
-        Includes initial indent and trailing colon and space:
-
-            <indent>'foo':<space>
-
-        """
-        key_fmt = self._indent + repr(key)
-        supported_types = (six.text_type, six.binary_type, numbers.Number,
-                           type(None))
-        if len(key_fmt) > (self._width / 2) or not isinstance(key,
-                                                              supported_types):
-            key_fmt = self._indent + str(type(key))
-        return '%s: ' % key_fmt
-
-    def _wrap_text_with_indent(self, text, initial_text, extra_indent):
-        """Wrap text across lines with an initial indentation.
-
-        For example:
-
-            'foo': 'abc def
-                    ghi jkl
-                    mno pqr'
-
-        <indent>'foo':<space> is `initial_text`. `extra_indent` is 1. Wrapped
-        lines are indented such that they line up with the start of the
-        previous line of wrapped text.
-
-        """
-        return textwrap.wrap(
-            text, width=self._width, expand_tabs=False,
-            initial_indent=initial_text,
-            subsequent_indent=' ' * (len(initial_text) + extra_indent))
-
-    def _format_positional_metadata_column(self, key, dtype):
-        key_fmt = self._format_key(key)
-        dtype_fmt = '<dtype: %s>' % str(dtype)
-        return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
-
-    def _find_optimal_seq_chunking(self):
-        """Find the optimal number of sequence chunks to fit on a single line.
-
-        Returns the number of lines the sequence will occupy, the number of
-        sequence characters displayed on each line, and the column width
-        necessary to display position info using the optimal number of sequence
-        chunks.
-
-        """
-        # strategy: use an iterative approach to find the optimal number of
-        # sequence chunks per line. start with a single chunk and increase
-        # until the max line width is exceeded. when this happens, the previous
-        # number of chunks is optimal
-        num_lines = 0
-        num_chars = 0
-        column_width = 0
-
-        num_chunks = 1
-        not_exceeded = True
-        while not_exceeded:
-            line_len, new_chunk_info = self._compute_chunked_seq_line_len(
-                num_chunks)
-            not_exceeded = line_len <= self._width
-            if not_exceeded:
-                num_lines, num_chars, column_width = new_chunk_info
-                num_chunks += 1
-        return num_lines, num_chars, column_width
-
-    def _compute_chunked_seq_line_len(self, num_chunks):
-        """Compute line length based on a number of chunks."""
-        num_chars = num_chunks * self._chunk_size
-
-        # ceil to account for partial line
-        num_lines = int(math.ceil(len(self._seq) / num_chars))
-
-        # position column width is fixed width, based on the number of
-        # characters necessary to display the position of the final line (all
-        # previous positions will be left justified using this width)
-        column_width = len('%d ' % ((num_lines - 1) * num_chars))
-
-        # column width + number of sequence characters + spaces between chunks
-        line_len = column_width + num_chars + (num_chunks - 1)
-        return line_len, (num_lines, num_chars, column_width)
-
-    def _format_chunked_seq(self, line_idxs, num_chars, column_width):
-        """Format specified lines of chunked sequence data."""
-        lines = []
-        for line_idx in line_idxs:
-            seq_idx = line_idx * num_chars
-            chars = str(self._seq[seq_idx:seq_idx+num_chars])
-            chunked_chars = chunk_str(chars, self._chunk_size, ' ')
-            lines.append(('%d' % seq_idx).ljust(column_width) + chunked_chars)
-        return lines

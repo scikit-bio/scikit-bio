@@ -399,7 +399,7 @@ class ReaderTests(TestCase):
              {'qual': get_data_path('qual_3_seqs_defaults_length_mismatch')},
              ValueError,
              'Number of positional metadata values \(3\) must match the '
-             'number of characters in the sequence \(4\)\.'),
+             'positional metadata axis length \(4\)\.'),
 
             # invalid qual scores (string value can't be converted to integer)
             ('fasta_3_seqs_defaults',

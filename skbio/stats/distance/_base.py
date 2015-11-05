@@ -21,7 +21,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
@@ -62,8 +62,10 @@ class DissimilarityMatrix(SkbioObject):
     data : array_like or DissimilarityMatrix
         Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray``. Can instead be a `DissimilarityMatrix` (or
-        subclass) instance, in which case the instance's data will be used.
+        using ``numpy.asarray`` or a one-dimensional vector of dissimilarities
+        (floats), as defined by `scipy.spatial.distance.squareform`. Can
+        instead be a `DissimilarityMatrix` (or subclass) instance,
+        in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
     ids : sequence of str, optional
@@ -75,6 +77,7 @@ class DissimilarityMatrix(SkbioObject):
     See Also
     --------
     DistanceMatrix
+    scipy.spatial.distance.squareform
 
     Notes
     -----
@@ -98,7 +101,8 @@ class DissimilarityMatrix(SkbioObject):
             ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
-
+        if data.ndim == 1:
+            data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
@@ -365,12 +369,18 @@ class DissimilarityMatrix(SkbioObject):
         ax.set_xticks(ticks, minor=False)
         ax.set_yticks(ticks, minor=False)
 
+        # Ensure there is no white border around the heatmap by manually
+        # setting the limits
+        ax.set_ylim(0, len(self.ids))
+        ax.set_xlim(0, len(self.ids))
+
         # display data as it is stored in the dissimilarity matrix
         # (default is to have y-axis inverted)
         ax.invert_yaxis()
 
         ax.set_xticklabels(self.ids, rotation=90, minor=False)
         ax.set_yticklabels(self.ids, minor=False)
+
         ax.set_title(title)
 
         return fig
@@ -404,6 +414,31 @@ class DissimilarityMatrix(SkbioObject):
         # will pick it up and send it as output, resulting in a double display
         plt.close(fig)
         return data
+
+    @experimental(as_of="0.4.0-dev")
+    def to_data_frame(self):
+        """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
+
+        Returns
+        -------
+        pd.DataFrame
+            ``pd.DataFrame`` with IDs on index and columns.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2],
+        ...                      [1, 0, 3],
+        ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> df = dm.to_data_frame()
+        >>> df
+           a  b  c
+        a  0  1  2
+        b  1  0  3
+        c  2  3  0
+
+        """
+        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
     @experimental(as_of="0.4.0")
     def __str__(self):
@@ -650,9 +685,9 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
-    def from_iterable(cls, iterable, metric, key=None):
+    def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
         Parameters
@@ -662,17 +697,25 @@ class DistanceMatrix(DissimilarityMatrix):
         metric : callable
             A function that takes two arguments and returns a float
             representing the distance between the two arguments.
-        key : callable, str, optional
+        key : callable or metadata key, optional
             A function that takes one argument and returns a string
             representing the id of the element in the distance matrix.
             Alternatively, a key to a `metadata` property if it exists for
             each element in the `iterable`. If None, then default ids will be
             used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
 
         Returns
         -------
         DistanceMatrix
             The `metric` applied to all pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
 
         Notes
         -----
@@ -682,17 +725,22 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same"
+                             " time.")
 
-        keys = None
+        keys_ = None
         if key is not None:
-            keys = [resolve_key(e, key) for e in iterable]
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = keys
 
         dm = np.zeros((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable[:i]):
                 dm[i, j] = dm[j, i] = metric(a, b)
 
-        return cls(dm, keys)
+        return cls(dm, keys_)
 
     @experimental(as_of="0.4.0")
     def condensed_form(self):

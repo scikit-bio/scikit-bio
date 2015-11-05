@@ -117,6 +117,7 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     """
     if copy:
         a = a.copy()
+    a = np.asarray(a, dtype=np.float64)
     avg, std = mean_and_std(a, axis=0, weights=weights, with_mean=with_mean,
                             with_std=with_std, ddof=ddof)
     if with_mean:

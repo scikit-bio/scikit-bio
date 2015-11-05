@@ -25,7 +25,7 @@ from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 from skbio.util import RepresentationWarning
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 
 
 def distance_from_r(m1, m2):
@@ -1822,7 +1822,7 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
         """Construct a tree from a taxonomy
@@ -1916,7 +1916,7 @@ class TreeNode(SkbioObject):
             node = node.children[0]
         return distance
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_linkage_matrix(cls, linkage_matrix, id_list):
         """Return tree from SciPy linkage matrix.
