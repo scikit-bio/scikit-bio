@@ -1087,6 +1087,42 @@ class TestAppend(unittest.TestCase):
         self.assertEqual(self.msa_with_keys, self.msa_with_keys_unmodified)
 
 
+class TestIterPositions(unittest.TestCase):
+    def setUp(self):
+        self.msa_empty = TabularMSA(())
+        self.msa = TabularMSA((DNA('ACGT'), DNA('TGCA')))
+        self.expected = [Sequence('AT'), Sequence('CG'), Sequence('GC'),
+                         Sequence('TA')]
+
+    def test_method_exists(self):
+        self.msa.iter_positions()
+
+    def test_formal_parameters(self):
+        self.msa.iter_positions(True)
+        self.msa.iter_positions(reverse=True)
+
+    def test_empty(self):
+        observed = self.msa_empty.iter_positions()
+        self.assertEqual(len(tuple(observed)), 0)
+
+    def test_simple(self):
+        observed = list(self.msa.iter_positions())
+
+        self.assertEqual(len(observed), len(self.expected))
+
+        for obs, exp in zip(observed, self.expected):
+            self.assertEqual(obs, exp)
+
+    def test_reverse(self):
+        expected = list(reversed(self.expected))
+        observed = list(self.msa.iter_positions(reverse=True))
+
+        self.assertEqual(len(observed), len(expected))
+
+        for obs, exp in zip(observed, expected):
+            self.assertEqual(obs, exp)
+
+
 class TestGapFrequencies(unittest.TestCase):
     def test_default_behavior(self):
         msa = TabularMSA([DNA('AA.'),
