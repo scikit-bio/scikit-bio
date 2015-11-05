@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function
 from future.utils import PY3
 
+import copy
 import os
 import inspect
 
@@ -142,6 +143,86 @@ class MetadataMixinTests(object):
         obj1 = self._metadata_constructor_(metadata={'id': 'foo'})
         obj2 = self._metadata_constructor_()
         self.assertReallyNotEqual(obj1, obj2)
+
+    def test_copy_metadata_none(self):
+        obj = self._metadata_constructor_()
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNone(obj._metadata)
+        self.assertIsNone(obj_copy._metadata)
+
+    def test_copy_metadata_empty(self):
+        obj = self._metadata_constructor_(metadata={})
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertEqual(obj._metadata, {})
+        self.assertIsNone(obj_copy._metadata)
+
+    def test_copy_with_metadata(self):
+        obj = self._metadata_constructor_(metadata={'foo': [1]})
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNot(obj._metadata, obj_copy._metadata)
+        self.assertIs(obj._metadata['foo'], obj_copy._metadata['foo'])
+
+        obj_copy.metadata['foo'].append(2)
+        obj_copy.metadata['foo2'] = 42
+
+        self.assertEqual(obj_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(obj.metadata, {'foo': [1, 2]})
+
+    def test_deepcopy_metadata_none(self):
+        obj = self._metadata_constructor_()
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNone(obj._metadata)
+        self.assertIsNone(obj_copy._metadata)
+
+    def test_deepcopy_metadata_empty(self):
+        obj = self._metadata_constructor_(metadata={})
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertEqual(obj._metadata, {})
+        self.assertIsNone(obj_copy._metadata)
+
+    def test_deepcopy_with_metadata(self):
+        obj = self._metadata_constructor_(metadata={'foo': [1]})
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNot(obj._metadata, obj_copy._metadata)
+        self.assertIsNot(obj._metadata['foo'], obj_copy._metadata['foo'])
+
+        obj_copy.metadata['foo'].append(2)
+        obj_copy.metadata['foo2'] = 42
+
+        self.assertEqual(obj_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(obj.metadata, {'foo': [1]})
+
+    def test_deepcopy_memo_is_respected(self):
+        # Basic test to ensure deepcopy's memo is passed through to recursive
+        # deepcopy calls.
+        obj = self._metadata_constructor_(metadata={'foo': 'bar'})
+        memo = {}
+        copy.deepcopy(obj, memo)
+        self.assertGreater(len(memo), 2)
 
     def test_metadata_getter(self):
         obj = self._metadata_constructor_(
@@ -475,6 +556,115 @@ class PositionalMetadataMixinTests(object):
             3, positional_metadata={'foo': [1, 2, 3]})
         obj2 = self._positional_metadata_constructor_(3)
         self.assertReallyNotEqual(obj1, obj2)
+
+    def test_copy_positional_metadata_none(self):
+        obj = self._positional_metadata_constructor_(3)
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNone(obj._positional_metadata)
+        self.assertIsNone(obj_copy._positional_metadata)
+
+    def test_copy_positional_metadata_empty(self):
+        obj = self._positional_metadata_constructor_(
+            3, positional_metadata=pd.DataFrame(index=range(3)))
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        assert_data_frame_almost_equal(obj._positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNone(obj_copy._positional_metadata)
+
+    def test_copy_with_positional_metadata(self):
+        obj = self._positional_metadata_constructor_(
+            4, positional_metadata={'bar': [[], [], [], []],
+                                    'baz': [42, 42, 42, 42]})
+        obj_copy = copy.copy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNot(obj._positional_metadata,
+                         obj_copy._positional_metadata)
+        self.assertIsNot(obj._positional_metadata.values,
+                         obj_copy._positional_metadata.values)
+        self.assertIs(obj._positional_metadata.loc[0, 'bar'],
+                      obj_copy._positional_metadata.loc[0, 'bar'])
+
+        obj_copy.positional_metadata.loc[0, 'bar'].append(1)
+        obj_copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            obj_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
+    def test_deepcopy_positional_metadata_none(self):
+        obj = self._positional_metadata_constructor_(3)
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNone(obj._positional_metadata)
+        self.assertIsNone(obj_copy._positional_metadata)
+
+    def test_deepcopy_positional_metadata_empty(self):
+        obj = self._positional_metadata_constructor_(
+            3, positional_metadata=pd.DataFrame(index=range(3)))
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        assert_data_frame_almost_equal(obj._positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNone(obj_copy._positional_metadata)
+
+    def test_deepcopy_with_positional_metadata(self):
+        obj = self._positional_metadata_constructor_(
+            4, positional_metadata={'bar': [[], [], [], []],
+                                    'baz': [42, 42, 42, 42]})
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNot(obj._positional_metadata,
+                         obj_copy._positional_metadata)
+        self.assertIsNot(obj._positional_metadata.values,
+                         obj_copy._positional_metadata.values)
+        self.assertIsNot(obj._positional_metadata.loc[0, 'bar'],
+                         obj_copy._positional_metadata.loc[0, 'bar'])
+
+        obj_copy.positional_metadata.loc[0, 'bar'].append(1)
+        obj_copy.positional_metadata.loc[0, 'baz'] = 43
+
+        assert_data_frame_almost_equal(
+            obj_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
+
+    def test_deepcopy_memo_is_respected(self):
+        # Basic test to ensure deepcopy's memo is passed through to recursive
+        # deepcopy calls.
+        obj = self._positional_metadata_constructor_(
+            3, positional_metadata={'foo': [1, 2, 3]})
+        memo = {}
+        copy.deepcopy(obj, memo)
+        self.assertGreater(len(memo), 2)
 
     def test_positional_metadata_getter(self):
         obj = self._positional_metadata_constructor_(

@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import copy
 import unittest
 import functools
 import itertools
@@ -959,6 +960,111 @@ class TestContains(unittest.TestCase):
         self.assertTrue(-1 in msa)
         self.assertFalse(0 in msa)
         self.assertFalse('foo' in msa)
+
+
+class TestCopy(unittest.TestCase):
+    # Note: tests for metadata/positional_metadata are in mixin tests above.
+
+    def test_no_sequences(self):
+        msa = TabularMSA([])
+        msa_copy = copy.copy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._seqs, msa_copy._seqs)
+
+    def test_with_sequences(self):
+        msa = TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')])
+        msa_copy = copy.copy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._seqs, msa_copy._seqs)
+        # TODO: use __getitem__ when it exists.
+        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
+        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+
+        msa_copy.append(DNA('AAAA'))
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['bar'] = 42
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['foo'].append(2)
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1, 2]}), DNA('TGCA')]))
+
+    def test_with_keys(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=['foo', 'bar'])
+        msa_copy = copy.copy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._keys, msa_copy._keys)
+
+        # Make sure copying keys preserves array flags.
+        with self.assertRaises(ValueError):
+            msa_copy.keys[0] = 42
+
+        msa_copy.keys = [1, 2]
+        npt.assert_array_equal(msa.keys, np.array(['foo', 'bar']))
+
+
+class TestDeepCopy(unittest.TestCase):
+    # Note: tests for metadata/positional_metadata are in mixin tests above.
+
+    def test_no_sequences(self):
+        msa = TabularMSA([])
+        msa_copy = copy.deepcopy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._seqs, msa_copy._seqs)
+
+    def test_with_sequences(self):
+        msa = TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')])
+        msa_copy = copy.deepcopy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._seqs, msa_copy._seqs)
+        # TODO: use __getitem__ when it exists.
+        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
+        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+
+        msa_copy.append(DNA('AAAA'))
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['bar'] = 42
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['foo'].append(2)
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+    def test_with_keys(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=['foo', 'bar'])
+        msa_copy = copy.deepcopy(msa)
+
+        self.assertEqual(msa, msa_copy)
+        self.assertIsNot(msa, msa_copy)
+        self.assertIsNot(msa._keys, msa_copy._keys)
+
+        with self.assertRaises(ValueError):
+            msa_copy.keys[0] = 42
+
+        msa_copy.keys = [1, 2]
+        npt.assert_array_equal(msa.keys, np.array(['foo', 'bar']))
 
 
 class TestAppend(unittest.TestCase):
