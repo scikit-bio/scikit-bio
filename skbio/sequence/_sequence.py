@@ -1122,7 +1122,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         This method is equivalent to ``seq.copy(deep=False)``.
 
         """
-        return self.copy(deep=False)
+        return self._copy(False, {})
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):

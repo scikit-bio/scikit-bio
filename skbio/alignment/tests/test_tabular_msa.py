@@ -974,23 +974,30 @@ class TestCopy(unittest.TestCase):
         self.assertIsNot(msa._seqs, msa_copy._seqs)
 
     def test_with_sequences(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        msa = TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')])
         msa_copy = copy.copy(msa)
 
         self.assertEqual(msa, msa_copy)
         self.assertIsNot(msa, msa_copy)
         self.assertIsNot(msa._seqs, msa_copy._seqs)
         # TODO: use __getitem__ when it exists.
-        self.assertIs(msa._seqs[0], msa_copy._seqs[0])
-        self.assertIs(msa._seqs[1], msa_copy._seqs[1])
+        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
+        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
 
         msa_copy.append(DNA('AAAA'))
-        self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
-
-        msa_copy._seqs[0].metadata = {'foo': 'bar'}
         self.assertEqual(
             msa,
-            TabularMSA([DNA('ACGT', metadata={'foo': 'bar'}), DNA('TGCA')]))
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['bar'] = 42
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
+
+        msa_copy._seqs[0].metadata['foo'].append(2)
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1, 2]}), DNA('TGCA')]))
 
     def test_with_keys(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=['foo', 'bar'])
@@ -1020,7 +1027,7 @@ class TestDeepCopy(unittest.TestCase):
         self.assertIsNot(msa._seqs, msa_copy._seqs)
 
     def test_with_sequences(self):
-        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
+        msa = TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')])
         msa_copy = copy.deepcopy(msa)
 
         self.assertEqual(msa, msa_copy)
@@ -1031,20 +1038,19 @@ class TestDeepCopy(unittest.TestCase):
         self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
 
         msa_copy.append(DNA('AAAA'))
-        self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
 
-        msa_copy._seqs[0].metadata = {'foo': 'bar'}
-        self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
-
-    def test_nested_references(self):
-        msa = TabularMSA([DNA('ACGT', metadata={'foo': [1]})])
-        msa_copy = copy.deepcopy(msa)
-
-        self.assertEqual(msa, msa_copy)
-        self.assertIsNot(msa, msa_copy)
+        msa_copy._seqs[0].metadata['bar'] = 42
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
 
         msa_copy._seqs[0].metadata['foo'].append(2)
-        self.assertEqual(msa, TabularMSA([DNA('ACGT', metadata={'foo': [1]})]))
+        self.assertEqual(
+            msa,
+            TabularMSA([DNA('ACGT', metadata={'foo': [1]}), DNA('TGCA')]))
 
     def test_with_keys(self):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], keys=['foo', 'bar'])

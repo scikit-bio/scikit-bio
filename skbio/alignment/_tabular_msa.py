@@ -516,14 +516,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Returns
         -------
         TabularMSA
-            Shallow copy of this MSA.
+            Shallow copy of this MSA. Sequence objects will be shallow-copied.
 
         See Also
         --------
         __deepcopy__
 
         """
-        seqs = copy.copy(self._seqs)
+        seqs = (copy.copy(seq) for seq in self._seqs)
 
         keys = None
         if self.has_keys():
