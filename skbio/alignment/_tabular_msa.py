@@ -307,6 +307,41 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     __nonzero__ = __bool__
 
     @experimental(as_of='0.4.0-dev')
+    def __contains__(self, key):
+        """Determine if a key is in this MSA.
+
+        Parameters
+        ----------
+        key : hashable
+            Key to search for in this MSA.
+
+        Returns
+        -------
+        bool
+            Indicates whether `key` is in this MSA.
+
+        Raises
+        ------
+        OperationError
+            If keys do not exist.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], keys=['key1', 'key2'])
+        >>> 'key1' in msa
+        True
+        >>> 'key2' in msa
+        True
+        >>> 'key3' in msa
+        False
+
+        """
+        # TODO: this lookup is O(n). Not worth fixing now because keys will be
+        # refactored into Index which supports fast lookups.
+        return key in self.keys
+
+    @experimental(as_of='0.4.0-dev')
     def __len__(self):
         """Number of sequences in the MSA.
 

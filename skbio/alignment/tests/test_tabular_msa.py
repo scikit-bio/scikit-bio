@@ -932,6 +932,36 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertIs(d1[42], d2[42])
 
 
+class TestContains(unittest.TestCase):
+    def test_no_keys(self):
+        msa = TabularMSA([RNA('AU'), RNA('A.')])
+
+        with self.assertRaises(OperationError):
+            'foo' in msa
+
+    def test_no_sequences(self):
+        msa = TabularMSA([], keys=[])
+
+        self.assertFalse('' in msa)
+        self.assertFalse('foo' in msa)
+
+    def test_with_str_keys(self):
+        msa = TabularMSA([RNA('AU'), RNA('A.')], keys=['foo', 'bar'])
+
+        self.assertTrue('foo' in msa)
+        self.assertTrue('bar' in msa)
+        self.assertFalse('baz' in msa)
+        self.assertFalse(0 in msa)
+
+    def test_with_int_keys(self):
+        msa = TabularMSA([RNA('AU'), RNA('A.')], keys=[42, -1])
+
+        self.assertTrue(42 in msa)
+        self.assertTrue(-1 in msa)
+        self.assertFalse(0 in msa)
+        self.assertFalse('foo' in msa)
+
+
 class TestCopy(unittest.TestCase):
     # Note: tests for metadata/positional_metadata are in mixin tests above.
 
