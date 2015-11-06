@@ -23,8 +23,7 @@ def _validate(u_counts, v_counts, otu_ids, tree):
 
 
 @experimental(as_of="0.4.0-dev")
-def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
-                       validate=True, indexed=None, **kwargs):
+def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     """ Compute unweighted UniFrac
 
     Parameters
@@ -43,10 +42,6 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
-    **kwargs: dict, optional
-        Keyword arguments are used from within scikit-bio to support optimized
-        implementations of this function. Users should not pass any keyword
-        arguments.
 
     Returns
     -------
@@ -100,33 +95,58 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree,
        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
-
     # cast to numpy types
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     otu_ids = np.asarray(otu_ids)
 
+    if validate:
+        _validate(u_counts, v_counts, otu_ids, tree)
+    # Quickly handle boundary cases
     boundary = _boundary_case(u_counts.sum(), v_counts.sum())
     if boundary is not None:
         return boundary
-
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_index(counts, otu_ids, tree, indexed)
+    count_array, indexed = _counts_and_index(counts, otu_ids, tree, None)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
+    branch_lengths = indexed['length']
+    return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
-    length = indexed['length']
 
-    return _unweighted_unifrac(length, u_counts, v_counts)
+def _unweighted_unifrac(u_counts, v_counts, branch_lengths):
+    """
+    Parameters
+    ----------
+    u_counts, v_counts : np.array
+        Vectors indicating presense (value greater than zero) and absense
+        (value equal to zero) of OTUs in two samples, `u` and `v`. Order is
+        assumed to be the same as in `branch_lengths`.
+    branch_lengths : np.array
+        Branch lengths of OTUs in postorder representation of their tree.
+
+    Returns
+    -------
+    float
+        unweighted UniFrac distance between samples
+
+    Notes
+    -----
+    No validation is performed in this function. See the
+    skbio.diversity.beta.unweighted_unifrac documentation for a description of
+    the validation that should be performed before using this function.
+    """
+
+    _or = np.logical_or(u_counts, v_counts),
+    _and = np.logical_and(u_counts, v_counts)
+    return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
 
 
 @experimental(as_of="0.4.0-dev")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
-                     validate=True, indexed=None, **kwargs):
+                     validate=True):
     """ Compute weighted UniFrac with or without branch length normalization
 
     Parameters
@@ -148,10 +168,6 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results, so this step
         should not be bypassed all together.
-    **kwargs: dict, optional
-        Keyword arguments are used from within scikit-bio to support optimized
-        implementations of this function. Users should not pass any keyword
-        arguments.
 
     Returns
     -------
@@ -220,7 +236,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_index(counts, otu_ids, tree, indexed)
+    count_array, indexed = _counts_and_index(counts, otu_ids, tree, None)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
 
@@ -237,33 +253,6 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
 
     return u
-
-def _unweighted_unifrac(m, i, j):
-    """
-
-    Parameters
-    ----------
-    m : np.array
-        A 1D vector that represents the lengths in the tree in postorder.
-    i,j : np.array
-        A slice of states from m in postorder.
-
-    Returns
-    -------
-    float
-        Unweighted unifrac metric
-
-    Notes
-    -----
-    This is cogent.maths.unifrac.fast_tree.unifrac, but there are
-    other metrics that can (should?) be ported like:
-     - unnormalized_unifrac
-     - G
-     - unnormalized_G
-    """
-    _or = np.logical_or(i, j),
-    _and = np.logical_and(i, j)
-    return 1 - ((m * _and).sum() / (m * _or).sum())
 
 
 def _weighted_unifrac(m, i, j, i_sum, j_sum):
@@ -332,7 +321,7 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
             boundary = _boundary_case(u_counts.sum(), v_counts.sum())
             if boundary is not None:
                 return boundary
-            return _unweighted_unifrac(length, u_counts, v_counts)
+            return _unweighted_unifrac(u_counts, v_counts, length)
 
     elif metric is _weighted_unifrac:
         # This block is duplicated in weighted_unifrac_fast -- possibly should

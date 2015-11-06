@@ -105,9 +105,9 @@ class UnifracTests(StatsTests, TestCase):
                       [0, 1, 1], [1, 1, 1], [0, 1, 1], [1, 1, 1]])
         # lengths from ((a:1,b:2):4,(c:3,(d:1,e:1):2):3)
         bl = np.array([1, 2, 1, 1, 3, 2, 4, 3, 0], dtype=float)
-        self.assertEqual(_unweighted_unifrac(bl, m[:, 0], m[:, 1]), 10/16.0)
-        self.assertEqual(_unweighted_unifrac(bl, m[:, 0], m[:, 2]), 8/13.0)
-        self.assertEqual(_unweighted_unifrac(bl, m[:, 1], m[:, 2]), 8/17.0)
+        self.assertEqual(_unweighted_unifrac(m[:, 0], m[:, 1], bl), 10/16.0)
+        self.assertEqual(_unweighted_unifrac(m[:, 0], m[:, 2], bl), 8/13.0)
+        self.assertEqual(_unweighted_unifrac(m[:, 1], m[:, 2], bl), 8/17.0)
 
     def test_weighted_unifrac(self):
         # lengths from ((a:1,b:2):4,(c:3,(d:1,e:1):2):3)
