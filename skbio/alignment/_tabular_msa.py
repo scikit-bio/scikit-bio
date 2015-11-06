@@ -10,16 +10,15 @@ from __future__ import absolute_import, division, print_function
 
 import collections
 import copy
-import operator
 
-from future.builtins import zip, range
+from future.builtins import range
 from future.utils import viewkeys, viewvalues
 import numpy as np
+import pandas as pd
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
-from skbio.util import find_duplicates, OperationError, UniqueError
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
@@ -45,34 +44,33 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         of metadata must be the same length as the number of positions in the
         MSA. A shallow copy of the positional metadata will be made.
     minter : callable or metadata key, optional
-        If provided, defines a minter which provides a unique, hashable key
-        for each sequence in `sequences`. Can either be a callable accepting
-        a single argument (each sequence) or a key into each sequence's
-        ``metadata`` attribute.
-    keys : iterable, optional
-        An iterable of the same length as `sequences` containing unique,
-        hashable elements. Each element will be used as the respective key for
-        `sequences`.
+        If provided, defines an index label for each sequence in `sequences`.
+        Can either be a callable accepting a single argument (each sequence) or
+        a key into each sequence's ``metadata`` attribute.
+    index : pd.Index consumable, optional
+        Index containing labels for `sequences`. Must be the same length as
+        `sequences`. Must be able to be passed directly to ``pd.Index``
+        constructor.
 
     Raises
     ------
     ValueError
-        If `minter` and `keys` are both provided.
+        If `minter` and `index` are both provided.
     ValueError
-        If `keys` is not the same length as `sequences`.
-    UniqueError
-        If keys are not unique.
+        If `index` is not the same length as `sequences`.
 
     See Also
     --------
     skbio.sequence.DNA
     skbio.sequence.RNA
     skbio.sequence.Protein
+    pandas.DataFrame
+    pandas.Index
 
     Notes
     -----
-    If `minter` or `keys` are not provided, keys will not be set and certain
-    operations requiring keys will raise an ``OperationError``.
+    If `minter` or `index` are not provided, default pandas labels will be
+    used: integer labels ``0..(N-1)``, where ``N`` is the number of sequences.
 
     """
 
@@ -95,7 +93,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         True
 
         """
-        return type(self._seqs[0]) if len(self) > 0 else None
+        return type(self._get_sequence(0)) if len(self) > 0 else None
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -131,86 +129,70 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         sequence_count = len(self)
+
         if sequence_count > 0:
-            position_count = len(self._seqs[0])
+            position_count = len(self._get_sequence(0))
         else:
             position_count = 0
+
         return _Shape(sequence=sequence_count, position=position_count)
 
     @property
     @experimental(as_of='0.4.0-dev')
-    def keys(self):
-        """Keys in the order of sequences in the MSA.
+    def index(self):
+        """Index containing labels along the sequence axis.
 
         Returns
         -------
-        np.ndarray (object)
-            Immutable 1D array of keys with ``object`` dtype.
-
-        Raises
-        ------
-        OperationError
-            If keys do not exist.
+        pd.Index
+            Index containing sequence labels.
 
         See Also
         --------
-        has_keys
-        reindex
+        reassign_index
 
         Notes
         -----
-        This property can be set and deleted.
+        This property can be set and deleted. Deleting the index will reset the
+        index to the ``TabularMSA`` constructor's default.
 
         Examples
         --------
-        Create a ``TabularMSA`` object keyed by sequence identifier:
+        Create a ``TabularMSA`` object with sequences labeled by sequence
+        identifier:
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'})]
         >>> msa = TabularMSA(seqs, minter='id')
 
-        Retrieve keys:
+        Retrieve index:
 
-        >>> msa.keys
-        array(['a', 'b'], dtype=object)
+        >>> msa.index
+        Index(['a', 'b'], dtype='object')
 
-        Set keys:
+        Set index:
 
-        >>> msa.keys = ['seq1', 'seq2']
-        >>> msa.keys
-        array(['seq1', 'seq2'], dtype=object)
+        >>> msa.index = ['seq1', 'seq2']
+        >>> msa.index
+        Index(['seq1', 'seq2'], dtype='object')
 
-        To make updates to a subset of the keys, first make a copy of the keys,
-        update them, then set them again:
+        Delete index:
 
-        >>> new_keys = msa.keys.copy()
-        >>> new_keys[0] = 'new-key'
-        >>> msa.keys = new_keys
-        >>> msa.keys
-        array(['new-key', 'seq2'], dtype=object)
-
-        Delete keys:
-
-        >>> msa.has_keys()
-        True
-        >>> del msa.keys
-        >>> msa.has_keys()
-        False
+        >>> del msa.index
+        >>> msa.index
+        Int64Index([0, 1], dtype='int64')
 
         """
-        if not self.has_keys():
-            raise OperationError(
-                "Keys do not exist. Use `reindex` to set them.")
-        return self._keys
+        return self._seqs.index
 
-    @keys.setter
-    def keys(self, keys):
-        self.reindex(keys=keys)
+    @index.setter
+    def index(self, index):
+        self._seqs.index = index
 
-    @keys.deleter
-    def keys(self):
-        self.reindex()
+    @index.deleter
+    def index(self):
+        self.reassign_index()
 
     @classonlymethod
     @experimental(as_of="0.4.0-dev")
@@ -221,8 +203,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ----------
         dictionary : dict
             Dictionary mapping keys to alphabet-aware scikit-bio sequence
-            objects. The ``TabularMSA`` object will have its keys set to the
-            keys in the dictionary.
+            objects. The ``TabularMSA`` object will have its index labels set
+            to the keys in the dictionary.
 
         Returns
         -------
@@ -237,8 +219,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        The order of sequences and keys in the resulting ``TabularMSA`` object
-        is arbitrary. Use ``TabularMSA.sort`` to set a different order.
+        The order of sequences and index labels in the resulting ``TabularMSA``
+        object is arbitrary. Use ``TabularMSA.sort`` to set a different order.
 
         Examples
         --------
@@ -252,20 +234,31 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         #     https://docs.python.org/2/library/stdtypes.html#dict.items
         #     https://docs.python.org/3/library/stdtypes.html#
         #         dictionary-view-objects
-        return cls(viewvalues(dictionary), keys=viewkeys(dictionary))
+        return cls(viewvalues(dictionary), index=viewkeys(dictionary))
 
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
-                 minter=None, keys=None):
-        self._seqs = []
-        for seq in sequences:
-            self._add_sequence(seq)
+                 minter=None, index=None):
+        # TODO: optimize this to not append Series for each sequence.
+        self._seqs = pd.Series([])
+        for sequence in sequences:
+            self.append(sequence)
+
+        if minter is not None and index is not None:
+            raise ValueError(
+                "Cannot use both `minter` and `index` at the same time.")
+        if minter is not None:
+            self.reassign_index(minter=minter)
+        elif index is not None:
+            # Cast to Index to identify tuples as a MultiIndex to match
+            # pandas constructor. Just setting would make an index of tuples.
+            if not isinstance(index, pd.Index):
+                index = pd.Index(index)
+            self.index = index
 
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
-
-        self.reindex(minter=minter, keys=keys)
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
@@ -307,39 +300,32 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     __nonzero__ = __bool__
 
     @experimental(as_of='0.4.0-dev')
-    def __contains__(self, key):
-        """Determine if a key is in this MSA.
+    def __contains__(self, label):
+        """Determine if an index label is in this MSA.
 
         Parameters
         ----------
-        key : hashable
-            Key to search for in this MSA.
+        label : hashable
+            Label to search for in this MSA.
 
         Returns
         -------
         bool
-            Indicates whether `key` is in this MSA.
-
-        Raises
-        ------
-        OperationError
-            If keys do not exist.
+            Indicates whether `label` is in this MSA.
 
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], keys=['key1', 'key2'])
-        >>> 'key1' in msa
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], index=['l1', 'l2'])
+        >>> 'l1' in msa
         True
-        >>> 'key2' in msa
+        >>> 'l2' in msa
         True
-        >>> 'key3' in msa
+        >>> 'l3' in msa
         False
 
         """
-        # TODO: this lookup is O(n). Not worth fixing now because keys will be
-        # refactored into Index which supports fast lookups.
-        return key in self.keys
+        return label in self.index
 
     @experimental(as_of='0.4.0-dev')
     def __len__(self):
@@ -417,7 +403,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
-        ``TabularMSA`` objects are equal if their sequences, keys, metadata,
+        ``TabularMSA`` objects are equal if their sequences, index, metadata,
         and positional metadata are equal.
 
         Parameters
@@ -453,7 +439,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa == TabularMSA([DNA('ACG', metadata={'id': 'a'}), DNA('AC-')])
         False
 
-        MSAs with different keys are not equal:
+        MSAs with different index labels are not equal:
 
         >>> msa == TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
         False
@@ -480,16 +466,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if not PositionalMetadataMixin._eq_(self, other):
             return False
 
-        # Use np.array_equal instead of (a == b).all():
-        #   http://stackoverflow.com/a/10580782/3776794
-        return ((self._seqs == other._seqs) and
-                np.array_equal(self._keys, other._keys))
+        return self._seqs.equals(other._seqs)
 
     @experimental(as_of='0.4.0-dev')
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
-        ``TabularMSA`` objects are not equal if their sequences, keys,
+        ``TabularMSA`` objects are not equal if their sequences, index,
         metadata, or positional metadata are not equal.
 
         Parameters
@@ -525,11 +508,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         seqs = (copy.copy(seq) for seq in self._seqs)
 
-        keys = None
-        if self.has_keys():
-            keys = self.keys
-
-        msa_copy = self.__class__(sequences=seqs, keys=keys, metadata=None,
+        # Copying index isn't necessary because pd.Index is immutable.
+        msa_copy = self.__class__(sequences=seqs, index=self.index,
+                                  metadata=None,
                                   positional_metadata=None)
 
         msa_copy._metadata = MetadataMixin._copy_(self)
@@ -551,19 +532,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         __copy__
 
         """
-        seqs = copy.deepcopy(self._seqs, memo)
+        seqs = (copy.deepcopy(seq, memo) for seq in self._seqs)
 
-        keys = None
-        if self.has_keys():
-            keys = self.keys
-
-        # Constructor makes shallow copy of keys but this should be sufficient
-        # even for a deep copy since keys must be hashable (read: immutable).
-        # Technically it is possible to create a hashable, mutable key but the
-        # user has bigger problems at that point... the concept of keys is
-        # going to change soon so may want to revisit then.
-        msa_copy = self.__class__(sequences=seqs, keys=keys, metadata=None,
-                                  positional_metadata=None)
+        # Copying index isn't necessary because pd.Index is immutable.
+        msa_copy = self.__class__(sequences=seqs, index=self.index,
+                                  metadata=None, positional_metadata=None)
 
         msa_copy._metadata = MetadataMixin._deepcopy_(self, memo)
         msa_copy._positional_metadata = \
@@ -659,136 +632,82 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return gap_freqs
 
     @experimental(as_of='0.4.0-dev')
-    def has_keys(self):
-        """Determine if keys exist on the MSA.
-
-        Returns
-        -------
-        bool
-            Indicates whether the MSA has keys.
-
-        See Also
-        --------
-        keys
-        reindex
-
-        Examples
-        --------
-        >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
-        >>> msa.has_keys()
-        False
-        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], minter=str)
-        >>> msa.has_keys()
-        True
-
-        """
-        return self._keys is not None
-
-    @experimental(as_of='0.4.0-dev')
-    def reindex(self, minter=None, keys=None):
-        """Reassign keys to sequences in the MSA.
+    def reassign_index(self, mapping=None, minter=None):
+        """Reassign index labels to sequences in this MSA.
 
         Parameters
         ----------
+        mapping : dict-like or callable, optional
+            Dictionary or callable that maps existing labels to new labels. Any
+            label without a mapping will remain the same.
         minter : callable or metadata key, optional
-            If provided, defines a minter which provides a unique, hashable
-            key for each sequence in the MSA. Can either be a callable
-            accepting a single argument (each sequence) or a key into each
-            sequence's ``metadata`` attribute.
-        keys : iterable, optional
-            An iterable of the same length as the number of sequences in the
-            MSA. `keys` must contain unique, hashable elements. Each element
-            will be used as the respective key for the sequences in the MSA.
+            If provided, defines an index label for each sequence. Can either
+            be a callable accepting a single argument (each sequence) or a key
+            into each sequence's ``metadata`` attribute.
 
         Raises
         ------
         ValueError
-            If `minter` and `keys` are both provided.
-        ValueError
-            If `keys` is not the same length as the number of sequences in the
-            MSA.
-        UniqueError
-            If keys are not unique.
+            If `mapping` and `minter` are both provided.
 
         See Also
         --------
-        keys
-        has_keys
+        index
 
         Notes
         -----
-        If `minter` or `keys` are not provided, keys will not be set and
-        certain operations requiring keys will raise an ``OperationError``.
+        If neither `mapping` nor `minter` are provided, default pandas labels
+        will be used: integer labels ``0..(N-1)``, where ``N`` is the number of
+        sequences.
 
         Examples
         --------
-        Create a ``TabularMSA`` object without keys:
+        Create a ``TabularMSA`` object with default index labels:
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'})]
         >>> msa = TabularMSA(seqs)
-        >>> msa.has_keys()
-        False
+        >>> msa.index
+        Int64Index([0, 1], dtype='int64')
 
-        Set keys on the MSA, using each sequence's ID:
+        Assign new index to the MSA using each sequence's ID as a label:
 
-        >>> msa.reindex(minter='id')
-        >>> msa.has_keys()
-        True
-        >>> msa.keys
-        array(['a', 'b'], dtype=object)
+        >>> msa.reassign_index(minter='id')
+        >>> msa.index
+        Index(['a', 'b'], dtype='object')
 
-        Remove keys from the MSA:
+        Assign default index:
 
-        >>> msa.reindex()
-        >>> msa.has_keys()
-        False
+        >>> msa.reassign_index()
+        >>> msa.index
+        Int64Index([0, 1], dtype='int64')
 
-        Alternatively, an iterable of keys may be passed via `keys`:
+        Alternatively, a mapping of existing labels to new labels may be passed
+        via `mapping`:
 
-        >>> msa.reindex(keys=['a', 'b'])
-        >>> msa.keys
-        array(['a', 'b'], dtype=object)
+        >>> msa.reassign_index(mapping={0: 'seq1', 1: 'seq2'})
+        >>> msa.index
+        Index(['seq1', 'seq2'], dtype='object')
 
         """
-        if minter is not None and keys is not None:
+        if mapping is not None and minter is not None:
             raise ValueError(
-                "Cannot use both `minter` and `keys` at the same time.")
+                "Cannot use both `mapping` and `minter` at the same time.")
+        if mapping is not None:
+            self._seqs.rename(mapping, inplace=True)
+        elif minter is not None:
+            index = [resolve_key(seq, minter) for seq in self._seqs]
 
-        if minter is not None:
-            keys_ = [resolve_key(seq, minter) for seq in self._seqs]
-        elif keys is not None:
-            keys_ = list(keys)
-            if len(keys_) != len(self):
-                raise ValueError(
-                    "Number of elements in `keys` must match number of "
-                    "sequences: %d != %d" % (len(keys_), len(self)))
+            # Cast to Index to identify tuples as a MultiIndex to match
+            # pandas constructor. Just setting would make an index of tuples.
+            self.index = pd.Index(index)
         else:
-            keys_ = None
-
-        self._keys = self._munge_keys(keys_)
-
-    def _munge_keys(self, keys):
-        if keys is not None:
-            # Hashability of keys is implicitly checked here.
-            duplicates = find_duplicates(keys)
-            if duplicates:
-                raise UniqueError(
-                    "Keys must be unique. Duplicate keys: %r" % duplicates)
-
-            # Create an immutable ndarray to ensure key invariants are
-            # preserved. Use object dtype to preserve original key types. This
-            # is important, for example, because np.array(['a', 42]) will
-            # upcast to ['a', '42'].
-            keys = np.array(keys, dtype=object, copy=True)
-            keys.flags.writeable = False
-        return keys
+            self._seqs.reset_index(drop=True, inplace=True)
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, minter=None, key=None):
-        """Append a sequence to the MSA.
+    def append(self, sequence, minter=None, label=None):
+        """Append a sequence to the MSA without recomputing alignment.
 
         Parameters
         ----------
@@ -796,28 +715,23 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
-            Used to create a key for the sequence being appended. If callable,
-            it generates a key directly. Otherwise it's treated as a key into
-            the sequence metadata. If the key is a duplicate of any key
-            already in the MSA, an error is raised. Note that `minter` cannot
-            be combined with `key`.
-        key : hashable, optional
-            Key for the MSA to use for the appended sequence. Note that
-            `key` cannot be combined with `minter`.
+            Used to create a label for the sequence being appended. If
+            callable, it generates a label directly. Otherwise it's treated as
+            a key into the sequence metadata. Note that `minter` cannot be
+            combined with `label`.
+        label : object, optional
+            Index label to use for the appended sequence. Note that `label`
+            cannot be combined with `minter`.
 
         Raises
         ------
-        OperationError
-            If both key and minter are provided.
-        OperationError
-            If MSA has keys but no key or minter was provided for the sequence
-            being appended.
-        OperationError
-            If key was provided but the MSA does not have keys.
-        OperationError
-            If minter was provided but the MSA does not have keys.
+        ValueError
+            If both `minter` and `label` are provided.
+        ValueError
+            If neither `minter` nor `label` are provided and the MSA has a
+            non-default index.
         TypeError
-            If the sequence object is a type that doesn't have an alphabet
+            If the sequence object is a type that doesn't have an alphabet.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -826,52 +740,52 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         See Also
         --------
-        reindex
+        reassign_index
 
         Notes
         -----
+        If neither `minter` nor `label` are provided and this MSA has default
+        index labels, the new label will be auto-incremented.
+
         The MSA is not automatically re-aligned when a sequence is appended.
         Therefore, this operation is not necessarily meaningful on its own.
 
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('')])
-        >>> msa.append(DNA(''))
-        >>> msa == TabularMSA([DNA(''), DNA('')])
+        >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa.append(DNA('AG-T'))
+        >>> msa == TabularMSA([DNA('ACGT'), DNA('AG-T')])
         True
 
-        >>> msa = TabularMSA([DNA('', metadata={'id': 'a'})], minter='id')
-        >>> msa.append(DNA('', metadata={'id': 'b'}), minter='id')
-        >>> msa == TabularMSA([DNA('', metadata={'id': 'a'}),
-        ...                    DNA('', metadata={'id': 'b'})], minter='id')
-        True
+        Auto-incrementing index labels:
+
+        >>> msa.index
+        Int64Index([0, 1], dtype='int64')
+        >>> msa.append(DNA('ACGA'))
+        >>> msa.index
+        Int64Index([0, 1, 2], dtype='int64')
+
         """
-
-        if key is not None and minter is not None:
+        if minter is not None and label is not None:
             raise ValueError(
-                "Cannot use both `minter` and `key` at the same time.")
+                "Cannot use both `minter` and `label` at the same time.")
 
-        new_key = None
-        if self.has_keys():
-            if key is None and minter is None:
-                raise OperationError(
-                    "MSA has keys but no key or minter was provided.")
-            elif key is not None:
-                new_key = key
-            elif minter is not None:
-                new_key = resolve_key(sequence, minter)
-        else:
-            if key is not None:
-                raise OperationError(
-                    "key was provided but MSA does not have keys.")
-            elif minter is not None:
-                raise OperationError(
-                    "minter was provided but MSA does not have keys.")
+        if minter is None and label is None:
+            if self.index.equals(pd.Index(np.arange(len(self)))):
+                label = len(self)
+            else:
+                raise ValueError(
+                    "Must provide a `minter` or `label` for this sequence.")
 
-        self._add_sequence(sequence, new_key)
+        if minter is not None:
+            label = resolve_key(sequence, minter)
 
-    def _add_sequence(self, sequence, key=None):
+        self._assert_valid_sequence(sequence)
+
+        self._seqs = self._seqs.append(pd.Series([sequence], index=[label]))
+
+    def _assert_valid_sequence(self, sequence):
         msa_is_empty = not len(self)
         dtype = type(sequence)
         if msa_is_empty:
@@ -879,9 +793,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 raise TypeError(
                     "`sequence` must be a scikit-bio sequence object "
                     "that has an alphabet, not type %r" % dtype.__name__)
-            if key is not None:
-                self._keys = self._munge_keys([key])
-            self._seqs = [sequence]
         elif dtype is not self.dtype:
             raise TypeError(
                 "`sequence` must match the type of any other sequences "
@@ -892,103 +803,52 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 "`sequence` length must match the number of positions in the "
                 "MSA: %d != %d"
                 % (len(sequence), self.shape.position))
-        else:
-            if key is not None:
-                keys = list(self.keys)
-                keys.append(key)
-                self._keys = self._munge_keys(keys)
-            self._seqs.append(sequence)
 
-    def sort(self, key=None, reverse=False):
-        """Sort sequences in-place.
-
-        Performs a stable sort of the sequences in-place.
+    def sort(self, level=None, ascending=True):
+        """Sort sequences by index label in-place.
 
         Parameters
         ----------
-        key : callable or metadata key, optional
-            If provided, defines a key to sort each sequence on. Can either be
-            a callable accepting a single argument (each sequence) or a key
-            into each sequence's ``metadata`` attribute. If not provided,
-            sequences will be sorted using existing keys on the ``TabularMSA``.
-        reverse: bool, optional
-            If ``True``, sort in reverse order.
-
-        Raises
-        ------
-        OperationError
-            If `key` is not provided and keys do not exist on the MSA.
+        level : int or object, optional
+            Index level to sort on when index is a ``pd.MultiIndex``. Does
+            nothing otherwise.
+        ascending: bool, optional
+            If ``False``, sort in descending (i.e., reverse) order.
 
         See Also
         --------
-        keys
-        has_keys
-        reindex
+        index
+        reassign_index
+        pandas.Series.sort_index
 
         Notes
         -----
-        This method's API is similar to Python's built-in sorting functionality
-        (e.g., ``list.sort()``, ``sorted()``). See [1]_ for an excellent
-        tutorial on sorting in Python.
-
-        References
-        ----------
-        .. [1] https://docs.python.org/3/howto/sorting.html
+        This is a passthrough to ``pd.Series.sort_index`` internally.
 
         Examples
         --------
-        Create a ``TabularMSA`` object without keys:
+        Create a ``TabularMSA`` object:
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'c'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('AC-', metadata={'id': 'a'})]
-        >>> msa = TabularMSA(seqs)
+        >>> msa = TabularMSA(seqs, minter='id')
 
         Sort the sequences in alphabetical order by sequence identifier:
 
-        >>> msa.sort(key='id')
+        >>> msa.sort()
         >>> msa == TabularMSA([DNA('AC-', metadata={'id': 'a'}),
         ...                    DNA('AC-', metadata={'id': 'b'}),
-        ...                    DNA('ACG', metadata={'id': 'c'})])
+        ...                    DNA('ACG', metadata={'id': 'c'})], minter='id')
         True
 
         Note that since the sort is in-place, the ``TabularMSA`` object is
         modified (a new object is **not** returned).
 
-        Create a ``TabularMSA`` object with keys:
-
-        >>> seqs = [DNA('ACG'), DNA('AC-'), DNA('AC-')]
-        >>> msa = TabularMSA(seqs, keys=['c', 'b', 'a'])
-
-        Sort the sequences using the MSA's existing keys:
-
-        >>> msa.sort()
-        >>> msa == TabularMSA([DNA('AC-'), DNA('AC-'), DNA('ACG')],
-        ...                   keys=['a', 'b', 'c'])
-        True
-
         """
-        if key is None:
-            sort_keys = self.keys.tolist()
-        else:
-            sort_keys = [resolve_key(seq, key) for seq in self._seqs]
-
-        if len(self) > 0:
-            if self.has_keys():
-                _, sorted_seqs, sorted_keys = self._sort_by_first_element(
-                    [sort_keys, self._seqs, self.keys.tolist()], reverse)
-                self.keys = sorted_keys
-            else:
-                _, sorted_seqs = self._sort_by_first_element(
-                    [sort_keys, self._seqs], reverse)
-            self._seqs = list(sorted_seqs)
-
-    def _sort_by_first_element(self, components, reverse):
-        """Helper for TabularMSA.sort."""
-        # Taken and modified from http://stackoverflow.com/a/13668413/3776794
-        return zip(*sorted(
-            zip(*components), key=operator.itemgetter(0), reverse=reverse))
+        series = self._seqs.sort_index(ascending=ascending, level=level)
+        self._seqs = series
 
     @experimental(as_of='0.4.0-dev')
     def to_dict(self):
@@ -997,32 +857,38 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Returns
         -------
         dict
-            Dictionary constructed from the keys and sequences in this
+            Dictionary constructed from the index labels and sequences in this
             ``TabularMSA``.
 
         Raises
         ------
-        OperationError
-            If keys do not exist.
+        ValueError
+            If index labels are not unique.
 
         See Also
         --------
         from_dict
-        keys
-        has_keys
-        reindex
+        index
+        reassign_index
 
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACGT'), DNA('A--T')]
-        >>> msa = TabularMSA(seqs, keys=['a', 'b'])
+        >>> msa = TabularMSA(seqs, index=['a', 'b'])
         >>> dictionary = msa.to_dict()
         >>> dictionary == {'a': DNA('ACGT'), 'b': DNA('A--T')}
         True
 
         """
-        return dict(zip(self.keys, self._seqs))
+        if self.index.is_unique:
+            return self._seqs.to_dict()
+        else:
+            raise ValueError("Cannot convert to dict. Index labels are not"
+                             " unique.")
+
+    def _get_sequence(self, i):
+        return self._seqs.iloc[i]
 
     def _get_position(self, i):
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
