@@ -99,7 +99,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     unweighted = True
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
-    # Quickly handle boundary cases
+
     boundary = _boundary_case(sum(u_counts), sum(v_counts),
                               normalized=normalized, unweighted=unweighted)
     if boundary is not None:
@@ -277,8 +277,20 @@ def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
 
     return u
 
-def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
-               normalized=False, **kwargs):
+def _unifrac_pdist_f(counts, otu_ids, tree, metric, normalized):
+    if metric is _unweighted_unifrac:
+        return _unweighted_unifrac_pdist_f(counts, otu_ids, tree)
+    elif metric is _weighted_unifrac:
+        return _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized)
+    else:
+        raise AttributeError("Unknown metric: %s" % metric)
+
+def make_pdist(counts, otu_ids, tree, metric=_unweighted_unifrac,
+               normalized=False):
+    # temporary, for testing. this will go away
+    return _unifrac_pdist_f(counts, otu_ids, tree, metric, normalized)
+
+def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     """Construct a metric for use with skbio.diversity.beta.pw_distances
 
     Parameters
@@ -305,53 +317,41 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
     metric, counts, length = make_unweighted_pdist(input_counts, tip_ids, tree)
     mat = pw_distances(metric, counts, ids=['%d' % i for i in range(10)])
     """
-    count_array, tree_index = _counts_and_index(counts, obs_ids, tree, indexed)
+    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
     branch_lengths = tree_index['length']
 
-    if metric is _unweighted_unifrac:
-        def f(u_counts, v_counts):
-            boundary = _boundary_case(u_counts.sum(), v_counts.sum())
-            if boundary is not None:
-                return boundary
-            return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
+    def f(u_counts, v_counts):
+        boundary = _boundary_case(u_counts.sum(), v_counts.sum())
+        if boundary is not None:
+            return boundary
+        print(u_counts, v_counts, branch_lengths)
+        return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
-    elif metric is _weighted_unifrac:
-        # This block is duplicated in weighted_unifrac_fast -- possibly should
-        # be decomposed.
-        # There is a lot in common with both of these methods, but pulling the
-        # normalized check out reduces branching logic.
-        tip_idx = np.array([n.id for n in tree_index['id_index'].values()
+    return f, count_array.T, branch_lengths
+
+def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
+    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
+    branch_lengths = tree_index['length']
+    tip_indices = np.array([n.id for n in tree_index['id_index'].values()
                             if n.is_tip()])
+    if normalized:
+        tip_dists = _tip_distances(branch_lengths, tree, tip_indices)
+
+    def f(u_counts, v_counts):
+        print(u_counts, tip_indices)
+        u_sum = np.take(u_counts, tip_indices).sum()
+        v_sum = np.take(v_counts, tip_indices).sum()
+
+        boundary = _boundary_case(u_sum, v_sum, unweighted=False)
+        if boundary is not None:
+            return boundary
+
+        u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
+                                 branch_lengths)
         if normalized:
-            def f(u_counts, v_counts):
-                u_sum = np.take(u_counts, tip_idx).sum()
-                v_sum = np.take(v_counts, tip_idx).sum()
-
-                boundary = _boundary_case(u_sum, v_sum, normalized,
-                                          unweighted=False)
-                if boundary is not None:
-                    return boundary
-
-                tip_ds = _tip_distances(branch_lengths, tree, tip_idx)
-
-                u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths)
-                u /= _weighted_unifrac_branch_correction(
-                        tip_ds, u_counts, v_counts, u_sum, v_sum)
-                return u
-        else:
-            def f(u_counts, v_counts):
-                u_sum = np.take(u_counts, tip_idx).sum()
-                v_sum = np.take(v_counts, tip_idx).sum()
-
-                boundary = _boundary_case(u_sum, v_sum, unweighted=False)
-                if boundary is not None:
-                    return boundary
-
-                u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
-                                      branch_lengths)
-                return u
-    else:
-        raise AttributeError("Unknown metric: %s" % metric)
+            u /= _weighted_unifrac_branch_correction(
+                    tip_dists, u_counts, v_counts, u_sum, v_sum)
+        return u
 
     return f, count_array.T, branch_lengths
 
