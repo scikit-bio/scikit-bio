@@ -72,7 +72,6 @@ Functions
    enspie
    esty_ci
    faith_pd
-   faith_pd_fast
    fisher_alpha
    gini_index
    goods_coverage
