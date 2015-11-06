@@ -21,7 +21,6 @@ def _validate(u_counts, v_counts, otu_ids, tree):
     _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
     _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
-
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     """ Compute unweighted UniFrac
@@ -277,45 +276,8 @@ def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
 
     return u
 
-def _unifrac_pdist_f(counts, otu_ids, tree, metric, normalized):
-    if metric is _unweighted_unifrac:
-        return _unweighted_unifrac_pdist_f(counts, otu_ids, tree)
-    elif metric is _weighted_unifrac:
-        return _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized)
-    else:
-        raise AttributeError("Unknown metric: %s" % metric)
-
-def make_pdist(counts, otu_ids, tree, metric=_unweighted_unifrac,
-               normalized=False):
-    # temporary, for testing. this will go away
-    return _unifrac_pdist_f(counts, otu_ids, tree, metric, normalized)
-
 def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
-    """Construct a metric for use with skbio.diversity.beta.pw_distances
-
-    Parameters
-    ----------
-    counts : np.ndarray
-        A matrix of environment counts where each row is an environment, and
-        each column is an observation. The observations are expected to be in
-        index order w.r.t. obs_ids, but do not need to be in tree order.
-    obs_ids : np.ndarray
-        A vector of observation IDs. These IDs must map to tips in the tree.
-    tree : skbio.tree.TreeNode
-        A tree that represents the relationships between the observations.
-    indexed : dict, optional;
-        The result of skbio.diversity.beta.index_tree
-    metric : function, {unweighted_unifrac_fast, weighted_unifrac_fast}
-        The specific metric to use.
-    normalized : bool
-        Whether the weighted unifrac calculation should be normalized.
-
-    Notes
-    -------
-    example usage
-
-    metric, counts, length = make_unweighted_pdist(input_counts, tip_ids, tree)
-    mat = pw_distances(metric, counts, ids=['%d' % i for i in range(10)])
+    """ Create optimized pairwise func for computing many pairwise distances
     """
     count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
     branch_lengths = tree_index['length']
@@ -330,6 +292,8 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     return f, count_array.T, branch_lengths
 
 def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
+    """ Create optimized pairwise func for computing many pairwise distances
+    """
     count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
     branch_lengths = tree_index['length']
     tip_indices = np.array([n.id for n in tree_index['id_index'].values()

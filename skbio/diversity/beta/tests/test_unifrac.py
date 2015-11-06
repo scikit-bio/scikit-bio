@@ -15,7 +15,9 @@ import numpy.testing as npt
 
 from skbio.diversity.beta.tests.test_unifrac_base import StatsTests
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity.beta._unifrac import (_boundary_case, make_pdist,
+from skbio.diversity.beta._unifrac import (_boundary_case,
+                                           _unweighted_unifrac_pdist_f,
+                                           _weighted_unifrac_pdist_f,
                                            _unweighted_unifrac,
                                            _weighted_unifrac,
                                            _weighted_unifrac_branch_correction)
@@ -25,9 +27,9 @@ class UnifracTests(StatsTests, TestCase):
     _method = {'unweighted_unifrac': unweighted_unifrac,
                'weighted_unifrac': weighted_unifrac}
 
-    def test_make_pdist_unweighted(self):
-        f, counts, length = make_pdist(self.b1, np.asarray(self.oids1),
-                                       self.t1, metric=_unweighted_unifrac)
+    def test_pdist_unweighted(self):
+        f, counts, length = _unweighted_unifrac_pdist_f(
+            self.b1, np.asarray(self.oids1), self.t1)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         for i in range(len(self.b1)):
@@ -37,9 +39,9 @@ class UnifracTests(StatsTests, TestCase):
                                                     self.oids1, self.t1)
         npt.assert_almost_equal(obs, exp)
 
-    def test_make_pdist_weighted(self):
-        f, counts, length = make_pdist(self.b1, np.asarray(self.oids1),
-                                       self.t1, metric=_weighted_unifrac)
+    def test_pdist_weighted(self):
+        f, counts, length = _weighted_unifrac_pdist_f(
+            self.b1, np.asarray(self.oids1), self.t1, normalized=False)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         for i in range(len(self.b1)):
@@ -49,10 +51,9 @@ class UnifracTests(StatsTests, TestCase):
                                                   self.oids1, self.t1)
         npt.assert_almost_equal(obs, exp)
 
-    def test_make_pdist_weighted_normalized(self):
-        f, counts, length = make_pdist(self.b1, np.asarray(self.oids1),
-                                       self.t1, metric=_weighted_unifrac,
-                                       normalized=True)
+    def test_pdist_weighted_normalized(self):
+        f, counts, length = _weighted_unifrac_pdist_f(
+            self.b1, np.asarray(self.oids1), self.t1, normalized=True)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         for i in range(len(self.b1)):
