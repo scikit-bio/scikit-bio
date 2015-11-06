@@ -231,7 +231,8 @@ class BaseTests(TestCase):
     def test_index_tree(self):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
         indexed = _index_tree(t)
-        npt.assert_equal(indexed['length'], np.array([1, 2, 3, 0], dtype=float))
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, 0], dtype=float))
 
     def test_counts_and_index(self):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))

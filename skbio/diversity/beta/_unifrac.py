@@ -21,6 +21,7 @@ def _validate(u_counts, v_counts, otu_ids, tree):
     _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
     _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
+
 @experimental(as_of="0.4.0-dev")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     """ Compute unweighted UniFrac
@@ -106,8 +107,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
 
     u_counts, v_counts, u_sum, v_sum, tree_index =\
         _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-        normalized=normalized, unweighted=unweighted)
+                              normalized=normalized, unweighted=unweighted)
     return _unweighted_unifrac(u_counts, v_counts, tree_index['length'])
+
 
 def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
                           normalized, unweighted):
@@ -128,6 +130,7 @@ def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
     v_counts = count_array[:, 1]
 
     return u_counts, v_counts, u_sum, v_sum, tree_index
+
 
 def _unweighted_unifrac(u_counts, v_counts, branch_lengths):
     """
@@ -240,7 +243,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
     u_counts, v_counts, u_sum, v_sum, tree_index =\
         _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-        normalized=normalized, unweighted=unweighted)
+                              normalized=normalized, unweighted=unweighted)
 
     if normalized:
         return _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
@@ -248,6 +251,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     else:
         return _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
                                  tree_index['length'])
+
 
 def _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths):
     if u_sum:
@@ -261,6 +265,7 @@ def _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths):
         v_ = 0.0
 
     return (branch_lengths * abs(u_ - v_)).sum()
+
 
 def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
                                  tree, tree_index):
@@ -276,6 +281,7 @@ def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
 
     return u
 
+
 def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     """ Create optimized pairwise func for computing many pairwise distances
     """
@@ -290,6 +296,7 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
         return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
     return f, count_array.T, branch_lengths
+
 
 def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
     """ Create optimized pairwise func for computing many pairwise distances
@@ -311,13 +318,14 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
             return boundary
 
         u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
-                                 branch_lengths)
+                              branch_lengths)
         if normalized:
             u /= _weighted_unifrac_branch_correction(
                     tip_dists, u_counts, v_counts, u_sum, v_sum)
         return u
 
     return f, count_array.T, branch_lengths
+
 
 def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
     """Test for boundary conditions
@@ -360,6 +368,7 @@ def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
         return 0.0
 
     return None
+
 
 def _weighted_unifrac_branch_correction(tip_dists, u_counts, v_counts,
                                         u_sum, v_sum):

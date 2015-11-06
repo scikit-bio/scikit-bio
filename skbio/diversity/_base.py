@@ -32,6 +32,7 @@ def _validate_counts_vector(counts, suppress_cast=False):
 
     return counts
 
+
 def _validate_counts_vectors(*args, **kwargs):
     results = []
     lens = []
@@ -47,6 +48,7 @@ def _validate_counts_vectors(*args, **kwargs):
                          "equal length.")
 
     return results
+
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     # all otu_ids are unique
@@ -87,6 +89,7 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
                                "tree. Tree is missing tips with names: %s"
                                % " ".join(missing_tip_names))
 
+
 def _index_tree(tree):
     """Index a tree to allow for bulk numpy aggregations
 
@@ -115,6 +118,7 @@ def _index_tree(tree):
     indexed['length'] = np.where(np.isnan(length), 0.0, length)
 
     return indexed
+
 
 def _counts_and_index(counts, otu_ids, tree, indexed):
     """Get the counts array and the indexed tree"""

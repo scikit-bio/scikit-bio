@@ -723,10 +723,11 @@ class UnifracTests(TestCase):
                         5.0 * (.5 + (2.0/3.0)),
                         10.0 * (1.0 / 3.0),
                         0.0]).sum()
-        obs = _weighted_unifrac_branch_correction(tip_ds, u_counts, v_counts, u_sum, v_sum)
+        obs = _weighted_unifrac_branch_correction(
+            tip_ds, u_counts, v_counts, u_sum, v_sum)
         self.assertEqual(obs, exp)
 
-    def test_unweighted_unifrac(self):
+    def test_unweighted_unifrac_pycogent_adapted(self):
         # adapted from PyCogent unit tests
         m = np.array([[1, 0, 1], [1, 1, 0], [0, 1, 0], [0, 0, 1], [0, 1, 0],
                       [0, 1, 1], [1, 1, 1], [0, 1, 1], [1, 1, 1]])
@@ -736,7 +737,7 @@ class UnifracTests(TestCase):
         self.assertEqual(_unweighted_unifrac(m[:, 0], m[:, 2], bl), 8/13.0)
         self.assertEqual(_unweighted_unifrac(m[:, 1], m[:, 2], bl), 8/17.0)
 
-    def test_weighted_unifrac(self):
+    def test_weighted_unifrac_pycogent_adapted(self):
         # lengths from ((a:1,b:2):4,(c:3,(d:1,e:1):2):3)
         bl = np.array([1, 2, 1, 1, 3, 2, 4, 3, 0], dtype=float)
 
