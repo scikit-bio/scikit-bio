@@ -64,8 +64,8 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
     - ``biplot`` is now a ``pd.DataFrame`` object named ``biplot_scores``.
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
-* ``skbio.diversity.beta.pw_distances`` no longer defines a default metric, and ``metric`` is now the first argument to this function.
 * Removed `skbio.diversity.alpha.equitability`. Please use `skbio.diversity.alpha.pielou_e`, which is more accurately named and better documented. Note that `equitability` by default used logarithm base 2 while `pielou_e` uses logarithm base `e` as described in Heip 1974.
+* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
 
 ### Bug Fixes
 

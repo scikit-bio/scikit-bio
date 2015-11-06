@@ -15,7 +15,7 @@ import numpy.testing as npt
 
 from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode
-from skbio.diversity.beta import (pw_distances, pw_distances_from_table,
+from skbio.diversity.beta import (beta_diversity, pw_distances_from_table,
                                   unweighted_unifrac, weighted_unifrac)
 
 
@@ -70,13 +70,13 @@ class BaseTests(TestCase):
             np.array(self.t2).T, observation_ids=range(7),
             sample_ids=self.ids2)
 
-    def test_pw_distances_invalid_input(self):
+    def test_beta_diversity_invalid_input(self):
         # number of ids doesn't match the number of samples
-        self.assertRaises(ValueError, pw_distances, self.t1, list('AB'),
+        self.assertRaises(ValueError, beta_diversity, self.t1, list('AB'),
                           'euclidean')
 
-    def test_pw_distances_euclidean(self):
-        actual_dm = pw_distances('euclidean', self.t1, self.ids1)
+    def test_beta_diversity_euclidean(self):
+        actual_dm = beta_diversity('euclidean', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -88,7 +88,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 2.82842712)
         npt.assert_almost_equal(actual_dm['C', 'B'], 2.82842712)
 
-        actual_dm = pw_distances('euclidean', self.t2, self.ids2)
+        actual_dm = beta_diversity('euclidean', self.t2, self.ids2)
         expected_data = [
             [0., 80.8455317, 84.0297566, 36.3042697, 86.0116271, 78.9176786],
             [80.8455317, 0., 71.0844568, 74.4714710, 69.3397433, 14.422205],
@@ -102,8 +102,8 @@ class BaseTests(TestCase):
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
 
-    def test_pw_distances_braycurtis(self):
-        actual_dm = pw_distances('braycurtis', self.t1, self.ids1)
+    def test_beta_diversity_braycurtis(self):
+        actual_dm = beta_diversity('braycurtis', self.t1, self.ids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
         npt.assert_almost_equal(actual_dm['B', 'B'], 0.0)
@@ -115,7 +115,7 @@ class BaseTests(TestCase):
         npt.assert_almost_equal(actual_dm['B', 'C'], 0.66666667)
         npt.assert_almost_equal(actual_dm['C', 'B'], 0.66666667)
 
-        actual_dm = pw_distances('braycurtis', self.t2, self.ids2)
+        actual_dm = beta_diversity('braycurtis', self.t2, self.ids2)
         expected_data = [
             [0., 0.78787879, 0.86666667, 0.30927835, 0.85714286, 0.81521739],
             [0.78787879, 0., 0.78142077, 0.86813187, 0.75, 0.1627907],
@@ -129,12 +129,12 @@ class BaseTests(TestCase):
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
 
-    def test_pw_distances_unweighted_unifrac(self):
+    def test_beta_diversity_unweighted_unifrac(self):
         # expected values calculated by hand
-        dm1 = pw_distances('unweighted_unifrac', self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1)
-        dm2 = pw_distances(unweighted_unifrac, self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm1 = beta_diversity('unweighted_unifrac', self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = beta_diversity(unweighted_unifrac, self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -147,12 +147,12 @@ class BaseTests(TestCase):
                 npt.assert_almost_equal(dm1[id1, id2],
                                         expected_dm[id1, id2], 6)
 
-    def test_pw_distances_weighted_unifrac(self):
+    def test_beta_diversity_weighted_unifrac(self):
         # expected values calculated by hand
-        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1)
-        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1)
+        dm1 = beta_diversity('weighted_unifrac', self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1)
+        dm2 = beta_diversity(weighted_unifrac, self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -165,14 +165,14 @@ class BaseTests(TestCase):
                 npt.assert_almost_equal(dm1[id1, id2],
                                         expected_dm[id1, id2], 6)
 
-    def test_pw_distances_weighted_unifrac_normalized(self):
+    def test_beta_diversity_weighted_unifrac_normalized(self):
         # expected values calculated by hand
-        dm1 = pw_distances('weighted_unifrac', self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1,
-                           normalized=True)
-        dm2 = pw_distances(weighted_unifrac, self.t1, self.ids1,
-                           otu_ids=self.otu_ids1, tree=self.tree1,
-                           normalized=True)
+        dm1 = beta_diversity('weighted_unifrac', self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1,
+                             normalized=True)
+        dm2 = beta_diversity(weighted_unifrac, self.t1, self.ids1,
+                             otu_ids=self.otu_ids1, tree=self.tree1,
+                             normalized=True)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -187,7 +187,7 @@ class BaseTests(TestCase):
 
     def test_pw_distances_from_table_euclidean(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances('euclidean', self.t1, self.ids1,)
+        m_dm = beta_diversity('euclidean', self.t1, self.ids1,)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table1,
             'euclidean')
@@ -195,7 +195,7 @@ class BaseTests(TestCase):
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances('euclidean', self.t2, self.ids2)
+        m_dm = beta_diversity('euclidean', self.t2, self.ids2)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table2,
             'euclidean')
@@ -205,14 +205,14 @@ class BaseTests(TestCase):
 
     def test_pw_distances_from_table_braycurtis(self):
         # results are equal when passed as Table or matrix
-        m_dm = pw_distances('braycurtis', self.t1, self.ids1)
+        m_dm = beta_diversity('braycurtis', self.t1, self.ids1)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table1)
         for id1 in self.ids1:
             for id2 in self.ids1:
                 npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
 
-        m_dm = pw_distances('braycurtis', self.t2, self.ids2,)
+        m_dm = beta_diversity('braycurtis', self.t2, self.ids2,)
         t_dm = npt.assert_warns(
             DeprecationWarning, pw_distances_from_table, self.table2)
         for id1 in self.ids2:

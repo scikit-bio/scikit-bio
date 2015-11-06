@@ -20,7 +20,7 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-    pw_distances
+    beta_diversity
     pw_distances_from_table
     unweighted_unifrac
     weighted_unifrac
@@ -32,7 +32,7 @@ Create a table containing 7 OTUs and 6 samples:
 .. plot::
    :context:
 
-   >>> from skbio.diversity.beta import pw_distances
+   >>> from skbio.diversity.beta import beta_diversity
    >>> import numpy as np
    >>> data = [[23, 64, 14, 0, 0, 3, 1],
    ...         [0, 3, 35, 42, 0, 12, 1],
@@ -45,7 +45,7 @@ Create a table containing 7 OTUs and 6 samples:
    Compute Bray-Curtis distances between all pairs of samples and return a
    ``DistanceMatrix`` object:
 
-   >>> bc_dm = pw_distances("braycurtis", data, ids)
+   >>> bc_dm = beta_diversity("braycurtis", data, ids)
    >>> print(bc_dm)
    6x6 distance matrix
    IDs:
@@ -71,7 +71,7 @@ Create a table containing 7 OTUs and 6 samples:
    ...                      '(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):0.5'
    ...                      '):1.25):0.0)root;'))
    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
-   >>> wu_dm = pw_distances("weighted_unifrac", data, ids, tree=tree,
+   >>> wu_dm = beta_diversity("weighted_unifrac", data, ids, tree=tree,
    ...                      otu_ids=otu_ids)
    >>> print(wu_dm)
    6x6 distance matrix
@@ -196,10 +196,10 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
-from ._base import pw_distances, pw_distances_from_table
+from ._base import beta_diversity, pw_distances_from_table
 from ._unifrac import unweighted_unifrac, weighted_unifrac
 
-__all__ = ["pw_distances", "pw_distances_from_table", "unweighted_unifrac",
+__all__ = ["beta_diversity", "pw_distances_from_table", "unweighted_unifrac",
            "weighted_unifrac"]
 
 test = TestRunner(__file__).test

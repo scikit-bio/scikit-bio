@@ -26,7 +26,7 @@ def _get_skbio_metrics():
 
 
 @experimental(as_of="0.4.0")
-def pw_distances(metric, counts, ids=None, **kwargs):
+def beta_diversity(metric, counts, ids=None, **kwargs):
     """Compute distances between all pairs of columns in a counts matrix
 
     Parameters
@@ -78,7 +78,7 @@ def pw_distances(metric, counts, ids=None, **kwargs):
 pw_distances_from_table_deprecation_reason = (
     "In the future, pw_distance will take a biom.table.Table object "
     "and this function will be removed. You will need to update your "
-    "code to call pw_distances at that time.")
+    "code to call beta_diversity at that time.")
 
 
 @deprecated(as_of="0.4.0", until="0.4.1",
@@ -108,7 +108,7 @@ def pw_distances_from_table(table, metric='braycurtis'):
     weighted_unifrac
     scipy.spatial.distance.pdist
     biom.table.Table
-    pw_distances
+    beta_diversity
 
     """
     sample_ids = table.ids(axis="sample")

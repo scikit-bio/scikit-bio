@@ -146,7 +146,8 @@ Phylogenetic Diversity (PD) metric to the sample:
 ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
 ...                      u'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7', 'OTU8']
->>> faith_pd(counts, otu_ids, tree)
+>>> pd = faith_pd(counts, otu_ids, tree)
+>>> print(round(pd, 2))
 6.95
 
 
