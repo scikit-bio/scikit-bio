@@ -95,8 +95,23 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        comparison. ISME J. 5, 169-172 (2011).
 
     """
+    normalized = False
+    unweighted = True
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
+    # Quickly handle boundary cases
+    boundary = _boundary_case(sum(u_counts), sum(v_counts),
+                              normalized=normalized, unweighted=unweighted)
+    if boundary is not None:
+        return boundary
+
+    u_counts, v_counts, u_sum, v_sum, tree_index =\
+        _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+        normalized=normalized, unweighted=unweighted)
+    return _unweighted_unifrac(u_counts, v_counts, tree_index['length'])
+
+def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+                          normalized, unweighted):
 
     # cast to numpy types
     u_counts = np.asarray(u_counts)
@@ -106,20 +121,14 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     u_sum = u_counts.sum()
     v_sum = v_counts.sum()
 
-    # Quickly handle boundary cases
-    boundary = _boundary_case(u_sum, v_sum)
-    if boundary is not None:
-        return boundary
-
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_index(counts, otu_ids, tree, None)
+    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
-    branch_lengths = indexed['length']
-    return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
+    return u_counts, v_counts, u_sum, v_sum, tree_index
 
 def _unweighted_unifrac(u_counts, v_counts, branch_lengths):
     """
@@ -221,36 +230,25 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
        comparison. ISME J. 5, 169-172 (2011).
 
     """
+    unweighted = False
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
-
-    # convert to numpy types
-    u_counts = np.asarray(u_counts)
-    v_counts = np.asarray(v_counts)
-    otu_ids = np.asarray(otu_ids)
-
-    u_sum = u_counts.sum()
-    v_sum = v_counts.sum()
-
-    # check boundary conditions and shortcut if necessary
-    boundary = _boundary_case(u_sum, v_sum, normalized, unweighted=False)
+    # Quickly handle boundary cases
+    boundary = _boundary_case(sum(u_counts), sum(v_counts),
+                              normalized=normalized, unweighted=unweighted)
     if boundary is not None:
         return boundary
 
-    # aggregate state information up the tree (stored in counts_array), and
-    # retrieve the aggregated state information for each input count vector
-    counts = np.vstack([u_counts, v_counts])
-    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
-    u_counts = count_array[:, 0]
-    v_counts = count_array[:, 1]
+    u_counts, v_counts, u_sum, v_sum, tree_index =\
+        _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+        normalized=normalized, unweighted=unweighted)
 
-    branch_lengths = tree_index['length']
     if normalized:
         return _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
-                                            branch_lengths, tree, tree_index)
+                                            tree, tree_index)
     else:
         return _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
-                                 branch_lengths)
+                                 tree_index['length'])
 
 def _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths):
     if u_sum:
@@ -266,7 +264,8 @@ def _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths):
     return (branch_lengths * abs(u_ - v_)).sum()
 
 def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
-                                 branch_lengths, tree, tree_index):
+                                 tree, tree_index):
+    branch_lengths = tree_index['length']
     u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths)
     # get the index positions for tips in counts_array, and determine the
     # tip distances to the root
