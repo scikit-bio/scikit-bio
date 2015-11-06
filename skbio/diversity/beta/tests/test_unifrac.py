@@ -18,7 +18,7 @@ from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.diversity.beta._unifrac import (_boundary_case, make_pdist,
                                            _unweighted_unifrac,
                                            _weighted_unifrac,
-                                           _branch_correct)
+                                           _weighted_unifrac_branch_correction)
 
 
 class UnifracTests(StatsTests, TestCase):
@@ -85,7 +85,7 @@ class UnifracTests(StatsTests, TestCase):
         self.assertEqual(_boundary_case(0, 0, normalized=False,
                                         unweighted=False), 0.0)
 
-    def test_branch_correct(self):
+    def test_weighted_unifrac_branch_correction(self):
         # for ((a:1, b:2)c:3,(d:4,e:5)f:6)root;"
         tip_ds = np.array([4, 5, 10, 11, 0, 0, 0])[:, np.newaxis]
         u_counts = np.array([1, 1, 0, 0, 2, 0, 2])
@@ -96,7 +96,7 @@ class UnifracTests(StatsTests, TestCase):
                         5.0 * (.5 + (2.0/3.0)),
                         10.0 * (1.0 / 3.0),
                         0.0]).sum()
-        obs = _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+        obs = _weighted_unifrac_branch_correction(tip_ds, u_counts, v_counts, u_sum, v_sum)
         self.assertEqual(obs, exp)
 
     def test_unweighted_unifrac(self):
@@ -131,11 +131,11 @@ class UnifracTests(StatsTests, TestCase):
 
         # scores computed by educational implementation
         self.assertAlmostEqual(
-            _weighted_unifrac(bl, m[:, 0], m[:, 1], m0s, m1s), 7.5)
+            _weighted_unifrac(m[:, 0], m[:, 1], m0s, m1s, bl), 7.5)
         self.assertAlmostEqual(
-            _weighted_unifrac(bl, m[:, 0], m[:, 2], m0s, m2s), 6.0)
+            _weighted_unifrac(m[:, 0], m[:, 2], m0s, m2s, bl), 6.0)
         self.assertAlmostEqual(
-            _weighted_unifrac(bl, m[:, 1], m[:, 2], m1s, m2s), 4.5)
+            _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl), 4.5)
 
 
 if __name__ == '__main__':

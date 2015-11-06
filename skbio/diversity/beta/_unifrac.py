@@ -95,17 +95,22 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        comparison. ISME J. 5, 169-172 (2011).
 
     """
+    if validate:
+        _validate(u_counts, v_counts, otu_ids, tree)
+
     # cast to numpy types
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     otu_ids = np.asarray(otu_ids)
 
-    if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
+    u_sum = u_counts.sum()
+    v_sum = v_counts.sum()
+
     # Quickly handle boundary cases
-    boundary = _boundary_case(u_counts.sum(), v_counts.sum())
+    boundary = _boundary_case(u_sum, v_sum)
     if boundary is not None:
         return boundary
+
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
@@ -138,7 +143,6 @@ def _unweighted_unifrac(u_counts, v_counts, branch_lengths):
     skbio.diversity.beta.unweighted_unifrac documentation for a description of
     the validation that should be performed before using this function.
     """
-
     _or = np.logical_or(u_counts, v_counts),
     _and = np.logical_and(u_counts, v_counts)
     return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
@@ -236,54 +240,43 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
     counts = np.vstack([u_counts, v_counts])
-    count_array, indexed = _counts_and_index(counts, otu_ids, tree, None)
+    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
     u_counts = count_array[:, 0]
     v_counts = count_array[:, 1]
 
-    # fetch the lengths
-    length = indexed['length']
-
-    u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
+    branch_lengths = tree_index['length']
     if normalized:
-        # get the index positions for tips in counts_array, and determine the
-        # tip distances to the root
-        tip_indices = np.array([n.id for n in indexed['id_index'].values()
-                                if n.is_tip()])
-        tip_ds = _tip_distances(length, tree, tip_indices)
-        u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+        return _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
+                                            branch_lengths, tree, tree_index)
+    else:
+        return _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
+                                 branch_lengths)
+
+def _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths):
+    if u_sum:
+        u_ = u_counts / u_sum
+    else:
+        u_ = 0.0
+
+    if v_sum:
+        v_ = v_counts / v_sum
+    else:
+        v_ = 0.0
+
+    return (branch_lengths * abs(u_ - v_)).sum()
+
+def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
+                                 branch_lengths, tree, tree_index):
+    u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths)
+    # get the index positions for tips in counts_array, and determine the
+    # tip distances to the root
+    tip_indices = np.array([n.id for n in tree_index['id_index'].values()
+                            if n.is_tip()])
+    tip_ds = _tip_distances(branch_lengths, tree, tip_indices)
+    u /= _weighted_unifrac_branch_correction(tip_ds, u_counts, v_counts,
+                                             u_sum, v_sum)
 
     return u
-
-
-def _weighted_unifrac(m, i, j, i_sum, j_sum):
-    """Calculates weighted unifrac(i, j) from m
-
-    Parameters
-    ----------
-    m : np.array
-        A 1D vector that represents the lengths in the tree in postorder.
-    i, j : np.array
-        A slice of states from m in postorder.
-    i_sum, j_sum: float
-        Counts of the observations in each environment
-
-    Returns
-    -------
-    float
-        The weighted unifrac score
-    """
-    if i_sum:
-        i_ = i / i_sum
-    else:
-        i_ = 0.0
-
-    if j_sum:
-        j_ = j / j_sum
-    else:
-        j_ = 0.0
-
-    return (m * abs(i_ - j_)).sum()
-
 
 def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
                normalized=False, **kwargs):
@@ -313,22 +306,22 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
     metric, counts, length = make_unweighted_pdist(input_counts, tip_ids, tree)
     mat = pw_distances(metric, counts, ids=['%d' % i for i in range(10)])
     """
-    count_array, indexed = _counts_and_index(counts, obs_ids, tree, indexed)
-    length = indexed['length']
+    count_array, tree_index = _counts_and_index(counts, obs_ids, tree, indexed)
+    branch_lengths = tree_index['length']
 
     if metric is _unweighted_unifrac:
         def f(u_counts, v_counts):
             boundary = _boundary_case(u_counts.sum(), v_counts.sum())
             if boundary is not None:
                 return boundary
-            return _unweighted_unifrac(u_counts, v_counts, length)
+            return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
     elif metric is _weighted_unifrac:
         # This block is duplicated in weighted_unifrac_fast -- possibly should
         # be decomposed.
         # There is a lot in common with both of these methods, but pulling the
         # normalized check out reduces branching logic.
-        tip_idx = np.array([n.id for n in indexed['id_index'].values()
+        tip_idx = np.array([n.id for n in tree_index['id_index'].values()
                             if n.is_tip()])
         if normalized:
             def f(u_counts, v_counts):
@@ -340,10 +333,11 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
                 if boundary is not None:
                     return boundary
 
-                tip_ds = _tip_distances(length, tree, tip_idx)
+                tip_ds = _tip_distances(branch_lengths, tree, tip_idx)
 
-                u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
-                u /= _branch_correct(tip_ds, u_counts, v_counts, u_sum, v_sum)
+                u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum, branch_lengths)
+                u /= _weighted_unifrac_branch_correction(
+                        tip_ds, u_counts, v_counts, u_sum, v_sum)
                 return u
         else:
             def f(u_counts, v_counts):
@@ -354,12 +348,13 @@ def make_pdist(counts, obs_ids, tree, indexed=None, metric=_unweighted_unifrac,
                 if boundary is not None:
                     return boundary
 
-                u = _weighted_unifrac(length, u_counts, v_counts, u_sum, v_sum)
+                u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
+                                      branch_lengths)
                 return u
     else:
         raise AttributeError("Unknown metric: %s" % metric)
 
-    return f, count_array.T, length
+    return f, count_array.T, branch_lengths
 
 def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
     """Test for boundary conditions
@@ -403,7 +398,8 @@ def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
 
     return None
 
-def _branch_correct(tip_dists, i, j, i_sum, j_sum):
+def _weighted_unifrac_branch_correction(tip_dists, u_counts, v_counts,
+                                        u_sum, v_sum):
     """Calculates weighted unifrac branch length correction.
 
     Parameters
@@ -412,10 +408,10 @@ def _branch_correct(tip_dists, i, j, i_sum, j_sum):
         1D column vector of branch lengths in post order form. Only tips
         should be non-zero as this represents the distance from each tip to
         root.
-    i, j : np.ndarray
+    u_counts, v_counts : np.ndarray
         Aggregated environment counts. This vector is expected to be in index
         order with tip_dists
-    i_sum, j_sum: float
+    u_sum, v_sum: float
         Counts of the observations in each environment
 
     Returns
@@ -423,4 +419,5 @@ def _branch_correct(tip_dists, i, j, i_sum, j_sum):
     np.ndarray
         The corrected branch lengths
     """
-    return (tip_dists.ravel() * ((i / i_sum) + (j / j_sum))).sum()
+    return (tip_dists.ravel() *
+            ((u_counts / u_sum) + (v_counts / v_sum))).sum()
