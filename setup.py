@@ -119,9 +119,6 @@ setup(name='scikit-bio',
           'scipy >= 0.15.1',
           'six >= 1.9.0'
       ],
-      extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
-                               "python-dateutil", "check-manifest"],
-                      'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],

@@ -31,13 +31,6 @@ class TabularMSASubclass(TabularMSA):
     pass
 
 
-class Unorderable(object):
-    """For testing unorderable objects in Python 2 and 3."""
-    def __lt__(self, other):
-        raise TypeError()
-    __cmp__ = __lt__
-
-
 class TestTabularMSAMetadata(unittest.TestCase, ReallyEqualMixin,
                              MetadataMixinTests):
     def setUp(self):
@@ -558,14 +551,16 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             TabularMSA([DNA('AC'), DNA('.G')],
                        index=[('foo', 42), ('bar', 43)]))
 
+    @unittest.skipIf(six.PY2, "Everything is orderable in Python 2.")
     def test_sort_on_unorderable_msa_index(self):
-        unorderable = Unorderable()
-        msa = TabularMSA([DNA('AAA'), DNA('ACG')], index=[42, unorderable])
+        msa = TabularMSA([DNA('AAA'), DNA('ACG'), DNA('---')],
+                         index=[42, 41, 'foo'])
         with self.assertRaises(TypeError):
             msa.sort()
         self.assertEqual(
             msa,
-            TabularMSA([DNA('AAA'), DNA('ACG')], index=[42, unorderable]))
+            TabularMSA([DNA('AAA'), DNA('ACG'), DNA('---')],
+                       index=[42, 41, 'foo']))
 
     def test_sort_empty_on_msa_index(self):
         msa = TabularMSA([], index=[])
