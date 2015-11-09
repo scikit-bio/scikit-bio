@@ -240,7 +240,7 @@ class BaseTests(TestCase):
         count_array, indexed = _counts_and_index(counts, np.array(['a', 'b']),
                                                  t, None)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
-        npt.assert_equal(count_array, exp_counts)
+        npt.assert_equal(count_array, exp_counts.T)
 
     def test_counts_and_length_with_index(self):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
@@ -249,7 +249,7 @@ class BaseTests(TestCase):
         count_array, indexed = _counts_and_index(counts, np.array(['a', 'b']),
                                                  t, indexed)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
-        npt.assert_equal(count_array, exp_counts)
+        npt.assert_equal(count_array, exp_counts.T)
 
 if __name__ == '__main__':
     main()
