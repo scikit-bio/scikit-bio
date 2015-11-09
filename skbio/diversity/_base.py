@@ -120,12 +120,14 @@ def _index_tree(tree):
     return indexed
 
 
-def _counts_and_index(counts, otu_ids, tree, indexed):
-    """Generate extended counts array, """
-    if indexed is None:
-        indexed = _index_tree(tree)
-
+def _counts_and_index(counts, otu_ids, tree, tree_index=None):
+    """Compute tree index and array of counts of all nodes in tree
+    """
+    if tree_index is None:
+        tree_index = _index_tree(tree)
+    otu_ids = np.asarray(otu_ids)
     counts = np.atleast_2d(counts)
-    counts_by_node = _nodes_by_counts(counts, otu_ids, indexed)
+    counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)
+    branch_lengths = tree_index['length']
 
-    return counts_by_node.T, indexed
+    return counts_by_node.T, tree_index, branch_lengths

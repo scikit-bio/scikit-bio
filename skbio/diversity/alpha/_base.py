@@ -17,7 +17,6 @@ from skbio.util._decorator import experimental
 from skbio.diversity._base import (_validate_counts_vector,
                                    _validate_otu_ids_and_tree,
                                    _counts_and_index)
-from skbio.diversity.beta._unifrac import _setup_unifrac
 
 
 @experimental(as_of="0.4.0")
@@ -328,8 +327,8 @@ def faith_pd(counts, otu_ids, tree, validate=True, indexed=None):
     # If Faith's PD is being calculated for a large number of samples, the
     # count_array could be produced a single time for the samples. This would
     # be much faster than producing it for each sample.
-    counts_by_node, otu_ids, branch_lengths, tree_index = \
-        _setup_unifrac(counts, otu_ids, tree)
+    counts_by_node, tree_index, branch_lengths = \
+        _counts_and_index(counts, otu_ids, tree)
 
     counts_by_node = np.where(counts_by_node > 0, 1, 0)
     result = (branch_lengths * counts_by_node).sum()
