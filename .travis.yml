@@ -3,7 +3,8 @@
 sudo: false
 language: python
 env:
-  - PYTHON_VERSION=3.4 MAKE_DOC=TRUE
+  - PYTHON_VERSION=3.5 MAKE_DOC=TRUE
+  - PYTHON_VERSION=3.4 USE_CYTHON=TRUE
   - PYTHON_VERSION=2.7
 before_install:
   - "export DISPLAY=:99.0"

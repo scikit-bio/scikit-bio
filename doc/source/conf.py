@@ -7,12 +7,7 @@ import os
 import types
 import re
 
-# Check that dependencies are installed and the correct version if necessary
-sphinx_version = '1.2.2'
 import sphinx
-if sphinx.__version__ != sphinx_version:
-    raise RuntimeError("Sphinx %s required" % sphinx_version)
-
 import sphinx.ext.autosummary as autosummary
 
 class NewAuto(autosummary.Autosummary):
