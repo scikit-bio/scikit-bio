@@ -42,8 +42,19 @@ Create a table containing 7 OTUs and 6 samples:
    ...         [0, 0, 25, 35, 0, 19, 0]]
    >>> ids = list('ABCDEF')
 
+    The value that you provide for to ``beta_diversity`` for ``metric`` can
+    be either a string (e.g., "unweighted_unifrac") or a function
+    (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
+    generally be passed as a string, as this often uses an optimized version
+    of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)
+    will be hundreds of times faster than passing the function
+    ``skbio.diversity.beta.unweighted_unifrac``. The latter is faster if
+    computing only one or a few distances, but in these cases the difference in
+    runtime is negligible, so it's safer to just err on the side of passing
+    ``metric`` as a string.
+
    Compute Bray-Curtis distances between all pairs of samples and return a
-   ``DistanceMatrix`` object:
+   ``DistanceMatrix`` object.
 
    >>> bc_dm = beta_diversity("braycurtis", data, ids)
    >>> print(bc_dm)

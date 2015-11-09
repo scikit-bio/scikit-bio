@@ -128,4 +128,4 @@ def _counts_and_index(counts, otu_ids, tree, indexed):
     counts = np.atleast_2d(counts)
     counts_by_node = _nodes_by_counts(counts, otu_ids, indexed)
 
-    return counts_by_node, indexed
+    return counts_by_node.T, indexed

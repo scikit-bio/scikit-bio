@@ -21,13 +21,6 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
 
-def _get_skbio_metrics():
-    return {
-        'unweighted_unifrac': unweighted_unifrac,
-        'weighted_unifrac': weighted_unifrac,
-        }
-
-
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, **kwargs):
     """Compute distances between all pairs of columns in a counts matrix
@@ -38,6 +31,8 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
         The pairwise distance function as a string or callable to use when
         generating pairwise distances. See the scipy ``pdist`` docs and the
         scikit-bio functions linked under *See Also* for available metrics.
+        Passing metrics as a string is preferable as this often results in an
+        optimized version of the metric being used.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
@@ -62,27 +57,37 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
     scipy.spatial.distance.pdist
     pw_distances_from_table
 
+    Notes
+    -----
+    The value that you provide for for ``metric`` can be either a string (e.g.,
+    "unweighted_unifrac") or a function
+    (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
+    generally be passed as a string, as this often uses an optimized version
+    of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)
+    will be hundreds of times faster than passing the function
+    ``skbio.diversity.beta.unweighted_unifrac``. The latter is faster if
+    computing only one or a few distances, but in these cases the difference in
+    runtime is negligible, so it's safer to just err on the side of passing
+    ``metric`` as a string.
+
     """
-    _skbio_metrics = _get_skbio_metrics()
     num_samples = len(counts)
     if ids is not None and num_samples != len(ids):
         raise ValueError(
             "Number of rows in counts must be equal to number of provided "
             "ids.")
-    if metric in _skbio_metrics:
-        if metric == 'unweighted_unifrac':
-            metric, counts, _ = _unweighted_unifrac_pdist_f(
-                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
-        elif metric == 'weighted_unifrac':
-            try:
-                normalized = kwargs['normalized']
-            except KeyError:
-                normalized=False
-            metric, counts, _ = _weighted_unifrac_pdist_f(
-                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'],
-                normalized=normalized)
-        else:
-            metric = _skbio_metrics[metric]
+
+    if metric == 'unweighted_unifrac':
+        metric, counts, _ = _unweighted_unifrac_pdist_f(
+            counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
+    elif metric == 'weighted_unifrac':
+        try:
+            normalized = kwargs['normalized']
+        except KeyError:
+            normalized=False
+        metric, counts, _ = _weighted_unifrac_pdist_f(
+            counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'],
+            normalized=normalized)
     elif callable(metric):
         metric = partial(metric, **kwargs)
     else:
