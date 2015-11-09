@@ -121,11 +121,11 @@ def _index_tree(tree):
 
 
 def _counts_and_index(counts, otu_ids, tree, indexed):
-    """Get the counts array and the indexed tree"""
+    """Generate extended counts array, """
     if indexed is None:
         indexed = _index_tree(tree)
 
     counts = np.atleast_2d(counts)
-    count_array = _nodes_by_counts(counts, otu_ids, indexed)
+    counts_by_node = _nodes_by_counts(counts, otu_ids, indexed)
 
-    return count_array, indexed
+    return counts_by_node, indexed

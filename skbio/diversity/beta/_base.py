@@ -13,7 +13,10 @@ from functools import partial
 import numpy as np
 from scipy.spatial.distance import pdist
 
-from skbio.diversity.beta._unifrac import unweighted_unifrac, weighted_unifrac
+from skbio.diversity.beta._unifrac import (
+    unweighted_unifrac, weighted_unifrac,_unweighted_unifrac_pdist_f,
+    _weighted_unifrac_pdist_f)
+
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._decorator import experimental, deprecated
 
@@ -67,10 +70,23 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
             "Number of rows in counts must be equal to number of provided "
             "ids.")
     if metric in _skbio_metrics:
-        metric = _skbio_metrics[metric]
-
-    if callable(metric):
+        if metric == 'unweighted_unifrac':
+            metric, counts, _ = _unweighted_unifrac_pdist_f(
+                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
+        elif metric == 'weighted_unifrac':
+            try:
+                normalized = kwargs['normalized']
+            except KeyError:
+                normalized=False
+            metric, counts, _ = _weighted_unifrac_pdist_f(
+                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'],
+                normalized=normalized)
+        else:
+            metric = _skbio_metrics[metric]
+    elif callable(metric):
         metric = partial(metric, **kwargs)
+    else:
+        pass
 
     distances = pdist(counts, metric)
     return DistanceMatrix(distances, ids)

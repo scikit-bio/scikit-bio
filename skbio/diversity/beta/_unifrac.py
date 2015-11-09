@@ -124,10 +124,11 @@ def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
 
     # aggregate state information up the tree (stored in counts_array), and
     # retrieve the aggregated state information for each input count vector
-    counts = np.vstack([u_counts, v_counts])
-    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
-    u_counts = count_array[:, 0]
-    v_counts = count_array[:, 1]
+    counts_by_otu = np.vstack([u_counts, v_counts])
+    counts_by_node, tree_index = \
+        _counts_and_index(counts_by_otu, otu_ids, tree, None)
+    u_counts = counts_by_node[:, 0]
+    v_counts = counts_by_node[:, 1]
 
     return u_counts, v_counts, u_sum, v_sum, tree_index
 
@@ -282,26 +283,31 @@ def _weighted_unifrac_normalized(u_counts, v_counts, u_sum, v_sum,
     return u
 
 
-def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
+def _unweighted_unifrac_pdist_f(counts_by_otu, otu_ids, tree):
     """ Create optimized pairwise func for computing many pairwise distances
     """
-    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
+    otu_ids = np.asarray(otu_ids)
+    counts_by_otu = np.asarray(counts_by_otu)
+    counts_by_node, tree_index = \
+        _counts_and_index(counts_by_otu, otu_ids, tree, None)
     branch_lengths = tree_index['length']
 
     def f(u_counts, v_counts):
         boundary = _boundary_case(u_counts.sum(), v_counts.sum())
         if boundary is not None:
             return boundary
-        print(u_counts, v_counts, branch_lengths)
         return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
 
-    return f, count_array.T, branch_lengths
+    return f, counts_by_node.T, branch_lengths
 
 
-def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
+def _weighted_unifrac_pdist_f(counts_by_otu, otu_ids, tree, normalized):
     """ Create optimized pairwise func for computing many pairwise distances
     """
-    count_array, tree_index = _counts_and_index(counts, otu_ids, tree, None)
+    otu_ids = np.asarray(otu_ids)
+    counts_by_otu = np.asarray(counts_by_otu)
+    counts_by_node, tree_index = _counts_and_index(\
+        counts_by_otu, otu_ids, tree, None)
     branch_lengths = tree_index['length']
     tip_indices = np.array([n.id for n in tree_index['id_index'].values()
                             if n.is_tip()])
@@ -309,7 +315,6 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
         tip_dists = _tip_distances(branch_lengths, tree, tip_indices)
 
     def f(u_counts, v_counts):
-        print(u_counts, tip_indices)
         u_sum = np.take(u_counts, tip_indices).sum()
         v_sum = np.take(v_counts, tip_indices).sum()
 
@@ -324,7 +329,7 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
                     tip_dists, u_counts, v_counts, u_sum, v_sum)
         return u
 
-    return f, count_array.T, branch_lengths
+    return f, counts_by_node.T, branch_lengths
 
 
 def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
