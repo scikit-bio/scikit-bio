@@ -212,7 +212,7 @@ def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
                           normalized, unweighted):
 
     # temporarily store u_counts and v_counts in a 2D array as that's what
-    # _setup_unifrac requires
+    # _counts_and_index takes
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     counts = np.vstack([u_counts, v_counts])
@@ -335,31 +335,70 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     # tip distances to the root
     tip_indices = np.array([n.id for n in tree_index['id_index'].values()
                             if n.is_tip()])
-    tip_ds = _tip_distances(branch_lengths, tree, tip_indices)
-    u /= _weighted_unifrac_branch_correction(tip_ds, u_node_counts,
-                                             v_node_counts, u_total_count,
-                                             v_total_count)
+    node_to_root_distances = _tip_distances(branch_lengths, tree, tip_indices)
+    u /= _weighted_unifrac_branch_correction(
+        node_to_root_distances, u_node_counts, v_node_counts, u_total_count,
+        v_total_count)
 
     return u
 
 
 def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
-    """ Create optimized pairwise func for computing many pairwise distances
+    """ Create optimized pdist-compatible function
+
+    Parameters
+    ----------
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of observations in a given sample.
+    otu_ids: list, np.array
+        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
+        same length as ``u_counts`` and ``v_counts``. These IDs do not need to
+        be in tip order with respect to the tree.
+    tree: skbio.TreeNode
+        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
+        be a superset of ``otu_ids``, but not a subset.
+
+    Returns
+    -------
+    function
+        Optimized pairwise unweighted UniFrac calculator that can be passed
+        to ``scipy.spatial.distance.pdist``.
     """
     counts_by_node, tree_index, branch_lengths = \
         _counts_and_index(counts, otu_ids, tree)
 
-    def f(u_counts, v_counts):
-        boundary = _boundary_case(u_counts.sum(), v_counts.sum())
+    def f(u_node_counts, v_node_counts):
+        boundary = _boundary_case(u_node_counts.sum(), v_node_counts.sum())
         if boundary is not None:
             return boundary
-        return _unweighted_unifrac(u_counts, v_counts, branch_lengths)
+        return _unweighted_unifrac(u_node_counts, v_node_counts,
+                                   branch_lengths)
 
     return f, counts_by_node, branch_lengths
 
 
 def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
-    """ Create optimized pairwise func for computing many pairwise distances
+    """ Create optimized pdist-compatible function
+
+    Parameters
+    ----------
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of observations in a given sample.
+    otu_ids: list, np.array
+        Vector of OTU ids corresponding to tip names in ``tree``. Must be the
+        same length as ``u_counts`` and ``v_counts``. These IDs do not need to
+        be in tip order with respect to the tree.
+    tree: skbio.TreeNode
+        Tree relating the OTUs in otu_ids. The set of tip names in the tree can
+        be a superset of ``otu_ids``, but not a subset.
+
+    Returns
+    -------
+    function
+        Optimized pairwise unweighted UniFrac calculator that can be passed
+        to ``scipy.spatial.distance.pdist``.
     """
     counts_by_node, tree_index, branch_lengths = \
         _counts_and_index(counts, otu_ids, tree)
@@ -367,56 +406,60 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
                             if n.is_tip()])
 
     if normalized:
-        tip_dists = _tip_distances(branch_lengths, tree, tip_indices)
+        node_to_root_distances = _tip_distances(branch_lengths, tree,
+                                                tip_indices)
 
-    def f(u_counts, v_counts):
-        u_sum = np.take(u_counts, tip_indices).sum()
-        v_sum = np.take(v_counts, tip_indices).sum()
+    def f(u_node_counts, v_node_counts):
+        u_total_count = np.take(u_node_counts, tip_indices).sum()
+        v_total_count = np.take(v_node_counts, tip_indices).sum()
 
-        boundary = _boundary_case(u_sum, v_sum, unweighted=False)
+        boundary = _boundary_case(u_total_count, v_total_count,
+                                  unweighted=False)
         if boundary is not None:
             return boundary
 
-        u = _weighted_unifrac(u_counts, v_counts, u_sum, v_sum,
-                              branch_lengths)
+        u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
+                              v_total_count, branch_lengths)
         if normalized:
             u /= _weighted_unifrac_branch_correction(
-                    tip_dists, u_counts, v_counts, u_sum, v_sum)
+                    node_to_root_distances, u_node_counts, v_node_counts,
+                    u_total_count, v_total_count)
         return u
 
     return f, counts_by_node, branch_lengths
 
 
-def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
+def _boundary_case(u_total_count, v_total_count, normalized=False,
+                   unweighted=True):
     """Test for boundary conditions
 
     Parameters
     ----------
-    u_sum, v_sum: float
-        The sum of the observations in both environments.
-    normalized: bool
+    u_total_count, v_total_count : float
+        The sum of the observations in samples ``u`` and ``v``, respectively.
+    normalized : bool, optional
         Indicates if the method is normalized.
-    unweighted: bool
-        Indicates if the method is weighted.
+    unweighted : bool, optional
+        Indicates if the method is unweighted.
 
     Returns
     -------
     float or None
         Specifically, one of `[0.0, 1.0, None]`. `None` indicates that a
-        boundary condition was not observed.
+        boundary condition was not observed, and the float values are distances
+        between ``u`` and ``v``.
 
     Notes
     -----
     The following boundary conditions are tested:
 
-        * if u_sum or v_sum are zero
-        * if both u_sum and v_sum are zero
-        * both of the above conditions with respect to normalized and weighted
+        * if u_total_count or v_total_count are zero
+        * if both u_total_count and v_total_count are zero
     """
-    if u_sum and v_sum:
+    if u_total_count and v_total_count:
         return None
 
-    if u_sum + v_sum:
+    if u_total_count + v_total_count:
         # u or v counts are all zeros
         if unweighted or normalized:
             # u or v counts are all zeros
@@ -430,26 +473,28 @@ def _boundary_case(u_sum, v_sum, normalized=False, unweighted=True):
     return None
 
 
-def _weighted_unifrac_branch_correction(tip_dists, u_counts, v_counts,
-                                        u_sum, v_sum):
+def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
+                                        v_node_counts, u_total_count,
+                                        v_total_count):
     """Calculates weighted unifrac branch length correction.
 
     Parameters
     ----------
-    tip_dists : np.ndarray
-        1D column vector of branch lengths in post order form. Only tips
-        should be non-zero as this represents the distance from each tip to
-        root.
-    u_counts, v_counts : np.ndarray
-        Aggregated environment counts. This vector is expected to be in index
-        order with tip_dists
-    u_sum, v_sum: float
-        Counts of the observations in each environment
+    node_to_root_distances : np.ndarray
+        1D column vector of branch lengths in post order form. There should be
+        positions in this vector for all nodes in the tree, but only tips
+        should be non-zero.
+    u_node_counts, v_node_counts : np.ndarray
+        Counts of observations of all nodes in the tree in samples ``u`` and
+        ``v``, respectively.
+    u_total_count, v_total_count : float
+        The sum of the observations in samples ``u`` and ``v``, respectively.
 
     Returns
     -------
     np.ndarray
         The corrected branch lengths
     """
-    return (tip_dists.ravel() *
-            ((u_counts / u_sum) + (v_counts / v_sum))).sum()
+    return (node_to_root_distances.ravel() *
+            ((u_node_counts / u_total_count) +
+             (v_node_counts / v_total_count))).sum()
