@@ -15,13 +15,12 @@ import inspect
 
 import six
 import pandas as pd
-import pandas.util.testing as pdt
 from nose import core
 from nose.tools import nottest
 
 import numpy as np
 import numpy.testing as npt
-from pandas.util.testing import assert_index_equal
+import pandas.util.testing as pdt
 
 from ._decorator import experimental
 
@@ -1050,7 +1049,7 @@ def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
         npt.assert_almost_equal(left_s.values, right_s.values,
                                 decimal=decimal)
         if not ignore_index:
-            assert_index_equal(left_s.index, right_s.index)
+            pdt.assert_index_equal(left_s.index, right_s.index)
 
 
 def _assert_frame_equal(left_df, right_df, ignore_index=False,
@@ -1069,9 +1068,9 @@ def _assert_frame_equal(left_df, right_df, ignore_index=False,
         npt.assert_almost_equal(left_values, right_values, decimal=decimal)
 
         if not ignore_index:
-            assert_index_equal(left_df.index, right_df.index)
+            pdt.assert_index_equal(left_df.index, right_df.index)
         if not ignore_columns:
-            assert_index_equal(left_df.columns, right_df.columns)
+            pdt.assert_index_equal(left_df.columns, right_df.columns)
 
 
 def _normalize_signs(arr1, arr2):
@@ -1192,6 +1191,11 @@ def assert_data_frame_almost_equal(left, right):
     # this check ensures that empty DataFrames with different indices do not
     # compare equal. exact=True specifies that the type of the indices must be
     # exactly the same
-    pdt.assert_index_equal(left.index, right.index,
+    assert_index_equal(left.index, right.index)
+
+
+def assert_index_equal(a, b):
+    pdt.assert_index_equal(a, b,
                            exact=True,
-                           check_names=True)
+                           check_names=True,
+                           check_exact=True)
