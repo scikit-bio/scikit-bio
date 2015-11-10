@@ -24,6 +24,7 @@ from skbio.stats.distance import (
     DissimilarityMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
+from skbio.util import assert_data_frame_almost_equal
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -333,6 +334,26 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         dm = self.dm_1x1
         self.assertIsInstance(dm.svg, SVG)
 
+    def test_to_data_frame_1x1(self):
+        df = self.dm_1x1.to_data_frame()
+        exp = pd.DataFrame([[0.0]], index=['a'], columns=['a'])
+        assert_data_frame_almost_equal(df, exp)
+
+    def test_to_data_frame_3x3(self):
+        df = self.dm_3x3.to_data_frame()
+        exp = pd.DataFrame([[0.0, 0.01, 4.2],
+                            [0.01, 0.0, 12.0],
+                            [4.2, 12.0, 0.0]],
+                           index=['a', 'b', 'c'], columns=['a', 'b', 'c'])
+        assert_data_frame_almost_equal(df, exp)
+
+    def test_to_data_frame_default_ids(self):
+        df = DissimilarityMatrix(self.dm_2x2_data).to_data_frame()
+        exp = pd.DataFrame([[0.0, 0.123],
+                            [0.123, 0.0]],
+                           index=['0', '1'], columns=['0', '1'])
+        assert_data_frame_almost_equal(df, exp)
+
     def test_str(self):
         for dm in self.dms:
             obs = str(dm)
@@ -449,6 +470,14 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
+
+    def test_init_from_condensed_form(self):
+        data = [1, 2, 3]
+        exp = DistanceMatrix([[0, 1, 2],
+                              [1, 0, 3],
+                              [2, 3, 0]], ['0', '1', '2'])
+        res = DistanceMatrix(data)
+        self.assertEqual(exp, res)
 
     def test_init_invalid_input(self):
         # Asymmetric.

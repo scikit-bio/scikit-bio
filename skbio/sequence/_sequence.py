@@ -13,7 +13,6 @@ import six
 
 import re
 import collections
-import copy
 import numbers
 from contextlib import contextmanager
 
@@ -22,12 +21,14 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
-from skbio.util._decorator import stable, experimental
+from skbio.util._decorator import (stable, experimental, deprecated,
+                                   classonlymethod, overrides)
 
 
-class Sequence(collections.Sequence, SkbioObject):
+class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
+               SkbioObject):
     """Store biological sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet and are thus the most
@@ -345,186 +346,6 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
-    @stable(as_of="0.4.0")
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire sequence.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        >>> from pprint import pprint
-        >>> from skbio import Sequence
-
-        Create a sequence with metadata:
-
-        >>> s = Sequence('ACGTACGTACGTACGT',
-        ...              metadata={'id': 'seq-id',
-        ...                        'description': 'seq description'})
-        >>> s
-        Sequence
-        ------------------------------------
-        Metadata:
-            'description': 'seq description'
-            'id': 'seq-id'
-        Stats:
-            length: 16
-        ------------------------------------
-        0 ACGTACGTAC GTACGT
-
-        Retrieve metadata:
-
-        >>> pprint(s.metadata) # using pprint to display dict in sorted order
-        {'description': 'seq description', 'id': 'seq-id'}
-
-        Update metadata:
-
-        >>> s.metadata['id'] = 'new-id'
-        >>> s.metadata['pubmed'] = 12345
-        >>> pprint(s.metadata)
-        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
-
-        Set metadata:
-
-        >>> s.metadata = {'abc': 123}
-        >>> s.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> s.has_metadata()
-        True
-        >>> del s.metadata
-        >>> s.metadata
-        {}
-        >>> s.has_metadata()
-        False
-
-        """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @property
-    @stable(as_of="0.4.0")
-    def positional_metadata(self):
-        """``pd.DataFrame`` containing metadata on a per-character basis.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        Create a DNA sequence with positional metadata:
-
-        >>> from skbio import DNA
-        >>> seq = DNA(
-        ...     'ACGT',
-        ...     positional_metadata={'quality': [3, 3, 20, 11],
-        ...                          'exons': [True, True, False, True]})
-        >>> seq
-        DNA
-        -----------------------------
-        Positional metadata:
-            'exons': <dtype: bool>
-            'quality': <dtype: int64>
-        Stats:
-            length: 4
-            has gaps: False
-            has degenerates: False
-            has non-degenerates: True
-            GC-content: 50.00%
-        -----------------------------
-        0 ACGT
-
-        Retrieve positional metadata:
-
-        >>> seq.positional_metadata
-           exons  quality
-        0   True        3
-        1   True        3
-        2  False       20
-        3   True       11
-
-        Update positional metadata:
-
-        >>> seq.positional_metadata['gaps'] = seq.gaps()
-        >>> seq.positional_metadata
-           exons  quality   gaps
-        0   True        3  False
-        1   True        3  False
-        2  False       20  False
-        3   True       11  False
-
-        Set positional metadata:
-
-        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
-        >>> seq.positional_metadata
-          degenerates
-        0       False
-        1       False
-        2       False
-        3       False
-
-        Delete positional metadata:
-
-        >>> seq.has_positional_metadata()
-        True
-        >>> del seq.positional_metadata
-        >>> seq.positional_metadata
-        Empty DataFrame
-        Columns: []
-        Index: [0, 1, 2, 3]
-        >>> seq.has_positional_metadata()
-        False
-
-        """
-        if self._positional_metadata is None:
-            # not using setter to avoid copy
-            self._positional_metadata = pd.DataFrame(
-                index=np.arange(len(self)))
-        return self._positional_metadata
-
-    @positional_metadata.setter
-    def positional_metadata(self, positional_metadata):
-        try:
-            # copy=True to copy underlying data buffer
-            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
-            raise TypeError('Positional metadata invalid. Must be consumable '
-                            'by pd.DataFrame. Original pandas error message: '
-                            '"%s"' % e)
-
-        num_rows = len(positional_metadata.index)
-        if num_rows != len(self):
-            raise ValueError(
-                "Number of positional metadata values (%d) must match the "
-                "number of characters in the sequence (%d)." %
-                (num_rows, len(self)))
-
-        positional_metadata.reset_index(drop=True, inplace=True)
-        self._positional_metadata = positional_metadata
-
-    @positional_metadata.deleter
-    def positional_metadata(self):
-        self._positional_metadata = None
-
-    @property
     @experimental(as_of="0.4.0-dev")
     def observed_chars(self):
         """Set of observed characters in the sequence.
@@ -547,10 +368,155 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
+    @classonlymethod
+    @experimental(as_of="0.4.0-dev")
+    def concat(cls, sequences, how='strict'):
+        """Concatenate an iterable of ``Sequence`` objects.
+
+        Parameters
+        ----------
+        seqs : iterable (Sequence)
+            An iterable of ``Sequence`` objects or appropriate subclasses.
+        how : {'strict', 'inner', 'outer'}, optional
+            How to intersect the `positional_metadata` of the sequences.
+            If 'strict': the `positional_metadata` must have the exact same
+            columns; 'inner': an inner-join of the columns (only the shared set
+            of columns are used); 'outer': an outer-join of the columns
+            (all columns are used: missing values will be padded with NaN).
+
+        Returns
+        -------
+        Sequence
+            The returned sequence will be an instance of the class which
+            called this class-method.
+
+        Raises
+        ------
+        ValueError
+            If `how` is not one of: 'strict', 'inner', or 'outer'.
+        ValueError
+            If `how` is 'strict' and the `positional_metadata` of each sequence
+            does not have the same columns.
+        TypeError
+            If the sequences cannot be cast as the calling class.
+
+        Notes
+        -----
+            The sequence-wide metadata (``Sequence.metadata``) is not retained
+            during concatenation.
+
+            Sequence objects can be cast to a different type only when the new
+            type is an ancestor or child of the original type. Casting between
+            sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
+            allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
+            would be.
+
+        Examples
+        --------
+        Concatenate two DNA sequences into a new DNA object:
+
+        >>> from skbio import DNA, Sequence
+        >>> s1 = DNA("ACGT")
+        >>> s2 = DNA("GGAA")
+        >>> DNA.concat([s1, s2])
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+
+        Concatenate DNA sequences into a Sequence object (type coercion):
+
+        >>> Sequence.concat([s1, s2])
+        Sequence
+        -------------
+        Stats:
+            length: 8
+        -------------
+        0 ACGTGGAA
+
+        Positional metadata is conserved:
+
+        >>> s1 = DNA('AcgT', lowercase='one')
+        >>> s2 = DNA('GGaA', lowercase='one',
+        ...          positional_metadata={'two': [1, 2, 3, 4]})
+        >>> result = DNA.concat([s1, s2], how='outer')
+        >>> result
+        DNA
+        -----------------------------
+        Positional metadata:
+            'one': <dtype: bool>
+            'two': <dtype: float64>
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+        >>> result.positional_metadata
+             one  two
+        0  False  NaN
+        1   True  NaN
+        2   True  NaN
+        3  False  NaN
+        4  False    1
+        5  False    2
+        6   True    3
+        7  False    4
+
+        """
+        if how not in {'strict', 'inner', 'outer'}:
+            raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
+
+        seqs = list(sequences)
+        for seq in seqs:
+            seq._assert_can_cast_to(cls)
+
+        if how == 'strict':
+            how = 'inner'
+            cols = []
+            for s in seqs:
+                if s.has_positional_metadata():
+                    cols.append(frozenset(s.positional_metadata))
+                else:
+                    cols.append(frozenset())
+            if len(set(cols)) > 1:
+                raise ValueError("The positional metadata of the sequences do"
+                                 " not have matching columns. Consider setting"
+                                 " how='inner' or how='outer'")
+        seq_data = []
+        pm_data = []
+        for seq in seqs:
+            seq_data.append(seq._bytes)
+            pm_data.append(seq.positional_metadata)
+            if not seq.has_positional_metadata():
+                del seq.positional_metadata
+
+        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        bytes_ = np.concatenate(seq_data)
+
+        return cls(bytes_, positional_metadata=pm)
+
+    @classmethod
+    def _assert_can_cast_to(cls, target):
+        if not (issubclass(cls, target) or issubclass(target, cls)):
+            raise TypeError("Cannot cast %r as %r." %
+                            (cls.__name__, target.__name__))
+
+    @overrides(PositionalMetadataMixin)
+    def _positional_metadata_axis_len_(self):
+        return len(self)
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
-
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -567,6 +533,9 @@ class Sequence(collections.Sequence, SkbioObject):
                     "np.uint8 or '|S1'. Invalid dtype: %s" %
                     sequence.dtype)
         elif isinstance(sequence, Sequence):
+            # Sequence casting is acceptable between direct
+            # decendants/ancestors
+            sequence._assert_can_cast_to(type(self))
             # we're not simply accessing sequence.metadata in order to avoid
             # creating "empty" metadata representations on both sequence
             # objects if they don't have metadata. same strategy is used below
@@ -602,15 +571,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
             self._set_bytes(sequence)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
-
-        if positional_metadata is None:
-            self._positional_metadata = None
-        else:
-            self.positional_metadata = positional_metadata
+        MetadataMixin._init_(self, metadata=metadata)
+        PositionalMetadataMixin._init_(
+            self, positional_metadata=positional_metadata)
 
         if lowercase is False:
             pass
@@ -742,32 +705,13 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.__class__ != other.__class__:
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the sequence
-        # objects if they don't have metadata. same strategy is used below for
-        # positional metadata
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin._eq_(self, other):
             return False
 
         if self._string != other._string:
             return False
 
-        if self.has_positional_metadata() and other.has_positional_metadata():
-            if not self.positional_metadata.equals(other.positional_metadata):
-                return False
-        elif not (self.has_positional_metadata() or
-                  other.has_positional_metadata()):
-            # both don't have positional metadata
-            pass
-        else:
-            # one has positional metadata while the other does not
+        if not PositionalMetadataMixin._eq_(self, other):
             return False
 
         return True
@@ -1178,7 +1122,7 @@ class Sequence(collections.Sequence, SkbioObject):
         This method is equivalent to ``seq.copy(deep=False)``.
 
         """
-        return self.copy(deep=False)
+        return self._copy(False, {})
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
@@ -1195,52 +1139,10 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._copy(True, memo)
 
-    @stable(as_of="0.4.0")
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
-
-    @stable(as_of="0.4.0")
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
-
-    @stable(as_of="0.4.0")
+    @deprecated(as_of="0.4.0-dev", until="0.5.1",
+                reason="Use `copy.copy(seq)` instead of "
+                       "`seq.copy(deep=False)`, and `copy.deepcopy(seq)` "
+                       "instead of `seq.copy(deep=True)`.")
     def copy(self, deep=False):
         """Return a copy of the biological sequence.
 
@@ -1372,27 +1274,19 @@ class Sequence(collections.Sequence, SkbioObject):
         # we don't make a distinction between deep vs. shallow copy of bytes
         # because dtype=np.uint8. we only need to make the distinction when
         # dealing with object dtype
-        bytes = np.copy(self._bytes)
+        bytes_ = np.copy(self._bytes)
 
-        seq_copy = self._constructor(sequence=bytes, metadata=None,
+        seq_copy = self._constructor(sequence=bytes_, metadata=None,
                                      positional_metadata=None)
 
-        if self.has_metadata():
-            metadata = self.metadata
-            if deep:
-                metadata = copy.deepcopy(metadata, memo)
-            else:
-                metadata = metadata.copy()
-            seq_copy._metadata = metadata
-
-        if self.has_positional_metadata():
-            positional_metadata = self.positional_metadata
-            if deep:
-                positional_metadata = copy.deepcopy(positional_metadata, memo)
-            else:
-                # deep=True makes a shallow copy of the underlying data buffer
-                positional_metadata = positional_metadata.copy(deep=True)
-            seq_copy._positional_metadata = positional_metadata
+        if deep:
+            seq_copy._metadata = MetadataMixin._deepcopy_(self, memo)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._deepcopy_(self, memo)
+        else:
+            seq_copy._metadata = MetadataMixin._copy_(self)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._copy_(self)
 
         return seq_copy
 
@@ -2190,9 +2084,9 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         if sequence is None:
             sequence = self._bytes
-        if metadata is None:
+        if metadata is None and self.has_metadata():
             metadata = self._metadata
-        if positional_metadata is None:
+        if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
         return self._constructor(sequence=sequence, metadata=metadata,
                                  positional_metadata=positional_metadata)

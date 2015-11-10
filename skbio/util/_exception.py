@@ -17,13 +17,3 @@ class TestingUtilError(Exception):
 class OverrideError(AssertionError):
     """Raised when a property does not exist in the parent class."""
     pass
-
-
-class OperationError(ValueError):
-    """Raised when an operation cannot be performed."""
-    pass
-
-
-class UniqueError(ValueError):
-    """Raised when unique values were expected."""
-    pass

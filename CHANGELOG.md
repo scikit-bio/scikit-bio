@@ -4,6 +4,10 @@
 
 ### Features
 * Added `skbio.io.format.blast7` for reading BLAST+ output format 7 or BLAST output format 9 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
+* Added `skbio.stats.composition.ancom` function, a test for differential abundance [#1054](https://github.com/biocore/scikit-bio/issues/1054)
+* Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/biocore/scikit-bio/issues/757))
+* Added support for one-dimensional vector of dissimilarities in `skbio.stats.distance.DissimilarityMatrix`
+constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * Added `skbio.io.format.blast6` for reading BLAST+ output format 6 or BLAST output format 8 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
 * Added `inner`, `ilr`, `ilr_inv` and `clr_inv`, ``skbio.stats.composition``, which enables linear transformations on compositions ([#892](https://github.com/biocore/scikit-bio/issues/892)
 * Added ``skbio.diversity.alpha.pielou_e`` function as an evenness metric of alpha diversity. ([#1068](https://github.com/biocore/scikit-bio/issues/1068))
@@ -15,10 +19,12 @@
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
-* Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
+* Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ``skbio.diversity.alpha.faith_pd``, respectively.
 * Added ``reverse_transcribe`` class method to ``RNA``.
 * Added `Sequence.observed_chars` property for obtaining the set of observed characters in a sequence. ([#1075](https://github.com/biocore/scikit-bio/issues/1075))
 * Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/biocore/scikit-bio/issues/1074))
+* Added experimental class-method ``Sequence.concat`` which will produce a new sequence from an iterable of existing sequences. Parameters control how positional metadata is propagated during a concatenation.
+* ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/biocore/scikit-bio/issues/1006))
 
 ### Backward-incompatible changes [stable]
 * `Sequence.kmer_frequencies` now returns a `dict`. Previous behavior was to return a `collections.Counter` if `relative=False` was passed, and a `collections.defaultdict` if `relative=True` was passed. In the case of a missing key, the `Counter` would return 0 and the `defaultdict` would return 0.0. Because the return type is now always a `dict`, attempting to access a missing key will raise a `KeyError`. This change *may* break backwards-compatibility depending on how the `Counter`/`defaultdict` is being used. We hope that in most cases this change will not break backwards-compatibility because both `Counter` and `defaultdict` are `dict` subclasses.
@@ -65,8 +71,12 @@
 
 ### Bug Fixes
 
+* ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/biocore/scikit-bio/issues/1133))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
+
+### Deprecated functionality [stable]
+* `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
 
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
