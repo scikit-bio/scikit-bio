@@ -12,6 +12,7 @@ import copy
 import unittest
 import functools
 import itertools
+import types
 
 import six
 import numpy as np
@@ -1004,39 +1005,140 @@ class TestAppend(unittest.TestCase):
 
 
 class TestIterPositions(unittest.TestCase):
-    def setUp(self):
-        self.msa_empty = TabularMSA(())
-        self.msa = TabularMSA((DNA('ACGT'), DNA('TGCA')))
-        self.expected = [Sequence('AT'), Sequence('CG'), Sequence('GC'),
-                         Sequence('TA')]
+    def test_method_return_type(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('GT')])
 
-    def test_method_exists(self):
-        self.msa.iter_positions()
+        obs = msa.iter_positions()
 
-    def test_formal_parameters(self):
-        self.msa.iter_positions(True)
-        self.msa.iter_positions(reverse=True)
+        self.assertIsInstance(obs, types.GeneratorType)
 
-    def test_empty(self):
-        observed = self.msa_empty.iter_positions()
-        self.assertEqual(len(tuple(observed)), 0)
+    def test_position_type(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('GT')])
 
-    def test_simple(self):
-        observed = list(self.msa.iter_positions())
+        first_position = next(msa.iter_positions())
 
-        self.assertEqual(len(observed), len(self.expected))
+        # Type should be *exactly* Sequence.
+        self.assertIs(type(first_position), Sequence)
 
-        for obs, exp in zip(observed, self.expected):
-            self.assertEqual(obs, exp)
+    def test_no_sequences(self):
+        msa = TabularMSA([])
 
-    def test_reverse(self):
-        expected = list(reversed(self.expected))
-        observed = list(self.msa.iter_positions(reverse=True))
+        obs = list(msa.iter_positions())
 
-        self.assertEqual(len(observed), len(expected))
+        self.assertEqual(obs, [])
 
-        for obs, exp in zip(observed, expected):
-            self.assertEqual(obs, exp)
+    def test_no_sequences_reverse(self):
+        msa = TabularMSA([])
+
+        obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs, [])
+
+    def test_no_positions(self):
+        msa = TabularMSA([DNA(''),
+                          DNA('')])
+
+        obs = list(msa.iter_positions())
+
+        self.assertEqual(obs, [])
+
+    def test_no_positions_reverse(self):
+        msa = TabularMSA([DNA(''),
+                          DNA('')])
+
+        obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs, [])
+
+    def test_single_position(self):
+        msa = TabularMSA([DNA('A')])
+
+        obs = list(msa.iter_positions())
+
+        self.assertEqual(obs, [Sequence('A')])
+
+    def test_single_position_reverse(self):
+        msa = TabularMSA([DNA('A'),
+                          DNA('T')])
+
+        obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs, [Sequence('AT')])
+
+    def test_multiple_positions(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('A-G.'),
+                          DNA('----')])
+
+        obs = list(msa.iter_positions())
+
+        self.assertEqual(obs,
+                         [Sequence('AA-'), Sequence('C--'), Sequence('GG-'),
+                          Sequence('T.-')])
+
+    def test_multiple_positions_reverse(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('A-'),
+                          DNA('--')])
+
+        obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs,
+                         [Sequence('C--'), Sequence('AA-')])
+
+    def test_with_positional_metadata(self):
+        # MSA *and* sequence positional metadata.
+        msa_positional_metadata = {'pm1': [0.5, 1.5], 'foo': [9, 99]}
+        seqs = [
+            DNA('AC', positional_metadata={'foo': [42, 43]}),
+            DNA('A-'),
+            DNA('--', positional_metadata={'foo': [-1, -2],
+                                           'bar': ['baz', 'bazz']})]
+        msa = TabularMSA(seqs, positional_metadata=msa_positional_metadata)
+
+        obs = list(msa.iter_positions())
+
+        self.assertEqual(
+            obs,
+            [Sequence('AA-', metadata={'pm1': 0.5, 'foo': 9},
+                      positional_metadata={'foo': [42, np.nan, -1],
+                                           'bar': [np.nan, np.nan, 'baz']}),
+             Sequence('C--', metadata={'pm1': 1.5, 'foo': 99},
+                      positional_metadata={'foo': [43, np.nan, -2],
+                                           'bar': [np.nan, np.nan, 'bazz']})])
+
+    def test_with_positional_metadata_reverse(self):
+        # MSA *and* sequence positional metadata.
+        msa_positional_metadata = {'pm1': [0.5, 1.5], 'foo': [9, 99]}
+        seqs = [
+            DNA('AC', positional_metadata={'foo': [42, 43]}),
+            DNA('A-'),
+            DNA('--', positional_metadata={'foo': [-1, -2],
+                                           'bar': ['baz', 'bazz']})]
+        msa = TabularMSA(seqs, positional_metadata=msa_positional_metadata)
+
+        obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(
+            obs,
+            [Sequence('C--', metadata={'pm1': 1.5, 'foo': 99},
+                      positional_metadata={'foo': [43, np.nan, -2],
+                                           'bar': [np.nan, np.nan, 'bazz']}),
+             Sequence('AA-', metadata={'pm1': 0.5, 'foo': 9},
+                      positional_metadata={'foo': [42, np.nan, -1],
+                                           'bar': [np.nan, np.nan, 'baz']})])
+
+    def test_handles_missing_positional_metadata_efficiently(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('A-')])
+
+        self.assertIsNone(msa._positional_metadata)
+
+        list(msa.iter_positions())
+
+        self.assertIsNone(msa._positional_metadata)
 
 
 class TestGapFrequencies(unittest.TestCase):
