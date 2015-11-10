@@ -40,6 +40,8 @@ class TestBLAST7Sniffer(unittest.TestCase):
 
         self.negatives = [get_data_path(e) for e in [
             'blast7_invalid_gibberish',
+            'blast7_invalid_for_sniffer',
+            'blast7_invalid_for_sniffer_2',
             'empty']]
 
     def test_positives(self):
@@ -166,7 +168,13 @@ class TestBlast7Reader(unittest.TestCase):
         fp = get_data_path("blast7_invalid_differing_fields")
         with assertRaisesRegex(self, BLAST7FormatError,
                                "Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
-                               " do.*\[.*'qseqid', .*'sseqid'\]"):
+                               " do.*\[.*'qseqid', .*'sseqid', .*'score'\]"):
+            _blast7_to_data_frame(fp)
+        fp = get_data_path("legacy9_invalid_differing_fields")
+        with assertRaisesRegex(self, BLAST7FormatError,
+                               "Fields \[.*'qseqid', .*'sseqid', .*'qstart'\]"
+                               " do.*\[.*'qseqid', .*'sseqid', "
+                               ".*'sallseqid'\]"):
             _blast7_to_data_frame(fp)
 
     def test_no_data_error(self):
@@ -186,12 +194,19 @@ class TestBlast7Reader(unittest.TestCase):
     def test_wrong_amount_of_columns_error(self):
         fp = get_data_path("blast7_invalid_too_many_columns")
         with assertRaisesRegex(self, BLAST7FormatError,
-                               "Number of data columns.*\(2\)"):
+                               "Number of fields.*\(2\)"):
             _blast7_to_data_frame(fp)
         fp = get_data_path("legacy9_invalid_too_many_columns")
         with assertRaisesRegex(self, BLAST7FormatError,
-                               "Number of data columns.*\(12\)"):
+                               "Number of fields.*\(12\)"):
             _blast7_to_data_frame(fp)
+
+    def test_unrecognized_field_error(self):
+        fp = get_data_path("blast7_invalid_unrecognized_field")
+        with assertRaisesRegex(self, BLAST7FormatError,
+                               "Unrecognized field.*\('sallid'\)"):
+            _blast7_to_data_frame(fp)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,10 +12,9 @@
 # Fields: query id, subject id, q. start
 # 1 hits found
 query1	subject1	4
-# BLASTP 2.2.31+
-# Query: query2
+# BLASTP 2.2.3 [May-13-2002]
+# Database: other_vertebrate
 # Subject: subject1
-# Fields: query id, subject id, score
-# 1 hits found
-query2	subject2	4
-# BLAST processed 2 queries
+# Fields: 
+Query id,Subject id,subject ids
+query2	subject1	N/A

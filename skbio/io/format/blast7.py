@@ -90,7 +90,7 @@ The following column types are output by BLAST and supported by scikit-bio.
 For more information on these column types, see :mod:`skbio.io.format.blast6`.
 
 +-------------------+----------------------+
-|Fields Name        |DataFrame Column Name |
+|Field Name         |DataFrame Column Name |
 +===================+======================+
 |query id           |qseqid                |
 +-------------------+----------------------+
@@ -207,7 +207,7 @@ art, s. end',
 
 Read the file into a ``pd.DataFrame``:
 
->>> df = skbio.io.read(fh, format="blast+7", into=pd.DataFrame)
+>>> df = skbio.io.read(fh, into=pd.DataFrame)
 >>> df # doctest: +NORMALIZE_WHITESPACE
        qacc      sacc        evalue  qstart   qend  sstart   send
 0  AE000111  AE000111  0.000000e+00       1  10596       1  10596
@@ -238,7 +238,7 @@ gs,q. start,q. end,s. start,s. end,e-value,bit score',
 
 Read the file into a ``pd.DataFrame``:
 
->>> df = skbio.io.read(fh, format="blast+7", into=pd.DataFrame)
+>>> df = skbio.io.read(fh, into=pd.DataFrame)
 >>> df # doctest: +NORMALIZE_WHITESPACE
      qseqid          sseqid  pident  length  mismatch  gapopen  qstart  qend \\
 0  AF178033  EMORG:AF178033  100.00     811         0        0       1   811
@@ -269,10 +269,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import pandas as pd
-import numpy as np
 
 from skbio.io import create_format, BLAST7FormatError
-from skbio.io.format.blast6 import _possible_columns
+from skbio.io.format._blast import _parse_blast_data, _possible_columns
 
 blast7 = create_format('blast+7')
 
@@ -310,7 +309,7 @@ def _blast7_sniffer(fh):
     # Smells a BLAST+7 file if the following conditions are present
     #   -First line contains "BLAST"
     #   -Second line contains "Query" or "Database"
-    #   -Third line starts with "Subject" or "Query"
+    #   -Third line starts with "Subject" or "Query" or "Database"
     lines = [line for _, line in zip(range(3), fh)]
     if len(lines) < 3:
         return False, {}
@@ -338,7 +337,7 @@ def _blast7_to_data_frame(fh):
             # Identifies Legacy BLAST 9 data
             line = next(fh)
             line_num += 1
-            if not columns:
+            if columns is None:
                 columns = _parse_fields(line, legacy=True)
                 skiprows.append(line_num)
             else:
@@ -349,7 +348,7 @@ def _blast7_to_data_frame(fh):
                 skiprows.append(line_num)
         elif line.startswith("# Fields: "):
             # Identifies BLAST+7 data
-            if not columns:
+            if columns is None:
                 columns = _parse_fields(line)
             else:
                 # Affirms data types do not differ throught file
@@ -358,39 +357,31 @@ def _blast7_to_data_frame(fh):
                     raise BLAST7FormatError("Fields %r do not equal fields %r"
                                             % (columns, next_columns))
         line_num += 1
-    if not columns:
+    if columns is None:
         # Affirms file contains BLAST data
         raise BLAST7FormatError("File contains no BLAST data.")
     fh.seek(0)
-    try:
-        df = pd.read_csv(fh, names=columns, sep='\t', comment='#',
-                         dtype=_possible_columns, na_values='N/A',
-                         keep_default_na=False, skiprows=skiprows)
-    except ValueError:
-        # Catches first possibility of incorrect number of columns
-        raise BLAST7FormatError("Number of data columns does not equal number"
-                                " of fields (%r)." % (len(columns)))
-    if df.index.dtype != np.int64:
-        # Catches second possibility of incorrect number of columns
-        raise BLAST7FormatError("Number of data columns does not equal number"
-                                " of fields (%r)." % (len(columns)))
-    return df
+
+    return _parse_blast_data(fh, columns, BLAST7FormatError,
+                             "Number of fields (%r) does not equal number"
+                             " of data columns (%r).", comment='#',
+                             skiprows=skiprows)
 
 
 def _parse_fields(line, legacy=False):
-    # Removes "\n" from fields line and returns fields as a list (columns)
+    """Removes '\n' from fields line and returns fields as a list (columns)."""
     line = line.rstrip('\n')
     if legacy:
         fields = line.split(',')
     else:
-        line = line[10:]
+        line = line.split('# Fields: ')[1]
         fields = line.split(', ')
-    try:
-        columns = [column_converter[field] for field in fields]
-    except KeyError as e:
-        # Affirms all column names are supported
-        raise BLAST7FormatError("Unrecognized field: %r."
-                                " Supported fields: %r"
-                                % (str(e).strip("'"),
-                                   set(_possible_columns.keys())))
+    columns = []
+    for field in fields:
+        if field not in column_converter:
+            raise BLAST7FormatError("Unrecognized field (%r)."
+                                    " Supported fields: %r"
+                                    % (field,
+                                       set(_possible_columns.keys())))
+        columns.append(column_converter[field])
     return columns

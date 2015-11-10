@@ -242,29 +242,12 @@ and-csv.html
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import functools
-
 import pandas as pd
 
 from skbio.io import create_format
+from skbio.io.format._blast import _parse_blast_data, _possible_columns
 
 blast6 = create_format('blast+6')
-
-_possible_columns = {'qseqid': str, 'qgi': float, 'qacc': str, 'qaccver': str,
-                     'qlen': float, 'sseqid': str, 'sallseqid': str,
-                     'sgi': float, 'sallgi': float, 'sacc': str,
-                     'saccver': str, 'sallacc': str, 'slen': float,
-                     'qstart': float, 'qend': float, 'sstart': float,
-                     'send': float, 'qseq': str, 'sseq': str,
-                     'evalue': float, 'bitscore': float, 'score': float,
-                     'length': float, 'pident': float, 'nident': float,
-                     'mismatch': float, 'positive': float, 'gapopen': float,
-                     'gaps': float, 'ppos': float, 'frames': str,
-                     'qframe': float, 'sframe': float, 'btop': float,
-                     'staxids': str, 'sscinames': str, 'scomnames': str,
-                     'sblastnames': str, 'sskingdoms': str, 'stitle': str,
-                     'salltitles': str, 'sstrand': str, 'qcovs': float,
-                     'qcovhsp': float}
 
 _default_columns = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',
                     'gapopen', 'qstart', 'qend', 'sstart', 'send',
@@ -288,14 +271,6 @@ def _blast6_to_data_frame(fh, columns=None, default_columns=False):
                                  " Supported columns:\n%r" %
                                  (column, set(_possible_columns.keys())))
 
-    read_csv = functools.partial(pd.read_csv, na_values='N/A', sep='\t',
-                                 header=None, keep_default_na=False)
-    lineone = read_csv(fh, nrows=1)
-
-    if len(lineone.columns) != len(columns):
-        raise ValueError("Specified number of columns (%d) does not"
-                         " match the number of columns in the file (%d)."
-                         % (len(columns), len(lineone.columns)))
-
-    fh.seek(0)
-    return read_csv(fh, names=columns, dtype=_possible_columns)
+    return _parse_blast_data(fh, columns, ValueError,
+                             "Specified number of columns (%r) does not equal"
+                             " number of columns in file (%r).")
