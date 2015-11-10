@@ -204,7 +204,7 @@ class TestBlast7Reader(unittest.TestCase):
     def test_unrecognized_field_error(self):
         fp = get_data_path("blast7_invalid_unrecognized_field")
         with assertRaisesRegex(self, BLAST7FormatError,
-                               "Unrecognized field.*\('sallid'\)"):
+                               "Unrecognized field \(.*'sallid'\)"):
             _blast7_to_data_frame(fp)
 
 
