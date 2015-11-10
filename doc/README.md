@@ -10,18 +10,8 @@ visit [scikit-bio.org](http://scikit-bio.org).
 Building the documentation
 --------------------------
 
-To build the documentation, you'll need the following Python packages
-installed:
-
-- [Sphinx](http://sphinx-doc.org/) == 1.2.2
-- [sphinx-bootstrap-theme](https://pypi.python.org/pypi/sphinx-bootstrap-theme/)
-- [numpydoc](https://github.com/numpy/numpydoc) >= v0.6
-
-An easy way to install the dependencies is via pip:
-
-    pip install Sphinx sphinx-bootstrap-theme git+git://github.com/numpy/numpydoc.git
-
-Finally, you will need to install scikit-bio.
+To build the documentation, you'll need a scikit-bio development environment
+set up. See [CONTRIBUTING.md](../CONTRIBUTING.md) for instructions.
 
 **Important:** The documentation will be built for whatever version of
 scikit-bio is *currently installed* on your system (i.e., the version imported

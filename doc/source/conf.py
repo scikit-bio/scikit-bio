@@ -7,12 +7,7 @@ import os
 import types
 import re
 
-# Check that dependencies are installed and the correct version if necessary
-sphinx_version = '1.2.2'
 import sphinx
-if sphinx.__version__ != sphinx_version:
-    raise RuntimeError("Sphinx %s required" % sphinx_version)
-
 import sphinx.ext.autosummary as autosummary
 
 class NewAuto(autosummary.Autosummary):
@@ -449,7 +444,7 @@ intersphinx_mapping = {
         'http://docs.scipy.org/doc/numpy': None,
         'http://docs.scipy.org/doc/scipy/reference': None,
         'http://matplotlib.org': None,
-        'http://pandas.pydata.org': None,
+        'http://pandas.pydata.org/pandas-docs/stable': None,
         'http://www.biom-format.org':None
 }
 

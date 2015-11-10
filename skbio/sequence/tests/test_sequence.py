@@ -2025,6 +2025,13 @@ class TestSequence(TestCase, ReallyEqualMixin):
                 pd.DataFrame({'bar': [[], [], [], []],
                               'baz': [42, 42, 42, 42]}))
 
+    def test_copy_preserves_read_only_flag_on_bytes(self):
+        seq = Sequence('ACGT')
+        seq_copy = copy.copy(seq)
+
+        with self.assertRaises(ValueError):
+            seq_copy._bytes[0] = 'B'
+
     def test_deepcopy_memo_is_respected(self):
         # basic test to ensure deepcopy's memo is passed through to recursive
         # deepcopy calls
