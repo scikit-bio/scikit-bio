@@ -259,8 +259,14 @@ def esty_ci(counts):
     return f1 / n - z * np.sqrt(W), f1 / n + z * np.sqrt(W)
 
 
+def _faith_pd(counts_by_node, branch_lengths):
+    counts_by_node = np.where(counts_by_node > 0, 1, 0)
+    result = (branch_lengths * counts_by_node).sum()
+    return result
+
+
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree, validate=True, indexed=None):
+def faith_pd(counts, otu_ids, tree, validate=True,):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
@@ -324,16 +330,10 @@ def faith_pd(counts, otu_ids, tree, validate=True, indexed=None):
     if counts.sum() == 0:
         return 0.0
 
-    # If Faith's PD is being calculated for a large number of samples, the
-    # count_array could be produced a single time for the samples. This would
-    # be much faster than producing it for each sample.
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
 
-    counts_by_node = np.where(counts_by_node > 0, 1, 0)
-    result = (branch_lengths * counts_by_node).sum()
-
-    return result
+    return _faith_pd(counts_by_node, branch_lengths)
 
 
 @experimental(as_of="0.4.0")
