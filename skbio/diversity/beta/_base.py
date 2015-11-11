@@ -27,11 +27,10 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
     Parameters
     ----------
     metric : str, callable
-        The pairwise distance function as a string or callable to use when
-        generating pairwise distances. See the scipy ``pdist`` docs and the
-        scikit-bio functions linked under *See Also* for available metrics.
-        Passing metrics as a string is preferable as this often results in an
-        optimized version of the metric being used.
+        The pairwise distance function to apply. See the scipy ``pdist`` docs
+        and the scikit-bio functions linked under *See Also* for available
+        metrics. Passing metrics as a string is preferable as this often
+        results in an optimized version of the metric being used.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of observations in a given sample.
@@ -59,7 +58,7 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
     Notes
     -----
     The value that you provide for for ``metric`` can be either a string (e.g.,
-    "unweighted_unifrac") or a function
+    ``"unweighted_unifrac"``) or a function
     (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
     generally be passed as a string, as this often uses an optimized version
     of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)

@@ -7,6 +7,8 @@ Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 This package provides implementations of various alpha diversity measures,
 including measures of richness, dominance, and evenness. Some functions
 generate confidence intervals (CIs). These functions have the suffix ``_ci``.
+A driver function is also provided which supports computing alpha diversity for
+many samples at once.
 
 All alpha diversity measures accept a vector of counts within a single sample,
 where each count is, for example, the number of observations of a particular
@@ -150,6 +152,58 @@ Phylogenetic Diversity (PD) metric to the sample:
 >>> print(round(pd, 2))
 6.95
 
+If you're calculating alpha diversity for more than one sample, you should
+use the ``alpha_diversity`` function, which takes a matrix of per-sample
+count vectors as input. For some metrics (notably ``faith_pd``), this will
+internally use an optimized function so that calling ``alpha_diversity`` on
+all of your samples will be much faster than calling it on each of your samples
+individually.
+
+Create a table containing 7 OTUs and 6 samples:
+
+>>> from skbio.diversity.alpha import alpha_diversity
+>>> import numpy as np
+>>> data = [[23, 64, 14, 0, 0, 3, 1],
+...         [0, 3, 35, 42, 0, 12, 1],
+...         [0, 5, 5, 0, 40, 40, 0],
+...         [44, 35, 9, 0, 1, 0, 0],
+...         [0, 2, 8, 0, 35, 45, 1],
+...         [0, 0, 25, 35, 0, 19, 0]]
+>>> ids = list('ABCDEF')
+
+Compute observed OTUs for each sample:
+
+>>> alpha_diversity('observed_otus', data, ids)
+A    5
+B    5
+C    4
+D    4
+E    5
+F    3
+dtype: int64
+
+Create a tree corresponding to the OTUs:
+
+>>> from skbio import TreeNode
+>>> from io import StringIO
+>>> tree = TreeNode.read(StringIO(
+...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+...                      '(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):'
+...                      '0.5):1.25):0.0)root;'))
+>>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
+
+Compute Faith's PD for each sample. Because this metric takes ``otu_ids`` and
+``tree`` as additional parameters, those are required as ``kwargs`` to
+``alpha_diversity``.
+
+>>> alpha_diversity('faith_pd', data, ids=ids, otu_ids=otu_ids, tree=tree)
+A    6.75
+B    7.00
+C    6.25
+D    5.75
+E    6.75
+F    5.50
+dtype: float64
 
 """
 
@@ -172,16 +226,17 @@ from ._base import (
     esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
-    singles, strong)
+    singles, strong, alpha_diversity)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
-__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
-           'dominance', 'doubles', 'enspie', 'esty_ci',
-           'faith_pd', 'fisher_alpha', 'goods_coverage', 'heip_e',
-           'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
-           'menhinick', 'michaelis_menten_fit', 'observed_otus', 'osd',
-           'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e', 'singles',
-           'strong', 'gini_index', 'lladser_pe', 'lladser_ci']
+
+__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
+           'brillouin_d', 'dominance', 'doubles', 'enspie', 'esty_ci',
+           'faith_pd', 'fisher_alpha', 'gini_index', 'goods_coverage',
+           'heip_e', 'kempton_taylor_q', 'margalef', 'mcintosh_d',
+           'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
+           'osd', 'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e',
+           'singles', 'strong', 'lladser_pe', 'lladser_ci', 'alpha_diversity']
 
 test = TestRunner(__file__).test

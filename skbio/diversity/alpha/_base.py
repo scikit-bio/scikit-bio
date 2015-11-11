@@ -8,15 +8,114 @@
 
 from __future__ import absolute_import, division, print_function
 
+from functools import partial
+
 import numpy as np
+import pandas as pd
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
+import skbio
 from skbio.stats import subsample_counts
 from skbio.util._decorator import experimental
 from skbio.diversity._base import (_validate_counts_vector,
                                    _validate_otu_ids_and_tree,
                                    _vectorize_counts_and_tree)
+
+
+# need to figure out how to better factor this. as it stands, it's a big
+# duplication of .__init__.__all__
+def _get_alpha_diversity_metrics():
+    return {'ace': skbio.diversity.alpha.ace,
+            'chao1': skbio.diversity.alpha.chao1,
+            'chao1_ci': skbio.diversity.alpha.chao1_ci,
+            'berger_parker_d': berger_parker_d, 'brillouin_d': brillouin_d,
+            'dominance': dominance, 'doubles': doubles, 'enspie': enspie,
+            'esty_ci': esty_ci, 'faith_pd': faith_pd,
+            'fisher_alpha': fisher_alpha, 'goods_coverage': goods_coverage,
+            'heip_e': heip_e, 'kempton_taylor_q': kempton_taylor_q,
+            'margalef': margalef, 'mcintosh_d': mcintosh_d,
+            'mcintosh_e': mcintosh_e, 'menhinick': menhinick,
+            'michaelis_menten_fit': michaelis_menten_fit,
+            'observed_otus': observed_otus, 'osd': osd, 'pielou_e': pielou_e,
+            'robbins': robbins, 'shannon': shannon, 'simpson': simpson,
+            'simpson_e': simpson_e, 'singles': singles, 'strong': strong,
+            'gini_index': skbio.diversity.alpha.gini_index,
+            'lladser_pe': skbio.diversity.alpha.lladser_pe,
+            'lladser_ci': skbio.diversity.alpha.lladser_ci
+            }
+
+
+@experimental(as_of="0.4.0")
+def alpha_diversity(metric, counts, ids=None, **kwargs):
+    """ Compute alpha diversity for one or more count vectors
+
+    Parameters
+    ----------
+    metric: str, callable
+        The alpha diversity metric to apply to count vector(s).
+        Passing metric as a string is preferable as this often results in an
+        optimized version of the metric being used.
+    counts : 1D or 2D array_like of ints or floats
+        Vector or matrix containing count/abundance data. If a matrix, each row
+        should contain counts of observations in a given sample.
+    ids : iterable of strs, optional
+        Identifiers for each sample in ``counts``.
+
+    Returns
+    -------
+    pd.Series
+        Values of metric for all vectors provided in ``counts``. The index
+        will be ``ids``, if provided.
+
+    Raises
+    ------
+    ValueError
+        If ``len(ids) != len(counts)``.
+        If ``otu_ids`` and ``tree`` are not provided when ``metric=faith_pd``.
+
+    Notes
+    -----
+    The value that you provide for for ``metric`` can be either a string (e.g.,
+    ``"faith_pd"``) or a function
+    (e.g., ``skbio.diversity.alpha.faith_pd``). The metric should
+    generally be passed as a string, as this often uses an optimized version
+    of the metric. For example, passing  ``"faith_pd"`` (a string) will be
+    tens of times faster than passing the function
+    ``skbio.diversity.alpha.faith_pd``. The latter may be faster if computing
+    alpha diversity for only one or a few distances, but in these cases the
+    difference in runtime is negligible, so it's safer to just err on the side
+    of passing ``metric`` as a string.
+
+    """
+    metrics = _get_alpha_diversity_metrics()
+
+    counts = np.atleast_2d(counts)
+    num_samples = len(counts)
+    if ids is not None and num_samples != len(ids):
+        raise ValueError(
+            "Number of rows in counts must be equal to number of provided "
+            "ids.")
+
+    if metric == 'faith_pd':
+        if "otu_ids" not in kwargs:
+            raise ValueError("otu_ids must be provided when metric=faith_pd.")
+        if "tree" not in kwargs:
+            raise ValueError("tree must be provided when metric=faith_pd")
+        counts_by_node, tree_index, branch_lengths = \
+            _vectorize_counts_and_tree(counts, kwargs['otu_ids'],
+                                       kwargs['tree'])
+        counts = counts_by_node
+        metric = partial(_faith_pd, branch_lengths=branch_lengths)
+    elif callable(metric):
+        metric = partial(metric, **kwargs)
+    elif metric in metrics:
+        metric = metrics[metric]
+    else:
+        raise ValueError('Unknown metric provided: %r.' % metric)
+
+    results = map(metric, counts)
+    return pd.Series(results, index=ids)
 
 
 @experimental(as_of="0.4.0")
