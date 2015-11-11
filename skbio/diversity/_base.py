@@ -90,8 +90,8 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
                                % " ".join(missing_tip_names))
 
 
-def _counts_and_index(counts, otu_ids, tree, tree_index=None):
-    """Compute tree index and array of counts of all nodes in tree
+def _vectorize_counts_and_tree(counts, otu_ids, tree, tree_index=None):
+    """ Index tree and convert counts to np.array in corresponding order
     """
     if tree_index is None:
         tree_index = tree.to_array(nan_length_value=0.0)

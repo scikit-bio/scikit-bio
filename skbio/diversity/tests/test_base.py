@@ -16,7 +16,7 @@ import numpy.testing as npt
 
 from skbio.diversity._base import (
     _validate_counts_vector, _validate_counts_vectors,
-    _validate_otu_ids_and_tree, _counts_and_index)
+    _validate_otu_ids_and_tree, _vectorize_counts_and_tree)
 from skbio import TreeNode
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
@@ -228,11 +228,11 @@ class BaseTests(TestCase):
         self.assertRaises(MissingNodeError, _validate_otu_ids_and_tree, counts,
                           otu_ids, t)
 
-    def test_counts_and_index(self):
+    def test_vectorize_counts_and_tree(self):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
         counts = np.array([[0, 1], [1, 5], [10, 1]])
         count_array, indexed, branch_lengths = \
-            _counts_and_index(counts, np.array(['a', 'b']), t)
+            _vectorize_counts_and_tree(counts, np.array(['a', 'b']), t)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 
@@ -240,8 +240,8 @@ class BaseTests(TestCase):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
         counts = np.array([[0, 1], [1, 5], [10, 1]])
         indexed = t.to_array(nan_length_value=0.0)
-        count_array, indexed, branch_lengths = \
-            _counts_and_index(counts, np.array(['a', 'b']), t, indexed)
+        count_array, indexed, branch_lengths = _vectorize_counts_and_tree(
+            counts, np.array(['a', 'b']), t, indexed)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 

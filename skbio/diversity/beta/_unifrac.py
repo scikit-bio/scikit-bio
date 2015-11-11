@@ -13,7 +13,7 @@ import numpy as np
 from skbio.util._decorator import experimental
 from skbio.diversity._base import (_validate_counts_vectors,
                                    _validate_otu_ids_and_tree,
-                                   _counts_and_index)
+                                   _vectorize_counts_and_tree)
 from skbio.diversity._base_cy import _tip_distances
 
 
@@ -212,12 +212,12 @@ def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
                           normalized, unweighted):
 
     # temporarily store u_counts and v_counts in a 2D array as that's what
-    # _counts_and_index takes
+    # _vectorize_counts_and_tree takes
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
     counts = np.vstack([u_counts, v_counts])
     counts_by_node, tree_index, branch_lengths = \
-        _counts_and_index(counts, otu_ids, tree)
+        _vectorize_counts_and_tree(counts, otu_ids, tree)
     # unpack counts vectors for single pairwise UniFrac calculation
     u_node_counts = counts_by_node[0]
     v_node_counts = counts_by_node[1]
@@ -366,7 +366,7 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
         to ``scipy.spatial.distance.pdist``.
     """
     counts_by_node, tree_index, branch_lengths = \
-        _counts_and_index(counts, otu_ids, tree)
+        _vectorize_counts_and_tree(counts, otu_ids, tree)
 
     def f(u_node_counts, v_node_counts):
         boundary = _boundary_case(u_node_counts.sum(), v_node_counts.sum())
@@ -401,7 +401,7 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
         to ``scipy.spatial.distance.pdist``.
     """
     counts_by_node, tree_index, branch_lengths = \
-        _counts_and_index(counts, otu_ids, tree)
+        _vectorize_counts_and_tree(counts, otu_ids, tree)
     tip_indices = np.array([n.id for n in tree_index['id_index'].values()
                             if n.is_tip()])
 
