@@ -71,7 +71,7 @@ cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,
 
     Parameters
     ----------
-    child_index: nparray of int
+    child_index: np.array of int
         A matrix in which the first column corresponds to an index position in
         ``a``, which represents a node in a tree. The second column is the
         starting index in ``a`` for the node's children, and the third column

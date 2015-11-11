@@ -80,10 +80,7 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
         metric, counts, _ = _unweighted_unifrac_pdist_f(
             counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
     elif metric == 'weighted_unifrac':
-        try:
-            normalized = kwargs['normalized']
-        except KeyError:
-            normalized = False
+        normalized = kwargs.get('normalized', False)
         metric, counts, _ = _weighted_unifrac_pdist_f(
             counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'],
             normalized=normalized)

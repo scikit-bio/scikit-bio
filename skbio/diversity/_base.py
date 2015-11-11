@@ -100,4 +100,6 @@ def _vectorize_counts_and_tree(counts, otu_ids, tree, tree_index=None):
     counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)
     branch_lengths = tree_index['length']
 
+    # branch_lengths is just a reference to the array inside of tree_index,
+    # but it's used so much that it's convenient to just pull it out here.
     return counts_by_node.T, tree_index, branch_lengths
