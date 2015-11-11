@@ -90,41 +90,11 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
                                % " ".join(missing_tip_names))
 
 
-def _index_tree(tree):
-    """Index a tree to allow for bulk numpy aggregations
-
-    Paramters
-    ---------
-    tree : TreeNode
-        A tree to index
-
-    Returns
-    -------
-        dict of array
-            {id_index: {id: TreeNode},
-             child_index: [(node_id, left_child_id, right_child_id)],
-             attr_1: array(...),
-             ...
-             attr_N: array(...)}
-
-    Notes
-    -----
-    This wraps `TreeNode.to_array`, but replaces any `nan` in the length array
-    with 0.0 which can arise from an edge not having a length, notably the
-    root node parent edge.
-    """
-    indexed = tree.to_array()
-    length = indexed['length']
-    indexed['length'] = np.where(np.isnan(length), 0.0, length)
-
-    return indexed
-
-
 def _counts_and_index(counts, otu_ids, tree, tree_index=None):
     """Compute tree index and array of counts of all nodes in tree
     """
     if tree_index is None:
-        tree_index = _index_tree(tree)
+        tree_index = tree.to_array(nan_length_value=0.0)
     otu_ids = np.asarray(otu_ids)
     counts = np.atleast_2d(counts)
     counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)

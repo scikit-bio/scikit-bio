@@ -2052,7 +2052,7 @@ class TreeNode(SkbioObject):
                     seen.add(node.id)
 
     @experimental(as_of="0.4.0")
-    def to_array(self, attrs=None):
+    def to_array(self, attrs=None, nan_length_value=None):
         """Return an array representation of self
 
         Parameters
@@ -2061,6 +2061,11 @@ class TreeNode(SkbioObject):
             The attributes and types to return. The expected form is
             [(attribute_name, type)]. If `None`, then `name`, `length`, and
             `id` are returned.
+        nan_length_value : float, optional
+            If `True`, replaces any `nan` in the branch length vector
+            (i.e., ``result['length']``) with this value. `nan` branch lengths
+            can arise from an edge not having a length (common for the root
+            node parent edge), which can making summing problematic.
 
         Returns
         -------
@@ -2074,10 +2079,7 @@ class TreeNode(SkbioObject):
         Notes
         -----
         Attribute arrays are in index order such that TreeNode.id can be used
-        as a lookup into the the array
-
-        If `length` is an attribute, this will also record the length off the
-        root which is `nan`. Take care when summing.
+        as a lookup into the the array.
 
         Examples
         --------
@@ -2135,6 +2137,10 @@ class TreeNode(SkbioObject):
 
         results = {'id_index': id_index, 'child_index': child_index}
         results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
+        if nan_length_value is not None:
+            length_v = results['length']
+            results['length'] = np.where(np.isnan(length_v), nan_length_value,
+                                         length_v)
         return results
 
     def _ascii_art(self, char1='-', show_internal=True, compact=False):
