@@ -236,7 +236,7 @@ class BaseTests(TestCase):
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 
-    def test_counts_and_length_with_index(self):
+    def test_vectorize_counts_and_tree_w_precomputed_index(self):
         t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
         counts = np.array([[0, 1], [1, 5], [10, 1]])
         indexed = t.to_array(nan_length_value=0.0)

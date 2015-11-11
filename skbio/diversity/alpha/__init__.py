@@ -64,6 +64,7 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   alpha_diversity
    ace
    berger_parker_d
    brillouin_d
@@ -156,8 +157,8 @@ If you're calculating alpha diversity for more than one sample, you should
 use the ``alpha_diversity`` function, which takes a matrix of per-sample
 count vectors as input. For some metrics (notably ``faith_pd``), this will
 internally use an optimized function so that calling ``alpha_diversity`` on
-all of your samples will be much faster than calling it on each of your samples
-individually.
+all of your samples will be much faster than calling the metric on each of your
+samples individually.
 
 Create a table containing 7 OTUs and 6 samples:
 
@@ -182,7 +183,9 @@ E    5
 F    3
 dtype: int64
 
-Create a tree corresponding to the OTUs:
+Next we'll compute Faith's PD on the same samples. Since this is a phylogenetic
+diversity metric, we'll first need to create a tree and an ordered list of
+OTU identifiers:
 
 >>> from skbio import TreeNode
 >>> from io import StringIO
@@ -192,9 +195,8 @@ Create a tree corresponding to the OTUs:
 ...                      '0.5):1.25):0.0)root;'))
 >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
 
-Compute Faith's PD for each sample. Because this metric takes ``otu_ids`` and
-``tree`` as additional parameters, those are required as ``kwargs`` to
-``alpha_diversity``.
+Because ``faith_pd`` takes ``otu_ids`` and ``tree`` as additional parameters,
+those are required to be passed as ``kwargs`` to ``alpha_diversity``.
 
 >>> alpha_diversity('faith_pd', data, ids=ids, otu_ids=otu_ids, tree=tree)
 A    6.75
@@ -204,6 +206,14 @@ D    5.75
 E    6.75
 F    5.50
 dtype: float64
+
+Note that we passed ``'faith_pd'`` as a string to ``alpha_diversity``. While we
+could have passed the function itself (i.e., ``metric=faith_pd``) passing it as
+a string results in an optmized verison of the function being used. Wherever
+possible, you should pass ``metric`` as a string which will result in an
+optimized version being used if available. Passing ``metric`` as a string may
+not be possible if you're passing a metric that scikit-bio doesn't know about,
+such as a custom one that you've developed.
 
 """
 

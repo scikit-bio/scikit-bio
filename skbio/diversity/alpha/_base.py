@@ -53,7 +53,7 @@ def alpha_diversity(metric, counts, ids=None, **kwargs):
     Parameters
     ----------
     metric: str, callable
-        The alpha diversity metric to apply to count vector(s).
+        The alpha diversity metric to apply to the count vector(s).
         Passing metric as a string is preferable as this often results in an
         optimized version of the metric being used.
     counts : 1D or 2D array_like of ints or floats
@@ -71,8 +71,12 @@ def alpha_diversity(metric, counts, ids=None, **kwargs):
     Raises
     ------
     ValueError
-        If ``len(ids) != len(counts)``.
-        If ``otu_ids`` and ``tree`` are not provided when ``metric=faith_pd``.
+        If ``len(ids) != len(counts)``, or if ``otu_ids`` and ``tree`` are not
+        provided when ``metric=faith_pd``.
+
+    See Also
+    --------
+    skbio.diversity.beta.beta_diversity
 
     Notes
     -----
@@ -99,9 +103,9 @@ def alpha_diversity(metric, counts, ids=None, **kwargs):
 
     if metric == 'faith_pd':
         if "otu_ids" not in kwargs:
-            raise ValueError("otu_ids must be provided when metric=faith_pd.")
+            raise ValueError("otu_ids is required when metric is faith_pd.")
         if "tree" not in kwargs:
-            raise ValueError("tree must be provided when metric=faith_pd")
+            raise ValueError("tree is required when metric=faith_pd")
         counts_by_node, tree_index, branch_lengths = \
             _vectorize_counts_and_tree(counts, kwargs['otu_ids'],
                                        kwargs['tree'])

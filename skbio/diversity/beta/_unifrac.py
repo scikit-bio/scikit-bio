@@ -27,8 +27,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
         Vectors of counts of OTUs for two samples. Must be equal length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u_counts`` and ``v_counts``. These IDs do not need to
-        be in tip order with respect to the tree.
+        same length as ``u_counts`` and ``v_counts``.
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
@@ -118,8 +117,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
         Vectors of counts of OTUs for two samples. Must be equal length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
-        same length as ``u_counts`` and ``v_counts``. These IDs do not need to
-        be in tip order with respect to the tree.
+        same length as ``u_counts`` and ``v_counts``.
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
@@ -183,7 +181,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     unweighted = False
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
-    # Quickly handle boundary cases
+
     boundary = _boundary_case(sum(u_counts), sum(v_counts),
                               normalized=normalized, unweighted=unweighted)
     if boundary is not None:
@@ -244,13 +242,12 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
     Returns
     -------
     float
-        unweighted UniFrac distance between samples
+        Unweighted UniFrac distance between samples.
 
     Notes
     -----
     The count vectors passed here correspond to all nodes in the tree, not
-    just the tips as is the case for the public function
-    (``unweighted_unifrac``).
+    just the tips.
 
     """
     _or = np.logical_or(u_node_counts, v_node_counts),
@@ -279,13 +276,12 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     Returns
     -------
     float
-        weighted UniFrac distance between samples
+        Weighted UniFrac distance between samples.
 
     Notes
     -----
     The count vectors passed here correspond to all nodes in the tree, not
-    just the tips as is the case for the public function
-    (``weighted_unifrac``).
+    just the tips.
 
     """
     if u_total_count:
@@ -315,17 +311,22 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
          respectively. This could be computed internally, but since this is a
          private method and the calling function has already generated these
          values, this saves an iteration over each of these vectors.
+    tree: skbio.TreeNode
+         Tree relating the OTUs.
+    tree_index:
+         Result of calling ``tree.to_array``. This is expensive to compute, so
+         it's provided as a parameter here as the calling function will have
+         already generated it.
 
     Returns
     -------
     float
-        normalized weighted UniFrac distance between samples
+        Normalized weighted UniFrac distance between samples.
 
     Notes
     -----
     The count vectors passed here correspond to all nodes in the tree, not
-    just the tips as is the case for the public function
-    (``weighted_unifrac``).
+    just the tips.
 
     """
     branch_lengths = tree_index['length']
@@ -344,7 +345,7 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
 
 
 def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
-    """ Create optimized pdist-compatible function
+    """ Create optimized pdist-compatible unweighted UniFrac function
 
     Parameters
     ----------
@@ -364,6 +365,11 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     function
         Optimized pairwise unweighted UniFrac calculator that can be passed
         to ``scipy.spatial.distance.pdist``.
+    2D np.array of ints, floats
+        Counts of all nodes in ``tree``.
+    2D np.array of floats
+        Branch length leading to all nodes in ``tree``.
+
     """
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
@@ -379,7 +385,7 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
 
 
 def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
-    """ Create optimized pdist-compatible function
+    """ Create optimized pdist-compatible weighted UniFrac function
 
     Parameters
     ----------
@@ -399,6 +405,11 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
     function
         Optimized pairwise unweighted UniFrac calculator that can be passed
         to ``scipy.spatial.distance.pdist``.
+    2D np.array of ints, floats
+        Counts of all nodes in ``tree``.
+    2D np.array of floats
+        Branch length leading to all nodes in ``tree``.
+
     """
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)

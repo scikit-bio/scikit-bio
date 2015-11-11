@@ -53,7 +53,7 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
     unweighted_unifrac
     weighted_unifrac
     scipy.spatial.distance.pdist
-    pw_distances_from_table
+    skbio.diversity.alpha.alpha_diversity
 
     Notes
     -----
