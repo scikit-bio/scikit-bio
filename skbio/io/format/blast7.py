@@ -79,10 +79,7 @@ Example legacy BLAST output format 9 file:
     AF178033    EMORG:AF178033  100.00  811 0   0   1   811 1   811 0.0 1566.6
     AF178033    EMORG:AF031394  99.63   811 3   0   1   811 99  909 0.0 1542.8
 
-.. note:: scikit-bio supports reading files that contain both these file
-   formats.
-
-.. note:: scikit-bio requires fields to be the same within a file.
+.. note:: scikit-bio requires fields to be consistent within a file.
 
 BLAST Column Types
 ------------------
@@ -382,6 +379,6 @@ def _parse_fields(line, legacy=False):
             raise BLAST7FormatError("Unrecognized field (%r)."
                                     " Supported fields: %r"
                                     % (field,
-                                       set(_possible_columns.keys())))
+                                       set(column_converter.keys())))
         columns.append(column_converter[field])
     return columns
