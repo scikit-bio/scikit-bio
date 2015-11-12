@@ -1,0 +1,6 @@
+# BLASTN 2.2.3 [May-13-2002]
+# Database: other_vertebrate
+# Query: AF178033
+# Fields: 
+Query id,Subject id,% identity,alignment length,mismatches,gap openings,q. start,q. end,s. start,s. end,e-value,bit score
+query1	subject1	80.00	7	2	0	0	9	4	9	0.023	14.4	0.145
