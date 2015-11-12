@@ -268,7 +268,7 @@ from __future__ import (absolute_import, division, print_function,
 import pandas as pd
 
 from skbio.io import create_format, BLAST7FormatError
-from skbio.io.format._blast import _parse_blast_data, _possible_columns
+from skbio.io.format._blast import _parse_blast_data
 
 blast7 = create_format('blast+7')
 
