@@ -17,8 +17,8 @@ import numpy as np
 import pandas as pd
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
-from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.sequence import Sequence
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
@@ -545,6 +545,125 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return msa_copy
 
     @experimental(as_of='0.4.0-dev')
+    def iter_positions(self, reverse=False):
+        """Iterate over positions (columns) in the MSA.
+
+        Parameters
+        ----------
+        reverse : bool, optional
+            If ``True``, iterate over positions in reverse order.
+
+        Yields
+        ------
+        Sequence
+            Each position in the order they are stored in the MSA.
+
+        See Also
+        --------
+        __iter__
+        __reversed__
+        skbio.sequence.Sequence.concat
+
+        Notes
+        -----
+        Each position will be yielded as *exactly* a ``Sequence`` object,
+        regardless of this MSA's ``dtype``. ``Sequence`` is used because a
+        position is an artifact of multiple sequence alignment and is not a
+        real biological sequence.
+
+        Each ``Sequence`` object will have its corresponding MSA positional
+        metadata stored as ``metadata``.
+
+        Sequences will have their positional metadata concatenated using an
+        outer join. See ``Sequence.concat(how='outer')`` for details.
+
+        Examples
+        --------
+        Create an MSA with positional metadata:
+
+        >>> from skbio import DNA, TabularMSA
+        >>> sequences = [DNA('ACG'),
+        ...              DNA('A-T')]
+        >>> msa = TabularMSA(sequences,
+        ...                  positional_metadata={'prob': [3, 1, 2]})
+
+        Iterate over positions:
+
+        >>> for position in msa.iter_positions():
+        ...     position
+        ...     print()
+        Sequence
+        -------------
+        Metadata:
+            'prob': 3
+        Stats:
+            length: 2
+        -------------
+        0 AA
+        <BLANKLINE>
+        Sequence
+        -------------
+        Metadata:
+            'prob': 1
+        Stats:
+            length: 2
+        -------------
+        0 C-
+        <BLANKLINE>
+        Sequence
+        -------------
+        Metadata:
+            'prob': 2
+        Stats:
+            length: 2
+        -------------
+        0 GT
+        <BLANKLINE>
+
+        Note that MSA positional metadata is stored as ``metadata`` on each
+        ``Sequence`` object.
+
+        Iterate over positions in reverse order:
+
+        >>> for position in msa.iter_positions(reverse=True):
+        ...     position
+        ...     print('')
+        Sequence
+        -------------
+        Metadata:
+            'prob': 2
+        Stats:
+            length: 2
+        -------------
+        0 GT
+        <BLANKLINE>
+        Sequence
+        -------------
+        Metadata:
+            'prob': 1
+        Stats:
+            length: 2
+        -------------
+        0 C-
+        <BLANKLINE>
+        Sequence
+        -------------
+        Metadata:
+            'prob': 3
+        Stats:
+            length: 2
+        -------------
+        0 AA
+        <BLANKLINE>
+
+        """
+        indices = range(self.shape.position)
+        if reverse:
+            indices = reversed(indices)
+
+        return (self._get_position(index) for index in indices)
+
+    @experimental(as_of='0.4.0-dev')
     def gap_frequencies(self, axis='sequence', relative=False):
         """Compute frequency of gap characters across an axis.
 
@@ -602,10 +721,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         if self._is_sequence_axis(axis):
-            # TODO: use TabularMSA.iter_positions when it is implemented
-            # (#1100).
-            seq_iterator = (self._get_position(i)
-                            for i in range(self.shape.position))
+            seq_iterator = self.iter_positions()
             length = self.shape.sequence
         else:
             seq_iterator = self
