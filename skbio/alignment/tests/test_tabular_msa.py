@@ -1433,5 +1433,17 @@ class TestIsSequenceAxis(unittest.TestCase):
         self.assertFalse(self.msa._is_sequence_axis(1))
 
 
+class TestConsensus(unittest.TestCase):
+    def test_method_exists(self):
+        msa = TabularMSA([])
+        msa.consensus()
+
+    def test_simple(self):
+        msa = TabularMSA([DNA('AC--'),
+                          DNA('AT-C'),
+                          DNA('TT-C')])
+        observed = msa.consensus()
+        self.assertEqual(observed, DNA('AT-C'))
+
 if __name__ == "__main__":
     unittest.main()
