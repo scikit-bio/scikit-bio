@@ -285,14 +285,17 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
 
     """
     if u_total_count > 0:
+        # convert to relative abundances if there are any counts
         u_ = u_node_counts / u_total_count
     else:
-        return (branch_lengths * v_).sum()
+        # otherwise, we'll just do the computation with u_node_counts, which
+        # is necessarily all zeros
+        u_ = u_node_counts
 
     if v_total_count > 0:
         v_ = v_node_counts / v_total_count
     else:
-        return (branch_lengths * u_).sum()
+        v_ = v_node_counts
 
     return (branch_lengths * abs(u_ - v_)).sum()
 
