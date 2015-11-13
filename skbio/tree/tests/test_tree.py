@@ -1041,6 +1041,16 @@ class TreeTests(TestCase):
         npt.assert_equal(indexed['length'],
                          np.array([1, 2, 3, 42.0], dtype=float))
 
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root:4;"))
+        indexed = t.to_array(nan_length_value=42.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, 4], dtype=float))
+
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c)root;"))
+        indexed = t.to_array(nan_length_value=42.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 42.0, 42.0], dtype=float))
+
     def test_from_taxonomy(self):
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
                           '2': ['a', 'b', 'c', None, None, 'x', 'y'],
