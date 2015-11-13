@@ -250,9 +250,9 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
     just the tips.
 
     """
-    _or = np.logical_or(u_node_counts, v_node_counts),
-    _and = np.logical_and(u_node_counts, v_node_counts)
-    return 1 - ((branch_lengths * _and).sum() / (branch_lengths * _or).sum())
+    unique = np.logical_xor(u_node_counts, v_node_counts)
+    observed = np.logical_or(u_node_counts, v_node_counts)
+    return (branch_lengths * unique).sum() / (branch_lengths * observed).sum()
 
 
 def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
@@ -284,15 +284,15 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     just the tips.
 
     """
-    if u_total_count:
+    if u_total_count > 0:
         u_ = u_node_counts / u_total_count
     else:
-        u_ = 0.0
+        return (branch_lengths * v_).sum()
 
-    if v_total_count:
+    if v_total_count > 0:
         v_ = v_node_counts / v_total_count
     else:
-        v_ = 0.0
+        return (branch_lengths * u_).sum()
 
     return (branch_lengths * abs(u_ - v_)).sum()
 
