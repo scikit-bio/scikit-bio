@@ -337,8 +337,7 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
                           v_total_count, branch_lengths)
     # get the index positions for tips in counts_array, and determine the
     # tip distances to the root
-    tip_indices = np.array([n.id for n in tree_index['id_index'].values()
-                            if n.is_tip()])
+    tip_indices = _get_tip_indices(tree_index)
     node_to_root_distances = _tip_distances(branch_lengths, tree, tip_indices)
     u /= _weighted_unifrac_branch_correction(
         node_to_root_distances, u_node_counts, v_node_counts, u_total_count,
@@ -416,8 +415,7 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
     """
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
-    tip_indices = np.array([n.id for n in tree_index['id_index'].values()
-                            if n.is_tip()])
+    tip_indices = _get_tip_indices(tree_index)
 
     if normalized:
         node_to_root_distances = _tip_distances(branch_lengths, tree,
@@ -485,6 +483,12 @@ def _boundary_case(u_total_count, v_total_count, normalized=False,
         return 0.0
 
     return None
+
+
+def _get_tip_indices(tree_index):
+    tip_indices = np.array([n.id for n in tree_index['id_index'].values()
+                            if n.is_tip()])
+    return tip_indices
 
 
 def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
