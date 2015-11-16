@@ -175,9 +175,10 @@ from skbio.util import TestRunner
 
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
+from ._faith_pd import faith_pd
 from ._base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
     singles, strong)

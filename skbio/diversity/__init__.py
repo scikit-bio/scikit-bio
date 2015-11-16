@@ -255,8 +255,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
-from .alpha._base import alpha_diversity
-from .beta._base import beta_diversity
+from ._driver import alpha_diversity, beta_diversity
 
 __all__ = ["alpha_diversity", "beta_diversity"]
 

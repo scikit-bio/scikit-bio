@@ -13,12 +13,10 @@ from io import StringIO
 
 import numpy as np
 import numpy.testing as npt
-import pandas as pd
 
 from skbio import TreeNode
-from skbio.diversity import alpha_diversity
 from skbio.diversity.alpha import (
-    berger_parker_d, brillouin_d, dominance, doubles, enspie, faith_pd,
+    berger_parker_d, brillouin_d, dominance, doubles, enspie,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
@@ -41,57 +39,6 @@ class BaseTests(TestCase):
            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
                     u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
                     u')root;'))
-
-    def test_alpha_diversity_invalid_input(self):
-        # number of ids doesn't match the number of samples
-        self.assertRaises(ValueError, alpha_diversity, 'observed_otus',
-                          self.table1, list('ABC'))
-
-        # otu_ids not provided for metric=faith_pd
-        self.assertRaises(ValueError, alpha_diversity, 'faith_pd', self.table1,
-                          list('ABC'), tree=self.t1)
-        # tree not provided for metric=faith_pd
-        self.assertRaises(ValueError, alpha_diversity, 'faith_pd', self.table1,
-                          list('ABC'), otu_ids=self.oids1)
-
-        # unknown metric provided
-        self.assertRaises(ValueError, alpha_diversity, 'not-a-metric',
-                          self.table1)
-
-    def test_alpha_diversity_observed_otus(self):
-        # expected values hand-calculated
-        expected = pd.Series([3, 3, 3, 3], index=self.sids1)
-        actual = alpha_diversity('observed_otus', self.table1, self.sids1)
-        npt.assert_array_equal(actual, expected)
-        # function passed instead of string
-        actual = alpha_diversity(observed_otus, self.table1, self.sids1)
-        npt.assert_array_equal(actual, expected)
-
-    def test_alpha_diversity_no_ids(self):
-        # expected values hand-calculated
-        expected = pd.Series([3, 3, 3, 3])
-        actual = alpha_diversity('observed_otus', self.table1)
-        npt.assert_array_equal(actual, expected)
-
-    def test_alpha_diversity_faith_pd(self):
-        # calling faith_pd through alpha_diversity gives same results as
-        # calling it directly
-        expected = []
-        for e in self.table1:
-            expected.append(faith_pd(e, tree=self.t1, otu_ids=self.oids1))
-        expected = pd.Series(expected)
-        actual = alpha_diversity('faith_pd', self.table1, tree=self.t1,
-                                 otu_ids=self.oids1)
-        npt.assert_array_equal(actual, expected)
-
-    def test_alpha_diversity_faith_pd_optimized(self):
-        # calling optimized faith_pd gives same results as calling unoptimized
-        # version
-        optimized = alpha_diversity('faith_pd', self.table1, tree=self.t1,
-                                    otu_ids=self.oids1)
-        unoptimized = alpha_diversity(faith_pd, self.table1, tree=self.t1,
-                                      otu_ids=self.oids1)
-        npt.assert_array_equal(optimized, unoptimized)
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)

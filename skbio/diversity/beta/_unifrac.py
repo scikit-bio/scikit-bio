@@ -11,9 +11,9 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from skbio.util._decorator import experimental
-from skbio.diversity._base import (_validate_counts_vectors,
-                                   _validate_otu_ids_and_tree,
-                                   _vectorize_counts_and_tree)
+from skbio.diversity._driver import (_validate_counts_vectors,
+                                     _validate_otu_ids_and_tree,
+                                     _vectorize_counts_and_tree)
 from skbio.diversity._base_cy import _tip_distances
 
 
