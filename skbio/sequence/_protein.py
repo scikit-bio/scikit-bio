@@ -55,6 +55,7 @@ class Protein(IUPACSequence):
     positional_metadata
     alphabet
     gap_chars
+    default_gap_char
     stop_chars
     nondegenerate_chars
     degenerate_chars

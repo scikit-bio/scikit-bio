@@ -55,6 +55,7 @@ class RNA(IUPACSequence, NucleotideMixin):
     positional_metadata
     alphabet
     gap_chars
+    default_gap_char
     nondegenerate_chars
     degenerate_chars
     degenerate_map
