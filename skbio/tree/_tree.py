@@ -2755,7 +2755,7 @@ class TreeNode(SkbioObject):
                                 self.children[0].id,
                                 self.children[-1].id))
 
-        return id_index, np.vstack(child_index)
+        return id_index, np.asarray(child_index)
 
     @experimental(as_of="0.4.0")
     def assign_ids(self):

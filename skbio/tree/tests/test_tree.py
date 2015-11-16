@@ -784,6 +784,13 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.levelorder()]
         self.assertEqual(obs, exp)
 
+    def test_index_tree_single_node(self):
+        """index_tree handles single node tree"""
+        t1 = TreeNode.read(StringIO(u'root;'))
+        id_index, child_index = t1.index_tree()
+        self.assertEqual(id_index[0], t1)
+        npt.assert_equal(child_index, np.array([]))
+
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
         # test for first tree: contains singleton outgroup
