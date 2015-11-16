@@ -10,14 +10,13 @@ from __future__ import absolute_import, division, print_function
 
 from functools import partial
 
-import numpy as np
 from scipy.spatial.distance import pdist
 
 from skbio.diversity.beta._unifrac import (_unweighted_unifrac_pdist_f,
                                            _weighted_unifrac_pdist_f)
 
 from skbio.stats.distance import DistanceMatrix
-from skbio.util._decorator import experimental, deprecated
+from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.4.0")
@@ -90,51 +89,3 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
 
     distances = pdist(counts, metric)
     return DistanceMatrix(distances, ids)
-
-pw_distances_from_table_deprecation_reason = (
-    "In the future, pw_distance will take a biom.table.Table object "
-    "and this function will be removed. You will need to update your "
-    "code to call beta_diversity at that time.")
-
-
-@deprecated(as_of="0.4.0", until="0.4.1",
-            reason=pw_distances_from_table_deprecation_reason)
-def pw_distances_from_table(table, metric='braycurtis'):
-    """Compute distances between all pairs of samples in table
-
-    Parameters
-    ----------
-    table : biom.table.Table
-        ``Table`` containing count/abundance data of observations across
-        samples.
-    metric : str, callable, optional
-        The name of the pairwise distance function to use when generating
-        pairwise distances. See the scipy ``pdist`` docs and the scikit-bio
-        functions linked under *See Also* for available metrics.
-
-    Returns
-    -------
-    skbio.DistanceMatrix
-        Distances between all pairs of samples. The number of row and columns
-        will be equal to the number of samples in ``table``.
-
-    See Also
-    --------
-    unweighted_unifrac
-    weighted_unifrac
-    scipy.spatial.distance.pdist
-    biom.table.Table
-    beta_diversity
-
-    """
-    sample_ids = table.ids(axis="sample")
-    num_samples = len(sample_ids)
-
-    # initialize the result object
-    dm = np.zeros((num_samples, num_samples))
-    for i, sid1 in enumerate(sample_ids):
-        v1 = table.data(sid1)
-        for j, sid2 in enumerate(sample_ids[:i]):
-            v2 = table.data(sid2)
-            dm[i, j] = dm[j, i] = pdist([v1, v2], metric)
-    return DistanceMatrix(dm, sample_ids)

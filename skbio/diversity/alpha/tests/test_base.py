@@ -16,12 +16,13 @@ import numpy.testing as npt
 import pandas as pd
 
 from skbio import TreeNode
+from skbio.diversity import alpha_diversity
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, faith_pd,
     esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
-    singles, strong, alpha_diversity)
+    singles, strong)
 
 
 class BaseTests(TestCase):

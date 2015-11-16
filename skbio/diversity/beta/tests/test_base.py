@@ -10,34 +10,12 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-import numpy as np
 import numpy.testing as npt
 
 from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode
-from skbio.diversity.beta import (beta_diversity, pw_distances_from_table,
-                                  unweighted_unifrac, weighted_unifrac)
-
-
-class HelperBiomTable(object):
-    """An object that looks like a BIOM table, for use in testing
-
-    This allows us to test passing BIOM-like objects, without having to
-    depend on the biom-format project (since this would ultimately be a
-    circular dependency).
-    """
-
-    def __init__(self, data, observation_ids, sample_ids):
-        self._data = data.T
-        self.observation_ids = observation_ids
-        self.sample_ids = sample_ids
-
-    def ids(self, axis):
-        return self.sample_ids
-
-    def data(self, sample_id):
-        i = self.sample_ids.index(sample_id)
-        return self._data[i]
+from skbio.diversity import beta_diversity
+from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 
 
 class BaseTests(TestCase):
@@ -57,18 +35,6 @@ class BaseTests(TestCase):
                    [0, 2, 8, 0, 35, 45, 1],
                    [0, 0, 25, 35, 0, 19, 0]]
         self.ids2 = list('ABCDEF')
-
-        # In the future, if necessary, it should be possible to just replace
-        # HelperBiomTable with Table in the following lines to test with the
-        # biom.table.Table object directly (i.e., this constructor
-        # interface aligns with the biom.table.Table constructor
-        # interface).
-        self.table1 = HelperBiomTable(
-            np.array(self.t1).T, observation_ids=range(2),
-            sample_ids=self.ids1)
-        self.table2 = HelperBiomTable(
-            np.array(self.t2).T, observation_ids=range(7),
-            sample_ids=self.ids2)
 
     def test_beta_diversity_invalid_input(self):
         # number of ids doesn't match the number of samples
@@ -184,41 +150,6 @@ class BaseTests(TestCase):
             for id2 in self.ids1:
                 npt.assert_almost_equal(dm1[id1, id2],
                                         expected_dm[id1, id2], 6)
-
-    def test_pw_distances_from_table_euclidean(self):
-        # results are equal when passed as Table or matrix
-        m_dm = beta_diversity('euclidean', self.t1, self.ids1,)
-        t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table1,
-            'euclidean')
-        for id1 in self.ids1:
-            for id2 in self.ids1:
-                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
-
-        m_dm = beta_diversity('euclidean', self.t2, self.ids2)
-        t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table2,
-            'euclidean')
-        for id1 in self.ids2:
-            for id2 in self.ids2:
-                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
-
-    def test_pw_distances_from_table_braycurtis(self):
-        # results are equal when passed as Table or matrix
-        m_dm = beta_diversity('braycurtis', self.t1, self.ids1)
-        t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table1)
-        for id1 in self.ids1:
-            for id2 in self.ids1:
-                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
-
-        m_dm = beta_diversity('braycurtis', self.t2, self.ids2,)
-        t_dm = npt.assert_warns(
-            DeprecationWarning, pw_distances_from_table, self.table2)
-        for id1 in self.ids2:
-            for id2 in self.ids2:
-                npt.assert_almost_equal(m_dm[id1, id2], t_dm[id1, id2])
-
 
 if __name__ == "__main__":
     main()

@@ -23,7 +23,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * Added experimental class-method ``Sequence.concat`` which will produce a new sequence from an iterable of existing sequences. Parameters control how positional metadata is propagated during a concatenation.
 * ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/biocore/scikit-bio/issues/1006)).
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
-* Addition of function ``skbio.diversity.alpha.alpha_diversity``, which supports applying an alpha diversity metric to multiple samples in one call. 
+* Addition of function ``skbio.diversity.alpha_diversity``, which supports applying an alpha diversity metric to multiple samples in one call.
 
 ### Backward-incompatible changes [stable]
 * `Sequence.kmer_frequencies` now returns a `dict`. Previous behavior was to return a `collections.Counter` if `relative=False` was passed, and a `collections.defaultdict` if `relative=True` was passed. In the case of a missing key, the `Counter` would return 0 and the `defaultdict` would return 0.0. Because the return type is now always a `dict`, attempting to access a missing key will raise a `KeyError`. This change *may* break backwards-compatibility depending on how the `Counter`/`defaultdict` is being used. We hope that in most cases this change will not break backwards-compatibility because both `Counter` and `defaultdict` are `dict` subclasses.
@@ -66,7 +66,8 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
 * Removed `skbio.diversity.alpha.equitability`. Please use `skbio.diversity.alpha.pielou_e`, which is more accurately named and better documented. Note that `equitability` by default used logarithm base 2 while `pielou_e` uses logarithm base `e` as described in Heip 1974.
-* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
+* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
+* Deprecated function ``skbio.diversity.beta.pw_distances_from_table`` has been removed from scikit-bio, as scheduled. Code that used this should be adapted to use ``skbio.diversity.beta_diversity``.
 
 ### Bug Fixes
 
