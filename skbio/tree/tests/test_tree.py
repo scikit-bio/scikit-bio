@@ -789,7 +789,7 @@ class TreeTests(TestCase):
         t1 = TreeNode.read(StringIO(u'root;'))
         id_index, child_index = t1.index_tree()
         self.assertEqual(id_index[0], t1)
-        npt.assert_equal(child_index, np.array([]))
+        npt.assert_equal(child_index, np.array([[]]))
 
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
@@ -799,6 +799,7 @@ class TreeTests(TestCase):
         t3 = TreeNode.read(StringIO(u'(((a,b,c),(d)),(e,f));'))
 
         id_1, child_1 = t1.index_tree()
+        print(child_1.dtype)
         nodes_1 = [n.id for n in t1.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_1, [0, 1, 2, 3, 6, 4, 5, 7, 8])
