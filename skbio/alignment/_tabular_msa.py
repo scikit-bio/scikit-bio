@@ -681,15 +681,20 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        Gap characters are treated as distinct characters when computing the
-        majority consensus character at each MSA position.
+        The majority consensus sequence will use this MSA's default gap
+        character (``dtype.default_gap_char``) to represent gap majority at a
+        position, regardless of the gap characters present at that position.
+
+        Different gap characters at a position are **not** treated as distinct
+        characters. All gap characters at a position contribute to that
+        position's gap consensus.
 
         Examples
         --------
         >>> from skbio import DNA, TabularMSA
         >>> sequences = [DNA('AC---'),
         ...              DNA('AT-C.'),
-        ...              DNA('TT-C.')]
+        ...              DNA('TT-CG')]
         >>> msa = TabularMSA(sequences,
         ...                  positional_metadata={'prob': [2, 1, 2, 3, 5]})
         >>> msa.consensus()
@@ -704,7 +709,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             has non-degenerates: True
             GC-content: 33.33%
         -----------------------------
-        0 AT-C.
+        0 AT-C-
+
+        Note that the last position in the MSA has more than one type of gap
+        character. These are not treated as distinct characters; both types of
+        gap characters contribute to the position's consensus. Also note that
+        ``DNA.default_gap_char`` is used to represent gap majority at a
+        position (``'-'``).
 
         """
         dtype = self.dtype
@@ -718,6 +729,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         consensus = []
         for position in self.iter_positions():
             freqs = position.frequencies()
+
+            gap_freq = 0
+            for gap_char in dtype.gap_chars:
+                if gap_char in freqs:
+                    gap_freq += freqs.pop(gap_char)
+            assert dtype.default_gap_char not in freqs
+            freqs[dtype.default_gap_char] = gap_freq
+
             consensus.append(collections.Counter(freqs).most_common(1)[0][0])
 
         return dtype(''.join(consensus),
