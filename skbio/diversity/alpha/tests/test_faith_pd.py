@@ -93,14 +93,7 @@ class FaithPDTests(TestCase):
         expected = self.faith_pd(self.b1[3], self.oids1, self.t1)
         self.assertAlmostEqual(actual, expected)
 
-    def test_faith_pd_minimal_trees(self):
-        # expected values computed by hand
-        # zero tips
-        tree = TreeNode.read(StringIO(u'root;'))
-        actual = self.faith_pd(np.array([], dtype=int), [], tree)
-        expected = 0.0
-        self.assertEqual(actual, expected)
-
+    def test_faith_pd_minimal(self):
         # two tips
         tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
         actual = self.faith_pd([1, 0], ['OTU1', 'OTU2'], tree)

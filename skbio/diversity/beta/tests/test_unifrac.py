@@ -17,8 +17,7 @@ import numpy.testing as npt
 from skbio import TreeNode
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity.beta._unifrac import (_boundary_case,
-                                           _unweighted_unifrac_pdist_f,
+from skbio.diversity.beta._unifrac import (_unweighted_unifrac_pdist_f,
                                            _weighted_unifrac_pdist_f,
                                            _unweighted_unifrac,
                                            _weighted_unifrac,
@@ -108,13 +107,6 @@ class UnifracTests(TestCase):
                 self.assertAlmostEqual(actual, expected)
 
     def test_unweighted_minimal_trees(self):
-        # expected values computed by hand
-        # zero tips
-        tree = TreeNode.read(StringIO(u'root;'))
-        actual = self.unweighted_unifrac([], [], [], tree)
-        expected = 0.0
-        self.assertEqual(actual, expected)
-
         # two tips
         tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
         actual = self.unweighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'],
@@ -123,13 +115,6 @@ class UnifracTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_weighted_minimal_trees(self):
-        # expected values computed by hand
-        # zero tips
-        tree = TreeNode.read(StringIO(u'root;'))
-        actual = self.weighted_unifrac([], [], [], tree)
-        expected = 0.0
-        self.assertEqual(actual, expected)
-
         # two tips
         tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
         actual = self.weighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'], tree)
@@ -689,28 +674,6 @@ class UnifracTests(TestCase):
                                                   self.oids1, self.t1,
                                                   normalized=True)
         npt.assert_almost_equal(obs, exp)
-
-    def test_boundary_case(self):
-        self.assertEqual(_boundary_case(100, 1000), None)
-        self.assertEqual(_boundary_case(100, 1000, normalized=True), None)
-        self.assertEqual(_boundary_case(100, 1000, unweighted=False), None)
-        self.assertEqual(_boundary_case(100, 1000, normalized=True,
-                                        unweighted=False), None)
-
-        self.assertEqual(_boundary_case(0, 1), 1.0)
-        self.assertEqual(_boundary_case(1, 0), 1.0)
-        self.assertEqual(_boundary_case(1, 0, normalized=True), 1.0)
-        self.assertEqual(_boundary_case(1, 0, normalized=True,
-                                        unweighted=False), 1.0)
-        self.assertEqual(_boundary_case(1, 0, normalized=False,
-                                        unweighted=False), None)
-
-        self.assertEqual(_boundary_case(0, 0), 0.0)
-        self.assertEqual(_boundary_case(0, 0, normalized=True), 0.0)
-        self.assertEqual(_boundary_case(0, 0, normalized=True,
-                                        unweighted=False), 0.0)
-        self.assertEqual(_boundary_case(0, 0, normalized=False,
-                                        unweighted=False), 0.0)
 
     def test_weighted_unifrac_branch_correction(self):
         # for ((a:1, b:2)c:3,(d:4,e:5)f:6)root;"

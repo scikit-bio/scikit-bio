@@ -359,12 +359,6 @@ class UtilityFunctionTests(TestCase):
         otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
 
-        # single node tree
-        t = TreeNode.read(StringIO(u'root;'))
-        counts = []
-        otu_ids = []
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
     def test_validate_otu_ids_and_tree_invalid_input(self):
         # tree has duplicated tip ids
         t = TreeNode.read(
@@ -429,6 +423,13 @@ class UtilityFunctionTests(TestCase):
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU32']
         self.assertRaises(MissingNodeError, _validate_otu_ids_and_tree, counts,
+                          otu_ids, t)
+
+        # single node tree
+        t = TreeNode.read(StringIO(u'root;'))
+        counts = []
+        otu_ids = []
+        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
                           otu_ids, t)
 
     def test_vectorize_counts_and_tree(self):

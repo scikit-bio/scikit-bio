@@ -252,6 +252,8 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     if len(counts) != len_otu_ids:
         raise ValueError("OTU IDs vector must be the same length as counts "
                          "vector(s).")
+    if len(tree.root().children) == 0:
+        raise ValueError("Tree must contain more than just a root node.")
 
     # the tree is rooted
     if len(tree.root().children) > 2:

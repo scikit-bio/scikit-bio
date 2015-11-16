@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+from functools import partial
+
 import numpy as np
 
 from skbio.util._decorator import experimental
@@ -89,19 +91,12 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    normalized = False
-    unweighted = True
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
-    boundary = _boundary_case(sum(u_counts), sum(v_counts),
-                              normalized=normalized, unweighted=unweighted)
-    if boundary is not None:
-        return boundary
-
     u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index =\
         _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-                              normalized=normalized, unweighted=unweighted)
+                              normalized=False, unweighted=True)
     return _unweighted_unifrac(u_node_counts, v_node_counts,
                                tree_index['length'])
 
@@ -178,27 +173,26 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    unweighted = False
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
-    boundary = _boundary_case(sum(u_counts), sum(v_counts),
-                              normalized=normalized, unweighted=unweighted)
-    if boundary is not None:
-        return boundary
-
     u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index =\
         _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-                              normalized=normalized, unweighted=unweighted)
+                              normalized=normalized, unweighted=False)
+    branch_lengths = tree_index['length']
 
     if normalized:
+        tip_indices = _get_tip_indices(tree_index)
+        node_to_root_distances = _tip_distances(branch_lengths, tree,
+                                                tip_indices)
         return _weighted_unifrac_normalized(u_node_counts, v_node_counts,
                                             u_total_count, v_total_count,
-                                            tree, tree_index)
+                                            branch_lengths,
+                                            node_to_root_distances)
     else:
         return _weighted_unifrac(u_node_counts, v_node_counts,
                                  u_total_count, v_total_count,
-                                 tree_index['length'])
+                                 branch_lengths)
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
@@ -250,9 +244,14 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
     just the tips.
 
     """
-    unique = np.logical_xor(u_node_counts, v_node_counts)
-    observed = np.logical_or(u_node_counts, v_node_counts)
-    return (branch_lengths * unique).sum() / (branch_lengths * observed).sum()
+    unique_nodes = np.logical_xor(u_node_counts, v_node_counts)
+    observed_nodes = np.logical_or(u_node_counts, v_node_counts)
+    unique_branch_length = (branch_lengths * unique_nodes).sum()
+    observed_branch_length = (branch_lengths * observed_nodes).sum()
+    if observed_branch_length == 0.0:
+        # handle special case to avoid division by zero
+        return 0.0
+    return unique_branch_length / observed_branch_length
 
 
 def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
@@ -286,22 +285,24 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     """
     if u_total_count > 0:
         # convert to relative abundances if there are any counts
-        u_ = u_node_counts / u_total_count
+        u_node_proportions = u_node_counts / u_total_count
     else:
         # otherwise, we'll just do the computation with u_node_counts, which
         # is necessarily all zeros
-        u_ = u_node_counts
+        u_node_proportions = u_node_counts
 
     if v_total_count > 0:
-        v_ = v_node_counts / v_total_count
+        v_node_proportions = v_node_counts / v_total_count
     else:
-        v_ = v_node_counts
+        v_node_proportions = v_node_counts
 
-    return (branch_lengths * abs(u_ - v_)).sum()
+    return (branch_lengths *
+            abs(u_node_proportions - v_node_proportions)).sum()
 
 
 def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
-                                 v_total_count, tree, tree_index):
+                                 v_total_count, branch_lengths,
+                                 node_to_root_distances):
     """
     Parameters
     ----------
@@ -316,10 +317,6 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
          values, this saves an iteration over each of these vectors.
     tree: skbio.TreeNode
          Tree relating the OTUs.
-    tree_index:
-         Result of calling ``tree.to_array``. This is expensive to compute, so
-         it's provided as a parameter here as the calling function will have
-         already generated it.
 
     Returns
     -------
@@ -332,18 +329,16 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     just the tips.
 
     """
-    branch_lengths = tree_index['length']
+    if u_total_count == 0.0 and v_total_count == 0.0:
+        # handle special case to avoid division by zero
+        return 0.0
     u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
                           v_total_count, branch_lengths)
-    # get the index positions for tips in counts_array, and determine the
-    # tip distances to the root
-    tip_indices = _get_tip_indices(tree_index)
-    node_to_root_distances = _tip_distances(branch_lengths, tree, tip_indices)
-    u /= _weighted_unifrac_branch_correction(
+    c = _weighted_unifrac_branch_correction(
         node_to_root_distances, u_node_counts, v_node_counts, u_total_count,
         v_total_count)
 
-    return u
+    return u/c
 
 
 def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
@@ -376,12 +371,7 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
 
-    def f(u_node_counts, v_node_counts):
-        boundary = _boundary_case(u_node_counts.sum(), v_node_counts.sum())
-        if boundary is not None:
-            return boundary
-        return _unweighted_unifrac(u_node_counts, v_node_counts,
-                                   branch_lengths)
+    f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node, branch_lengths
 
@@ -421,68 +411,23 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
         node_to_root_distances = _tip_distances(branch_lengths, tree,
                                                 tip_indices)
 
-    def f(u_node_counts, v_node_counts):
-        u_total_count = np.take(u_node_counts, tip_indices).sum()
-        v_total_count = np.take(v_node_counts, tip_indices).sum()
+        def f(u_node_counts, v_node_counts):
+            u_total_count = np.take(u_node_counts, tip_indices).sum()
+            v_total_count = np.take(v_node_counts, tip_indices).sum()
+            u = _weighted_unifrac_normalized(
+                    u_node_counts, v_node_counts, u_total_count, v_total_count,
+                    branch_lengths, node_to_root_distances)
+            return u
+    else:
 
-        boundary = _boundary_case(u_total_count, v_total_count,
-                                  unweighted=False)
-        if boundary is not None:
-            return boundary
-
-        u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
-                              v_total_count, branch_lengths)
-        if normalized:
-            u /= _weighted_unifrac_branch_correction(
-                    node_to_root_distances, u_node_counts, v_node_counts,
-                    u_total_count, v_total_count)
-        return u
+        def f(u_node_counts, v_node_counts):
+            u_total_count = np.take(u_node_counts, tip_indices).sum()
+            v_total_count = np.take(v_node_counts, tip_indices).sum()
+            u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
+                                  v_total_count, branch_lengths)
+            return u
 
     return f, counts_by_node, branch_lengths
-
-
-def _boundary_case(u_total_count, v_total_count, normalized=False,
-                   unweighted=True):
-    """Test for boundary conditions
-
-    Parameters
-    ----------
-    u_total_count, v_total_count : float
-        The sum of the observations in samples ``u`` and ``v``, respectively.
-    normalized : bool, optional
-        Indicates if the method is normalized.
-    unweighted : bool, optional
-        Indicates if the method is unweighted.
-
-    Returns
-    -------
-    float or None
-        Specifically, one of `[0.0, 1.0, None]`. `None` indicates that a
-        boundary condition was not observed, and the float values are distances
-        between ``u`` and ``v``.
-
-    Notes
-    -----
-    The following boundary conditions are tested:
-
-        * if u_total_count or v_total_count are zero
-        * if both u_total_count and v_total_count are zero
-    """
-    if u_total_count and v_total_count:
-        return None
-
-    if u_total_count + v_total_count:
-        # u or v counts are all zeros
-        if unweighted or normalized:
-            # u or v counts are all zeros
-            return 1.0
-        # NOTE: we cannot handle the unnormalized case here yet as it
-        # requires operations on the tree vector
-    else:
-        # u and v are zero
-        return 0.0
-
-    return None
 
 
 def _get_tip_indices(tree_index):
@@ -513,6 +458,15 @@ def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
     np.ndarray
         The corrected branch lengths
     """
+    if u_total_count > 0:
+        u_node_proportions = u_node_counts / u_total_count
+    else:
+        u_node_proportions = u_node_counts
+
+    if v_total_count > 0:
+        v_node_proportions = v_node_counts / v_total_count
+    else:
+        v_node_proportions = v_node_counts
+
     return (node_to_root_distances.ravel() *
-            ((u_node_counts / u_total_count) +
-             (v_node_counts / v_total_count))).sum()
+            (u_node_proportions + v_node_proportions)).sum()
