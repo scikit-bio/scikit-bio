@@ -234,8 +234,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__skbio__diversity___base_cy
-#define __PYX_HAVE_API__skbio__diversity___base_cy
+#define __PYX_HAVE__skbio__diversity___phylogenetic
+#define __PYX_HAVE_API__skbio__diversity___phylogenetic
 #include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -470,7 +470,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "skbio/diversity/_base_cy.pyx",
+  "skbio/diversity/_phylogenetic.pyx",
   "__init__.pxd",
   "type.pxd",
 };
@@ -512,7 +512,7 @@ typedef struct {
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":725
  * # in Cython to enable them only on the right systems.
- *
+ * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
@@ -520,7 +520,7 @@ typedef struct {
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":726
- *
+ * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
  * ctypedef npy_int32      int32_t
@@ -548,7 +548,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":732
  * #ctypedef npy_int128     int128_t
- *
+ * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
@@ -556,7 +556,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":733
- *
+ * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
  * ctypedef npy_uint32     uint32_t
@@ -584,7 +584,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":739
  * #ctypedef npy_uint128    uint128_t
- *
+ * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
  * ctypedef npy_float64    float64_t
  * #ctypedef npy_float80    float80_t
@@ -592,7 +592,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":740
- *
+ * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
  * #ctypedef npy_float80    float80_t
@@ -614,7 +614,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t             # <<<<<<<<<<<<<<
  * ctypedef npy_longlong   longlong_t
- *
+ * 
  */
 typedef npy_longlong __pyx_t_5numpy_long_t;
 
@@ -622,14 +622,14 @@ typedef npy_longlong __pyx_t_5numpy_long_t;
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
- *
+ * 
  * ctypedef npy_ulong      uint_t
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":753
  * ctypedef npy_longlong   longlong_t
- *
+ * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t
@@ -637,11 +637,11 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":754
- *
+ * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t             # <<<<<<<<<<<<<<
  * ctypedef npy_ulonglong  ulonglong_t
- *
+ * 
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
 
@@ -649,32 +649,32 @@ typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
- *
+ * 
  * ctypedef npy_intp       intp_t
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":757
  * ctypedef npy_ulonglong  ulonglong_t
- *
+ * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
  * ctypedef npy_uintp      uintp_t
- *
+ * 
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":758
- *
+ * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
- *
+ * 
  * ctypedef npy_double     float_t
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":760
  * ctypedef npy_uintp      uintp_t
- *
+ * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t
@@ -682,11 +682,11 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
 typedef npy_double __pyx_t_5numpy_float_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":761
- *
+ * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
  * ctypedef npy_longdouble longdouble_t
- *
+ * 
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
@@ -694,19 +694,19 @@ typedef npy_double __pyx_t_5numpy_double_t;
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
- *
+ * 
  * ctypedef npy_cfloat      cfloat_t
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "skbio/diversity/_base_cy.pyx":14
- *
+/* "skbio/diversity/_phylogenetic.pyx":14
+ * 
  * DTYPE = np.int64
  * ctypedef np.int64_t DTYPE_t             # <<<<<<<<<<<<<<
- *
- *
+ * 
+ * 
  */
-typedef __pyx_t_5numpy_int64_t __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t;
+typedef __pyx_t_5numpy_int64_t __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t;
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
     typedef ::std::complex< float > __pyx_t_float_complex;
@@ -732,7 +732,7 @@ typedef __pyx_t_5numpy_int64_t __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":764
  * ctypedef npy_longdouble longdouble_t
- *
+ * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t
@@ -740,11 +740,11 @@ typedef __pyx_t_5numpy_int64_t __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t;
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":765
- *
+ * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
  * ctypedef npy_clongdouble clongdouble_t
- *
+ * 
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
@@ -752,16 +752,16 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
- *
+ * 
  * ctypedef npy_cdouble     complex_t
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":768
  * ctypedef npy_clongdouble clongdouble_t
- *
+ * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object PyArray_MultiIterNew1(a):
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
@@ -1151,14 +1151,14 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 
 /* Module declarations from 'cython' */
 
-/* Module declarations from 'skbio.diversity._base_cy' */
-static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObject *, PyArrayObject *); /*proto*/
+/* Module declarations from 'skbio.diversity._phylogenetic' */
+static PyObject *__pyx_f_5skbio_9diversity_13_phylogenetic__traverse_reduce(PyArrayObject *, PyArrayObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_double_t = { "double_t", NULL, sizeof(__pyx_t_5numpy_double_t), { 0 }, 0, 'R', 0, 0 };
-static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t), 0 };
-#define __Pyx_MODULE_NAME "skbio.diversity._base_cy"
-int __pyx_module_is_main_skbio__diversity___base_cy = 0;
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t), 0 };
+#define __Pyx_MODULE_NAME "skbio.diversity._phylogenetic"
+int __pyx_module_is_main_skbio__diversity___phylogenetic = 0;
 
-/* Implementation of 'skbio.diversity._base_cy' */
+/* Implementation of 'skbio.diversity._phylogenetic' */
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
@@ -1228,9 +1228,9 @@ static char __pyx_k_n_count_vectors[] = "n_count_vectors";
 static char __pyx_k_nodes_by_counts[] = "_nodes_by_counts";
 static char __pyx_k_observed_ids_set[] = "observed_ids_set";
 static char __pyx_k_observed_indices[] = "observed_indices";
-static char __pyx_k_skbio_diversity__base_cy[] = "skbio.diversity._base_cy";
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
-static char __pyx_k_Users_caporaso_Dropbox_code_sci[] = "/Users/caporaso/Dropbox/code/scikit-bio/skbio/diversity/_base_cy.pyx";
+static char __pyx_k_skbio_diversity__phylogenetic[] = "skbio.diversity._phylogenetic";
+static char __pyx_k_Users_caporaso_Dropbox_code_sci[] = "/Users/caporaso/Dropbox/code/scikit-bio/skbio/diversity/_phylogenetic.pyx";
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order not supported";
@@ -1283,7 +1283,7 @@ static PyObject *__pyx_n_s_p_i;
 static PyObject *__pyx_n_s_parent;
 static PyObject *__pyx_n_s_preorder;
 static PyObject *__pyx_n_s_range;
-static PyObject *__pyx_n_s_skbio_diversity__base_cy;
+static PyObject *__pyx_n_s_skbio_diversity__phylogenetic;
 static PyObject *__pyx_n_s_sum;
 static PyObject *__pyx_n_s_t;
 static PyObject *__pyx_n_s_test;
@@ -1294,8 +1294,8 @@ static PyObject *__pyx_n_s_tip_indices;
 static PyObject *__pyx_n_s_transpose;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyObject *__pyx_v_t, PyArrayObject *__pyx_v_tip_indices); /* proto */
-static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_counts, PyArrayObject *__pyx_v_tip_ids, PyObject *__pyx_v_indexed); /* proto */
+static PyObject *__pyx_pf_5skbio_9diversity_13_phylogenetic__tip_distances(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyObject *__pyx_v_t, PyArrayObject *__pyx_v_tip_indices); /* proto */
+static PyObject *__pyx_pf_5skbio_9diversity_13_phylogenetic_2_nodes_by_counts(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_counts, PyArrayObject *__pyx_v_tip_ids, PyObject *__pyx_v_indexed); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static PyObject *__pyx_int_0;
@@ -1311,7 +1311,7 @@ static PyObject *__pyx_tuple__10;
 static PyObject *__pyx_codeobj__9;
 static PyObject *__pyx_codeobj__11;
 
-/* "skbio/diversity/_base_cy.pyx":19
+/* "skbio/diversity/_phylogenetic.pyx":19
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,             # <<<<<<<<<<<<<<
@@ -1320,10 +1320,10 @@ static PyObject *__pyx_codeobj__11;
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_1_tip_distances(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_9diversity_8_base_cy__tip_distances[] = "Sets each tip to its distance from the root\n\n    Parameters\n    ----------\n    a : np.ndarray of double\n        A matrix in which each row corresponds to a node in ``t``.\n    t : skbio.tree.TreeNode\n        The tree that corresponds to the rows in ``a``.\n    tip_indices : np.ndarray of int\n        The index positions in ``a`` of the tips in ``t``.\n\n    Returns\n    -------\n    np.ndarray of double\n        A matrix in which each row corresponds to a node in ``t``, Only the\n        rows that correspond to tips are nonzero, and the values in these rows\n        are the distance from that tip to the root of the tree.\n    ";
-static PyMethodDef __pyx_mdef_5skbio_9diversity_8_base_cy_1_tip_distances = {"_tip_distances", (PyCFunction)__pyx_pw_5skbio_9diversity_8_base_cy_1_tip_distances, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_9diversity_8_base_cy__tip_distances};
-static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_1_tip_distances(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_9diversity_13_phylogenetic_1_tip_distances(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_9diversity_13_phylogenetic__tip_distances[] = "Sets each tip to its distance from the root\n\n    Parameters\n    ----------\n    a : np.ndarray of double\n        A matrix in which each row corresponds to a node in ``t``.\n    t : skbio.tree.TreeNode\n        The tree that corresponds to the rows in ``a``.\n    tip_indices : np.ndarray of int\n        The index positions in ``a`` of the tips in ``t``.\n\n    Returns\n    -------\n    np.ndarray of double\n        A matrix in which each row corresponds to a node in ``t``, Only the\n        rows that correspond to tips are nonzero, and the values in these rows\n        are the distance from that tip to the root of the tree.\n    ";
+static PyMethodDef __pyx_mdef_5skbio_9diversity_13_phylogenetic_1_tip_distances = {"_tip_distances", (PyCFunction)__pyx_pw_5skbio_9diversity_13_phylogenetic_1_tip_distances, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_9diversity_13_phylogenetic__tip_distances};
+static PyObject *__pyx_pw_5skbio_9diversity_13_phylogenetic_1_tip_distances(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_a = 0;
   PyObject *__pyx_v_t = 0;
   PyArrayObject *__pyx_v_tip_indices = 0;
@@ -1380,13 +1380,13 @@ static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_1_tip_distances(PyObject *
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_tip_distances", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.diversity._base_cy._tip_distances", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.diversity._phylogenetic._tip_distances", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_a), __pyx_ptype_5numpy_ndarray, 1, "a", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tip_indices), __pyx_ptype_5numpy_ndarray, 1, "tip_indices", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_r = __pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(__pyx_self, __pyx_v_a, __pyx_v_t, __pyx_v_tip_indices);
+  __pyx_r = __pyx_pf_5skbio_9diversity_13_phylogenetic__tip_distances(__pyx_self, __pyx_v_a, __pyx_v_t, __pyx_v_tip_indices);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1397,7 +1397,7 @@ static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_1_tip_distances(PyObject *
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyObject *__pyx_v_t, PyArrayObject *__pyx_v_tip_indices) {
+static PyObject *__pyx_pf_5skbio_9diversity_13_phylogenetic__tip_distances(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyObject *__pyx_v_t, PyArrayObject *__pyx_v_tip_indices) {
   PyObject *__pyx_v_n = 0;
   Py_ssize_t __pyx_v_i;
   Py_ssize_t __pyx_v_p_i;
@@ -1432,7 +1432,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   PyObject *__pyx_t_16 = NULL;
   npy_intp __pyx_t_17;
   Py_ssize_t __pyx_t_18;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_19;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_19;
   Py_ssize_t __pyx_t_20;
   Py_ssize_t __pyx_t_21;
   int __pyx_lineno = 0;
@@ -1462,15 +1462,15 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   __pyx_pybuffernd_a.diminfo[0].strides = __pyx_pybuffernd_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_a.diminfo[0].shape = __pyx_pybuffernd_a.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tip_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_tip_indices, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tip_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_tip_indices, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_pybuffernd_tip_indices.diminfo[0].strides = __pyx_pybuffernd_tip_indices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_tip_indices.diminfo[0].shape = __pyx_pybuffernd_tip_indices.rcbuffer->pybuffer.shape[0];
 
-  /* "skbio/diversity/_base_cy.pyx":43
+  /* "skbio/diversity/_phylogenetic.pyx":43
  *         Py_ssize_t i, p_i, n_rows
  *         np.ndarray[np.double_t, ndim=1] mask
  *         np.ndarray[np.double_t, ndim=1] tip_ds = a.copy()             # <<<<<<<<<<<<<<
- *
+ * 
  *     # preorder reduction over the tree to gather distances at the tips
  */
   __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_a), __pyx_n_s_copy); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -1507,8 +1507,8 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   __pyx_v_tip_ds = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":46
- *
+  /* "skbio/diversity/_phylogenetic.pyx":46
+ * 
  *     # preorder reduction over the tree to gather distances at the tips
  *     n_rows = tip_ds.shape[0]             # <<<<<<<<<<<<<<
  *     for n in t.preorder(include_self=False):
@@ -1516,7 +1516,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
  */
   __pyx_v_n_rows = (__pyx_v_tip_ds->dimensions[0]);
 
-  /* "skbio/diversity/_base_cy.pyx":47
+  /* "skbio/diversity/_phylogenetic.pyx":47
  *     # preorder reduction over the tree to gather distances at the tips
  *     n_rows = tip_ds.shape[0]
  *     for n in t.preorder(include_self=False):             # <<<<<<<<<<<<<<
@@ -1575,12 +1575,12 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
     __Pyx_XDECREF_SET(__pyx_v_n, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "skbio/diversity/_base_cy.pyx":48
+    /* "skbio/diversity/_phylogenetic.pyx":48
  *     n_rows = tip_ds.shape[0]
  *     for n in t.preorder(include_self=False):
  *         i = n.id             # <<<<<<<<<<<<<<
  *         p_i = n.parent.id
- *
+ * 
  */
     __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_n, __pyx_n_s_id); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
@@ -1588,11 +1588,11 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_v_i = __pyx_t_7;
 
-    /* "skbio/diversity/_base_cy.pyx":49
+    /* "skbio/diversity/_phylogenetic.pyx":49
  *     for n in t.preorder(include_self=False):
  *         i = n.id
  *         p_i = n.parent.id             # <<<<<<<<<<<<<<
- *
+ * 
  *         tip_ds[i] += tip_ds[p_i]
  */
     __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_n, __pyx_n_s_parent); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -1604,18 +1604,18 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_p_i = __pyx_t_7;
 
-    /* "skbio/diversity/_base_cy.pyx":51
+    /* "skbio/diversity/_phylogenetic.pyx":51
  *         p_i = n.parent.id
- *
+ * 
  *         tip_ds[i] += tip_ds[p_i]             # <<<<<<<<<<<<<<
- *
+ * 
  *     # construct a mask that represents the locations of the tips
  */
     __pyx_t_8 = __pyx_v_p_i;
     __pyx_t_9 = __pyx_v_i;
     *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_tip_ds.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_tip_ds.diminfo[0].strides) += (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_tip_ds.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_tip_ds.diminfo[0].strides));
 
-    /* "skbio/diversity/_base_cy.pyx":47
+    /* "skbio/diversity/_phylogenetic.pyx":47
  *     # preorder reduction over the tree to gather distances at the tips
  *     n_rows = tip_ds.shape[0]
  *     for n in t.preorder(include_self=False):             # <<<<<<<<<<<<<<
@@ -1625,8 +1625,8 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":54
- *
+  /* "skbio/diversity/_phylogenetic.pyx":54
+ * 
  *     # construct a mask that represents the locations of the tips
  *     mask = np.zeros(n_rows, dtype=np.double)             # <<<<<<<<<<<<<<
  *     for i in range(tip_indices.shape[0]):
@@ -1680,45 +1680,45 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   __pyx_v_mask = ((PyArrayObject *)__pyx_t_11);
   __pyx_t_11 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":55
+  /* "skbio/diversity/_phylogenetic.pyx":55
  *     # construct a mask that represents the locations of the tips
  *     mask = np.zeros(n_rows, dtype=np.double)
  *     for i in range(tip_indices.shape[0]):             # <<<<<<<<<<<<<<
  *         mask[tip_indices[i]] = 1.0
- *
+ * 
  */
   __pyx_t_17 = (__pyx_v_tip_indices->dimensions[0]);
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_17; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "skbio/diversity/_base_cy.pyx":56
+    /* "skbio/diversity/_phylogenetic.pyx":56
  *     mask = np.zeros(n_rows, dtype=np.double)
  *     for i in range(tip_indices.shape[0]):
  *         mask[tip_indices[i]] = 1.0             # <<<<<<<<<<<<<<
- *
+ * 
  *     # apply the mask such that tip_ds only includes values which correspond to
  */
     __pyx_t_18 = __pyx_v_i;
-    __pyx_t_19 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_tip_indices.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_tip_indices.diminfo[0].strides));
+    __pyx_t_19 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_tip_indices.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_tip_indices.diminfo[0].strides));
     *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_mask.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_mask.diminfo[0].strides) = 1.0;
   }
 
-  /* "skbio/diversity/_base_cy.pyx":60
+  /* "skbio/diversity/_phylogenetic.pyx":60
  *     # apply the mask such that tip_ds only includes values which correspond to
  *     # the tips of the tree.
  *     for i in range(n_rows):             # <<<<<<<<<<<<<<
  *         tip_ds[i] *= mask[i]
- *
+ * 
  */
   __pyx_t_5 = __pyx_v_n_rows;
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_5; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "skbio/diversity/_base_cy.pyx":61
+    /* "skbio/diversity/_phylogenetic.pyx":61
  *     # the tips of the tree.
  *     for i in range(n_rows):
  *         tip_ds[i] *= mask[i]             # <<<<<<<<<<<<<<
- *
+ * 
  *     return tip_ds
  */
     __pyx_t_20 = __pyx_v_i;
@@ -1726,19 +1726,19 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
     *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_tip_ds.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_tip_ds.diminfo[0].strides) *= (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_mask.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_mask.diminfo[0].strides));
   }
 
-  /* "skbio/diversity/_base_cy.pyx":63
+  /* "skbio/diversity/_phylogenetic.pyx":63
  *         tip_ds[i] *= mask[i]
- *
+ * 
  *     return tip_ds             # <<<<<<<<<<<<<<
- *
- *
+ * 
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_tip_ds));
   __pyx_r = ((PyObject *)__pyx_v_tip_ds);
   goto __pyx_L0;
 
-  /* "skbio/diversity/_base_cy.pyx":19
+  /* "skbio/diversity/_phylogenetic.pyx":19
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,             # <<<<<<<<<<<<<<
@@ -1760,7 +1760,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_tip_ds.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_tip_indices.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.diversity._base_cy._tip_distances", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.diversity._phylogenetic._tip_distances", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -1777,7 +1777,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
   return __pyx_r;
 }
 
-/* "skbio/diversity/_base_cy.pyx":68
+/* "skbio/diversity/_phylogenetic.pyx":68
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,             # <<<<<<<<<<<<<<
@@ -1785,14 +1785,14 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy__tip_distances(CYTHON_UNUS
  *     """Apply a[k] = sum[i:j]
  */
 
-static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObject *__pyx_v_child_index, PyArrayObject *__pyx_v_a) {
+static PyObject *__pyx_f_5skbio_9diversity_13_phylogenetic__traverse_reduce(PyArrayObject *__pyx_v_child_index, PyArrayObject *__pyx_v_a) {
   Py_ssize_t __pyx_v_i;
   Py_ssize_t __pyx_v_j;
   Py_ssize_t __pyx_v_k;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_node;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_start;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_end;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_n_envs;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_node;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_start;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_end;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_n_envs;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_a;
   __Pyx_Buffer __pyx_pybuffer_a;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_child_index;
@@ -1807,13 +1807,13 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
   Py_ssize_t __pyx_t_6;
   Py_ssize_t __pyx_t_7;
   Py_ssize_t __pyx_t_8;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_9;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_9;
   Py_ssize_t __pyx_t_10;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_11;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_11;
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_15;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_15;
   Py_ssize_t __pyx_t_16;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -1829,26 +1829,26 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
   __pyx_pybuffernd_a.rcbuffer = &__pyx_pybuffer_a;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_child_index.rcbuffer->pybuffer, (PyObject*)__pyx_v_child_index, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_child_index.rcbuffer->pybuffer, (PyObject*)__pyx_v_child_index, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_pybuffernd_child_index.diminfo[0].strides = __pyx_pybuffernd_child_index.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_child_index.diminfo[0].shape = __pyx_pybuffernd_child_index.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_child_index.diminfo[1].strides = __pyx_pybuffernd_child_index.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_child_index.diminfo[1].shape = __pyx_pybuffernd_child_index.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_a, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_a, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __pyx_pybuffernd_a.diminfo[0].strides = __pyx_pybuffernd_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_a.diminfo[0].shape = __pyx_pybuffernd_a.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_a.diminfo[1].strides = __pyx_pybuffernd_a.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_a.diminfo[1].shape = __pyx_pybuffernd_a.rcbuffer->pybuffer.shape[1];
 
-  /* "skbio/diversity/_base_cy.pyx":128
+  /* "skbio/diversity/_phylogenetic.pyx":128
  *         Py_ssize_t i, j, k
  *         DTYPE_t node, start, end
  *         DTYPE_t n_envs = a.shape[1]             # <<<<<<<<<<<<<<
- *
+ * 
  *     # possible GPGPU target
  */
   __pyx_v_n_envs = (__pyx_v_a->dimensions[1]);
 
-  /* "skbio/diversity/_base_cy.pyx":131
- *
+  /* "skbio/diversity/_phylogenetic.pyx":131
+ * 
  *     # possible GPGPU target
  *     for i in range(child_index.shape[0]):             # <<<<<<<<<<<<<<
  *         node = child_index[i, 0]
@@ -1858,7 +1858,7 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "skbio/diversity/_base_cy.pyx":132
+    /* "skbio/diversity/_phylogenetic.pyx":132
  *     # possible GPGPU target
  *     for i in range(child_index.shape[0]):
  *         node = child_index[i, 0]             # <<<<<<<<<<<<<<
@@ -1867,33 +1867,33 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
  */
     __pyx_t_3 = __pyx_v_i;
     __pyx_t_4 = 0;
-    __pyx_v_node = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_child_index.diminfo[1].strides));
+    __pyx_v_node = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_child_index.diminfo[1].strides));
 
-    /* "skbio/diversity/_base_cy.pyx":133
+    /* "skbio/diversity/_phylogenetic.pyx":133
  *     for i in range(child_index.shape[0]):
  *         node = child_index[i, 0]
  *         start = child_index[i, 1]             # <<<<<<<<<<<<<<
  *         end = child_index[i, 2]
- *
+ * 
  */
     __pyx_t_5 = __pyx_v_i;
     __pyx_t_6 = 1;
-    __pyx_v_start = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_child_index.diminfo[1].strides));
+    __pyx_v_start = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_child_index.diminfo[1].strides));
 
-    /* "skbio/diversity/_base_cy.pyx":134
+    /* "skbio/diversity/_phylogenetic.pyx":134
  *         node = child_index[i, 0]
  *         start = child_index[i, 1]
  *         end = child_index[i, 2]             # <<<<<<<<<<<<<<
- *
+ * 
  *         for j in range(start, end + 1):
  */
     __pyx_t_7 = __pyx_v_i;
     __pyx_t_8 = 2;
-    __pyx_v_end = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_child_index.diminfo[1].strides));
+    __pyx_v_end = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_child_index.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_child_index.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_child_index.diminfo[1].strides));
 
-    /* "skbio/diversity/_base_cy.pyx":136
+    /* "skbio/diversity/_phylogenetic.pyx":136
  *         end = child_index[i, 2]
- *
+ * 
  *         for j in range(start, end + 1):             # <<<<<<<<<<<<<<
  *             for k in range(n_envs):
  *                 a[node, k] += a[j, k]
@@ -1902,34 +1902,34 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
     for (__pyx_t_10 = __pyx_v_start; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
       __pyx_v_j = __pyx_t_10;
 
-      /* "skbio/diversity/_base_cy.pyx":137
- *
+      /* "skbio/diversity/_phylogenetic.pyx":137
+ * 
  *         for j in range(start, end + 1):
  *             for k in range(n_envs):             # <<<<<<<<<<<<<<
  *                 a[node, k] += a[j, k]
- *
+ * 
  */
       __pyx_t_11 = __pyx_v_n_envs;
       for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
         __pyx_v_k = __pyx_t_12;
 
-        /* "skbio/diversity/_base_cy.pyx":138
+        /* "skbio/diversity/_phylogenetic.pyx":138
  *         for j in range(start, end + 1):
  *             for k in range(n_envs):
  *                 a[node, k] += a[j, k]             # <<<<<<<<<<<<<<
- *
- *
+ * 
+ * 
  */
         __pyx_t_13 = __pyx_v_j;
         __pyx_t_14 = __pyx_v_k;
         __pyx_t_15 = __pyx_v_node;
         __pyx_t_16 = __pyx_v_k;
-        *__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_a.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_a.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_a.diminfo[1].strides) += (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_a.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_a.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_a.diminfo[1].strides));
+        *__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_a.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_a.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_a.diminfo[1].strides) += (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_a.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_a.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_a.diminfo[1].strides));
       }
     }
   }
 
-  /* "skbio/diversity/_base_cy.pyx":68
+  /* "skbio/diversity/_phylogenetic.pyx":68
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,             # <<<<<<<<<<<<<<
@@ -1946,7 +1946,7 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_a.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_child_index.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.diversity._base_cy._traverse_reduce", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.diversity._phylogenetic._traverse_reduce", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   goto __pyx_L2;
   __pyx_L0:;
@@ -1958,7 +1958,7 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
   return __pyx_r;
 }
 
-/* "skbio/diversity/_base_cy.pyx":143
+/* "skbio/diversity/_phylogenetic.pyx":143
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _nodes_by_counts(np.ndarray counts,             # <<<<<<<<<<<<<<
@@ -1967,10 +1967,10 @@ static PyObject *__pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(PyArrayObj
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_3_nodes_by_counts(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_9diversity_8_base_cy_2_nodes_by_counts[] = "Construct the count array, and the counts up the tree\n\n    Parameters\n    ----------\n    counts : np.array of int\n        A 1D or 2D vector in which each row corresponds to the observed counts\n        in an environment. The rows are expected to be in order with respect to\n        `tip_ids`.\n    tip_ids : np.array of str\n        A vector of tip names that correspond to the columns in the `counts`\n        matrix.\n    indexed : dict\n        The result of `index_tree`.\n\n    Returns\n    -------\n    np.array of int\n        The observed counts of every node and the counts if its descendents.\n\n    ";
-static PyMethodDef __pyx_mdef_5skbio_9diversity_8_base_cy_3_nodes_by_counts = {"_nodes_by_counts", (PyCFunction)__pyx_pw_5skbio_9diversity_8_base_cy_3_nodes_by_counts, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_9diversity_8_base_cy_2_nodes_by_counts};
-static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_3_nodes_by_counts(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_9diversity_13_phylogenetic_3_nodes_by_counts(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_9diversity_13_phylogenetic_2_nodes_by_counts[] = "Construct the count array, and the counts up the tree\n\n    Parameters\n    ----------\n    counts : np.array of int\n        A 1D or 2D vector in which each row corresponds to the observed counts\n        in an environment. The rows are expected to be in order with respect to\n        `tip_ids`.\n    tip_ids : np.array of str\n        A vector of tip names that correspond to the columns in the `counts`\n        matrix.\n    indexed : dict\n        The result of `index_tree`.\n\n    Returns\n    -------\n    np.array of int\n        The observed counts of every node and the counts if its descendents.\n\n    ";
+static PyMethodDef __pyx_mdef_5skbio_9diversity_13_phylogenetic_3_nodes_by_counts = {"_nodes_by_counts", (PyCFunction)__pyx_pw_5skbio_9diversity_13_phylogenetic_3_nodes_by_counts, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_9diversity_13_phylogenetic_2_nodes_by_counts};
+static PyObject *__pyx_pw_5skbio_9diversity_13_phylogenetic_3_nodes_by_counts(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_counts = 0;
   PyArrayObject *__pyx_v_tip_ids = 0;
   PyObject *__pyx_v_indexed = 0;
@@ -2027,14 +2027,14 @@ static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_3_nodes_by_counts(PyObject
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_nodes_by_counts", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("skbio.diversity._base_cy._nodes_by_counts", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.diversity._phylogenetic._nodes_by_counts", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_counts), __pyx_ptype_5numpy_ndarray, 1, "counts", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tip_ids), __pyx_ptype_5numpy_ndarray, 1, "tip_ids", 0))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_indexed), (&PyDict_Type), 1, "indexed", 1))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_r = __pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(__pyx_self, __pyx_v_counts, __pyx_v_tip_ids, __pyx_v_indexed);
+  __pyx_r = __pyx_pf_5skbio_9diversity_13_phylogenetic_2_nodes_by_counts(__pyx_self, __pyx_v_counts, __pyx_v_tip_ids, __pyx_v_indexed);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2045,7 +2045,7 @@ static PyObject *__pyx_pw_5skbio_9diversity_8_base_cy_3_nodes_by_counts(PyObject
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_counts, PyArrayObject *__pyx_v_tip_ids, PyObject *__pyx_v_indexed) {
+static PyObject *__pyx_pf_5skbio_9diversity_13_phylogenetic_2_nodes_by_counts(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_counts, PyArrayObject *__pyx_v_tip_ids, PyObject *__pyx_v_indexed) {
   PyArrayObject *__pyx_v_nodes = 0;
   PyArrayObject *__pyx_v_observed_ids = 0;
   PyArrayObject *__pyx_v_count_array = 0;
@@ -2057,8 +2057,8 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   PyObject *__pyx_v_observed_ids_set = 0;
   PyObject *__pyx_v_n = 0;
   PyObject *__pyx_v_node_lookup = 0;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_n_count_vectors;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_v_n_count_otus;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_n_count_vectors;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_v_n_count_otus;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_count_array;
   __Pyx_Buffer __pyx_pybuffer_count_array;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_counts_t;
@@ -2083,16 +2083,16 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   Py_ssize_t __pyx_t_12;
   int __pyx_t_13;
   int __pyx_t_14;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_15;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_15;
   Py_ssize_t __pyx_t_16;
   PyArrayObject *__pyx_t_17 = NULL;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_18;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_18;
   Py_ssize_t __pyx_t_19;
   Py_ssize_t __pyx_t_20;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_21;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_21;
   Py_ssize_t __pyx_t_22;
   Py_ssize_t __pyx_t_23;
-  __pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t __pyx_t_24;
+  __pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t __pyx_t_24;
   Py_ssize_t __pyx_t_25;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -2116,11 +2116,11 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_pybuffernd_otus_in_nodes.data = NULL;
   __pyx_pybuffernd_otus_in_nodes.rcbuffer = &__pyx_pybuffer_otus_in_nodes;
 
-  /* "skbio/diversity/_base_cy.pyx":176
+  /* "skbio/diversity/_phylogenetic.pyx":176
  *         DTYPE_t n_count_vectors, n_count_otus
- *
+ * 
  *     nodes = indexed['name']             # <<<<<<<<<<<<<<
- *
+ * 
  *     # allow counts to be a vector
  */
   if (unlikely(__pyx_v_indexed == Py_None)) {
@@ -2133,12 +2133,12 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_nodes = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":179
- *
+  /* "skbio/diversity/_phylogenetic.pyx":179
+ * 
  *     # allow counts to be a vector
  *     counts = np.atleast_2d(counts)             # <<<<<<<<<<<<<<
  *     counts = counts.astype(DTYPE)
- *
+ * 
  */
   __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 179; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
@@ -2174,11 +2174,11 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __Pyx_DECREF_SET(__pyx_v_counts, ((PyArrayObject *)__pyx_t_1));
   __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":180
+  /* "skbio/diversity/_phylogenetic.pyx":180
  *     # allow counts to be a vector
  *     counts = np.atleast_2d(counts)
  *     counts = counts.astype(DTYPE)             # <<<<<<<<<<<<<<
- *
+ * 
  *     # determine observed IDs. It may be possible to unroll these calls to
  */
   __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_counts), __pyx_n_s_astype); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2215,7 +2215,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __Pyx_DECREF_SET(__pyx_v_counts, ((PyArrayObject *)__pyx_t_1));
   __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":184
+  /* "skbio/diversity/_phylogenetic.pyx":184
  *     # determine observed IDs. It may be possible to unroll these calls to
  *     # squeeze a little more performance
  *     observed_indices = counts.sum(0).nonzero()[0]             # <<<<<<<<<<<<<<
@@ -2256,10 +2256,10 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer);
-    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack);
+    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack);
     if (unlikely(__pyx_t_7 < 0)) {
       PyErr_Fetch(&__pyx_t_8, &__pyx_t_9, &__pyx_t_10);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_observed_indices, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_observed_indices, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_8); Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_10);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -2273,12 +2273,12 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_observed_indices = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":185
+  /* "skbio/diversity/_phylogenetic.pyx":185
  *     # squeeze a little more performance
  *     observed_indices = counts.sum(0).nonzero()[0]
  *     observed_ids = tip_ids[observed_indices]             # <<<<<<<<<<<<<<
  *     observed_ids_set = set(observed_ids)
- *
+ * 
  */
   __pyx_t_3 = PyObject_GetItem(((PyObject *)__pyx_v_tip_ids), ((PyObject *)__pyx_v_observed_indices)); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 185; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   __Pyx_GOTREF(__pyx_t_3);
@@ -2286,11 +2286,11 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_observed_ids = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":186
+  /* "skbio/diversity/_phylogenetic.pyx":186
  *     observed_indices = counts.sum(0).nonzero()[0]
  *     observed_ids = tip_ids[observed_indices]
  *     observed_ids_set = set(observed_ids)             # <<<<<<<<<<<<<<
- *
+ * 
  *     # construct mappings of the observed to their positions in the node array
  */
   __pyx_t_3 = PySet_New(((PyObject *)__pyx_v_observed_ids)); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 186; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2298,8 +2298,8 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_observed_ids_set = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":189
- *
+  /* "skbio/diversity/_phylogenetic.pyx":189
+ * 
  *     # construct mappings of the observed to their positions in the node array
  *     node_lookup = {}             # <<<<<<<<<<<<<<
  *     for i in range(nodes.shape[0]):
@@ -2310,7 +2310,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_node_lookup = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":190
+  /* "skbio/diversity/_phylogenetic.pyx":190
  *     # construct mappings of the observed to their positions in the node array
  *     node_lookup = {}
  *     for i in range(nodes.shape[0]):             # <<<<<<<<<<<<<<
@@ -2321,7 +2321,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
     __pyx_v_i = __pyx_t_12;
 
-    /* "skbio/diversity/_base_cy.pyx":191
+    /* "skbio/diversity/_phylogenetic.pyx":191
  *     node_lookup = {}
  *     for i in range(nodes.shape[0]):
  *         n = nodes[i]             # <<<<<<<<<<<<<<
@@ -2333,22 +2333,22 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
     __Pyx_XDECREF_SET(__pyx_v_n, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "skbio/diversity/_base_cy.pyx":192
+    /* "skbio/diversity/_phylogenetic.pyx":192
  *     for i in range(nodes.shape[0]):
  *         n = nodes[i]
  *         if n in observed_ids_set:             # <<<<<<<<<<<<<<
  *             node_lookup[n] = i
- *
+ * 
  */
     __pyx_t_13 = (__Pyx_PySequence_ContainsTF(__pyx_v_n, __pyx_v_observed_ids_set, Py_EQ)); if (unlikely(__pyx_t_13 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_14 = (__pyx_t_13 != 0);
     if (__pyx_t_14) {
 
-      /* "skbio/diversity/_base_cy.pyx":193
+      /* "skbio/diversity/_phylogenetic.pyx":193
  *         n = nodes[i]
  *         if n in observed_ids_set:
  *             node_lookup[n] = i             # <<<<<<<<<<<<<<
- *
+ * 
  *     # determine the positions of the observed IDs in nodes
  */
       __pyx_t_3 = PyInt_FromSsize_t(__pyx_v_i); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 193; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2356,18 +2356,18 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
       if (unlikely(PyDict_SetItem(__pyx_v_node_lookup, __pyx_v_n, __pyx_t_3) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 193; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-      /* "skbio/diversity/_base_cy.pyx":192
+      /* "skbio/diversity/_phylogenetic.pyx":192
  *     for i in range(nodes.shape[0]):
  *         n = nodes[i]
  *         if n in observed_ids_set:             # <<<<<<<<<<<<<<
  *             node_lookup[n] = i
- *
+ * 
  */
     }
   }
 
-  /* "skbio/diversity/_base_cy.pyx":196
- *
+  /* "skbio/diversity/_phylogenetic.pyx":196
+ * 
  *     # determine the positions of the observed IDs in nodes
  *     otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)             # <<<<<<<<<<<<<<
  *     for i in range(observed_ids.shape[0]):
@@ -2401,10 +2401,10 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer);
-    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack);
+    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack);
     if (unlikely(__pyx_t_7 < 0)) {
       PyErr_Fetch(&__pyx_t_10, &__pyx_t_9, &__pyx_t_8);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer, (PyObject*)__pyx_v_otus_in_nodes, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer, (PyObject*)__pyx_v_otus_in_nodes, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_10); Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_8);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -2418,7 +2418,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_otus_in_nodes = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":197
+  /* "skbio/diversity/_phylogenetic.pyx":197
  *     # determine the positions of the observed IDs in nodes
  *     otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)
  *     for i in range(observed_ids.shape[0]):             # <<<<<<<<<<<<<<
@@ -2429,23 +2429,23 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
     __pyx_v_i = __pyx_t_12;
 
-    /* "skbio/diversity/_base_cy.pyx":198
+    /* "skbio/diversity/_phylogenetic.pyx":198
  *     otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)
  *     for i in range(observed_ids.shape[0]):
  *         n = observed_ids[i]             # <<<<<<<<<<<<<<
  *         otus_in_nodes[i] = node_lookup[n]
- *
+ * 
  */
     __pyx_t_4 = __Pyx_GetItemInt(((PyObject *)__pyx_v_observed_ids), __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 198; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_XDECREF_SET(__pyx_v_n, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "skbio/diversity/_base_cy.pyx":199
+    /* "skbio/diversity/_phylogenetic.pyx":199
  *     for i in range(observed_ids.shape[0]):
  *         n = observed_ids[i]
  *         otus_in_nodes[i] = node_lookup[n]             # <<<<<<<<<<<<<<
- *
+ * 
  *     # count_array has a row per node (not tip) and a column per env.
  */
     __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_node_lookup, __pyx_v_n); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 199; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
@@ -2453,23 +2453,23 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
     __pyx_t_15 = __Pyx_PyInt_As_npy_int64(__pyx_t_4); if (unlikely((__pyx_t_15 == (npy_int64)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 199; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_16 = __pyx_v_i;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_otus_in_nodes.diminfo[0].strides) = __pyx_t_15;
+    *__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_otus_in_nodes.diminfo[0].strides) = __pyx_t_15;
   }
 
-  /* "skbio/diversity/_base_cy.pyx":202
- *
+  /* "skbio/diversity/_phylogenetic.pyx":202
+ * 
  *     # count_array has a row per node (not tip) and a column per env.
  *     n_count_vectors = counts.shape[0]             # <<<<<<<<<<<<<<
  *     count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=DTYPE)
- *
+ * 
  */
   __pyx_v_n_count_vectors = (__pyx_v_counts->dimensions[0]);
 
-  /* "skbio/diversity/_base_cy.pyx":203
+  /* "skbio/diversity/_phylogenetic.pyx":203
  *     # count_array has a row per node (not tip) and a column per env.
  *     n_count_vectors = counts.shape[0]
  *     count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=DTYPE)             # <<<<<<<<<<<<<<
- *
+ * 
  *     # populate the counts array with the counts of each observation in each
  */
   __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2510,10 +2510,10 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_count_array.rcbuffer->pybuffer);
-    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_count_array.rcbuffer->pybuffer, (PyObject*)__pyx_t_17, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack);
+    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_count_array.rcbuffer->pybuffer, (PyObject*)__pyx_t_17, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack);
     if (unlikely(__pyx_t_7 < 0)) {
       PyErr_Fetch(&__pyx_t_8, &__pyx_t_9, &__pyx_t_10);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_count_array.rcbuffer->pybuffer, (PyObject*)__pyx_v_count_array, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_count_array.rcbuffer->pybuffer, (PyObject*)__pyx_v_count_array, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_8); Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_10);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -2527,7 +2527,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_count_array = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":207
+  /* "skbio/diversity/_phylogenetic.pyx":207
  *     # populate the counts array with the counts of each observation in each
  *     # env
  *     counts_t = counts.transpose()             # <<<<<<<<<<<<<<
@@ -2559,10 +2559,10 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_counts_t.rcbuffer->pybuffer);
-    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_counts_t.rcbuffer->pybuffer, (PyObject*)__pyx_t_17, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack);
+    __pyx_t_7 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_counts_t.rcbuffer->pybuffer, (PyObject*)__pyx_t_17, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack);
     if (unlikely(__pyx_t_7 < 0)) {
       PyErr_Fetch(&__pyx_t_10, &__pyx_t_9, &__pyx_t_8);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_counts_t.rcbuffer->pybuffer, (PyObject*)__pyx_v_counts_t, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_counts_t.rcbuffer->pybuffer, (PyObject*)__pyx_v_counts_t, &__Pyx_TypeInfo_nn___pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_10); Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_8);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -2576,7 +2576,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_v_counts_t = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":208
+  /* "skbio/diversity/_phylogenetic.pyx":208
  *     # env
  *     counts_t = counts.transpose()
  *     n_count_otus = otus_in_nodes.shape[0]             # <<<<<<<<<<<<<<
@@ -2585,7 +2585,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
  */
   __pyx_v_n_count_otus = (__pyx_v_otus_in_nodes->dimensions[0]);
 
-  /* "skbio/diversity/_base_cy.pyx":209
+  /* "skbio/diversity/_phylogenetic.pyx":209
  *     counts_t = counts.transpose()
  *     n_count_otus = otus_in_nodes.shape[0]
  *     for i in range(n_count_otus):             # <<<<<<<<<<<<<<
@@ -2596,39 +2596,39 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_15; __pyx_t_12+=1) {
     __pyx_v_i = __pyx_t_12;
 
-    /* "skbio/diversity/_base_cy.pyx":210
+    /* "skbio/diversity/_phylogenetic.pyx":210
  *     n_count_otus = otus_in_nodes.shape[0]
  *     for i in range(n_count_otus):
  *         for j in range(n_count_vectors):             # <<<<<<<<<<<<<<
  *             count_array[otus_in_nodes[i], j] = counts_t[observed_indices[i], j]
- *
+ * 
  */
     __pyx_t_18 = __pyx_v_n_count_vectors;
     for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
       __pyx_v_j = __pyx_t_19;
 
-      /* "skbio/diversity/_base_cy.pyx":211
+      /* "skbio/diversity/_phylogenetic.pyx":211
  *     for i in range(n_count_otus):
  *         for j in range(n_count_vectors):
  *             count_array[otus_in_nodes[i], j] = counts_t[observed_indices[i], j]             # <<<<<<<<<<<<<<
- *
+ * 
  *     _traverse_reduce(indexed['child_index'], count_array)
  */
       __pyx_t_20 = __pyx_v_i;
-      __pyx_t_21 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_observed_indices.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_observed_indices.diminfo[0].strides));
+      __pyx_t_21 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_observed_indices.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_observed_indices.diminfo[0].strides));
       __pyx_t_22 = __pyx_v_j;
       __pyx_t_23 = __pyx_v_i;
-      __pyx_t_24 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_otus_in_nodes.diminfo[0].strides));
+      __pyx_t_24 = (*__Pyx_BufPtrStrided1d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_otus_in_nodes.diminfo[0].strides));
       __pyx_t_25 = __pyx_v_j;
-      *__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_count_array.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_count_array.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_count_array.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_8_base_cy_DTYPE_t *, __pyx_pybuffernd_counts_t.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_counts_t.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_counts_t.diminfo[1].strides));
+      *__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_count_array.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_count_array.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_count_array.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_5skbio_9diversity_13_phylogenetic_DTYPE_t *, __pyx_pybuffernd_counts_t.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_counts_t.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_counts_t.diminfo[1].strides));
     }
   }
 
-  /* "skbio/diversity/_base_cy.pyx":213
+  /* "skbio/diversity/_phylogenetic.pyx":213
  *             count_array[otus_in_nodes[i], j] = counts_t[observed_indices[i], j]
- *
+ * 
  *     _traverse_reduce(indexed['child_index'], count_array)             # <<<<<<<<<<<<<<
- *
+ * 
  *     return count_array
  */
   if (unlikely(__pyx_v_indexed == Py_None)) {
@@ -2638,14 +2638,14 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_t_4 = __Pyx_PyDict_GetItem(__pyx_v_indexed, __pyx_n_s_child_index); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   __Pyx_GOTREF(__pyx_t_4);
   if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_1 = __pyx_f_5skbio_9diversity_8_base_cy__traverse_reduce(((PyArrayObject *)__pyx_t_4), ((PyArrayObject *)__pyx_v_count_array)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_f_5skbio_9diversity_13_phylogenetic__traverse_reduce(((PyArrayObject *)__pyx_t_4), ((PyArrayObject *)__pyx_v_count_array)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":215
+  /* "skbio/diversity/_phylogenetic.pyx":215
  *     _traverse_reduce(indexed['child_index'], count_array)
- *
+ * 
  *     return count_array             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
@@ -2653,7 +2653,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
   __pyx_r = ((PyObject *)__pyx_v_count_array);
   goto __pyx_L0;
 
-  /* "skbio/diversity/_base_cy.pyx":143
+  /* "skbio/diversity/_phylogenetic.pyx":143
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _nodes_by_counts(np.ndarray counts,             # <<<<<<<<<<<<<<
@@ -2675,7 +2675,7 @@ static PyObject *__pyx_pf_5skbio_9diversity_8_base_cy_2_nodes_by_counts(CYTHON_U
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_observed_indices.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_otus_in_nodes.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("skbio.diversity._base_cy._nodes_by_counts", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.diversity._phylogenetic._nodes_by_counts", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -2751,9 +2751,9 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":203
  *             # of flags
- *
+ * 
  *             if info == NULL: return             # <<<<<<<<<<<<<<
- *
+ * 
  *             cdef int copy_shape, i, ndim
  */
   __pyx_t_1 = ((__pyx_v_info == NULL) != 0);
@@ -2763,11 +2763,11 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":206
- *
+ * 
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1             # <<<<<<<<<<<<<<
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
- *
+ * 
  */
   __pyx_v_endian_detector = 1;
 
@@ -2775,23 +2775,23 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
- *
+ * 
  *             ndim = PyArray_NDIM(self)
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":209
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
- *
+ * 
  *             ndim = PyArray_NDIM(self)             # <<<<<<<<<<<<<<
- *
+ * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  */
   __pyx_v_ndim = PyArray_NDIM(__pyx_v_self);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":211
  *             ndim = PyArray_NDIM(self)
- *
+ * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
  *                 copy_shape = 1
  *             else:
@@ -2800,7 +2800,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   if (__pyx_t_1) {
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":212
- *
+ * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 copy_shape = 1             # <<<<<<<<<<<<<<
  *             else:
@@ -2810,7 +2810,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":211
  *             ndim = PyArray_NDIM(self)
- *
+ * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
  *                 copy_shape = 1
  *             else:
@@ -2822,7 +2822,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *                 copy_shape = 1
  *             else:
  *                 copy_shape = 0             # <<<<<<<<<<<<<<
- *
+ * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  */
   /*else*/ {
@@ -2832,7 +2832,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":216
  *                 copy_shape = 0
- *
+ * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")
@@ -2845,11 +2845,11 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":217
- *
+ * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):             # <<<<<<<<<<<<<<
  *                 raise ValueError(u"ndarray is not C contiguous")
- *
+ * 
  */
   __pyx_t_2 = ((!(PyArray_CHKFLAGS(__pyx_v_self, NPY_C_CONTIGUOUS) != 0)) != 0);
   __pyx_t_1 = __pyx_t_2;
@@ -2857,7 +2857,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":216
  *                 copy_shape = 0
- *
+ * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")
@@ -2868,7 +2868,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  */
     __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2879,7 +2879,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":216
  *                 copy_shape = 0
- *
+ * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")
@@ -2888,7 +2888,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":220
  *                 raise ValueError(u"ndarray is not C contiguous")
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
@@ -2901,11 +2901,11 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":221
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):             # <<<<<<<<<<<<<<
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
- *
+ * 
  */
   __pyx_t_2 = ((!(PyArray_CHKFLAGS(__pyx_v_self, NPY_F_CONTIGUOUS) != 0)) != 0);
   __pyx_t_1 = __pyx_t_2;
@@ -2913,7 +2913,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":220
  *                 raise ValueError(u"ndarray is not C contiguous")
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
@@ -2924,7 +2924,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
- *
+ * 
  *             info.buf = PyArray_DATA(self)
  */
     __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 222; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2935,7 +2935,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":220
  *                 raise ValueError(u"ndarray is not C contiguous")
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
@@ -2944,7 +2944,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":224
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
- *
+ * 
  *             info.buf = PyArray_DATA(self)             # <<<<<<<<<<<<<<
  *             info.ndim = ndim
  *             if copy_shape:
@@ -2952,7 +2952,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_v_info->buf = PyArray_DATA(__pyx_v_self);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":225
- *
+ * 
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim             # <<<<<<<<<<<<<<
  *             if copy_shape:
@@ -3063,7 +3063,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)             # <<<<<<<<<<<<<<
  *             info.readonly = not PyArray_ISWRITEABLE(self)
- *
+ * 
  */
   __pyx_v_info->itemsize = PyArray_ITEMSIZE(__pyx_v_self);
 
@@ -3071,13 +3071,13 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)
  *             info.readonly = not PyArray_ISWRITEABLE(self)             # <<<<<<<<<<<<<<
- *
+ * 
  *             cdef int t
  */
   __pyx_v_info->readonly = (!(PyArray_ISWRITEABLE(__pyx_v_self) != 0));
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":242
- *
+ * 
  *             cdef int t
  *             cdef char* f = NULL             # <<<<<<<<<<<<<<
  *             cdef dtype descr = self.descr
@@ -3090,7 +3090,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             cdef char* f = NULL
  *             cdef dtype descr = self.descr             # <<<<<<<<<<<<<<
  *             cdef int offset
- *
+ * 
  */
   __pyx_t_3 = ((PyObject *)__pyx_v_self->descr);
   __Pyx_INCREF(__pyx_t_3);
@@ -3099,16 +3099,16 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":246
  *             cdef int offset
- *
+ * 
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)             # <<<<<<<<<<<<<<
- *
+ * 
  *             if not hasfields and not copy_shape:
  */
   __pyx_v_hasfields = PyDataType_HASFIELDS(__pyx_v_descr);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":248
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
- *
+ * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
  *                 # do not call releasebuffer
  *                 info.obj = None
@@ -3139,7 +3139,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":248
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
- *
+ * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
  *                 # do not call releasebuffer
  *                 info.obj = None
@@ -3151,7 +3151,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *             else:
  *                 # need to call releasebuffer
  *                 info.obj = self             # <<<<<<<<<<<<<<
- *
+ * 
  *             if not hasfields:
  */
   /*else*/ {
@@ -3165,7 +3165,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":255
  *                 info.obj = self
- *
+ * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or
@@ -3174,7 +3174,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   if (__pyx_t_1) {
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":256
- *
+ * 
  *             if not hasfields:
  *                 t = descr.type_num             # <<<<<<<<<<<<<<
  *                 if ((descr.byteorder == c'>' and little_endian) or
@@ -3487,7 +3487,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":255
  *                 info.obj = self
- *
+ * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or
@@ -3536,7 +3536,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *                                       info.format + _buffer_format_string_len,
  *                                       &offset)
  *                 f[0] = c'\0' # Terminate format string             # <<<<<<<<<<<<<<
- *
+ * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  */
     (__pyx_v_f[0]) = '\x00';
@@ -3576,7 +3576,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":290
  *                 f[0] = c'\0' # Terminate format string
- *
+ * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)
@@ -3599,7 +3599,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __Pyx_RefNannySetupContext("__releasebuffer__", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":291
- *
+ * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
  *                 stdlib.free(info.format)
@@ -3618,7 +3618,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
     free(__pyx_v_info->format);
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":291
- *
+ * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
  *                 stdlib.free(info.format)
@@ -3641,7 +3641,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 stdlib.free(info.strides)             # <<<<<<<<<<<<<<
  *                 # info.shape was stored after info.strides in the same block
- *
+ * 
  */
     free(__pyx_v_info->strides);
 
@@ -3656,7 +3656,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":290
  *                 f[0] = c'\0' # Terminate format string
- *
+ * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)
@@ -3668,10 +3668,10 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":770
  * ctypedef npy_cdouble     complex_t
- *
+ * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(1, <void*>a)
- *
+ * 
  */
 
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__pyx_v_a) {
@@ -3684,10 +3684,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":771
- *
+ * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  */
   __Pyx_XDECREF(__pyx_r);
@@ -3699,10 +3699,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":770
  * ctypedef npy_cdouble     complex_t
- *
+ * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(1, <void*>a)
- *
+ * 
  */
 
   /* function exit code */
@@ -3718,10 +3718,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":773
  *     return PyArray_MultiIterNew(1, <void*>a)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
- *
+ * 
  */
 
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__pyx_v_a, PyObject *__pyx_v_b) {
@@ -3734,10 +3734,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":774
- *
+ * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  */
   __Pyx_XDECREF(__pyx_r);
@@ -3749,10 +3749,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":773
  *     return PyArray_MultiIterNew(1, <void*>a)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
- *
+ * 
  */
 
   /* function exit code */
@@ -3768,10 +3768,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":776
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
- *
+ * 
  */
 
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__pyx_v_a, PyObject *__pyx_v_b, PyObject *__pyx_v_c) {
@@ -3784,10 +3784,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":777
- *
+ * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  */
   __Pyx_XDECREF(__pyx_r);
@@ -3799,10 +3799,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":776
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
- *
+ * 
  */
 
   /* function exit code */
@@ -3818,10 +3818,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":779
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
- *
+ * 
  */
 
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__pyx_v_a, PyObject *__pyx_v_b, PyObject *__pyx_v_c, PyObject *__pyx_v_d) {
@@ -3834,10 +3834,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":780
- *
+ * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  */
   __Pyx_XDECREF(__pyx_r);
@@ -3849,10 +3849,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":779
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
- *
+ * 
  */
 
   /* function exit code */
@@ -3868,10 +3868,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":782
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
- *
+ * 
  */
 
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__pyx_v_a, PyObject *__pyx_v_b, PyObject *__pyx_v_c, PyObject *__pyx_v_d, PyObject *__pyx_v_e) {
@@ -3884,10 +3884,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":783
- *
+ * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:
  */
   __Pyx_XDECREF(__pyx_r);
@@ -3899,10 +3899,10 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":782
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
- *
+ * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
- *
+ * 
  */
 
   /* function exit code */
@@ -3918,7 +3918,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":785
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
- *
+ * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
  *     # Recursive utility function used in __getbuffer__ to get format
  *     # string. The new location in the format string is returned.
@@ -3949,7 +3949,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   __Pyx_RefNannySetupContext("_util_dtypestring", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":790
- *
+ * 
  *     cdef dtype child
  *     cdef int endian_detector = 1             # <<<<<<<<<<<<<<
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
@@ -3962,13 +3962,13 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *     cdef int endian_detector = 1
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
  *     cdef tuple fields
- *
+ * 
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":794
  *     cdef tuple fields
- *
+ * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
  *         fields = descr.fields[childname]
  *         child, new_offset = fields
@@ -3990,11 +3990,11 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_3 = 0;
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":795
- *
+ * 
  *     for childname in descr.names:
  *         fields = descr.fields[childname]             # <<<<<<<<<<<<<<
  *         child, new_offset = fields
- *
+ * 
  */
     if (unlikely(__pyx_v_descr->fields == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
@@ -4010,7 +4010,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *     for childname in descr.names:
  *         fields = descr.fields[childname]
  *         child, new_offset = fields             # <<<<<<<<<<<<<<
- *
+ * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  */
     if (likely(__pyx_v_fields != Py_None)) {
@@ -4026,8 +4026,8 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         {__pyx_filename = __pyx_f[1]; __pyx_lineno = 796; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
       #if CYTHON_COMPILING_IN_CPYTHON
-      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 0);
-      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 1);
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 0); 
+      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 1); 
       __Pyx_INCREF(__pyx_t_3);
       __Pyx_INCREF(__pyx_t_4);
       #else
@@ -4047,10 +4047,10 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":798
  *         child, new_offset = fields
- *
+ * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
- *
+ * 
  */
     __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_offset[0])); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 798; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
@@ -4063,10 +4063,10 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     if (__pyx_t_6) {
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":799
- *
+ * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or
  */
       __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4077,16 +4077,16 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":798
  *         child, new_offset = fields
- *
+ * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
- *
+ * 
  */
     }
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":801
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")
@@ -4105,7 +4105,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_L8_next_or:;
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":802
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):             # <<<<<<<<<<<<<<
  *             raise ValueError(u"Non-native byte order not supported")
@@ -4123,7 +4123,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":801
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")
@@ -4145,7 +4145,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":801
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")
@@ -4153,7 +4153,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":813
- *
+ * 
  *         # Output padding bytes
  *         while offset[0] < new_offset:             # <<<<<<<<<<<<<<
  *             f[0] = 120 # "x"; pad byte
@@ -4182,7 +4182,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             f[0] = 120 # "x"; pad byte
  *             f += 1             # <<<<<<<<<<<<<<
  *             offset[0] += 1
- *
+ * 
  */
       __pyx_v_f = (__pyx_v_f + 1);
 
@@ -4190,7 +4190,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             f[0] = 120 # "x"; pad byte
  *             f += 1
  *             offset[0] += 1             # <<<<<<<<<<<<<<
- *
+ * 
  *         offset[0] += child.itemsize
  */
       __pyx_t_8 = 0;
@@ -4199,9 +4199,9 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":818
  *             offset[0] += 1
- *
+ * 
  *         offset[0] += child.itemsize             # <<<<<<<<<<<<<<
- *
+ * 
  *         if not PyDataType_HASFIELDS(child):
  */
     __pyx_t_8 = 0;
@@ -4209,7 +4209,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":820
  *         offset[0] += child.itemsize
- *
+ * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
  *             t = child.type_num
  *             if end - f < 5:
@@ -4218,7 +4218,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     if (__pyx_t_6) {
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":821
- *
+ * 
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num             # <<<<<<<<<<<<<<
  *             if end - f < 5:
@@ -4234,7 +4234,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
  *                 raise RuntimeError(u"Format string allocated too short.")
- *
+ * 
  */
       __pyx_t_6 = (((__pyx_v_end - __pyx_v_f) < 5) != 0);
       if (__pyx_t_6) {
@@ -4243,7 +4243,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
- *
+ * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  */
         __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 823; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4257,12 +4257,12 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
  *                 raise RuntimeError(u"Format string allocated too short.")
- *
+ * 
  */
       }
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":826
- *
+ * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"             # <<<<<<<<<<<<<<
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
@@ -4608,7 +4608,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
       /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":820
  *         offset[0] += child.itemsize
- *
+ * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
  *             t = child.type_num
  *             if end - f < 5:
@@ -4621,7 +4621,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)             # <<<<<<<<<<<<<<
  *     return f
- *
+ * 
  */
     /*else*/ {
       __pyx_t_9 = __pyx_f_5numpy__util_dtypestring(__pyx_v_child, __pyx_v_f, __pyx_v_end, __pyx_v_offset); if (unlikely(__pyx_t_9 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 849; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4631,7 +4631,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":794
  *     cdef tuple fields
- *
+ * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
  *         fields = descr.fields[childname]
  *         child, new_offset = fields
@@ -4643,15 +4643,15 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)
  *     return f             # <<<<<<<<<<<<<<
- *
- *
+ * 
+ * 
  */
   __pyx_r = __pyx_v_f;
   goto __pyx_L0;
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":785
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
- *
+ * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
  *     # Recursive utility function used in __getbuffer__ to get format
  *     # string. The new location in the format string is returned.
@@ -4675,8 +4675,8 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
 }
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":966
- *
- *
+ * 
+ * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
  *      cdef PyObject* baseptr
  *      if base is None:
@@ -4745,7 +4745,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)             # <<<<<<<<<<<<<<
  *      arr.base = baseptr
- *
+ * 
  */
   Py_XDECREF(__pyx_v_arr->base);
 
@@ -4753,14 +4753,14 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)
  *      arr.base = baseptr             # <<<<<<<<<<<<<<
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):
  */
   __pyx_v_arr->base = __pyx_v_baseptr;
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":966
- *
- *
+ * 
+ * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
  *      cdef PyObject* baseptr
  *      if base is None:
@@ -4772,7 +4772,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
 
 /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":976
  *      arr.base = baseptr
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
  *     if arr.base is NULL:
  *         return None
@@ -4785,7 +4785,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":977
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:             # <<<<<<<<<<<<<<
  *         return None
@@ -4807,7 +4807,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     goto __pyx_L0;
 
     /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":977
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:             # <<<<<<<<<<<<<<
  *         return None
@@ -4829,7 +4829,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":976
  *      arr.base = baseptr
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
  *     if arr.base is NULL:
  *         return None
@@ -4853,7 +4853,7 @@ static struct PyModuleDef __pyx_moduledef = {
   #else
     PyModuleDef_HEAD_INIT,
   #endif
-    "_base_cy",
+    "_phylogenetic",
     0, /* m_doc */
     -1, /* m_size */
     __pyx_methods /* m_methods */,
@@ -4912,7 +4912,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_parent, __pyx_k_parent, sizeof(__pyx_k_parent), 0, 0, 1, 1},
   {&__pyx_n_s_preorder, __pyx_k_preorder, sizeof(__pyx_k_preorder), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
-  {&__pyx_n_s_skbio_diversity__base_cy, __pyx_k_skbio_diversity__base_cy, sizeof(__pyx_k_skbio_diversity__base_cy), 0, 0, 1, 1},
+  {&__pyx_n_s_skbio_diversity__phylogenetic, __pyx_k_skbio_diversity__phylogenetic, sizeof(__pyx_k_skbio_diversity__phylogenetic), 0, 0, 1, 1},
   {&__pyx_n_s_sum, __pyx_k_sum, sizeof(__pyx_k_sum), 0, 0, 1, 1},
   {&__pyx_n_s_t, __pyx_k_t, sizeof(__pyx_k_t), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
@@ -4938,7 +4938,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "skbio/diversity/_base_cy.pyx":184
+  /* "skbio/diversity/_phylogenetic.pyx":184
  *     # determine observed IDs. It may be possible to unroll these calls to
  *     # squeeze a little more performance
  *     observed_indices = counts.sum(0).nonzero()[0]             # <<<<<<<<<<<<<<
@@ -4953,7 +4953,7 @@ static int __Pyx_InitCachedConstants(void) {
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
- *
+ * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  */
   __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_C_contiguous); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4964,7 +4964,7 @@ static int __Pyx_InitCachedConstants(void) {
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
- *
+ * 
  *             info.buf = PyArray_DATA(self)
  */
   __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_Fortran_contiguou); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 222; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4983,10 +4983,10 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__4);
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":799
- *
+ * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
- *
+ * 
  *         if ((child.byteorder == c'>' and little_endian) or
  */
   __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -5008,14 +5008,14 @@ static int __Pyx_InitCachedConstants(void) {
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
- *
+ * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  */
   __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor_2); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 823; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
-  /* "skbio/diversity/_base_cy.pyx":19
+  /* "skbio/diversity/_phylogenetic.pyx":19
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,             # <<<<<<<<<<<<<<
@@ -5027,7 +5027,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__8);
   __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(3, 0, 9, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_caporaso_Dropbox_code_sci, __pyx_n_s_tip_distances, 19, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "skbio/diversity/_base_cy.pyx":143
+  /* "skbio/diversity/_phylogenetic.pyx":143
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _nodes_by_counts(np.ndarray counts,             # <<<<<<<<<<<<<<
@@ -5054,11 +5054,11 @@ static int __Pyx_InitGlobals(void) {
 }
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC init_base_cy(void); /*proto*/
-PyMODINIT_FUNC init_base_cy(void)
+PyMODINIT_FUNC init_phylogenetic(void); /*proto*/
+PyMODINIT_FUNC init_phylogenetic(void)
 #else
-PyMODINIT_FUNC PyInit__base_cy(void); /*proto*/
-PyMODINIT_FUNC PyInit__base_cy(void)
+PyMODINIT_FUNC PyInit__phylogenetic(void); /*proto*/
+PyMODINIT_FUNC PyInit__phylogenetic(void)
 #endif
 {
   PyObject *__pyx_t_1 = NULL;
@@ -5076,7 +5076,7 @@ PyMODINIT_FUNC PyInit__base_cy(void)
           Py_FatalError("failed to import 'refnanny' module");
   }
   #endif
-  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit__base_cy(void)", 0);
+  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit__phylogenetic(void)", 0);
   if (__Pyx_check_binary_version() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_empty_tuple = PyTuple_New(0); if (unlikely(!__pyx_empty_tuple)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_empty_bytes = PyBytes_FromStringAndSize("", 0); if (unlikely(!__pyx_empty_bytes)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -5104,7 +5104,7 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   #endif
   /*--- Module creation code ---*/
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("_base_cy", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("_phylogenetic", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -5121,14 +5121,14 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
-  if (__pyx_module_is_main_skbio__diversity___base_cy) {
+  if (__pyx_module_is_main_skbio__diversity___phylogenetic) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (!PyDict_GetItemString(modules, "skbio.diversity._base_cy")) {
-      if (unlikely(PyDict_SetItemString(modules, "skbio.diversity._base_cy", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (!PyDict_GetItemString(modules, "skbio.diversity._phylogenetic")) {
+      if (unlikely(PyDict_SetItemString(modules, "skbio.diversity._phylogenetic", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
@@ -5141,7 +5141,7 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   /*--- Function export code ---*/
   /*--- Type init code ---*/
   /*--- Type import code ---*/
-  __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__Pyx_BUILTIN_MODULE_NAME, "type",
+  __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__Pyx_BUILTIN_MODULE_NAME, "type", 
   #if CYTHON_COMPILING_IN_PYPY
   sizeof(PyTypeObject),
   #else
@@ -5160,9 +5160,9 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   if (__Pyx_patch_abc() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
 
-  /* "skbio/diversity/_base_cy.pyx":9
+  /* "skbio/diversity/_phylogenetic.pyx":9
  * # ----------------------------------------------------------------------------
- *
+ * 
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * cimport cython
@@ -5172,12 +5172,12 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":13
+  /* "skbio/diversity/_phylogenetic.pyx":13
  * cimport cython
- *
+ * 
  * DTYPE = np.int64             # <<<<<<<<<<<<<<
  * ctypedef np.int64_t DTYPE_t
- *
+ * 
  */
   __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
@@ -5187,31 +5187,31 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":19
+  /* "skbio/diversity/_phylogenetic.pyx":19
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,             # <<<<<<<<<<<<<<
  *                    np.ndarray[DTYPE_t, ndim=1] tip_indices):
  *     """Sets each tip to its distance from the root
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9diversity_8_base_cy_1_tip_distances, NULL, __pyx_n_s_skbio_diversity__base_cy); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9diversity_13_phylogenetic_1_tip_distances, NULL, __pyx_n_s_skbio_diversity__phylogenetic); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_tip_distances, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":143
+  /* "skbio/diversity/_phylogenetic.pyx":143
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _nodes_by_counts(np.ndarray counts,             # <<<<<<<<<<<<<<
  *                      np.ndarray tip_ids,
  *                      dict indexed):
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9diversity_8_base_cy_3_nodes_by_counts, NULL, __pyx_n_s_skbio_diversity__base_cy); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5skbio_9diversity_13_phylogenetic_3_nodes_by_counts, NULL, __pyx_n_s_skbio_diversity__phylogenetic); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_nodes_by_counts, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 143; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "skbio/diversity/_base_cy.pyx":1
+  /* "skbio/diversity/_phylogenetic.pyx":1
  * # ----------------------------------------------------------------------------             # <<<<<<<<<<<<<<
  * # Copyright (c) 2013--, scikit-bio development team.
  * #
@@ -5223,7 +5223,7 @@ PyMODINIT_FUNC PyInit__base_cy(void)
 
   /* "../../../../../.miniconda/envs/skbio/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":976
  *      arr.base = baseptr
- *
+ * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
  *     if arr.base is NULL:
  *         return None
@@ -5237,11 +5237,11 @@ PyMODINIT_FUNC PyInit__base_cy(void)
   __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init skbio.diversity._base_cy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init skbio.diversity._phylogenetic", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init skbio.diversity._base_cy");
+    PyErr_SetString(PyExc_ImportError, "init skbio.diversity._phylogenetic");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

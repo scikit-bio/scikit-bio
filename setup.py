@@ -84,8 +84,8 @@ extensions = [
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
               extra_compile_args=ssw_extra_compile_args),
-    Extension("skbio.diversity._base_cy",
-              ["skbio/diversity/_base_cy" + ext])
+    Extension("skbio.diversity._phylogenetic",
+              ["skbio/diversity/_phylogenetic" + ext])
 ]
 
 if USE_CYTHON:

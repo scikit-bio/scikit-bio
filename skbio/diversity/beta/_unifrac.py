@@ -14,7 +14,7 @@ from skbio.util._decorator import experimental
 from skbio.diversity._driver import (_validate_counts_vectors,
                                      _validate_otu_ids_and_tree,
                                      _vectorize_counts_and_tree)
-from skbio.diversity._base_cy import _tip_distances
+from skbio.diversity._phylogenetic import _tip_distances
 
 
 @experimental(as_of="0.4.0-dev")

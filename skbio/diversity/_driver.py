@@ -18,7 +18,7 @@ import skbio
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import DuplicateNodeError, MissingNodeError
-from skbio.diversity._base_cy import _nodes_by_counts
+from skbio.diversity._phylogenetic import _nodes_by_counts
 
 
 def _get_alpha_diversity_metrics():
