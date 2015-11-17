@@ -39,8 +39,11 @@ def faith_pd(counts, otu_ids, tree, validate=True,):
     validate: bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
-        However, invalid input data can lead to invalid results, so this step
-        should not be bypassed all together.
+        However, invalid input data can lead to invalid results or error
+        messages that are hard to interpret, so this step should not be
+        bypassed if you're not certain that your input data are valid. See
+        Notes for the description of what validation entails so you can
+        determine if you can safely disable validation.
 
     Returns
     -------
@@ -49,11 +52,9 @@ def faith_pd(counts, otu_ids, tree, validate=True,):
 
     Raises
     ------
-    ValueError
-        If ``counts`` and ``otu_ids`` are not equal in length.
-    MissingNodeError
-        If an OTU id is provided that does not correspond to a tip in the
-        tree.
+    ValueError, MissingNodeError, DuplicateNodeError
+        If validation fails (see description of validation in Notes). Exact
+        error will depend on what was invalid.
 
     Notes
     -----
@@ -70,6 +71,18 @@ def faith_pd(counts, otu_ids, tree, validate=True,):
     PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    Validation of input data confirms the following:
+     * ``counts`` data can be safely cast to integers
+     * there are no negative values in ``counts``
+     * ``counts`` has the correct number of dimensions
+     * ``otu_ids`` does not contain duplicate values
+     * ``len(counts)`` is equal to ``len(otu_ids)``
+     * ``tree`` is rooted
+     * ``tree`` has more than one node
+     * all nodes in ``tree`` except for the root node have branch lengths
+     * all tip names in ``tree`` are unique
+     * all ``otu_ids`` correspond to tip names in ``tree``
 
     References
     ----------

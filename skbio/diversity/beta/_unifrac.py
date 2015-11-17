@@ -13,10 +13,13 @@ from functools import partial
 import numpy as np
 
 from skbio.util._decorator import experimental
-from skbio.diversity._validate import (_validate_counts_vectors,
+from skbio.diversity._validate import (_validate_counts_matrix,
                                        _validate_otu_ids_and_tree,
                                        _vectorize_counts_and_tree)
 from skbio.diversity._phylogenetic import _tip_distances
+
+
+_normalize_weighted_unifrac_by_default = False
 
 
 @experimental(as_of="0.4.0-dev")
@@ -36,8 +39,11 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     validate: bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
-        However, invalid input data can lead to invalid results, so this step
-        should not be bypassed all together.
+        However, invalid input data can lead to invalid results or error
+        messages that are hard to interpret, so this step should not be
+        bypassed if you're not certain that your input data are valid. See
+        Notes for the description of what validation entails so you can
+        determine if you can safely disable validation.
 
     Returns
     -------
@@ -46,12 +52,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
 
     Raises
     ------
-    ValueError
-        If ``u_counts``, ``v_counts``, and ``otu_ids`` are not all of equal
-        length.
-    MissingNodeError
-        If an OTU id is provided that does not correspond to a tip in the
-        tree.
+    ValueError, MissingNodeError, DuplicateNodeError
+        If validation fails (see description of validation in Notes). Exact
+        error will depend on what was invalid.
 
     See Also
     --------
@@ -74,6 +77,19 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    Validation of input data confirms the following:
+     * ``counts`` data can be safely cast to integers
+     * there are no negative values in ``counts``
+     * ``counts`` has the correct number of dimensions
+     * all vectors in ``counts`` are of equal length
+     * ``otu_ids`` does not contain duplicate values
+     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
+     * ``tree`` is rooted
+     * ``tree`` has more than one node
+     * all nodes in ``tree`` except for the root node have branch lengths
+     * all tip names in ``tree`` are unique
+     * all ``otu_ids`` correspond to tip names in ``tree``
 
     References
     ----------
@@ -102,7 +118,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
 
 
 @experimental(as_of="0.4.0-dev")
-def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
+def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
+                     normalized=_normalize_weighted_unifrac_by_default,
                      validate=True):
     """ Compute weighted UniFrac with or without branch length normalization
 
@@ -122,8 +139,11 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     validate: bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
-        However, invalid input data can lead to invalid results, so this step
-        should not be bypassed all together.
+        However, invalid input data can lead to invalid results or error
+        messages that are hard to interpret, so this step should not be
+        bypassed if you're not certain that your input data are valid. See
+        Notes for the description of what validation entails so you can
+        determine if you can safely disable validation.
 
     Returns
     -------
@@ -132,12 +152,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
     Raises
     ------
-    ValueError
-        If ``u_counts``, ``v_counts``, and ``otu_ids`` are not all equal in
-        length.
-    MissingNodeError
-        If an OTU id is provided that does not correspond to a tip in the
-        tree.
+    ValueError, MissingNodeError, DuplicateNodeError
+        If validation fails (see description of validation in Notes). Exact
+        error will depend on what was invalid.
 
     See Also
     --------
@@ -160,6 +177,19 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
     PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    Validation of input data confirms the following:
+     * ``counts`` data can be safely cast to integers
+     * there are no negative values in ``counts``
+     * ``counts`` has the correct number of dimensions
+     * all vectors in ``counts`` are of equal length
+     * ``otu_ids`` does not contain duplicate values
+     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
+     * ``tree`` is rooted
+     * ``tree`` has more than one node
+     * all nodes in ``tree`` except for the root node have branch lengths
+     * all tip names in ``tree`` are unique
+     * all ``otu_ids`` correspond to tip names in ``tree``
 
     References
     ----------
@@ -196,7 +226,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree, normalized=False,
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
-    _validate_counts_vectors(u_counts, v_counts, suppress_cast=True)
+    _validate_counts_matrix([u_counts, v_counts], suppress_cast=True)
     _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
 

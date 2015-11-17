@@ -195,7 +195,7 @@ was taken from:
 ...                  title='Samples colored by subject', cmap='jet', s=50)
 
 .. plot::
-:context:
+    :context:
 
 We don't see any clustering/grouping of samples. If we were to instead color
 the samples by the body site they were taken from, we see that the samples

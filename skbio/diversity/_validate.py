@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import collections
+
 import numpy as np
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
@@ -33,21 +35,39 @@ def _validate_counts_vector(counts, suppress_cast=False):
     return counts
 
 
-def _validate_counts_vectors(*args, **kwargs):
+def _validate_counts_matrix(counts, ids=None, **kwargs):
     results = []
-    lens = []
+
+    # handle case of where counts is a single vector by making it a matrix.
+    # this has to be done before forcing counts into an ndarray because we
+    # don't yet know that all of the entries are of equal length
+    if len(counts) == 0 or not isinstance(counts[0], collections.Iterable):
+        counts = [counts]
+    counts = np.asarray(counts)
+    num_dimensions = len(counts.shape)
+    if num_dimensions > 2:
+        raise ValueError("Only 1-D and 2-D array-like objects can be provided "
+                         "as input. Provided object has %d dimensions." %
+                         len(counts.shape))
+
+    if ids is not None and len(counts) != len(ids):
+        raise ValueError(
+            "Number of rows in counts must be equal to number of provided "
+            "ids.")
+
     # py2-compatible mechanism for specifying a keyword argument when also
     # passing *args derived from SO answer:
     # http://stackoverflow.com/a/15302038/3424666
     suppress_cast = kwargs.pop('suppress_cast', False)
-    for counts in args:
-        results.append(_validate_counts_vector(counts, suppress_cast))
-        lens.append(len(counts))
-    if len(set(lens)) > 1:
-        raise ValueError("Input vectors u_counts and v_counts must be of "
-                         "equal length.")
 
-    return results
+    lens = []
+    for v in counts:
+        results.append(_validate_counts_vector(v, suppress_cast))
+        lens.append(len(v))
+    if len(set(lens)) > 1:
+        raise ValueError("Input vectors must be of equal length.")
+
+    return np.asarray(results)
 
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
