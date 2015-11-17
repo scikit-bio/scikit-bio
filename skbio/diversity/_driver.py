@@ -15,45 +15,91 @@ import pandas as pd
 import numpy as np
 
 import skbio
+from skbio.diversity.alpha._faith_pd import _faith_pd
+from skbio.diversity.beta._unifrac import (_unweighted_unifrac_pdist_f,
+                                           _weighted_unifrac_pdist_f)
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
-from skbio.tree import DuplicateNodeError, MissingNodeError
-from skbio.diversity._phylogenetic import _nodes_by_counts
+from skbio.diversity._validate import _vectorize_counts_and_tree
 
 
-def _get_alpha_diversity_metrics():
-    return {'ace': skbio.diversity.alpha.ace,
-            'chao1': skbio.diversity.alpha.chao1,
-            'chao1_ci': skbio.diversity.alpha.chao1_ci,
-            'berger_parker_d': skbio.diversity.alpha.berger_parker_d,
-            'brillouin_d': skbio.diversity.alpha.brillouin_d,
-            'dominance': skbio.diversity.alpha.dominance,
-            'doubles': skbio.diversity.alpha.doubles,
-            'enspie': skbio.diversity.alpha.enspie,
-            'esty_ci': skbio.diversity.alpha.esty_ci,
-            'faith_pd': skbio.diversity.alpha.faith_pd,
-            'fisher_alpha': skbio.diversity.alpha.fisher_alpha,
-            'goods_coverage': skbio.diversity.alpha.goods_coverage,
-            'heip_e': skbio.diversity.alpha.heip_e,
-            'kempton_taylor_q': skbio.diversity.alpha.kempton_taylor_q,
-            'margalef': skbio.diversity.alpha.margalef,
-            'mcintosh_d': skbio.diversity.alpha.mcintosh_d,
-            'mcintosh_e': skbio.diversity.alpha.mcintosh_e,
-            'menhinick': skbio.diversity.alpha.menhinick,
-            'michaelis_menten_fit': skbio.diversity.alpha.michaelis_menten_fit,
-            'observed_otus': skbio.diversity.alpha.observed_otus,
-            'osd': skbio.diversity.alpha.osd,
-            'pielou_e': skbio.diversity.alpha.pielou_e,
-            'robbins': skbio.diversity.alpha.robbins,
-            'shannon': skbio.diversity.alpha.shannon,
-            'simpson': skbio.diversity.alpha.simpson,
-            'simpson_e': skbio.diversity.alpha.simpson_e,
-            'singles': skbio.diversity.alpha.singles,
-            'strong': skbio.diversity.alpha.strong,
-            'gini_index': skbio.diversity.alpha.gini_index,
-            'lladser_pe': skbio.diversity.alpha.lladser_pe,
-            'lladser_ci': skbio.diversity.alpha.lladser_ci
-            }
+def _get_alpha_diversity_metric_map():
+    return {
+        'ace': skbio.diversity.alpha.ace,
+        'chao1': skbio.diversity.alpha.chao1,
+        'chao1_ci': skbio.diversity.alpha.chao1_ci,
+        'berger_parker_d': skbio.diversity.alpha.berger_parker_d,
+        'brillouin_d': skbio.diversity.alpha.brillouin_d,
+        'dominance': skbio.diversity.alpha.dominance,
+        'doubles': skbio.diversity.alpha.doubles,
+        'enspie': skbio.diversity.alpha.enspie,
+        'esty_ci': skbio.diversity.alpha.esty_ci,
+        'faith_pd': skbio.diversity.alpha.faith_pd,
+        'fisher_alpha': skbio.diversity.alpha.fisher_alpha,
+        'goods_coverage': skbio.diversity.alpha.goods_coverage,
+        'heip_e': skbio.diversity.alpha.heip_e,
+        'kempton_taylor_q': skbio.diversity.alpha.kempton_taylor_q,
+        'margalef': skbio.diversity.alpha.margalef,
+        'mcintosh_d': skbio.diversity.alpha.mcintosh_d,
+        'mcintosh_e': skbio.diversity.alpha.mcintosh_e,
+        'menhinick': skbio.diversity.alpha.menhinick,
+        'michaelis_menten_fit': skbio.diversity.alpha.michaelis_menten_fit,
+        'observed_otus': skbio.diversity.alpha.observed_otus,
+        'osd': skbio.diversity.alpha.osd,
+        'pielou_e': skbio.diversity.alpha.pielou_e,
+        'robbins': skbio.diversity.alpha.robbins,
+        'shannon': skbio.diversity.alpha.shannon,
+        'simpson': skbio.diversity.alpha.simpson,
+        'simpson_e': skbio.diversity.alpha.simpson_e,
+        'singles': skbio.diversity.alpha.singles,
+        'strong': skbio.diversity.alpha.strong,
+        'gini_index': skbio.diversity.alpha.gini_index,
+        'lladser_pe': skbio.diversity.alpha.lladser_pe,
+        'lladser_ci': skbio.diversity.alpha.lladser_ci}
+
+
+@experimental(as_of="0.4.0-dev")
+def get_alpha_diversity_metrics():
+    """ List scikit-bio's alpha diversity metrics
+
+    Returns
+    -------
+    list
+        Alphabetically sorted list of alpha diversity metrics implemented in
+        scikit-bio.
+
+    See Also
+    --------
+    get_beta_diversity_metrics
+
+    """
+    metrics = _get_alpha_diversity_metric_map()
+    return sorted(list(metrics.keys()))
+
+
+@experimental(as_of="0.4.0-dev")
+def get_beta_diversity_metrics():
+    """ List scikit-bio's beta diversity metrics
+
+    Returns
+    -------
+    list
+        Alphabetically sorted list of beta diversity metrics implemented in
+        scikit-bio.
+
+    See Also
+    --------
+    get_alpha_diversity_metrics
+    scipy.spatial.distance.pdist
+
+    Notes
+    -----
+    SciPy implements many additional beta diversity metrics that are not
+    included in this list. See documentation for
+    ``scipy.spatial.distance.pdist`` for more detail.
+
+    """
+    return ['unweighted_unifrac', 'weighted_unifrac']
 
 
 @experimental(as_of="0.4.0-dev")
@@ -102,8 +148,7 @@ def alpha_diversity(metric, counts, ids=None, **kwargs):
     of passing ``metric`` as a string.
 
     """
-    metrics = _get_alpha_diversity_metrics()
-
+    metric_map = _get_alpha_diversity_metric_map()
     counts = np.atleast_2d(counts)
     num_samples = len(counts)
     if ids is not None and num_samples != len(ids):
@@ -120,12 +165,11 @@ def alpha_diversity(metric, counts, ids=None, **kwargs):
             _vectorize_counts_and_tree(counts, kwargs['otu_ids'],
                                        kwargs['tree'])
         counts = counts_by_node
-        metric = partial(skbio.diversity.alpha._faith_pd._faith_pd,
-                         branch_lengths=branch_lengths)
+        metric = partial(_faith_pd, branch_lengths=branch_lengths)
     elif callable(metric):
         metric = partial(metric, **kwargs)
-    elif metric in metrics:
-        metric = metrics[metric]
+    elif metric in metric_map:
+        metric = metric_map[metric]
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
@@ -189,14 +233,13 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
             "ids.")
 
     if metric == 'unweighted_unifrac':
-        f = skbio.diversity.beta._unifrac._unweighted_unifrac_pdist_f
-        metric, counts, _ = f(counts, otu_ids=kwargs['otu_ids'],
-                              tree=kwargs['tree'])
+        metric, counts, _ = _unweighted_unifrac_pdist_f(
+                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
     elif metric == 'weighted_unifrac':
         normalized = kwargs.get('normalized', False)
-        f = skbio.diversity.beta._unifrac._weighted_unifrac_pdist_f
-        metric, counts, _ = f(counts, otu_ids=kwargs['otu_ids'],
-                              tree=kwargs['tree'], normalized=normalized)
+        metric, counts, _ = _weighted_unifrac_pdist_f(
+                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'],
+                normalized=normalized)
     elif callable(metric):
         metric = partial(metric, **kwargs)
     else:
@@ -204,95 +247,3 @@ def beta_diversity(metric, counts, ids=None, **kwargs):
 
     distances = pdist(counts, metric)
     return DistanceMatrix(distances, ids)
-
-
-def _validate_counts_vector(counts, suppress_cast=False):
-    """Validate and convert input to an acceptable counts vector type.
-
-    Note: may not always return a copy of `counts`!
-
-    """
-    counts = np.asarray(counts)
-
-    if not suppress_cast:
-        counts = counts.astype(int, casting='safe', copy=False)
-
-    if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
-    return counts
-
-
-def _validate_counts_vectors(*args, **kwargs):
-    results = []
-    lens = []
-    # py2-compatible mechanism for specifying a keyword argument when also
-    # passing *args derived from SO answer:
-    # http://stackoverflow.com/a/15302038/3424666
-    suppress_cast = kwargs.pop('suppress_cast', False)
-    for counts in args:
-        results.append(_validate_counts_vector(counts, suppress_cast))
-        lens.append(len(counts))
-    if len(set(lens)) > 1:
-        raise ValueError("Input vectors u_counts and v_counts must be of "
-                         "equal length.")
-
-    return results
-
-
-def _validate_otu_ids_and_tree(counts, otu_ids, tree):
-    # all otu_ids are unique
-    # len(otu_ids) == len(counts)
-    len_otu_ids = len(otu_ids)
-    set_otu_ids = set(otu_ids)
-    if len_otu_ids != len(set_otu_ids):
-        raise ValueError("OTU IDs vector cannot contain duplicated ids.")
-    if len(counts) != len_otu_ids:
-        raise ValueError("OTU IDs vector must be the same length as counts "
-                         "vector(s).")
-    if len(tree.root().children) == 0:
-        raise ValueError("Tree must contain more than just a root node.")
-
-    # the tree is rooted
-    if len(tree.root().children) > 2:
-        # this is an imperfect check for whether the tree is rooted or not.
-        # can this be improved?
-        raise ValueError("Tree must be rooted.")
-
-    # all nodes (except the root node) have corresponding branch lengths
-    # all tip names in tree are unique
-    # all otu_ids correspond to tip names in tree
-    branch_lengths = []
-    tip_names = []
-    for e in tree.traverse():
-        if not e.is_root():
-            branch_lengths.append(e.length)
-        if e.is_tip():
-            tip_names.append(e.name)
-    set_tip_names = set(tip_names)
-    if len(tip_names) != len(set_tip_names):
-        raise DuplicateNodeError("All tip names must be unique.")
-    if np.array([l is None for l in branch_lengths]).any():
-        raise ValueError("All non-root nodes in tree must have a branch "
-                         "length.")
-    missing_tip_names = set_otu_ids - set_tip_names
-    if missing_tip_names != set():
-        raise MissingNodeError("All otu_ids must be present as tip names in "
-                               "tree. Tree is missing tips with names: %s"
-                               % " ".join(missing_tip_names))
-
-
-def _vectorize_counts_and_tree(counts, otu_ids, tree):
-    """ Index tree and convert counts to np.array in corresponding order
-    """
-    tree_index = tree.to_array(nan_length_value=0.0)
-    otu_ids = np.asarray(otu_ids)
-    counts = np.atleast_2d(counts)
-    counts_by_node = _nodes_by_counts(counts, otu_ids, tree_index)
-    branch_lengths = tree_index['length']
-
-    # branch_lengths is just a reference to the array inside of tree_index,
-    # but it's used so much that it's convenient to just pull it out here.
-    return counts_by_node.T, tree_index, branch_lengths

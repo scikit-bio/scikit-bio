@@ -11,9 +11,9 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from skbio.util._decorator import experimental
-from skbio.diversity._driver import (_validate_counts_vector,
-                                     _validate_otu_ids_and_tree,
-                                     _vectorize_counts_and_tree)
+from skbio.diversity._validate import (_validate_counts_vector,
+                                       _validate_otu_ids_and_tree,
+                                       _vectorize_counts_and_tree)
 
 
 def _faith_pd(counts_by_node, branch_lengths):

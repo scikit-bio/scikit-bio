@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from ._base import osd
-from skbio.diversity.alpha._base import _validate_counts_vector
+from skbio.diversity._validate import _validate_counts_vector
 from skbio.util._decorator import experimental
 
 

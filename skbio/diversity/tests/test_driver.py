@@ -16,13 +16,15 @@ import numpy.testing as npt
 
 from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode
-from skbio.diversity import alpha_diversity, beta_diversity
+from skbio.diversity import (alpha_diversity, beta_diversity,
+                             get_alpha_diversity_metrics,
+                             get_beta_diversity_metrics)
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity._driver import (_validate_counts_vector,
-                                     _validate_counts_vectors,
-                                     _validate_otu_ids_and_tree,
-                                     _vectorize_counts_and_tree)
+from skbio.diversity._validate import (_validate_counts_vector,
+                                       _validate_counts_vectors,
+                                       _validate_otu_ids_and_tree,
+                                       _vectorize_counts_and_tree)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -224,7 +226,32 @@ class BetaDiversityTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
 
-class UtilityFunctionTests(TestCase):
+class MetricGetters(TestCase):
+
+    def test_get_alpha_diversity_metrics(self):
+        m = get_alpha_diversity_metrics()
+        # basic sanity checks
+        self.assertTrue('faith_pd' in m)
+        self.assertTrue('chao1' in m)
+
+    def test_get_alpha_diversity_metrics_sorted(self):
+        m = get_alpha_diversity_metrics()
+        n = sorted(list(m))
+        self.assertEqual(m, n)
+
+    def test_get_beta_diversity_metrics(self):
+        m = get_beta_diversity_metrics()
+        # basic sanity checks
+        self.assertTrue('unweighted_unifrac' in m)
+        self.assertTrue('weighted_unifrac' in m)
+
+    def test_get_beta_diversity_metrics_sorted(self):
+        m = get_beta_diversity_metrics()
+        n = sorted(list(m))
+        self.assertEqual(m, n)
+
+
+class ValidationTests(TestCase):
 
     def test_validate_counts_vector(self):
         # python list
