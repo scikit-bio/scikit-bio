@@ -13,7 +13,6 @@ import six
 
 import re
 import collections
-import copy
 import numbers
 from contextlib import contextmanager
 
@@ -24,8 +23,8 @@ import pandas as pd
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
-from skbio.util._decorator import (stable, experimental, classonlymethod,
-                                   overrides)
+from skbio.util._decorator import (stable, experimental, deprecated,
+                                   classonlymethod, overrides)
 
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
@@ -404,7 +403,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Notes
         -----
             The sequence-wide metadata (``Sequence.metadata``) is not retained
-            during concatentation.
+            during concatenation.
 
             Sequence objects can be cast to a different type only when the new
             type is an ancestor or child of the original type. Casting between
@@ -572,8 +571,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
             self._set_bytes(sequence)
 
-        MetadataMixin.__init__(self, metadata=metadata)
-        PositionalMetadataMixin.__init__(
+        MetadataMixin._init_(self, metadata=metadata)
+        PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
 
         if lowercase is False:
@@ -706,13 +705,13 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         if self.__class__ != other.__class__:
             return False
 
-        if not MetadataMixin.__eq__(self, other):
+        if not MetadataMixin._eq_(self, other):
             return False
 
         if self._string != other._string:
             return False
 
-        if not PositionalMetadataMixin.__eq__(self, other):
+        if not PositionalMetadataMixin._eq_(self, other):
             return False
 
         return True
@@ -1123,7 +1122,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         This method is equivalent to ``seq.copy(deep=False)``.
 
         """
-        return self.copy(deep=False)
+        return self._copy(False, {})
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
@@ -1140,7 +1139,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """
         return self._copy(True, memo)
 
-    @stable(as_of="0.4.0")
+    @deprecated(as_of="0.4.0-dev", until="0.5.1",
+                reason="Use `copy.copy(seq)` instead of "
+                       "`seq.copy(deep=False)`, and `copy.deepcopy(seq)` "
+                       "instead of `seq.copy(deep=True)`.")
     def copy(self, deep=False):
         """Return a copy of the biological sequence.
 
@@ -1272,27 +1274,19 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         # we don't make a distinction between deep vs. shallow copy of bytes
         # because dtype=np.uint8. we only need to make the distinction when
         # dealing with object dtype
-        bytes = np.copy(self._bytes)
+        bytes_ = np.copy(self._bytes)
 
-        seq_copy = self._constructor(sequence=bytes, metadata=None,
+        seq_copy = self._constructor(sequence=bytes_, metadata=None,
                                      positional_metadata=None)
 
-        if self.has_metadata():
-            metadata = self.metadata
-            if deep:
-                metadata = copy.deepcopy(metadata, memo)
-            else:
-                metadata = metadata.copy()
-            seq_copy._metadata = metadata
-
-        if self.has_positional_metadata():
-            positional_metadata = self.positional_metadata
-            if deep:
-                positional_metadata = copy.deepcopy(positional_metadata, memo)
-            else:
-                # deep=True makes a shallow copy of the underlying data buffer
-                positional_metadata = positional_metadata.copy(deep=True)
-            seq_copy._positional_metadata = positional_metadata
+        if deep:
+            seq_copy._metadata = MetadataMixin._deepcopy_(self, memo)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._deepcopy_(self, memo)
+        else:
+            seq_copy._metadata = MetadataMixin._copy_(self)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._copy_(self)
 
         return seq_copy
 

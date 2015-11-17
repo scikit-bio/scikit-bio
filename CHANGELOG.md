@@ -3,6 +3,8 @@
 ## Version 0.4.0-dev (changes since 0.4.0 release go here)
 
 ### Features
+* Added `skbio.io.format.blast7` for reading BLAST+ output format 7 or BLAST output format 9 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
+* Added `skbio.stats.composition.ancom` function, a test for differential abundance [#1054](https://github.com/biocore/scikit-bio/issues/1054)
 * Added `skbio.DissimilarityMatrix.to_data_frame` method for creating a ``pandas.DataFrame`` from a `DissimilarityMatrix` or `DistanceMatrix`. ([#757](https://github.com/biocore/scikit-bio/issues/757))
 * Added support for one-dimensional vector of dissimilarities in `skbio.stats.distance.DissimilarityMatrix`
 constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
@@ -17,6 +19,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``DistanceMatrix`` now has a new constructor method called `from_iterable`.
 * ``Sequence`` now accepts ``lowercase`` keyword like ``DNA`` and others. Updated ``fasta``, ``fastq``, and ``qseq`` readers/writers for ``Sequence`` to reflect this.
 * The ``lowercase`` method has been moved up to ``Sequence`` meaning all sequence objects now have a ``lowercase`` method.
+* Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ``skbio.diversity.alpha.faith_pd``, respectively.
 * Added ``reverse_transcribe`` class method to ``RNA``.
 * Added `Sequence.observed_chars` property for obtaining the set of observed characters in a sequence. ([#1075](https://github.com/biocore/scikit-bio/issues/1075))
 * Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/biocore/scikit-bio/issues/1074))
@@ -75,6 +78,9 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/biocore/scikit-bio/issues/1133))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
+
+### Deprecated functionality [stable]
+* `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
 
 ### Deprecated functionality [experimental]
 * ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.

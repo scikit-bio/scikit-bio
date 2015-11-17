@@ -10,8 +10,9 @@ from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
 from future.builtins import zip
 
-from abc import ABCMeta, abstractmethod
-from functools import partial
+import abc
+import copy
+import functools
 
 import numpy as np
 import pandas as pd
@@ -25,7 +26,7 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util._decorator import stable, experimental
 
 
-class SkbioObject(with_metaclass(ABCMeta, object)):
+class SkbioObject(with_metaclass(abc.ABCMeta, object)):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
@@ -33,12 +34,12 @@ class SkbioObject(with_metaclass(ABCMeta, object)):
     be implemented in subclasses, otherwise they will not be instantiable.
 
     """
-    @abstractmethod
+    @abc.abstractmethod
     def __str__(self):
         pass
 
 
-class MetadataMixin(object):
+class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
     @property
     @stable(as_of="0.4.0")
     def metadata(self):
@@ -109,13 +110,21 @@ class MetadataMixin(object):
     def metadata(self):
         self._metadata = None
 
+    @abc.abstractmethod
     def __init__(self, metadata=None):
+        pass
+
+    def _init_(self, metadata=None):
         if metadata is None:
             self._metadata = None
         else:
             self.metadata = metadata
 
+    @abc.abstractmethod
     def __eq__(self, other):
+        pass
+
+    def _eq_(self, other):
         # We're not simply comparing self.metadata to other.metadata in order
         # to avoid creating "empty" metadata representations on the objects if
         # they don't have metadata.
@@ -131,8 +140,32 @@ class MetadataMixin(object):
 
         return True
 
+    @abc.abstractmethod
     def __ne__(self, other):
+        pass
+
+    def _ne_(self, other):
         return not (self == other)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        pass
+
+    def _copy_(self):
+        if self.has_metadata():
+            return self.metadata.copy()
+        else:
+            return None
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo):
+        pass
+
+    def _deepcopy_(self, memo):
+        if self.has_metadata():
+            return copy.deepcopy(self.metadata, memo)
+        else:
+            return None
 
     @stable(as_of="0.4.0")
     def has_metadata(self):
@@ -169,8 +202,8 @@ class MetadataMixin(object):
         return self._metadata is not None and bool(self.metadata)
 
 
-class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
-    @abstractmethod
+class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
+    @abc.abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.
 
@@ -296,13 +329,21 @@ class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
     def positional_metadata(self):
         self._positional_metadata = None
 
+    @abc.abstractmethod
     def __init__(self, positional_metadata=None):
+        pass
+
+    def _init_(self, positional_metadata=None):
         if positional_metadata is None:
             self._positional_metadata = None
         else:
             self.positional_metadata = positional_metadata
 
+    @abc.abstractmethod
     def __eq__(self, other):
+        pass
+
+    def _eq_(self, other):
         # We're not simply comparing self.positional_metadata to
         # other.positional_metadata in order to avoid creating "empty"
         # positional metadata representations on the objects if they don't have
@@ -320,8 +361,33 @@ class PositionalMetadataMixin(with_metaclass(ABCMeta, object)):
 
         return True
 
+    @abc.abstractmethod
     def __ne__(self, other):
+        pass
+
+    def _ne_(self, other):
         return not (self == other)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        pass
+
+    def _copy_(self):
+        if self.has_positional_metadata():
+            # deep=True makes a shallow copy of the underlying data buffer.
+            return self.positional_metadata.copy(deep=True)
+        else:
+            return None
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo):
+        pass
+
+    def _deepcopy_(self, memo):
+        if self.has_positional_metadata():
+            return copy.deepcopy(self.positional_metadata, memo)
+        else:
+            return None
 
     @stable(as_of="0.4.0")
     def has_positional_metadata(self):
@@ -601,7 +667,7 @@ class OrdinationResults(SkbioObject):
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.samples.index, cmap)
 
-        scatter_fn = partial(ax.scatter, xs, ys, zs, s=s)
+        scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
         if point_colors is None:
             plot = scatter_fn()
         else:
