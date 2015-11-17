@@ -687,7 +687,7 @@ class UnifracTests(TestCase):
                         10.0 * (1.0 / 3.0),
                         0.0]).sum()
         obs = _weighted_unifrac_branch_correction(
-            tip_ds, u_counts, v_counts, u_sum, v_sum)
+            tip_ds, u_counts/u_sum, v_counts/v_sum)
         self.assertEqual(obs, exp)
 
     def test_unweighted_unifrac_pycogent_adapted(self):
@@ -722,11 +722,11 @@ class UnifracTests(TestCase):
 
         # scores computed by educational implementation
         self.assertAlmostEqual(
-            _weighted_unifrac(m[:, 0], m[:, 1], m0s, m1s, bl), 7.5)
+            _weighted_unifrac(m[:, 0], m[:, 1], m0s, m1s, bl)[0], 7.5)
         self.assertAlmostEqual(
-            _weighted_unifrac(m[:, 0], m[:, 2], m0s, m2s, bl), 6.0)
+            _weighted_unifrac(m[:, 0], m[:, 2], m0s, m2s, bl)[0], 6.0)
         self.assertAlmostEqual(
-            _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl), 4.5)
+            _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl)[0], 4.5)
 
 
 if __name__ == '__main__':

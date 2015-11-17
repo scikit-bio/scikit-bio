@@ -222,7 +222,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     else:
         return _weighted_unifrac(u_node_counts, v_node_counts,
                                  u_total_count, v_total_count,
-                                 branch_lengths)
+                                 branch_lengths)[0]
 
 
 def _validate(u_counts, v_counts, otu_ids, tree):
@@ -306,6 +306,10 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     -------
     float
         Weighted UniFrac distance between samples.
+    np.array of float
+        Proportional abundance of each node in tree in sample `u`
+    np.array of float
+        Proportional abundance of each node in tree in sample `v`
 
     Notes
     -----
@@ -326,8 +330,8 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     else:
         v_node_proportions = v_node_counts
 
-    return (branch_lengths *
-            abs(u_node_proportions - v_node_proportions)).sum()
+    wu = (branch_lengths * abs(u_node_proportions - v_node_proportions)).sum()
+    return wu, u_node_proportions, v_node_proportions
 
 
 def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
@@ -362,11 +366,11 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     if u_total_count == 0.0 and v_total_count == 0.0:
         # handle special case to avoid division by zero
         return 0.0
-    u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
-                          v_total_count, branch_lengths)
+    u, u_node_proportions, v_node_proportions = _weighted_unifrac(
+        u_node_counts, v_node_counts, u_total_count, v_total_count,
+        branch_lengths)
     c = _weighted_unifrac_branch_correction(
-        node_to_root_distances, u_node_counts, v_node_counts, u_total_count,
-        v_total_count)
+        node_to_root_distances, u_node_proportions, v_node_proportions)
 
     return u/c
 
@@ -453,8 +457,9 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
         def f(u_node_counts, v_node_counts):
             u_total_count = np.take(u_node_counts, tip_indices).sum()
             v_total_count = np.take(v_node_counts, tip_indices).sum()
-            u = _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
-                                  v_total_count, branch_lengths)
+            u, _, _ = _weighted_unifrac(u_node_counts, v_node_counts,
+                                        u_total_count, v_total_count,
+                                        branch_lengths)
             return u
 
     return f, counts_by_node, branch_lengths
@@ -466,9 +471,9 @@ def _get_tip_indices(tree_index):
     return tip_indices
 
 
-def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
-                                        v_node_counts, u_total_count,
-                                        v_total_count):
+def _weighted_unifrac_branch_correction(node_to_root_distances,
+                                        u_node_proportions,
+                                        v_node_proportions):
     """Calculates weighted unifrac branch length correction.
 
     Parameters
@@ -477,9 +482,9 @@ def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
         1D column vector of branch lengths in post order form. There should be
         positions in this vector for all nodes in the tree, but only tips
         should be non-zero.
-    u_node_counts, v_node_counts : np.ndarray
-        Counts of observations of all nodes in the tree in samples ``u`` and
-        ``v``, respectively.
+    u_node_proportions, v_node_proportions : np.ndarray
+        Proportional abundace of observations of all nodes in the tree in
+        samples ``u`` and ``v``, respectively.
     u_total_count, v_total_count : float
         The sum of the observations in samples ``u`` and ``v``, respectively.
 
@@ -488,15 +493,5 @@ def _weighted_unifrac_branch_correction(node_to_root_distances, u_node_counts,
     np.ndarray
         The corrected branch lengths
     """
-    if u_total_count > 0:
-        u_node_proportions = u_node_counts / u_total_count
-    else:
-        u_node_proportions = u_node_counts
-
-    if v_total_count > 0:
-        v_node_proportions = v_node_counts / v_total_count
-    else:
-        v_node_proportions = v_node_counts
-
     return (node_to_root_distances.ravel() *
             (u_node_proportions + v_node_proportions)).sum()
