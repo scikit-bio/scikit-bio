@@ -13,9 +13,9 @@ from functools import partial
 import numpy as np
 
 from skbio.util._decorator import experimental
-from skbio.diversity._validate import (_validate_counts_matrix,
-                                       _validate_otu_ids_and_tree,
-                                       _vectorize_counts_and_tree)
+from skbio.diversity._util import (_validate_counts_matrix,
+                                   _validate_otu_ids_and_tree,
+                                   _vectorize_counts_and_tree)
 from skbio.diversity._phylogenetic import _tip_distances
 
 

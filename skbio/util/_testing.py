@@ -1194,6 +1194,53 @@ def assert_data_frame_almost_equal(left, right):
     assert_index_equal(left.index, right.index)
 
 
+@experimental(as_of="0.4.0")
+def assert_series_almost_equal(left, right):
+    """Raise AssertionError if ``pd.Series`` objects are not "almost equal".
+
+    Wrapper of ``pd.util.testing.assert_series_equal``. Floating point values
+    are considered "almost equal" if they are within a threshold defined by
+    ``assert_series_equal``.
+
+    Other notes:
+
+    * Index (row) and column ordering must be the same for objects to be equal.
+    * NaNs (``np.nan``) in the same locations are considered equal.
+
+    This is a helper function intended to be used in unit tests that need to
+    compare ``pd.Series`` objects.
+
+    Parameters
+    ----------
+    left, right : pd.Series
+        ``pd.Series`` objects to compare.
+
+    Raises
+    ------
+    AssertionError
+        If `left` and `right` are not "almost equal".
+
+    See Also
+    --------
+    pandas.util.testing.assert_series_equal
+
+    """
+    # pass all kwargs to ensure this function has consistent behavior even if
+    # `assert_frame_equal`'s defaults change
+    pdt.assert_series_equal(left, right,
+                            check_dtype=True,
+                            check_index_type=True,
+                            check_series_type=True,
+                            check_less_precise=False,
+                            check_names=True,
+                            check_exact=False,
+                            check_datetimelike_compat=False,
+                            obj='Series')
+    # this check ensures that empty Series with different indices do not
+    # compare equal.
+    assert_index_equal(left.index, right.index)
+
+
 def assert_index_equal(a, b):
     pdt.assert_index_equal(a, b,
                            exact=True,

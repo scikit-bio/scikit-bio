@@ -14,17 +14,14 @@ import pandas as pd
 import numpy as np
 import numpy.testing as npt
 
-from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix, TreeNode
+from skbio.io._fileobject import StringIO
+from skbio.util import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
                              get_alpha_diversity_metrics,
                              get_beta_diversity_metrics)
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity._validate import (_validate_counts_vector,
-                                       _validate_counts_matrix,
-                                       _validate_otu_ids_and_tree,
-                                       _vectorize_counts_and_tree)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -156,44 +153,44 @@ class AlphaDiversityTests(TestCase):
         # empty vector
         actual = alpha_diversity('observed_otus', np.array([], dtype=np.int64))
         expected = pd.Series([0])
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
         # array of empty vector
         actual = alpha_diversity('observed_otus',
                                  np.array([[]], dtype=np.int64))
         expected = pd.Series([0])
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
         actual = alpha_diversity('observed_otus',
                                  np.array([[], []], dtype=np.int64))
         expected = pd.Series([0, 0])
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
         # empty vector
         actual = alpha_diversity('faith_pd', np.array([], dtype=np.int64),
                                  tree=self.tree1, otu_ids=[])
-        expected = pd.Series([0])
-        npt.assert_array_equal(actual, expected)
+        expected = pd.Series([0.])
+        assert_series_almost_equal(actual, expected)
 
         # array of empty vector
         actual = alpha_diversity('faith_pd',
                                  np.array([[]], dtype=np.int64),
                                  tree=self.tree1, otu_ids=[])
-        expected = pd.Series([0])
-        npt.assert_array_equal(actual, expected)
+        expected = pd.Series([0.])
+        assert_series_almost_equal(actual, expected)
 
         # array of empty vectors
         actual = alpha_diversity('faith_pd',
                                  np.array([[], []], dtype=np.int64),
                                  tree=self.tree1, otu_ids=[])
-        expected = pd.Series([0, 0])
-        npt.assert_array_equal(actual, expected)
+        expected = pd.Series([0., 0.])
+        assert_series_almost_equal(actual, expected)
 
     def test_single_count_vector(self):
         actual = alpha_diversity('observed_otus', np.array([1, 0, 2]))
         expected = pd.Series([2])
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
         actual = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
                                  tree=self.tree1, otu_ids=self.oids1)
@@ -204,27 +201,27 @@ class AlphaDiversityTests(TestCase):
         array_result = alpha_diversity('observed_otus',
                                        np.array([1, 3, 0, 1, 0]))
         self.assertAlmostEqual(list_result[0], 3)
-        npt.assert_array_equal(list_result, array_result)
+        assert_series_almost_equal(list_result, array_result)
 
         list_result = alpha_diversity('faith_pd', [1, 3, 0, 1, 0],
                                       tree=self.tree1, otu_ids=self.oids1)
         array_result = alpha_diversity('faith_pd', np.array([1, 3, 0, 1, 0]),
                                        tree=self.tree1, otu_ids=self.oids1)
         self.assertAlmostEqual(list_result[0], 4.5)
-        npt.assert_array_equal(list_result, array_result)
+        assert_series_almost_equal(list_result, array_result)
 
     def test_observed_otus(self):
         # expected values hand-calculated
         expected = pd.Series([3, 3, 3, 3], index=self.sids1)
         actual = alpha_diversity('observed_otus', self.table1, self.sids1)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
         # function passed instead of string
         actual = alpha_diversity(observed_otus, self.table1, self.sids1)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
         # alt input table
         expected = pd.Series([2, 1, 0], index=self.sids2)
         actual = alpha_diversity('observed_otus', self.table2, self.sids2)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
     def test_faith_pd(self):
         # calling faith_pd through alpha_diversity gives same results as
@@ -235,7 +232,7 @@ class AlphaDiversityTests(TestCase):
         expected = pd.Series(expected)
         actual = alpha_diversity('faith_pd', self.table1, tree=self.tree1,
                                  otu_ids=self.oids1)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
         # alt input table and tree
         expected = []
@@ -244,13 +241,13 @@ class AlphaDiversityTests(TestCase):
         expected = pd.Series(expected)
         actual = alpha_diversity('faith_pd', self.table2, tree=self.tree2,
                                  otu_ids=self.oids2)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
     def test_no_ids(self):
         # expected values hand-calculated
         expected = pd.Series([3, 3, 3, 3])
         actual = alpha_diversity('observed_otus', self.table1)
-        npt.assert_array_equal(actual, expected)
+        assert_series_almost_equal(actual, expected)
 
     def test_optimized(self):
         # calling optimized faith_pd gives same results as calling unoptimized
@@ -259,7 +256,7 @@ class AlphaDiversityTests(TestCase):
                                     otu_ids=self.oids1)
         unoptimized = alpha_diversity(faith_pd, self.table1, tree=self.tree1,
                                       otu_ids=self.oids1)
-        npt.assert_array_equal(optimized, unoptimized)
+        assert_series_almost_equal(optimized, unoptimized)
 
 
 class BetaDiversityTests(TestCase):
@@ -588,221 +585,6 @@ class MetricGetters(TestCase):
         m = get_beta_diversity_metrics()
         n = sorted(list(m))
         self.assertEqual(m, n)
-
-
-class ValidationTests(TestCase):
-
-    def test_validate_counts_vector(self):
-        # python list
-        obs = _validate_counts_vector([0, 2, 1, 3])
-        npt.assert_array_equal(obs, np.array([0, 2, 1, 3]))
-        self.assertEqual(obs.dtype, int)
-
-        # numpy array (no copy made)
-        data = np.array([0, 2, 1, 3])
-        obs = _validate_counts_vector(data)
-        npt.assert_array_equal(obs, data)
-        self.assertEqual(obs.dtype, int)
-        self.assertTrue(obs is data)
-
-        # single element
-        obs = _validate_counts_vector([42])
-        npt.assert_array_equal(obs, np.array([42]))
-        self.assertEqual(obs.dtype, int)
-        self.assertEqual(obs.shape, (1,))
-
-        # suppress casting to int
-        obs = _validate_counts_vector([42.2, 42.1, 0], suppress_cast=True)
-        npt.assert_array_equal(obs, np.array([42.2, 42.1, 0]))
-        self.assertEqual(obs.dtype, float)
-
-        # all zeros
-        obs = _validate_counts_vector([0, 0, 0])
-        npt.assert_array_equal(obs, np.array([0, 0, 0]))
-        self.assertEqual(obs.dtype, int)
-
-        # all zeros (single value)
-        obs = _validate_counts_vector([0])
-        npt.assert_array_equal(obs, np.array([0]))
-        self.assertEqual(obs.dtype, int)
-
-    def test_validate_counts_vector_invalid_input(self):
-        # wrong dtype
-        with self.assertRaises(TypeError):
-            _validate_counts_vector([0, 2, 1.2, 3])
-
-        # wrong number of dimensions (2-D)
-        with self.assertRaises(ValueError):
-            _validate_counts_vector([[0, 2, 1, 3], [4, 5, 6, 7]])
-
-        # wrong number of dimensions (scalar)
-        with self.assertRaises(ValueError):
-            _validate_counts_vector(1)
-
-        # negative values
-        with self.assertRaises(ValueError):
-            _validate_counts_vector([0, 0, 2, -1, 3])
-
-    def test_validate_counts_matrix(self):
-        # basic valid input (n=2)
-        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
-                                       [0, 0, 2, 1, 3]])
-        npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
-        npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
-
-        # basic valid input (n=3)
-        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
-                                       [0, 0, 2, 1, 3],
-                                       [1, 1, 1, 1, 1]])
-        npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
-        npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
-        npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
-
-        # empty counts vectors
-        obs = _validate_counts_matrix(np.array([[], []], dtype=int))
-        npt.assert_array_equal(obs[0], np.array([]))
-        npt.assert_array_equal(obs[1], np.array([]))
-
-    def test_validate_counts_matrix_suppress_cast(self):
-        # suppress_cast is passed through to _validate_counts_vector
-        obs = _validate_counts_matrix(
-            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], suppress_cast=True)
-        npt.assert_array_equal(obs[0], np.array([42.2, 42.1, 0]))
-        npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
-        self.assertEqual(obs[0].dtype, float)
-        self.assertEqual(obs[1].dtype, float)
-        with self.assertRaises(TypeError):
-            _validate_counts_matrix([[0.0], [1]], suppress_cast=False)
-
-    def test_validate_counts_matrix_negative_counts(self):
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0, 1, 1, 0, 2], [0, 0, 2, -1, 3]])
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0, 0, 2, -1, 3], [0, 1, 1, 0, 2]])
-
-    def test_validate_counts_matrix_unequal_lengths(self):
-        # len of vectors not equal
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0], [0, 0], [9, 8]])
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0, 0], [0, 0, 8], [9, 8]])
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0, 0, 75], [0, 0, 3], [9, 8, 22, 44]])
-
-    def test_validate_otu_ids_and_tree(self):
-        # basic valid input
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
-        # all tips observed
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 1, 1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
-        # no tips observed
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = []
-        otu_ids = []
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
-        # all counts zero
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [0, 0, 0, 0, 0]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
-    def test_validate_otu_ids_and_tree_invalid_input(self):
-        # tree has duplicated tip ids
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU2:0.75):1.25):0.0)root;'))
-        counts = [1, 1, 1]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(DuplicateNodeError, _validate_otu_ids_and_tree,
-                          counts, otu_ids, t)
-
-        # unrooted tree as input
-        t = TreeNode.read(StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                   u'OTU4:0.7);'))
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # otu_ids has duplicated ids
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU2']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # len of vectors not equal
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 2]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # tree with no branch lengths
-        t = TreeNode.read(
-            StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # tree missing some branch lengths
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # otu_ids not present in tree
-        t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.25,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
-        counts = [1, 2, 3]
-        otu_ids = ['OTU1', 'OTU2', 'OTU32']
-        self.assertRaises(MissingNodeError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-        # single node tree
-        t = TreeNode.read(StringIO(u'root;'))
-        counts = []
-        otu_ids = []
-        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
-                          otu_ids, t)
-
-    def test_vectorize_counts_and_tree(self):
-        t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
-        counts = np.array([[0, 1], [1, 5], [10, 1]])
-        count_array, indexed, branch_lengths = \
-            _vectorize_counts_and_tree(counts, np.array(['a', 'b']), t)
-        exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
-        npt.assert_equal(count_array, exp_counts.T)
-
 
 if __name__ == "__main__":
     main()

@@ -20,8 +20,8 @@ from skbio.diversity.beta._unifrac import (
     _normalize_weighted_unifrac_by_default)
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
-from skbio.diversity._validate import (_validate_counts_matrix,
-                                       _get_phylogenetic_kwargs)
+from skbio.diversity._util import (_validate_counts_matrix,
+                                   _get_phylogenetic_kwargs)
 
 
 def _get_alpha_diversity_metric_map():
@@ -183,8 +183,9 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     if metric == 'faith_pd':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        counts, branch_lengths = _setup_faith_pd(
+        counts_by_node, branch_lengths = _setup_faith_pd(
             counts, otu_ids, tree, validate, single_sample=False)
+        counts = counts_by_node
         metric = partial(_faith_pd, branch_lengths=branch_lengths)
     elif callable(metric):
         metric = partial(metric, **kwargs)
@@ -279,17 +280,19 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts = _setup_multiple_unweighted_unifrac(
+        metric, counts_by_node = _setup_multiple_unweighted_unifrac(
                 counts, otu_ids=otu_ids, tree=tree, validate=validate)
+        counts = counts_by_node
     elif metric == 'weighted_unifrac':
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop('normalized',
                                 _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts = _setup_multiple_weighted_unifrac(
+        metric, counts_by_node = _setup_multiple_weighted_unifrac(
                 counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
                 validate=validate)
+        counts = counts_by_node
     elif callable(metric):
         metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
