@@ -1248,6 +1248,8 @@ class TestConsensus(unittest.TestCase):
             DNA('A'),
             DNA('A'),
             DNA('A'),
+            DNA('A'),
+            DNA('.'),
             DNA('.'),
             DNA('.'),
             DNA('-'),
