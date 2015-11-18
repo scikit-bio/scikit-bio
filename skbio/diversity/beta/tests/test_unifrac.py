@@ -639,7 +639,7 @@ class UnifracTests(TestCase):
         self.assertAlmostEqual(actual, expected)
 
     def test_pdist_unweighted(self):
-        f, counts, length = _unweighted_unifrac_pdist_f(
+        f, counts = _unweighted_unifrac_pdist_f(
             self.b1, np.asarray(self.oids1), self.t1)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
@@ -651,7 +651,7 @@ class UnifracTests(TestCase):
         npt.assert_almost_equal(obs, exp)
 
     def test_pdist_weighted(self):
-        f, counts, length = _weighted_unifrac_pdist_f(
+        f, counts = _weighted_unifrac_pdist_f(
             self.b1, np.asarray(self.oids1), self.t1, normalized=False)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
@@ -663,7 +663,7 @@ class UnifracTests(TestCase):
         npt.assert_almost_equal(obs, exp)
 
     def test_pdist_weighted_normalized(self):
-        f, counts, length = _weighted_unifrac_pdist_f(
+        f, counts = _weighted_unifrac_pdist_f(
             self.b1, np.asarray(self.oids1), self.t1, normalized=True)
         exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
         obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)

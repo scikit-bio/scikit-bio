@@ -52,8 +52,8 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
 
     if ids is not None and len(counts) != len(ids):
         raise ValueError(
-            "Number of rows in counts must be equal to number of provided "
-            "ids.")
+            "Number of rows in ``counts`` must be equal to number of provided "
+            "``ids``.")
 
     # py2-compatible mechanism for specifying a keyword argument when also
     # passing *args derived from SO answer:
@@ -65,7 +65,7 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
         results.append(_validate_counts_vector(v, suppress_cast))
         lens.append(len(v))
     if len(set(lens)) > 1:
-        raise ValueError("Input vectors must be of equal length.")
+        raise ValueError("All rows in ``counts`` must be of equal length.")
 
     return np.asarray(results)
 
@@ -76,18 +76,18 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     len_otu_ids = len(otu_ids)
     set_otu_ids = set(otu_ids)
     if len_otu_ids != len(set_otu_ids):
-        raise ValueError("OTU IDs vector cannot contain duplicated ids.")
+        raise ValueError("``otu_ids`` cannot contain duplicated ids.")
     if len(counts) != len_otu_ids:
-        raise ValueError("OTU IDs vector must be the same length as counts "
+        raise ValueError("``otu_ids`` must be the same length as ``counts`` "
                          "vector(s).")
     if len(tree.root().children) == 0:
-        raise ValueError("Tree must contain more than just a root node.")
+        raise ValueError("``tree`` must contain more than just a root node.")
 
     # the tree is rooted
     if len(tree.root().children) > 2:
         # this is an imperfect check for whether the tree is rooted or not.
         # can this be improved?
-        raise ValueError("Tree must be rooted.")
+        raise ValueError("``tree`` must be rooted.")
 
     # all nodes (except the root node) have corresponding branch lengths
     # all tip names in tree are unique
@@ -103,13 +103,13 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     if len(tip_names) != len(set_tip_names):
         raise DuplicateNodeError("All tip names must be unique.")
     if np.array([l is None for l in branch_lengths]).any():
-        raise ValueError("All non-root nodes in tree must have a branch "
+        raise ValueError("All non-root nodes in ``tree`` must have a branch "
                          "length.")
     missing_tip_names = set_otu_ids - set_tip_names
     if missing_tip_names != set():
-        raise MissingNodeError("All otu_ids must be present as tip names in "
-                               "tree. Tree is missing tips with names: %s"
-                               % " ".join(missing_tip_names))
+        raise MissingNodeError("All ``otu_ids`` must be present as tip names "
+                               "in ``tree``. ``otu_ids`` not correspond to "
+                               "tip names: %s" % " ".join(missing_tip_names))
 
 
 def _vectorize_counts_and_tree(counts, otu_ids, tree):
@@ -124,3 +124,21 @@ def _vectorize_counts_and_tree(counts, otu_ids, tree):
     # branch_lengths is just a reference to the array inside of tree_index,
     # but it's used so much that it's convenient to just pull it out here.
     return counts_by_node.T, tree_index, branch_lengths
+
+
+def _get_phylogenetic_kwargs(counts, **kwargs):
+    try:
+        otu_ids = kwargs.pop('otu_ids')
+    except KeyError:
+        raise ValueError("``otu_ids`` is required for phylogenetic diversity "
+                         "metrics.")
+    try:
+        tree = kwargs.pop('tree')
+    except KeyError:
+        raise ValueError("``tree`` is required for phylogenetic diversity "
+                         "metrics.")
+
+    if len(kwargs) > 0:
+        raise TypeError("Unsupported keyword arguments provided: %s." %
+                        ' '.join(kwargs.keys()))
+    return otu_ids, tree, kwargs

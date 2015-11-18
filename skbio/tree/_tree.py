@@ -2062,7 +2062,7 @@ class TreeNode(SkbioObject):
             [(attribute_name, type)]. If `None`, then `name`, `length`, and
             `id` are returned.
         nan_length_value : float, optional
-            If `True`, replaces any `nan` in the branch length vector
+            If provided, replaces any `nan` in the branch length vector
             (i.e., ``result['length']``) with this value. `nan` branch lengths
             can arise from an edge not having a length (common for the root
             node parent edge), which can making summing problematic.
@@ -2079,7 +2079,7 @@ class TreeNode(SkbioObject):
         Notes
         -----
         Attribute arrays are in index order such that TreeNode.id can be used
-        as a lookup into the the array.
+        as a lookup into the array.
 
         Examples
         --------

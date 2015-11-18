@@ -14,15 +14,15 @@ from scipy.spatial.distance import pdist
 import pandas as pd
 
 import skbio
-from skbio.diversity.alpha._faith_pd import _faith_pd
+from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
 from skbio.diversity.beta._unifrac import (
     _unweighted_unifrac_pdist_f, _weighted_unifrac_pdist_f,
     _normalize_weighted_unifrac_by_default)
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._validate import (_validate_counts_matrix,
-                                       _vectorize_counts_and_tree,
-                                       _validate_otu_ids_and_tree)
+                                       _validate_otu_ids_and_tree,
+                                       _get_phylogenetic_kwargs)
 
 
 def _get_alpha_diversity_metric_map():
@@ -106,17 +106,17 @@ def get_beta_diversity_metrics():
 
 @experimental(as_of="0.4.0-dev")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
-    """ Compute alpha diversity for one or more count vectors
+    """ Compute alpha diversity for one or more samples
 
     Parameters
     ----------
     metric: str, callable
-        The alpha diversity metric to apply to the count vector(s).
+        The alpha diversity metric to apply to the sample(s).
         Passing metric as a string is preferable as this often results in an
         optimized version of the metric being used.
     counts : 1D or 2D array_like of ints or floats
         Vector or matrix containing count/abundance data. If a matrix, each row
-        should contain counts of observations in a given sample.
+        should contain counts of OTUs in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``.
     validate: bool, optional
@@ -127,11 +127,13 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         bypassed if you're not certain that your input data are valid. See
         Notes for the description of what validation entails so you can
         determine if you can safely disable validation.
+    kwargs : kwargs, optional
+        Metric-specific parameters.
 
     Returns
     -------
     pd.Series
-        Values of metric for all vectors provided in ``counts``. The index
+        Values of ``metric`` for all vectors provided in ``counts``. The index
         will be ``ids``, if provided.
 
     Raises
@@ -139,21 +141,23 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     ValueError, MissingNodeError, DuplicateNodeError
         If validation fails (see description of validation in Notes). Exact
         error will depend on what was invalid.
+    TypeError
+        If invalid method-specific parameters are provided.
 
     See Also
     --------
-    skbio.diversity.beta.beta_diversity
+    skbio.diversity.beta_diversity
 
     Notes
     -----
-    The value that you provide for for ``metric`` can be either a string (e.g.,
+    The value that you provide for ``metric`` can be either a string (e.g.,
     ``"faith_pd"``) or a function
     (e.g., ``skbio.diversity.alpha.faith_pd``). The metric should
     generally be passed as a string, as this often uses an optimized version
     of the metric. For example, passing  ``"faith_pd"`` (a string) will be
     tens of times faster than passing the function
     ``skbio.diversity.alpha.faith_pd``. The latter may be faster if computing
-    alpha diversity for only one or a few distances, but in these cases the
+    alpha diversity for only one or a few samples, but in these cases the
     difference in runtime is negligible, so it's safer to just err on the side
     of passing ``metric`` as a string.
 
@@ -179,17 +183,14 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         counts = _validate_counts_matrix(counts, ids=ids)
 
     if metric == 'faith_pd':
-        otu_ids, tree = _get_phylogenetic_kwargs(counts, **kwargs)
-        if validate:
-            _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
-        counts_by_node, tree_index, branch_lengths = \
-            _vectorize_counts_and_tree(counts, otu_ids, tree)
-        counts = counts_by_node
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        counts, branch_lengths = _setup_faith_pd(
+            counts, otu_ids, tree, validate, single_sample=False)
         metric = partial(_faith_pd, branch_lengths=branch_lengths)
     elif callable(metric):
         metric = partial(metric, **kwargs)
     elif metric in metric_map:
-        metric = metric_map[metric]
+        metric = partial(metric_map[metric], **kwargs)
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
@@ -199,18 +200,18 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
-    """Compute distances between all pairs of columns in a counts matrix
+    """Compute distances between all pairs of samples
 
     Parameters
     ----------
     metric : str, callable
         The pairwise distance function to apply. See the scipy ``pdist`` docs
         and the scikit-bio functions linked under *See Also* for available
-        metrics. Passing metrics as a string is preferable as this often
+        metrics. Passing metrics as a strings is preferable as this often
         results in an optimized version of the metric being used.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
-        of observations in a given sample.
+        of OTUs in a given sample.
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``.
     validate: bool, optional
@@ -221,6 +222,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         bypassed if you're not certain that your input data are valid. See
         Notes for the description of what validation entails so you can
         determine if you can safely disable validation.
+    kwargs : kwargs, optional
+        Metric-specific parameters.
 
     Returns
     -------
@@ -233,13 +236,15 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
     ValueError, MissingNodeError, DuplicateNodeError
         If validation fails (see description of validation in Notes). Exact
         error will depend on what was invalid.
+    TypeError
+        If invalid method-specific parameters are provided.
 
     See Also
     --------
     unweighted_unifrac
     weighted_unifrac
     scipy.spatial.distance.pdist
-    skbio.diversity.alpha.alpha_diversity
+    skbio.diversity.alpha_diversity
 
     Notes
     -----
@@ -274,44 +279,28 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         counts = _validate_counts_matrix(counts, ids=ids)
 
     if metric == 'unweighted_unifrac':
-        otu_ids, tree = _get_phylogenetic_kwargs(counts, **kwargs)
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         if validate:
             _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
-        metric, counts, _ = _unweighted_unifrac_pdist_f(
-                counts, otu_ids=kwargs['otu_ids'], tree=kwargs['tree'])
+        metric, counts = _unweighted_unifrac_pdist_f(
+                counts, otu_ids=otu_ids, tree=tree)
     elif metric == 'weighted_unifrac':
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop('normalized',
                                 _normalize_weighted_unifrac_by_default)
-        otu_ids, tree = _get_phylogenetic_kwargs(counts, **kwargs)
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         if validate:
             _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
-        metric, counts, _ = _weighted_unifrac_pdist_f(
+        metric, counts = _weighted_unifrac_pdist_f(
                 counts, otu_ids=otu_ids, tree=tree, normalized=normalized)
     elif callable(metric):
         metric = partial(metric, **kwargs)
+        # remove all values from kwargs, since they have already been provided
+        # through the partial
+        kwargs = {}
     else:
         pass
 
-    distances = pdist(counts, metric)
+    distances = pdist(counts, metric, **kwargs)
     return DistanceMatrix(distances, ids)
-
-
-def _get_phylogenetic_kwargs(counts, **kwargs):
-    try:
-        otu_ids = kwargs.pop('otu_ids')
-    except KeyError:
-        raise ValueError("otu_ids is required for phylogenetic diversity "
-                         "metrics.")
-    try:
-        tree = kwargs.pop('tree')
-    except KeyError:
-        raise ValueError("tree is required for phylogenetic diversity "
-                         "metrics.")
-
-    if len(kwargs) > 0:
-        raise ValueError("Unsupported keyword arguments provided: %s." %
-                         ' '.join(kwargs.keys()))
-
-    return otu_ids, tree

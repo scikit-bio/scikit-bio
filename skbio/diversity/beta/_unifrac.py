@@ -29,7 +29,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     Parameters
     ----------
     u_counts, v_counts: list, np.array
-        Vectors of counts of OTUs for two samples. Must be equal length.
+        Vectors of counts/abundances of OTUs for two samples. Must be equal
+        length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``.
@@ -110,7 +111,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
-    u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index =\
+    u_node_counts, v_node_counts, _, _, tree_index =\
         _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
                               normalized=False, unweighted=True)
     return _unweighted_unifrac(u_node_counts, v_node_counts,
@@ -126,7 +127,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     Parameters
     ----------
     u_counts, v_counts: list, np.array
-        Vectors of counts of OTUs for two samples. Must be equal length.
+        Vectors of counts/abundances of OTUs for two samples. Must be equal
+        length.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``.
@@ -311,11 +313,6 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     np.array of float
         Proportional abundance of each node in tree in sample `v`
 
-    Notes
-    -----
-    The count vectors passed here correspond to all nodes in the tree, not
-    just the tips.
-
     """
     if u_total_count > 0:
         # convert to relative abundances if there are any counts
@@ -398,8 +395,6 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
         to ``scipy.spatial.distance.pdist``.
     2D np.array of ints, floats
         Counts of all nodes in ``tree``.
-    2D np.array of floats
-        Branch length leading to all nodes in ``tree``.
 
     """
     counts_by_node, tree_index, branch_lengths = \
@@ -407,7 +402,7 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
 
     f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
-    return f, counts_by_node, branch_lengths
+    return f, counts_by_node
 
 
 def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
@@ -433,8 +428,6 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
         to ``scipy.spatial.distance.pdist``.
     2D np.array of ints, floats
         Counts of all nodes in ``tree``.
-    2D np.array of floats
-        Branch length leading to all nodes in ``tree``.
 
     """
     counts_by_node, tree_index, branch_lengths = \
@@ -462,7 +455,7 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
                                         branch_lengths)
             return u
 
-    return f, counts_by_node, branch_lengths
+    return f, counts_by_node
 
 
 def _get_tip_indices(tree_index):

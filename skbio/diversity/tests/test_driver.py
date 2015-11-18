@@ -66,6 +66,16 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(ValueError, alpha_diversity, 'observed_otus',
                           [0, 3, -12, 42])
 
+        # additional kwargs
+        self.assertRaises(TypeError, alpha_diversity, 'observed_otus',
+                          [0, 1], not_a_real_kwarg=42.0)
+        self.assertRaises(TypeError, alpha_diversity, 'faith_pd',
+                          [0, 1], tree=self.tree1, otu_ids=['OTU1', 'OTU2'],
+                          not_a_real_kwarg=42.0)
+        self.assertRaises(TypeError, alpha_diversity, faith_pd,
+                          [0, 1], tree=self.tree1, otu_ids=['OTU1', 'OTU2'],
+                          not_a_real_kwarg=42.0)
+
     def test_invalid_input_phylogenetic(self):
         # otu_ids not provided
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd', self.table1,
@@ -285,9 +295,26 @@ class BetaDiversityTests(TestCase):
 
         # negative counts
         self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[0, 3, -12, 42]])
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
                           [[0, 1, 3, 4], [0, 3, -12, 42]])
+        self.assertRaises(ValueError, beta_diversity, 'euclidean',
+                          [[0, 1, 3, -4], [0, 3, 12, 42]])
+
+        # additional kwargs
+        self.assertRaises(TypeError, beta_diversity, 'euclidean',
+                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          not_a_real_kwarg=42.0)
+        self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
+                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          not_a_real_kwarg=42.0, tree=self.tree1,
+                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+        self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
+                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          not_a_real_kwarg=42.0, tree=self.tree1,
+                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+        self.assertRaises(TypeError, beta_diversity, weighted_unifrac,
+                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          not_a_real_kwarg=42.0, tree=self.tree1,
+                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
 
     def test_invalid_input_phylogenetic(self):
         # otu_ids not provided
@@ -524,6 +551,18 @@ class BetaDiversityTests(TestCase):
             for id2 in self.sids1:
                 npt.assert_almost_equal(dm1[id1, id2],
                                         expected_dm[id1, id2], 6)
+
+    def test_scipy_kwargs(self):
+        # confirm that p can be passed to SciPy's minkowski, and that it
+        # gives a different result than not passing it (the off-diagonal
+        # entries are not equal).
+        dm1 = beta_diversity('minkowski', self.table1, self.sids1)
+        dm2 = beta_diversity('minkowski', self.table1, self.sids1, p=42.0)
+
+        for id1 in self.sids1:
+            for id2 in self.sids1:
+                if id1 != id2:
+                    self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
 
 
 class MetricGetters(TestCase):

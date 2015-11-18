@@ -17,19 +17,18 @@ from skbio.diversity._validate import (_validate_counts_vector,
 
 
 def _faith_pd(counts_by_node, branch_lengths):
-    counts_by_node = np.where(counts_by_node > 0, 1, 0)
-    result = (branch_lengths * counts_by_node).sum()
-    return result
+    observed_nodes = np.where(counts_by_node > 0, 1, 0)
+    return (branch_lengths * observed_nodes).sum()
 
 
 @experimental(as_of="0.4.0-dev")
-def faith_pd(counts, otu_ids, tree, validate=True,):
+def faith_pd(counts, otu_ids, tree, validate=True):
     """ Compute Faith's phylogenetic diversity metric (PD)
 
     Parameters
     ----------
     counts : 1-D array_like, int
-        Vector of counts.
+        Vectors of counts/abundances of OTUs for one sample.
     otu_ids: list, np.array
         Vector of OTU ids corresponding to tip names in ``tree``. Must be the
         same length as ``counts``.
@@ -90,17 +89,23 @@ def faith_pd(counts, otu_ids, tree, validate=True,):
        Biol. Conserv. (1992).
 
     """
+    counts_by_node, branch_lengths = _setup_faith_pd(
+        counts, otu_ids, tree, validate, single_sample=True)
+
+    return _faith_pd(counts_by_node, branch_lengths)
+
+
+def _setup_faith_pd(counts, otu_ids, tree, validate, single_sample):
     if validate:
-        counts = _validate_counts_vector(counts)
-        _validate_otu_ids_and_tree(counts, otu_ids, tree)
-
-    counts = np.asarray(counts)
-    otu_ids = np.asarray(otu_ids)
-
-    if counts.sum() == 0:
-        return 0.0
+        if single_sample:
+            # only validate count if operating in single sample mode, they
+            # will have already been validated otherwise
+            counts = _validate_counts_vector(counts)
+            _validate_otu_ids_and_tree(counts, otu_ids, tree)
+        else:
+            _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
 
     counts_by_node, tree_index, branch_lengths = \
         _vectorize_counts_and_tree(counts, otu_ids, tree)
 
-    return _faith_pd(counts_by_node, branch_lengths)
+    return counts_by_node, branch_lengths
