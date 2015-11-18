@@ -16,12 +16,11 @@ import pandas as pd
 import skbio
 from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
 from skbio.diversity.beta._unifrac import (
-    _unweighted_unifrac_pdist_f, _weighted_unifrac_pdist_f,
+    _setup_multiple_unweighted_unifrac, _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default)
 from skbio.util._decorator import experimental
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._validate import (_validate_counts_matrix,
-                                       _validate_otu_ids_and_tree,
                                        _get_phylogenetic_kwargs)
 
 
@@ -280,20 +279,17 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        if validate:
-            _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
-        metric, counts = _unweighted_unifrac_pdist_f(
-                counts, otu_ids=otu_ids, tree=tree)
+        metric, counts = _setup_multiple_unweighted_unifrac(
+                counts, otu_ids=otu_ids, tree=tree, validate=validate)
     elif metric == 'weighted_unifrac':
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop('normalized',
                                 _normalize_weighted_unifrac_by_default)
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        if validate:
-            _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
-        metric, counts = _weighted_unifrac_pdist_f(
-                counts, otu_ids=otu_ids, tree=tree, normalized=normalized)
+        metric, counts = _setup_multiple_weighted_unifrac(
+                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
+                validate=validate)
     elif callable(metric):
         metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided

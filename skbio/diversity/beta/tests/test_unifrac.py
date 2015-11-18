@@ -12,14 +12,11 @@ from io import StringIO
 from unittest import main, TestCase
 
 import numpy as np
-import numpy.testing as npt
 
 from skbio import TreeNode
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity.beta._unifrac import (_unweighted_unifrac_pdist_f,
-                                           _weighted_unifrac_pdist_f,
-                                           _unweighted_unifrac,
+from skbio.diversity.beta._unifrac import (_unweighted_unifrac,
                                            _weighted_unifrac,
                                            _weighted_unifrac_branch_correction)
 
@@ -637,43 +634,6 @@ class UnifracTests(TestCase):
             self.b1[4], self.b1[5], self.oids1, self.t1, normalized=True)
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
-
-    def test_pdist_unweighted(self):
-        f, counts = _unweighted_unifrac_pdist_f(
-            self.b1, np.asarray(self.oids1), self.t1)
-        exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
-                obs[i, j] = f(counts[i], counts[j])
-                exp[i, j] = self.unweighted_unifrac(self.b1[i], self.b1[j],
-                                                    self.oids1, self.t1)
-        npt.assert_almost_equal(obs, exp)
-
-    def test_pdist_weighted(self):
-        f, counts = _weighted_unifrac_pdist_f(
-            self.b1, np.asarray(self.oids1), self.t1, normalized=False)
-        exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
-                obs[i, j] = f(counts[i], counts[j])
-                exp[i, j] = self.weighted_unifrac(self.b1[i], self.b1[j],
-                                                  self.oids1, self.t1)
-        npt.assert_almost_equal(obs, exp)
-
-    def test_pdist_weighted_normalized(self):
-        f, counts = _weighted_unifrac_pdist_f(
-            self.b1, np.asarray(self.oids1), self.t1, normalized=True)
-        exp = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        obs = np.zeros((len(self.b1), len(self.b1)), dtype=float)
-        for i in range(len(self.b1)):
-            for j in range(len(self.b1)):
-                obs[i, j] = f(counts[i], counts[j])
-                exp[i, j] = self.weighted_unifrac(self.b1[i], self.b1[j],
-                                                  self.oids1, self.t1,
-                                                  normalized=True)
-        npt.assert_almost_equal(obs, exp)
 
     def test_weighted_unifrac_branch_correction(self):
         # for ((a:1, b:2)c:3,(d:4,e:5)f:6)root;"

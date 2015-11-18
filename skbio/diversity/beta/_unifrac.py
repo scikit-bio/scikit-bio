@@ -19,6 +19,10 @@ from skbio.diversity._validate import (_validate_counts_matrix,
 from skbio.diversity._phylogenetic import _tip_distances
 
 
+# The default value indicating whether normalization should be applied
+# for weighted UniFrac. This is used in two locations, so set in a single
+# variable to avoid the code base becoming out of sync in the event of a
+# change in this default value.
 _normalize_weighted_unifrac_by_default = False
 
 
@@ -108,12 +112,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
-
     u_node_counts, v_node_counts, _, _, tree_index =\
-        _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-                              normalized=False, unweighted=True)
+        _setup_pairwise_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+                                normalized=False, unweighted=True)
     return _unweighted_unifrac(u_node_counts, v_node_counts,
                                tree_index['length'])
 
@@ -205,12 +206,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
        comparison. ISME J. 5, 169-172 (2011).
 
     """
-    if validate:
-        _validate(u_counts, v_counts, otu_ids, tree)
-
     u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index =\
-        _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-                              normalized=normalized, unweighted=False)
+        _setup_pairwise_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+                                normalized=normalized, unweighted=False)
     branch_lengths = tree_index['length']
 
     if normalized:
@@ -232,8 +230,11 @@ def _validate(u_counts, v_counts, otu_ids, tree):
     _validate_otu_ids_and_tree(counts=u_counts, otu_ids=otu_ids, tree=tree)
 
 
-def _setup_single_unifrac(u_counts, v_counts, otu_ids, tree, validate,
-                          normalized, unweighted):
+def _setup_pairwise_unifrac(u_counts, v_counts, otu_ids, tree, validate,
+                            normalized, unweighted):
+
+    if validate:
+        _validate(u_counts, v_counts, otu_ids, tree)
 
     # temporarily store u_counts and v_counts in a 2D array as that's what
     # _vectorize_counts_and_tree takes
@@ -372,7 +373,17 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     return u/c
 
 
-def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
+def _setup_multiple_unifrac(counts, otu_ids, tree, validate):
+    if validate:
+        _validate_otu_ids_and_tree(counts[0], otu_ids, tree)
+
+    counts_by_node, tree_index, branch_lengths = \
+        _vectorize_counts_and_tree(counts, otu_ids, tree)
+
+    return counts_by_node, tree_index, branch_lengths
+
+
+def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
     """ Create optimized pdist-compatible unweighted UniFrac function
 
     Parameters
@@ -387,6 +398,8 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
+    validate: bool, optional
+        If `False`, validation of the input won't be performed.
 
     Returns
     -------
@@ -397,15 +410,16 @@ def _unweighted_unifrac_pdist_f(counts, otu_ids, tree):
         Counts of all nodes in ``tree``.
 
     """
-    counts_by_node, tree_index, branch_lengths = \
-        _vectorize_counts_and_tree(counts, otu_ids, tree)
+    counts_by_node, _, branch_lengths = \
+        _setup_multiple_unifrac(counts, otu_ids, tree, validate)
 
     f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node
 
 
-def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
+def _setup_multiple_weighted_unifrac(counts, otu_ids, tree, normalized,
+                                     validate):
     """ Create optimized pdist-compatible weighted UniFrac function
 
     Parameters
@@ -420,6 +434,8 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
     tree: skbio.TreeNode
         Tree relating the OTUs in otu_ids. The set of tip names in the tree can
         be a superset of ``otu_ids``, but not a subset.
+    validate: bool, optional
+        If `False`, validation of the input won't be performed.
 
     Returns
     -------
@@ -431,7 +447,7 @@ def _weighted_unifrac_pdist_f(counts, otu_ids, tree, normalized):
 
     """
     counts_by_node, tree_index, branch_lengths = \
-        _vectorize_counts_and_tree(counts, otu_ids, tree)
+        _setup_multiple_unifrac(counts, otu_ids, tree, validate)
     tip_indices = _get_tip_indices(tree_index)
 
     if normalized:
