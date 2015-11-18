@@ -111,6 +111,38 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
        R. UniFrac: an effective distance metric for microbial community
        comparison. ISME J. 5, 169-172 (2011).
 
+    Examples
+    --------
+    Assume we have the following abundance data for two samples, ``u`` and
+    ``v``, represented as a pair of counts vectors. These counts represent the
+    number of times specific Operational Taxonomic Units, or OTUs, were
+    observed in each of the samples.
+
+    >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
+    >>> v_counts = [0, 1, 1, 6, 0, 1, 0, 0]
+
+    Because UniFrac is a phylogenetic diversity metric, we need to know which
+    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+
+    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
+    ...            'OTU8']
+
+    We also need a phylogenetic tree that relates the OTUs to one another.
+
+    >>> from io import StringIO
+    >>> from skbio import TreeNode
+    >>> tree = TreeNode.read(StringIO(
+    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+
+    We can then compute the unweighted UniFrac distance between the samples.
+
+    >>> from skbio.diversity.beta import unweighted_unifrac
+    >>> uu = unweighted_unifrac(u_counts, v_counts, otu_ids, tree)
+    >>> print(round(uu, 2))
+    0.37
+
     """
     u_node_counts, v_node_counts, _, _, tree_index =\
         _setup_pairwise_unifrac(u_counts, v_counts, otu_ids, tree, validate,
@@ -204,6 +236,46 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     .. [2] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
        R. UniFrac: an effective distance metric for microbial community
        comparison. ISME J. 5, 169-172 (2011).
+
+    Examples
+    --------
+    Assume we have the following abundance data for two samples, ``u`` and
+    ``v``, represented as a pair of counts vectors. These counts represent the
+    number of times specific Operational Taxonomic Units, or OTUs, were
+    observed in each of the samples.
+
+    >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
+    >>> v_counts = [0, 1, 1, 6, 0, 1, 0, 0]
+
+    Because UniFrac is a phylogenetic diversity metric, we need to know which
+    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+
+    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
+    ...            'OTU8']
+
+    We also need a phylogenetic tree that relates the OTUs to one another.
+
+    >>> from io import StringIO
+    >>> from skbio import TreeNode
+    >>> tree = TreeNode.read(StringIO(
+    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+
+    Compute the weighted UniFrac distance between the samples.
+
+    >>> from skbio.diversity.beta import weighted_unifrac
+    >>> wu = weighted_unifrac(u_counts, v_counts, otu_ids, tree)
+    >>> print(round(wu, 2))
+    1.54
+
+    Compute the weighted UniFrac distance between the samples including
+    branch length normalization so the value falls in the range ``[0.0, 1.0]``.
+
+    >>> wu = weighted_unifrac(u_counts, v_counts, otu_ids, tree,
+    ...                       normalized=True)
+    >>> print(round(wu, 2))
+    0.33
 
     """
     u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index =\

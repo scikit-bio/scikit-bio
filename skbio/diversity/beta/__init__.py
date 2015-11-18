@@ -4,15 +4,10 @@ Beta diversity measures (:mod:`skbio.diversity.beta`)
 
 .. currentmodule:: skbio.diversity.beta
 
-This package contains helper functions for working with scipy's pairwise
-distance (``pdist``) functions in scikit-bio, and will eventually be expanded
-to contain pairwise distance/dissimilarity methods that are not implemented
-(or planned to be implemented) in scipy.
-
-The functions in this package currently support applying ``pdist`` functions
-to all pairs of samples in a sample by observation count or abundance matrix
-and returning an ``skbio.DistanceMatrix`` object. This application is
-illustrated below for a few different forms of input.
+This package provides implementations of beta diversity measures for computing
+sample dissimilarity. Users of this package should also explore
+``scipy.spatial.distance.pdist``, as it contains implementations of additional
+beta diversity metrics with interfaces similar to those provided here.
 
 Functions
 ---------

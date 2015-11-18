@@ -88,6 +88,37 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     .. [1] Faith, D. P. Conservation evaluation and phylogenetic diversity.
        Biol. Conserv. (1992).
 
+    Examples
+    --------
+    Assume we have the following abundance data for a sample ``u``,
+    represented as a counts vector. These counts represent the
+    number of times specific Operational Taxonomic Units, or OTUs, were
+    observed in the sample.
+
+    >>> u_counts = [1, 0, 0, 4, 1, 2, 3, 0]
+
+    Because Faith PD is a phylogenetic diversity metric, we need to know which
+    OTU each count corresponds to, which we'll provide as ``otu_ids``.
+
+    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7',
+    ...            'OTU8']
+
+    We also need a phylogenetic tree that relates the OTUs to one another.
+
+    >>> from io import StringIO
+    >>> from skbio import TreeNode
+    >>> tree = TreeNode.read(StringIO(
+    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+
+    We can then compute the Faith PD of the sample.
+
+    >>> from skbio.diversity.alpha import faith_pd
+    >>> pd = faith_pd(u_counts, otu_ids, tree)
+    >>> print(round(pd, 2))
+    6.95
+
     """
     counts_by_node, branch_lengths = _setup_faith_pd(
         counts, otu_ids, tree, validate, single_sample=True)

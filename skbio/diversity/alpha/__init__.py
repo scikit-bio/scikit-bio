@@ -135,29 +135,12 @@ Let's see how many singletons and doubletons there are in the sample:
 >>> doubles(counts)
 1
 
-Phylogenetic diversity metrics additionally incorporate the relative
-relatedness of the OTUs in the calculation, and therefore require a tree and
-a mapping of counts to OTU (tip) ids in the tree. Here we'll apply Faith's
-Phylogenetic Diversity (PD) metric to the sample:
-
->>> from skbio import TreeNode
->>> from skbio.diversity.alpha import faith_pd
->>> from io import StringIO
->>> tree = TreeNode.read(StringIO(
-...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
-...                      u'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
->>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7', 'OTU8']
->>> pd = faith_pd(counts, otu_ids, tree)
->>> print(round(pd, 2))
-6.95
-
 If you're calculating alpha diversity for more than one sample, you should
-use the ``alpha_diversity`` function, which takes a matrix of per-sample
-count vectors as input. For some metrics (notably ``faith_pd``), this will
-internally use an optimized function so that calling ``alpha_diversity`` on
-all of your samples will be much faster than calling the metric on each of your
-samples individually.
+use the ``skbio.diversity.alpha_diversity`` function, which takes a matrix of
+per-sample count vectors as input. For some metrics (notably ``faith_pd``),
+this will internally use an optimized function so that calling
+``skbio.diversity.alpha_diversity`` on all of your samples at once will be much
+faster than calling the metric on each of your samples individually.
 
 """
 
