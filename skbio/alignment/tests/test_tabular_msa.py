@@ -1141,6 +1141,127 @@ class TestIterPositions(unittest.TestCase):
         self.assertIsNone(msa._positional_metadata)
 
 
+class TestConsensus(unittest.TestCase):
+    def test_no_sequences(self):
+        msa = TabularMSA([])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, Sequence(''))
+
+    def test_no_positions(self):
+        msa = TabularMSA([DNA(''),
+                          DNA('')])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, DNA(''))
+
+    def test_single_sequence(self):
+        msa = TabularMSA([DNA('ACGT-.')])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, DNA('ACGT--'))
+
+    def test_multiple_sequences(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('AG-.'),
+                          DNA('AC-.')])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, DNA('AC--'))
+
+    def test_ties(self):
+        msa = TabularMSA([DNA('A-'),
+                          DNA('C-'),
+                          DNA('G-')])
+
+        cons = msa.consensus()
+
+        self.assertTrue(cons in [DNA('A-'), DNA('C-'), DNA('G-')])
+
+    def test_ties_with_gaps(self):
+        msa = TabularMSA([DNA('-'),
+                          DNA('.'),
+                          DNA('T'),
+                          DNA('T')])
+
+        cons = msa.consensus()
+
+        self.assertTrue(cons in [DNA('T'), DNA('-')])
+
+    def test_default_gap_char(self):
+        msa = TabularMSA([DNA('.'),
+                          DNA('.'),
+                          DNA('.')])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, DNA('-'))
+
+    def test_different_dtype(self):
+        msa = TabularMSA([RNA('---'),
+                          RNA('AG-'),
+                          RNA('AGG')])
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, RNA('AG-'))
+
+    def test_with_positional_metadata(self):
+        # Defining *all* types of metadata to ensure correct metadata is
+        # propagated to majority consensus sequence.
+        seqs = [
+            DNA('-.-', metadata={'id': 'seq1'},
+                positional_metadata={'qual': range(0, 3)}),
+            DNA('A.T', metadata={'id': 'seq2'},
+                positional_metadata={'qual': range(3, 6)}),
+            DNA('ACT', metadata={'id': 'seq3'},
+                positional_metadata={'qual': range(6, 9)})
+        ]
+        msa = TabularMSA(seqs, metadata={'pubmed': 123456},
+                         positional_metadata={'foo': [42, 43, 42],
+                                              'bar': ['a', 'b', 'c']})
+
+        cons = msa.consensus()
+
+        self.assertEqual(
+            cons,
+            DNA('A-T', positional_metadata={'foo': [42, 43, 42],
+                                            'bar': ['a', 'b', 'c']}))
+
+    def test_handles_missing_positional_metadata_efficiently(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('AC')])
+
+        self.assertIsNone(msa._positional_metadata)
+
+        cons = msa.consensus()
+
+        self.assertIsNone(msa._positional_metadata)
+        self.assertIsNone(cons._positional_metadata)
+
+    def test_mixed_gap_characters_as_majority(self):
+        seqs = [
+            DNA('A'),
+            DNA('A'),
+            DNA('A'),
+            DNA('A'),
+            DNA('.'),
+            DNA('.'),
+            DNA('.'),
+            DNA('-'),
+            DNA('-')
+        ]
+        msa = TabularMSA(seqs)
+
+        cons = msa.consensus()
+
+        self.assertEqual(cons, DNA('-'))
+
+
 class TestGapFrequencies(unittest.TestCase):
     def test_default_behavior(self):
         msa = TabularMSA([DNA('AA.'),

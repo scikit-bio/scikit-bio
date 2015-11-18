@@ -664,6 +664,85 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return (self._get_position(index) for index in indices)
 
     @experimental(as_of='0.4.0-dev')
+    def consensus(self):
+        """Compute the majority consensus sequence for this MSA.
+
+        The majority consensus sequence contains the most common character at
+        each position in this MSA. Ties will be broken in an arbitrary manner.
+
+        Returns
+        -------
+        Sequence
+            The majority consensus sequence for this MSA. The type of sequence
+            returned will be the same as this MSA's ``dtype`` or ``Sequence``
+            if this MSA does not contain any sequences. The majority consensus
+            sequence will have its positional metadata set to this MSA's
+            positional metadata if present.
+
+        Notes
+        -----
+        The majority consensus sequence will use this MSA's default gap
+        character (``dtype.default_gap_char``) to represent gap majority at a
+        position, regardless of the gap characters present at that position.
+
+        Different gap characters at a position are **not** treated as distinct
+        characters. All gap characters at a position contribute to that
+        position's gap consensus.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> sequences = [DNA('AC---'),
+        ...              DNA('AT-C.'),
+        ...              DNA('TT-CG')]
+        >>> msa = TabularMSA(sequences,
+        ...                  positional_metadata={'prob': [2, 1, 2, 3, 5]})
+        >>> msa.consensus()
+        DNA
+        -----------------------------
+        Positional metadata:
+            'prob': <dtype: int64>
+        Stats:
+            length: 5
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 AT-C-
+
+        Note that the last position in the MSA has more than one type of gap
+        character. These are not treated as distinct characters; both types of
+        gap characters contribute to the position's consensus. Also note that
+        ``DNA.default_gap_char`` is used to represent gap majority at a
+        position (``'-'``).
+
+        """
+        dtype = self.dtype
+        if dtype is None:
+            dtype = Sequence
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
+        consensus = []
+        for position in self.iter_positions():
+            freqs = position.frequencies()
+
+            gap_freq = 0
+            for gap_char in dtype.gap_chars:
+                if gap_char in freqs:
+                    gap_freq += freqs.pop(gap_char)
+            assert dtype.default_gap_char not in freqs
+            freqs[dtype.default_gap_char] = gap_freq
+
+            consensus.append(collections.Counter(freqs).most_common(1)[0][0])
+
+        return dtype(''.join(consensus),
+                     positional_metadata=positional_metadata)
+
+    @experimental(as_of='0.4.0-dev')
     def gap_frequencies(self, axis='sequence', relative=False):
         """Compute frequency of gap characters across an axis.
 

@@ -207,6 +207,14 @@ class TestIUPACSequence(TestCase):
         with self.assertRaises(AttributeError):
             ExampleIUPACSequence('').gap_chars = set("_ =")
 
+    def test_default_gap_char(self):
+        self.assertIs(type(ExampleIUPACSequence.default_gap_char), str)
+        self.assertEqual(ExampleIUPACSequence.default_gap_char, '-')
+        self.assertEqual(ExampleIUPACSequence('').default_gap_char, '-')
+
+        with self.assertRaises(AttributeError):
+            ExampleIUPACSequence('').default_gap_char = '.'
+
     def test_alphabet(self):
         expected = set("ABC.-XYZ")
         self.assertIs(type(ExampleIUPACSequence.alphabet), set)
