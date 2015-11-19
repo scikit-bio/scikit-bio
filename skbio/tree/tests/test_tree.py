@@ -12,7 +12,7 @@ from unittest import TestCase, main
 from collections import defaultdict
 
 import numpy as np
-import numpy.testing as nptest
+import numpy.testing as npt
 from scipy.stats import pearsonr
 
 from skbio.io._fileobject import StringIO
@@ -562,15 +562,15 @@ class TreeTests(TestCase):
             u"((a:0.1,b:0.2)c:0.3,(d:0.4,e)f:0.5)root;"))
         tips = sorted([n for n in t.tips()], key=lambda x: x.name)
 
-        nptest.assert_almost_equal(tips[0].distance(tips[0]), 0.0)
-        nptest.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
-        nptest.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
+        npt.assert_almost_equal(tips[0].distance(tips[0]), 0.0)
+        npt.assert_almost_equal(tips[0].distance(tips[1]), 0.3)
+        npt.assert_almost_equal(tips[0].distance(tips[2]), 1.3)
         with self.assertRaises(NoLengthError):
             tips[0].distance(tips[3])
 
-        nptest.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
-        nptest.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
-        nptest.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
+        npt.assert_almost_equal(tips[1].distance(tips[0]), 0.3)
+        npt.assert_almost_equal(tips[1].distance(tips[1]), 0.0)
+        npt.assert_almost_equal(tips[1].distance(tips[2]), 1.4)
         with self.assertRaises(NoLengthError):
             tips[1].distance(tips[3])
 
@@ -621,7 +621,7 @@ class TreeTests(TestCase):
         tree = TreeNode.read(StringIO(
             u"((a:0.1,b:0.2)c:0.3,(d:0.4,e:0.5)f:0.6)root;"))
         dist, nodes = tree.get_max_distance()
-        nptest.assert_almost_equal(dist, 1.6)
+        npt.assert_almost_equal(dist, 1.6)
         self.assertEqual(sorted([n.name for n in nodes]), ['b', 'e'])
 
     def test_set_max_distance(self):
@@ -706,7 +706,7 @@ class TreeTests(TestCase):
         exp_t = TreeNode.read(StringIO(u"((a:0,b:0)c:0,(d:0,e:0)f:0);"))
         exp_t_dm = exp_t.tip_tip_distances()
 
-        t_dm = nptest.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
 
         for node in t.preorder():
@@ -717,7 +717,7 @@ class TreeTests(TestCase):
         exp_t = TreeNode.read(StringIO(u"((a:0,b:6)c:4,(d:0,e:0)f:0);"))
         exp_t_dm = exp_t.tip_tip_distances()
 
-        t_dm = nptest.assert_warns(RepresentationWarning, t.tip_tip_distances)
+        t_dm = npt.assert_warns(RepresentationWarning, t.tip_tip_distances)
         self.assertEqual(t_dm, exp_t_dm)
 
     def test_neighbors(self):
@@ -784,6 +784,13 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.levelorder()]
         self.assertEqual(obs, exp)
 
+    def test_index_tree_single_node(self):
+        """index_tree handles single node tree"""
+        t1 = TreeNode.read(StringIO(u'root;'))
+        id_index, child_index = t1.index_tree()
+        self.assertEqual(id_index[0], t1)
+        npt.assert_equal(child_index, np.array([[]]))
+
     def test_index_tree(self):
         """index_tree should produce correct index and node map"""
         # test for first tree: contains singleton outgroup
@@ -795,23 +802,25 @@ class TreeTests(TestCase):
         nodes_1 = [n.id for n in t1.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_1, [0, 1, 2, 3, 6, 4, 5, 7, 8])
-        self.assertEqual(child_1, [(2, 0, 1), (6, 2, 3), (7, 4, 5), (8, 6, 7)])
+        npt.assert_equal(child_1, np.array([[2, 0, 1], [6, 2, 3], [7, 4, 5],
+                                            [8, 6, 7]]))
 
         # test for second tree: strictly bifurcating
         id_2, child_2 = t2.index_tree()
         nodes_2 = [n.id for n in t2.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_2, [0, 1, 4, 2, 3, 5, 8, 6, 7, 9, 10])
-        self.assertEqual(child_2, [(4, 0, 1), (5, 2, 3), (8, 4, 5), (9, 6, 7),
-                                   (10, 8, 9)])
+        npt.assert_equal(child_2, np.array([[4, 0, 1], [5, 2, 3],
+                                            [8, 4, 5], [9, 6, 7],
+                                            [10, 8, 9]]))
 
         # test for third tree: contains trifurcation and single-child parent
         id_3, child_3 = t3.index_tree()
         nodes_3 = [n.id for n in t3.traverse(self_before=False,
                    self_after=True)]
         self.assertEqual(nodes_3, [0, 1, 2, 4, 3, 5, 8, 6, 7, 9, 10])
-        self.assertEqual(child_3, [(4, 0, 2), (5, 3, 3), (8, 4, 5), (9, 6, 7),
-                                   (10, 8, 9)])
+        npt.assert_equal(child_3, np.array([[4, 0, 2], [5, 3, 3], [8, 4, 5],
+                                            [9, 6, 7], [10, 8, 9]]))
 
     def test_root_at(self):
         """Form a new root"""
@@ -950,8 +959,8 @@ class TreeTests(TestCase):
                                     ",(H:.4,I:.5)J:1.3)K;"))
         tdbl = tr.descending_branch_length()
         sdbl = tr.descending_branch_length(['A', 'E'])
-        nptest.assert_almost_equal(tdbl, 8.9)
-        nptest.assert_almost_equal(sdbl, 2.2)
+        npt.assert_almost_equal(tdbl, 8.9)
+        npt.assert_almost_equal(sdbl, 2.2)
         self.assertRaises(ValueError, tr.descending_branch_length,
                           ['A', 'DNE'])
         self.assertRaises(ValueError, tr.descending_branch_length, ['A', 'C'])
@@ -959,28 +968,28 @@ class TreeTests(TestCase):
         tr = TreeNode.read(StringIO(u"(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
                                     ":.4,I:.5)J:1.3)K;"))
         tdbl = tr.descending_branch_length()
-        nptest.assert_almost_equal(tdbl, 8.8)
+        npt.assert_almost_equal(tdbl, 8.8)
 
         tr = TreeNode.read(StringIO(u"(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4"
                                     ",I:.5)J:1.3)K;"))
         tdbl = tr.descending_branch_length()
-        nptest.assert_almost_equal(tdbl, 7.9)
+        npt.assert_almost_equal(tdbl, 7.9)
 
         tr = TreeNode.read(StringIO(u"(((A,B:1.2)C:.6,(D:.9,E:.6)F)G:2.4,(H:.4"
                                     ",I:.5)J:1.3)K;"))
         tdbl = tr.descending_branch_length(['A', 'D', 'E'])
-        nptest.assert_almost_equal(tdbl, 2.1)
+        npt.assert_almost_equal(tdbl, 2.1)
 
         tr = TreeNode.read(StringIO(u"(((A,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H"
                                     ":.4,I:.5)J:1.3)K;"))
         tdbl = tr.descending_branch_length(['I', 'D', 'E'])
-        nptest.assert_almost_equal(tdbl, 6.6)
+        npt.assert_almost_equal(tdbl, 6.6)
 
         # test with a situation where we have unnamed internal nodes
         tr = TreeNode.read(StringIO(u"(((A,B:1.2):.6,(D:.9,E:.6)F):2.4,(H:.4,I"
                                     ":.5)J:1.3);"))
         tdbl = tr.descending_branch_length()
-        nptest.assert_almost_equal(tdbl, 7.9)
+        npt.assert_almost_equal(tdbl, 7.9)
 
     def test_to_array(self):
         """Convert a tree to arrays"""
@@ -990,20 +999,20 @@ class TreeTests(TestCase):
         arrayed = t.to_array()
 
         self.assertEqual(id_index, arrayed['id_index'])
-        self.assertEqual(child_index, arrayed['child_index'])
+        npt.assert_equal(child_index, arrayed['child_index'])
 
         exp = np.array([1, 2, 3, 5, 4, 6, 8, 9, 7, 10, np.nan])
         obs = arrayed['length']
-        nptest.assert_equal(obs, exp)
+        npt.assert_equal(obs, exp)
 
         exp = np.array(['a', 'b', 'c', 'd', 'x',
                         'y', 'e', 'f', 'z', 'z', None])
         obs = arrayed['name']
-        nptest.assert_equal(obs, exp)
+        npt.assert_equal(obs, exp)
 
         exp = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         obs = arrayed['id']
-        nptest.assert_equal(obs, exp)
+        npt.assert_equal(obs, exp)
 
     def test_to_array_attrs(self):
         t = TreeNode.read(StringIO(
@@ -1016,16 +1025,38 @@ class TreeTests(TestCase):
         self.assertEqual(len(arrayed), 3)
 
         self.assertEqual(id_index, arrayed['id_index'])
-        self.assertEqual(child_index, arrayed['child_index'])
+        npt.assert_equal(child_index, arrayed['child_index'])
 
         exp = np.array(['a', 'b', 'c', 'd', 'x',
                         'y', 'e', 'f', 'z', 'z', None])
         obs = arrayed['name']
-        nptest.assert_equal(obs, exp)
+        npt.assert_equal(obs, exp)
 
         # invalid attrs
         with self.assertRaises(AttributeError):
             t.to_array(attrs=[('name', object), ('brofist', int)])
+
+    def test_to_array_nan_length_value(self):
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
+        indexed = t.to_array(nan_length_value=None)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, np.nan], dtype=float))
+        indexed = t.to_array(nan_length_value=0.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, 0.0], dtype=float))
+        indexed = t.to_array(nan_length_value=42.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, 42.0], dtype=float))
+
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root:4;"))
+        indexed = t.to_array(nan_length_value=42.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 3, 4], dtype=float))
+
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c)root;"))
+        indexed = t.to_array(nan_length_value=42.0)
+        npt.assert_equal(indexed['length'],
+                         np.array([1, 2, 42.0, 42.0], dtype=float))
 
     def test_from_taxonomy(self):
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],

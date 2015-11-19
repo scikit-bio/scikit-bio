@@ -1194,6 +1194,23 @@ def assert_data_frame_almost_equal(left, right):
     assert_index_equal(left.index, right.index)
 
 
+def assert_series_almost_equal(left, right):
+    # pass all kwargs to ensure this function has consistent behavior even if
+    # `assert_series_equal`'s defaults change
+    pdt.assert_series_equal(left, right,
+                            check_dtype=True,
+                            check_index_type=True,
+                            check_series_type=True,
+                            check_less_precise=False,
+                            check_names=True,
+                            check_exact=False,
+                            check_datetimelike_compat=False,
+                            obj='Series')
+    # this check ensures that empty Series with different indices do not
+    # compare equal.
+    assert_index_equal(left.index, right.index)
+
+
 def assert_index_equal(a, b):
     pdt.assert_index_equal(a, b,
                            exact=True,

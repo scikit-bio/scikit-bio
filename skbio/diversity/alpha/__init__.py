@@ -7,6 +7,8 @@ Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 This package provides implementations of various alpha diversity measures,
 including measures of richness, dominance, and evenness. Some functions
 generate confidence intervals (CIs). These functions have the suffix ``_ci``.
+A driver function is also provided which supports computing alpha diversity for
+many samples at once.
 
 All alpha diversity measures accept a vector of counts within a single sample,
 where each count is, for example, the number of observations of a particular
@@ -133,22 +135,12 @@ Let's see how many singletons and doubletons there are in the sample:
 >>> doubles(counts)
 1
 
-Phylogenetic diversity metrics additionally incorporate the relative
-relatedness of the OTUs in the calculation, and therefore require a tree and
-a mapping of counts to OTU (tip) ids in the tree. Here we'll apply Faith's
-Phylogenetic Diversity (PD) metric to the sample:
-
->>> from skbio import TreeNode
->>> from skbio.diversity.alpha import faith_pd
->>> from io import StringIO
->>> tree = TreeNode.read(StringIO(
-...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5,'
-...                      u'OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
->>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7', 'OTU8']
->>> faith_pd(counts, otu_ids, tree)
-6.95
-
+If you're calculating alpha diversity for more than one sample, you should
+use the ``skbio.diversity.alpha_diversity`` function, which takes a matrix of
+per-sample count vectors as input. For some metrics (notably ``faith_pd``),
+this will internally use an optimized function so that calling
+``skbio.diversity.alpha_diversity`` on all of your samples at once will be much
+faster than calling the metric on each of your samples individually.
 
 """
 
@@ -166,21 +158,23 @@ from skbio.util import TestRunner
 
 from ._ace import ace
 from ._chao1 import chao1, chao1_ci
+from ._faith_pd import faith_pd
 from ._base import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie,
-    esty_ci, faith_pd, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
+    esty_ci, fisher_alpha, goods_coverage, heip_e, kempton_taylor_q,
     margalef, mcintosh_d, mcintosh_e, menhinick, michaelis_menten_fit,
     observed_otus, osd, pielou_e, robbins, shannon, simpson, simpson_e,
     singles, strong)
 from ._gini import gini_index
 from ._lladser import lladser_pe, lladser_ci
 
-__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d', 'brillouin_d',
-           'dominance', 'doubles', 'enspie', 'esty_ci',
-           'faith_pd', 'fisher_alpha', 'goods_coverage', 'heip_e',
-           'kempton_taylor_q', 'margalef', 'mcintosh_d', 'mcintosh_e',
-           'menhinick', 'michaelis_menten_fit', 'observed_otus', 'osd',
-           'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e', 'singles',
-           'strong', 'gini_index', 'lladser_pe', 'lladser_ci']
+
+__all__ = ['ace', 'chao1', 'chao1_ci', 'berger_parker_d',
+           'brillouin_d', 'dominance', 'doubles', 'enspie', 'esty_ci',
+           'faith_pd', 'fisher_alpha', 'gini_index', 'goods_coverage',
+           'heip_e', 'kempton_taylor_q', 'margalef', 'mcintosh_d',
+           'mcintosh_e', 'menhinick', 'michaelis_menten_fit', 'observed_otus',
+           'osd', 'pielou_e', 'robbins', 'shannon', 'simpson', 'simpson_e',
+           'singles', 'strong', 'lladser_pe', 'lladser_ci']
 
 test = TestRunner(__file__).test

@@ -8,20 +8,21 @@
 
 from __future__ import absolute_import, division, print_function
 
-from unittest import TestCase, main
-from io import StringIO
-
 import numpy as np
 import numpy.testing as npt
 
-from skbio.diversity._base import (
-    _validate_counts_vector, _validate_counts_vectors,
-    _validate_otu_ids_and_tree)
+from unittest import TestCase, main
+
+from skbio.io._fileobject import StringIO
 from skbio import TreeNode
+from skbio.diversity._util import (_validate_counts_vector,
+                                   _validate_counts_matrix,
+                                   _validate_otu_ids_and_tree,
+                                   _vectorize_counts_and_tree)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
-class BaseTests(TestCase):
+class ValidationTests(TestCase):
 
     def test_validate_counts_vector(self):
         # python list
@@ -74,54 +75,51 @@ class BaseTests(TestCase):
         with self.assertRaises(ValueError):
             _validate_counts_vector([0, 0, 2, -1, 3])
 
-    def test_validate_counts_vectors(self):
+    def test_validate_counts_matrix(self):
         # basic valid input (n=2)
-        obs_u, obs_v = _validate_counts_vectors([0, 1, 1, 0, 2],
-                                                [0, 0, 2, 1, 3])
-        npt.assert_array_equal(obs_u, np.array([0, 1, 1, 0, 2]))
-        npt.assert_array_equal(obs_v, np.array([0, 0, 2, 1, 3]))
+        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
+                                       [0, 0, 2, 1, 3]])
+        npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
+        npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
 
         # basic valid input (n=3)
-        actual = _validate_counts_vectors([0, 1, 1, 0, 2],
-                                          [0, 0, 2, 1, 3],
-                                          [1, 1, 1, 1, 1])
-        npt.assert_array_equal(actual[0], np.array([0, 1, 1, 0, 2]))
-        npt.assert_array_equal(actual[1], np.array([0, 0, 2, 1, 3]))
-        npt.assert_array_equal(actual[2], np.array([1, 1, 1, 1, 1]))
+        obs = _validate_counts_matrix([[0, 1, 1, 0, 2],
+                                       [0, 0, 2, 1, 3],
+                                       [1, 1, 1, 1, 1]])
+        npt.assert_array_equal(obs[0], np.array([0, 1, 1, 0, 2]))
+        npt.assert_array_equal(obs[1], np.array([0, 0, 2, 1, 3]))
+        npt.assert_array_equal(obs[2], np.array([1, 1, 1, 1, 1]))
 
         # empty counts vectors
-        obs_u, obs_v = _validate_counts_vectors(np.array([], dtype=int),
-                                                np.array([], dtype=int))
-        npt.assert_array_equal(obs_u, np.array([]))
-        npt.assert_array_equal(obs_v, np.array([]))
+        obs = _validate_counts_matrix(np.array([[], []], dtype=int))
+        npt.assert_array_equal(obs[0], np.array([]))
+        npt.assert_array_equal(obs[1], np.array([]))
 
-    def test_validate_counts_vectors_suppress_cast(self):
+    def test_validate_counts_matrix_suppress_cast(self):
         # suppress_cast is passed through to _validate_counts_vector
-        obs_u, obs_v = _validate_counts_vectors(
-            [42.2, 42.1, 0], [42.2, 42.1, 1.0], suppress_cast=True)
-        npt.assert_array_equal(obs_u, np.array([42.2, 42.1, 0]))
-        npt.assert_array_equal(obs_v, np.array([42.2, 42.1, 1.0]))
-        self.assertEqual(obs_u.dtype, float)
-        self.assertEqual(obs_v.dtype, float)
+        obs = _validate_counts_matrix(
+            [[42.2, 42.1, 0], [42.2, 42.1, 1.0]], suppress_cast=True)
+        npt.assert_array_equal(obs[0], np.array([42.2, 42.1, 0]))
+        npt.assert_array_equal(obs[1], np.array([42.2, 42.1, 1.0]))
+        self.assertEqual(obs[0].dtype, float)
+        self.assertEqual(obs[1].dtype, float)
         with self.assertRaises(TypeError):
-            _validate_counts_vectors([0.0], [1], suppress_cast=False)
+            _validate_counts_matrix([[0.0], [1]], suppress_cast=False)
 
-    def test_validate_counts_vectors_invalid_input(self):
-        # checks that are caught by the calls to _validate_counts_vector
+    def test_validate_counts_matrix_negative_counts(self):
         with self.assertRaises(ValueError):
-            _validate_counts_vectors([0, 1, 1, 0, 2], [0, 0, 2, -1, 3])
+            _validate_counts_matrix([[0, 1, 1, 0, 2], [0, 0, 2, -1, 3]])
         with self.assertRaises(ValueError):
-            _validate_counts_vectors([0, 0, 2, -1, 3], [0, 1, 1, 0, 2])
+            _validate_counts_matrix([[0, 0, 2, -1, 3], [0, 1, 1, 0, 2]])
 
+    def test_validate_counts_matrix_unequal_lengths(self):
         # len of vectors not equal
-        u_counts = [1, 2]
-        v_counts = [1, 1, 1]
-        self.assertRaises(ValueError, _validate_counts_vectors, u_counts,
-                          v_counts)
-        u_counts = [1, 2, 3]
-        v_counts = [1, 1]
-        self.assertRaises(ValueError, _validate_counts_vectors, u_counts,
-                          v_counts)
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([[0], [0, 0], [9, 8]])
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([[0, 0], [0, 0, 8], [9, 8]])
+        with self.assertRaises(ValueError):
+            _validate_counts_matrix([[0, 0, 75], [0, 0, 3], [9, 8, 22, 44]])
 
     def test_validate_otu_ids_and_tree(self):
         # basic valid input
@@ -154,12 +152,6 @@ class BaseTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [0, 0, 0, 0, 0]
         otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
-        self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
-
-        # single node tree
-        t = TreeNode.read(StringIO(u'root;'))
-        counts = []
-        otu_ids = []
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
 
     def test_validate_otu_ids_and_tree_invalid_input(self):
@@ -228,6 +220,21 @@ class BaseTests(TestCase):
         self.assertRaises(MissingNodeError, _validate_otu_ids_and_tree, counts,
                           otu_ids, t)
 
+        # single node tree
+        t = TreeNode.read(StringIO(u'root;'))
+        counts = []
+        otu_ids = []
+        self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
+                          otu_ids, t)
 
-if __name__ == '__main__':
+    def test_vectorize_counts_and_tree(self):
+        t = TreeNode.read(StringIO(u"((a:1, b:2)c:3)root;"))
+        counts = np.array([[0, 1], [1, 5], [10, 1]])
+        count_array, indexed, branch_lengths = \
+            _vectorize_counts_and_tree(counts, np.array(['a', 'b']), t)
+        exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
+        npt.assert_equal(count_array, exp_counts.T)
+
+
+if __name__ == "__main__":
     main()

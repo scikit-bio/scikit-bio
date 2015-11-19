@@ -19,7 +19,7 @@ import numpy.testing as npt
 from skbio import OrdinationResults
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal)
-from skbio.util._testing import _normalize_signs
+from skbio.util._testing import _normalize_signs, assert_series_almost_equal
 
 
 class TestGetDataPath(unittest.TestCase):
@@ -200,9 +200,10 @@ class TestAssertDataFrameAlmostEqual(unittest.TestCase):
             pd.DataFrame(index=np.arange(9), columns=np.arange(9))
         ]
 
-        # each df should compare equal to itself
+        # each df should compare equal to itself and a copy of itself
         for df in unequal_dfs:
             assert_data_frame_almost_equal(df, df)
+            assert_data_frame_almost_equal(df, pd.DataFrame(df, copy=True))
 
         # every pair of dfs should not compare equal. use permutations instead
         # of combinations to test that comparing df1 to df2 and df2 to df1 are
@@ -225,6 +226,38 @@ class TestAssertDataFrameAlmostEqual(unittest.TestCase):
         for df1, df2 in itertools.permutations(equal_dfs, 2):
             assert_data_frame_almost_equal(df1, df2)
 
+
+class TestAssertSeriesAlmostEqual(unittest.TestCase):
+
+    def setUp(self):
+        self.series = [
+            pd.Series(),
+            pd.Series(dtype='int64'),
+            pd.Series([1, 2, 3]),
+            pd.Series([3, 2, 1]),
+            pd.Series([1, 2, 3, 4]),
+            pd.Series([1., 2., 3.]),
+            pd.Series([1, 2, 3], [1.0, 2.0, 3.0]),
+            pd.Series([1, 2, 3], [1, 2, 3]),
+            pd.Series([1, 2, 3], ['c', 'b', 'a']),
+            pd.Series([3, 2, 1], ['c', 'b', 'a']),
+        ]
+
+    def test_not_equal(self):
+        # no pair of series should compare equal
+        for s1, s2 in itertools.permutations(self.series, 2):
+            with self.assertRaises(AssertionError):
+                assert_series_almost_equal(s1, s2)
+
+    def test_equal(self):
+        s1 = pd.Series([1., 2., 3.])
+        s2 = pd.Series([1.000001, 2., 3.])
+        assert_series_almost_equal(s1, s2)
+
+        # all series should be equal to themselves and copies of themselves
+        for s in self.series:
+            assert_series_almost_equal(s, s)
+            assert_series_almost_equal(s, pd.Series(s, copy=True))
 
 if __name__ == '__main__':
     unittest.main()
