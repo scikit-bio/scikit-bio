@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import numpy as np
-
 from skbio.util._decorator import experimental
 from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_otu_ids_and_tree,
@@ -17,8 +15,7 @@ from skbio.diversity._util import (_validate_counts_vector,
 
 
 def _faith_pd(counts_by_node, branch_lengths):
-    observed_nodes = np.where(counts_by_node > 0, 1, 0)
-    return (branch_lengths * observed_nodes).sum()
+    return (branch_lengths * (counts_by_node > 0)).sum()
 
 
 @experimental(as_of="0.4.0-dev")

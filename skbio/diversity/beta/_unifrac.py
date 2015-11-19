@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from functools import partial
+import functools
 
 import numpy as np
 
@@ -334,7 +334,7 @@ def _setup_pairwise_unifrac(u_counts, v_counts, otu_ids, tree, validate,
     if validate:
         _validate(u_counts, v_counts, otu_ids, tree)
 
-    # temporarily store u_counts and v_counts in a 2D array as that's what
+    # temporarily store u_counts and v_counts in a 2-D array as that's what
     # _vectorize_counts_and_tree takes
     u_counts = np.asarray(u_counts)
     v_counts = np.asarray(v_counts)
@@ -426,7 +426,8 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     else:
         v_node_proportions = v_node_counts
 
-    wu = (branch_lengths * abs(u_node_proportions - v_node_proportions)).sum()
+    wu = (branch_lengths *
+          np.absolute(u_node_proportions - v_node_proportions)).sum()
     return wu, u_node_proportions, v_node_proportions
 
 
@@ -511,7 +512,7 @@ def _setup_multiple_unweighted_unifrac(counts, otu_ids, tree, validate):
     counts_by_node, _, branch_lengths = \
         _setup_multiple_unifrac(counts, otu_ids, tree, validate)
 
-    f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
+    f = functools.partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node
 

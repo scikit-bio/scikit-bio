@@ -26,10 +26,6 @@ from skbio.diversity.alpha import (
 class BaseTests(TestCase):
     def setUp(self):
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
-        self.table1 = np.array([[1, 3, 0, 1, 0],
-                                [0, 2, 0, 4, 4],
-                                [0, 0, 6, 2, 1],
-                                [0, 0, 1, 1, 1]])
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(StringIO(

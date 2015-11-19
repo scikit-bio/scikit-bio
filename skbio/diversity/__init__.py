@@ -237,12 +237,6 @@ True
 The R statistic of 1.0 indicates strong separation of samples based on body
 site. The p-value is significant at an alpha of 0.1.
 
-References
-----------
-.. [1] http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
-
-
-
 """
 
 # ----------------------------------------------------------------------------

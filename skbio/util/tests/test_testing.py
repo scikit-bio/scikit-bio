@@ -18,9 +18,8 @@ import numpy.testing as npt
 
 from skbio import OrdinationResults
 from skbio.util import (get_data_path, assert_ordination_results_equal,
-                        assert_data_frame_almost_equal,
-                        assert_series_almost_equal)
-from skbio.util._testing import _normalize_signs
+                        assert_data_frame_almost_equal)
+from skbio.util._testing import _normalize_signs, assert_series_almost_equal
 
 
 class TestGetDataPath(unittest.TestCase):
@@ -248,8 +247,6 @@ class TestAssertSeriesAlmostEqual(unittest.TestCase):
         # no pair of series should compare equal
         for s1, s2 in itertools.permutations(self.series, 2):
             with self.assertRaises(AssertionError):
-                print(s1)
-                print(s2)
                 assert_series_almost_equal(s1, s2)
 
     def test_equal(self):

@@ -8,9 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-from functools import partial
+import functools
 
-from scipy.spatial.distance import pdist
+import scipy.spatial.distance
 import pandas as pd
 
 import skbio
@@ -63,6 +63,9 @@ def _get_alpha_diversity_metric_map():
 def get_alpha_diversity_metrics():
     """ List scikit-bio's alpha diversity metrics
 
+    The alpha diversity metrics listed here can be passed as metrics to
+    ``skbio.diversity.alpha_diversity``.
+
     Returns
     -------
     list of str
@@ -71,6 +74,7 @@ def get_alpha_diversity_metrics():
 
     See Also
     --------
+    alpha_diversity
     get_beta_diversity_metrics
 
     """
@@ -82,6 +86,9 @@ def get_alpha_diversity_metrics():
 def get_beta_diversity_metrics():
     """ List scikit-bio's beta diversity metrics
 
+    The beta diversity metrics listed here can be passed as metrics to
+    ``skbio.diversity.beta_diversity``.
+
     Returns
     -------
     list of str
@@ -90,6 +97,7 @@ def get_beta_diversity_metrics():
 
     See Also
     --------
+    beta_diversity
     get_alpha_diversity_metrics
     scipy.spatial.distance.pdist
 
@@ -97,10 +105,10 @@ def get_beta_diversity_metrics():
     -----
     SciPy implements many additional beta diversity metrics that are not
     included in this list. See documentation for
-    ``scipy.spatial.distance.pdist`` for more detail.
+    ``scipy.spatial.distance.pdist`` for more details.
 
     """
-    return ['unweighted_unifrac', 'weighted_unifrac']
+    return sorted(['unweighted_unifrac', 'weighted_unifrac'])
 
 
 @experimental(as_of="0.4.0-dev")
@@ -117,7 +125,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Vector or matrix containing count/abundance data. If a matrix, each row
         should contain counts of OTUs in a given sample.
     ids : iterable of strs, optional
-        Identifiers for each sample in ``counts``.
+        Identifiers for each sample in ``counts``. By default, samples will be
+        assigned integer identifiers in the order that they were provided.
     validate: bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
@@ -145,6 +154,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     See Also
     --------
+    skbio.diversity.alpha
     skbio.diversity.beta_diversity
 
     Notes
@@ -165,7 +175,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
      * ``counts`` has the correct number of dimensions
      * if ``counts`` is 2-D, all vectors are of equal length
      * the correct number of ``ids`` is provided (if any are provided)
-    And for phylogenetic diversity metrics:
+
+    For phylogenetic diversity metrics, validation additional confirms that:
      * ``otu_ids`` does not contain duplicate values
      * the length of each ``counts`` vector is equal to ``len(otu_ids)``
      * ``tree`` is rooted
@@ -185,11 +196,11 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         counts_by_node, branch_lengths = _setup_faith_pd(
             counts, otu_ids, tree, validate, single_sample=False)
         counts = counts_by_node
-        metric = partial(_faith_pd, branch_lengths=branch_lengths)
+        metric = functools.partial(_faith_pd, branch_lengths=branch_lengths)
     elif callable(metric):
-        metric = partial(metric, **kwargs)
+        metric = functools.partial(metric, **kwargs)
     elif metric in metric_map:
-        metric = partial(metric_map[metric], **kwargs)
+        metric = functools.partial(metric_map[metric], **kwargs)
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
@@ -212,7 +223,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Matrix containing count/abundance data where each row contains counts
         of OTUs in a given sample.
     ids : iterable of strs, optional
-        Identifiers for each sample in ``counts``.
+        Identifiers for each sample in ``counts``. By default, samples will be
+        assigned integer identifiers in the order that they were provided
+        (where the type of the identifiers will be ``str``).
     validate: bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
@@ -228,7 +241,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
     -------
     skbio.DistanceMatrix
         Distances between all pairs of samples (i.e., rows). The number of
-        row and columns will be equal to the number of rows in ``counts``.
+        rows and columns will be equal to the number of rows in ``counts``.
 
     Raises
     ------
@@ -240,14 +253,13 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     See Also
     --------
-    unweighted_unifrac
-    weighted_unifrac
-    scipy.spatial.distance.pdist
+    skbio.diversity.beta
     skbio.diversity.alpha_diversity
+    scipy.spatial.distance.pdist
 
     Notes
     -----
-    The value that you provide for for ``metric`` can be either a string (e.g.,
+    The value that you provide for ``metric`` can be either a string (e.g.,
     ``"unweighted_unifrac"``) or a function
     (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
     generally be passed as a string, as this often uses an optimized version
@@ -264,7 +276,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
      * ``counts`` has the correct number of dimensions
      * all vectors in ``counts`` are of equal length
      * the correct number of ``ids`` is provided (if any are provided)
-    And for phylogenetic diversity metrics:
+
+    For phylogenetic diversity metrics, validation additional confirms that:
      * ``otu_ids`` does not contain duplicate values
      * the length of each ``counts`` vector is equal to ``len(otu_ids)``
      * ``tree`` is rooted
@@ -293,12 +306,14 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
                 validate=validate)
         counts = counts_by_node
     elif callable(metric):
-        metric = partial(metric, **kwargs)
+        metric = functools.partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
     else:
+        # metric is a string that scikit-bio doesn't know about, for
+        # example one of the SciPy metrics
         pass
 
-    distances = pdist(counts, metric, **kwargs)
+    distances = scipy.spatial.distance.pdist(counts, metric, **kwargs)
     return DistanceMatrix(distances, ids)

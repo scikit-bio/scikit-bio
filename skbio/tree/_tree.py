@@ -2139,8 +2139,7 @@ class TreeNode(SkbioObject):
         results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
         if nan_length_value is not None:
             length_v = results['length']
-            results['length'] = np.where(np.isnan(length_v), nan_length_value,
-                                         length_v)
+            length_v[np.isnan(length_v)] = nan_length_value
         return results
 
     def _ascii_art(self, char1='-', show_internal=True, compact=False):

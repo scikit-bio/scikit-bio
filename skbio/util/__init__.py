@@ -20,7 +20,6 @@ Common functionality to support testing in skbio.
    TestRunner
    assert_ordination_results_equal
    assert_data_frame_almost_equal
-   assert_series_almost_equal
 
 Miscellaneous functionality
 ---------------------------
@@ -64,13 +63,12 @@ from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import (get_data_path, TestRunner,
                        assert_ordination_results_equal,
-                       assert_data_frame_almost_equal,
-                       assert_series_almost_equal)
+                       assert_data_frame_almost_equal)
 
 __all__ = ['EfficiencyWarning', 'RepresentationWarning', 'cardinal_to_ordinal',
            'create_dir', 'find_duplicates', 'flatten',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
            'get_data_path', 'TestRunner', 'assert_ordination_results_equal',
-           'assert_data_frame_almost_equal', 'assert_series_almost_equal']
+           'assert_data_frame_almost_equal']
 
 test = TestRunner(__file__).test

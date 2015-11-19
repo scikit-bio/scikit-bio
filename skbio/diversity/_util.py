@@ -44,11 +44,10 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
     if len(counts) == 0 or not isinstance(counts[0], collections.Iterable):
         counts = [counts]
     counts = np.asarray(counts)
-    num_dimensions = len(counts.shape)
-    if num_dimensions > 2:
+    if counts.ndim > 2:
         raise ValueError("Only 1-D and 2-D array-like objects can be provided "
                          "as input. Provided object has %d dimensions." %
-                         len(counts.shape))
+                         counts.ndim)
 
     if ids is not None and len(counts) != len(ids):
         raise ValueError(
@@ -108,7 +107,7 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
     missing_tip_names = set_otu_ids - set_tip_names
     if missing_tip_names != set():
         raise MissingNodeError("All ``otu_ids`` must be present as tip names "
-                               "in ``tree``. ``otu_ids`` not correspond to "
+                               "in ``tree``. ``otu_ids`` not corresponding to "
                                "tip names: %s" % " ".join(missing_tip_names))
 
 

@@ -27,8 +27,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
 * Addition of the function ``skbio.diversity.alpha_diversity`` to support applying an alpha diversity metric to multiple samples in one call.
 * Addition of the functions ``skbio.diversity.get_alpha_diversity_metrics`` and ``skbio.diversity.get_beta_diversity_metrics`` to support discovery of the alpha and beta diversity metrics implemented in scikit-bio.
-* ``TreeNode.to_array`` now supports replace ``nan`` branch lengths in the resulting branch length vector with the value provided as ``nan_length_value``.
-* Added ``skbio.util.assert_series_almost_equal`` function for comparing ``pd.DataFrame`` objects in unit tests.
+* ``TreeNode.to_array`` now supports replacing ``nan`` branch lengths in the resulting branch length vector with the value provided as ``nan_length_value``.
 * ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/biocore/scikit-bio/issues/1006))
 * Added `default_gap_char` class property to ``DNA``, ``RNA``, and ``Protein`` for representing gap characters in a new sequence.
 

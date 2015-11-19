@@ -16,7 +16,7 @@ import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.io._fileobject import StringIO
-from skbio.util import assert_series_almost_equal
+from skbio.util._testing import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
                              get_alpha_diversity_metrics,
                              get_beta_diversity_metrics)
@@ -429,7 +429,7 @@ class BetaDiversityTests(TestCase):
                                 np.array([[], []], dtype=np.int64),
                                 ids=['a', 'b'], tree=self.tree1, otu_ids=[])
         expected_dm = DistanceMatrix([[0.0, 0.0], [0.0, 0.0]], ['a', 'b'])
-        npt.assert_array_equal(actual, expected_dm)
+        self.assertEqual(actual, expected_dm)
 
     def test_input_types(self):
         actual_array = beta_diversity('euclidean',
@@ -437,9 +437,11 @@ class BetaDiversityTests(TestCase):
                                       ids=['a', 'b'])
         actual_list = beta_diversity('euclidean',
                                      [[1, 5], [2, 3]], ids=['a', 'b'])
-        npt.assert_array_equal(actual_array, actual_list)
+        self.assertEqual(actual_array, actual_list)
 
     def test_euclidean(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
         actual_dm = beta_diversity('euclidean', self.table1, self.sids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
@@ -467,6 +469,8 @@ class BetaDiversityTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_braycurtis(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
         actual_dm = beta_diversity('braycurtis', self.table1, self.sids1)
         self.assertEqual(actual_dm.shape, (3, 3))
         npt.assert_almost_equal(actual_dm['A', 'A'], 0.0)
@@ -494,6 +498,8 @@ class BetaDiversityTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_unweighted_unifrac(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
                              otu_ids=self.oids1, tree=self.tree1)
@@ -501,10 +507,9 @@ class BetaDiversityTests(TestCase):
                              otu_ids=self.oids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
-        expected_data = [
-            [0.0, 0.0, 0.25/1.0],
-            [0.0, 0.0, 0.25/1.0],
-            [0.25/1.0, 0.25/1.0, 0.0]]
+        expected_data = [[0.0, 0.0, 0.25],
+                         [0.0, 0.0, 0.25],
+                         [0.25, 0.25, 0.0]]
         expected_dm = DistanceMatrix(expected_data, ids=self.sids1)
         for id1 in self.sids1:
             for id2 in self.sids1:
@@ -512,6 +517,8 @@ class BetaDiversityTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_weighted_unifrac(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
                              otu_ids=self.oids1, tree=self.tree1)
@@ -530,6 +537,8 @@ class BetaDiversityTests(TestCase):
                                         expected_dm[id1, id2], 6)
 
     def test_weighted_unifrac_normalized(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
         # expected values calculated by hand
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
                              otu_ids=self.oids1, tree=self.tree1,
