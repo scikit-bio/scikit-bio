@@ -24,7 +24,6 @@ from skbio.diversity.alpha import faith_pd
 class FaithPDTests(TestCase):
 
     def setUp(self):
-        self.faith_pd = faith_pd
         self.counts = np.array([0, 1, 1, 4, 2, 5, 2, 4, 1, 2])
         self.b1 = np.array([[1, 3, 0, 1, 0],
                             [0, 2, 0, 4, 4],
@@ -41,22 +40,22 @@ class FaithPDTests(TestCase):
                     u')root;'))
 
     def test_faith_pd_none_observed(self):
-        actual = self.faith_pd(np.array([], dtype=int),
-                               np.array([], dtype=int),
-                               self.t1)
+        actual = faith_pd(np.array([], dtype=int),
+                          np.array([], dtype=int),
+                          self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd([0, 0, 0, 0, 0], self.oids1, self.t1)
+        actual = faith_pd([0, 0, 0, 0, 0], self.oids1, self.t1)
         expected = 0.0
         self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd_all_observed(self):
-        actual = self.faith_pd([1, 1, 1, 1, 1], self.oids1, self.t1)
+        actual = faith_pd([1, 1, 1, 1, 1], self.oids1, self.t1)
         expected = sum(n.length for n in self.t1.traverse()
                        if n.length is not None)
         self.assertAlmostEqual(actual, expected)
 
-        actual = self.faith_pd([1, 2, 3, 4, 5], self.oids1, self.t1)
+        actual = faith_pd([1, 2, 3, 4, 5], self.oids1, self.t1)
         expected = sum(n.length for n in self.t1.traverse()
                        if n.length is not None)
         self.assertAlmostEqual(actual, expected)
@@ -65,38 +64,38 @@ class FaithPDTests(TestCase):
         # expected results derived from QIIME 1.9.1, which
         # is a completely different implementation skbio's initial
         # phylogenetic diversity implementation
-        actual = self.faith_pd(self.b1[0], self.oids1, self.t1)
+        actual = faith_pd(self.b1[0], self.oids1, self.t1)
         expected = 4.5
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[1], self.oids1, self.t1)
+        actual = faith_pd(self.b1[1], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[2], self.oids1, self.t1)
+        actual = faith_pd(self.b1[2], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[3], self.oids1, self.t1)
+        actual = faith_pd(self.b1[3], self.oids1, self.t1)
         expected = 4.75
         self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd_extra_tips(self):
         # results are the same despite presences of unobserved tips in tree
-        actual = self.faith_pd(self.b1[0], self.oids1, self.t1_w_extra_tips)
-        expected = self.faith_pd(self.b1[0], self.oids1, self.t1)
+        actual = faith_pd(self.b1[0], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[0], self.oids1, self.t1)
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[1], self.oids1, self.t1_w_extra_tips)
-        expected = self.faith_pd(self.b1[1], self.oids1, self.t1)
+        actual = faith_pd(self.b1[1], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[1], self.oids1, self.t1)
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[2], self.oids1, self.t1_w_extra_tips)
-        expected = self.faith_pd(self.b1[2], self.oids1, self.t1)
+        actual = faith_pd(self.b1[2], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[2], self.oids1, self.t1)
         self.assertAlmostEqual(actual, expected)
-        actual = self.faith_pd(self.b1[3], self.oids1, self.t1_w_extra_tips)
-        expected = self.faith_pd(self.b1[3], self.oids1, self.t1)
+        actual = faith_pd(self.b1[3], self.oids1, self.t1_w_extra_tips)
+        expected = faith_pd(self.b1[3], self.oids1, self.t1)
         self.assertAlmostEqual(actual, expected)
 
     def test_faith_pd_minimal(self):
         # two tips
         tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
-        actual = self.faith_pd([1, 0], ['OTU1', 'OTU2'], tree)
+        actual = faith_pd([1, 0], ['OTU1', 'OTU2'], tree)
         expected = 0.25
         self.assertEqual(actual, expected)
 
@@ -116,9 +115,9 @@ class FaithPDTests(TestCase):
             os.path.join('qiime-191-tt', 'faith-pd.txt'), 'data')
         expected = pd.read_csv(expected_fp, sep='\t', index_col=0)
         for sid in self.q_table.columns:
-            actual = self.faith_pd(self.q_table[sid],
-                                   otu_ids=self.q_table.index,
-                                   tree=self.q_tree)
+            actual = faith_pd(self.q_table[sid],
+                              otu_ids=self.q_table.index,
+                              tree=self.q_tree)
             self.assertAlmostEqual(actual, expected['PD_whole_tree'][sid])
 
     def test_faith_pd_root_not_observed(self):
@@ -129,13 +128,13 @@ class FaithPDTests(TestCase):
         otu_ids = ['OTU%d' % i for i in range(1, 5)]
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered observed
-        actual = self.faith_pd([1, 1, 0, 0], otu_ids, tree)
+        actual = faith_pd([1, 1, 0, 0], otu_ids, tree)
         expected = 0.6
         self.assertAlmostEqual(actual, expected)
 
         # root node not observed, but branch between (OTU3, OTU4) and root
         # is considered observed
-        actual = self.faith_pd([0, 0, 1, 1], otu_ids, tree)
+        actual = faith_pd([0, 0, 1, 1], otu_ids, tree)
         expected = 2.3
         self.assertAlmostEqual(actual, expected)
 
@@ -146,7 +145,7 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(DuplicateNodeError, self.faith_pd, counts, otu_ids,
+        self.assertRaises(DuplicateNodeError, faith_pd, counts, otu_ids,
                           t)
 
         # unrooted tree as input
@@ -154,7 +153,7 @@ class FaithPDTests(TestCase):
                                    u'OTU4:0.7);'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # otu_ids has duplicated ids
         t = TreeNode.read(
@@ -162,7 +161,7 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # len of vectors not equal
         t = TreeNode.read(
@@ -170,10 +169,10 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # negative counts
         t = TreeNode.read(
@@ -181,14 +180,14 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, -3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # tree with no branch lengths
         t = TreeNode.read(
             StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
@@ -196,7 +195,7 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
-        self.assertRaises(ValueError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # otu_ids not present in tree
         t = TreeNode.read(
@@ -204,7 +203,7 @@ class FaithPDTests(TestCase):
                      u'0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
-        self.assertRaises(MissingNodeError, self.faith_pd, counts, otu_ids, t)
+        self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)
 
 if __name__ == "__main__":
     main()

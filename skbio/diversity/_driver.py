@@ -65,7 +65,7 @@ def get_alpha_diversity_metrics():
 
     Returns
     -------
-    list
+    list of str
         Alphabetically sorted list of alpha diversity metrics implemented in
         scikit-bio.
 
@@ -75,7 +75,7 @@ def get_alpha_diversity_metrics():
 
     """
     metrics = _get_alpha_diversity_metric_map()
-    return sorted(list(metrics.keys()))
+    return sorted(metrics.keys())
 
 
 @experimental(as_of="0.4.0-dev")
@@ -84,7 +84,7 @@ def get_beta_diversity_metrics():
 
     Returns
     -------
-    list
+    list of str
         Alphabetically sorted list of beta diversity metrics implemented in
         scikit-bio.
 
@@ -109,10 +109,10 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     Parameters
     ----------
-    metric: str, callable
-        The alpha diversity metric to apply to the sample(s).
-        Passing metric as a string is preferable as this often results in an
-        optimized version of the metric being used.
+    metric : str, callable
+        The alpha diversity metric to apply to the sample(s). Passing metric as
+        a string is preferable as this often results in an optimized version of
+        the metric being used.
     counts : 1D or 2D array_like of ints or floats
         Vector or matrix containing count/abundance data. If a matrix, each row
         should contain counts of OTUs in a given sample.
@@ -150,11 +150,10 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     Notes
     -----
     The value that you provide for ``metric`` can be either a string (e.g.,
-    ``"faith_pd"``) or a function
-    (e.g., ``skbio.diversity.alpha.faith_pd``). The metric should
-    generally be passed as a string, as this often uses an optimized version
-    of the metric. For example, passing  ``"faith_pd"`` (a string) will be
-    tens of times faster than passing the function
+    ``"faith_pd"``) or a function (e.g., ``skbio.diversity.alpha.faith_pd``).
+    The metric should generally be passed as a string, as this often uses an
+    optimized version of the metric. For example, passing  ``"faith_pd"`` (a
+    string) will be tens of times faster than passing the function
     ``skbio.diversity.alpha.faith_pd``. The latter may be faster if computing
     alpha diversity for only one or a few samples, but in these cases the
     difference in runtime is negligible, so it's safer to just err on the side

@@ -55,10 +55,18 @@ def faith_pd(counts, otu_ids, tree, validate=True):
         If validation fails (see description of validation in Notes). Exact
         error will depend on what was invalid.
 
+    See Also
+    --------
+    skbio.diversity.alpha_diversity
+
     Notes
     -----
     Faith's phylogenetic diversity, often referred to as PD, was originally
     described in [1]_.
+
+    If computing Faith's PD for multiple samples, using
+    ``skbio.diversity.alpha_diversity`` will be much faster than calling this
+    function individually on each sample.
 
     This implementation differs from that in PyCogent (and therefore QIIME
     versions less than 2.0.0) by imposing a few additional restrictions on the
@@ -70,6 +78,9 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     PyCogent with scikit-bio, ensure that your PyCogent Faith PD calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    This implementation of Faith's PD is based on the array-based
+    implementation of UniFrac described in [2]_.
 
     Validation of input data confirms the following:
      * ``counts`` data can be safely cast to integers
@@ -87,6 +98,11 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     ----------
     .. [1] Faith, D. P. Conservation evaluation and phylogenetic diversity.
        Biol. Conserv. (1992).
+
+    .. [2] Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
+       throughput phylogenetic analyses of microbial communities including
+       analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
+       (2010).
 
     Examples
     --------

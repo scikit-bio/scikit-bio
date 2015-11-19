@@ -71,19 +71,19 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
 
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
-    # all otu_ids are unique
-    # len(otu_ids) == len(counts)
+
     len_otu_ids = len(otu_ids)
     set_otu_ids = set(otu_ids)
     if len_otu_ids != len(set_otu_ids):
         raise ValueError("``otu_ids`` cannot contain duplicated ids.")
+
     if len(counts) != len_otu_ids:
         raise ValueError("``otu_ids`` must be the same length as ``counts`` "
                          "vector(s).")
+
     if len(tree.root().children) == 0:
         raise ValueError("``tree`` must contain more than just a root node.")
 
-    # the tree is rooted
     if len(tree.root().children) > 2:
         # this is an imperfect check for whether the tree is rooted or not.
         # can this be improved?

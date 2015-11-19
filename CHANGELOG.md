@@ -25,8 +25,8 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * Added `Sequence.frequencies` method for computing character frequencies in a sequence. ([#1074](https://github.com/biocore/scikit-bio/issues/1074))
 * Added experimental class-method ``Sequence.concat`` which will produce a new sequence from an iterable of existing sequences. Parameters control how positional metadata is propagated during a concatenation.
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ````skbio.diversity.alpha.faith_pd``, respectively.
-* Addition of function ``skbio.diversity.alpha_diversity``, which supports applying an alpha diversity metric to multiple samples in one call.
-* Addition of functions ``skbio.diversity.get_alpha_diversity_metrics`` and ``skbio.diversity.get_beta_diversity_metrics``, which allow for discovery of the alpha and beta diversity metrics implemented in scikit-bio.
+* Addition of the function ``skbio.diversity.alpha_diversity`` to support applying an alpha diversity metric to multiple samples in one call.
+* Addition of the functions ``skbio.diversity.get_alpha_diversity_metrics`` and ``skbio.diversity.get_beta_diversity_metrics`` to support discovery of the alpha and beta diversity metrics implemented in scikit-bio.
 * ``TreeNode.to_array`` now supports replace ``nan`` branch lengths in the resulting branch length vector with the value provided as ``nan_length_value``.
 * Added ``skbio.util.assert_series_almost_equal`` function for comparing ``pd.DataFrame`` objects in unit tests.
 * ``skbio.io.format.phylip`` now supports sniffing and reading strict, sequential PHYLIP-formatted files into ``skbio.Alignment`` objects. ([#1006](https://github.com/biocore/scikit-bio/issues/1006))
@@ -75,7 +75,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * Removed `skbio.diversity.alpha.equitability`. Please use `skbio.diversity.alpha.pielou_e`, which is more accurately named and better documented. Note that `equitability` by default used logarithm base 2 while `pielou_e` uses logarithm base `e` as described in Heip 1974.
 * ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
 * Deprecated function ``skbio.diversity.beta.pw_distances_from_table`` has been removed from scikit-bio, as scheduled. Code that used this should be adapted to use ``skbio.diversity.beta_diversity``.
-* ``TreeNode.index_tree`` now returns a 2-D numpy array as it's second return value (the child node index) instead of a 1-D numpy array.
+* ``TreeNode.index_tree`` now returns a 2-D numpy array as its second return value (the child node index) instead of a 1-D numpy array.
 
 ### Bug Fixes
 

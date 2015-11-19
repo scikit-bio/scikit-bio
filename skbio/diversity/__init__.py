@@ -81,8 +81,8 @@ F    5.50
 dtype: float64
 
 Note that we passed ``'faith_pd'`` as a string to ``alpha_diversity``. While we
-could have passed the function itself (i.e., ``metric=faith_pd``) passing it as
-a string results in an optmized verison of the function being used. Wherever
+could have passed the function itself (i.e., ``metric=faith_pd``), passing it
+as a string results in an optmized verison of the function being used. Wherever
 possible, you should pass ``metric`` as a string which will result in an
 optimized version being used if available. Passing ``metric`` as a string may
 not be possible if you're passing a metric that scikit-bio doesn't know about,
@@ -90,7 +90,7 @@ such as a custom one that you've developed.
 
 
 The value that you provide for to ``beta_diversity`` for ``metric`` can
-be either a string (e.g., "unweighted_unifrac") or a function
+either be a string (e.g., "unweighted_unifrac") or a function
 (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
 generally be passed as a string, as this often uses an optimized version
 of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)

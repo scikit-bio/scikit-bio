@@ -64,6 +64,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     See Also
     --------
     weighted_unifrac
+    skbio.diversity.beta_diversity
 
     Notes
     -----
@@ -71,6 +72,10 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     unweighted (qualitative) versus weighted (quantitiative) diversity metrics
     is presented in [2]_. Deeper mathemtical discussions of this metric is
     presented in [3]_.
+
+    If computing unweighted UniFrac for multiple pairs of samples, using
+    ``skbio.diversity.beta_diversity`` will be much faster than calling this
+    function individually on each sample.
 
     This implementation differs from that in PyCogent (and therefore QIIME
     versions less than 2.0.0) by imposing a few additional restrictions on the
@@ -82,6 +87,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    This implementation of unweighted UniFrac is the array-based implementation
+    described in [4]_.
 
     Validation of input data confirms the following:
      * ``counts`` data can be safely cast to integers
@@ -110,6 +118,11 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     .. [3] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
        R. UniFrac: an effective distance metric for microbial community
        comparison. ISME J. 5, 169-172 (2011).
+
+    .. [4] Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
+       throughput phylogenetic analyses of microbial communities including
+       analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
+       (2010).
 
     Examples
     --------
@@ -194,6 +207,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     See Also
     --------
     unweighted_unifrac
+    skbio.diversity.beta_diversity
 
     Notes
     -----
@@ -201,6 +215,10 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     discussion of unweighted (qualitative) versus weighted (quantitiative)
     diversity metrics. Deeper mathemtical discussions of this metric is
     presented in [2]_.
+
+    If computing weighted UniFrac for multiple pairs of samples, using
+    ``skbio.diversity.beta_diversity`` will be much faster than calling this
+    function individually on each sample.
 
     This implementation differs from that in PyCogent (and therefore QIIME
     versions less than 2.0.0) by imposing a few additional restrictions on the
@@ -212,6 +230,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     PyCogent with scikit-bio, ensure that your PyCogent UniFrac calculations
     are performed on a rooted tree and that all OTU IDs are present in the
     tree.
+
+    This implementation of weighted UniFrac is the array-based implementation
+    described in [3]_.
 
     Validation of input data confirms the following:
      * ``counts`` data can be safely cast to integers
@@ -236,6 +257,11 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     .. [2] Lozupone, C., Lladser, M. E., Knights, D., Stombaugh, J. & Knight,
        R. UniFrac: an effective distance metric for microbial community
        comparison. ISME J. 5, 169-172 (2011).
+
+    .. [3] Hamady M, Lozupone C, Knight R. Fast UniFrac: facilitating high-
+       throughput phylogenetic analyses of microbial communities including
+       analysis of pyrosequencing and PhyloChip data.  ISME J. 4(1):17-27
+       (2010).
 
     Examples
     --------
@@ -442,7 +468,7 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     c = _weighted_unifrac_branch_correction(
         node_to_root_distances, u_node_proportions, v_node_proportions)
 
-    return u/c
+    return u / c
 
 
 def _setup_multiple_unifrac(counts, otu_ids, tree, validate):
