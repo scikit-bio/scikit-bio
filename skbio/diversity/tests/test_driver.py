@@ -642,8 +642,8 @@ class BetaDiversityTests(TestCase):
         # for n_jobs, sklearn.metrics.pairwise_distances throws a TypeError
         # (Any ideas on a more direct way to test this?)
         self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
-                self.table1, self.sids1, otu_ids=self.oids1, tree=self.tree1,
-                pdist_f=skl, n_jobs='hello world!')
+                          self.table1, self.sids1, otu_ids=self.oids1,
+                          tree=self.tree1, pdist_f=skl, n_jobs='hello world!')
 
     def test_sklearn_parallel_weighted_unifrac(self):
         skl = sklearn.metrics.pairwise_distances
@@ -671,8 +671,8 @@ class BetaDiversityTests(TestCase):
         # for n_jobs, sklearn.metrics.pairwise_distances throws a TypeError
         # (Any ideas on a more direct way to test this?)
         self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
-                self.table1, self.sids1, otu_ids=self.oids1, tree=self.tree1,
-                pdist_f=skl, n_jobs='hello world!')
+                          self.table1, self.sids1, otu_ids=self.oids1,
+                          tree=self.tree1, pdist_f=skl, n_jobs='hello world!')
 
 
 class MetricGetters(TestCase):

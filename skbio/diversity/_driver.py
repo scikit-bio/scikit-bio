@@ -12,7 +12,6 @@ import functools
 
 import scipy.spatial.distance
 import pandas as pd
-import sklearn.metrics
 
 import skbio
 from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
