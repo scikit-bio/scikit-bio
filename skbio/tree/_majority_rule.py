@@ -113,7 +113,8 @@ def _filter_clades(clade_counts, cutoff_threshold):
     return accepted_clades
 
 
-def _build_trees(clade_counts, edge_lengths, support_attr):
+def _build_trees(clade_counts, edge_lengths, support_attr,
+                 tree_node_class=TreeNode):
     """Construct the trees with support
 
     Parameters
@@ -124,6 +125,9 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         Keyed by the frozenset of the clade and valued by the weighted length
     support_attr : str
         The name of the attribute to hold the support value
+    tree_node_class: Python class
+        Either TreeNode (the default) or a class that implements the same
+        interface (most usefully, a subclass of TreeNode).
 
     Returns
     -------
@@ -166,7 +170,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         children = [nodes.pop(c) for c in clade if c in nodes]
         length = edge_lengths[clade]
 
-        node = TreeNode(children=children, length=length, name=name)
+        node = tree_node_class(children=children, length=length, name=name)
         setattr(node, support_attr, clade_counts[clade])
         nodes[clade] = node
 
@@ -176,7 +180,8 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
 
 
 @experimental(as_of="0.4.0")
-def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
+def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
+                  tree_node_class=TreeNode):
     r"""Determines consensus trees from a list of rooted trees
 
     Parameters
@@ -194,10 +199,13 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
     support_attr : str
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
+    tree_node_class: Python class
+        Either TreeNode (the default) or a class that implements the same
+        interface (most usefully, a subclass of TreeNode).
 
     Returns
     -------
-    list of TreeNode
+    list of tree_node_class instances
         Multiple trees can be returned in the case of two or more disjoint sets
         of tips represented on input.
 
@@ -275,6 +283,7 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
 
     clade_counts, edge_lengths = _walk_clades(trees, weights)
     clade_counts = _filter_clades(clade_counts, cutoff_threshold)
-    trees = _build_trees(clade_counts, edge_lengths, support_attr)
+    trees = _build_trees(clade_counts, edge_lengths, support_attr,
+                         tree_node_class)
 
     return trees
