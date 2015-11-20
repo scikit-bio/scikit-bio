@@ -31,10 +31,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     Parameters
     ----------
-    sequences : iterable of alphabet-aware scikit-bio sequence objects
+    sequences : iterable of alphabet-aware skbio sequence objects, TabularMSA
         Aligned sequences in the MSA. Sequences must be the same type, length,
         and have an alphabet. For example, `sequences` could be an iterable of
-        ``DNA``, ``RNA``, or ``Protein`` objects.
+        ``DNA``, ``RNA``, or ``Protein`` objects. If `sequences` is a
+        ``TabularMSA``, its `metadata`, `positional_metadata`, and `index` will
+        be used unless overridden by parameters `metadata`,
+        `positional_metadata`, and `minter`/`index`.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
@@ -239,6 +242,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
+        if isinstance(sequences, TabularMSA):
+            if metadata is None and sequences.has_metadata():
+                metadata = sequences.metadata
+            if (positional_metadata is None and
+                    sequences.has_positional_metadata()):
+                positional_metadata = sequences.positional_metadata
+            if minter is None and index is None:
+                index = sequences.index
+
         self._seqs = pd.Series([])
         self.extend(sequences, minter=minter, index=index)
 
@@ -993,9 +1005,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             dtype = type(sequence)
             if dtype is not expected_dtype:
                 raise TypeError(
-                    "Each sequence must match the type of the sequences "
-                    "already in the MSA. Type %r does not match type %r" %
-                    (dtype.__name__, expected_dtype.__name__))
+                    "Sequences in MSA must have matching type. Type %r does "
+                    "not match type %r" % (dtype.__name__,
+                                           expected_dtype.__name__))
 
             length = len(sequence)
             if length != expected_length:

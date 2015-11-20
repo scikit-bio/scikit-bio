@@ -81,11 +81,11 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_not_monomorphic(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*RNA.*DNA'):
+                                   'matching type.*RNA.*DNA'):
             TabularMSA([DNA(''), RNA('')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*float.*Protein'):
+                                   'matching type.*float.*Protein'):
             TabularMSA([Protein(''), Protein(''), 42.0, Protein('')])
 
     def test_constructor_unequal_length(self):
@@ -210,6 +210,73 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         self.assertIsInstance(msa.index, pd.MultiIndex)
         assert_index_equal(msa.index, pd.Index([('foo', 42), ('bar', 43)]))
+
+    def test_copy_constructor_handles_missing_metadata_efficiently(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('----')])
+
+        copy = TabularMSA(msa)
+
+        self.assertIsNone(msa._metadata)
+        self.assertIsNone(msa._positional_metadata)
+        self.assertIsNone(copy._metadata)
+        self.assertIsNone(copy._positional_metadata)
+
+    def test_copy_constructor_with_metadata(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('----')],
+                         metadata={'foo': 42},
+                         positional_metadata={'bar': range(4)},
+                         index=['idx1', 'idx2'])
+
+        copy = TabularMSA(msa)
+
+        self.assertEqual(msa, copy)
+        self.assertIsNot(msa, copy)
+        self.assertIsNot(msa.metadata, copy.metadata)
+        self.assertIsNot(msa.positional_metadata, copy.positional_metadata)
+        self.assertIsNot(msa.index, copy.index)
+
+    def test_copy_constructor_state_override_with_minter(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('----')],
+                         metadata={'foo': 42},
+                         positional_metadata={'bar': range(4)},
+                         index=['idx1', 'idx2'])
+
+        copy = TabularMSA(msa, metadata={'foo': 43},
+                          positional_metadata={'bar': range(4, 8)},
+                          minter=str)
+
+        self.assertNotEqual(msa, copy)
+
+        self.assertEqual(
+            copy,
+            TabularMSA([DNA('ACGT'),
+                        DNA('----')],
+                       metadata={'foo': 43},
+                       positional_metadata={'bar': range(4, 8)},
+                       minter=str))
+
+    def test_copy_constructor_state_override_with_index(self):
+        msa = TabularMSA([DNA('ACGT'),
+                          DNA('----')],
+                         metadata={'foo': 42},
+                         positional_metadata={'bar': range(4)},
+                         index=['idx1', 'idx2'])
+
+        copy = TabularMSA(msa, metadata={'foo': 43},
+                          positional_metadata={'bar': range(4, 8)},
+                          index=['a', 'b'])
+
+        self.assertNotEqual(msa, copy)
+
+        self.assertEqual(
+            copy,
+            TabularMSA([DNA('ACGT'),
+                        DNA('----')],
+                       metadata={'foo': 43},
+                       positional_metadata={'bar': range(4, 8)},
+                       index=['a', 'b']))
 
     def test_dtype(self):
         self.assertIsNone(TabularMSA([]).dtype)
@@ -887,7 +954,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*RNA.*DNA'):
+                                   'matching type.*RNA.*DNA'):
             msa.append(RNA('UUUU'))
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -896,7 +963,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*float.*DNA'):
+                                   'matching type.*float.*DNA'):
             msa.append(42.0)
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -1144,7 +1211,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*RNA.*DNA'):
+                                   'matching type.*RNA.*DNA'):
             msa.extend([DNA('----'), RNA('UUUU')])
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
@@ -1153,7 +1220,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('TGCA')])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'must match the type.*float.*DNA'):
+                                   'matching type.*float.*DNA'):
             msa.extend([DNA('GGGG'), 42.0])
 
         self.assertEqual(msa, TabularMSA([DNA('ACGT'), DNA('TGCA')]))
