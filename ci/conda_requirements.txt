@@ -12,3 +12,4 @@ pyflakes
 flake8
 python-dateutil
 decorator
+scikit-learn
