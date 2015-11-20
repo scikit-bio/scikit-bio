@@ -12,6 +12,7 @@ import functools
 
 import scipy.spatial.distance
 import pandas as pd
+import sklearn.metrics
 
 import skbio
 from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
@@ -209,7 +210,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
+def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
+                   pdist_f=scipy.spatial.distance.pdist, **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -234,6 +236,15 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         bypassed if you're not certain that your input data are valid. See
         Notes for the description of what validation entails so you can
         determine if you can safely disable validation.
+    pdist_f: callable, optional
+        The function to use for computing pairwise distances. This function
+        must take ``counts``, ``metric``, and ``kwargs``. Examples of functions
+        that can be provided are ``scipy.spatial.distance.pdist`` and
+        ``sklearn.metrics.pairwise_distances``.
+    n_jobs: int, optional
+        The number of jobs to start for computing pairwise distances in
+        parallel. This option will only be supported for certain ``pdist_f``
+        functions, notably ``sklearn.metrics.pairwise_distances``.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -250,12 +261,16 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
+    TypeError
+        If ``n_jobs`` is passed, but the function provided as ``pdist_f``
+        does not take an ``n_jobs`` parameter.
 
     See Also
     --------
     skbio.diversity.beta
     skbio.diversity.alpha_diversity
     scipy.spatial.distance.pdist
+    sklearn.metrics.pairwise_distances
 
     Notes
     -----
@@ -315,5 +330,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         # example one of the SciPy metrics
         pass
 
-    distances = scipy.spatial.distance.pdist(counts, metric, **kwargs)
+    if n_jobs is not None:
+        distances = pdist_f(counts, metric=metric, n_jobs=n_jobs, **kwargs)
+    else:
+        distances = pdist_f(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)

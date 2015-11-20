@@ -93,6 +93,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``make test`` now validates MANIFEST.in using [check-manifest](https://github.com/mgedmin/check-manifest). ([#461](https://github.com/biocore/scikit-bio/issues/461))
 * Many new alpha diversity equations added to ``skbio.diversity.alpha`` documentation. ([#321](https://github.com/biocore/scikit-bio/issues/321))
 * Order of ``lowercase`` and ``validate`` keywords swapped in ``DNA``, ``RNA``, and ``Protein``.
+* scikit-learn is now a required dependency.
 
 ## Version 0.4.0 (2015-07-08)
 
