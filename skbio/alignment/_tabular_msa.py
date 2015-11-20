@@ -31,10 +31,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     Parameters
     ----------
-    sequences : iterable of alphabet-aware scikit-bio sequence objects
+    sequences : iterable of alphabet-aware skbio sequence objects, TabularMSA
         Aligned sequences in the MSA. Sequences must be the same type, length,
         and have an alphabet. For example, `sequences` could be an iterable of
-        ``DNA``, ``RNA``, or ``Protein`` objects.
+        ``DNA``, ``RNA``, or ``Protein`` objects. If `sequences` is a
+        ``TabularMSA``, its `metadata`, `positional_metadata`, and `index` will
+        be used unless overridden by parameters `metadata`,
+        `positional_metadata`, and `minter`/`index`.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
@@ -239,22 +242,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
-        # TODO: optimize this to not append Series for each sequence.
-        self._seqs = pd.Series([])
-        for sequence in sequences:
-            self.append(sequence)
+        if isinstance(sequences, TabularMSA):
+            if metadata is None and sequences.has_metadata():
+                metadata = sequences.metadata
+            if (positional_metadata is None and
+                    sequences.has_positional_metadata()):
+                positional_metadata = sequences.positional_metadata
+            if minter is None and index is None:
+                index = sequences.index
 
-        if minter is not None and index is not None:
-            raise ValueError(
-                "Cannot use both `minter` and `index` at the same time.")
-        if minter is not None:
-            self.reassign_index(minter=minter)
-        elif index is not None:
-            # Cast to Index to identify tuples as a MultiIndex to match
-            # pandas constructor. Just setting would make an index of tuples.
-            if not isinstance(index, pd.Index):
-                index = pd.Index(index)
-            self.index = index
+        self._seqs = pd.Series([])
+        self.extend(sequences, minter=minter, index=index)
 
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
@@ -901,7 +899,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             self._seqs.reset_index(drop=True, inplace=True)
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, minter=None, label=None):
+    def append(self, sequence, minter=None, index=None):
         """Append a sequence to the MSA without recomputing alignment.
 
         Parameters
@@ -910,20 +908,20 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
-            Used to create a label for the sequence being appended. If
+            Used to create an index label for the sequence being appended. If
             callable, it generates a label directly. Otherwise it's treated as
             a key into the sequence metadata. Note that `minter` cannot be
-            combined with `label`.
-        label : object, optional
-            Index label to use for the appended sequence. Note that `label`
+            combined with `index`.
+        index : object, optional
+            Index label to use for the appended sequence. Note that `index`
             cannot be combined with `minter`.
 
         Raises
         ------
         ValueError
-            If both `minter` and `label` are provided.
+            If both `minter` and `index` are provided.
         ValueError
-            If neither `minter` nor `label` are provided and the MSA has a
+            If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
             If the sequence object is a type that doesn't have an alphabet.
@@ -935,12 +933,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         See Also
         --------
+        extend
         reassign_index
 
         Notes
         -----
-        If neither `minter` nor `label` are provided and this MSA has default
-        index labels, the new label will be auto-incremented.
+        If neither `minter` nor `index` are provided and this MSA has default
+        index labels, the new index label will be auto-incremented.
 
         The MSA is not automatically re-aligned when a sequence is appended.
         Therefore, this operation is not necessarily meaningful on its own.
@@ -962,42 +961,139 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Int64Index([0, 1, 2], dtype='int64')
 
         """
-        if minter is not None and label is not None:
-            raise ValueError(
-                "Cannot use both `minter` and `label` at the same time.")
+        if index is not None:
+            index = [index]
+        self.extend([sequence], minter=minter, index=index)
 
-        if minter is None and label is None:
+    @experimental(as_of='0.4.0-dev')
+    def extend(self, sequences, minter=None, index=None):
+        """Extend this MSA with sequences without recomputing alignment.
+
+        Parameters
+        ----------
+        sequences : iterable of alphabet-aware scikit-bio sequence objects
+            Sequences to be appended. Must match the dtype of the MSA and the
+            number of positions in the MSA.
+        minter : callable or metadata key, optional
+            Used to create index labels for the sequences being appended. If
+            callable, it generates a label directly. Otherwise it's treated as
+            a key into the sequence metadata. Note that `minter` cannot be
+            combined with `index`.
+        index : pd.Index consumable, optional
+            Index labels to use for the appended sequences. Must be the same
+            length as `sequences`. Must be able to be passed directly to
+            ``pd.Index`` constructor. Note that `index` cannot be combined
+            with `minter`.
+
+        Raises
+        ------
+        ValueError
+            If both `minter` and `index` are both provided.
+        ValueError
+            If neither `minter` nor `index` are provided and the MSA has a
+            non-default index.
+        ValueError
+            If `index` is not the same length as `sequences`.
+        TypeError
+            If `sequences` contains a type that does not have an alphabet.
+        TypeError
+            If `sequence` contains a type that does not match the dtype of the
+            MSA.
+        ValueError
+            If the length of a sequence does not match the number of positions
+            in the MSA.
+
+        See Also
+        --------
+        append
+        reassign_index
+
+        Notes
+        -----
+        If neither `minter` nor `index` are provided and this MSA has default
+        index labels, the new index labels will be auto-incremented.
+
+        The MSA is not automatically re-aligned when appending sequences.
+        Therefore, this operation is not necessarily meaningful on its own.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa.extend([DNA('AG-T'), DNA('-G-T')])
+        >>> msa == TabularMSA([DNA('ACGT'), DNA('AG-T'), DNA('-G-T')])
+        True
+
+        Auto-incrementing index labels:
+
+        >>> msa.index
+        Int64Index([0, 1, 2], dtype='int64')
+        >>> msa.extend([DNA('ACGA'), DNA('AC-T'), DNA('----')])
+        >>> msa.index
+        Int64Index([0, 1, 2, 3, 4, 5], dtype='int64')
+
+        """
+        if minter is not None and index is not None:
+            raise ValueError(
+                "Cannot use both `minter` and `index` at the same time.")
+
+        sequences = list(sequences)
+
+        if minter is None and index is None:
             if self.index.equals(pd.Index(np.arange(len(self)))):
-                label = len(self)
+                index = range(len(self), len(self) + len(sequences))
             else:
                 raise ValueError(
-                    "Must provide a `minter` or `label` for this sequence.")
+                    "MSA does not have default index labels, must provide "
+                    "a `minter` or `index` for sequence(s).")
+        elif minter is not None:
+            index = [resolve_key(seq, minter) for seq in sequences]
 
-        if minter is not None:
-            label = resolve_key(sequence, minter)
+        # Cast to Index to identify tuples as a MultiIndex to match
+        # pandas constructor. Just setting would make an index of tuples.
+        if not isinstance(index, pd.Index):
+            index = pd.Index(index)
 
-        self._assert_valid_sequence(sequence)
+        self._assert_valid_sequences(sequences)
 
-        self._seqs = self._seqs.append(pd.Series([sequence], index=[label]))
-
-    def _assert_valid_sequence(self, sequence):
-        msa_is_empty = not len(self)
-        dtype = type(sequence)
-        if msa_is_empty:
-            if not issubclass(dtype, IUPACSequence):
-                raise TypeError(
-                    "`sequence` must be a scikit-bio sequence object "
-                    "that has an alphabet, not type %r" % dtype.__name__)
-        elif dtype is not self.dtype:
-            raise TypeError(
-                "`sequence` must match the type of any other sequences "
-                "already in the MSA. Type %r does not match type %r" %
-                (dtype.__name__, self.dtype.__name__))
-        elif len(sequence) != self.shape.position:
+        # pandas doesn't give a user-friendly error message if we pass through.
+        if len(sequences) != len(index):
             raise ValueError(
-                "`sequence` length must match the number of positions in the "
-                "MSA: %d != %d"
-                % (len(sequence), self.shape.position))
+                "Number of sequences (%d) must match index length (%d)" %
+                (len(sequences), len(index)))
+        self._seqs = self._seqs.append(pd.Series(sequences, index=index))
+
+    def _assert_valid_sequences(self, sequences):
+        if not sequences:
+            return
+
+        if len(self):
+            expected_dtype = self.dtype
+            expected_length = self.shape.position
+        else:
+            sequence = sequences[0]
+            expected_dtype = type(sequence)
+            if not issubclass(expected_dtype, IUPACSequence):
+                raise TypeError(
+                    "Each sequence must be a scikit-bio sequence object "
+                    "that has an alphabet, not type %r" %
+                    expected_dtype.__name__)
+            expected_length = len(sequence)
+
+        for sequence in sequences:
+            dtype = type(sequence)
+            if dtype is not expected_dtype:
+                raise TypeError(
+                    "Sequences in MSA must have matching type. Type %r does "
+                    "not match type %r" % (dtype.__name__,
+                                           expected_dtype.__name__))
+
+            length = len(sequence)
+            if length != expected_length:
+                raise ValueError(
+                    "Each sequence's length must match the number of "
+                    "positions in the MSA: %d != %d"
+                    % (length, expected_length))
 
     def sort(self, level=None, ascending=True):
         """Sort sequences by index label in-place.
