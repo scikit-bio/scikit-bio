@@ -22,6 +22,7 @@ from skbio.sequence import Sequence
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
+from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
@@ -150,7 +151,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         True
 
         """
-        return type(self._get_sequence(0)) if len(self) > 0 else None
+        return type(self._get_sequence_(0)) if len(self) > 0 else None
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -188,7 +189,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         sequence_count = len(self)
 
         if sequence_count > 0:
-            position_count = len(self._get_sequence(0))
+            position_count = len(self._get_sequence_(0))
         else:
             position_count = 0
 
@@ -250,6 +251,22 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @index.deleter
     def index(self):
         self.reassign_index()
+
+    @property
+    @experimental(as_of="0.4.0-dev")
+    def loc(self):
+        """ TODO
+
+        """
+        return self._loc
+
+    @property
+    @experimental(as_of="0.4.0-dev")
+    def iloc(self):
+        """ TODO
+
+        """
+        return self._iloc
 
     @classonlymethod
     @experimental(as_of="0.4.0-dev")
@@ -317,6 +334,37 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
+
+        # Set up our indexers
+        self._loc = TabularMSALoc(self)
+        self._iloc = TabularMSAILoc(self)
+
+    def _constructor_(self, sequences=NotImplemented, metadata=NotImplemented,
+                      positional_metadata=NotImplemented,
+                      index=NotImplemented):
+        if sequences is NotImplemented:
+            sequences = self._seqs
+
+        if metadata is NotImplemented:
+            if self.has_metadata():
+                metadata = self.metadata
+            else:
+                metadata = None
+        if positional_metadata is NotImplemented:
+            if self.has_positional_metadata():
+                positional_metadata = self.positional_metadata
+            else:
+                positional_metadata = None
+
+        if index is NotImplemented:
+            if isinstance(sequences, pd.Series):
+                index = sequences.index
+            else:
+                index = self.index
+
+        return self.__class__(sequences, metadata=metadata,
+                              positional_metadata=positional_metadata,
+                              index=index)
 
     @experimental(as_of='0.4.0-dev')
     def __repr__(self):
@@ -640,6 +688,40 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return msa_copy
 
+    @experimental(as_of="0.4.0-dev")
+    def __getitem__(self, indexable):
+        """ TODO
+
+        """
+        return self.iloc[indexable]
+
+    # Helpers for TabularMSAILoc and TabularMSALoc
+    def _get_sequence_(self, i):
+        return self._seqs.iloc[i]
+
+    def _slice_sequences_(self, i):
+        return self._constructor_(self._seqs.iloc[i])
+
+    def _get_sequence_loc_(self, l):
+        return self._seqs.loc[l]
+
+    def _slice_sequences_loc_(self, l):
+        return self._constructor_(self._seqs.loc[l])
+
+    def _get_position_(self, i):
+        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
+        if self.has_positional_metadata():
+            seq.metadata = dict(self.positional_metadata.iloc[i])
+        return seq
+
+    def _slice_positions_(self, i):
+        seqs = self._seqs.apply(lambda seq: seq[i])
+        pm = None
+        if self.has_positional_metadata():
+            pm = self.positional_metadata.iloc[i]
+        return self._constructor_(seqs, positional_metadata=pm)
+    # end of helpers
+
     @experimental(as_of='0.4.0-dev')
     def iter_positions(self, reverse=False):
         """Iterate over positions (columns) in the MSA.
@@ -757,7 +839,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
-        return (self._get_position(index) for index in indices)
+        return (self._get_position_(index) for index in indices)
 
     @experimental(as_of='0.4.0-dev')
     def consensus(self):
@@ -1771,15 +1853,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         else:
             raise ValueError("Cannot convert to dict. Index labels are not"
                              " unique.")
-
-    def _get_sequence(self, i):
-        return self._seqs.iloc[i]
-
-    def _get_position(self, i):
-        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
-        if self.has_positional_metadata():
-            seq.metadata = dict(self.positional_metadata.iloc[i])
-        return seq
 
     def _is_sequence_axis(self, axis):
         if axis == 'sequence' or axis == 0:

@@ -902,6 +902,58 @@ class TestDeepCopy(unittest.TestCase):
         assert_index_equal(msa.index, pd.Index(['foo', 'bar']))
 
 
+class SharedIndexTests(object):
+    def get(self, obj, indexable):
+        raise NotImplementedError()
+
+    def test_empty_msa_slice(self):
+        msa = TabularMSA([])
+
+        new = self.get(msa, slice(None, None))
+
+        self.assertIsNot(msa, new)
+        self.assertEqual(msa, new)
+
+    def test_msa_slice_all(self):
+        msa = TabularMSA([RNA("AAA"), RNA("AAU")])
+
+        new = self.get(msa, slice(None, None))
+
+        self.assertIsNot(msa, new)
+        self.assertEqual(msa, new)
+
+
+class TestLoc(SharedIndexTests, unittest.TestCase):
+    def get(self, obj, indexable):
+        return obj.loc[indexable]
+    
+    def test_slice_entire_index(self):
+        msa = TabularMSA([DNA("ACCA"), DNA("GGAA")], minter=str)
+
+        new = self.get(msa, msa.index)
+
+        self.assertIsNot(msa, new)
+        self.assertEqual(msa, new)
+
+
+class TestILoc(SharedIndexTests, unittest.TestCase):
+    def get(self, obj, indexable):
+        return obj.iloc[indexable]
+    
+    def test_slice_entire_fancy(self):
+        msa = TabularMSA([DNA("ACCA"), DNA("GGAA")])
+
+        new = self.get(msa, np.arange(2))
+        
+        self.assertIsNot(msa, new)
+        self.assertEqual(msa, new)
+
+
+class TestGetItem(TestILoc):
+    def get(self, obj, indexable):
+        return obj[indexable]
+
+
 class TestAppend(unittest.TestCase):
     def test_to_empty_msa(self):
         msa = TabularMSA([])
@@ -2447,7 +2499,7 @@ class TestGetPosition(unittest.TestCase):
         msa = TabularMSA([DNA('ACG'),
                           DNA('A-G')])
 
-        position = msa._get_position(1)
+        position = msa._get_position_(1)
 
         self.assertEqual(position, Sequence('C-'))
 
@@ -2457,7 +2509,7 @@ class TestGetPosition(unittest.TestCase):
                          positional_metadata={'foo': [42, 43, 44],
                                               'bar': ['abc', 'def', 'ghi']})
 
-        position = msa._get_position(1)
+        position = msa._get_position_(1)
 
         self.assertEqual(position,
                          Sequence('C-', metadata={'foo': 43, 'bar': 'def'}))
@@ -2466,7 +2518,7 @@ class TestGetPosition(unittest.TestCase):
         msa = TabularMSA([DNA('AA'),
                           DNA('--')])
 
-        msa._get_position(1)
+        msa._get_position_(1)
 
         self.assertIsNone(msa._positional_metadata)
 
