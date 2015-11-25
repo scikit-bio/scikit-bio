@@ -1095,6 +1095,254 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     "positions in the MSA: %d != %d"
                     % (length, expected_length))
 
+    def join(self, other, how='strict'):
+        """Join this MSA with another by sequence (horizontally).
+
+        Sequences will be joined by index labels. MSA ``positional_metadata``
+        will be joined by columns. Use `how` to control join behavior.
+
+        Alignment is **not** recomputed during join operation (see *Notes*
+        section for details).
+
+        Parameters
+        ----------
+        other : TabularMSA
+            MSA to join with. Must have same ``dtype`` as this MSA.
+        how : {'strict', 'inner', 'outer', 'left', 'right'}, optional
+            How to join the sequences and MSA `positional_metadata`:
+
+            * ``'strict'``: MSA indexes and `positional_metadata` columns must
+              match
+
+            * ``'inner'``: an inner-join of the MSA indexes and
+              ``positional_metadata`` columns (only the shared set of index
+              labels and columns are used)
+
+            * ``'outer'``: an outer-join of the MSA indexes and
+              ``positional_metadata`` columns (all index labels and columns are
+              used). Unshared sequences will be padded with the MSA's default
+              gap character (``TabularMSA.dtype.default_gap_char``). Unshared
+              columns will be padded with NaN.
+
+            * ``'left'``: a left-outer-join of the MSA indexes and
+              ``positional_metadata`` columns (this MSA's index labels and
+              columns are used). Padding of unshared data is handled the same
+              as ``'outer'``.
+
+            * ``'right'``: a right-outer-join of the MSA indexes and
+              ``positional_metadata`` columns (`other` index labels and columns
+              are used). Padding of unshared data is handled the same as
+              ``'outer'``.
+
+        Returns
+        -------
+        TabularMSA
+            Joined MSA. There is no guaranteed ordering to its index (call
+            ``sort`` to define one).
+
+        Raises
+        ------
+        ValueError
+            If `how` is invalid.
+        ValueError
+            If either the index of this MSA or the index of `other` contains
+            duplicates.
+        ValueError
+            If ``how='strict'`` and this MSA's index doesn't match with
+            `other`.
+        ValueError
+            If ``how='strict'`` and this MSA's ``positional_metadata`` columns
+            don't match with `other`.
+        TypeError
+            If `other` is not a subclass of ``TabularMSA``.
+        TypeError
+            If the ``dtype`` of `other` does not match this MSA's ``dtype``.
+
+        See Also
+        --------
+        extend
+        sort
+        skbio.sequence.Sequence.concat
+
+        Notes
+        -----
+        The join operation does not automatically perform re-alignment;
+        sequences are simply joined together. Therefore, this operation is not
+        necessarily meaningful on its own.
+
+        The index labels of this MSA must be unique. Likewise, the index labels
+        of `other` must be unique.
+
+        The MSA-wide and per-sequence metadata (``TabularMSA.metadata`` and
+        ``Sequence.metadata``) are not retained on the joined ``TabularMSA``.
+
+        The positional metadata of the sequences will be outer-joined,
+        regardless of `how` (using ``Sequence.concat(how='outer')``).
+
+        If the join operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will not be set.
+
+        Examples
+        --------
+        Join MSAs by sequence:
+
+        >>> from skbio import DNA, TabularMSA
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-')])
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--')])
+        >>> joined = msa1.join(msa2)
+        >>> joined == TabularMSA([DNA('ACG-T'),
+        ...                       DNA('A-T--')])
+        True
+
+        Sequences are joined based on MSA index labels:
+
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-')], index=['a', 'b'])
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--')], index=['b', 'a'])
+        >>> joined = msa1.join(msa2)
+        >>> joined == TabularMSA([DNA('ACT--'),
+        ...                       DNA('A-G-T')], index=['a', 'b'])
+        True
+
+        By default both MSA indexes must match. Use ``how`` to specify an inner
+        join:
+
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-'),
+        ...                    DNA('-C')], index=['a', 'b', 'c'],
+        ...                   positional_metadata={'col1': [42, 43],
+        ...                                        'col2': [1, 2]})
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--'),
+        ...                    DNA('ACG')], index=['b', 'a', 'z'],
+        ...                   positional_metadata={'col2': [3, 4, 5],
+        ...                                        'col3': ['f', 'o', 'o']})
+        >>> joined = msa1.join(msa2, how='inner')
+        >>> joined == TabularMSA([DNA('A-G-T'),
+        ...                       DNA('ACT--')], index=['b', 'a'],
+        ...                      positional_metadata={'col2': [1, 2, 3, 4, 5]})
+        True
+
+        When performing an outer join (``'outer'``, ``'left'``, or
+        ``'right'``), unshared sequences are padded with gaps and unshared
+        ``positional_metadata`` columns are padded with NaN:
+
+        >>> joined = msa1.join(msa2, how='outer')
+        >>> joined == TabularMSA([DNA('ACT--'),
+        ...                       DNA('A-G-T'),
+        ...                       DNA('-C---'),
+        ...                       DNA('--ACG')], index=['a', 'b', 'c', 'z'],
+        ...                      positional_metadata={
+        ...                          'col1': [42, 43, np.nan, np.nan, np.nan],
+        ...                          'col2': [1, 2, 3, 4, 5],
+        ...                          'col3': [np.nan, np.nan, 'f', 'o', 'o']})
+        True
+
+        """
+        if how not in {'strict', 'inner', 'outer', 'left', 'right'}:
+            raise ValueError(
+                "`how` must be 'strict', 'inner', 'outer', 'left', or "
+                "'right'.")
+
+        self._assert_joinable(other)
+
+        join_index, concat_kwargs = self._get_join_index(other, how)
+
+        joined_seqs = []
+        for label in join_index:
+            left_seq = self._get_sequence_for_join(label)
+            right_seq = other._get_sequence_for_join(label)
+
+            joined_seqs.append(
+                self.dtype.concat([left_seq, right_seq], how='outer'))
+
+        # TODO: update when #1198 is implemented.
+        joined_positional_metadata = None
+        if joined_seqs:
+            joined_positional_metadata = pd.concat(
+                [self.positional_metadata, other.positional_metadata],
+                ignore_index=True, **concat_kwargs)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
+        joined = self.__class__(joined_seqs, index=join_index,
+                                positional_metadata=joined_positional_metadata)
+
+        if not joined.has_positional_metadata():
+            del joined.positional_metadata
+
+        return joined
+
+    def _assert_joinable(self, other):
+        if not isinstance(other, TabularMSA):
+            raise TypeError(
+                "`other` must be a `TabularMSA` object, not type %r" %
+                type(other).__name__)
+
+        if self.dtype is not other.dtype:
+            raise TypeError(
+                "`other` dtype %r does not match this MSA's dtype %r" %
+                (other.dtype if other.dtype is None else other.dtype.__name__,
+                 self.dtype if self.dtype is None else self.dtype.__name__))
+
+        if not self.index.is_unique:
+            raise ValueError(
+                "This MSA's index labels must be unique.")
+        if not other.index.is_unique:
+            raise ValueError(
+                "`other`'s index labels must be unique.")
+
+    def _get_join_index(self, other, how):
+        if how == 'strict':
+            diff = self.index.sym_diff(other.index)
+            if len(diff) > 0:
+                raise ValueError(
+                    "Index labels must all match with `how='strict'`")
+
+            diff = self.positional_metadata.columns.sym_diff(
+                other.positional_metadata.columns)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
+            if len(diff) > 0:
+                raise ValueError(
+                    "Positional metadata columns must all match with "
+                    "`how='strict'`")
+
+            join_index = self.index
+            concat_kwargs = {'join': 'inner'}
+        elif how == 'inner':
+            join_index = self.index.intersection(other.index)
+            concat_kwargs = {'join': 'inner'}
+        elif how == 'outer':
+            join_index = self.index.union(other.index)
+            concat_kwargs = {'join': 'outer'}
+        elif how == 'left':
+            join_index = self.index
+            concat_kwargs = {'join_axes': [self.positional_metadata.columns]}
+        else:  # how='right'
+            join_index = other.index
+            concat_kwargs = {'join_axes': [other.positional_metadata.columns]}
+
+        return join_index, concat_kwargs
+
+    def _get_sequence_for_join(self, label):
+        if label in self.index:
+            # TODO: use .loc when it is implemented.
+            return self._get_sequence(self.index.get_loc(label))
+        else:
+            return self.dtype(
+                self.dtype.default_gap_char * self.shape.position)
+
     def sort(self, level=None, ascending=True):
         """Sort sequences by index label in-place.
 

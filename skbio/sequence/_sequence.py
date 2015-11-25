@@ -402,14 +402,14 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         Notes
         -----
-            The sequence-wide metadata (``Sequence.metadata``) is not retained
-            during concatenation.
+        The sequence-wide metadata (``Sequence.metadata``) is not retained
+        during concatenation.
 
-            Sequence objects can be cast to a different type only when the new
-            type is an ancestor or child of the original type. Casting between
-            sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
-            allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
-            would be.
+        Sequence objects can be cast to a different type only when the new
+        type is an ancestor or child of the original type. Casting between
+        sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
+        allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
+        would be.
 
         Examples
         --------
