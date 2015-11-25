@@ -1351,6 +1351,316 @@ class TestExtend(unittest.TestCase):
                         DNA('GG')], index=['foo', 'bar']))
 
 
+class TestJoin(unittest.TestCase):
+    def test_invalid_how(self):
+        with six.assertRaisesRegex(self, ValueError, '`how`'):
+            TabularMSA([]).join(TabularMSA([]), how='really')
+
+    def test_invalid_other_type(self):
+        with six.assertRaisesRegex(self, TypeError, 'TabularMSA.*DNA'):
+            TabularMSA([]).join(DNA('ACGT'))
+
+    def test_dtype_mismatch(self):
+        with six.assertRaisesRegex(self, TypeError, 'dtype.*RNA.*DNA'):
+            TabularMSA([DNA('AC')]).join(TabularMSA([RNA('UG')]))
+
+        with six.assertRaisesRegex(self, TypeError, 'dtype.*None.*DNA'):
+            TabularMSA([DNA('AC')]).join(TabularMSA([]))
+
+        with six.assertRaisesRegex(self, TypeError, 'dtype.*DNA.*None'):
+            TabularMSA([]).join(TabularMSA([DNA('AC')]))
+
+    def test_duplicate_index_labels(self):
+        with six.assertRaisesRegex(self, ValueError,
+                                   "This MSA's index labels.*unique"):
+            TabularMSA([DNA('AC'), DNA('--')], index=[0, 0]).join(
+                TabularMSA([DNA('GT'), DNA('..')]))
+
+        with six.assertRaisesRegex(self, ValueError,
+                                   "`other`'s index labels.*unique"):
+            TabularMSA([DNA('AC'), DNA('--')]).join(
+                TabularMSA([DNA('GT'), DNA('..')], index=[0, 0]))
+
+    def test_handles_missing_metadata_efficiently(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.')])
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G')])
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('AC-C'),
+                        DNA('G..G')]))
+        self.assertIsNone(msa1._metadata)
+        self.assertIsNone(msa1._positional_metadata)
+        self.assertIsNone(msa2._metadata)
+        self.assertIsNone(msa2._positional_metadata)
+        self.assertIsNone(joined._metadata)
+        self.assertIsNone(joined._positional_metadata)
+
+    def test_ignores_metadata(self):
+        msa1 = TabularMSA([DNA('AC', metadata={'id': 'a'}),
+                           DNA('G.', metadata={'id': 'b'}),
+                           DNA('C-', metadata={'id': 'c'})],
+                          metadata={'id': 'msa1'})
+        msa2 = TabularMSA([DNA('-C', metadata={'id': 'd'}),
+                           DNA('.G', metadata={'id': 'e'}),
+                           DNA('CA', metadata={'id': 'f'})], index=[2, 1, 0],
+                          metadata={'id': 'msa2'})
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('ACCA'),
+                        DNA('G..G'),
+                        DNA('C--C')]))
+
+    def test_outer_join_on_per_sequence_positional_metadata(self):
+        msa1 = TabularMSA([
+            DNA('AC', positional_metadata={'1': [1, 2], 'foo': ['a', 'b']}),
+            DNA('GT', positional_metadata={'2': [3, 4], 'foo': ['c', 'd']})])
+        msa2 = TabularMSA([
+            DNA('CA', positional_metadata={'3': [5, 6], 'foo': ['e', 'f']}),
+            DNA('TG', positional_metadata={'4': [7, 8], 'foo': ['g', 'h']})])
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([
+                DNA('ACCA',
+                    positional_metadata={'1': [1, 2, np.nan, np.nan],
+                                         '3': [np.nan, np.nan, 5, 6],
+                                         'foo': ['a', 'b', 'e', 'f']}),
+                DNA('GTTG',
+                    positional_metadata={'2': [3, 4, np.nan, np.nan],
+                                         '4': [np.nan, np.nan, 7, 8],
+                                         'foo': ['c', 'd', 'g', 'h']})]))
+
+    def test_no_sequences(self):
+        msa1 = TabularMSA([], positional_metadata={'foo': []})
+        msa2 = TabularMSA([], positional_metadata={'foo': []})
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(joined, TabularMSA([]))
+
+    def test_no_positions(self):
+        msa1 = TabularMSA([DNA('', positional_metadata={'1': []}),
+                           DNA('', positional_metadata={'2': []})],
+                          positional_metadata={'foo': []})
+        msa2 = TabularMSA([DNA('', positional_metadata={'3': []}),
+                           DNA('', positional_metadata={'4': []})],
+                          positional_metadata={'foo': []})
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('', positional_metadata={'1': [], '3': []}),
+                        DNA('', positional_metadata={'2': [], '4': []})],
+                       positional_metadata={'foo': []}))
+
+    def test_one_with_positions_one_without_positions(self):
+        msa1 = TabularMSA([DNA('A', positional_metadata={'1': ['a']}),
+                           DNA('C', positional_metadata={'2': ['b']})],
+                          positional_metadata={'foo': ['bar']})
+        msa2 = TabularMSA([DNA('', positional_metadata={'3': []}),
+                           DNA('', positional_metadata={'4': []})],
+                          positional_metadata={'foo': []})
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('A', positional_metadata={'1': ['a'],
+                                                      '3': [np.nan]}),
+                        DNA('C', positional_metadata={'2': ['b'],
+                                                      '4': [np.nan]})],
+                       positional_metadata={'foo': ['bar']}))
+
+    def test_how_strict(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-')],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G'),
+                           DNA('CA')], index=[2, 1, 0],
+                          positional_metadata={'foo': [3, 4],
+                                               'bar': ['c', 'd']})
+
+        joined = msa1.join(msa2)
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('ACCA'),
+                        DNA('G..G'),
+                        DNA('C--C')],
+                       positional_metadata={'foo': [1, 2, 3, 4],
+                                            'bar': ['a', 'b', 'c', 'd']}))
+
+    def test_how_strict_failure_index_mismatch(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-')])
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G'),
+                           DNA('CA'),
+                           DNA('--')])
+
+        with six.assertRaisesRegex(self, ValueError,
+                                   'Index labels must all match'):
+            msa1.join(msa2)
+
+    def test_how_strict_failure_positional_metadata_mismatch(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.')],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G')],
+                          positional_metadata={'foo': [3, 4]})
+
+        with six.assertRaisesRegex(self, ValueError,
+                                   'Positional metadata columns.*match'):
+            msa1.join(msa2)
+
+    def test_how_inner(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-'),
+                           DNA('--')], index=[0, 1, 2, 3],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G'),
+                           DNA('CA'),
+                           DNA('..')], index=[2, 1, 0, -1],
+                          positional_metadata={'foo': [3, 4],
+                                               'baz': ['c', 'd']})
+
+        joined = msa1.join(msa2, how='inner')
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('C--C'),
+                        DNA('G..G'),
+                        DNA('ACCA')], index=[2, 1, 0],
+                       positional_metadata={'foo': [1, 2, 3, 4]}))
+
+    def test_how_inner_no_positional_metadata_overlap(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.')], index=['b', 'a'],
+                          positional_metadata={'foo': [1, 2]})
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G')], index=['a', 'b'],
+                          positional_metadata={'bar': ['c', 'd']})
+
+        joined = msa1.join(msa2, how='inner')
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('G.-C'),
+                        DNA('AC.G')], index=['a', 'b']))
+
+    def test_how_inner_no_index_overlap_with_positional_metadata_overlap(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.')],
+                          positional_metadata={'foo': [1, 2]})
+        msa2 = TabularMSA([DNA('-C'),
+                           DNA('.G')], index=['a', 'b'],
+                          positional_metadata={'foo': [3, 4]})
+
+        joined = msa1.join(msa2, how='inner')
+
+        self.assertEqual(joined, TabularMSA([]))
+
+    def test_how_outer(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-'),
+                           DNA('--')], index=[0, 1, 2, 3],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-CC'),
+                           DNA('.GG'),
+                           DNA('CAA'),
+                           DNA('...')], index=[2, 1, 0, -1],
+                          positional_metadata={'foo': [3, 4, 5],
+                                               'baz': ['c', 'd', 'e']})
+
+        joined = msa1.join(msa2, how='outer')
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('--...'),
+                        DNA('ACCAA'),
+                        DNA('G..GG'),
+                        DNA('C--CC'),
+                        DNA('-----')], index=range(-1, 4),
+                       positional_metadata={
+                           'foo': [1, 2, 3, 4, 5],
+                           'bar': ['a', 'b', np.nan, np.nan, np.nan],
+                           'baz': [np.nan, np.nan, 'c', 'd', 'e']}))
+
+    def test_how_left(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-'),
+                           DNA('--')], index=[0, 1, 2, 3],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-CC'),
+                           DNA('.GG'),
+                           DNA('CAA'),
+                           DNA('...')], index=[2, 1, 0, -1],
+                          positional_metadata={'foo': [3, 4, 5],
+                                               'baz': ['c', 'd', 'e']})
+
+        joined = msa1.join(msa2, how='left')
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('ACCAA'),
+                        DNA('G..GG'),
+                        DNA('C--CC'),
+                        DNA('-----')],
+                       positional_metadata={
+                           'foo': [1, 2, 3, 4, 5],
+                           'bar': ['a', 'b', np.nan, np.nan, np.nan]}))
+
+    def test_how_right(self):
+        msa1 = TabularMSA([DNA('AC'),
+                           DNA('G.'),
+                           DNA('C-'),
+                           DNA('--')], index=[0, 1, 2, 3],
+                          positional_metadata={'foo': [1, 2],
+                                               'bar': ['a', 'b']})
+        msa2 = TabularMSA([DNA('-CC'),
+                           DNA('.GG'),
+                           DNA('CAA'),
+                           DNA('...')], index=[2, 1, 0, -1],
+                          positional_metadata={'foo': [3, 4, 5],
+                                               'baz': ['c', 'd', 'e']})
+
+        joined = msa1.join(msa2, how='right')
+
+        self.assertEqual(
+            joined,
+            TabularMSA([DNA('C--CC'),
+                        DNA('G..GG'),
+                        DNA('ACCAA'),
+                        DNA('--...')], index=[2, 1, 0, -1],
+                       positional_metadata={
+                           'foo': [1, 2, 3, 4, 5],
+                           'baz': [np.nan, np.nan, 'c', 'd', 'e']}))
+
+
 class TestIterPositions(unittest.TestCase):
     def test_method_return_type(self):
         msa = TabularMSA([DNA('AC'),
