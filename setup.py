@@ -18,11 +18,16 @@ from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 
 # numpy is not required with help or information display options
-if any(arg.startswith('--') and arg not in ['--verbose', '--quiet', '--dry-run', '--no-user-cfg', '--command-packages'] for arg in sys.argv):
+if any(
+    arg.startswith('--') and arg not in [
+        '--verbose',
+        '--quiet',
+        '--dry-run',
+        '--no-user-cfg',
+        '--command-packages'] for arg in sys.argv):
     setup_requires = []
 else:
     setup_requires = ['numpy >= 1.9.2']
-
 
 # Bootstrap setup.py with numpy
 # Huge thanks to coldfix's solution
