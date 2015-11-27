@@ -22,6 +22,8 @@ from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
+from skbio.alignment._tabular_msa_repr import _TabularMSAReprBuilder
+
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
@@ -257,6 +259,22 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
+
+    @experimental(as_of='0.4.0-dev')
+    def __repr__(self):
+        pep8_line_length_limit = 79
+        length_taken_by_docstring_indent = 8
+        width = pep8_line_length_limit - length_taken_by_docstring_indent
+        return _TabularMSAReprBuilder(
+            seq=self,
+            width=width,
+            indent=4,
+            chunk_size=10).build()
+
+    @experimental(as_of='0.4.0-dev')
+    def _repr_stats(self):
+        return [("Sequence Count", str(self.shape.sequence)),
+                ("Position Count", str(self.shape.position))]
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
