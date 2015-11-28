@@ -268,8 +268,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return _TabularMSAReprBuilder(
             seq=self,
             width=width,
-            indent=4,
-            chunk_size=10).build()
+            indent=4).build()
 
     @experimental(as_of='0.4.0-dev')
     def _repr_stats(self):
