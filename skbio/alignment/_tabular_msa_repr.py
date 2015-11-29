@@ -15,7 +15,10 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
 
     def _process_header(self):
         cls_name = self._obj.__class__.__name__
-        dtype_class_name = self._obj._seqs[0].__class__.__name__
+        if self._obj.dtype is not None:
+            dtype_class_name = self._obj.dtype.__name__
+        else:
+            dtype_class_name = 'No dtype'
         self._lines.add_line(cls_name + ' <' + dtype_class_name + '>')
         self._lines.add_separator()
 
@@ -37,7 +40,13 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
         lines = []
         for line_index in line_indices:
             seq_str = str(self._obj._seqs[line_index])
-            formatted_seq = (seq_str[0:-num_chars_at_end] + ' ... ' +
-                             seq_str[-num_chars_at_end:])
+            if len(seq_str) <= self._width:
+                formatted_seq = seq_str
+            else:
+                insert = ' ... '
+                stop_index = self._width - num_chars_at_end - len(insert)
+                formatted_seq = (seq_str[0:stop_index] +
+                                 insert +
+                                 seq_str[-num_chars_at_end:])
             lines.append(formatted_seq)
         return lines

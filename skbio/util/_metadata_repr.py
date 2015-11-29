@@ -19,6 +19,21 @@ from skbio.sequence._base import ElasticLines
 
 
 class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
+    """Abstract base class for building  a repr for an object containing
+    metadata and/or positional metadata.
+
+    Parameters
+    ----------
+    obj : Type varies depending on subclass
+        Object to build repr for.
+    width : int
+        Maximum width of the repr.
+    indent : int
+        Number of spaces to use for indented lines.
+    chunk_size: int
+        Number of characters in each chunk of a sequence.
+
+    """
     def __init__(self, seq, width, indent):
         self._obj = seq
         self._width = width
@@ -26,13 +41,15 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def _process_header(self):
-        """Abstract method"""
+        """Used by `build` Template Method to build header for the repr"""
 
     @abstractmethod
     def _process_data(self):
-        """Abstract method"""
+        """Used by `build` Template Method to build data lines for the repr"""
 
     def build(self):
+        """Template method for building the repr"""
+
         self._lines = ElasticLines()
 
         self._process_header()

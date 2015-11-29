@@ -2211,5 +2211,181 @@ class TestIsSequenceAxis(unittest.TestCase):
         self.assertFalse(self.msa._is_sequence_axis(1))
 
 
+class TestRepr(unittest.TestCase):
+    def test_repr(self):
+        # basic sanity checks -- more extensive testing of formatting and
+        # special cases is performed in TabularMSAReprDoctests below. here we
+        # only test that pieces of the repr are present. these tests also
+        # exercise coverage for py2/3 since the doctests in
+        # TabularMSAReprDoctests only currently run in py3.
+
+        # minimal
+        obs = repr(TabularMSA([DNA('')]))
+        self.assertEqual(obs.count('\n'), 6)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('Sequence Count: 1', obs)
+        self.assertIn('Position Count: 0', obs)
+        self.assertTrue(obs.endswith('\n'))
+
+        # no metadata
+        obs = repr(TabularMSA([DNA('ACGT')]))
+        self.assertEqual(obs.count('\n'), 6)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('Sequence Count: 1', obs)
+        self.assertIn('Position Count: 4', obs)
+        self.assertTrue(obs.endswith('ACGT'))
+
+        # sequence spanning > 5 lines
+        obs = repr(TabularMSA([DNA('A' * 71) for x in range(6)]))
+        self.assertEqual(obs.count('\n'), 10)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('Sequence Count: 6', obs)
+        self.assertIn('Position Count: 71', obs)
+        self.assertIn('\n...\n', obs)
+        self.assertTrue(obs.endswith('AAAA'))
+
+        # sequences overflowing
+        obs = repr(TabularMSA([DNA('A' * 72)]))
+        self.assertEqual(obs.count('\n'), 6)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('Sequence Count: 1', obs)
+        self.assertIn('Position Count: 72', obs)
+        self.assertTrue(obs.endswith('... AAAA'))
+
+
+# NOTE: this must be a *separate* class for doctests only (no unit tests). nose
+# will not run the unit tests otherwise
+#
+# these doctests exercise the correct formatting of TabularMSA's repr in a
+# variety of situations. they are more extensive than the unit tests above
+# (TestRepr.test_repr) but are only currently run in py3. thus, they cannot
+# be relied upon for coverage (the unit tests take care of this)
+class TabularMSAReprDoctests(object):
+    r"""
+    >>> import pandas as pd
+    >>> from skbio import Sequence
+    >>> from skbio import DNA, TabularMSA
+
+    Empty (minimal) MSA:
+
+    >>> TabularMSA([])
+    TabularMSA <No dtype>
+    ---------------------
+    Stats:
+        Sequence Count: 0
+        Position Count: 0
+    ---------------------
+
+    MSA with single empty sequence:
+    >>> TabularMSA([DNA('')])
+    TabularMSA <DNA>
+    ---------------------
+    Stats:
+        Sequence Count: 1
+        Position Count: 0
+    ---------------------
+    <BLANKLINE>
+
+    MSA with single sequence with single character:
+
+    >>> TabularMSA([DNA('G')])
+    TabularMSA <DNA>
+    ---------------------
+    Stats:
+        Sequence Count: 1
+        Position Count: 1
+    ---------------------
+    G
+
+    MSA with multicharacter sequence:
+
+    >>> TabularMSA([DNA('ACGT')])
+    TabularMSA <DNA>
+    ---------------------
+    Stats:
+        Sequence Count: 1
+        Position Count: 4
+    ---------------------
+    ACGT
+
+    Full single line:
+
+    >>> TabularMSA([DNA('A' * 71)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 1
+        Position Count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Full single line with 1 character overflow:
+
+    >>> TabularMSA([DNA('A' * 72)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 1
+        Position Count: 72
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ... AAAA
+
+    Two sequences with full lines:
+
+    >>> TabularMSA([DNA('T' * 71), DNA('T' * 71)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 2
+        Position Count: 71
+    -----------------------------------------------------------------------
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+    Two sequences with full lines with 1 character overflow:
+
+    >>> TabularMSA([DNA('T' * 72), DNA('T' * 72)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 2
+        Position Count: 72
+    -----------------------------------------------------------------------
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ... TTTT
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ... TTTT
+
+    Five full lines (maximum amount of information):
+
+    >>> TabularMSA([DNA('A' * 71) for x in range(5)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 5
+        Position Count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Six lines starts "summarized" output:
+
+    >>> TabularMSA([DNA('A' * 71) for x in range(6)])
+    TabularMSA <DNA>
+    -----------------------------------------------------------------------
+    Stats:
+        Sequence Count: 6
+        Position Count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ...
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    """
+    pass
+
+
 if __name__ == "__main__":
     unittest.main()

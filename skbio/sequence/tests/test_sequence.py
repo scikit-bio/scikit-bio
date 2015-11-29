@@ -972,7 +972,7 @@ class TestSequence(TestCase, ReallyEqualMixin):
         # special cases is performed in SequenceReprDoctests below. here we
         # only test that pieces of the repr are present. these tests also
         # exercise coverage for py2/3 since the doctests in
-        # SequenceReprDoctests only currently run in py2.
+        # SequenceReprDoctests only currently run in py3.
 
         # minimal
         obs = repr(Sequence(''))
@@ -2223,7 +2223,7 @@ class TestSequence(TestCase, ReallyEqualMixin):
 #
 # these doctests exercise the correct formatting of Sequence's repr in a
 # variety of situations. they are more extensive than the unit tests above
-# (TestSequence.test_repr) but are only currently run in py2. thus, they cannot
+# (TestSequence.test_repr) but are only currently run in py3. thus, they cannot
 # be relied upon for coverage (the unit tests take care of this)
 class SequenceReprDoctests(object):
     r"""
