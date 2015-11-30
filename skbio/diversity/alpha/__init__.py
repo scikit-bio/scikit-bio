@@ -6,7 +6,7 @@ Alpha diversity measures (:mod:`skbio.diversity.alpha`)
 
 This package provides implementations of alpha diversity measures, including
 measures of richness, dominance, and evenness. Some functions generate
-confidence intervals (CIs). These functions have the suffix ``_ci``. 
+confidence intervals (CIs). These functions have the suffix ``_ci``.
 
 Functions
 ---------
