@@ -81,6 +81,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``Sequence`` objects now handle slicing of empty positional metadata correctly. Any metadata that is empty will no longer be propagated by the internal ``_to`` constructor. ([#1133](https://github.com/biocore/scikit-bio/issues/1133))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
+* ``TreeNode._set_max_distance`` would fail if ties were encountered. ([#1077](https://github.com/biocore/scikit-bio/issues/1077))
 
 ### Deprecated functionality [stable]
 * `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.

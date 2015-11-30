@@ -633,6 +633,18 @@ class TreeTests(TestCase):
         self.assertEqual(tip_a[0] + tip_b[0], 1.6)
         self.assertEqual(sorted([tip_a[1].name, tip_b[1].name]), ['b', 'e'])
 
+    def test_set_max_distance_tie_bug(self):
+        """Corresponds to #1077"""
+        s = StringIO("((a:1,b:1)c:2,(d:3,e:4)f:5)root;")
+        t = TreeNode.read(s)
+
+        # the above tree would trigger an exception in max. The central issue
+        # was that the data being passed to max were a tuple of tuple:
+        # ((left_d, left_n), (right_d, right_n))
+        # the call to max would break in this scenario as it would fall onto
+        # idx 1 of each tuple to assess the "max".
+        t._set_max_distance()
+
     def test_shear(self):
         """Shear the nodes"""
         t = TreeNode.read(StringIO(u'((H:1,G:1):2,(R:0.5,M:0.7):3);'))

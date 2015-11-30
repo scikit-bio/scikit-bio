@@ -2327,7 +2327,11 @@ class TreeNode(SkbioObject):
                 if len(n.children) == 1:
                     raise TreeError("No support for single descedent nodes")
                 else:
-                    tip_info = [(max(c.MaxDistTips), c) for c in n.children]
+                    tip_info = []
+                    for c in n.children:
+                        (left_d, _), (right_d, _) = c.MaxDistTips
+                        best_idx = np.argmax([left_d, right_d])
+                        tip_info.append((c.MaxDistTips[best_idx], c))
 
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
