@@ -7,11 +7,7 @@ Beta diversity measures (:mod:`skbio.diversity.beta`)
 This package provides implementations of beta diversity measures for computing
 sample dissimilarity. Users of this package should also explore
 ``scipy.spatial.distance.pdist``, as it contains implementations of additional
-beta diversity metrics with interfaces similar to those provided here. A driver
-function is also provided which supports computing beta diversity for many
-pairs of samples at once. Detailed documentation of this module is provided in
-``skbio.diversity`` due to the many commonalities with the APIs provided in
-``skbio.diversity.alpha``.
+beta diversity metrics with interfaces similar to those provided here.
 
 Functions
 ---------

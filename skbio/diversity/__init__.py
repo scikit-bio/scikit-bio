@@ -7,39 +7,38 @@ Diversity calculations (:mod:`skbio.diversity`)
 This package provides functionality for analyzing biological diversity. It
 implements metrics of alpha and beta diversity, and provides two "driver
 functions" that are intended to be the primary interface for computing alpha
-and beta diversity with scikit-bio. Finally, functions are provided that
-support discovery of the available diversity metrics. Due to commonalities in
-the interfaces of the driver functions and diversity metrics, this document
-consolidates discussion of how to work with the APIs in the
-``skbio.diversity.alpha`` and ``skbio.diversity.beta`` subpackages.
+and beta diversity with scikit-bio. Functions are additionally provided that
+support discovery of the available diversity metrics. This document provides
+high-level discussion of how to work with the ``skbio.diversity`` module, and
+should be the first document you read before working with the module.
 
 Driver functions
 ----------------
 
-The driver functions are ``skbio.diversity.alpha_diversity``, and
-``skbio.diversity.beta_diversity``. These functions are designed to compute
-alpha diversity for one or more samples, or beta diversity for one or more
-pairs of samples. The diversity driver functions accept a matrix containing
-vectors of frequencies of OTUs within a single sample.
+The driver functions, ``skbio.diversity.alpha_diversity`` and
+``skbio.diversity.beta_diversity``, are designed to compute alpha diversity for
+one or more samples, or beta diversity for one or more pairs of samples. The
+diversity driver functions accept a matrix containing vectors of frequencies of
+OTUs within a single sample.
 
-We use the term "OTU" here very loosely, as these can in practice be counts of
+We use the term "OTU" here very loosely, as these can in practice represent
 diverse feature types including bacterial species, genes, and metabolites. The
 term "sample" is also loosely defined for these purposes. These are intended to
-represent a single unit of sampling, and as such can vary widely. For example,
-in a microbiome survey, these could represent all 16S rRNA gene sequences from
-a single oral swab. In a comparative genomics study on the other hand, a sample
-could represent an individual organism's genome.
+represent a single unit of sampling, and as such what a single sample
+represents can vary widely. For example, in a microbiome survey, these could
+represent all 16S rRNA gene sequences from a single oral swab. In a comparative
+genomics study on the other hand, a sample could represent an individual
+organism's genome.
 
-The frequencies in these matrics are generally either counts or relative
-abundances of observations of particular OTUs in particular samples. If these
-values represent counts, they will most likely be positive integers. If these
-values represent relative abundances, they will most likely be floating point
-values that sum to one in each vector (sample). We will refer to the
-frequencies associated with a single sample as a *counts vector* or simply
-*counts* throughout the documentation. Counts vectors are `array_like`:
-anything that can be converted into a 1-D numpy array is acceptable input.
-For example, you can provide a numpy array or a native Python list and the
-results should be identical.
+The frequencies in a given vector are generally counts of observations of
+particular OTUs in a sample as positive integers. We will refer to the
+frequencies associated with a single sample as a *counts vector* or ``counts``
+throughout the documentation. Counts vectors are `array_like`: anything that
+can be converted into a 1-D numpy array is acceptable input. For example, you
+can provide a numpy array or a native Python list and the results will be
+identical. As mentioned above, the driver functions accept one or more of these
+vectors (representing one or more samples) in a matrix which is also
+`array_like`.
 
 Some diversity metrics incorporate relationships between the OTUs in their
 computation through reference to a phylogenetic tree. These metrics
@@ -69,21 +68,22 @@ input data is valid before disabling validation.
 The conditions that the driver functions validate follow. If disabling
 validation, users should be confident that these conditions are met.
 
-* ``counts`` data can be safely cast to integers
-* there are no negative values in ``counts``
-* ``counts`` has the correct number of dimensions
-* all vectors in ``counts`` are of equal length
+* the data in the counts vectors can be safely cast to integers
+* there are no negative values in the counts vectors
+* each counts vector is one dimensional
+* the counts matrix is two dimensional
+* all counts vectors are of equal length
 
 Additionally, if a phylogenetic diversity metric is being computed, the
 following conditions are also confirmed:
 
-* ``otu_ids`` does not contain duplicate values
-* the length of each ``counts`` vector is equal to ``len(otu_ids)``
-* ``tree`` is rooted
-* ``tree`` has more than one node
-* all nodes in ``tree`` except for the root node have branch lengths
-* all tip names in ``tree`` are unique
-* all ``otu_ids`` correspond to tip names in ``tree``
+* the provided OTU identifiers are all unique
+* the length of each counts vector is equal to the number of OTU identifiers
+* the provided tree is rooted
+* the tree has more than one node
+* all nodes in the provided tree except for the root node have branch lengths
+* all tip names in the provided tree are unique
+* all provided OTU identifiers correspond to tip names in the provided tree
 
 Count vectors
 -------------
@@ -91,10 +91,10 @@ Count vectors
 There are different ways that count vectors are represented in the ecological
 literature and in related software. The diversity measures provided here
 *always* assume that the input contains abundance data: each count represents
-the number of individuals seen for a particular OTU in the sample. For example,
-if you have two OTUs, where three individuals were observed from one of the
-OTUs and only a single individual was observed from the other, you could
-represent this data in the following forms (among others):
+the number of individuals observed for a particular OTU in the sample. For
+example, if you have two OTUs, where three individuals were observed from the
+first OTU and only a single individual was observed from the second OTU, you
+could represent this data in the following forms (among others).
 
 As a vector of counts. This is the expected type of input for the alpha
 diversity measures in this module. There are 3 individuals from the OTU at
@@ -124,12 +124,14 @@ can be either a string (e.g., ``"faith_pd"``) or a function (e.g.,
 string, as this often uses an optimized version of the metric. For example,
 passing  ``metric="faith_pd"`` (a string) to ``alpha_diversity`` will be tens
 of times faster than passing ``metric=skbio.diversity.alpha.faith_pd`` (a
-function).  Similarly, passing  ``metric="unweighted_unifrac"`` (a string) will
-often be hundreds of times faster than passing
-``metric=skbio.diversity.beta.unweighted_unifrac`` (a function). The latter may
-be faster if computing only one distance or alpha diversity of only one sample,
-but the difference in runtime in these cases will be negligible, so it's safer
-to just always err on the side of passing ``metric`` as a string.
+function) when computing Faith's PD on about 100 samples.  Similarly, passing
+``metric="unweighted_unifrac"`` (a string) will be hundreds of times
+faster than passing ``metric=skbio.diversity.beta.unweighted_unifrac`` (a
+function) when computing unweighted UniFrac on about 100 samples. The latter
+may be faster if computing only one alpha or beta diversity value, but in
+these cases the run times will likely be so small that the difference will be
+negligible. **We therefore recommend that you always pass the metric as a
+string when possible.**
 
 Passing a metric as a string will not be possible if the metric you'd like to
 run is not one that scikit-bio knows about. This might be the case, for
@@ -138,8 +140,8 @@ the metric names that scikit-bio knows about as strings that can be passed as
 ``metric`` to ``alpha_diversity`` or ``beta_diversity``, you can call
 ``get_alpha_diversity_metrices`` or ``get_beta_diversity_metrics``,
 respectively. These functions return lists of alpha and beta diversity metrics
-that are implemented in scikit-bio. There are additional metrics that can be
-passed as strings, such as those implemented in
+that are implemented in scikit-bio. There may be additional metrics that can be
+passed as strings which won't be listed here, such as those implemented in
 ``scipy.spatial.distance.pdist``.
 
 Subpackages
@@ -179,8 +181,8 @@ Create a table containing 7 OTUs and 6 samples:
    ...         [0, 0, 25, 35, 0, 19, 0]]
    >>> ids = list('ABCDEF')
 
-   Compute observed OTUs, an alpha diversity metric, for each sample using the
-   ``alpha_diversity`` driver function:
+   First, we'll compute observed OTUs, an alpha diversity metric, for each
+   sample using the ``alpha_diversity`` driver function:
 
    >>> from skbio.diversity import alpha_diversity
    >>> adiv_obs_otus = alpha_diversity('observed_otus', data, ids)
@@ -194,9 +196,9 @@ Create a table containing 7 OTUs and 6 samples:
    dtype: int64
 
    Next we'll compute Faith's PD on the same samples. Since this is a
-   phylogenetic diversity metric, we'll first need to create a tree and an
-   ordered list of OTU identifiers. This will be passed as passed as ``kwargs``
-   to ``alpha_diversity``.
+   phylogenetic diversity metric, we'll first to create a tree and an ordered
+   list of OTU identifiers. These will be passed as ``kwargs`` to
+   ``alpha_diversity``.
 
    >>> from skbio import TreeNode
    >>> from io import StringIO
@@ -218,8 +220,10 @@ Create a table containing 7 OTUs and 6 samples:
    F    5.50
    dtype: float64
 
-   Compute Bray-Curtis distances, a beta diversity metric, between all pairs of
-   samples and return a ``DistanceMatrix`` object.
+   Now we'll compute Bray-Curtis distances, a beta diversity metric, between
+   all pairs of samples. Notice that the ``data`` and ``ids`` parameters
+   provided to ``beta_diversity`` are the same as those provided to
+   ``alpha_diversity``.
 
    >>> from skbio.diversity import beta_diversity
    >>> bc_dm = beta_diversity("braycurtis", data, ids)
@@ -235,10 +239,10 @@ Create a table containing 7 OTUs and 6 samples:
     [ 0.85714286  0.75        0.09392265  0.87777778  0.          0.68235294]
     [ 0.81521739  0.1627907   0.71597633  0.89285714  0.68235294  0.        ]]
 
-   Compute weighted UniFrac distances between all pairs of samples and return a
-   ``DistanceMatrix`` object. Because weighted UniFrac is a phylogenetic beta
-   diversity metric, we'll need to pass the ``skbio.TreeNode`` and list of OTU
-   ids that we created above.
+   Next, we'll compute weighted UniFrac distances between all pairs of samples.
+   Because weighted UniFrac is a phylogenetic beta diversity metric, we'll need
+   to pass the ``skbio.TreeNode`` and list of OTU ids that we created above.
+   Again, these are the same values that were provided to ``alpha_diversity``.
 
    >>> wu_dm = beta_diversity("weighted_unifrac", data, ids, tree=tree,
    ...                        otu_ids=otu_ids)
@@ -254,10 +258,11 @@ Create a table containing 7 OTUs and 6 samples:
     [ 3.8547619   2.24270353  0.16025641  3.98796148  0.          1.82967033]
     [ 3.10937312  0.46774194  1.86111111  3.30870431  1.82967033  0.        ]]
 
-   Next we'll do some work with these distance matrics. First, we'll determine
-   if the UniFrac and Bray-Curtis distance matrices are significantly
-   correlated by computing the Mantel correlation between them. Then we'll
-   determine if the p-value is significant based on an alpha of 0.05.
+   Next we'll do some work with these beta diversity distance matrics. First,
+   we'll determine if the UniFrac and Bray-Curtis distance matrices are
+   significantly correlated by computing the Mantel correlation between them.
+   Then we'll determine if the p-value is significant based on an alpha of
+   0.05.
 
    >>> from skbio.stats.distance import mantel
    >>> r, p_value, n = mantel(wu_dm, bc_dm)
@@ -267,19 +272,14 @@ Create a table containing 7 OTUs and 6 samples:
    >>> print(p_value < alpha)
    True
 
-   Next, we'll perform principal coordinates analysis on both distance
-   matrices, and then find the Procrustes M-squared value that results from
-   comparing the coordinate matrices.
+   Next, we'll perform principal coordinates analysis (PCoA) on our weighted
+   UniFrac distance matrix.
 
    >>> from skbio.stats.ordination import pcoa
-   >>> bc_pc = pcoa(bc_dm)
    >>> wu_pc = pcoa(wu_dm)
-   >>> from skbio.stats.spatial import procrustes
-   >>> print(procrustes(bc_pc.samples.values, wu_pc.samples.values)[2])
-   0.096574934963
 
-   These diversity analyses only get interesting in the context of sample
-   metadata, so let's define some:
+   PCoA plots are only really interesting in the context of sample metadata, so
+   let's define some before we visualize these results.
 
    >>> import pandas as pd
    >>> sample_md = [
@@ -312,7 +312,9 @@ Create a table containing 7 OTUs and 6 samples:
 
    We don't see any clustering/grouping of samples. If we were to instead color
    the samples by the body site they were taken from, we see that the samples
-   form three separate groups:
+   from the same body site (those that are colored the same) appear to be
+   closer to one another in the 3-D space then they are to samples from
+   other body sites:
 
    >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use

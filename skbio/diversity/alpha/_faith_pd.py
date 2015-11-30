@@ -53,6 +53,7 @@ def faith_pd(counts, otu_ids, tree, validate=True):
 
     See Also
     --------
+    skbio.diversity
     skbio.diversity.alpha_diversity
 
     Notes

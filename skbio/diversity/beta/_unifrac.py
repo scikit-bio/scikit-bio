@@ -63,6 +63,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     See Also
     --------
     weighted_unifrac
+    skbio.diversity
     skbio.diversity.beta_diversity
 
     Notes
@@ -192,6 +193,7 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     See Also
     --------
     unweighted_unifrac
+    skbio.diversity
     skbio.diversity.beta_diversity
 
     Notes
