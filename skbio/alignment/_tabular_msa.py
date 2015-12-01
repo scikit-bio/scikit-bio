@@ -15,6 +15,7 @@ from future.builtins import range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
@@ -741,58 +742,106 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                      positional_metadata=positional_metadata)
 
     @experimental(as_of='0.4.0-dev')
-    def conservation(self, metric, nan_on_degenerate=False, nan_on_gap=True):
-        """Apply metric to compute the position conservation for the alignment
+    def conservation(self, metric='shannon_entropy', nan_on_degenerate=False,
+                     gap_mode='include'):
+        """Apply metric to compute positional conservation for the alignment
 
         Parameters
         ----------
-        metric : callable
-            Metric that should be applied for computing conservation. If
-            callable, must take a string representing the characters at single
-            position in the alignment, and the TabularMSA object and return a
-            single value.
+        metric : str, optional, {'shannon_entropy'}
+            Metric that should be applied for computing conservation.
         nan_on_degenerate : bool, optional
             If ``True``, positions in the resulting array that correspond to
             alignment positions containing degenerate characters will have
             np.nan as their value.
-        nan_on_gap : bool, optional
-            If ``True``, positions in the resulting array that correspond to
-            alignment positions with gaps will have np.nan as their value.
+        gap_mode : str, optional, {'nan', 'ignore', 'error', 'include'}
+            Mode for handling positions with gap characters.
 
         Returns
         -------
-        np.array
+        np.array of floats
             Value of applying ``metric`` to each position in the alignment.
 
         Raises
         ------
-        KeyError
+        ValueError
+            If an unknown metric is provided.
+        ValueError
             If a degenerate character is encountered at a position and
             ``nan_on_degenerate`` is ``False``.
+        ValueError
+            If any gaps are present in the alignment when ``gap_mode`` is
+            ``"error"``.
+
+        Notes
+        -----
+        A good discussion of conservation metrics (focused on protein
+        sequences) is provided in [1]_.
+
+        References
+        ----------
+        .. [1] Valdar WS. Scoring residue conservation. Proteins. (2002)
 
         """
-        if self.shape[1] == 0:
-            # check empty alignment here b/c looking up character sets
-            # fails otherwise
+
+        if self.shape[0] == 0:
+            # handle empty alignment to avoid error on lookup of character sets
             return np.array([])
+
+        if metric == 'shannon_entropy':
+            base = len(self.dtype.nondegenerate_chars)
+            if gap_mode == 'include':
+                # This is how [1] suggests handling gaps for Shannon entropy
+                base += 1
+
+            def metric_f(p):
+                freqs = list(p.kmer_frequencies(k=1).values())
+                return scipy.stats.entropy(freqs, base=base)
+        else:
+            raise ValueError("Unknown metric provided: %s" % metric)
 
         result = []
         for p in self.iter_positions():
+            cons = None
             pos_str = str(p)
             pos_set = set(pos_str)
+
+            # handle degenerate characters if present
             if len(self.dtype.degenerate_chars & pos_set) > 0:
                 if nan_on_degenerate:
-                    result.append(np.nan)
+                    cons = np.nan
                 else:
                     degenerate_chars = self.dtype.degenerate_chars & pos_set
-                    raise KeyError("Conservation is undefined for positions "
-                                   "with degenerate characters. The following "
-                                   "degenerate characters were observed: %s."
-                                   % degenerate_chars)
-            elif nan_on_gap and len(self.dtype.gap_chars & pos_set) > 0:
-                result.append(np.nan)
-            else:
-                result.append(metric(pos_str))
+                    raise ValueError("Conservation is undefined for positions "
+                                     "with degenerate characters. The "
+                                     "following degenerate characters were "
+                                     "observed: %s." % degenerate_chars)
+
+            # handle gap characters if present, and if they are treated
+            # differently than other characters
+            if gap_mode != 'include' and \
+               len(self.dtype.gap_chars & pos_set) > 0:
+                if gap_mode == 'nan':
+                    cons = np.nan
+                elif gap_mode == 'error':
+                    raise ValueError("Gap characters present in alignment.")
+                elif gap_mode == 'ignore':
+                    p_no_gaps = []
+                    for e in pos_str:
+                        if e not in self.dtype.gap_chars:
+                            p_no_gaps.append(e)
+                    p_no_gaps = ''.join(p_no_gaps)
+                    p = p.__class__(p_no_gaps)
+                else:
+                    # Do we care that this error only comes up if gaps are
+                    # present?
+                    raise ValueError("Unknown gap_mode provided: %s" % metric)
+
+            if cons is None:
+                cons = metric_f(p)
+
+            result.append(cons)
+
         return np.array(result)
 
     @experimental(as_of='0.4.0-dev')
