@@ -38,8 +38,8 @@ def faith_pd(counts, otu_ids, tree, validate=True):
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        ``skbio.diversity`` for the description of what validation entails so
-        you can determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
 
     Returns
     -------
