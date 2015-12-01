@@ -1921,56 +1921,91 @@ class TestConsensus(unittest.TestCase):
 
 class TestConservation(unittest.TestCase):
 
-    def dummy_metric(position, msa=None):
-        return len(set(position))
+    def get_dummy_metric(self):
+        def f(position, msa=None):
+            return float(len(set(str(position))))
+        return f
 
     def test_no_sequences(self):
+        dummy_metric = self.get_dummy_metric()
         msa = TabularMSA([])
 
-        cons = msa.conservation(metric=self.dummy_metric)
+        cons = msa.conservation(metric=dummy_metric)
 
-        self.assertEqual(cons, np.ndarray([]))
+        npt.assert_array_equal(cons, np.array([]))
 
     def test_dummy_metric(self):
+        dummy_metric = self.get_dummy_metric()
         msa = TabularMSA([DNA('AAC'),
                           DNA('GAC')])
-        cons = msa.conservation(metric=self.dummy_metric)
-        self.assertEqual(cons, np.ndarray([2, 1, 1]))
+        cons = msa.conservation(metric=dummy_metric)
+        npt.assert_array_equal(cons, np.array([2., 1., 1.]))
 
         msa = TabularMSA([DNA('AACT'),
                           DNA('GACA')])
-        cons = msa.conservation(metric=self.dummy_metric)
-        self.assertEqual(cons, np.ndarray([2, 1, 1, 2]))
+        cons = msa.conservation(metric=dummy_metric)
+        npt.assert_array_equal(cons, np.array([2., 1., 1., 2.]))
 
     def test_nan_on_degenerate(self):
+        dummy_metric = self.get_dummy_metric()
         msa = TabularMSA([DNA('NACN'),
                           DNA('NNCA')])
-        cons = msa.conservation(metric=self.dummy_metric,
+        cons = msa.conservation(metric=dummy_metric,
                                 nan_on_degenerate=True)
-        self.assertEqual(cons, np.ndarray([np.nan, np.nan, 1, np.nan]))
+        npt.assert_array_equal(cons, np.array([np.nan, np.nan, 1., np.nan]))
 
         msa = TabularMSA([DNA('NACN'),
                           DNA('NNCA')])
-        self.assertRaises(KeyError, msa.conservation, metric=self.dummy_metric,
+        self.assertRaises(KeyError, msa.conservation, metric=dummy_metric,
                           nan_on_degenerate=False)
 
         msa = TabularMSA([DNA('AACA'),
                           DNA('ANCA')])
-        self.assertRaises(KeyError, msa.conservation, metric=self.dummy_metric,
+        self.assertRaises(KeyError, msa.conservation, metric=dummy_metric,
                           nan_on_degenerate=False)
 
+    def test_error_on_degenerate_w_nan_on_gap(self):
+        dummy_metric = self.get_dummy_metric()
+        msa = TabularMSA([DNA('-ACA'),
+                          DNA('-NCA')])
+        self.assertRaises(KeyError, msa.conservation, metric=dummy_metric,
+                          nan_on_degenerate=False, nan_on_gap=True)
+
+    def test_column_with_degen_and_gap(self):
+        dummy_metric = self.get_dummy_metric()
+        msa = TabularMSA([DNA('N'),
+                          DNA('-')])
+        cons = msa.conservation(metric=dummy_metric,
+                                nan_on_degenerate=True,
+                                nan_on_gap=True)
+        npt.assert_array_equal(cons, np.array([np.nan]))
+
+        cons = msa.conservation(metric=dummy_metric,
+                                nan_on_degenerate=True,
+                                nan_on_gap=False)
+        npt.assert_array_equal(cons, np.array([np.nan]))
+
+        # degenerates raise error regardless of gap handling
+        self.assertRaises(KeyError, msa.conservation, metric=dummy_metric,
+                          nan_on_degenerate=False, nan_on_gap=True)
+
+        self.assertRaises(KeyError, msa.conservation, metric=dummy_metric,
+                          nan_on_degenerate=False, nan_on_gap=False)
+
     def test_nan_on_gap(self):
+        dummy_metric = self.get_dummy_metric()
         msa = TabularMSA([DNA('-AC.'),
                           DNA('--CA')])
-        cons = msa.conservation(metric=self.dummy_metric,
+        cons = msa.conservation(metric=dummy_metric,
                                 nan_on_gap=True)
-        self.assertEqual(cons, np.ndarray([np.nan, np.nan, 1, np.nan]))
+        npt.assert_array_equal(cons, np.array([np.nan, np.nan, 1., np.nan]))
 
         msa = TabularMSA([DNA('-AC..'),
                           DNA('--CA-')])
-        cons = msa.conservation(metric=self.dummy_metric,
+        cons = msa.conservation(metric=dummy_metric,
                                 nan_on_gap=False)
-        self.assertEqual(cons, np.ndarray([1, 2, 1, 2, 2]))
+        npt.assert_array_equal(cons, np.array([1., 2., 1., 2., 2.]))
+
 
 class TestGapFrequencies(unittest.TestCase):
     def test_default_behavior(self):

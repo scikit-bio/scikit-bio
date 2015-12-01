@@ -741,6 +741,61 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                      positional_metadata=positional_metadata)
 
     @experimental(as_of='0.4.0-dev')
+    def conservation(self, metric, nan_on_degenerate=False, nan_on_gap=True):
+        """Apply metric to compute the position conservation for the alignment
+
+        Parameters
+        ----------
+        metric : callable
+            Metric that should be applied for computing conservation. If
+            callable, must take a string representing the characters at single
+            position in the alignment, and the TabularMSA object and return a
+            single value.
+        nan_on_degenerate : bool, optional
+            If ``True``, positions in the resulting array that correspond to
+            alignment positions containing degenerate characters will have
+            np.nan as their value.
+        nan_on_gap : bool, optional
+            If ``True``, positions in the resulting array that correspond to
+            alignment positions with gaps will have np.nan as their value.
+
+        Returns
+        -------
+        np.array
+            Value of applying ``metric`` to each position in the alignment.
+
+        Raises
+        ------
+        KeyError
+            If a degenerate character is encountered at a position and
+            ``nan_on_degenerate`` is ``False``.
+
+        """
+        if self.shape[1] == 0:
+            # check empty alignment here b/c looking up character sets
+            # fails otherwise
+            return np.array([])
+
+        result = []
+        for p in self.iter_positions():
+            pos_str = str(p)
+            pos_set = set(pos_str)
+            if len(self.dtype.degenerate_chars & pos_set) > 0:
+                if nan_on_degenerate:
+                    result.append(np.nan)
+                else:
+                    degenerate_chars = self.dtype.degenerate_chars & pos_set
+                    raise KeyError("Conservation is undefined for positions "
+                                   "with degenerate characters. The following "
+                                   "degenerate characters were observed: %s."
+                                   % degenerate_chars)
+            elif nan_on_gap and len(self.dtype.gap_chars & pos_set) > 0:
+                result.append(np.nan)
+            else:
+                result.append(metric(pos_str))
+        return np.array(result)
+
+    @experimental(as_of='0.4.0-dev')
     def gap_frequencies(self, axis='sequence', relative=False):
         """Compute frequency of gap characters across an axis.
 
