@@ -57,7 +57,7 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
         return lines
 
     def _num_characters_before_ellipse(self):
-        return math.floor(self._num_characters_to_display() / 2)
+        return int(self._num_characters_to_display() / 2)
 
     def _num_characters_after_ellipse(self):
         return (self._num_characters_to_display() -
