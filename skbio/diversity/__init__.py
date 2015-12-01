@@ -8,7 +8,7 @@ This package provides functionality for analyzing biological diversity. It
 implements metrics of alpha and beta diversity, and provides two "driver
 functions" that are intended to be the primary interface for computing alpha
 and beta diversity with scikit-bio. Functions are additionally provided that
-support discovery of the available diversity metrics. This document provides
+support discovery of the available diversity metrics. This document provides a
 high-level discussion of how to work with the ``skbio.diversity`` module, and
 should be the first document you read before working with the module.
 
@@ -19,7 +19,7 @@ The driver functions, ``skbio.diversity.alpha_diversity`` and
 ``skbio.diversity.beta_diversity``, are designed to compute alpha diversity for
 one or more samples, or beta diversity for one or more pairs of samples. The
 diversity driver functions accept a matrix containing vectors of frequencies of
-OTUs within a single sample.
+OTUs within each sample.
 
 We use the term "OTU" here very loosely, as these can in practice represent
 diverse feature types including bacterial species, genes, and metabolites. The
@@ -30,15 +30,16 @@ represent all 16S rRNA gene sequences from a single oral swab. In a comparative
 genomics study on the other hand, a sample could represent an individual
 organism's genome.
 
-The frequencies in a given vector are generally counts of observations of
-particular OTUs in a sample as positive integers. We will refer to the
-frequencies associated with a single sample as a *counts vector* or ``counts``
-throughout the documentation. Counts vectors are `array_like`: anything that
-can be converted into a 1-D numpy array is acceptable input. For example, you
-can provide a numpy array or a native Python list and the results will be
-identical. As mentioned above, the driver functions accept one or more of these
-vectors (representing one or more samples) in a matrix which is also
-`array_like`.
+Each frequency in a given vector represents the number of individuals observed
+for a particular OTU. We will refer to the frequencies associated with a single
+sample as a *counts vector* or ``counts`` throughout the documentation. Counts
+vectors are `array_like`: anything that can be converted into a 1-D numpy array
+is acceptable input. For example, you can provide a numpy array or a native
+Python list and the results will be identical. As mentioned above, the driver
+functions accept one or more of these vectors (representing one or more
+samples) in a matrix which is also `array_like`. Each row in the matrix
+represents a single sample's count vector, so that rows represent samples and
+columns represent OTUs.
 
 Some diversity metrics incorporate relationships between the OTUs in their
 computation through reference to a phylogenetic tree. These metrics
@@ -50,7 +51,7 @@ than one time (i.e., for more than one sample for alpha diversity metrics, or
 more than one pair of samples for beta diversity metrics) is often much faster
 than repeated calls to the metric. For this reason, the driver functions take
 matrices of counts vectors rather than a single counts vector for alpha
-diversity metric or two counts vectors for beta diversity metrics. The
+diversity metrics or two counts vectors for beta diversity metrics. The
 ``alpha_diversity`` driver function will thus compute alpha diversity for all
 counts vectors in the matrix, and the ``beta_diversity`` driver function will
 compute beta diversity for all pairs of counts vectors in the matrix.
@@ -61,7 +62,7 @@ Input validation
 The driver functions perform validation of input by default. Validation can be
 slow so it is possible to disable this step by passing ``validate=False``. This
 can be dangerous however. If invalid input is encountered when validation is
-suppressed it can result in difficult-to-interpret error messages or incorrect
+disabled it can result in difficult-to-interpret error messages or incorrect
 results. We therefore recommend that users are careful to ensure that their
 input data is valid before disabling validation.
 
@@ -96,9 +97,9 @@ example, if you have two OTUs, where three individuals were observed from the
 first OTU and only a single individual was observed from the second OTU, you
 could represent this data in the following forms (among others).
 
-As a vector of counts. This is the expected type of input for the alpha
-diversity measures in this module. There are 3 individuals from the OTU at
-index 0, and 1 individual from the OTU at index 1:
+As a vector of counts. This is the expected type of input for the diversity
+measures in this module. There are 3 individuals from the OTU at index 0, and 1
+individual from the OTU at index 1:
 
 >>> counts = [3, 1]
 
@@ -114,8 +115,8 @@ is a tripleton. We do not have any 0-tons or doubletons:
 
 Always use the first representation (a counts vector) with this module.
 
-Speed-optimized metrics
------------------------
+Specifying a diversity metric
+-----------------------------
 
 The driver functions take a parameter, ``metric``, that specifies which
 diversity metric should be applied. The value that you provide for ``metric``
@@ -167,12 +168,11 @@ Functions
 Examples
 --------
 
-Create a table containing 7 OTUs and 6 samples:
+Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
 
 .. plot::
    :context:
 
-   >>> import numpy as np
    >>> data = [[23, 64, 14, 0, 0, 3, 1],
    ...         [0, 3, 35, 42, 0, 12, 1],
    ...         [0, 5, 5, 0, 40, 40, 0],
@@ -196,9 +196,8 @@ Create a table containing 7 OTUs and 6 samples:
    dtype: int64
 
    Next we'll compute Faith's PD on the same samples. Since this is a
-   phylogenetic diversity metric, we'll first to create a tree and an ordered
-   list of OTU identifiers. These will be passed as ``kwargs`` to
-   ``alpha_diversity``.
+   phylogenetic diversity metric, we'll first create a tree and an ordered
+   list of OTU identifiers.
 
    >>> from skbio import TreeNode
    >>> from io import StringIO
@@ -207,8 +206,6 @@ Create a table containing 7 OTUs and 6 samples:
    ...                      '(OTU4:0.75,(OTU5:0.5,(OTU6:0.5,OTU7:0.5):0.5):'
    ...                      '0.5):1.25):0.0)root;'))
    >>> otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5', 'OTU6', 'OTU7']
-
-   >>> from skbio.diversity import alpha_diversity
    >>> adiv_faith_pd = alpha_diversity('faith_pd', data, ids=ids,
    ...                                 otu_ids=otu_ids, tree=tree)
    >>> adiv_faith_pd
@@ -258,7 +255,7 @@ Create a table containing 7 OTUs and 6 samples:
     [ 3.8547619   2.24270353  0.16025641  3.98796148  0.          1.82967033]
     [ 3.10937312  0.46774194  1.86111111  3.30870431  1.82967033  0.        ]]
 
-   Next we'll do some work with these beta diversity distance matrics. First,
+   Next we'll do some work with these beta diversity distance matrices. First,
    we'll determine if the UniFrac and Bray-Curtis distance matrices are
    significantly correlated by computing the Mantel correlation between them.
    Then we'll determine if the p-value is significant based on an alpha of
@@ -314,7 +311,7 @@ Create a table containing 7 OTUs and 6 samples:
    the samples by the body site they were taken from, we see that the samples
    from the same body site (those that are colored the same) appear to be
    closer to one another in the 3-D space then they are to samples from
-   other body sites:
+   other body sites.
 
    >>> import matplotlib.pyplot as plt
    >>> plt.close('all') # not necessary for normal use
