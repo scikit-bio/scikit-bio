@@ -15,7 +15,7 @@ import numbers
 import textwrap
 
 from abc import ABCMeta, abstractmethod
-from skbio.sequence._base import ElasticLines
+from skbio._base import ElasticLines
 
 
 class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
@@ -30,12 +30,9 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
         Maximum width of the repr.
     indent : int
         Number of spaces to use for indented lines.
-    chunk_size: int
-        Number of characters in each chunk of a sequence.
-
     """
-    def __init__(self, seq, width, indent):
-        self._obj = seq
+    def __init__(self, obj, width, indent):
+        self._obj = obj
         self._width = width
         self._indent = ' ' * indent
 
