@@ -40,9 +40,9 @@ class _TabularMSAReprBuilder(_MetadataReprBuilder):
                 self._lines.add_lines(self._format_sequences(
                     range(num_sequences - 2, num_sequences)))
 
-    def _format_sequences(self, line_indices):
+    def _format_sequences(self, sequence_indices):
         lines = []
-        for line_index in line_indices:
+        for line_index in sequence_indices:
             seq_str = str(self._obj._get_sequence(line_index))
             if len(seq_str) <= self._width:
                 formatted_seq = seq_str
