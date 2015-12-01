@@ -47,8 +47,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
 
     Returns
     -------
@@ -58,12 +58,12 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
 
     See Also
     --------
     weighted_unifrac
+    skbio.diversity
     skbio.diversity.beta_diversity
 
     Notes
@@ -90,19 +90,6 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
 
     This implementation of unweighted UniFrac is the array-based implementation
     described in [4]_.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * all vectors in ``counts`` are of equal length
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
 
     References
     ----------
@@ -190,8 +177,8 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
 
     Returns
     -------
@@ -201,12 +188,12 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
 
     See Also
     --------
     unweighted_unifrac
+    skbio.diversity
     skbio.diversity.beta_diversity
 
     Notes
@@ -233,19 +220,6 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
 
     This implementation of weighted UniFrac is the array-based implementation
     described in [3]_.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * all vectors in ``counts`` are of equal length
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
 
     References
     ----------
