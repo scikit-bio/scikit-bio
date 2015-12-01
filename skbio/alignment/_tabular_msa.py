@@ -410,8 +410,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def __str__(self):
-        # TODO implement me!
-        return super(TabularMSA, self).__str__()
+        return self.__repr__()
 
     @experimental(as_of='0.4.0-dev')
     def __eq__(self, other):

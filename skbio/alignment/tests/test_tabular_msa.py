@@ -2219,6 +2219,15 @@ class TestRepr(unittest.TestCase):
         # exercise coverage for py2/3 since the doctests in
         # TabularMSAReprDoctests only currently run in py3.
 
+        # str calls repr
+        self.assertEqual(repr(TabularMSA([])), str(TabularMSA([])))
+        self.assertEqual(repr(TabularMSA([DNA('')])),
+                         str(TabularMSA([DNA('')])))
+        self.assertEqual(repr(TabularMSA([DNA('ACGT')])),
+                         str(TabularMSA([DNA('ACGT')])))
+        self.assertEqual(repr(TabularMSA([DNA('ACGT'*25) for x in range(10)])),
+                         str(TabularMSA([DNA('ACGT'*25) for x in range(10)])))
+
         # empty
         obs = repr(TabularMSA([]))
         self.assertEqual(obs.count('\n'), 5)
