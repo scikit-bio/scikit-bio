@@ -2241,7 +2241,7 @@ class TestRepr(unittest.TestCase):
         self.assertTrue(obs.startswith('TabularMSA'))
         self.assertIn('sequence count: 1', obs)
         self.assertIn('position count: 0', obs)
-        self.assertIn('<DNA>', obs)
+        self.assertIn('[DNA]', obs)
 
         # no metadata
         obs = repr(TabularMSA([DNA('ACGT')]))
@@ -2249,7 +2249,7 @@ class TestRepr(unittest.TestCase):
         self.assertTrue(obs.startswith('TabularMSA'))
         self.assertIn('sequence count: 1', obs)
         self.assertIn('position count: 4', obs)
-        self.assertIn('<DNA>', obs)
+        self.assertIn('[DNA]', obs)
         self.assertTrue(obs.endswith('ACGT'))
 
         # sequence spanning > 5 lines
@@ -2259,7 +2259,7 @@ class TestRepr(unittest.TestCase):
         self.assertIn('sequence count: 6', obs)
         self.assertIn('position count: 71', obs)
         self.assertIn('\n...\n', obs)
-        self.assertIn('<DNA>', obs)
+        self.assertIn('[DNA]', obs)
         self.assertTrue(obs.endswith('AAAA'))
 
         # sequences overflowing
@@ -2268,7 +2268,7 @@ class TestRepr(unittest.TestCase):
         self.assertTrue(obs.startswith('TabularMSA'))
         self.assertIn('sequence count: 1', obs)
         self.assertIn('position count: 72', obs)
-        self.assertIn('<DNA>', obs)
+        self.assertIn('[DNA]', obs)
         self.assertTrue(obs.endswith(' ... ' + 'A'*33))
 
 
@@ -2296,7 +2296,7 @@ class TabularMSAReprDoctests(object):
     MSA with single empty sequence:
 
     >>> TabularMSA([DNA('')])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     ---------------------
     Stats:
         sequence count: 1
@@ -2306,7 +2306,7 @@ class TabularMSAReprDoctests(object):
     MSA with single sequence with single character:
 
     >>> TabularMSA([DNA('G')])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     ---------------------
     Stats:
         sequence count: 1
@@ -2317,7 +2317,7 @@ class TabularMSAReprDoctests(object):
     MSA with multicharacter sequence:
 
     >>> TabularMSA([DNA('ACGT')])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     ---------------------
     Stats:
         sequence count: 1
@@ -2328,7 +2328,7 @@ class TabularMSAReprDoctests(object):
     Full single line:
 
     >>> TabularMSA([DNA('A' * 71)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 1
@@ -2339,7 +2339,7 @@ class TabularMSAReprDoctests(object):
     Full single line with 1 character overflow:
 
     >>> TabularMSA([DNA('A' * 72)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 1
@@ -2350,7 +2350,7 @@ class TabularMSAReprDoctests(object):
     Two sequences with full lines:
 
     >>> TabularMSA([DNA('T' * 71), DNA('T' * 71)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 2
@@ -2362,7 +2362,7 @@ class TabularMSAReprDoctests(object):
     Two sequences with full lines with 1 character overflow:
 
     >>> TabularMSA([DNA('T' * 72), DNA('T' * 72)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 2
@@ -2374,7 +2374,7 @@ class TabularMSAReprDoctests(object):
     Five full lines (maximum amount of information):
 
     >>> TabularMSA([DNA('A' * 71) for x in range(5)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 5
@@ -2389,7 +2389,7 @@ class TabularMSAReprDoctests(object):
     Six lines starts "summarized" output:
 
     >>> TabularMSA([DNA('A' * 71) for x in range(6)])
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Stats:
         sequence count: 6
@@ -2449,7 +2449,7 @@ class TabularMSAReprDoctests(object):
     ...     (None, range(4))])
     >>> TabularMSA([DNA('ACGT')], metadata=metadata,
     ...            positional_metadata=positional_metadata)
-    TabularMSA<DNA>
+    TabularMSA[DNA]
     -----------------------------------------------------------------------
     Metadata:
         None: (-1+0j)

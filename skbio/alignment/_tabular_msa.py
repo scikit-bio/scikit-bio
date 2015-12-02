@@ -266,7 +266,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         length_taken_by_docstring_indent = 8
         width = pep8_line_length_limit - length_taken_by_docstring_indent
         return _TabularMSAReprBuilder(
-            obj=self,
+            msa=self,
             width=width,
             indent=4).build()
 

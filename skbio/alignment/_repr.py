@@ -12,16 +12,18 @@ from skbio.util._metadata_repr import _MetadataReprBuilder
 
 
 class _TabularMSAReprBuilder(_MetadataReprBuilder):
+    def __init__(self, msa, width, indent):
+        super(_TabularMSAReprBuilder, self).__init__(msa, width, indent)
+        self._ellipse_insert = ' ... '
 
     def _process_header(self):
         cls_name = self._obj.__class__.__name__
         if self._obj.dtype is not None:
-            dtype_class = '<' + self._obj.dtype.__name__ + '>'
+            dtype_class = '[' + self._obj.dtype.__name__ + ']'
         else:
             dtype_class = ''
         self._lines.add_line(cls_name + dtype_class)
         self._lines.add_separator()
-        self._ellipse_insert = ' ... '
 
     def _process_data(self):
         num_sequences = self._obj.shape.sequence
