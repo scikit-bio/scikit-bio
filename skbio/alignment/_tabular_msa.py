@@ -22,6 +22,8 @@ from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
+from skbio.alignment._repr import _TabularMSAReprBuilder
+
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
@@ -259,6 +261,20 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             self, positional_metadata=positional_metadata)
 
     @experimental(as_of='0.4.0-dev')
+    def __repr__(self):
+        pep8_line_length_limit = 79
+        length_taken_by_docstring_indent = 8
+        width = pep8_line_length_limit - length_taken_by_docstring_indent
+        return _TabularMSAReprBuilder(
+            msa=self,
+            width=width,
+            indent=4).build()
+
+    def _repr_stats(self):
+        return [("sequence count", str(self.shape.sequence)),
+                ("position count", str(self.shape.position))]
+
+    @experimental(as_of='0.4.0-dev')
     def __bool__(self):
         """Boolean indicating whether the MSA is empty or not.
 
@@ -394,8 +410,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def __str__(self):
-        # TODO implement me!
-        return super(TabularMSA, self).__str__()
+        return self.__repr__()
 
     @experimental(as_of='0.4.0-dev')
     def __eq__(self, other):
