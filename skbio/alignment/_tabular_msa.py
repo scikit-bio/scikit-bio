@@ -33,13 +33,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     Parameters
     ----------
-    sequences : iterable of alphabet-aware skbio sequence objects, TabularMSA
-        Aligned sequences in the MSA. Sequences must be the same type, length,
-        and have an alphabet. For example, `sequences` could be an iterable of
-        ``DNA``, ``RNA``, or ``Protein`` objects. If `sequences` is a
-        ``TabularMSA``, its `metadata`, `positional_metadata`, and `index` will
-        be used unless overridden by parameters `metadata`,
-        `positional_metadata`, and `minter`/`index`.
+    sequences : iterable of IUPACSequence, TabularMSA
+        Aligned sequences in the MSA. Sequences must all be the same type and
+        length. For example, `sequences` could be an iterable of ``DNA``,
+        ``RNA``, or ``Protein`` sequences. If `sequences` is a ``TabularMSA``,
+        its `metadata`, `positional_metadata`, and `index` will be used unless
+        overridden by parameters `metadata`, `positional_metadata`, and
+        `minter`/`index`, respectively.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
@@ -76,6 +76,56 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     -----
     If `minter` or `index` are not provided, default pandas labels will be
     used: integer labels ``0..(N-1)``, where ``N`` is the number of sequences.
+
+    Examples
+    --------
+    Create a ``TabularMSA`` object with three DNA sequences and four positions:
+
+    >>> from skbio import DNA, TabularMSA
+    >>> seqs = [
+    ...     DNA('ACGT'),
+    ...     DNA('AG-T'),
+    ...     DNA('-C-T')
+    ... ]
+    >>> msa = TabularMSA(seqs)
+    >>> msa
+    TabularMSA[DNA]
+    ---------------------
+    Stats:
+        sequence count: 3
+        position count: 4
+    ---------------------
+    ACGT
+    AG-T
+    -C-T
+
+    The MSA has default index labels:
+
+    >>> msa.index
+    Int64Index([0, 1, 2], dtype='int64')
+
+    Create an MSA with metadata, positional metadata, and non-default index
+    labels:
+
+    >>> msa = TabularMSA(seqs, index=['seq1', 'seq2', 'seq3'],
+    ...                  metadata={'id': 'msa-id'},
+    ...                  positional_metadata={'prob': [3, 4, 2, 2]})
+    >>> msa
+    TabularMSA[DNA]
+    --------------------------
+    Metadata:
+        'id': 'msa-id'
+    Positional metadata:
+        'prob': <dtype: int64>
+    Stats:
+        sequence count: 3
+        position count: 4
+    --------------------------
+    ACGT
+    AG-T
+    -C-T
+    >>> msa.index
+    Index(['seq1', 'seq2', 'seq3'], dtype='object')
 
     """
 
@@ -207,8 +257,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Parameters
         ----------
         dictionary : dict
-            Dictionary mapping keys to alphabet-aware scikit-bio sequence
-            objects. The ``TabularMSA`` object will have its index labels set
+            Dictionary mapping keys to ``IUPACSequence`` sequence objects. The
+            ``TabularMSA`` object will have its index labels set
             to the keys in the dictionary.
 
         Returns
@@ -232,6 +282,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> from skbio import DNA, TabularMSA
         >>> seqs = {'a': DNA('ACGT'), 'b': DNA('A--T')}
         >>> msa = TabularMSA.from_dict(seqs)
+        >>> msa.shape
+        Shape(sequence=2, position=4)
+        >>> 'a' in msa
+        True
+        >>> 'b' in msa
+        True
 
         """
         # Python 2 and 3 guarantee same order of iteration as long as no
@@ -262,6 +318,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def __repr__(self):
+        """String summary of this MSA."""
         pep8_line_length_limit = 79
         length_taken_by_docstring_indent = 8
         width = pep8_line_length_limit - length_taken_by_docstring_indent
@@ -363,6 +420,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa = TabularMSA([])
         >>> len(msa)
         0
+
         """
         return len(self._seqs)
 
@@ -372,7 +430,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        alphabet-aware scikit-bio sequence object
+        IUPACSequence
             Each sequence in the order they are stored in the MSA.
 
         Examples
@@ -393,7 +451,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        alphabet-aware scikit-bio sequence object
+        IUPACSequence
             Each sequence in reverse order from how they are stored in the MSA.
 
         Examples
@@ -410,6 +468,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def __str__(self):
+        """String summary of this MSA."""
         return self.__repr__()
 
     @experimental(as_of='0.4.0-dev')
@@ -518,6 +577,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         __deepcopy__
 
+        Examples
+        --------
+        >>> import copy
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa_copy = copy.copy(msa)
+        >>> msa_copy == msa
+        True
+        >>> msa_copy is msa
+        False
+
         """
         seqs = (copy.copy(seq) for seq in self._seqs)
 
@@ -538,11 +608,22 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Returns
         -------
         TabularMSA
-            Deep copy of this MSA.
+            Deep copy of this MSA. Sequence objects will be deep-copied.
 
         See Also
         --------
         __copy__
+
+        Examples
+        --------
+        >>> import copy
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa_copy = copy.deepcopy(msa)
+        >>> msa_copy == msa
+        True
+        >>> msa_copy is msa
+        False
 
         """
         seqs = (copy.deepcopy(seq, memo) for seq in self._seqs)
@@ -919,7 +1000,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        sequence : alphabet-aware scikit-bio sequence object
+        sequence : IUPACSequence
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -939,7 +1020,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
-            If the sequence object is a type that doesn't have an alphabet.
+            If the sequence object isn't an ``IUPACSequence``.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -963,9 +1044,24 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         >>> from skbio import DNA, TabularMSA
         >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 1
+            position count: 4
+        ---------------------
+        ACGT
         >>> msa.append(DNA('AG-T'))
-        >>> msa == TabularMSA([DNA('ACGT'), DNA('AG-T')])
-        True
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
 
         Auto-incrementing index labels:
 
@@ -986,7 +1082,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        sequences : iterable of alphabet-aware scikit-bio sequence objects
+        sequences : iterable of IUPACSequence
             Sequences to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -1010,7 +1106,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ValueError
             If `index` is not the same length as `sequences`.
         TypeError
-            If `sequences` contains a type that does not have an alphabet.
+            If `sequences` contains an object that isn't an ``IUPACSequence``.
         TypeError
             If `sequence` contains a type that does not match the dtype of the
             MSA.
@@ -1035,9 +1131,25 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         >>> from skbio import DNA, TabularMSA
         >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 1
+            position count: 4
+        ---------------------
+        ACGT
         >>> msa.extend([DNA('AG-T'), DNA('-G-T')])
-        >>> msa == TabularMSA([DNA('ACGT'), DNA('AG-T'), DNA('-G-T')])
-        True
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
+        -G-T
 
         Auto-incrementing index labels:
 
@@ -1090,9 +1202,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             expected_dtype = type(sequence)
             if not issubclass(expected_dtype, IUPACSequence):
                 raise TypeError(
-                    "Each sequence must be a scikit-bio sequence object "
-                    "that has an alphabet, not type %r" %
-                    expected_dtype.__name__)
+                    "Each sequence must be of type %r, not type %r"
+                    % (IUPACSequence.__name__, expected_dtype.__name__))
             expected_length = len(sequence)
 
         for sequence in sequences:
@@ -1207,9 +1318,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa2 = TabularMSA([DNA('G-T'),
         ...                    DNA('T--')])
         >>> joined = msa1.join(msa2)
-        >>> joined == TabularMSA([DNA('ACG-T'),
-        ...                       DNA('A-T--')])
-        True
+        >>> joined
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 5
+        ---------------------
+        ACG-T
+        A-T--
 
         Sequences are joined based on MSA index labels:
 
@@ -1218,9 +1335,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa2 = TabularMSA([DNA('G-T'),
         ...                    DNA('T--')], index=['b', 'a'])
         >>> joined = msa1.join(msa2)
-        >>> joined == TabularMSA([DNA('ACT--'),
-        ...                       DNA('A-G-T')], index=['a', 'b'])
-        True
+        >>> joined
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 5
+        ---------------------
+        ACT--
+        A-G-T
+        >>> joined.index
+        Index(['a', 'b'], dtype='object')
 
         By default both MSA indexes must match. Use ``how`` to specify an inner
         join:
@@ -1236,25 +1361,56 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ...                   positional_metadata={'col2': [3, 4, 5],
         ...                                        'col3': ['f', 'o', 'o']})
         >>> joined = msa1.join(msa2, how='inner')
-        >>> joined == TabularMSA([DNA('A-G-T'),
-        ...                       DNA('ACT--')], index=['b', 'a'],
-        ...                      positional_metadata={'col2': [1, 2, 3, 4, 5]})
-        True
+        >>> joined
+        TabularMSA[DNA]
+        --------------------------
+        Positional metadata:
+            'col2': <dtype: int64>
+        Stats:
+            sequence count: 2
+            position count: 5
+        --------------------------
+        A-G-T
+        ACT--
+        >>> joined.index
+        Index(['b', 'a'], dtype='object')
+        >>> joined.positional_metadata
+           col2
+        0     1
+        1     2
+        2     3
+        3     4
+        4     5
 
         When performing an outer join (``'outer'``, ``'left'``, or
         ``'right'``), unshared sequences are padded with gaps and unshared
         ``positional_metadata`` columns are padded with NaN:
 
         >>> joined = msa1.join(msa2, how='outer')
-        >>> joined == TabularMSA([DNA('ACT--'),
-        ...                       DNA('A-G-T'),
-        ...                       DNA('-C---'),
-        ...                       DNA('--ACG')], index=['a', 'b', 'c', 'z'],
-        ...                      positional_metadata={
-        ...                          'col1': [42, 43, np.nan, np.nan, np.nan],
-        ...                          'col2': [1, 2, 3, 4, 5],
-        ...                          'col3': [np.nan, np.nan, 'f', 'o', 'o']})
-        True
+        >>> joined
+        TabularMSA[DNA]
+        ----------------------------
+        Positional metadata:
+            'col1': <dtype: float64>
+            'col2': <dtype: int64>
+            'col3': <dtype: object>
+        Stats:
+            sequence count: 4
+            position count: 5
+        ----------------------------
+        ACT--
+        A-G-T
+        -C---
+        --ACG
+        >>> joined.index
+        Index(['a', 'b', 'c', 'z'], dtype='object')
+        >>> joined.positional_metadata
+           col1  col2 col3
+        0    42     1  NaN
+        1    43     2  NaN
+        2   NaN     3    f
+        3   NaN     4    o
+        4   NaN     5    o
 
         """
         if how not in {'strict', 'inner', 'outer', 'left', 'right'}:
@@ -1381,24 +1537,45 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        Create a ``TabularMSA`` object:
+        Create a ``TabularMSA`` object with sequence identifiers as index
+        labels:
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'c'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('AC-', metadata={'id': 'a'})]
         >>> msa = TabularMSA(seqs, minter='id')
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 3
+        ---------------------
+        ACG
+        AC-
+        AC-
+        >>> msa.index
+        Index(['c', 'b', 'a'], dtype='object')
 
-        Sort the sequences in alphabetical order by sequence identifier:
+        Sort the sequences in alphabetical order by index label:
 
         >>> msa.sort()
-        >>> msa == TabularMSA([DNA('AC-', metadata={'id': 'a'}),
-        ...                    DNA('AC-', metadata={'id': 'b'}),
-        ...                    DNA('ACG', metadata={'id': 'c'})], minter='id')
-        True
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 3
+        ---------------------
+        AC-
+        AC-
+        ACG
+        >>> msa.index
+        Index(['a', 'b', 'c'], dtype='object')
 
         Note that since the sort is in-place, the ``TabularMSA`` object is
-        modified (a new object is **not** returned).
+        modified (a new object is *not* returned).
 
         """
         series = self._seqs.sort_index(ascending=ascending, level=level)

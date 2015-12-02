@@ -73,10 +73,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_invalid_dtype(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             TabularMSA([Sequence('')])
 
-        with six.assertRaisesRegex(self, TypeError, 'sequence.*alphabet.*int'):
+        with six.assertRaisesRegex(self, TypeError, 'IUPACSequence.*int'):
             TabularMSA([42, DNA('')])
 
     def test_constructor_not_monomorphic(self):
@@ -929,7 +929,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             msa.append(Sequence(''))
 
         self.assertEqual(msa, TabularMSA([]))
@@ -1187,7 +1187,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             msa.extend([Sequence('')])
 
         self.assertEqual(msa, TabularMSA([]))
