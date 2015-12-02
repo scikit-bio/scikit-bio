@@ -741,6 +741,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return dtype(''.join(consensus),
                      positional_metadata=positional_metadata)
 
+    def _build_shannon_entropy_f(self, include_gaps):
+        base = len(self.dtype.nondegenerate_chars)
+        if include_gaps:
+            # This is how [1] suggests handling gaps for Shannon entropy
+            base += 1
+        def f(p):
+            freqs = list(p.kmer_frequencies(k=1).values())
+            return scipy.stats.entropy(freqs, base=base)
+        return f
+
     @experimental(as_of='0.4.0-dev')
     def conservation(self, metric='shannon_entropy', nan_on_degenerate=False,
                      gap_mode='include'):
@@ -789,56 +799,44 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             return np.array([])
 
         if metric == 'shannon_entropy':
-            base = len(self.dtype.nondegenerate_chars)
-            if gap_mode == 'include':
-                # This is how [1] suggests handling gaps for Shannon entropy
-                base += 1
-
-            def metric_f(p):
-                freqs = list(p.kmer_frequencies(k=1).values())
-                return scipy.stats.entropy(freqs, base=base)
+            metric_f = self._build_shannon_entropy_f(gap_mode == 'include')
         else:
             raise ValueError("Unknown metric provided: %s" % metric)
 
         result = []
         for p in self.iter_positions():
             cons = None
-            pos_str = str(p)
-            pos_set = set(pos_str)
+            pos_seq = self.dtype(p)
 
             # handle degenerate characters if present
-            if len(self.dtype.degenerate_chars & pos_set) > 0:
+            if pos_seq.has_degenerates():
                 if nan_on_degenerate:
                     cons = np.nan
                 else:
-                    degenerate_chars = self.dtype.degenerate_chars & pos_set
+                    degenerate_chars = pos_seq[pos_seq.degenerates()]
                     raise ValueError("Conservation is undefined for positions "
                                      "with degenerate characters. The "
                                      "following degenerate characters were "
                                      "observed: %s." % degenerate_chars)
 
-            # handle gap characters if present, and if they are treated
-            # differently than other characters
-            if gap_mode != 'include' and \
-               len(self.dtype.gap_chars & pos_set) > 0:
+            # handle gap characters if present
+            if pos_seq.has_gaps():
                 if gap_mode == 'nan':
                     cons = np.nan
                 elif gap_mode == 'error':
                     raise ValueError("Gap characters present in alignment.")
                 elif gap_mode == 'ignore':
-                    p_no_gaps = []
-                    for e in pos_str:
-                        if e not in self.dtype.gap_chars:
-                            p_no_gaps.append(e)
-                    p_no_gaps = ''.join(p_no_gaps)
-                    p = p.__class__(p_no_gaps)
+                    pos_seq = pos_seq.degap()
+                elif gap_mode == 'include':
+                    # recode gaps here!
+                    pass
                 else:
                     # Do we care that this error only comes up if gaps are
                     # present?
                     raise ValueError("Unknown gap_mode provided: %s" % metric)
 
             if cons is None:
-                cons = metric_f(p)
+                cons = metric_f(pos_seq)
 
             result.append(cons)
 
