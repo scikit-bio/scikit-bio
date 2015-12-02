@@ -35,7 +35,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
+|Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
@@ -84,11 +84,18 @@ Sequence Header
 ~~~~~~~~~~~~~~~
 Each sequence header consists of a single line beginning with a greater-than
 (``>``) symbol. Immediately following this is a sequence identifier (ID) and
-description separated by one or more whitespace characters. The sequence ID and
-description are stored in the sequence `metadata` attribute, under the `'id'`
-and `'description'` keys, repectively. Both are optional. Each will be
-represented as the empty string (``''``) in `metadata` if it is not present
-in the header.
+description separated by one or more whitespace characters.
+
+.. note:: When reading a FASTA-formatted file, the sequence ID and description
+   are stored in the sequence `metadata` attribute, under the `'id'` and
+   `'description'` keys, repectively. Both are optional. Each will be
+   represented as the empty string (``''``) in `metadata` if it is not present
+   in the header.
+
+   When writing a FASTA-formatted file, sequence `metadata` identified by keys
+   `'id'` and `'description'` will be converted to strings and written as the
+   sequence identifier and description, respectively. Each will be written as
+   the empty string if not present in sequence `metadata`.
 
 A sequence ID consists of a single *word*: all characters after the greater-
 than symbol and before the first whitespace character (if any) are taken as the
@@ -96,14 +103,6 @@ sequence ID. Unique sequence IDs are not strictly enforced by the FASTA format
 itself. A single standardized ID format is similarly not enforced by the FASTA
 format, though it is often common to use a unique library accession number for
 a sequence ID (e.g., NCBI's FASTA defline format [5]_).
-
-.. note:: scikit-bio will enforce sequence ID uniqueness depending on the type
-   of object that the FASTA file is read into. For example, reading a FASTA
-   file as a generator of ``Sequence`` objects will not enforce
-   unique IDs since it simply yields each sequence it finds in the FASTA file.
-   However, if the FASTA file is read into a ``SequenceCollection`` object, ID
-   uniqueness will be enforced because that is a requirement of a
-   ``SequenceCollection``.
 
 If a description is present, it is taken as the remaining characters that
 follow the sequence ID and initial whitespace(s). The description is considered
@@ -134,14 +133,14 @@ the standard IUPAC lexicon (single-letter codes).
    case. Other sequence objects do, but all provide the `lowercase` parameter
    to control case functionality. Refer to each class's respective constructor
    documentation for details.
-.. note:: Both ``-`` and ``.`` are supported as gap characters. See
-   :mod:`skbio.sequence` for more details on how scikit-bio interprets
-   sequence data in its in-memory objects.
 
-   Validation is performed for all scikit-bio objects which support it. This
-   consists of all objects which enforce usage of IUPAC characters. If any
-   invalid IUPAC characters are found in the sequence while reading from the
-   FASTA file, an exception is raised.
+   Both ``-`` and ``.`` are supported as gap characters when reading into
+   ``DNA``, ``RNA``, and ``Protein`` sequence objects.
+
+   Validation is performed when reading into scikit-bio sequence objects that
+   enforce an alphabet (e.g., ``DNA``, ``RNA``, ``Protein``). If any invalid
+   characters are found while reading from the FASTA file, an exception is
+   raised.
 
 QUAL Format
 ^^^^^^^^^^^
@@ -152,13 +151,16 @@ containing a sequence ID and description. The same rules apply to QUAL headers
 as FASTA headers (see the above sections for details). scikit-bio processes
 FASTA and QUAL headers in exactly the same way.
 
-Quality scores are automatically stored in the object's `positional_metadata`
-attribute, under the `'quality'` column.
-
 Instead of storing biological sequence data in each record, a QUAL file stores
 a Phred quality score for each base in the corresponding sequence. Quality
 scores are represented as nonnegative integers separated by whitespace
 (typically a single space or newline), and can span multiple lines.
+
+.. note:: When reading a QUAL-formatted file, quality scores are stored in the
+   sequence's `positional_metadata` attribute under the `'quality'` column.
+
+   When writing a QUAL-formatted file, a sequence's `positional_metadata`
+   `'quality'` column will be written as the quality scores.
 
 .. note:: When reading FASTA and QUAL files, scikit-bio requires records to be
    in the same order in both files (i.e., each FASTA and QUAL record must have
@@ -191,19 +193,25 @@ Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The available reader parameters differ depending on which reader is used.
 
-Generator, SequenceCollection, and Alignment Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Generator, SequenceCollection, and TabularMSA Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``constructor`` parameter can be used with the ``Sequence``
-generator, ``SequenceCollection``, and ``Alignment`` FASTA readers.
-``constructor`` specifies the in-memory type of each sequence that is parsed,
-and defaults to ``Sequence``. ``constructor`` should be a subclass of
-``Sequence``. For example, if you know that the FASTA file you're
-reading contains protein sequences, you would pass
-``constructor=Protein`` to the reader call.
+generator, ``SequenceCollection``, and ``TabularMSA`` FASTA readers.
+``constructor`` specifies the type of in-memory sequence object to read each
+sequence into. For example, if you know that the FASTA file you're reading
+contains protein sequences, you would pass ``constructor=Protein`` to the
+reader call.
+
+When reading into a ``Sequence`` generator or ``SequenceCollection``,
+``constructor`` defaults to ``Sequence`` and must be a subclass of
+``Sequence`` if supplied.
+
+When reading into a ``TabularMSA``, ``constructor`` is a required format
+parameter and must be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``,
+``Protein``).
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
-   parameter, so it will always default to ``Sequence`` if another
-   type is not provided to the reader.
+   parameter.
 
 Sequence Reader Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -334,61 +342,35 @@ We see that all 5 sequences have 42 characters, and that each of the sequence
 IDs were successfully read into memory.
 
 Since these sequences are of equal length (presumably because they've been
-aligned), let's load the FASTA file into an ``Alignment`` object, which is a
+aligned), let's load the FASTA file into a ``TabularMSA`` object, which is a
 more appropriate data structure:
 
->>> from skbio import Alignment
->>> aln = Alignment.read(fl)
->>> aln.sequence_length()
-42
+>>> from skbio import TabularMSA, DNA
+>>> msa = TabularMSA.read(fl, constructor=DNA)
+>>> msa
+TabularMSA[DNA]
+------------------------------------------
+Stats:
+    sequence count: 5
+    position count: 42
+------------------------------------------
+AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
+AAGCCTTGGCAGTGCAGGGTGAGCCGTGGCCGGGCACGGTAT
+ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA
+AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
+AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 
 Note that we were able to read the FASTA file into two different data
-structures (``SequenceCollection`` and ``Alignment``) using the exact same
-``read`` method call (and underlying reading/parsing logic). Also note that we
-didn't specify a file format in the ``read`` call. The FASTA sniffer detected
-the correct file format for us!
+structures (``SequenceCollection`` and ``TabularMSA``) using similar ``read``
+method calls (and underlying reading/parsing logic). Also note that we didn't
+specify a file format in the ``read`` call. The FASTA sniffer detected the
+correct file format for us!
 
-Let's inspect the type of sequences stored in the ``Alignment``:
-
->>> aln[0]
-Sequence
-------------------------------------------------
-Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
-Stats:
-    length: 42
-------------------------------------------------
-0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
-
-By default, sequences are loaded as ``Sequence`` objects. We can
-change the type of sequence via the ``constructor`` parameter:
-
->>> from skbio import DNA
->>> aln = Alignment.read(fl, constructor=DNA)
->>> aln[0] # doctest: +NORMALIZE_WHITESPACE
-DNA
-------------------------------------------------
-Metadata:
-    'description': 'Turkey'
-    'id': 'seq1'
-Stats:
-    length: 42
-    has gaps: False
-    has degenerates: True
-    has non-degenerates: True
-    GC-content: 54.76%
-------------------------------------------------
-0 AAGCTNGGGC ATTTCAGGGT GAGCCCGGGC AATACAGGGT AT
-
-We now have an ``Alignment`` of ``DNA`` objects instead of
-``Sequence`` objects.
-
-To write the alignment in FASTA format:
+To write the ``TabularMSA`` in FASTA format:
 
 >>> from io import StringIO
 >>> with StringIO() as fh:
-...     print(aln.write(fh).getvalue())
+...     print(msa.write(fh).getvalue())
 >seq1 Turkey
 AAGCTNGGGCATTTCAGGGTGAGCCCGGGCAATACAGGGTAT
 >seq2 Salmo gair
@@ -401,7 +383,7 @@ AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 <BLANKLINE>
 
-Both ``SequenceCollection`` and ``Alignment`` load all of the sequences from
+Both ``SequenceCollection`` and ``TabularMSA`` load all of the sequences from
 the FASTA file into memory at once. If the FASTA file is large (which is often
 the case), this may be infeasible if you don't have enough memory. To work
 around this issue, you can stream the sequences using scikit-bio's
@@ -496,7 +478,7 @@ Stats:
 ------------------------------------------------
 0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA
 
-We can use the same API to read the fifth sequence into a ``DNA``:
+We can use the same API to read the fifth sequence into a ``DNA`` sequence:
 
 >>> dna_seq = DNA.read(fl, seq_num=5)
 >>> dna_seq
@@ -524,8 +506,8 @@ AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 
 Reading and Writing FASTA/QUAL Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In addition to reading and writing standalone FASTA files, scikit-bio also
-supports reading and writing FASTA and QUAL files together. Suppose we have the
+In addition to reading and writing standalone FASTA files, scikit-bio supports
+reading and writing FASTA and QUAL files together. Suppose we have the
 following FASTA file::
 
     >seq1 db-accession-149855
@@ -596,7 +578,7 @@ Now let's load the sequences and their quality scores into a
 <SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
 
 To write the sequence data and quality scores in the ``SequenceCollection`` to
-FASTA and QUAL files, respectively, we run:
+FASTA and QUAL files, respectively:
 
 >>> new_fasta_fh = StringIO()
 >>> new_qual_fh = StringIO()
@@ -656,7 +638,7 @@ from skbio.io.format._base import (_get_nth_sequence,
                                    _format_fasta_like_records, _line_generator,
                                    _too_many_blanks)
 from skbio.util._misc import chunk_str
-from skbio.alignment import SequenceCollection, Alignment
+from skbio.alignment import SequenceCollection, TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
@@ -785,11 +767,13 @@ def _fasta_to_sequence_collection(fh, qual=FileSentinel,
                                  **kwargs)))
 
 
-@fasta.reader(Alignment)
-def _fasta_to_alignment(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
-    return Alignment(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
-                                 **kwargs)))
+@fasta.reader(TabularMSA)
+def _fasta_to_tabular_msa(fh, qual=FileSentinel, constructor=None, **kwargs):
+    if constructor is None:
+        raise ValueError("Must provide `constructor`.")
+
+    return TabularMSA(
+        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs))
 
 
 @fasta.writer(None)
@@ -870,11 +854,11 @@ def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
                         description_newline_replacement, max_width, lowercase)
 
 
-@fasta.writer(Alignment)
-def _alignment_to_fasta(obj, fh, qual=FileSentinel,
-                        id_whitespace_replacement='_',
-                        description_newline_replacement=' ', max_width=None,
-                        lowercase=None):
+@fasta.writer(TabularMSA)
+def _tabular_msa_to_fasta(obj, fh, qual=FileSentinel,
+                          id_whitespace_replacement='_',
+                          description_newline_replacement=' ', max_width=None,
+                          lowercase=None):
     _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width, lowercase)
 
