@@ -5,10 +5,10 @@ Tree representations (:mod:`skbio.tree`)
 .. currentmodule:: skbio.tree
 
 This module provides functionality for working with trees, including
-phylogenetic trees and hierarchies, and prefix trees (i.e., tries).
-Functionality is provided for constructing trees, for traversing in multiple
-ways, comparisons, fetching subtrees, and more. This module supports trees that
-are multifurcating and nodes that have single descendants.
+phylogenetic trees and hierarchies. Functionality is provided for constructing
+trees, for traversing in multiple ways, comparisons, fetching subtrees, and
+more. This module supports trees that are multifurcating and nodes that have
+single descendants.
 
 Classes
 -------
@@ -17,7 +17,6 @@ Classes
    :toctree: generated/
 
     TreeNode
-    CompressedTrie
 
 Phylogenetic Reconstruction
 ---------------------------
@@ -33,7 +32,6 @@ Utility Functions
 .. autosummary::
    :toctree: generated/
 
-    fasta_to_pairlist
     majority_rule
 
 Exceptions
@@ -173,57 +171,6 @@ pairwise tip-to-tip distances between trees:
 >>> print(tree1.compare_tip_distances(tree2))
 0.120492524415
 
-Prefix trees (i.e., tries) examples
------------------------------------
-
-Construct a Trie from a (key, value) list
-
->>> from skbio.tree import CompressedTrie
->>> pair_list = [("ab",  "0"),
-...              ("abababa", "1"),
-...              ("abab", "2"),
-...              ("baba", "3"),
-...              ("ababaa", "4"),
-...              ("a", "5"),
-...              ("abababa", "6"),
-...              ("bab", "7"),
-...              ("babba", "8")]
->>> t = CompressedTrie(pair_list)
-
-Get the number of keys stored in the trie
-
->>> len(t)
-9
-
-Get the number of nodes in the trie
-
->>> t.size
-10
-
-Find the value attached to a given key
-
->>> t.find("ababaa")
-['4']
-
-Add a new (key, value) pair to the Trie
-
->>> t.insert("bac", "9")
->>> t.find("bac")
-['9']
-
-Create a new trie with a list of sequences
-
->>> from skbio.tree import fasta_to_pairlist
->>> seqs = [("s0", "ACA"),
-...         ("s1", "ACAGTC"),
-...         ("s2", "ACTA"),
-...         ("s3", "CAGT"),
-...         ("s4", "CATGAA"),
-...         ("s5", "A"),
-...         ("s6", "CATGTA"),
-...         ("s7", "CACCA")]
->>> t = CompressedTrie(fasta_to_pairlist(seqs))
-
 """
 
 # ----------------------------------------------------------------------------
@@ -239,14 +186,12 @@ from __future__ import absolute_import, division, print_function
 from skbio.util import TestRunner
 
 from ._tree import TreeNode
-from ._trie import CompressedTrie, fasta_to_pairlist
 from ._nj import nj
 from ._majority_rule import majority_rule
 from ._exception import (TreeError, NoLengthError, DuplicateNodeError,
                          MissingNodeError, NoParentError)
 
-__all__ = ['TreeNode', 'CompressedTrie', 'fasta_to_pairlist', 'nj',
-           'majority_rule', 'TreeError', 'NoLengthError', 'DuplicateNodeError',
-           'MissingNodeError', 'NoParentError']
+__all__ = ['TreeNode', 'nj', 'majority_rule', 'TreeError', 'NoLengthError',
+           'DuplicateNodeError', 'MissingNodeError', 'NoParentError']
 
 test = TestRunner(__file__).test

@@ -18,8 +18,7 @@ from shutil import rmtree
 from uuid import uuid4
 
 from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
-                        create_dir, find_duplicates, flatten,
-                        is_casava_v180_or_later)
+                        create_dir, find_duplicates, is_casava_v180_or_later)
 from skbio.util._misc import (
     _handle_error_codes, MiniRegistry, chunk_str, resolve_key)
 
@@ -265,10 +264,6 @@ class MiscTests(unittest.TestCase):
     def test_handle_error_codes_no_error(self):
         obs = _handle_error_codes('/foo/bar/baz')
         self.assertEqual(obs, 0)
-
-    def test_flatten(self):
-        self.assertEqual(flatten(['aa', 'bb', 'cc']), list('aabbcc'))
-        self.assertEqual(flatten([1, [2, 3], [[4, [5]]]]), [1, 2, 3, [4, [5]]])
 
 
 class CardinalToOrdinalTests(unittest.TestCase):
