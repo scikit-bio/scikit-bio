@@ -102,7 +102,6 @@ setup(name='scikit-bio',
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='http://scikit-bio.org',
-      test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
       cmdclass={'build_ext': build_ext},
@@ -119,7 +118,8 @@ setup(name='scikit-bio',
           'numpy >= 1.9.2',
           'pandas >= 0.17.0',
           'scipy >= 0.15.1',
-          'six >= 1.9.0'
+          'six >= 1.9.0',
+          'nose >= 1.3.7'
       ],
       classifiers=classifiers,
       package_data={
