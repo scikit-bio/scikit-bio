@@ -78,6 +78,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     used: integer labels ``0..(N-1)``, where ``N`` is the number of sequences.
 
     """
+    default_write_format = 'fasta'
 
     @property
     @experimental(as_of='0.4.0-dev')

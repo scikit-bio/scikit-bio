@@ -751,6 +751,12 @@ class Alignment(SequenceCollection):
             self._score = None
         self._start_end_positions = start_end_positions
 
+    def __str__(self):
+        lines = []
+        for id_, seq in self.iteritems():
+            lines.append('>%s\n%s\n' % (id_, seq))
+        return ''.join(lines)
+
     @experimental(as_of="0.4.0")
     def distances(self, distance_fn=None):
         """Compute distances between all pairs of sequences

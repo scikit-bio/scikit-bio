@@ -14,7 +14,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
+|Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -34,16 +34,29 @@ included in the examples below). A line containing conservation information
 about each position in the alignment can optionally follow all of the
 subsequences (not included in the examples below).
 
-.. note:: scikit-bio does not support writing conservation information
+.. note:: scikit-bio ignores conservation information when reading and does not
+   support writing conservation information.
 
-.. note:: scikit-bio will only write a clustal-formatted file if the
-   alignment's sequence characters are valid IUPAC characters, as defined in
-   :mod:`skbio.sequence`. The specific lexicon that is validated against
-   depends on the type of sequences stored in the alignment.
+.. note:: When reading a clustal-formatted file into an
+   ``skbio.alignment.TabularMSA`` object, sequence identifiers/labels are
+   stored as ``TabularMSA`` index labels (``index`` property).
+
+   When writing an ``skbio.alignment.TabularMSA`` object as a clustal-formatted
+   file, ``TabularMSA`` index labels will be converted to strings and written
+   as sequence identifiers/labels.
+
+Format Parameters
+-----------------
+The only supported format parameter is ``constructor``, which specifies the
+type of in-memory sequence object to read each aligned sequence into. This must
+be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is
+a required format parameter. For example, if you know that the clustal file
+you're reading contains DNA sequences, you would pass ``constructor=DNA`` to
+the reader call.
 
 Examples
 --------
-Assume we have a clustal-formatted file with the following contents::
+Assume we have a clustal-formatted file of RNA sequences::
 
     CLUSTAL W (1.82) multiple sequence alignment
 
@@ -55,9 +68,9 @@ Assume we have a clustal-formatted file with the following contents::
     def   ---------------CGCGAUGCAUGCAU-CGAU
     xyz   -----------CAUGCAUCGUACGUACGCAUGAC
 
-We can use the following code to read a clustal file into an ``Alignment``:
+We can use the following code to read the clustal file into a ``TabularMSA``:
 
->>> from skbio import Alignment
+>>> from skbio import TabularMSA, RNA
 >>> clustal_f = ['CLUSTAL W (1.82) multiple sequence alignment\n',
 ...              '\n',
 ...              'abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n',
@@ -67,10 +80,21 @@ We can use the following code to read a clustal file into an ``Alignment``:
 ...              'abc   GUCGAUACAUACGUACGUCGGUACGU-CGAC\n',
 ...              'def   ---------------CGUGCAUGCAU-CGAU\n',
 ...              'xyz   -----------CAUUCGUACGUACGCAUGAC\n']
->>> Alignment.read(clustal_f, format="clustal")
-<Alignment: n=3; mean +/- std length=62.00 +/- 0.00>
+>>> msa = TabularMSA.read(clustal_f, constructor=RNA)
+>>> msa
+TabularMSA[RNA]
+--------------------------------------------------------------
+Stats:
+    sequence count: 3
+    position count: 62
+--------------------------------------------------------------
+GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
+----------------------------------------------CGUGCAUGCAU-CGAU
+------------------------------------------CAUUCGUACGUACGCAUGAC
+>>> msa.index
+Index(['abc', 'def', 'xyz'], dtype='object')
 
-We can use the following code to write an ``Alignment`` to a clustal-formatted
+We can use the following code to write a ``TabularMSA`` to a clustal-formatted
 file:
 
 >>> from io import StringIO
@@ -78,9 +102,21 @@ file:
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id': 'seq1'}),
 ...         DNA('A--GTCGAA-GTACCT', metadata={'id': 'sequence-2'}),
 ...         DNA('AGAGTTGAAGGTATCT', metadata={'id': '3'})]
->>> aln = Alignment(seqs)
+>>> msa = TabularMSA(seqs, minter='id')
+>>> msa
+TabularMSA[DNA]
+----------------------
+Stats:
+    sequence count: 3
+    position count: 16
+----------------------
+ACCGTTGTA-GTAGCT
+A--GTCGAA-GTACCT
+AGAGTTGAAGGTATCT
+>>> msa.index
+Index(['seq1', 'sequence-2', '3'], dtype='object')
 >>> fh = StringIO()
->>> _ = aln.write(fh, format='clustal')
+>>> _ = msa.write(fh, format='clustal')
 >>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE
 CLUSTAL
 <BLANKLINE>
@@ -110,14 +146,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from skbio.io import create_format, ClustalFormatError
-from skbio.sequence import Sequence
-from skbio.alignment import Alignment
+from skbio.alignment import TabularMSA
 
 
 clustal = create_format('clustal')
 
 
-def _label_line_parser(record, strict=True):
+def _label_line_parser(record):
     """Returns dict mapping list of data to labels, plus list with field order.
 
     Field order contains labels in order encountered in file.
@@ -134,12 +169,9 @@ def _label_line_parser(record, strict=True):
         if len(split_line) == 2:
             key, val = split_line
         else:
-            if strict:
-                raise ClustalFormatError(
-                    "Failed to parse sequence identifier and subsequence from "
-                    "the following line: %r" % line)
-            else:
-                continue  # just skip the line if not strict
+            raise ClustalFormatError(
+                "Failed to parse sequence identifier and subsequence from "
+                "the following line: %r" % line)
 
         if key in result:
             result[key].append(val)
@@ -227,7 +259,7 @@ def _clustal_sniffer(fh):
     try:
         records = map(_delete_trailing_number,
                       filter(_is_clustal_seq_line, fh))
-        data, labels = _label_line_parser(records, strict=True)
+        data, labels = _label_line_parser(records)
         if len(data) > 0:
             empty = False
         # Only check first 50 sequences
@@ -239,19 +271,15 @@ def _clustal_sniffer(fh):
     return not empty, {}
 
 
-@clustal.writer(Alignment)
-def _alignment_to_clustal(obj, fh):
-    r"""writes aligned sequences to a specified file
-    Parameters
-    ----------
-    obj: Alignment object
-        An alignment object containing a set of Sequence objects
-    fh: open file handle object
-        An open file handle object containing Clustal sequences.
+@clustal.writer(TabularMSA)
+def _tabular_msa_to_clustal(obj, fh):
+    if not obj.index.is_unique:
+        raise ClustalFormatError(
+            "TabularMSA's index labels must be unique.")
 
-    """
     clen = 60  # Max length of clustal lines
-    names, seqs = zip(*[(s.metadata['id'], str(s)) for s in obj])
+    seqs = [str(s) for s in obj]
+    names = [str(label) for label in obj.index]
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write('CLUSTAL\n\n\n')
@@ -262,35 +290,31 @@ def _alignment_to_clustal(obj, fh):
         fh.write("\n")
 
 
-@clustal.reader(Alignment)
-def _clustal_to_alignment(fh, strict=True):
+@clustal.reader(TabularMSA)
+def _clustal_to_tabular_msa(fh, constructor=None):
     r"""yields labels and sequences from msa (multiple sequence alignment)
 
     Parameters
     ----------
-
     fh : open file object
         An open Clustal file.
-    strict : boolean
-        Whether or not to raise a ``ClustalFormatError``
-        when no labels are found.
 
     Returns
     -------
-    skbio.Alignment
-        Alignment object containing aligned biogical sequences
+    skbio.TabularMSA
+        MSA containing aligned sequences.
 
     Raises
     ------
-        skbio.util.exception.ClustalFormatError
-            If the sequences in `fh` don't have the same sequence length
-            or if the sequence ids don't properly match with the subsequences
+    skbio.util.exception.ClustalFormatError
+        If the sequences in `fh` don't have the same sequence length
+        or if the sequence ids don't properly match with the subsequences
+
     Notes
     -----
-
     Skips any line that starts with a blank.
 
-    ``_clustal_to_alignment`` preserves the order of the sequences from the
+    ``_clustal_to_tabular_msa`` preserves the order of the sequences from the
     original file.  However, it does use a dict as an intermediate, so
     two sequences can't have the same label. This is probably OK since
     Clustal will refuse to run on a FASTA file in which two sequences have
@@ -310,16 +334,17 @@ def _clustal_to_alignment(fh, strict=True):
         Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
+    if constructor is None:
+        raise ValueError("Must provide `constructor`.")
 
     records = map(_delete_trailing_number,
                   filter(_is_clustal_seq_line, fh))
-    data, labels = _label_line_parser(records, strict)
+    data, labels = _label_line_parser(records)
 
     aligned_correctly = _check_length(data, labels)
     if not aligned_correctly:
         raise ClustalFormatError("Sequences not aligned properly")
-    alns = []
-    for key in labels:
-        alns.append(Sequence(sequence=''.join(data[key]),
-                             metadata={'id': key}))
-    return Alignment(alns)
+    seqs = []
+    for label in labels:
+        seqs.append(constructor(''.join(data[label])))
+    return TabularMSA(seqs, index=labels)
