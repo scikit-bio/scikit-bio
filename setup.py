@@ -32,7 +32,10 @@ else:
 # Bootstrap setup.py with numpy
 # Huge thanks to coldfix's solution
 # http://stackoverflow.com/a/21621689/579416
+
+
 class build_ext(_build_ext):
+    
     def finalize_options(self):
         _build_ext.finalize_options(self)
         # Prevent numpy from thinking it is still in its setup process:
