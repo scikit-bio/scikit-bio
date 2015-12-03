@@ -14,7 +14,7 @@ from os.path import exists, isdir
 from functools import partial
 from types import FunctionType
 import inspect
-from ._decorator import experimental, deprecated
+from ._decorator import experimental
 
 
 def resolve_key(obj, key):
@@ -358,45 +358,6 @@ def find_duplicates(iterable):
         else:
             seen.add(e)
     return repeated
-
-flatten_deprecation_reason = (
-    "Solutions to this problem exist in the python standarnd library. "
-    "Please refer to the following links for good alternatives:\n"
-    "http://stackoverflow.com/a/952952/3639023\n"
-    "http://stackoverflow.com/a/406199/3639023")
-
-
-@deprecated(as_of="0.2.3-dev", until="0.4.1",
-            reason=flatten_deprecation_reason)
-def flatten(items):
-    """Removes one level of nesting from items
-
-    Parameters
-    ----------
-    items : iterable
-        list of items to flatten one level
-
-    Returns
-    -------
-    flattened_items : list
-        list of flattened items, items can be any sequence, but flatten always
-        returns a list.
-
-    Examples
-    --------
-    >>> from skbio.util import flatten
-    >>> h = [['a', 'b', 'c', 'd'], [1, 2, 3, 4, 5], ['x', 'y'], ['foo']]
-    >>> print(flatten(h))
-    ['a', 'b', 'c', 'd', 1, 2, 3, 4, 5, 'x', 'y', 'foo']
-
-    """
-    result = []
-    for i in items:
-        try:
-            result.extend(i)
-        except TypeError:
-            result.append(i)
-    return result
 
 
 def _get_create_dir_error_codes():
