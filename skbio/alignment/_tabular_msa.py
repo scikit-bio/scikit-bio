@@ -18,7 +18,7 @@ import pandas as pd
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
@@ -33,7 +33,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     Parameters
     ----------
-    sequences : iterable of IUPACSequence, TabularMSA
+    sequences : iterable of GrammaredSequence, TabularMSA
         Aligned sequences in the MSA. Sequences must all be the same type and
         length. For example, `sequences` could be an iterable of ``DNA``,
         ``RNA``, or ``Protein`` sequences. If `sequences` is a ``TabularMSA``,
@@ -258,8 +258,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Parameters
         ----------
         dictionary : dict
-            Dictionary mapping keys to ``IUPACSequence`` sequence objects. The
-            ``TabularMSA`` object will have its index labels set
+            Dictionary mapping keys to ``GrammaredSequence`` sequence objects.
+            The ``TabularMSA`` object will have its index labels set
             to the keys in the dictionary.
 
         Returns
@@ -431,7 +431,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Each sequence in the order they are stored in the MSA.
 
         Examples
@@ -452,7 +452,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Each sequence in reverse order from how they are stored in the MSA.
 
         Examples
@@ -1001,7 +1001,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        sequence : IUPACSequence
+        sequence : GrammaredSequence
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -1021,7 +1021,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
-            If the sequence object isn't an ``IUPACSequence``.
+            If the sequence object isn't an ``GrammaredSequence``.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -1083,7 +1083,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        sequences : iterable of IUPACSequence
+        sequences : iterable of GrammaredSequence
             Sequences to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -1107,7 +1107,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ValueError
             If `index` is not the same length as `sequences`.
         TypeError
-            If `sequences` contains an object that isn't an ``IUPACSequence``.
+            If `sequences` contains an object that isn't an
+            ``GrammaredSequence``.
         TypeError
             If `sequence` contains a type that does not match the dtype of the
             MSA.
@@ -1201,10 +1202,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         else:
             sequence = sequences[0]
             expected_dtype = type(sequence)
-            if not issubclass(expected_dtype, IUPACSequence):
+            if not issubclass(expected_dtype, GrammaredSequence):
                 raise TypeError(
                     "Each sequence must be of type %r, not type %r"
-                    % (IUPACSequence.__name__, expected_dtype.__name__))
+                    % (GrammaredSequence.__name__, expected_dtype.__name__))
             expected_length = len(sequence)
 
         for sequence in sequences:

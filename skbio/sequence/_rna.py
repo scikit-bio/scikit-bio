@@ -12,10 +12,10 @@ import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
-from ._iupac_sequence import IUPACSequence
+from ._grammared_sequence import GrammaredSequence
 
 
-class RNA(IUPACSequence, NucleotideMixin):
+class RNA(GrammaredSequence, NucleotideMixin):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
@@ -118,13 +118,13 @@ class RNA(IUPACSequence, NucleotideMixin):
 
     @classproperty
     @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set("ACGU")
 
     @classproperty
     @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
             "R": set("AG"), "Y": set("CU"), "M": set("AC"), "K": set("UG"),
@@ -404,7 +404,7 @@ class RNA(IUPACSequence, NucleotideMixin):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
         return genetic_code.translate_six_frames(self, *args, **kwargs)
 
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(RNA, self)._repr_stats()

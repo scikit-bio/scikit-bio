@@ -17,7 +17,7 @@ from six import string_types
 from skbio.alignment import Alignment
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import Sequence, Protein
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
@@ -797,7 +797,7 @@ def _init_matrices_nw_no_terminal_gap_penalty(
 def _compute_substitution_score(aln1_chars, aln2_chars, substitution_matrix,
                                 gap_substitution_score):
     substitution_score = 0
-    gap_chars = IUPACSequence.gap_chars
+    gap_chars = GrammaredSequence.gap_chars
     for aln1_char, aln2_char in product(aln1_chars, aln2_chars):
         if aln1_char in gap_chars or aln2_char in gap_chars:
                 substitution_score += gap_substitution_score

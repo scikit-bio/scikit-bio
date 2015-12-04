@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractproperty
 import numpy as np
 
 from skbio.util._decorator import classproperty, stable
-from ._iupac_sequence import _motifs as parent_motifs
+from ._grammared_sequence import _motifs as parent_motifs
 
 
 class NucleotideMixin(with_metaclass(ABCMeta, object)):

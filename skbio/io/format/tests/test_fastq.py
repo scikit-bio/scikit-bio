@@ -23,7 +23,7 @@ from skbio.io.format.fastq import (
     _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
     _fastq_to_tabular_msa, _generator_to_fastq, _sequence_collection_to_fastq,
     _tabular_msa_to_fastq)
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util import get_data_path
 from skbio.util._decorator import classproperty, overrides
 
@@ -417,19 +417,19 @@ class TestReaders(unittest.TestCase):
                     self.assertEqual(observed, expected)
 
     def test_fastq_to_tabular_msa(self):
-        class CustomSequence(IUPACSequence):
+        class CustomSequence(GrammaredSequence):
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def gap_chars(cls):
                 return set('-.')
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def nondegenerate_chars(cls):
                 return set(string.ascii_letters)
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def degenerate_map(cls):
                 return {}
 

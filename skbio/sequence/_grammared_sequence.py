@@ -22,7 +22,7 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
-class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
+class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
     """Store biological sequence data conforming to the IUPAC character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -188,7 +188,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False, validate=True):
-        super(IUPACSequence, self).__init__(
+        super(GrammaredSequence, self).__init__(
             sequence, metadata, positional_metadata, lowercase)
 
         if validate:
@@ -387,7 +387,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Returns
         -------
-        IUPACSequence
+        GrammaredSequence
             A new sequence with all gap characters removed.
 
         See Also
@@ -429,7 +429,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Non-degenerate version of the sequence.
 
         See Also
@@ -590,7 +590,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
-        stats = super(IUPACSequence, self)._repr_stats()
+        stats = super(GrammaredSequence, self)._repr_stats()
         stats.append(('has gaps', '%r' % self.has_gaps()))
         stats.append(('has degenerates', '%r' % self.has_degenerates()))
         stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
@@ -600,4 +600,4 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 _motifs = MiniRegistry()
 
 # Leave this at the bottom
-_motifs.interpolate(IUPACSequence, "find_motifs")
+_motifs.interpolate(GrammaredSequence, "find_motifs")

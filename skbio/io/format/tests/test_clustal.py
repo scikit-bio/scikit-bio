@@ -15,7 +15,7 @@ from unittest import TestCase, main
 import six
 
 from skbio import TabularMSA
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 from skbio.io.format.clustal import (
     _clustal_to_tabular_msa, _tabular_msa_to_clustal, _clustal_sniffer,
@@ -25,19 +25,19 @@ from skbio.io.format.clustal import (
 from skbio.io import ClustalFormatError
 
 
-class CustomSequence(IUPACSequence):
+class CustomSequence(GrammaredSequence):
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
         return set('-.')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set(string.ascii_letters)
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {}
 

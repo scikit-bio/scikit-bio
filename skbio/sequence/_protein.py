@@ -12,10 +12,10 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
-from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
+from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
 
 
-class Protein(IUPACSequence):
+class Protein(GrammaredSequence):
     """Store protein sequence data and optional associated metadata.
 
     Only characters in the IUPAC protein character set [1]_ are supported.
@@ -109,19 +109,19 @@ class Protein(IUPACSequence):
 
     @classproperty
     @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def alphabet(cls):
         return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
     @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
     @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
             "B": set("DN"), "Z": set("EQ"),
@@ -195,7 +195,7 @@ class Protein(IUPACSequence):
         """
         return bool(self.stops().any())
 
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(Protein, self)._repr_stats()
