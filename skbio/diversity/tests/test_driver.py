@@ -13,8 +13,6 @@ from unittest import TestCase, main
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
-import sklearn.metrics
-import scipy.spatial.distance
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.io._fileobject import StringIO
@@ -300,20 +298,20 @@ class BetaDiversityTests(TestCase):
 
         # additional kwargs
         self.assertRaises(TypeError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          [[0, 1, 3], [0, 3, 12]],
                           not_a_real_kwarg=42.0)
         self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          [[0, 1, 3], [0, 3, 12]],
                           not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+                          otu_ids=['O1', 'O2', 'O3'])
         self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          [[0, 1, 3], [0, 3, 12]],
                           not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+                          otu_ids=['O1', 'O2', 'O3'])
         self.assertRaises(TypeError, beta_diversity, weighted_unifrac,
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
+                          [[0, 1, 3], [0, 3, 12]],
                           not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+                          otu_ids=['O1', 'O2', 'O3'])
 
     def test_invalid_input_phylogenetic(self):
         # otu_ids not provided
@@ -573,28 +571,8 @@ class BetaDiversityTests(TestCase):
                     self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
 
     def test_alt_pdist_f(self):
-        sp = scipy.spatial.distance.pdist
-        skl = sklearn.metrics.pairwise_distances
-        # sklearn.metrics.pairwise_distances and scipy.spatial.distance.pdist
-        # give the same results with a scipy metric
-        dm1 = beta_diversity('braycurtis', self.table1, self.sids1,
-                             pdist_f=sp)
-        dm2 = beta_diversity('braycurtis', self.table1, self.sids1,
-                             pdist_f=skl)
-        self.assertEqual(dm1, dm2)
-
-        # sklearn.metrics.pairwise_distances and scipy.spatial.distance.pdist
-        # give the same results with a scikit-bio metric
-        dm1 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=sp)
-        dm2 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=skl)
-        self.assertEqual(dm1, dm2)
-
         # confirm that pdist_f is actually being used
-        def not_a_real_pdist(counts, metric, **kwargs):
+        def not_a_real_pdist(counts, metric):
             return [[0.0, 42.0], [42.0, 0.0]]
         dm1 = beta_diversity('unweighted_unifrac', self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
@@ -602,77 +580,71 @@ class BetaDiversityTests(TestCase):
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
-    def test_sklearn_parallel_scipy_metric(self):
-        skl = sklearn.metrics.pairwise_distances
-        # sklearn gives same results with and without n_jobs
-        dm1 = beta_diversity('braycurtis', self.table1, self.sids1,
-                             pdist_f=skl)
-        dm2 = beta_diversity('braycurtis', self.table1, self.sids1,
-                             pdist_f=skl, n_jobs=2)
-        self.assertEqual(dm1, dm2)
-
-        # confirm that n_jobs is actually being used - if we pass a string
-        # for n_jobs, sklearn.metrics.pairwise_distances throws a TypeError
-        # (Any ideas on a more direct way to test this?)
-        self.assertRaises(TypeError, beta_diversity, 'braycurtis', self.table1,
-                          self.sids1, pdist_f=skl, n_jobs='hello world!')
-
-    def test_sklearn_parallel_unweighted_unifrac(self):
-        skl = sklearn.metrics.pairwise_distances
-        # sklearn gives same results with and without n_jobs (passing pairwise
-        # metric)
-        dm1 = beta_diversity(unweighted_unifrac, self.table1, self.sids1,
+        dm1 = beta_diversity('weighted_unifrac', self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=skl)
-        dm2 = beta_diversity(unweighted_unifrac, self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1, pdist_f=skl,
-                             n_jobs=2)
-        self.assertEqual(dm1, dm2)
-        # sklearn gives same results with and without n_jobs (passing optimized
-        # metric)
-        dm1 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=skl)
-        dm2 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1, pdist_f=skl,
-                             n_jobs=2)
-        self.assertEqual(dm1, dm2)
+                             pdist_f=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
 
-        # confirm that n_jobs is actually being used - if we pass a string
-        # for n_jobs, sklearn.metrics.pairwise_distances throws a TypeError
-        # (Any ideas on a more direct way to test this?)
-        self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
-                          self.table1, self.sids1, otu_ids=self.oids1,
-                          tree=self.tree1, pdist_f=skl, n_jobs='hello world!')
-
-    def test_sklearn_parallel_weighted_unifrac(self):
-        skl = sklearn.metrics.pairwise_distances
-        # sklearn gives same results with and without n_jobs (passing pairwise
-        # metric)
-        dm1 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
+        dm1 = beta_diversity(unweighted_unifrac, self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=skl)
-        dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1, pdist_f=skl,
-                             n_jobs=2)
-        self.assertEqual(dm1, dm2)
-        # sklearn gives same results with and without n_jobs (passing optimized
-        # metric)
-        # TODO: sklearn doesn't like our optimized weighted_unifrac function
-        dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=skl)
-        dm2 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
-                             otu_ids=self.oids1, tree=self.tree1, pdist_f=skl,
-                             n_jobs=2)
-        self.assertEqual(dm1, dm2)
+                             pdist_f=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
 
-        # confirm that n_jobs is actually being used - if we pass a string
-        # for n_jobs, sklearn.metrics.pairwise_distances throws a TypeError
-        # (Any ideas on a more direct way to test this?)
-        self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
-                          self.table1, self.sids1, otu_ids=self.oids1,
-                          tree=self.tree1, pdist_f=skl, n_jobs='hello world!')
+        dm1 = beta_diversity("euclidean", self.table1,
+                             pdist_f=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
+
+    def test_alt_pdist_f_uses_kwargs(self):
+        # confirm that pdist_f is actually being used
+        def not_a_real_pdist(counts, metric, value):
+            return [[0.0, value], [value, 0.0]]
+
+        dm1 = beta_diversity('unweighted_unifrac', self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pdist_f=not_a_real_pdist,
+                             pdist_kwargs={'value': 99.9})
+        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity('weighted_unifrac', self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pdist_f=not_a_real_pdist,
+                             pdist_kwargs={'value': 99.9})
+        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity(unweighted_unifrac, self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pdist_f=not_a_real_pdist,
+                             pdist_kwargs={'value': 99.9})
+        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity("euclidean", self.table1,
+                             pdist_f=not_a_real_pdist,
+                             pdist_kwargs={'value': 99.9})
+        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
+        self.assertEqual(dm1, expected)
+
+    def test_alt_pdist_f_invalid_kwargs(self):
+        def not_a_real_pdist(counts, metric):
+            return [[0.0, 42.0], [42.0, 0.0]]
+        # TypeError on extra pdist_kwarg
+        self.assertRaises(TypeError, beta_diversity, unweighted_unifrac,
+                          self.table1, otu_ids=self.oids1, tree=self.tree1,
+                          pdist_f=not_a_real_pdist,
+                          pdist_kwargs={'not_a_kwarg': True})
+
+        def not_a_real_pdist(counts, metric, value):
+            return [[0.0, value], [value, 0.0]]
+        # TypeError on extra kwarg
+        self.assertRaises(TypeError, beta_diversity, unweighted_unifrac,
+                          self.table1, otu_ids=self.oids1, tree=self.tree1,
+                          pdist_f=not_a_real_pdist,
+                          pdist_kwargs={'value': 99.9, 'not_a_kwarg': True})
 
 
 class MetricGetters(TestCase):

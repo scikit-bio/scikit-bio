@@ -204,13 +204,14 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
-    results = [metric(c) for c in counts]
+    # kwargs is provided here so an error is raised on extra kwargs
+    results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
 
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
-                   pdist_f=scipy.spatial.distance.pdist, **kwargs):
+                   pdist_f=None, pdist_kwargs=None, **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -240,6 +241,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         must take ``counts``, ``metric``, and ``kwargs``. Examples of functions
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``.
+    pdist_kwargs: dict, optional
+        pdist_f-specific parameters.
     n_jobs: int, optional
         The number of jobs to start for computing pairwise distances in
         parallel. This option will only be supported for certain ``pdist_f``
@@ -304,6 +307,12 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
+    if pdist_f is None:
+        pdist_f = scipy.spatial.distance.pdist
+    else:
+        pdist_kwargs = pdist_kwargs or {}
+        pdist_f = functools.partial(pdist_f, **pdist_kwargs)
+
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
@@ -329,8 +338,5 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         # example one of the SciPy metrics
         pass
 
-    if n_jobs is not None:
-        distances = pdist_f(counts, metric=metric, n_jobs=n_jobs, **kwargs)
-    else:
-        distances = pdist_f(counts, metric=metric, **kwargs)
+    distances = pdist_f(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
