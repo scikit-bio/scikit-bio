@@ -244,35 +244,6 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
     scipy.spatial.distance.pdist
     sklearn.metrics.pairwise_distances
 
-    Notes
-    -----
-    The value that you provide for ``metric`` can be either a string (e.g.,
-    ``"unweighted_unifrac"``) or a function
-    (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
-    generally be passed as a string, as this often uses an optimized version
-    of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)
-    will be hundreds of times faster than passing the function
-    ``skbio.diversity.beta.unweighted_unifrac``. The latter is faster if
-    computing only one or a few distances, but in these cases the difference in
-    runtime is negligible, so it's safer to just err on the side of passing
-    ``metric`` as a string.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * all vectors in ``counts`` are of equal length
-     * the correct number of ``ids`` is provided (if any are provided)
-
-    For phylogenetic diversity metrics, validation additional confirms that:
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
-
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
