@@ -16,7 +16,6 @@ API Reference
    alignment
    tree
    workflow
-   draw
    diversity
    stats
    util

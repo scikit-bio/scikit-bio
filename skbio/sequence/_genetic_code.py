@@ -14,7 +14,7 @@ from future.builtins import range
 from skbio.util._decorator import classproperty, stable, classonlymethod
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
-from skbio.sequence._base import ElasticLines
+from skbio._base import ElasticLines
 
 
 class GeneticCode(SkbioObject):

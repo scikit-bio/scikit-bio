@@ -20,7 +20,8 @@ from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_true
 
 from skbio import OrdinationResults
-from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio._base import (SkbioObject, MetadataMixin, PositionalMetadataMixin,
+                         ElasticLines)
 from skbio.util._decorator import overrides
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests)
@@ -363,6 +364,37 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_svg(self):
         assert_is_instance(self.min_ord_results.svg, SVG)
+
+
+class TestElasticLines(unittest.TestCase):
+    def setUp(self):
+        self.el = ElasticLines()
+
+    def test_empty(self):
+        self.assertEqual(self.el.to_str(), '')
+
+    def test_add_line(self):
+        self.el.add_line('foo')
+        self.assertEqual(self.el.to_str(), 'foo')
+
+    def test_add_lines(self):
+        self.el = ElasticLines()
+        self.el.add_lines(['alice', 'bob', 'carol'])
+        self.assertEqual(self.el.to_str(), 'alice\nbob\ncarol')
+
+    def test_add_separator(self):
+        self.el.add_separator()
+        self.assertEqual(self.el.to_str(), '')
+
+        self.el.add_line('foo')
+        self.assertEqual(self.el.to_str(), '---\nfoo')
+
+        self.el.add_separator()
+        self.el.add_lines(['bar', 'bazzzz'])
+        self.el.add_separator()
+
+        self.assertEqual(self.el.to_str(),
+                         '------\nfoo\n------\nbar\nbazzzz\n------')
 
 
 if __name__ == '__main__':

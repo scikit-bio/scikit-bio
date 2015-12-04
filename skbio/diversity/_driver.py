@@ -133,8 +133,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -147,43 +147,16 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
 
     See Also
     --------
+    skbio.diversity
     skbio.diversity.alpha
+    skbio.diversity.get_alpha_diversity_metrics
     skbio.diversity.beta_diversity
-
-    Notes
-    -----
-    The value that you provide for ``metric`` can be either a string (e.g.,
-    ``"faith_pd"``) or a function (e.g., ``skbio.diversity.alpha.faith_pd``).
-    The metric should generally be passed as a string, as this often uses an
-    optimized version of the metric. For example, passing  ``"faith_pd"`` (a
-    string) will be tens of times faster than passing the function
-    ``skbio.diversity.alpha.faith_pd``. The latter may be faster if computing
-    alpha diversity for only one or a few samples, but in these cases the
-    difference in runtime is negligible, so it's safer to just err on the side
-    of passing ``metric`` as a string.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * if ``counts`` is 2-D, all vectors are of equal length
-     * the correct number of ``ids`` is provided (if any are provided)
-
-    For phylogenetic diversity metrics, validation additional confirms that:
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
 
     """
     metric_map = _get_alpha_diversity_metric_map()
@@ -234,8 +207,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
     pdist_f: callable, optional
         The function to use for computing pairwise distances. This function
         must take ``counts``, ``metric``, and can optionally take kwargs that
@@ -256,8 +229,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
     TypeError
@@ -265,7 +237,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
 
     See Also
     --------
+    skbio.diversity
     skbio.diversity.beta
+    skbio.diversity.get_beta_diversity_metrics
     skbio.diversity.alpha_diversity
     scipy.spatial.distance.pdist
     sklearn.metrics.pairwise_distances

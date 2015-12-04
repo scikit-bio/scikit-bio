@@ -22,6 +22,8 @@ from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 
+from skbio.alignment._repr import _TabularMSAReprBuilder
+
 
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
@@ -31,10 +33,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     Parameters
     ----------
-    sequences : iterable of alphabet-aware scikit-bio sequence objects
-        Aligned sequences in the MSA. Sequences must be the same type, length,
-        and have an alphabet. For example, `sequences` could be an iterable of
-        ``DNA``, ``RNA``, or ``Protein`` objects.
+    sequences : iterable of IUPACSequence, TabularMSA
+        Aligned sequences in the MSA. Sequences must all be the same type and
+        length. For example, `sequences` could be an iterable of ``DNA``,
+        ``RNA``, or ``Protein`` sequences. If `sequences` is a ``TabularMSA``,
+        its `metadata`, `positional_metadata`, and `index` will be used unless
+        overridden by parameters `metadata`, `positional_metadata`, and
+        `minter`/`index`, respectively.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire MSA. A shallow copy of
         the ``dict`` will be made.
@@ -72,7 +77,58 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     If `minter` or `index` are not provided, default pandas labels will be
     used: integer labels ``0..(N-1)``, where ``N`` is the number of sequences.
 
+    Examples
+    --------
+    Create a ``TabularMSA`` object with three DNA sequences and four positions:
+
+    >>> from skbio import DNA, TabularMSA
+    >>> seqs = [
+    ...     DNA('ACGT'),
+    ...     DNA('AG-T'),
+    ...     DNA('-C-T')
+    ... ]
+    >>> msa = TabularMSA(seqs)
+    >>> msa
+    TabularMSA[DNA]
+    ---------------------
+    Stats:
+        sequence count: 3
+        position count: 4
+    ---------------------
+    ACGT
+    AG-T
+    -C-T
+
+    The MSA has default index labels:
+
+    >>> msa.index
+    Int64Index([0, 1, 2], dtype='int64')
+
+    Create an MSA with metadata, positional metadata, and non-default index
+    labels:
+
+    >>> msa = TabularMSA(seqs, index=['seq1', 'seq2', 'seq3'],
+    ...                  metadata={'id': 'msa-id'},
+    ...                  positional_metadata={'prob': [3, 4, 2, 2]})
+    >>> msa
+    TabularMSA[DNA]
+    --------------------------
+    Metadata:
+        'id': 'msa-id'
+    Positional metadata:
+        'prob': <dtype: int64>
+    Stats:
+        sequence count: 3
+        position count: 4
+    --------------------------
+    ACGT
+    AG-T
+    -C-T
+    >>> msa.index
+    Index(['seq1', 'seq2', 'seq3'], dtype='object')
+
     """
+    default_write_format = 'fasta'
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -202,8 +258,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Parameters
         ----------
         dictionary : dict
-            Dictionary mapping keys to alphabet-aware scikit-bio sequence
-            objects. The ``TabularMSA`` object will have its index labels set
+            Dictionary mapping keys to ``IUPACSequence`` sequence objects. The
+            ``TabularMSA`` object will have its index labels set
             to the keys in the dictionary.
 
         Returns
@@ -227,6 +283,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> from skbio import DNA, TabularMSA
         >>> seqs = {'a': DNA('ACGT'), 'b': DNA('A--T')}
         >>> msa = TabularMSA.from_dict(seqs)
+        >>> msa.shape
+        Shape(sequence=2, position=4)
+        >>> 'a' in msa
+        True
+        >>> 'b' in msa
+        True
 
         """
         # Python 2 and 3 guarantee same order of iteration as long as no
@@ -239,26 +301,36 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @experimental(as_of='0.4.0-dev')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
-        # TODO: optimize this to not append Series for each sequence.
-        self._seqs = pd.Series([])
-        for sequence in sequences:
-            self.append(sequence)
+        if isinstance(sequences, TabularMSA):
+            if metadata is None and sequences.has_metadata():
+                metadata = sequences.metadata
+            if (positional_metadata is None and
+                    sequences.has_positional_metadata()):
+                positional_metadata = sequences.positional_metadata
+            if minter is None and index is None:
+                index = sequences.index
 
-        if minter is not None and index is not None:
-            raise ValueError(
-                "Cannot use both `minter` and `index` at the same time.")
-        if minter is not None:
-            self.reassign_index(minter=minter)
-        elif index is not None:
-            # Cast to Index to identify tuples as a MultiIndex to match
-            # pandas constructor. Just setting would make an index of tuples.
-            if not isinstance(index, pd.Index):
-                index = pd.Index(index)
-            self.index = index
+        self._seqs = pd.Series([])
+        self.extend(sequences, minter=minter, index=index)
 
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
+
+    @experimental(as_of='0.4.0-dev')
+    def __repr__(self):
+        """String summary of this MSA."""
+        pep8_line_length_limit = 79
+        length_taken_by_docstring_indent = 8
+        width = pep8_line_length_limit - length_taken_by_docstring_indent
+        return _TabularMSAReprBuilder(
+            msa=self,
+            width=width,
+            indent=4).build()
+
+    def _repr_stats(self):
+        return [("sequence count", str(self.shape.sequence)),
+                ("position count", str(self.shape.position))]
 
     @experimental(as_of='0.4.0-dev')
     def __bool__(self):
@@ -349,6 +421,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> msa = TabularMSA([])
         >>> len(msa)
         0
+
         """
         return len(self._seqs)
 
@@ -358,7 +431,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        alphabet-aware scikit-bio sequence object
+        IUPACSequence
             Each sequence in the order they are stored in the MSA.
 
         Examples
@@ -379,7 +452,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Yields
         ------
-        alphabet-aware scikit-bio sequence object
+        IUPACSequence
             Each sequence in reverse order from how they are stored in the MSA.
 
         Examples
@@ -396,8 +469,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def __str__(self):
-        # TODO implement me!
-        return super(TabularMSA, self).__str__()
+        """String summary of this MSA."""
+        return self.__repr__()
 
     @experimental(as_of='0.4.0-dev')
     def __eq__(self, other):
@@ -505,6 +578,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         __deepcopy__
 
+        Examples
+        --------
+        >>> import copy
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa_copy = copy.copy(msa)
+        >>> msa_copy == msa
+        True
+        >>> msa_copy is msa
+        False
+
         """
         seqs = (copy.copy(seq) for seq in self._seqs)
 
@@ -525,11 +609,22 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Returns
         -------
         TabularMSA
-            Deep copy of this MSA.
+            Deep copy of this MSA. Sequence objects will be deep-copied.
 
         See Also
         --------
         __copy__
+
+        Examples
+        --------
+        >>> import copy
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
+        >>> msa_copy = copy.deepcopy(msa)
+        >>> msa_copy == msa
+        True
+        >>> msa_copy is msa
+        False
 
         """
         seqs = (copy.deepcopy(seq, memo) for seq in self._seqs)
@@ -901,32 +996,32 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             self._seqs.reset_index(drop=True, inplace=True)
 
     @experimental(as_of='0.4.0-dev')
-    def append(self, sequence, minter=None, label=None):
+    def append(self, sequence, minter=None, index=None):
         """Append a sequence to the MSA without recomputing alignment.
 
         Parameters
         ----------
-        sequence : alphabet-aware scikit-bio sequence object
+        sequence : IUPACSequence
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
-            Used to create a label for the sequence being appended. If
+            Used to create an index label for the sequence being appended. If
             callable, it generates a label directly. Otherwise it's treated as
             a key into the sequence metadata. Note that `minter` cannot be
-            combined with `label`.
-        label : object, optional
-            Index label to use for the appended sequence. Note that `label`
+            combined with `index`.
+        index : object, optional
+            Index label to use for the appended sequence. Note that `index`
             cannot be combined with `minter`.
 
         Raises
         ------
         ValueError
-            If both `minter` and `label` are provided.
+            If both `minter` and `index` are provided.
         ValueError
-            If neither `minter` nor `label` are provided and the MSA has a
+            If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
-            If the sequence object is a type that doesn't have an alphabet.
+            If the sequence object isn't an ``IUPACSequence``.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -935,12 +1030,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         See Also
         --------
+        extend
         reassign_index
 
         Notes
         -----
-        If neither `minter` nor `label` are provided and this MSA has default
-        index labels, the new label will be auto-incremented.
+        If neither `minter` nor `index` are provided and this MSA has default
+        index labels, the new index label will be auto-incremented.
 
         The MSA is not automatically re-aligned when a sequence is appended.
         Therefore, this operation is not necessarily meaningful on its own.
@@ -949,9 +1045,24 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         >>> from skbio import DNA, TabularMSA
         >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 1
+            position count: 4
+        ---------------------
+        ACGT
         >>> msa.append(DNA('AG-T'))
-        >>> msa == TabularMSA([DNA('ACGT'), DNA('AG-T')])
-        True
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
 
         Auto-incrementing index labels:
 
@@ -962,42 +1073,447 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Int64Index([0, 1, 2], dtype='int64')
 
         """
-        if minter is not None and label is not None:
-            raise ValueError(
-                "Cannot use both `minter` and `label` at the same time.")
+        if index is not None:
+            index = [index]
+        self.extend([sequence], minter=minter, index=index)
 
-        if minter is None and label is None:
+    @experimental(as_of='0.4.0-dev')
+    def extend(self, sequences, minter=None, index=None):
+        """Extend this MSA with sequences without recomputing alignment.
+
+        Parameters
+        ----------
+        sequences : iterable of IUPACSequence
+            Sequences to be appended. Must match the dtype of the MSA and the
+            number of positions in the MSA.
+        minter : callable or metadata key, optional
+            Used to create index labels for the sequences being appended. If
+            callable, it generates a label directly. Otherwise it's treated as
+            a key into the sequence metadata. Note that `minter` cannot be
+            combined with `index`.
+        index : pd.Index consumable, optional
+            Index labels to use for the appended sequences. Must be the same
+            length as `sequences`. Must be able to be passed directly to
+            ``pd.Index`` constructor. Note that `index` cannot be combined
+            with `minter`.
+
+        Raises
+        ------
+        ValueError
+            If both `minter` and `index` are both provided.
+        ValueError
+            If neither `minter` nor `index` are provided and the MSA has a
+            non-default index.
+        ValueError
+            If `index` is not the same length as `sequences`.
+        TypeError
+            If `sequences` contains an object that isn't an ``IUPACSequence``.
+        TypeError
+            If `sequence` contains a type that does not match the dtype of the
+            MSA.
+        ValueError
+            If the length of a sequence does not match the number of positions
+            in the MSA.
+
+        See Also
+        --------
+        append
+        reassign_index
+
+        Notes
+        -----
+        If neither `minter` nor `index` are provided and this MSA has default
+        index labels, the new index labels will be auto-incremented.
+
+        The MSA is not automatically re-aligned when appending sequences.
+        Therefore, this operation is not necessarily meaningful on its own.
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 1
+            position count: 4
+        ---------------------
+        ACGT
+        >>> msa.extend([DNA('AG-T'), DNA('-G-T')])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
+        -G-T
+
+        Auto-incrementing index labels:
+
+        >>> msa.index
+        Int64Index([0, 1, 2], dtype='int64')
+        >>> msa.extend([DNA('ACGA'), DNA('AC-T'), DNA('----')])
+        >>> msa.index
+        Int64Index([0, 1, 2, 3, 4, 5], dtype='int64')
+
+        """
+        if minter is not None and index is not None:
+            raise ValueError(
+                "Cannot use both `minter` and `index` at the same time.")
+
+        sequences = list(sequences)
+
+        if minter is None and index is None:
             if self.index.equals(pd.Index(np.arange(len(self)))):
-                label = len(self)
+                index = range(len(self), len(self) + len(sequences))
             else:
                 raise ValueError(
-                    "Must provide a `minter` or `label` for this sequence.")
+                    "MSA does not have default index labels, must provide "
+                    "a `minter` or `index` for sequence(s).")
+        elif minter is not None:
+            index = [resolve_key(seq, minter) for seq in sequences]
 
-        if minter is not None:
-            label = resolve_key(sequence, minter)
+        # Cast to Index to identify tuples as a MultiIndex to match
+        # pandas constructor. Just setting would make an index of tuples.
+        if not isinstance(index, pd.Index):
+            index = pd.Index(index)
 
-        self._assert_valid_sequence(sequence)
+        self._assert_valid_sequences(sequences)
 
-        self._seqs = self._seqs.append(pd.Series([sequence], index=[label]))
-
-    def _assert_valid_sequence(self, sequence):
-        msa_is_empty = not len(self)
-        dtype = type(sequence)
-        if msa_is_empty:
-            if not issubclass(dtype, IUPACSequence):
-                raise TypeError(
-                    "`sequence` must be a scikit-bio sequence object "
-                    "that has an alphabet, not type %r" % dtype.__name__)
-        elif dtype is not self.dtype:
-            raise TypeError(
-                "`sequence` must match the type of any other sequences "
-                "already in the MSA. Type %r does not match type %r" %
-                (dtype.__name__, self.dtype.__name__))
-        elif len(sequence) != self.shape.position:
+        # pandas doesn't give a user-friendly error message if we pass through.
+        if len(sequences) != len(index):
             raise ValueError(
-                "`sequence` length must match the number of positions in the "
-                "MSA: %d != %d"
-                % (len(sequence), self.shape.position))
+                "Number of sequences (%d) must match index length (%d)" %
+                (len(sequences), len(index)))
+        self._seqs = self._seqs.append(pd.Series(sequences, index=index))
+
+    def _assert_valid_sequences(self, sequences):
+        if not sequences:
+            return
+
+        if len(self):
+            expected_dtype = self.dtype
+            expected_length = self.shape.position
+        else:
+            sequence = sequences[0]
+            expected_dtype = type(sequence)
+            if not issubclass(expected_dtype, IUPACSequence):
+                raise TypeError(
+                    "Each sequence must be of type %r, not type %r"
+                    % (IUPACSequence.__name__, expected_dtype.__name__))
+            expected_length = len(sequence)
+
+        for sequence in sequences:
+            dtype = type(sequence)
+            if dtype is not expected_dtype:
+                raise TypeError(
+                    "Sequences in MSA must have matching type. Type %r does "
+                    "not match type %r" % (dtype.__name__,
+                                           expected_dtype.__name__))
+
+            length = len(sequence)
+            if length != expected_length:
+                raise ValueError(
+                    "Each sequence's length must match the number of "
+                    "positions in the MSA: %d != %d"
+                    % (length, expected_length))
+
+    def join(self, other, how='strict'):
+        """Join this MSA with another by sequence (horizontally).
+
+        Sequences will be joined by index labels. MSA ``positional_metadata``
+        will be joined by columns. Use `how` to control join behavior.
+
+        Alignment is **not** recomputed during join operation (see *Notes*
+        section for details).
+
+        Parameters
+        ----------
+        other : TabularMSA
+            MSA to join with. Must have same ``dtype`` as this MSA.
+        how : {'strict', 'inner', 'outer', 'left', 'right'}, optional
+            How to join the sequences and MSA `positional_metadata`:
+
+            * ``'strict'``: MSA indexes and `positional_metadata` columns must
+              match
+
+            * ``'inner'``: an inner-join of the MSA indexes and
+              ``positional_metadata`` columns (only the shared set of index
+              labels and columns are used)
+
+            * ``'outer'``: an outer-join of the MSA indexes and
+              ``positional_metadata`` columns (all index labels and columns are
+              used). Unshared sequences will be padded with the MSA's default
+              gap character (``TabularMSA.dtype.default_gap_char``). Unshared
+              columns will be padded with NaN.
+
+            * ``'left'``: a left-outer-join of the MSA indexes and
+              ``positional_metadata`` columns (this MSA's index labels and
+              columns are used). Padding of unshared data is handled the same
+              as ``'outer'``.
+
+            * ``'right'``: a right-outer-join of the MSA indexes and
+              ``positional_metadata`` columns (`other` index labels and columns
+              are used). Padding of unshared data is handled the same as
+              ``'outer'``.
+
+        Returns
+        -------
+        TabularMSA
+            Joined MSA. There is no guaranteed ordering to its index (call
+            ``sort`` to define one).
+
+        Raises
+        ------
+        ValueError
+            If `how` is invalid.
+        ValueError
+            If either the index of this MSA or the index of `other` contains
+            duplicates.
+        ValueError
+            If ``how='strict'`` and this MSA's index doesn't match with
+            `other`.
+        ValueError
+            If ``how='strict'`` and this MSA's ``positional_metadata`` columns
+            don't match with `other`.
+        TypeError
+            If `other` is not a subclass of ``TabularMSA``.
+        TypeError
+            If the ``dtype`` of `other` does not match this MSA's ``dtype``.
+
+        See Also
+        --------
+        extend
+        sort
+        skbio.sequence.Sequence.concat
+
+        Notes
+        -----
+        The join operation does not automatically perform re-alignment;
+        sequences are simply joined together. Therefore, this operation is not
+        necessarily meaningful on its own.
+
+        The index labels of this MSA must be unique. Likewise, the index labels
+        of `other` must be unique.
+
+        The MSA-wide and per-sequence metadata (``TabularMSA.metadata`` and
+        ``Sequence.metadata``) are not retained on the joined ``TabularMSA``.
+
+        The positional metadata of the sequences will be outer-joined,
+        regardless of `how` (using ``Sequence.concat(how='outer')``).
+
+        If the join operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will not be set.
+
+        Examples
+        --------
+        Join MSAs by sequence:
+
+        >>> from skbio import DNA, TabularMSA
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-')])
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--')])
+        >>> joined = msa1.join(msa2)
+        >>> joined
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 5
+        ---------------------
+        ACG-T
+        A-T--
+
+        Sequences are joined based on MSA index labels:
+
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-')], index=['a', 'b'])
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--')], index=['b', 'a'])
+        >>> joined = msa1.join(msa2)
+        >>> joined
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 5
+        ---------------------
+        ACT--
+        A-G-T
+        >>> joined.index
+        Index(['a', 'b'], dtype='object')
+
+        By default both MSA indexes must match. Use ``how`` to specify an inner
+        join:
+
+        >>> msa1 = TabularMSA([DNA('AC'),
+        ...                    DNA('A-'),
+        ...                    DNA('-C')], index=['a', 'b', 'c'],
+        ...                   positional_metadata={'col1': [42, 43],
+        ...                                        'col2': [1, 2]})
+        >>> msa2 = TabularMSA([DNA('G-T'),
+        ...                    DNA('T--'),
+        ...                    DNA('ACG')], index=['b', 'a', 'z'],
+        ...                   positional_metadata={'col2': [3, 4, 5],
+        ...                                        'col3': ['f', 'o', 'o']})
+        >>> joined = msa1.join(msa2, how='inner')
+        >>> joined
+        TabularMSA[DNA]
+        --------------------------
+        Positional metadata:
+            'col2': <dtype: int64>
+        Stats:
+            sequence count: 2
+            position count: 5
+        --------------------------
+        A-G-T
+        ACT--
+        >>> joined.index
+        Index(['b', 'a'], dtype='object')
+        >>> joined.positional_metadata
+           col2
+        0     1
+        1     2
+        2     3
+        3     4
+        4     5
+
+        When performing an outer join (``'outer'``, ``'left'``, or
+        ``'right'``), unshared sequences are padded with gaps and unshared
+        ``positional_metadata`` columns are padded with NaN:
+
+        >>> joined = msa1.join(msa2, how='outer')
+        >>> joined
+        TabularMSA[DNA]
+        ----------------------------
+        Positional metadata:
+            'col1': <dtype: float64>
+            'col2': <dtype: int64>
+            'col3': <dtype: object>
+        Stats:
+            sequence count: 4
+            position count: 5
+        ----------------------------
+        ACT--
+        A-G-T
+        -C---
+        --ACG
+        >>> joined.index
+        Index(['a', 'b', 'c', 'z'], dtype='object')
+        >>> joined.positional_metadata
+           col1  col2 col3
+        0    42     1  NaN
+        1    43     2  NaN
+        2   NaN     3    f
+        3   NaN     4    o
+        4   NaN     5    o
+
+        """
+        if how not in {'strict', 'inner', 'outer', 'left', 'right'}:
+            raise ValueError(
+                "`how` must be 'strict', 'inner', 'outer', 'left', or "
+                "'right'.")
+
+        self._assert_joinable(other)
+
+        join_index, concat_kwargs = self._get_join_index(other, how)
+
+        joined_seqs = []
+        for label in join_index:
+            left_seq = self._get_sequence_for_join(label)
+            right_seq = other._get_sequence_for_join(label)
+
+            joined_seqs.append(
+                self.dtype.concat([left_seq, right_seq], how='outer'))
+
+        # TODO: update when #1198 is implemented.
+        joined_positional_metadata = None
+        if joined_seqs:
+            joined_positional_metadata = pd.concat(
+                [self.positional_metadata, other.positional_metadata],
+                ignore_index=True, **concat_kwargs)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
+        joined = self.__class__(joined_seqs, index=join_index,
+                                positional_metadata=joined_positional_metadata)
+
+        if not joined.has_positional_metadata():
+            del joined.positional_metadata
+
+        return joined
+
+    def _assert_joinable(self, other):
+        if not isinstance(other, TabularMSA):
+            raise TypeError(
+                "`other` must be a `TabularMSA` object, not type %r" %
+                type(other).__name__)
+
+        if self.dtype is not other.dtype:
+            raise TypeError(
+                "`other` dtype %r does not match this MSA's dtype %r" %
+                (other.dtype if other.dtype is None else other.dtype.__name__,
+                 self.dtype if self.dtype is None else self.dtype.__name__))
+
+        if not self.index.is_unique:
+            raise ValueError(
+                "This MSA's index labels must be unique.")
+        if not other.index.is_unique:
+            raise ValueError(
+                "`other`'s index labels must be unique.")
+
+    def _get_join_index(self, other, how):
+        if how == 'strict':
+            diff = self.index.sym_diff(other.index)
+            if len(diff) > 0:
+                raise ValueError(
+                    "Index labels must all match with `how='strict'`")
+
+            diff = self.positional_metadata.columns.sym_diff(
+                other.positional_metadata.columns)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
+            if len(diff) > 0:
+                raise ValueError(
+                    "Positional metadata columns must all match with "
+                    "`how='strict'`")
+
+            join_index = self.index
+            concat_kwargs = {'join': 'inner'}
+        elif how == 'inner':
+            join_index = self.index.intersection(other.index)
+            concat_kwargs = {'join': 'inner'}
+        elif how == 'outer':
+            join_index = self.index.union(other.index)
+            concat_kwargs = {'join': 'outer'}
+        elif how == 'left':
+            join_index = self.index
+            concat_kwargs = {'join_axes': [self.positional_metadata.columns]}
+        else:  # how='right'
+            join_index = other.index
+            concat_kwargs = {'join_axes': [other.positional_metadata.columns]}
+
+        return join_index, concat_kwargs
+
+    def _get_sequence_for_join(self, label):
+        if label in self.index:
+            # TODO: use .loc when it is implemented.
+            return self._get_sequence(self.index.get_loc(label))
+        else:
+            return self.dtype(
+                self.dtype.default_gap_char * self.shape.position)
 
     def sort(self, level=None, ascending=True):
         """Sort sequences by index label in-place.
@@ -1022,24 +1538,45 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        Create a ``TabularMSA`` object:
+        Create a ``TabularMSA`` object with sequence identifiers as index
+        labels:
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'c'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('AC-', metadata={'id': 'a'})]
         >>> msa = TabularMSA(seqs, minter='id')
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 3
+        ---------------------
+        ACG
+        AC-
+        AC-
+        >>> msa.index
+        Index(['c', 'b', 'a'], dtype='object')
 
-        Sort the sequences in alphabetical order by sequence identifier:
+        Sort the sequences in alphabetical order by index label:
 
         >>> msa.sort()
-        >>> msa == TabularMSA([DNA('AC-', metadata={'id': 'a'}),
-        ...                    DNA('AC-', metadata={'id': 'b'}),
-        ...                    DNA('ACG', metadata={'id': 'c'})], minter='id')
-        True
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 3
+        ---------------------
+        AC-
+        AC-
+        ACG
+        >>> msa.index
+        Index(['a', 'b', 'c'], dtype='object')
 
         Note that since the sort is in-place, the ``TabularMSA`` object is
-        modified (a new object is **not** returned).
+        modified (a new object is *not* returned).
 
         """
         series = self._seqs.sort_index(ascending=ascending, level=level)
