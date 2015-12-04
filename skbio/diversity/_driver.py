@@ -238,15 +238,12 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         determine if you can safely disable validation.
     pdist_f: callable, optional
         The function to use for computing pairwise distances. This function
-        must take ``counts``, ``metric``, and ``kwargs``. Examples of functions
-        that can be provided are ``scipy.spatial.distance.pdist`` and
+        must take ``counts``, ``metric``, and can optionally take kwargs that
+        are provided through ``pdist_kwargs``. Examples of functions that can
+        be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``.
     pdist_kwargs: dict, optional
         pdist_f-specific parameters.
-    n_jobs: int, optional
-        The number of jobs to start for computing pairwise distances in
-        parallel. This option will only be supported for certain ``pdist_f``
-        functions, notably ``sklearn.metrics.pairwise_distances``.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -264,8 +261,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
     TypeError
         If invalid method-specific parameters are provided.
     TypeError
-        If ``n_jobs`` is passed, but the function provided as ``pdist_f``
-        does not take an ``n_jobs`` parameter.
+        If invalid pdist-specific parameters are provided.
 
     See Also
     --------

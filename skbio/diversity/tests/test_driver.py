@@ -598,7 +598,7 @@ class BetaDiversityTests(TestCase):
         self.assertEqual(dm1, expected)
 
     def test_alt_pdist_f_uses_kwargs(self):
-        # confirm that pdist_f is actually being used
+        # confirm that pdist_kwargs is actually being used
         def not_a_real_pdist(counts, metric, value):
             return [[0.0, value], [value, 0.0]]
 
@@ -607,6 +607,13 @@ class BetaDiversityTests(TestCase):
                              pdist_f=not_a_real_pdist,
                              pdist_kwargs={'value': 99.9})
         expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity('unweighted_unifrac', self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pdist_f=not_a_real_pdist,
+                             pdist_kwargs={'value': 97.9})
+        expected = DistanceMatrix([[0.0, 97.9], [97.9, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity('weighted_unifrac', self.table1,
