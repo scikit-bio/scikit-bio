@@ -304,7 +304,9 @@ from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
+from ._grammared_sequence import GrammaredSequence
 
-__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
+           'GrammaredSequence']
 
 test = TestRunner(__file__).test
