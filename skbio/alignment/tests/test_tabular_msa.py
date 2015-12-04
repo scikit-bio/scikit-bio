@@ -20,7 +20,7 @@ import numpy.testing as npt
 import pandas as pd
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests,

@@ -14,7 +14,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty
 
 

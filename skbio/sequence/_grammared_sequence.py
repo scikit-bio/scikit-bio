@@ -23,7 +23,7 @@ from ._sequence import Sequence
 
 
 class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
-    """Store biological sequence data conforming to the IUPAC character set.
+    """Store sequence data conforming to a character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.
 
@@ -42,7 +42,7 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
     Raises
     ------
     ValueError
-        If sequence characters are not in the IUPAC character set [1]_.
+        If sequence characters are not in the character set [1]_.
 
     See Also
     --------
@@ -97,14 +97,14 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
     @classproperty
     @stable(as_of='0.4.0')
     def alphabet(cls):
-        """Return valid IUPAC characters.
+        """Return valid characters.
 
         This includes gap, non-degenerate, and degenerate characters.
 
         Returns
         -------
         set
-            Valid IUPAC characters.
+            Valid characters.
 
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
@@ -142,12 +142,12 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
     @classproperty
     @stable(as_of='0.4.0')
     def degenerate_chars(cls):
-        """Return degenerate IUPAC characters.
+        """Return degenerate characters.
 
         Returns
         -------
         set
-            Degenerate IUPAC characters.
+            Degenerate characters.
 
         """
         return set(cls.degenerate_map)
@@ -156,12 +156,12 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
     @classproperty
     @stable(as_of='0.4.0')
     def nondegenerate_chars(cls):
-        """Return non-degenerate IUPAC characters.
+        """Return non-degenerate characters.
 
         Returns
         -------
         set
-            Non-degenerate IUPAC characters.
+            Non-degenerate characters.
 
         """
         return set()  # pragma: no cover
@@ -175,8 +175,8 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
         Returns
         -------
         dict (set)
-            Mapping of each degenerate IUPAC character to the set of
-            non-degenerate IUPAC characters it represents.
+            Mapping of each degenerate character to the set of
+            non-degenerate characters it represents.
 
         """
         return set()  # pragma: no cover
@@ -210,10 +210,11 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
             raise ValueError(
                 "Invalid character%s in sequence: %r. \n"
-                "Lowercase letters are not used in IUPAC notation. You can "
+                "Note that lowercase letters are not valid by default. "
+                "You can "
                 "pass `lowercase=True` if your sequence contains lowercase "
                 "letters.\n"
-                "Valid IUPAC characters: "
+                "Valid characters: "
                 "%r" % ('s' if len(bad) > 1 else '',
                         [str(b.tostring().decode("ascii")) for b in bad] if
                         len(bad) > 1 else bad[0],
