@@ -13,6 +13,7 @@ from unittest import TestCase, main
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import six
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.io._fileobject import StringIO
@@ -279,39 +280,49 @@ class BetaDiversityTests(TestCase):
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        self.assertRaises(ValueError, beta_diversity, self.table1, list('AB'),
-                          'euclidean')
+        error_msg = ("Number of rows in ``counts`` must be equal to number of"
+                     " provided ``ids``.")
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity(self.table1, list('AB'), 'euclidean')
 
         # unknown metric provided
-        self.assertRaises(ValueError, beta_diversity, 'not-a-metric',
-                          self.table1)
+        error_msg = "Unknown Distance Metric: not-a-metric"
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('not-a-metric', self.table1)
 
         # 3-D list provided as input
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[[43]]])
+        error_msg = ("Only 1-D and 2-D array-like objects can be provided as "
+                     "input. Provided object has 3 dimensions.")
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[[43]]])
 
         # negative counts
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, 4], [0, 3, -12, 42]])
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, -4], [0, 3, 12, 42]])
+        error_msg = "Counts vector cannot contain negative values."
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3, 4], [0, 3, -12, 42]])
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3, -4], [0, 3, 12, 42]])
 
         # additional kwargs
-        self.assertRaises(TypeError, beta_diversity, 'euclidean',
-                          [[0, 1, 3], [0, 3, 12]],
-                          not_a_real_kwarg=42.0)
-        self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
-                          [[0, 1, 3], [0, 3, 12]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['O1', 'O2', 'O3'])
-        self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
-                          [[0, 1, 3], [0, 3, 12]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['O1', 'O2', 'O3'])
-        self.assertRaises(TypeError, beta_diversity, weighted_unifrac,
-                          [[0, 1, 3], [0, 3, 12]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['O1', 'O2', 'O3'])
+        error_msg = ("pdist\(\) got an unexpected keyword argument "
+                     "'not_a_real_kwarg'")
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0)
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('unweighted_unifrac', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('weighted_unifrac', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
+        error_msg = ("weighted_unifrac\(\) got an unexpected keyword argument "
+                     "'not_a_real_kwarg'")
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity(weighted_unifrac, [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
 
     def test_invalid_input_phylogenetic(self):
         # otu_ids not provided
