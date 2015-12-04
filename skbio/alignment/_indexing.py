@@ -19,15 +19,18 @@ class _Indexing(object):
     def __getitem__(self, indexable):
         if type(indexable) is tuple:
             if len(indexable) > 2:
-                raise ValueError()
+                raise ValueError("TODO")
             elif len(indexable) > 1:
                 return self._handle_both_axes(*indexable)
             else:
                 indexable, = indexable
+        if indexable is Ellipsis:
+            indexable = slice(None)
         return self._slice_on_first_axis(self._obj, indexable)
 
     def _handle_both_axes(self, seq_index, pos_index):
-        if seq_index is Ellipsis or seq_index == slice(None):
+        if not hasattr(seq_index, '__iter__') and (seq_index is Ellipsis or 
+                                                   seq_index == slice(None)):
             # Only slice second axis
             return self._slice_on_second_axis(self._obj, pos_index)
         else:
@@ -66,9 +69,11 @@ class _Indexing(object):
         if hasattr(indexable, '__iter__') and not isinstance(indexable,
                                                              np.ndarray):
             indexable = list(indexable)
-            if np.asarray(indexable).dtype == object:
-                indexable = np.r_[tuple(indexable)]
+            result = np.asarray(indexable)
+            if result.dtype == object:
+                result = np.r_[tuple(indexable)]
 
+            return result
         return indexable
 
 
@@ -85,6 +90,10 @@ class TabularMSAILoc(_Indexing):
 
 
 class TabularMSALoc(_Indexing):
+    
+    def is_fancy_index(self):
+        return hasattr(self._obj.index, 'levshape')
+
     def is_scalar(self, indexable, axis):
         """
         Sometimes (MultiIndex!) something that looks like a scalar, isn't
@@ -105,19 +114,24 @@ class TabularMSALoc(_Indexing):
         index = self._obj.index
         complete_key = False
         partial_key = False
-        if axis == 0:
+        if axis == 0 and self.is_fancy_index():
             try:
-                if hasattr(index, 'levshape'):
-                    if type(indexable) is tuple:
-                        complete_key = (len(indexable) == len(index.levshape)
-                                        and indexable in index)
-                    partial_key = (not complete_key) and indexable in index
+                if type(indexable) is tuple:
+                    complete_key = (len(indexable) == len(index.levshape)
+                                    and indexable in index)
+                partial_key = not complete_key and indexable in index
             except TypeError:  # Unhashable type, no biggie
                 pass
         return (np.isscalar(indexable) and not partial_key) or complete_key
 
     def _get_sequence(self, obj, indexable):
+        self._assert_no_tuple_if_not_fancy(indexable)
         return obj._get_sequence_loc_(indexable)
 
     def _slice_sequences(self, obj, indexable):
+        self._assert_no_tuple_if_not_fancy(indexable)
         return obj._slice_sequences_loc_(indexable)
+
+    def _assert_no_tuple_if_not_fancy(self, indexable):
+        if not self.is_fancy_index() and type(indexable) is tuple:
+            raise TypeError("")

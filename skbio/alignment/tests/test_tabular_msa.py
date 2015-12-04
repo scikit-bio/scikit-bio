@@ -906,6 +906,10 @@ class SharedIndexTests(object):
     def get(self, obj, indexable):
         raise NotImplementedError()
 
+    def test_tuple_too_big(self):
+        with self.assertRaises(ValueError):
+            self.get(TabularMSA([]), (None, None, None))
+
     def test_empty_msa_slice(self):
         msa = TabularMSA([])
 
@@ -917,36 +921,311 @@ class SharedIndexTests(object):
     def test_msa_slice_all(self):
         msa = TabularMSA([RNA("AAA"), RNA("AAU")])
 
-        new = self.get(msa, slice(None, None))
+        one_axis = self.get(msa, slice(None))
+        both_axes = self.get(msa, (slice(None), slice(None)))
 
-        self.assertIsNot(msa, new)
-        self.assertEqual(msa, new)
+        self.assertIsNot(msa, one_axis)
+        self.assertEqual(msa, both_axes)
+
+    def test_bool_index_first_axis(self):
+        pass
+
+    def test_bool_index_second_second(self):
+        pass
+
+    def test_bool_index_both_axes(self):
+        pass
+
+    def test_bool_index_too_big(self):
+        pass
+    
+    def test_bool_index_too_small(self):
+        pass
+
+    def test_ellipsis_first_axis(self):
+        pass
+
+    def test_ellipsis_both_axes(self):
+        pass
 
 
 class TestLoc(SharedIndexTests, unittest.TestCase):
     def get(self, obj, indexable):
         return obj.loc[indexable]
+
+    def test_complex_single_label(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+
+        self.assertIs(a, self.get(msa, (('a', 0),)))
+        self.assertIs(b, self.get(msa, (('a', 1),)))
+        self.assertIs(c, self.get(msa, (('b', 0),)))
+
+    def test_partial_label(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+        exp_a = TabularMSA([a, b], index=[0, 1])
+        exp_b = TabularMSA([c], index=[0])
+
+        self.assertEqual(self.get(msa, 'a'), exp_a)
+        self.assertEqual(self.get(msa, 'b'), exp_b)
+
+    def test_label_not_exists(self):
+        msa = TabularMSA([DNA("ACG")], index=['foo'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, 'bar')
+
+    def test_fancy_indexing_complex(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+        exp = TabularMSA([a, c], index=[('a', 0), ('b', 0)])
+
+        self.assertEqual(self.get(msa, [('a', 0), ('b', 0)]), exp)
+
+    def test_fancy_indexing_missing_label(self):
+        msa = TabularMSA([DNA("ACG")], index=['foo'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, ['foo', 'bar'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, ['bar'])
+
+    def test_fancy_indexing_complex_incomplete_label(self):
+        pass
+
+    def test_complex_slice(self):
+        pass
     
-    def test_slice_entire_index(self):
-        msa = TabularMSA([DNA("ACCA"), DNA("GGAA")], minter=str)
+    def test_loc_combinations(self):
+        # This test assumes ILoc works correctly for fancy indices
+        msa = TabularMSA([DNA('ACGTA'), DNA('CGTAC'), DNA('GTACG'),
+                          DNA('TACGT'), DNA('ACGTT')], index=list('ABCDE'))
+        first_axis = [
+            ('A', 0),
+            ('E', 4),
+            (['B'], [1]),
+            (np.asarray(['B']), [1]),
+            (slice('A', 'C', 2), [0, 2]),
+            (slice('C', 'A', -2), [2, 0]),
+            (slice('A', 'B'), [0, 1]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice('A', None), [0, 1, 2, 3, 4]),
+            (slice(None, 'C'), [0, 1, 2]),
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (msa.index, [0, 1, 2, 3, 4]),
+            (['B', 'A', 'A', 'C'], [1, 0, 0, 2]),
+            (np.asarray(['B', 'A', 'A', 'C']), [1, 0, 0, 2]),
+            ([True, False, True, True, False], [0, 2, 3]),
+            (np.asarray([True, False, True, True, False]), [0, 2, 3]),
+        ]
 
-        new = self.get(msa, msa.index)
-
-        self.assertIsNot(msa, new)
-        self.assertEqual(msa, new)
-
+        second_axis = [
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice(0, 10000), [0, 1, 2, 3, 4]),
+            (3, 3),
+            (-4, 1),
+            ([0], [0]),
+            (slice(1, 3), [1, 2]),
+            (slice(3, 0, -1), [3, 2, 1]),
+            ([-3, 2, 1], [2, 2, 1]),
+            (np.array([-3, 2, 1]), [2, 2, 1]),
+            ([True, True, False, False, True], [0, 1, 4]),
+            (np.array([True, True, False, True, False]), [0, 1, 3]),
+            (range(3), [0, 1, 2]),
+            ([slice(0, 2), 4], [0, 1, 4])
+        ]
+        
+        for loc1, iloc1 in first_axis:
+            self.assertEqual(msa.loc[loc1], msa.iloc[iloc1],
+                             msg="loc %r did not match iloc %r" % (loc1,
+                                                                   iloc1))
+            for loc2, iloc2 in second_axis:
+                self.assertEqual(msa.loc[loc1, loc2], msa.iloc[iloc1, iloc2],
+                                 msg=("loc (%r, %r) did not match iloc (%r,"
+                                      " %r)" % (loc1, loc2, iloc1, iloc2)))
 
 class TestILoc(SharedIndexTests, unittest.TestCase):
     def get(self, obj, indexable):
         return obj.iloc[indexable]
     
-    def test_slice_entire_fancy(self):
-        msa = TabularMSA([DNA("ACCA"), DNA("GGAA")])
+    def test_entire_fancy_first_axis(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a':'foo'}, 
+                positional_metadata={'a':[7, 6, 5, 4]}), 
+            DNA("GGAA", metadata={'b':'bar'},
+                positional_metadata={'b':[3, 4, 5, 6]})
+            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
 
-        new = self.get(msa, np.arange(2))
+        new_np_simple = self.get(msa, np.arange(2))
+        new_list_simple = self.get(msa, [0, 1])
+        new_list_backwards = self.get(msa, [-2, -1])
         
-        self.assertIsNot(msa, new)
-        self.assertEqual(msa, new)
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+
+    def test_fancy_entire_second_axis(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a':'foo'}, 
+                positional_metadata={'a':[7, 6, 5, 4]}), 
+            DNA("GGAA", metadata={'b':'bar'},
+                positional_metadata={'b':[3, 4, 5, 6]})
+            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
+
+        new_np_simple = self.get(msa, (Ellipsis, np.arange(4)))
+        new_list_simple = self.get(msa, (Ellipsis, [0, 1, 2, 3]))
+        new_list_backwards = self.get(msa, (Ellipsis, [-4, -3, -2, -1]))
+        
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+    
+    def test_fancy_entire_both_axes(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a':'foo'}, 
+                positional_metadata={'a':[7, 6, 5, 4]}), 
+            DNA("GGAA", metadata={'b':'bar'},
+                positional_metadata={'b':[3, 4, 5, 6]})
+            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
+
+        new_np_simple = self.get(msa, (np.arange(2), np.arange(4)))
+        new_list_simple = self.get(msa, ([0, 1], [0, 1, 2, 3]))
+        new_list_backwards = self.get(msa, ([-2, -1], [-4, -3, -2, -1]))
+        
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+
+    def test_fancy_out_of_bound(self):
+        with self.assertRaises(IndexError):
+            self.get(TabularMSA([DNA('AC')]), [0, 1, 2])
+
+        with self.assertRaises(IndexError):
+            self.get(TabularMSA([DNA('AC')]), (Ellipsis, [0, 1, 2]))
+
+    def test_fancy_empty_first_axis(self):
+        msa = TabularMSA([DNA("ACGT"), DNA("TGCA")], index=list("AB"))
+
+        new_np_simple = self.get(msa, np.arange(0))
+        new_list_simple = self.get(msa, [])
+        
+        self.assertEqual(TabularMSA([]), new_np_simple)
+
+        self.assertEqual(TabularMSA([]), new_list_simple)
+
+    def test_fancy_empty_second_axis(self):
+        msa = TabularMSA([DNA("ACGT", metadata={'x':1}), 
+                          DNA("TGCA", metadata={'y':2})], index=list("AB"))
+        exp = TabularMSA([DNA("", metadata={'x':1}), 
+                          DNA("", metadata={'y':2})], index=list("AB"))
+
+        new_np_simple = self.get(msa, (Ellipsis, np.arange(0)))
+        new_list_simple = self.get(msa, (Ellipsis, []))
+       
+        self.assertEqual(exp, new_np_simple)
+        self.assertEqual(exp, new_list_simple)
+
+    def test_fancy_empty_both_axis(self):
+        msa = TabularMSA([DNA("ACGT", metadata={'x':1}), 
+                          DNA("TGCA", metadata={'y':2})], index=list("AB"))
+
+        new_np_simple = self.get(msa, (np.arange(0), np.arange(0)))
+        new_list_simple = self.get(msa, ([], []))
+        
+        self.assertEqual(TabularMSA([]), new_np_simple)
+        self.assertEqual(TabularMSA([]), new_list_simple)
+
+    def test_fancy_standard_first_axis(self):
+        pass
+    
+    def test_fancy_standard_second_axis(self):
+        pass
+
+    def test_fancy_standard_both_axes(self):
+        pass
+    
+    def test_get_scalar_first_axis(self):
+        a = DNA("AA", metadata={'a':'foo'}, positional_metadata={'x':[1, 2]})
+        b = DNA("GG", metadata={'b':'bar'}, positional_metadata={'y':[3, 4]})
+        msa = TabularMSA([a, b])
+
+        new0 = self.get(msa, 0)
+        new1 = self.get(msa, 1)
+        newneg1 = self.get(msa, -1)
+        newneg2 = self.get(msa, -2)
+
+        self.assertEqual(new0, a)
+        self.assertEqual(new1, b)
+        self.assertEqual(newneg1, b)
+        self.assertEqual(newneg2, a)
+
+    def test_get_scalar_second_axis(self):
+        pass
+
+    def test_scalar_sliced_first_axis(self):
+        pass
+
+    def test_scalar_sliced_second_axis(self):
+        pass
+
+    def test_get_scalar_out_of_bound(self):
+        pass
+
+    def test_iloc_combinations(self):
+        # This test assumes ILoc works correctly for fancy indices
+        msa = TabularMSA([DNA('ACGTA'), DNA('CGTAC'), DNA('GTACG'),
+                          DNA('TACGT'), DNA('ACGTT')], index=list('ABCDE'))
+
+        axes = [
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice(0, 10000), [0, 1, 2, 3, 4]),
+            (3, 3),
+            (-4, 1),
+            ([0], [0]),
+            (slice(1, 3), [1, 2]),
+            (slice(3, 0, -1), [3, 2, 1]),
+            ([-3, 2, 1], [2, 2, 1]),
+            (np.array([-3, 2, 1]), [2, 2, 1]),
+            ([True, True, False, False, True], [0, 1, 4]),
+            (np.array([True, True, False, True, False]), [0, 1, 3]),
+            (range(3), [0, 1, 2]),
+            ([slice(0, 2), 4], [0, 1, 4])
+        ]
+        
+        for iloc1, exp1 in axes:
+            self.assertEqual(self.get(msa, iloc1), msa.iloc[exp1],
+                             msg="iloc %r did not match exp %r" % (iloc1,
+                                                                   exp1))
+            for iloc2, exp2 in axes:
+                self.assertEqual(self.get(msa, (iloc1, iloc2)),
+                                 msa.iloc[exp1, exp2],
+                                 msg=("iloc (%r, %r) did not match exp (%r,"
+                                      " %r)" % (iloc1, iloc2, exp1, exp2)))
 
 
 class TestGetItem(TestILoc):

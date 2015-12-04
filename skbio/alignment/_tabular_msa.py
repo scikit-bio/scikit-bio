@@ -706,7 +706,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._seqs.loc[l]
 
     def _slice_sequences_loc_(self, l):
-        return self._constructor_(self._seqs.loc[l])
+        new_seqs = self._seqs.loc[l]
+        try:
+            return self._constructor_(new_seqs)
+        except TypeError: #NaN hit the constructor, key was bad
+            raise KeyError(repr(l))
 
     def _get_position_(self, i):
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
@@ -1745,7 +1749,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _get_sequence_for_join(self, label):
         if label in self.index:
             # TODO: use .loc when it is implemented.
-            return self._get_sequence(self.index.get_loc(label))
+            return self._get_sequence_(self.index.get_loc(label))
         else:
             return self.dtype(
                 self.dtype.default_gap_char * self.shape.position)
