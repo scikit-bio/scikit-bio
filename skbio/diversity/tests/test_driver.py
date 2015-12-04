@@ -581,88 +581,32 @@ class BetaDiversityTests(TestCase):
                 if id1 != id2:
                     self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
 
-    def test_alt_pdist_f(self):
-        # confirm that pdist_f is actually being used
+    def test_alt_pdist_func(self):
+        # confirm that pdist_func is actually being used
         def not_a_real_pdist(counts, metric):
             return [[0.0, 42.0], [42.0, 0.0]]
         dm1 = beta_diversity('unweighted_unifrac', self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist)
+                             pdist_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity('weighted_unifrac', self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist)
+                             pdist_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity(unweighted_unifrac, self.table1,
                              otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist)
+                             pdist_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
         dm1 = beta_diversity("euclidean", self.table1,
-                             pdist_f=not_a_real_pdist)
+                             pdist_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
-
-    def test_alt_pdist_f_uses_kwargs(self):
-        # confirm that pdist_kwargs is actually being used
-        def not_a_real_pdist(counts, metric, value):
-            return [[0.0, value], [value, 0.0]]
-
-        dm1 = beta_diversity('unweighted_unifrac', self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist,
-                             pdist_kwargs={'value': 99.9})
-        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
-        self.assertEqual(dm1, expected)
-
-        dm1 = beta_diversity('unweighted_unifrac', self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist,
-                             pdist_kwargs={'value': 97.9})
-        expected = DistanceMatrix([[0.0, 97.9], [97.9, 0.0]])
-        self.assertEqual(dm1, expected)
-
-        dm1 = beta_diversity('weighted_unifrac', self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist,
-                             pdist_kwargs={'value': 99.9})
-        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
-        self.assertEqual(dm1, expected)
-
-        dm1 = beta_diversity(unweighted_unifrac, self.table1,
-                             otu_ids=self.oids1, tree=self.tree1,
-                             pdist_f=not_a_real_pdist,
-                             pdist_kwargs={'value': 99.9})
-        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
-        self.assertEqual(dm1, expected)
-
-        dm1 = beta_diversity("euclidean", self.table1,
-                             pdist_f=not_a_real_pdist,
-                             pdist_kwargs={'value': 99.9})
-        expected = DistanceMatrix([[0.0, 99.9], [99.9, 0.0]])
-        self.assertEqual(dm1, expected)
-
-    def test_alt_pdist_f_invalid_kwargs(self):
-        def not_a_real_pdist(counts, metric):
-            return [[0.0, 42.0], [42.0, 0.0]]
-        # TypeError on extra pdist_kwarg
-        self.assertRaises(TypeError, beta_diversity, unweighted_unifrac,
-                          self.table1, otu_ids=self.oids1, tree=self.tree1,
-                          pdist_f=not_a_real_pdist,
-                          pdist_kwargs={'not_a_kwarg': True})
-
-        def not_a_real_pdist(counts, metric, value):
-            return [[0.0, value], [value, 0.0]]
-        # TypeError on extra kwarg
-        self.assertRaises(TypeError, beta_diversity, unweighted_unifrac,
-                          self.table1, otu_ids=self.oids1, tree=self.tree1,
-                          pdist_f=not_a_real_pdist,
-                          pdist_kwargs={'value': 99.9, 'not_a_kwarg': True})
 
 
 class MetricGetters(TestCase):

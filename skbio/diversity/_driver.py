@@ -183,8 +183,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
-                   pdist_f=None, pdist_kwargs=None, **kwargs):
+def beta_diversity(metric, counts, ids=None, validate=True, pdist_func=None,
+                   **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -201,7 +201,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
         (where the type of the identifiers will be ``str``).
-    validate: bool, optional
+    validate : bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
@@ -209,14 +209,12 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
-    pdist_f: callable, optional
+    pdist_func : callable, optional
         The function to use for computing pairwise distances. This function
         must take ``counts``, ``metric``, and can optionally take kwargs that
         are provided through ``pdist_kwargs``. Examples of functions that can
         be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``.
-    pdist_kwargs: dict, optional
-        pdist_f-specific parameters.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -232,8 +230,6 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         If validation fails. Exact error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
-    TypeError
-        If invalid pdist-specific parameters are provided.
 
     See Also
     --------
@@ -248,11 +244,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
-    if pdist_f is None:
-        pdist_f = scipy.spatial.distance.pdist
-    else:
-        pdist_kwargs = pdist_kwargs or {}
-        pdist_f = functools.partial(pdist_f, **pdist_kwargs)
+    if pdist_func is None:
+        pdist_func = scipy.spatial.distance.pdist
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -279,5 +272,5 @@ def beta_diversity(metric, counts, ids=None, validate=True, n_jobs=None,
         # example one of the SciPy metrics
         pass
 
-    distances = pdist_f(counts, metric=metric, **kwargs)
+    distances = pdist_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
