@@ -72,7 +72,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
 * Removed `skbio.diversity.alpha.equitability`. Please use `skbio.diversity.alpha.pielou_e`, which is more accurately named and better documented. Note that `equitability` by default used logarithm base 2 while `pielou_e` uses logarithm base `e` as described in Heip 1974.
-* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
+* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function. This function can also now take a pairwise distances function as ``pairwise_func``.
 * Deprecated function ``skbio.diversity.beta.pw_distances_from_table`` has been removed from scikit-bio as scheduled. Code that used this should be adapted to use ``skbio.diversity.beta_diversity``.
 * ``TreeNode.index_tree`` now returns a 2-D numpy array as its second return value (the child node index) instead of a 1-D numpy array.
 * Deprecated functions `skbio.draw.boxplots` and `skbio.draw.grouped_distributions` have been removed from scikit-bio as scheduled. These functions generated plots that were not specific to bioinformatics. These types of plots can be generated with seaborn or another general-purpose plotting package.

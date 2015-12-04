@@ -183,7 +183,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, pdist_func=None,
+def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                    **kwargs):
     """Compute distances between all pairs of samples
 
@@ -209,10 +209,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, pdist_func=None,
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
-    pdist_func : callable, optional
+    pairwise_func : callable, optional
         The function to use for computing pairwise distances. This function
-        must take ``counts``, ``metric``, and can optionally take kwargs that
-        are provided through ``pdist_kwargs``. Examples of functions that can
+        must take ``counts`` and ``metric``. Examples of functions that can
         be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``.
     kwargs : kwargs, optional
@@ -244,8 +243,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, pdist_func=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
-    if pdist_func is None:
-        pdist_func = scipy.spatial.distance.pdist
+    if pairwise_func is None:
+        pairwise_func = scipy.spatial.distance.pdist
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -272,5 +271,5 @@ def beta_diversity(metric, counts, ids=None, validate=True, pdist_func=None,
         # example one of the SciPy metrics
         pass
 
-    distances = pdist_func(counts, metric=metric, **kwargs)
+    distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
