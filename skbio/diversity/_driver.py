@@ -211,9 +211,11 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         so you can determine if you can safely disable validation.
     pairwise_func : callable, optional
         The function to use for computing pairwise distances. This function
-        must take ``counts`` and ``metric``. Examples of functions that can
-        be provided are ``scipy.spatial.distance.pdist`` and
-        ``sklearn.metrics.pairwise_distances``.
+        must take ``counts`` and ``metric`` and return a square, hollow, 2-D
+        ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
+        that can be provided are ``scipy.spatial.distance.pdist`` and
+        ``sklearn.metrics.pairwise_distances``. By default,
+        ``scipy.spatial.distance.pdist`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
