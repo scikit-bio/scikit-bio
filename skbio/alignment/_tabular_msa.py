@@ -806,6 +806,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         result = []
         for p in self.iter_positions():
             cons = None
+            # convert this from Sequence to self.dtype for access to gap-
+            # and degenerate-related functionality
             pos_seq = self.dtype(p)
 
             # handle degenerate characters if present
