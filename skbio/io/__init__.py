@@ -80,9 +80,8 @@ Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory
   representation (i.e., object). For example, a FASTA file can be read into an
-  :mod:`skbio.alignment.SequenceCollection` or
-  :mod:`skbio.alignment.TabularMSA` depending on the file's contents and what
-  operations you'd like to perform on your data.
+  :mod:`skbio.alignment.TabularMSA` or :mod:`skbio.sequence.DNA` depending on
+  what operations you'd like to perform on your data.
 * A single object might be writeable to more than one file format. For example,
   an :mod:`skbio.alignment.TabularMSA` object could be written to FASTA, FASTQ,
   CLUSTAL, or PHYLIP formats, just to name a few.

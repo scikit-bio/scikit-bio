@@ -33,8 +33,6 @@ Format Support
 +======+======+===============================================================+
 |Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
-+------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
@@ -193,18 +191,16 @@ Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The available reader parameters differ depending on which reader is used.
 
-Generator, SequenceCollection, and TabularMSA Reader Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``constructor`` parameter can be used with the ``Sequence``
-generator, ``SequenceCollection``, and ``TabularMSA`` FASTA readers.
-``constructor`` specifies the type of in-memory sequence object to read each
-sequence into. For example, if you know that the FASTA file you're reading
-contains protein sequences, you would pass ``constructor=Protein`` to the
-reader call.
+Generator and TabularMSA Reader Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``constructor`` parameter can be used with the ``Sequence`` generator and
+``TabularMSA`` FASTA readers. ``constructor`` specifies the type of in-memory
+sequence object to read each sequence into. For example, if you know that the
+FASTA file you're reading contains protein sequences, you would pass
+``constructor=Protein`` to the reader call.
 
-When reading into a ``Sequence`` generator or ``SequenceCollection``,
-``constructor`` defaults to ``Sequence`` and must be a subclass of
-``Sequence`` if supplied.
+When reading into a ``Sequence`` generator, ``constructor`` defaults to
+``Sequence`` and must be a subclass of ``Sequence`` if supplied.
 
 When reading into a ``TabularMSA``, ``constructor`` is a required format
 parameter and must be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``,
@@ -329,21 +325,8 @@ registry in practice:
 ...       ">seq5 Gorilla\\n",
 ...       "AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA\\n"]
 
-Let's read the FASTA file into a ``SequenceCollection``:
-
->>> from skbio import SequenceCollection
->>> sc = SequenceCollection.read(fl)
->>> sc.sequence_lengths()
-[42, 42, 42, 42, 42]
->>> sc.ids()
-['seq1', 'seq2', 'seq3', 'seq4', 'seq5']
-
-We see that all 5 sequences have 42 characters, and that each of the sequence
-IDs were successfully read into memory.
-
 Since these sequences are of equal length (presumably because they've been
-aligned), let's load the FASTA file into a ``TabularMSA`` object, which is a
-more appropriate data structure:
+aligned), let's read the FASTA file into a ``TabularMSA`` object:
 
 >>> from skbio import TabularMSA, DNA
 >>> msa = TabularMSA.read(fl, constructor=DNA)
@@ -360,11 +343,8 @@ ACCGGTTGGCCGTTCAGGGTACAGGTTGGCCGTTCAGGGTAA
 AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 
-Note that we were able to read the FASTA file into two different data
-structures (``SequenceCollection`` and ``TabularMSA``) using similar ``read``
-method calls (and underlying reading/parsing logic). Also note that we didn't
-specify a file format in the ``read`` call. The FASTA sniffer detected the
-correct file format for us!
+Note that we didn't specify a file format in the ``read`` call. The FASTA
+sniffer detected the correct file format for us!
 
 To write the ``TabularMSA`` in FASTA format:
 
@@ -383,15 +363,14 @@ AAACCCTTGCCGTTACGCTTAAACCGAGGCCGGGACACTCAT
 AAACCCTTGCCGGTACGCTTAAACCATTGCCGGTACGCTTAA
 <BLANKLINE>
 
-Both ``SequenceCollection`` and ``TabularMSA`` load all of the sequences from
-the FASTA file into memory at once. If the FASTA file is large (which is often
-the case), this may be infeasible if you don't have enough memory. To work
-around this issue, you can stream the sequences using scikit-bio's
-generator-based FASTA reader and writer. The generator-based reader yields
-``Sequence`` objects (or subclasses if ``constructor`` is supplied)
-one at a time, instead of loading all sequences into memory. For example, let's
-use the generator-based reader to process a single sequence at a time in a
-``for`` loop:
+``TabularMSA`` loads all of the sequences from the FASTA file into memory at
+once. If the FASTA file is large (which is often the case), this may be
+infeasible if you don't have enough memory. To work around this issue, you can
+stream the sequences using scikit-bio's generator-based FASTA reader and
+writer. The generator-based reader yields ``Sequence`` objects (or subclasses
+if ``constructor`` is supplied) one at a time, instead of loading all sequences
+into memory. For example, let's use the generator-based reader to process a
+single sequence at a time in a ``for`` loop:
 
 >>> import skbio.io
 >>> for seq in skbio.io.read(fl, format='fasta'):
@@ -513,7 +492,7 @@ following FASTA file::
     >seq1 db-accession-149855
     CGATGTC
     >seq2 db-accession-34989
-    CATCG
+    CATCGTC
 
 Also suppose we have the following QUAL file::
 
@@ -521,19 +500,19 @@ Also suppose we have the following QUAL file::
     40 39 39 4
     50 1 100
     >seq2 db-accession-34989
-    3 3 10 42 80
+    3 3 10 42 80 80 79
 
 >>> fasta_fl = [
 ...     ">seq1 db-accession-149855\\n",
 ...     "CGATGTC\\n",
 ...     ">seq2 db-accession-34989\\n",
-...     "CATCG\\n"]
+...     "CATCGTC\\n"]
 >>> qual_fl = [
 ...     ">seq1 db-accession-149855\\n",
 ...     "40 39 39 4\\n",
 ...     "50 1 100\\n",
 ...     ">seq2 db-accession-34989\\n",
-...     "3 3 10 42 80\\n"]
+...     "3 3 10 42 80 80 79\\n"]
 
 To read in a single ``Sequence`` at a time, we can use the
 generator-based reader as we did above, providing both FASTA and QUAL files:
@@ -561,39 +540,45 @@ Metadata:
 Positional metadata:
     'quality': <dtype: uint8>
 Stats:
-    length: 5
+    length: 7
 ---------------------------------------
-0 CATCG
+0 CATCGTC
 <BLANKLINE>
 
 Note that the sequence objects have quality scores stored as positional
 metadata since we provided a QUAL file. The other FASTA readers operate in a
 similar manner.
 
-Now let's load the sequences and their quality scores into a
-``SequenceCollection``:
+Now let's load the sequences and their quality scores into a ``TabularMSA``:
 
->>> sc = SequenceCollection.read(fasta_fl, qual=qual_fl)
->>> sc
-<SequenceCollection: n=2; mean +/- std length=6.00 +/- 1.00>
+>>> msa = TabularMSA.read(fasta_fl, qual=qual_fl, constructor=DNA)
+>>> msa
+TabularMSA[DNA]
+---------------------
+Stats:
+    sequence count: 2
+    position count: 7
+---------------------
+CGATGTC
+CATCGTC
 
-To write the sequence data and quality scores in the ``SequenceCollection`` to
-FASTA and QUAL files, respectively:
+To write the sequence data and quality scores in the ``TabularMSA`` to FASTA
+and QUAL files, respectively:
 
 >>> new_fasta_fh = StringIO()
 >>> new_qual_fh = StringIO()
->>> _ = sc.write(new_fasta_fh, qual=new_qual_fh)
+>>> _ = msa.write(new_fasta_fh, qual=new_qual_fh)
 >>> print(new_fasta_fh.getvalue())
 >seq1 db-accession-149855
 CGATGTC
 >seq2 db-accession-34989
-CATCG
+CATCGTC
 <BLANKLINE>
 >>> print(new_qual_fh.getvalue())
 >seq1 db-accession-149855
 40 39 39 4 50 1 100
 >seq2 db-accession-34989
-3 3 10 42 80
+3 3 10 42 80 80 79
 <BLANKLINE>
 >>> new_fasta_fh.close()
 >>> new_qual_fh.close()
@@ -638,7 +623,7 @@ from skbio.io.format._base import (_get_nth_sequence,
                                    _format_fasta_like_records, _line_generator,
                                    _too_many_blanks)
 from skbio.util._misc import chunk_str
-from skbio.alignment import SequenceCollection, TabularMSA
+from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 
@@ -759,14 +744,6 @@ def _fasta_to_protein(fh, qual=FileSentinel, seq_num=1, **kwargs):
         seq_num)
 
 
-@fasta.reader(SequenceCollection)
-def _fasta_to_sequence_collection(fh, qual=FileSentinel,
-                                  constructor=Sequence, **kwargs):
-    return SequenceCollection(
-        list(_fasta_to_generator(fh, qual=qual, constructor=constructor,
-                                 **kwargs)))
-
-
 @fasta.reader(TabularMSA)
 def _fasta_to_tabular_msa(fh, qual=FileSentinel, constructor=None, **kwargs):
     if constructor is None:
@@ -842,15 +819,6 @@ def _protein_to_fasta(obj, fh, qual=FileSentinel,
                       description_newline_replacement=' ', max_width=None,
                       lowercase=None):
     _sequences_to_fasta([obj], fh, qual, id_whitespace_replacement,
-                        description_newline_replacement, max_width, lowercase)
-
-
-@fasta.writer(SequenceCollection)
-def _sequence_collection_to_fasta(obj, fh, qual=FileSentinel,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  max_width=None, lowercase=None):
-    _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width, lowercase)
 
 

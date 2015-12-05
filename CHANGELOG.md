@@ -88,6 +88,9 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
     - `global_pairwise_align_protein`: `Protein` or `TabularMSA[Protein]`
     - `global_pairwise_align`: `IUPACSequence` or `TabularMSA`
     - `local_pairwise_align_ssw`: `DNA`, `RNA`, or `Protein`. Additionally, this function now overrides the `protein` kwarg based on input type. `constructor` parameter was removed because the function now determines the return type based on input type.
+* Removed `skbio.alignment.SequenceCollection` in favor of using a list or other standard library containers to store scikit-bio sequence objects (most `SequenceCollection` operations were simple list comprehensions). Use `DistanceMatrix.from_iterable` instead of `SequenceCollection.distances` (pass `key="id"` to exactly match original behavior).
+* Removed `skbio.alignment.Alignment` in favor of `skbio.alignment.TabularMSA`.
+* Removed `skbio.alignment.SequenceCollectionError` and `skbio.alignment.AlignmentError` exceptions as their corresponding classes no longer exist.
 
 ### Bug Fixes
 
@@ -98,9 +101,6 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 
 ### Deprecated functionality [stable]
 * `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
-
-### Deprecated functionality [experimental]
-* ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
 
 ### Miscellaneous
 * Doctests are now written in Python 3.
