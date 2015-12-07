@@ -12,12 +12,11 @@ from future.builtins import zip
 
 import unittest
 
-from skbio import SequenceCollection, Sequence, DNA, RNA, Protein
+from skbio import Sequence, DNA, RNA, Protein
 from skbio import read
 from skbio.util import get_data_path
 from skbio.io import QSeqFormatError
-from skbio.io.format.qseq import (
-    _qseq_to_generator, _qseq_to_sequence_collection, _qseq_sniffer)
+from skbio.io.format.qseq import _qseq_to_generator, _qseq_sniffer
 import numpy as np
 
 
@@ -286,48 +285,6 @@ class TestQSeqToGenerator(TestQSeqBase):
                 self.assertEqual(len(expected), len(observed))
                 for o, e in zip(observed, expected):
                     self.assertEqual(o, e)
-
-
-class TestQSeqToSequenceCollection(TestQSeqBase):
-    def setUp(self):
-        super(TestQSeqToSequenceCollection, self).setUp()
-        self.valid_files += [
-            (get_data_path('empty'), [{}, {'variant': 'sanger'}],
-             SequenceCollection([]))
-        ]
-
-    def test_invalid_files(self):
-        for invalid, kwargs, errors, etype in self.invalid_files:
-            with self.assertRaises(etype) as cm:
-                for kwarg in kwargs:
-                    _drop_kwargs(kwarg, 'seq_num')
-                    _qseq_to_sequence_collection(invalid, **kwarg)
-            for e in errors:
-                self.assertIn(e, str(cm.exception))
-
-    def test_valid_files(self):
-        for valid, kwargs, components in self.valid_files:
-            for kwarg in kwargs:
-                _drop_kwargs(kwarg, 'seq_num')
-                constructor = kwarg.get('constructor', Sequence)
-                expected = SequenceCollection([
-                    constructor(
-                        c['sequence'],
-                        metadata={'id': c['id'],
-                                  'machine_name': c['machine_name'],
-                                  'run_number': c['run_number'],
-                                  'lane_number': c['lane_number'],
-                                  'tile_number': c['tile_number'],
-                                  'x': c['x'],
-                                  'y': c['y'],
-                                  'index': c['index'],
-                                  'read_number': c['read_number']},
-                        positional_metadata={
-                            'quality': np.array(c['quality'], dtype=np.uint8)})
-                    for c in components])
-
-                observed = _qseq_to_sequence_collection(valid, **kwarg)
-                self.assertEqual(observed, expected)
 
 
 class TestQSeqToSequences(TestQSeqBase):
