@@ -659,7 +659,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, constructor=Sequence,
                      start_end_positions=start_end)
 
 
-@deprecated(as_of="0.4.0", until="0.4.1",
+@deprecated(as_of="0.4.0", until="0.5.0",
             reason="Will be replaced by a SubstitutionMatrix class. To track "
                    "progress, see [#161]"
                    "(https://github.com/biocore/scikit-bio/issues/161).")

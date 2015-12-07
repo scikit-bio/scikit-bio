@@ -11,20 +11,40 @@ from future.builtins import map, range, zip
 import six
 
 import io
+import string
 from unittest import TestCase, main
 from functools import partial
 
 import numpy as np
 
-from skbio import (Sequence, DNA, RNA, Protein, SequenceCollection, Alignment)
+from skbio import Sequence, DNA, RNA, Protein, SequenceCollection, TabularMSA
 from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_sequence,
     _fasta_to_dna, _fasta_to_rna, _fasta_to_protein,
-    _fasta_to_sequence_collection, _fasta_to_alignment, _generator_to_fasta,
+    _fasta_to_sequence_collection, _fasta_to_tabular_msa, _generator_to_fasta,
     _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
-    _sequence_collection_to_fasta, _alignment_to_fasta)
+    _sequence_collection_to_fasta, _tabular_msa_to_fasta)
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import get_data_path
+from skbio.util._decorator import classproperty, overrides
+
+
+class CustomSequence(IUPACSequence):
+    @classproperty
+    @overrides(IUPACSequence)
+    def gap_chars(cls):
+        return set('-.')
+
+    @classproperty
+    @overrides(IUPACSequence)
+    def nondegenerate_chars(cls):
+        return set(string.ascii_letters)
+
+    @classproperty
+    @overrides(IUPACSequence)
+    def degenerate_map(cls):
+        return {}
 
 
 class SnifferTests(TestCase):
@@ -242,7 +262,7 @@ class ReaderTests(TestCase):
             list(map(get_data_path, ['qual_prot_seqs_odd_labels']))
         )
 
-        # sequences that can be loaded into a SequenceCollection or Alignment.
+        # sequences that can be loaded into a SequenceCollection or TabularMSA.
         # they are also a different type than Sequence in order to
         # exercise the constructor parameter
         self.sequence_collection_different_type = (
@@ -604,32 +624,61 @@ class ReaderTests(TestCase):
                                                '`seq_num`=0'):
                         reader_fn(fasta_fp, seq_num=0, qual=qual_fp)
 
-    def test_fasta_to_sequence_collection_and_alignment(self):
+    def test_fasta_to_sequence_collection(self):
         test_cases = (self.empty, self.single,
                       self.sequence_collection_different_type,
                       self.lowercase_seqs)
 
-        for constructor, reader_fn in ((SequenceCollection,
-                                        _fasta_to_sequence_collection),
-                                       (Alignment,
-                                        _fasta_to_alignment)):
-            # see comment in test_fasta_to_generator_valid_files (above) for
-            # testing strategy
-            for exp_list, kwargs, fasta_fps, qual_fps in test_cases:
-                exp = constructor(exp_list)
+        # see comment in test_fasta_to_generator_valid_files (above) for
+        # testing strategy
+        for exp_list, kwargs, fasta_fps, qual_fps in test_cases:
+            exp = SequenceCollection(exp_list)
 
-                for fasta_fp in fasta_fps:
-                    obs = reader_fn(fasta_fp, **kwargs)
+            for fasta_fp in fasta_fps:
+                obs = _fasta_to_sequence_collection(fasta_fp, **kwargs)
 
-                    self.assertEqual(len(obs), len(exp))
-                    for o, e in zip(obs, exp):
-                        e = e.copy()
-                        del e.positional_metadata['quality']
-                        self.assertEqual(o, e)
+                self.assertEqual(len(obs), len(exp))
+                for o, e in zip(obs, exp):
+                    e = e.copy()
+                    del e.positional_metadata['quality']
+                    self.assertEqual(o, e)
 
-                    for qual_fp in qual_fps:
-                        obs = reader_fn(fasta_fp, qual=qual_fp, **kwargs)
-                        self.assertEqual(obs, exp)
+                for qual_fp in qual_fps:
+                    obs = _fasta_to_sequence_collection(fasta_fp, qual=qual_fp,
+                                                        **kwargs)
+                    self.assertEqual(obs, exp)
+
+    def test_fasta_to_tabular_msa(self):
+        test_cases = (self.empty, self.single,
+                      self.sequence_collection_different_type,
+                      self.lowercase_seqs)
+
+        # see comment in test_fasta_to_generator_valid_files (above) for
+        # testing strategy
+        for exp_list, kwargs, fasta_fps, qual_fps in test_cases:
+            if 'constructor' not in kwargs:
+                kwargs['constructor'] = CustomSequence
+                exp_list = [CustomSequence(seq) for seq in exp_list]
+
+            exp = TabularMSA(exp_list)
+
+            for fasta_fp in fasta_fps:
+                obs = _fasta_to_tabular_msa(fasta_fp, **kwargs)
+
+                self.assertEqual(len(obs), len(exp))
+                for o, e in zip(obs, exp):
+                    e = e.copy()
+                    del e.positional_metadata['quality']
+                    self.assertEqual(o, e)
+
+                for qual_fp in qual_fps:
+                    obs = _fasta_to_tabular_msa(fasta_fp, qual=qual_fp,
+                                                **kwargs)
+                    self.assertEqual(obs, exp)
+
+    def test_fasta_to_tabular_msa_no_constructor(self):
+        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+            _fasta_to_tabular_msa(get_data_path('fasta_single_seq'))
 
 
 class WriterTests(TestCase):
@@ -668,22 +717,23 @@ class WriterTests(TestCase):
             lowercase='introns')
 
         seqs = [
-            RNA('UUUU',
+            CustomSequence(
+                'UUUU',
                 metadata={'id': 's\te\tq\t1', 'description': 'desc\n1'},
                 positional_metadata={'quality': [1234, 0, 0, 2]},
                 lowercase='introns'),
-            Sequence(
+            CustomSequence(
                 'CATC',
                 metadata={'id': 's\te\tq\t2', 'description': 'desc\n2'},
                 positional_metadata={'quality': [1, 11, 111, 11112]}),
-            Protein('sits',
-                    metadata={'id': 's\te\tq\t3', 'description': 'desc\n3'},
-                    positional_metadata={'quality': [12345, 678909, 999999,
-                                                     4242424242]},
-                    validate=False)
+            CustomSequence(
+                'sits',
+                metadata={'id': 's\te\tq\t3', 'description': 'desc\n3'},
+                positional_metadata={'quality': [12345, 678909, 999999,
+                                                 4242424242]})
         ]
         self.seq_coll = SequenceCollection(seqs)
-        self.align = Alignment(seqs)
+        self.align = TabularMSA(seqs)
 
         def empty_gen():
             raise StopIteration()
@@ -930,7 +980,7 @@ class WriterTests(TestCase):
 
     def test_any_sequences_to_fasta(self):
         for fn, obj in ((_sequence_collection_to_fasta, self.seq_coll),
-                        (_alignment_to_fasta, self.align)):
+                        (_tabular_msa_to_fasta, self.align)):
             # test writing with default parameters
             fh = io.StringIO()
             fn(obj, fh)
@@ -988,7 +1038,7 @@ class RoundtripTests(TestCase):
             self.assertEqual(obs_fasta, exp_fasta)
             self.assertEqual(obs_qual, exp_qual)
 
-    def test_roundtrip_sequence_collections_and_alignments(self):
+    def test_roundtrip_sequence_collection_and_tabular_msa(self):
         fps = list(map(lambda e: list(map(get_data_path, e)),
                        [('empty', 'empty'),
                         ('fasta_sequence_collection_different_type',
@@ -996,8 +1046,9 @@ class RoundtripTests(TestCase):
 
         for reader, writer in ((_fasta_to_sequence_collection,
                                 _sequence_collection_to_fasta),
-                               (_fasta_to_alignment,
-                                _alignment_to_fasta)):
+                               (partial(_fasta_to_tabular_msa,
+                                        constructor=CustomSequence),
+                                _tabular_msa_to_fasta)):
             for fasta_fp, qual_fp in fps:
                 # read
                 obj1 = reader(fasta_fp, qual=qual_fp)

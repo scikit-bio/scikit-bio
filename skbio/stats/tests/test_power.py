@@ -26,7 +26,6 @@ from skbio.stats.power import (subsample_power,
                                _identify_sample_groups,
                                _draw_paired_samples,
                                _get_min_size,
-                               bootstrap_power_curve,
                                paired_subsamples
                                )
 
@@ -402,23 +401,6 @@ class PowerAnalysisTest(TestCase):
 
         # Checks the samples returned sanely
         npt.assert_allclose(test, known, rtol=0.1, atol=0.1)
-
-    def test_bootstrap_power_curve(self):
-        # Sets the known values
-        known_mean = np.array([0.500, 0.82, 0.965, 0.995, 1.000, 1.000,
-                               1.000, 1.000,  1.000])
-        known_bound = np.array([0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00,
-                                0.00])
-
-        # Generates the test values
-        test_mean, test_bound = bootstrap_power_curve(self.f,
-                                                      self.pop,
-                                                      self.num_samps,
-                                                      num_iter=100)
-
-        # Checks the function returned sanely
-        npt.assert_allclose(test_mean, known_mean, rtol=0.05, atol=0.05)
-        npt.assert_allclose(test_bound, known_bound, rtol=0.1, atol=0.01)
 
     def test_paired_subsamples_default(self):
         # Sets the known np.array set

@@ -137,7 +137,4 @@ def _get_phylogenetic_kwargs(counts, **kwargs):
         raise ValueError("``tree`` is required for phylogenetic diversity "
                          "metrics.")
 
-    if len(kwargs) > 0:
-        raise TypeError("Unsupported keyword arguments provided: %s." %
-                        ' '.join(kwargs.keys()))
     return otu_ids, tree, kwargs

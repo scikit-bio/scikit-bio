@@ -4,20 +4,19 @@ Sequences (:mod:`skbio.sequence`)
 
 .. currentmodule:: skbio.sequence
 
-This module provides classes for storing and working with biological sequences,
-including generic sequences which have no restrictions on which characters can
-be included, and sequences based on IUPAC-defined sets of allowed characters
-(including degenerate characters), including ``DNA``, ``RNA`` and ``Protein``
-sequences. Common operations are defined as methods, for example computing the
-reverse complement of a DNA sequence, or searching for N-glycosylation motifs
-in ``Protein`` sequences. Class attributes are available to obtain valid
-character sets, complement maps for different sequence types, and for obtaining
-degenerate character definitions. Additionally this module defines the
-``GeneticCode`` class, which represents an immutable object that translates DNA
-or RNA sequences into protein sequences.
+This module provides classes for storing and working with sequences, including
+generic/nonbiological sequences which have no alphabet restrictions
+(``Sequence``) and sequences based on IUPAC-defined alphabets (``DNA``,
+``RNA``, ``Protein``). Common operations are defined as methods, for example
+computing the reverse complement of a DNA sequence, or searching for
+N-glycosylation motifs in protein sequences. Class attributes provide valid
+character sets, complement maps for different sequence types, and degenerate
+character definitions. Additionally this module defines the ``GeneticCode``
+class, which represents an immutable object that translates DNA or RNA
+sequences into protein sequences.
 
 The primary information stored for each different type of sequence object is
-the underlying sequence data itself. This is stored as an immutable Numpy
+the underlying sequence data itself. This is stored as an immutable numpy
 array. Additionally, each type of sequence may include optional metadata
 and positional metadata. Note that metadata and positional metadata are
 mutable.
@@ -36,16 +35,29 @@ Classes
 
 Examples
 --------
+New sequences are created with optional metadata and positional metadata.
+Metadata is stored as a Python ``dict``, while positional metadata is stored as
+a pandas ``DataFrame``.
+
 >>> from skbio import DNA, RNA
-
-New sequences are created with optional metadata and positional metadata
-fields. Metadata is stored as a Python dict, while positional metadata
-becomes a Pandas DataFrame.
-
->>> d = DNA('ACCGGGTA')
 >>> d = DNA('ACCGGGTA', metadata={'id':"my-sequence", 'description':"GFP"},
 ...          positional_metadata={'quality':[22, 25, 22, 18, 23, 25, 25, 25]})
->>> d = DNA('ACCGGTA', metadata={'id':"my-sequence"})
+>>> d
+DNA
+-----------------------------
+Metadata:
+    'description': 'GFP'
+    'id': 'my-sequence'
+Positional metadata:
+    'quality': <dtype: int64>
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has non-degenerates: True
+    GC-content: 62.50%
+-----------------------------
+0 ACCGGGTA
 
 New sequences can also be created from existing sequences, for example as their
 reverse complement or degapped (i.e., unaligned) version.
