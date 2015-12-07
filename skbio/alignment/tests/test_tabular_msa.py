@@ -357,11 +357,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         msa.index = [('foo', 42), ('bar', 43)]
 
-        self.assertIsInstance(msa.index, pd.Index)
-        self.assertNotIsInstance(msa.index, pd.MultiIndex)
+        self.assertIsInstance(msa.index, pd.MultiIndex)
         assert_index_equal(
             msa.index,
-            pd.Index([('foo', 42), ('bar', 43)], tupleize_cols=False))
+            pd.Index([('foo', 42), ('bar', 43)], tupleize_cols=True))
 
     def test_index_deleter(self):
         msa = TabularMSA([RNA('UUU'), RNA('AAA')], minter=str)
@@ -820,9 +819,8 @@ class TestCopy(unittest.TestCase):
         self.assertEqual(msa, msa_copy)
         self.assertIsNot(msa, msa_copy)
         self.assertIsNot(msa._seqs, msa_copy._seqs)
-        # TODO: use __getitem__ when it exists.
-        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
-        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+        self.assertIsNot(msa[0], msa_copy[0])
+        self.assertIsNot(msa[1], msa_copy[1])
 
         msa_copy.append(DNA('AAAA'))
         self.assertEqual(
@@ -870,9 +868,8 @@ class TestDeepCopy(unittest.TestCase):
         self.assertEqual(msa, msa_copy)
         self.assertIsNot(msa, msa_copy)
         self.assertIsNot(msa._seqs, msa_copy._seqs)
-        # TODO: use __getitem__ when it exists.
-        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
-        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+        self.assertIsNot(msa[0], msa_copy[0])
+        self.assertIsNot(msa[1], msa_copy[1])
 
         msa_copy.append(DNA('AAAA'))
         self.assertEqual(
@@ -918,40 +915,223 @@ class SharedIndexTests(object):
         self.assertIsNot(msa, new)
         self.assertEqual(msa, new)
 
-    def test_msa_slice_all(self):
-        msa = TabularMSA([RNA("AAA"), RNA("AAU")])
+    def test_msa_slice_all_first_axis(self):
+        msa = TabularMSA([RNA("AAA", metadata={1: 1}),
+                          RNA("AAU", positional_metadata={0: [1, 2, 3]})],
+                         metadata={0: 0}, positional_metadata={1: [3, 2, 1]})
 
-        one_axis = self.get(msa, slice(None))
-        both_axes = self.get(msa, (slice(None), slice(None)))
+        new_slice = self.get(msa, slice(None))
+        new_ellipsis = self.get(msa, Ellipsis)
 
-        self.assertIsNot(msa, one_axis)
-        self.assertEqual(msa, both_axes)
+        self.assertIsNot(msa, new_slice)
+        self.assertEqual(msa, new_slice)
+        self.assertIsNot(msa, new_ellipsis)
+        self.assertEqual(msa, new_ellipsis)
+
+    def test_msa_slice_all_both_axes(self):
+        msa = TabularMSA([RNA("AAA", metadata={1: 1}),
+                          RNA("AAU", positional_metadata={0: [1, 2, 3]})],
+                         metadata={0: 0}, positional_metadata={1: [3, 2, 1]})
+
+        new_slice = self.get(msa, (slice(None), slice(None)))
+        new_ellipsis = self.get(msa, (Ellipsis, Ellipsis))
+
+        self.assertIsNot(msa, new_slice)
+        self.assertEqual(msa, new_slice)
+        self.assertIsNot(msa, new_ellipsis)
+        self.assertEqual(msa, new_ellipsis)
 
     def test_bool_index_first_axis(self):
-        pass
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, [True, True, False])
+
+        self.assertEqual(new, TabularMSA([a, b], metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2, 3]},
+                                         index=[True, False]))
 
     def test_bool_index_second_second(self):
-        pass
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, (Ellipsis, [True, True, False]))
+
+        self.assertEqual(new, TabularMSA([a[0, 1], b[0, 1], c[0, 1]],
+                                         metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2]},
+                                         index=[True, False, True]))
 
     def test_bool_index_both_axes(self):
-        pass
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, ([False, True, True], [True, True, False]))
+
+        self.assertEqual(new, TabularMSA([b[0, 1], c[0, 1]],
+                                         metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2]},
+                                         index=[False, True]))
 
     def test_bool_index_too_big(self):
-        pass
-    
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")],
+                         index=[False, True, False])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, [False, False, False, False])
+        with self.assertRaises(IndexError):
+            self.get(msa, [True, True, True, True])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [True, False, True, False, True]))
+
+        with self.assertRaises(IndexError):
+            self.get(msa, ([True, False, True, False],
+                           [True, False, True, False, False]))
+
     def test_bool_index_too_small(self):
-        pass
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")],
+                         index=[False, True, False])
 
-    def test_ellipsis_first_axis(self):
-        pass
+        with self.assertRaises(IndexError):
+            self.get(msa, [False])
+        with self.assertRaises(IndexError):
+            self.get(msa, [True])
 
-    def test_ellipsis_both_axes(self):
-        pass
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [True]))
+
+        with self.assertRaises(IndexError):
+            self.get(msa, ([True, False], [True, False, True, False]))
 
 
-class TestLoc(SharedIndexTests, unittest.TestCase):
-    def get(self, obj, indexable):
-        return obj.loc[indexable]
+class SharedPropertyIndexTests(SharedIndexTests):
+    def setUp(self):
+        self.combo_msa = TabularMSA([
+            DNA('ACGTA', metadata={0: 0},
+                positional_metadata={0: [1, 2, 3, 4, 5]}),
+            DNA('CGTAC', metadata={1: 1},
+                positional_metadata={1: [1, 2, 3, 4, 5]}),
+            DNA('GTACG', metadata={2: 2},
+                positional_metadata={2: [1, 2, 3, 4, 5]}),
+            DNA('TACGT', metadata={3: 3},
+                positional_metadata={3: [1, 2, 3, 4, 5]}),
+            DNA('ACGTT', metadata={4: 4},
+                positional_metadata={4: [1, 2, 3, 4, 5]})
+            ], index=list('ABCDE'), metadata={'x': 'x'},
+            positional_metadata={'y': [5, 4, 3, 2, 1]})
+
+        """First off, sorry to the next person who has to deal with this.
+
+           The next few tests will try and slice by a bunch of stuff, with
+           all combinations. Each element in the two lists is a tuple where
+           the first element is the thing to slice with, and the second is
+           the equivalent fancy index which describes the same range.
+
+           This lets us describe the results a little more declaratively
+           without setting up a thousand tests for each possible combination.
+           This does mean the iloc via a fancy index and simple scalar must
+           work correctly.
+        """
+        # This will be overriden for TestLoc because the first axis are labels
+        self.combo_first_axis = [
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice(0, 10000), [0, 1, 2, 3, 4]),
+            (3, 3),
+            (-4, 1),
+            ([0], [0]),
+            ([2], [2]),
+            (slice(1, 3), [1, 2]),
+            (slice(3, 0, -1), [3, 2, 1]),
+            ([-3, 2, 1], [2, 2, 1]),
+            (np.array([-3, 2, 1]), [2, 2, 1]),
+            ([True, True, False, False, True], [0, 1, 4]),
+            (np.array([True, True, False, True, False]), [0, 1, 3]),
+            (range(3), [0, 1, 2]),
+            ([slice(0, 2), 4], [0, 1, 4])
+        ]
+        # Same in both TestLoc and TestILoc
+        self.combo_second_axis = self.combo_first_axis
+
+    def test_combo_single_axis_natural(self):
+        for idx, exp in self.combo_first_axis:
+            self.assertEqual(self.get(self.combo_msa, idx),
+                             self.combo_msa.iloc[exp],
+                             msg="%r did not match iloc[%r]" % (idx, exp))
+
+    def test_combo_first_axis_only(self):
+        for idx, exp in self.combo_first_axis:
+            self.assertEqual(self.get(self.combo_msa, idx, axis=0),
+                             self.combo_msa.iloc[exp, ...],
+                             msg="%r did not match iloc[%r, ...]" % (idx, exp))
+
+    def test_combo_second_axis_only(self):
+        for idx, exp in self.combo_second_axis:
+            self.assertEqual(self.get(self.combo_msa, idx, axis=1),
+                             self.combo_msa.iloc[..., exp],
+                             msg="%r did not match iloc[..., %r]" % (idx, exp))
+
+    def test_combo_both_axes(self):
+        for idx1, exp1 in self.combo_first_axis:
+            for idx2, exp2 in self.combo_second_axis:
+                self.assertEqual(self.get(self.combo_msa, (idx1, idx2)),
+                                 self.combo_msa.iloc[exp1, exp2],
+                                 msg=("%r did not match iloc[%r, %r]"
+                                      % ((idx1, idx2), exp1, exp2)))
+
+
+class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
+    def setUp(self):
+        SharedPropertyIndexTests.setUp(self)
+        self.combo_first_axis = [
+            ('A', 0),
+            ('E', 4),
+            (['B'], [1]),
+            (np.asarray(['B']), [1]),
+            (slice('A', 'C', 2), [0, 2]),
+            (slice('C', 'A', -2), [2, 0]),
+            (slice('A', 'B'), [0, 1]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice('A', None), [0, 1, 2, 3, 4]),
+            (slice(None, 'C'), [0, 1, 2]),
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (self.combo_msa.index, [0, 1, 2, 3, 4]),
+            (['B', 'A', 'A', 'C'], [1, 0, 0, 2]),
+            (np.asarray(['B', 'A', 'A', 'C']), [1, 0, 0, 2]),
+            ([True, False, True, True, False], [0, 2, 3]),
+            (np.asarray([True, False, True, True, False]), [0, 2, 3]),
+        ]
+
+    def test_forced_axis_returns_copy(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertIsNot(msa.loc(axis=1), msa)
+
+    def test_forced_axis_no_mutate(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertEqual(msa.loc(axis=1)[0], Sequence("EE"))
+        self.assertEqual(msa.loc[0], Protein("EVANTHQMVS"))
+        self.assertIsNone(msa.loc._axis)
+
+    def get(self, obj, indexable, axis=None):
+        if axis is None:
+            return obj.loc[indexable]
+        else:
+            return obj.loc(axis=axis)[indexable]
 
     def test_complex_single_label(self):
         a = DNA("ACG")
@@ -980,6 +1160,33 @@ class TestLoc(SharedIndexTests, unittest.TestCase):
         with self.assertRaises(KeyError):
             self.get(msa, 'bar')
 
+    def test_duplicate_index_nonscalar_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[0, 0, 1, 2])
+
+        self.assertEqual(self.get(msa, 0),
+                         TabularMSA([a, b], metadata={'x': 'y'},
+                                    positional_metadata={'z': [1, 2, 3, 4]},
+                                    index=[0, 0]))
+
+    def test_duplicate_index_scalar_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[0, 0, 1, 2])
+
+        self.assertEqual(self.get(msa, 1), c)
+
     def test_fancy_indexing_complex(self):
         a = DNA("ACG")
         b = DNA("ACT")
@@ -999,76 +1206,174 @@ class TestLoc(SharedIndexTests, unittest.TestCase):
             self.get(msa, ['bar'])
 
     def test_fancy_indexing_complex_incomplete_label(self):
-        pass
+        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
+        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
+        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
+                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
+                                ('b', 'x', 0)])
 
-    def test_complex_slice(self):
-        pass
-    
-    def test_loc_combinations(self):
-        # This test assumes ILoc works correctly for fancy indices
-        msa = TabularMSA([DNA('ACGTA'), DNA('CGTAC'), DNA('GTACG'),
-                          DNA('TACGT'), DNA('ACGTT')], index=list('ABCDE'))
-        first_axis = [
-            ('A', 0),
-            ('E', 4),
-            (['B'], [1]),
-            (np.asarray(['B']), [1]),
-            (slice('A', 'C', 2), [0, 2]),
-            (slice('C', 'A', -2), [2, 0]),
-            (slice('A', 'B'), [0, 1]),
-            (slice(None), [0, 1, 2, 3, 4]),
-            (slice('A', None), [0, 1, 2, 3, 4]),
-            (slice(None, 'C'), [0, 1, 2]),
-            (Ellipsis, [0, 1, 2, 3, 4]),
-            (msa.index, [0, 1, 2, 3, 4]),
-            (['B', 'A', 'A', 'C'], [1, 0, 0, 2]),
-            (np.asarray(['B', 'A', 'A', 'C']), [1, 0, 0, 2]),
-            ([True, False, True, True, False], [0, 2, 3]),
-            (np.asarray([True, False, True, True, False]), [0, 2, 3]),
-        ]
+        self.assertEqual(self.get(msa, (('a', 'x'), Ellipsis)),
+                         TabularMSA([a, b], metadata={'x': 'y'},
+                                    positional_metadata={'c': ['a', 'b', 'c',
+                                                               'd']},
+                                    index=[0, 1]))
 
-        second_axis = [
-            (Ellipsis, [0, 1, 2, 3, 4]),
-            (slice(None), [0, 1, 2, 3, 4]),
-            (slice(0, 10000), [0, 1, 2, 3, 4]),
-            (3, 3),
-            (-4, 1),
-            ([0], [0]),
-            (slice(1, 3), [1, 2]),
-            (slice(3, 0, -1), [3, 2, 1]),
-            ([-3, 2, 1], [2, 2, 1]),
-            (np.array([-3, 2, 1]), [2, 2, 1]),
-            ([True, True, False, False, True], [0, 1, 4]),
-            (np.array([True, True, False, True, False]), [0, 1, 3]),
-            (range(3), [0, 1, 2]),
-            ([slice(0, 2), 4], [0, 1, 4])
-        ]
-        
-        for loc1, iloc1 in first_axis:
-            self.assertEqual(msa.loc[loc1], msa.iloc[iloc1],
-                             msg="loc %r did not match iloc %r" % (loc1,
-                                                                   iloc1))
-            for loc2, iloc2 in second_axis:
-                self.assertEqual(msa.loc[loc1, loc2], msa.iloc[iloc1, iloc2],
-                                 msg=("loc (%r, %r) did not match iloc (%r,"
-                                      " %r)" % (loc1, loc2, iloc1, iloc2)))
+    def test_multiindex_complicated_axis(self):
+        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
+        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
+        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
+                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
+                                ('b', 'x', 0)])
 
-class TestILoc(SharedIndexTests, unittest.TestCase):
-    def get(self, obj, indexable):
-        return obj.iloc[indexable]
-    
+        self.assertEqual(self.get(msa, (([False, True, False, True],
+                                         'x', 0), Ellipsis)),
+                         TabularMSA([d], metadata={'x': 'y'},
+                                    positional_metadata={'c': ['a', 'b', 'c',
+                                                               'd']},
+                                    index=[('b', 'x', 0)]))
+
+    def test_bool_index_scalar_bool_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[False, True, False, False])
+
+        self.assertEqual(self.get(msa, True), b)
+
+    def test_bool_index_nonscalar_bool_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[False, True, False, True])
+
+        self.assertEqual(self.get(msa, True),
+                         TabularMSA([b, d], metadata={'x': 'y'},
+                                    positional_metadata={'z': [1, 2, 3, 4]},
+                                    index=[True, True]))
+
+    def test_unhashable_index_first_axis(self):
+        s = slice(0, 1)
+        msa = TabularMSA([Protein(""), Protein(""), Protein("")],
+                         index=[s, slice(1, 2), slice(2, 3)])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, Ellipsis, axis=0)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, s, axis=0)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, 0, axis=0)
+
+    def test_unhashable_index_second_axis(self):
+        msa = TabularMSA([Protein("AA"), Protein("CC"), Protein("AA")],
+                         index=[slice(0, 1), slice(1, 2), slice(2, 3)])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, Ellipsis, axis=1)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, [0, 1], axis=1)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+            self.get(msa, 0, axis=1)
+
+    def test_unhashable_index_both_axes(self):
+        s = [0, 1]
+        msa = TabularMSA([RNA("AA"), RNA("CC"), RNA("AA")],
+                         index=[s, [1, 2], [2, 3]])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            # This implies copy cannot be derived from getitem
+            self.get(msa, (Ellipsis, Ellipsis))
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            self.get(msa, (s, 0))
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            self.get(msa, ('x', 10))
+
+    def test_categorical_index_scalar_label(self):
+        msa = TabularMSA([RNA("ACUG"), RNA("ACUA"), RNA("AAUG"), RNA("AC-G")],
+                         index=pd.CategoricalIndex(['a', 'b', 'b', 'c']))
+
+        self.assertEqual(self.get(msa, 'a'), RNA("ACUG"))
+
+    def test_categorical_index_nonscalar_label(self):
+        msa = TabularMSA([RNA("ACUG"), RNA("ACUA"), RNA("AAUG"), RNA("AC-G")],
+                         index=pd.CategoricalIndex(['a', 'b', 'b', 'c']))
+
+        self.assertEqual(self.get(msa, 'b'),
+                         TabularMSA([RNA("ACUA"), RNA("AAUG")],
+                                    index=pd.CategoricalIndex(
+                                        ['b', 'b'], categories=['a', 'b', 'c'])
+                                    ))
+
+    def test_float_index_out_of_order_slice(self):
+        msa = TabularMSA([DNA("ACGG"), DNA("AAGC"), DNA("AAAA"), DNA("ACTC")],
+                         index=[0.1, 2.4, 5.1, 2.6])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, slice(0.1, 2.7))
+
+        msa.sort()
+        result = self.get(msa, slice(0.1, 2.7))
+
+        self.assertEqual(result, TabularMSA([DNA("ACGG"), DNA("AAGC"),
+                                             DNA("ACTC")],
+                                            index=[0.1, 2.4, 2.6]))
+
+
+class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
+    def setUp(self):
+        SharedPropertyIndexTests.setUp(self)
+        self.combo_first_axis = self.combo_second_axis
+
+    def test_forced_axis_returns_copy(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertIsNot(msa.iloc(axis=1), msa)
+
+    def test_forced_axis_no_mutate(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertEqual(msa.iloc(axis=1)[0], Sequence("EE"))
+        self.assertEqual(msa.iloc[0], Protein("EVANTHQMVS"))
+        self.assertIsNone(msa.iloc._axis)
+
+    def get(self, obj, indexable, axis=None):
+        if axis is None:
+            return obj.iloc[indexable]
+        else:
+            return obj.iloc(axis=axis)[indexable]
+
     def test_entire_fancy_first_axis(self):
         msa = TabularMSA([
-            DNA("ACCA", metadata={'a':'foo'}, 
-                positional_metadata={'a':[7, 6, 5, 4]}), 
-            DNA("GGAA", metadata={'b':'bar'},
-                positional_metadata={'b':[3, 4, 5, 6]})
-            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
 
         new_np_simple = self.get(msa, np.arange(2))
         new_list_simple = self.get(msa, [0, 1])
         new_list_backwards = self.get(msa, [-2, -1])
-        
+
         self.assertIsNot(msa, new_np_simple)
         self.assertEqual(msa, new_np_simple)
 
@@ -1080,16 +1385,17 @@ class TestILoc(SharedIndexTests, unittest.TestCase):
 
     def test_fancy_entire_second_axis(self):
         msa = TabularMSA([
-            DNA("ACCA", metadata={'a':'foo'}, 
-                positional_metadata={'a':[7, 6, 5, 4]}), 
-            DNA("GGAA", metadata={'b':'bar'},
-                positional_metadata={'b':[3, 4, 5, 6]})
-            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
 
         new_np_simple = self.get(msa, (Ellipsis, np.arange(4)))
         new_list_simple = self.get(msa, (Ellipsis, [0, 1, 2, 3]))
         new_list_backwards = self.get(msa, (Ellipsis, [-4, -3, -2, -1]))
-        
+
         self.assertIsNot(msa, new_np_simple)
         self.assertEqual(msa, new_np_simple)
 
@@ -1098,19 +1404,20 @@ class TestILoc(SharedIndexTests, unittest.TestCase):
 
         self.assertIsNot(msa, new_list_backwards)
         self.assertEqual(msa, new_list_backwards)
-    
+
     def test_fancy_entire_both_axes(self):
         msa = TabularMSA([
-            DNA("ACCA", metadata={'a':'foo'}, 
-                positional_metadata={'a':[7, 6, 5, 4]}), 
-            DNA("GGAA", metadata={'b':'bar'},
-                positional_metadata={'b':[3, 4, 5, 6]})
-            ], metadata={'c':'baz'}, positional_metadata={'foo':[1, 2, 3, 4]})
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
 
         new_np_simple = self.get(msa, (np.arange(2), np.arange(4)))
         new_list_simple = self.get(msa, ([0, 1], [0, 1, 2, 3]))
         new_list_backwards = self.get(msa, ([-2, -1], [-4, -3, -2, -1]))
-        
+
         self.assertIsNot(msa, new_np_simple)
         self.assertEqual(msa, new_np_simple)
 
@@ -1132,45 +1439,45 @@ class TestILoc(SharedIndexTests, unittest.TestCase):
 
         new_np_simple = self.get(msa, np.arange(0))
         new_list_simple = self.get(msa, [])
-        
+
         self.assertEqual(TabularMSA([]), new_np_simple)
 
         self.assertEqual(TabularMSA([]), new_list_simple)
 
     def test_fancy_empty_second_axis(self):
-        msa = TabularMSA([DNA("ACGT", metadata={'x':1}), 
-                          DNA("TGCA", metadata={'y':2})], index=list("AB"))
-        exp = TabularMSA([DNA("", metadata={'x':1}), 
-                          DNA("", metadata={'y':2})], index=list("AB"))
+        msa = TabularMSA([DNA("ACGT", metadata={'x': 1}),
+                          DNA("TGCA", metadata={'y': 2})], index=list("AB"))
+        exp = TabularMSA([DNA("", metadata={'x': 1}),
+                          DNA("", metadata={'y': 2})], index=list("AB"))
 
         new_np_simple = self.get(msa, (Ellipsis, np.arange(0)))
         new_list_simple = self.get(msa, (Ellipsis, []))
-       
+
         self.assertEqual(exp, new_np_simple)
         self.assertEqual(exp, new_list_simple)
 
     def test_fancy_empty_both_axis(self):
-        msa = TabularMSA([DNA("ACGT", metadata={'x':1}), 
-                          DNA("TGCA", metadata={'y':2})], index=list("AB"))
+        msa = TabularMSA([DNA("ACGT", metadata={'x': 1}),
+                          DNA("TGCA", metadata={'y': 2})], index=list("AB"))
 
         new_np_simple = self.get(msa, (np.arange(0), np.arange(0)))
         new_list_simple = self.get(msa, ([], []))
-        
+
         self.assertEqual(TabularMSA([]), new_np_simple)
         self.assertEqual(TabularMSA([]), new_list_simple)
 
     def test_fancy_standard_first_axis(self):
         pass
-    
+
     def test_fancy_standard_second_axis(self):
         pass
 
     def test_fancy_standard_both_axes(self):
         pass
-    
+
     def test_get_scalar_first_axis(self):
-        a = DNA("AA", metadata={'a':'foo'}, positional_metadata={'x':[1, 2]})
-        b = DNA("GG", metadata={'b':'bar'}, positional_metadata={'y':[3, 4]})
+        a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
+        b = DNA("GG", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
         msa = TabularMSA([a, b])
 
         new0 = self.get(msa, 0)
@@ -1195,42 +1502,17 @@ class TestILoc(SharedIndexTests, unittest.TestCase):
     def test_get_scalar_out_of_bound(self):
         pass
 
-    def test_iloc_combinations(self):
-        # This test assumes ILoc works correctly for fancy indices
-        msa = TabularMSA([DNA('ACGTA'), DNA('CGTAC'), DNA('GTACG'),
-                          DNA('TACGT'), DNA('ACGTT')], index=list('ABCDE'))
 
-        axes = [
-            (Ellipsis, [0, 1, 2, 3, 4]),
-            (slice(None), [0, 1, 2, 3, 4]),
-            (slice(0, 10000), [0, 1, 2, 3, 4]),
-            (3, 3),
-            (-4, 1),
-            ([0], [0]),
-            (slice(1, 3), [1, 2]),
-            (slice(3, 0, -1), [3, 2, 1]),
-            ([-3, 2, 1], [2, 2, 1]),
-            (np.array([-3, 2, 1]), [2, 2, 1]),
-            ([True, True, False, False, True], [0, 1, 4]),
-            (np.array([True, True, False, True, False]), [0, 1, 3]),
-            (range(3), [0, 1, 2]),
-            ([slice(0, 2), 4], [0, 1, 4])
-        ]
-        
-        for iloc1, exp1 in axes:
-            self.assertEqual(self.get(msa, iloc1), msa.iloc[exp1],
-                             msg="iloc %r did not match exp %r" % (iloc1,
-                                                                   exp1))
-            for iloc2, exp2 in axes:
-                self.assertEqual(self.get(msa, (iloc1, iloc2)),
-                                 msa.iloc[exp1, exp2],
-                                 msg=("iloc (%r, %r) did not match exp (%r,"
-                                      " %r)" % (iloc1, iloc2, exp1, exp2)))
-
-
-class TestGetItem(TestILoc):
+class TestGetItem(SharedIndexTests, unittest.TestCase):
     def get(self, obj, indexable):
         return obj[indexable]
+
+    def test_uses_iloc_not_loc(self):
+        a = DNA("ACGA")
+        b = DNA("ACGT")
+        msa = TabularMSA([a, b], index=[1, 0])
+
+        self.assertIs(msa[0], a)
 
 
 class TestAppend(unittest.TestCase):

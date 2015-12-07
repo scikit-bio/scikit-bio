@@ -246,7 +246,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @index.setter
     def index(self, index):
-        self._seqs.index = index
+        # Cast to Index to identify tuples as a MultiIndex to match
+        # pandas constructor. Just setting would make an index of tuples.
+        if not isinstance(index, pd.Index):
+            self._seqs.index = pd.Index(index)
+        else:
+            self._seqs.index = index
 
     @index.deleter
     def index(self):
@@ -703,14 +708,27 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._constructor_(self._seqs.iloc[i])
 
     def _get_sequence_loc_(self, l):
-        return self._seqs.loc[l]
+        new_seqs = self._seqs.loc[l]
+        if type(new_seqs) is self.dtype:
+            return new_seqs
+        else:
+            # Thanks CategoricalIndex, you understand no such thing as a scalar
+            if len(new_seqs) == 1:
+                return new_seqs.iloc[0]
+            else:
+                # This was a common failure mode; shouldn't happen anymore, but
+                # it could strike again.
+                raise AssertionError(
+                    "Something went wrong with the index %r provided to"
+                    " `_get_sequence_loc_`, please report this stack trace to"
+                    "\nhttps://github.com/biocore/scikit-bio/issues" % l)
 
     def _slice_sequences_loc_(self, l):
         new_seqs = self._seqs.loc[l]
         try:
             return self._constructor_(new_seqs)
-        except TypeError: #NaN hit the constructor, key was bad
-            raise KeyError(repr(l))
+        except TypeError:  # NaN hit the constructor, key was bad... probably
+            raise KeyError("Part of `%r` was not in the index.")
 
     def _get_position_(self, i):
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
@@ -1748,8 +1766,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     def _get_sequence_for_join(self, label):
         if label in self.index:
-            # TODO: use .loc when it is implemented.
-            return self._get_sequence_(self.index.get_loc(label))
+            return self.loc[label]
         else:
             return self.dtype(
                 self.dtype.default_gap_char * self.shape.position)
