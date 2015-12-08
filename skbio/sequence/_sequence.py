@@ -11,13 +11,9 @@ from future.builtins import range, zip
 from future.utils import viewitems
 import six
 
-import itertools
-import math
 import re
 import collections
-import copy
 import numbers
-import textwrap
 from contextlib import contextmanager
 
 import numpy as np
@@ -25,19 +21,23 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject
-from skbio.sequence._base import ElasticLines
-from skbio.util._misc import chunk_str
-from skbio.util._decorator import stable, experimental
+from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio.sequence._repr import _SequenceReprBuilder
+from skbio.util._decorator import (stable, experimental, deprecated,
+                                   classonlymethod, overrides)
 
 
-class Sequence(collections.Sequence, SkbioObject):
-    """Store biological sequence data and optional associated metadata.
+class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
+               SkbioObject):
+    """Store generic sequence data and optional associated metadata.
 
-    ``Sequence`` objects do not enforce an alphabet and are thus the most
-    generic objects for storing biological sequence data. Subclasses ``DNA``,
-    ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ for, and
-    provide operations specific to, each respective molecule type.
+    ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
+    most generic objects for storing sequence data. ``Sequence`` objects do not
+    necessarily represent biological sequences. For example, ``Sequence`` can
+    be used to represent a position in a multiple sequence alignment.
+    Subclasses ``DNA``, ``RNA``, and ``Protein`` enforce the IUPAC character
+    set [1]_ for, and provide operations specific to, each respective molecule
+    type.
 
     ``Sequence`` objects consist of the underlying sequence data, as well
     as optional metadata and positional metadata. The underlying sequence
@@ -46,16 +46,16 @@ class Sequence(collections.Sequence, SkbioObject):
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the biological sequence itself.
+        Characters representing the sequence itself.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy
         of the ``dict`` will be made (see Examples section below for details).
     positional_metadata : pd.DataFrame consumable, optional
         Arbitrary per-character metadata (e.g., sequence read quality
         scores). Must be able to be passed directly to ``pd.DataFrame``
-        constructor. Each column of metadata must be the same length as the
-        biological sequence. A shallow copy of the positional metadata will be
-        made if necessary (see Examples section below for details).
+        constructor. Each column of metadata must be the same length as
+        `sequence`. A shallow copy of the positional metadata will be made if
+        necessary (see Examples section below for details).
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters. If ``False``, no characters will be converted.
@@ -349,186 +349,6 @@ class Sequence(collections.Sequence, SkbioObject):
         return self._bytes.view('|S1')
 
     @property
-    @stable(as_of="0.4.0")
-    def metadata(self):
-        """``dict`` containing metadata which applies to the entire sequence.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        >>> from pprint import pprint
-        >>> from skbio import Sequence
-
-        Create a sequence with metadata:
-
-        >>> s = Sequence('ACGTACGTACGTACGT',
-        ...              metadata={'id': 'seq-id',
-        ...                        'description': 'seq description'})
-        >>> s
-        Sequence
-        ------------------------------------
-        Metadata:
-            'description': 'seq description'
-            'id': 'seq-id'
-        Stats:
-            length: 16
-        ------------------------------------
-        0 ACGTACGTAC GTACGT
-
-        Retrieve metadata:
-
-        >>> pprint(s.metadata) # using pprint to display dict in sorted order
-        {'description': 'seq description', 'id': 'seq-id'}
-
-        Update metadata:
-
-        >>> s.metadata['id'] = 'new-id'
-        >>> s.metadata['pubmed'] = 12345
-        >>> pprint(s.metadata)
-        {'description': 'seq description', 'id': 'new-id', 'pubmed': 12345}
-
-        Set metadata:
-
-        >>> s.metadata = {'abc': 123}
-        >>> s.metadata
-        {'abc': 123}
-
-        Delete metadata:
-
-        >>> s.has_metadata()
-        True
-        >>> del s.metadata
-        >>> s.metadata
-        {}
-        >>> s.has_metadata()
-        False
-
-        """
-        if self._metadata is None:
-            # not using setter to avoid copy
-            self._metadata = {}
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, metadata):
-        if not isinstance(metadata, dict):
-            raise TypeError("metadata must be a dict")
-        # shallow copy
-        self._metadata = metadata.copy()
-
-    @metadata.deleter
-    def metadata(self):
-        self._metadata = None
-
-    @property
-    @stable(as_of="0.4.0")
-    def positional_metadata(self):
-        """``pd.DataFrame`` containing metadata on a per-character basis.
-
-        Notes
-        -----
-        This property can be set and deleted.
-
-        Examples
-        --------
-        Create a DNA sequence with positional metadata:
-
-        >>> from skbio import DNA
-        >>> seq = DNA(
-        ...     'ACGT',
-        ...     positional_metadata={'quality': [3, 3, 20, 11],
-        ...                          'exons': [True, True, False, True]})
-        >>> seq
-        DNA
-        -----------------------------
-        Positional metadata:
-            'exons': <dtype: bool>
-            'quality': <dtype: int64>
-        Stats:
-            length: 4
-            has gaps: False
-            has degenerates: False
-            has non-degenerates: True
-            GC-content: 50.00%
-        -----------------------------
-        0 ACGT
-
-        Retrieve positional metadata:
-
-        >>> seq.positional_metadata
-           exons  quality
-        0   True        3
-        1   True        3
-        2  False       20
-        3   True       11
-
-        Update positional metadata:
-
-        >>> seq.positional_metadata['gaps'] = seq.gaps()
-        >>> seq.positional_metadata
-           exons  quality   gaps
-        0   True        3  False
-        1   True        3  False
-        2  False       20  False
-        3   True       11  False
-
-        Set positional metadata:
-
-        >>> seq.positional_metadata = {'degenerates': seq.degenerates()}
-        >>> seq.positional_metadata
-          degenerates
-        0       False
-        1       False
-        2       False
-        3       False
-
-        Delete positional metadata:
-
-        >>> seq.has_positional_metadata()
-        True
-        >>> del seq.positional_metadata
-        >>> seq.positional_metadata
-        Empty DataFrame
-        Columns: []
-        Index: [0, 1, 2, 3]
-        >>> seq.has_positional_metadata()
-        False
-
-        """
-        if self._positional_metadata is None:
-            # not using setter to avoid copy
-            self._positional_metadata = pd.DataFrame(
-                index=np.arange(len(self)))
-        return self._positional_metadata
-
-    @positional_metadata.setter
-    def positional_metadata(self, positional_metadata):
-        try:
-            # copy=True to copy underlying data buffer
-            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
-        except pd.core.common.PandasError as e:
-            raise TypeError('Positional metadata invalid. Must be consumable '
-                            'by pd.DataFrame. Original pandas error message: '
-                            '"%s"' % e)
-
-        num_rows = len(positional_metadata.index)
-        if num_rows != len(self):
-            raise ValueError(
-                "Number of positional metadata values (%d) must match the "
-                "number of characters in the sequence (%d)." %
-                (num_rows, len(self)))
-
-        positional_metadata.reset_index(drop=True, inplace=True)
-        self._positional_metadata = positional_metadata
-
-    @positional_metadata.deleter
-    def positional_metadata(self):
-        self._positional_metadata = None
-
-    @property
     @experimental(as_of="0.4.0-dev")
     def observed_chars(self):
         """Set of observed characters in the sequence.
@@ -551,10 +371,155 @@ class Sequence(collections.Sequence, SkbioObject):
     def _string(self):
         return self._bytes.tostring()
 
+    @classonlymethod
+    @experimental(as_of="0.4.0-dev")
+    def concat(cls, sequences, how='strict'):
+        """Concatenate an iterable of ``Sequence`` objects.
+
+        Parameters
+        ----------
+        seqs : iterable (Sequence)
+            An iterable of ``Sequence`` objects or appropriate subclasses.
+        how : {'strict', 'inner', 'outer'}, optional
+            How to intersect the `positional_metadata` of the sequences.
+            If 'strict': the `positional_metadata` must have the exact same
+            columns; 'inner': an inner-join of the columns (only the shared set
+            of columns are used); 'outer': an outer-join of the columns
+            (all columns are used: missing values will be padded with NaN).
+
+        Returns
+        -------
+        Sequence
+            The returned sequence will be an instance of the class which
+            called this class-method.
+
+        Raises
+        ------
+        ValueError
+            If `how` is not one of: 'strict', 'inner', or 'outer'.
+        ValueError
+            If `how` is 'strict' and the `positional_metadata` of each sequence
+            does not have the same columns.
+        TypeError
+            If the sequences cannot be cast as the calling class.
+
+        Notes
+        -----
+        The sequence-wide metadata (``Sequence.metadata``) is not retained
+        during concatenation.
+
+        Sequence objects can be cast to a different type only when the new
+        type is an ancestor or child of the original type. Casting between
+        sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
+        allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
+        would be.
+
+        Examples
+        --------
+        Concatenate two DNA sequences into a new DNA object:
+
+        >>> from skbio import DNA, Sequence
+        >>> s1 = DNA("ACGT")
+        >>> s2 = DNA("GGAA")
+        >>> DNA.concat([s1, s2])
+        DNA
+        -----------------------------
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+
+        Concatenate DNA sequences into a Sequence object (type coercion):
+
+        >>> Sequence.concat([s1, s2])
+        Sequence
+        -------------
+        Stats:
+            length: 8
+        -------------
+        0 ACGTGGAA
+
+        Positional metadata is conserved:
+
+        >>> s1 = DNA('AcgT', lowercase='one')
+        >>> s2 = DNA('GGaA', lowercase='one',
+        ...          positional_metadata={'two': [1, 2, 3, 4]})
+        >>> result = DNA.concat([s1, s2], how='outer')
+        >>> result
+        DNA
+        -----------------------------
+        Positional metadata:
+            'one': <dtype: bool>
+            'two': <dtype: float64>
+        Stats:
+            length: 8
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGTGGAA
+        >>> result.positional_metadata
+             one  two
+        0  False  NaN
+        1   True  NaN
+        2   True  NaN
+        3  False  NaN
+        4  False    1
+        5  False    2
+        6   True    3
+        7  False    4
+
+        """
+        if how not in {'strict', 'inner', 'outer'}:
+            raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
+
+        seqs = list(sequences)
+        for seq in seqs:
+            seq._assert_can_cast_to(cls)
+
+        if how == 'strict':
+            how = 'inner'
+            cols = []
+            for s in seqs:
+                if s.has_positional_metadata():
+                    cols.append(frozenset(s.positional_metadata))
+                else:
+                    cols.append(frozenset())
+            if len(set(cols)) > 1:
+                raise ValueError("The positional metadata of the sequences do"
+                                 " not have matching columns. Consider setting"
+                                 " how='inner' or how='outer'")
+        seq_data = []
+        pm_data = []
+        for seq in seqs:
+            seq_data.append(seq._bytes)
+            pm_data.append(seq.positional_metadata)
+            if not seq.has_positional_metadata():
+                del seq.positional_metadata
+
+        pm = pd.concat(pm_data, join=how, ignore_index=True)
+        bytes_ = np.concatenate(seq_data)
+
+        return cls(bytes_, positional_metadata=pm)
+
+    @classmethod
+    def _assert_can_cast_to(cls, target):
+        if not (issubclass(cls, target) or issubclass(target, cls)):
+            raise TypeError("Cannot cast %r as %r." %
+                            (cls.__name__, target.__name__))
+
+    @overrides(PositionalMetadataMixin)
+    def _positional_metadata_axis_len_(self):
+        return len(self)
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False):
-
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -571,6 +536,9 @@ class Sequence(collections.Sequence, SkbioObject):
                     "np.uint8 or '|S1'. Invalid dtype: %s" %
                     sequence.dtype)
         elif isinstance(sequence, Sequence):
+            # Sequence casting is acceptable between direct
+            # decendants/ancestors
+            sequence._assert_can_cast_to(type(self))
             # we're not simply accessing sequence.metadata in order to avoid
             # creating "empty" metadata representations on both sequence
             # objects if they don't have metadata. same strategy is used below
@@ -606,15 +574,9 @@ class Sequence(collections.Sequence, SkbioObject):
 
             self._set_bytes(sequence)
 
-        if metadata is None:
-            self._metadata = None
-        else:
-            self.metadata = metadata
-
-        if positional_metadata is None:
-            self._positional_metadata = None
-        else:
-            self.positional_metadata = positional_metadata
+        MetadataMixin._init_(self, metadata=metadata)
+        PositionalMetadataMixin._init_(
+            self, positional_metadata=positional_metadata)
 
         if lowercase is False:
             pass
@@ -654,7 +616,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
-        """Determine if a subsequence is contained in the biological sequence.
+        """Determine if a subsequence is contained in this sequence.
 
         Parameters
         ----------
@@ -664,14 +626,13 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         bool
-            Indicates whether `subsequence` is contained in the biological
-            sequence.
+            Indicates whether `subsequence` is contained in this sequence.
 
         Raises
         ------
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -687,11 +648,10 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __eq__(self, other):
-        """Determine if the biological sequence is equal to another.
+        """Determine if this sequence is equal to another.
 
-        Biological sequences are equal if they are *exactly* the same type and
-        their sequence characters, metadata, and positional metadata are the
-        same.
+        Sequences are equal if they are *exactly* the same type and their
+        sequence characters, metadata, and positional metadata are the same.
 
         Parameters
         ----------
@@ -701,11 +661,11 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         bool
-            Indicates whether the biological sequence is equal to `other`.
+            Indicates whether this sequence is equal to `other`.
 
         Examples
         --------
-        Define two biological sequences that have the same underlying sequence
+        Define two ``Sequence`` objects that have the same underlying sequence
         of characters:
 
         >>> from skbio import Sequence
@@ -722,15 +682,15 @@ class Sequence(collections.Sequence, SkbioObject):
         >>> t == s
         True
 
-        Define another biological sequence with a different sequence of
-        characters than the previous two biological sequences:
+        Define another sequence object with a different sequence of characters
+        than the previous two sequence objects:
 
         >>> u = Sequence('ACGA')
         >>> u == t
         False
 
-        Define a biological sequence with the same sequence of characters as
-        ``u`` but with different metadata and positional metadata:
+        Define a sequence with the same sequence of characters as ``u`` but
+        with different metadata and positional metadata:
 
         >>> v = Sequence('ACGA', metadata={'id': 'abc'},
         ...              positional_metadata={'quality':[1, 5, 3, 3]})
@@ -746,43 +706,23 @@ class Sequence(collections.Sequence, SkbioObject):
         if self.__class__ != other.__class__:
             return False
 
-        # we're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the sequence
-        # objects if they don't have metadata. same strategy is used below for
-        # positional metadata
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # both don't have metadata
-            pass
-        else:
-            # one has metadata while the other does not
+        if not MetadataMixin._eq_(self, other):
             return False
 
         if self._string != other._string:
             return False
 
-        if self.has_positional_metadata() and other.has_positional_metadata():
-            if not self.positional_metadata.equals(other.positional_metadata):
-                return False
-        elif not (self.has_positional_metadata() or
-                  other.has_positional_metadata()):
-            # both don't have positional metadata
-            pass
-        else:
-            # one has positional metadata while the other does not
+        if not PositionalMetadataMixin._eq_(self, other):
             return False
 
         return True
 
     @stable(as_of="0.4.0")
     def __ne__(self, other):
-        """Determine if the biological sequence is not equal to another.
+        """Determine if this sequence is not equal to another.
 
-        Biological sequences are not equal if they are not *exactly* the same
-        type, or their sequence characters, metadata, or positional metadata
-        differ.
+        Sequences are not equal if they are not *exactly* the same type, or
+        their sequence characters, metadata, or positional metadata differ.
 
         Parameters
         ----------
@@ -792,7 +732,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         bool
-            Indicates whether the biological sequence is not equal to `other`.
+            Indicates whether this sequence is not equal to `other`.
 
         Examples
         --------
@@ -813,32 +753,31 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
-        """Slice the biological sequence.
+        """Slice this sequence.
 
         Parameters
         ----------
         indexable : int, slice, iterable (int and slice), 1D array_like (bool)
-            The position(s) to return from the biological sequence. If
-            `indexable` is an iterable of integers, these are assumed to be
-            indices in the sequence to keep. If `indexable` is a 1D
-            ``array_like`` of booleans, these are assumed to be the positions
-            in the sequence to keep.
+            The position(s) to return from this sequence. If `indexable` is an
+            iterable of integers, these are assumed to be indices in the
+            sequence to keep. If `indexable` is a 1D ``array_like`` of
+            booleans, these are assumed to be the positions in the sequence to
+            keep.
 
         Returns
         -------
         Sequence
-            New biological sequence containing the position(s) specified by
-            `indexable` in the current biological sequence. If quality scores
-            are present, they will be sliced in the same manner and included in
-            the returned biological sequence. ID and description are also
-            included.
+            New sequence containing the position(s) specified by `indexable` in
+            this sequence. Positional metadata will be sliced in the same
+            manner and included in the returned sequence. `metadata` is
+            included in the returned sequence.
 
         Examples
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
 
-        Obtain a single character from the biological sequence:
+        Obtain a single character from the sequence:
 
         >>> s[1]
         Sequence
@@ -941,12 +880,12 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __len__(self):
-        """Return the number of characters in the biological sequence.
+        """Return the number of characters in this sequence.
 
         Returns
         -------
         int
-            The length of the biological sequence.
+            The length of this sequence.
 
         Examples
         --------
@@ -982,7 +921,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __iter__(self):
-        """Iterate over positions in the biological sequence.
+        """Iterate over positions in this sequence.
 
         Yields
         ------
@@ -1007,7 +946,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __reversed__(self):
-        """Iterate over positions in the biological sequence in reverse order.
+        """Iterate over positions in this sequence in reverse order.
 
         Yields
         ------
@@ -1031,7 +970,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __str__(self):
-        """Return biological sequence characters as a string.
+        """Return sequence characters as a string.
 
         Returns
         -------
@@ -1055,7 +994,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __repr__(self):
-        r"""Return a string representation of the biological sequence object.
+        r"""Return a string representation of this sequence object.
 
         Representation includes:
 
@@ -1075,7 +1014,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         str
-            String representation of the biological sequence object.
+            String representation of this sequence object.
 
         Notes
         -----
@@ -1171,7 +1110,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def __copy__(self):
-        """Return a shallow copy of the biological sequence.
+        """Return a shallow copy of this sequence.
 
         See Also
         --------
@@ -1182,11 +1121,11 @@ class Sequence(collections.Sequence, SkbioObject):
         This method is equivalent to ``seq.copy(deep=False)``.
 
         """
-        return self.copy(deep=False)
+        return self._copy(False, {})
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
-        """Return a deep copy of the biological sequence.
+        """Return a deep copy of this sequence.
 
         See Also
         --------
@@ -1199,54 +1138,12 @@ class Sequence(collections.Sequence, SkbioObject):
         """
         return self._copy(True, memo)
 
-    @stable(as_of="0.4.0")
-    def has_metadata(self):
-        """Determine if the sequence contains metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', metadata={'id': 'seq-id'})
-        >>> t.has_metadata()
-        True
-
-        """
-        return self._metadata is not None and bool(self.metadata)
-
-    @stable(as_of="0.4.0")
-    def has_positional_metadata(self):
-        """Determine if the sequence contains positional metadata.
-
-        Returns
-        -------
-        bool
-            Indicates whether the sequence has positional metadata
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACACGACGTT')
-        >>> s.has_positional_metadata()
-        False
-        >>> t = DNA('ACACGACGTT', positional_metadata={'quality': range(10)})
-        >>> t.has_positional_metadata()
-        True
-
-        """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
-
-    @stable(as_of="0.4.0")
+    @deprecated(as_of="0.4.0-dev", until="0.5.1",
+                reason="Use `copy.copy(seq)` instead of "
+                       "`seq.copy(deep=False)`, and `copy.deepcopy(seq)` "
+                       "instead of `seq.copy(deep=True)`.")
     def copy(self, deep=False):
-        """Return a copy of the biological sequence.
+        """Return a copy of this sequence.
 
         Parameters
         ----------
@@ -1256,7 +1153,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         Sequence
-            Copy of the biological sequence.
+            Copy of this sequence.
 
         Notes
         -----
@@ -1376,27 +1273,19 @@ class Sequence(collections.Sequence, SkbioObject):
         # we don't make a distinction between deep vs. shallow copy of bytes
         # because dtype=np.uint8. we only need to make the distinction when
         # dealing with object dtype
-        bytes = np.copy(self._bytes)
+        bytes_ = np.copy(self._bytes)
 
-        seq_copy = self._constructor(sequence=bytes, metadata=None,
+        seq_copy = self._constructor(sequence=bytes_, metadata=None,
                                      positional_metadata=None)
 
-        if self.has_metadata():
-            metadata = self.metadata
-            if deep:
-                metadata = copy.deepcopy(metadata, memo)
-            else:
-                metadata = metadata.copy()
-            seq_copy._metadata = metadata
-
-        if self.has_positional_metadata():
-            positional_metadata = self.positional_metadata
-            if deep:
-                positional_metadata = copy.deepcopy(positional_metadata, memo)
-            else:
-                # deep=True makes a shallow copy of the underlying data buffer
-                positional_metadata = positional_metadata.copy(deep=True)
-            seq_copy._positional_metadata = positional_metadata
+        if deep:
+            seq_copy._metadata = MetadataMixin._deepcopy_(self, memo)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._deepcopy_(self, memo)
+        else:
+            seq_copy._metadata = MetadataMixin._copy_(self)
+            seq_copy._positional_metadata = \
+                PositionalMetadataMixin._copy_(self)
 
         return seq_copy
 
@@ -1450,7 +1339,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
-        """Count occurrences of a subsequence in the biological sequence.
+        """Count occurrences of a subsequence in this sequence.
 
         Parameters
         ----------
@@ -1464,7 +1353,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         int
-            Number of occurrences of `subsequence` in the biological sequence.
+            Number of occurrences of `subsequence` in this sequence.
 
         Raises
         ------
@@ -1472,7 +1361,7 @@ class Sequence(collections.Sequence, SkbioObject):
             If `subsequence` is of length 0.
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -1501,7 +1390,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Parameters
         ----------
         subsequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Subsequence to search for in the biological sequence.
+            Subsequence to search for in this sequence.
         start : int, optional
             The position at which to start searching (inclusive).
         end : int, optional
@@ -1510,16 +1399,15 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         int
-            Position where `subsequence` first occurs in the biological
-            sequence.
+            Position where `subsequence` first occurs in this sequence.
 
         Raises
         ------
         ValueError
-            If `subsequence` is not present in the biological sequence.
+            If `subsequence` is not present in this sequence.
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -1545,15 +1433,15 @@ class Sequence(collections.Sequence, SkbioObject):
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
             Sequence to compute the distance to.
         metric : function, optional
-            Function used to compute the distance between the biological
-            sequence and `other`. If ``None`` (the default),
+            Function used to compute the distance between this sequence and
+            `other`. If ``None`` (the default),
             ``scipy.spatial.distance.hamming`` will be used. This function
             should take two ``skbio.Sequence`` objects and return a ``float``.
 
         Returns
         -------
         float
-            Distance between the biological sequence and `other`.
+            Distance between this sequence and `other`.
 
         Raises
         ------
@@ -1569,8 +1457,8 @@ class Sequence(collections.Sequence, SkbioObject):
             removed from this method when the ``skbio.sequence.stats`` module
             is created (track progress on issue #913).
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1627,8 +1515,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1669,8 +1557,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1711,8 +1599,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1761,8 +1649,8 @@ class Sequence(collections.Sequence, SkbioObject):
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1921,7 +1809,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
-        """Generate kmers of length `k` from the biological sequence.
+        """Generate kmers of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1933,7 +1821,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Yields
         ------
         Sequence
-            kmer of length `k` contained in the biological sequence.
+            kmer of length `k` contained in this sequence.
 
         Raises
         ------
@@ -1982,7 +1870,7 @@ class Sequence(collections.Sequence, SkbioObject):
 
     @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
-        """Return counts of words of length `k` from the biological sequence.
+        """Return counts of words of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1997,8 +1885,7 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         dict
-            Frequencies of words of length `k` contained in the biological
-            sequence.
+            Frequencies of words of length `k` contained in this sequence.
 
         Raises
         ------
@@ -2153,18 +2040,17 @@ class Sequence(collections.Sequence, SkbioObject):
                 yield r
 
     def _to(self, sequence=None, metadata=None, positional_metadata=None):
-        """Return a copy of the current biological sequence.
+        """Return a copy of this sequence.
 
-        Returns a copy of the current biological sequence, optionally with
-        updated attributes specified as keyword arguments.
+        Returns a copy of this sequence, optionally with updated attributes
+        specified as keyword arguments.
 
         Arguments are the same as those passed to the ``Sequence`` constructor.
         The returned copy will have its attributes updated based on the
         arguments. If an attribute is missing, the copy will keep the same
-        attribute as the current biological sequence. Valid attribute names
-        are `'sequence'`, `'metadata'`, and `'positional_metadata'`. Default
-        behavior is to return a copy of the current biological sequence
-        without changing any attributes.
+        attribute as this sequence. Valid attribute names are `'sequence'`,
+        `'metadata'`, and `'positional_metadata'`. Default behavior is to
+        return a copy of this sequence without changing any attributes.
 
         Parameters
         ----------
@@ -2175,9 +2061,8 @@ class Sequence(collections.Sequence, SkbioObject):
         Returns
         -------
         Sequence
-            Copy of the current biological sequence, optionally with updated
-            attributes based on arguments. Will be the same type as the current
-            biological sequence (`self`).
+            Copy of this sequence, optionally with updated attributes based on
+            arguments. Will be the same type as this sequence (`self`).
 
         Notes
         -----
@@ -2187,16 +2072,16 @@ class Sequence(collections.Sequence, SkbioObject):
         `Sequence.copy`, which will actually copy `sequence`.
 
         This method is the preferred way of creating new instances from an
-        existing biological sequence, instead of calling
-        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
-        it's easy to forget to propagate attributes to the new instance).
+        existing sequence, instead of calling ``self.__class__(...)``, as the
+        latter can be error-prone (e.g., it's easy to forget to propagate
+        attributes to the new instance).
 
         """
         if sequence is None:
             sequence = self._bytes
-        if metadata is None:
+        if metadata is None and self.has_metadata():
             metadata = self._metadata
-        if positional_metadata is None:
+        if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
         return self._constructor(sequence=sequence, metadata=metadata,
                                  positional_metadata=positional_metadata)
@@ -2318,208 +2203,3 @@ def _slices_from_iter(array, indexables):
                              "containing %r." % i)
 
         yield array[i]
-
-
-class _SequenceReprBuilder(object):
-    """Build a ``Sequence`` repr.
-
-    Parameters
-    ----------
-    seq : Sequence
-        Sequence to repr.
-    width : int
-        Maximum width of the repr.
-    indent : int
-        Number of spaces to use for indented lines.
-    chunk_size: int
-        Number of characters in each chunk of a sequence.
-
-    """
-    def __init__(self, seq, width, indent, chunk_size):
-        self._seq = seq
-        self._width = width
-        self._indent = ' ' * indent
-        self._chunk_size = chunk_size
-
-    def build(self):
-        lines = ElasticLines()
-
-        cls_name = self._seq.__class__.__name__
-        lines.add_line(cls_name)
-        lines.add_separator()
-
-        if self._seq.has_metadata():
-            lines.add_line('Metadata:')
-            # Python 3 doesn't allow sorting of mixed types so we can't just
-            # use sorted() on the metadata keys. Sort first by type then sort
-            # by value within each type.
-            for key in self._sorted_keys_grouped_by_type(self._seq.metadata):
-                value = self._seq.metadata[key]
-                lines.add_lines(self._format_metadata_key_value(key, value))
-
-        if self._seq.has_positional_metadata():
-            lines.add_line('Positional metadata:')
-            for key in self._seq.positional_metadata.columns.values.tolist():
-                dtype = self._seq.positional_metadata[key].dtype
-                lines.add_lines(
-                    self._format_positional_metadata_column(key, dtype))
-
-        lines.add_line('Stats:')
-        for label, value in self._seq._repr_stats():
-            lines.add_line('%s%s: %s' % (self._indent, label, value))
-        lines.add_separator()
-
-        num_lines, num_chars, column_width = self._find_optimal_seq_chunking()
-
-        # display entire sequence if we can, else display the first two and
-        # last two lines separated by ellipsis
-        if num_lines <= 5:
-            lines.add_lines(self._format_chunked_seq(
-                range(num_lines), num_chars, column_width))
-        else:
-            lines.add_lines(self._format_chunked_seq(
-                range(2), num_chars, column_width))
-            lines.add_line('...')
-            lines.add_lines(self._format_chunked_seq(
-                range(num_lines - 2, num_lines), num_chars, column_width))
-
-        return lines.to_str()
-
-    def _sorted_keys_grouped_by_type(self, dict_):
-        """Group keys within a dict by their type and sort within type."""
-        type_sorted = sorted(dict_, key=self._type_sort_key)
-        type_and_value_sorted = []
-        for _, group in itertools.groupby(type_sorted, self._type_sort_key):
-            type_and_value_sorted.extend(sorted(group))
-        return type_and_value_sorted
-
-    def _type_sort_key(self, key):
-        return repr(type(key))
-
-    def _format_metadata_key_value(self, key, value):
-        """Format metadata key:value, wrapping across lines if necessary."""
-        key_fmt = self._format_key(key)
-
-        supported_type = True
-        if isinstance(value, (six.text_type, six.binary_type)):
-            # for stringy values, there may be u'' or b'' depending on the type
-            # of `value` and version of Python. find the starting quote
-            # character so that wrapped text will line up with that instead of
-            # the string literal prefix character. for example:
-            #
-            #     'foo': u'abc def ghi
-            #              jkl mno'
-            value_repr = repr(value)
-            extra_indent = 1
-            if not (value_repr.startswith("'") or value_repr.startswith('"')):
-                extra_indent = 2
-        # handles any number, this includes bool
-        elif value is None or isinstance(value, numbers.Number):
-            value_repr = repr(value)
-            extra_indent = 0
-        else:
-            supported_type = False
-
-        if not supported_type or len(value_repr) > 140:
-            value_repr = str(type(value))
-            # extra indent of 1 so that wrapped text lines up past the bracket:
-            #
-            #     'foo': <type
-            #             'dict'>
-            extra_indent = 1
-
-        return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
-
-    def _format_key(self, key):
-        """Format metadata key.
-
-        Includes initial indent and trailing colon and space:
-
-            <indent>'foo':<space>
-
-        """
-        key_fmt = self._indent + repr(key)
-        supported_types = (six.text_type, six.binary_type, numbers.Number,
-                           type(None))
-        if len(key_fmt) > (self._width / 2) or not isinstance(key,
-                                                              supported_types):
-            key_fmt = self._indent + str(type(key))
-        return '%s: ' % key_fmt
-
-    def _wrap_text_with_indent(self, text, initial_text, extra_indent):
-        """Wrap text across lines with an initial indentation.
-
-        For example:
-
-            'foo': 'abc def
-                    ghi jkl
-                    mno pqr'
-
-        <indent>'foo':<space> is `initial_text`. `extra_indent` is 1. Wrapped
-        lines are indented such that they line up with the start of the
-        previous line of wrapped text.
-
-        """
-        return textwrap.wrap(
-            text, width=self._width, expand_tabs=False,
-            initial_indent=initial_text,
-            subsequent_indent=' ' * (len(initial_text) + extra_indent))
-
-    def _format_positional_metadata_column(self, key, dtype):
-        key_fmt = self._format_key(key)
-        dtype_fmt = '<dtype: %s>' % str(dtype)
-        return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
-
-    def _find_optimal_seq_chunking(self):
-        """Find the optimal number of sequence chunks to fit on a single line.
-
-        Returns the number of lines the sequence will occupy, the number of
-        sequence characters displayed on each line, and the column width
-        necessary to display position info using the optimal number of sequence
-        chunks.
-
-        """
-        # strategy: use an iterative approach to find the optimal number of
-        # sequence chunks per line. start with a single chunk and increase
-        # until the max line width is exceeded. when this happens, the previous
-        # number of chunks is optimal
-        num_lines = 0
-        num_chars = 0
-        column_width = 0
-
-        num_chunks = 1
-        not_exceeded = True
-        while not_exceeded:
-            line_len, new_chunk_info = self._compute_chunked_seq_line_len(
-                num_chunks)
-            not_exceeded = line_len <= self._width
-            if not_exceeded:
-                num_lines, num_chars, column_width = new_chunk_info
-                num_chunks += 1
-        return num_lines, num_chars, column_width
-
-    def _compute_chunked_seq_line_len(self, num_chunks):
-        """Compute line length based on a number of chunks."""
-        num_chars = num_chunks * self._chunk_size
-
-        # ceil to account for partial line
-        num_lines = int(math.ceil(len(self._seq) / num_chars))
-
-        # position column width is fixed width, based on the number of
-        # characters necessary to display the position of the final line (all
-        # previous positions will be left justified using this width)
-        column_width = len('%d ' % ((num_lines - 1) * num_chars))
-
-        # column width + number of sequence characters + spaces between chunks
-        line_len = column_width + num_chars + (num_chunks - 1)
-        return line_len, (num_lines, num_chars, column_width)
-
-    def _format_chunked_seq(self, line_idxs, num_chars, column_width):
-        """Format specified lines of chunked sequence data."""
-        lines = []
-        for line_idx in line_idxs:
-            seq_idx = line_idx * num_chars
-            chars = str(self._seq[seq_idx:seq_idx+num_chars])
-            chunked_chars = chunk_str(chars, self._chunk_size, ' ')
-            lines.append(('%d' % seq_idx).ljust(column_width) + chunked_chars)
-        return lines

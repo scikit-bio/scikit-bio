@@ -11,10 +11,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from future.builtins import range
 
-from skbio.util._decorator import classproperty, stable
+from skbio.util._decorator import classproperty, stable, classonlymethod
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
-from skbio.sequence._base import ElasticLines
+from skbio._base import ElasticLines
 
 
 class GeneticCode(SkbioObject):
@@ -141,7 +141,7 @@ class GeneticCode(SkbioObject):
             cls.__offset_table = table
         return cls.__offset_table
 
-    @classmethod
+    @classonlymethod
     @stable(as_of="0.4.0")
     def from_ncbi(cls, table_id=1):
         """Return NCBI genetic code specified by table ID.

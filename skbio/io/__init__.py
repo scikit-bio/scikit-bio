@@ -15,6 +15,8 @@ see the associated documentation.
 .. autosummary::
    :toctree: generated/
 
+   blast6
+   blast7
    clustal
    fasta
    fastq
@@ -50,6 +52,7 @@ User exceptions and warnings
    UnrecognizedFormatError
    IOSourceError
    FileFormatError
+   BLAST7FormatError
    ClustalFormatError
    FASTAFormatError
    FASTQFormatError
@@ -77,12 +80,11 @@ Reading and writing files (I/O) can be a complicated task:
 
 * A file format can sometimes be read into more than one in-memory
   representation (i.e., object). For example, a FASTA file can be read into an
-  :mod:`skbio.alignment.SequenceCollection` or :mod:`skbio.alignment.Alignment`
-  depending on the file's contents and what operations you'd like to perform on
-  your data.
+  :mod:`skbio.alignment.TabularMSA` or :mod:`skbio.sequence.DNA` depending on
+  what operations you'd like to perform on your data.
 * A single object might be writeable to more than one file format. For example,
-  an :mod:`skbio.alignment.Alignment` object could be written to FASTA, FASTQ,
-  QSEQ, or PHYLIP formats, just to name a few.
+  an :mod:`skbio.alignment.TabularMSA` object could be written to FASTA, FASTQ,
+  CLUSTAL, or PHYLIP formats, just to name a few.
 * You might not know the exact file format of your file, but you want to read
   it into an appropriate object.
 * You might want to read multiple files into a single object, or write an
@@ -195,10 +197,11 @@ from skbio.util import TestRunner
 
 from ._warning import FormatIdentificationWarning, ArgumentOverrideWarning
 from ._exception import (UnrecognizedFormatError, FileFormatError,
-                         ClustalFormatError, FASTAFormatError,
-                         IOSourceError, FASTQFormatError, LSMatFormatError,
-                         NewickFormatError, OrdinationFormatError,
-                         PhylipFormatError, QSeqFormatError, QUALFormatError)
+                         BLAST7FormatError, ClustalFormatError,
+                         FASTAFormatError, GenBankFormatError, IOSourceError,
+                         FASTQFormatError, LSMatFormatError, NewickFormatError,
+                         OrdinationFormatError, PhylipFormatError,
+                         QSeqFormatError, QUALFormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -208,9 +211,11 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'UnrecognizedFormatError', 'IOSourceError',
 
            'FileFormatError',
+           'BLAST7FormatError',
            'ClustalFormatError',
            'FASTAFormatError',
            'FASTQFormatError',
+           'GenBankFormatError',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',
@@ -222,6 +227,8 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
 # Necessary to import each file format module to have them added to the I/O
 # registry. We use import_module instead of a typical import to avoid flake8
 # unused import errors.
+import_module('skbio.io.format.blast6')
+import_module('skbio.io.format.blast7')
 import_module('skbio.io.format.clustal')
 import_module('skbio.io.format.fasta')
 import_module('skbio.io.format.fastq')
@@ -230,7 +237,7 @@ import_module('skbio.io.format.newick')
 import_module('skbio.io.format.ordination')
 import_module('skbio.io.format.phylip')
 import_module('skbio.io.format.qseq')
-
+import_module('skbio.io.format.genbank')
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.

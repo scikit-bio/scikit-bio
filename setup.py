@@ -83,7 +83,9 @@ extensions = [
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args)
+              extra_compile_args=ssw_extra_compile_args),
+    Extension("skbio.diversity._phylogenetic",
+              ["skbio/diversity/_phylogenetic" + ext])
 ]
 
 if USE_CYTHON:
@@ -100,7 +102,6 @@ setup(name='scikit-bio',
       maintainer="scikit-bio development team",
       maintainer_email="gregcaporaso@gmail.com",
       url='http://scikit-bio.org',
-      test_suite='nose.collector',
       packages=find_packages(),
       ext_modules=extensions,
       cmdclass={'build_ext': build_ext},
@@ -115,13 +116,11 @@ setup(name='scikit-bio',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           'numpy >= 1.9.2',
-          'pandas >= 0.16.2',
+          'pandas >= 0.17.0',
           'scipy >= 0.15.1',
-          'six >= 1.9.0'
+          'six >= 1.9.0',
+          'nose >= 1.3.7'
       ],
-      extras_require={'test': ["HTTPretty", "nose", "pep8", "flake8",
-                               "python-dateutil", "check-manifest"],
-                      'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],

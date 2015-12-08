@@ -32,7 +32,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
+|Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -50,10 +50,9 @@ relax this rule to allow for longer sequence identifiers. See the
 The format described here is "sequential" format. The original PHYLIP format
 specification [3]_ describes both sequential and interleaved formats.
 
-.. note:: scikit-bio currently only supports writing strict, sequential
-   PHYLIP-formatted files from an ``skbio.alignment.Alignment``. It does not
-   yet support reading PHYLIP-formatted files, nor does it support relaxed or
-   interleaved PHYLIP formats.
+.. note:: scikit-bio currently supports reading and writing strict, sequential
+   PHYLIP-formatted files. Relaxed and/or interleaved PHYLIP formats are not
+   supported.
 
 Header Section
 ^^^^^^^^^^^^^^
@@ -82,13 +81,16 @@ must have spaces appended to them to reach the 10 character fixed width. Within
 an ID, all characters except newlines are supported, including spaces,
 underscores, and numbers.
 
-.. note:: While not explicitly stated in the original PHYLIP format
-   description, scikit-bio only supports writing unique sequence identifiers
-   (i.e., duplicates are not allowed). Uniqueness is required because an
-   ``skbio.alignment.Alignment`` cannot be created with duplicate IDs.
+.. note:: When reading a PHYLIP-formatted file into an
+   ``skbio.alignment.TabularMSA`` object, sequence identifiers/labels are
+   stored as ``TabularMSA`` index labels (``index`` property).
+
+   When writing an ``skbio.alignment.TabularMSA`` object as a PHYLIP-formatted
+   file, ``TabularMSA`` index labels will be converted to strings and written
+   as sequence identifiers/labels.
 
    scikit-bio supports the empty string (``''``) as a valid sequence ID. An
-   empty ID will be padded with 10 spaces.
+   empty ID will be padded with 10 spaces when writing.
 
 Sequence characters immediately follow the sequence ID. They *must* start at
 the 11th character in the line, as the first 10 characters are reserved for the
@@ -100,15 +102,16 @@ PHYLIP specification uses ``-`` as a gap character, though older versions also
 supported ``.``. The sequence characters may contain optional spaces (e.g., to
 improve readability), and both upper and lower case characters are supported.
 
-.. note:: scikit-bio will write a PHYLIP-formatted file even if the alignment's
-   sequence characters are not valid IUPAC characters. This differs from the
-   PHYLIP specification, which states that a PHYLIP-formatted file can only
-   contain valid IUPAC characters. To check whether all characters are valid
-   before writing, the user can call ``Alignment.is_valid()``.
+.. note:: scikit-bio will read/write a PHYLIP-formatted file as long as the
+   alignment's sequence characters are valid for the type of in-memory sequence
+   object being read into or written from. This differs from the PHYLIP
+   specification, which states that a PHYLIP-formatted file can only contain
+   valid IUPAC characters. See the ``constructor`` format parameter below for
+   details.
 
    Since scikit-bio supports both ``-`` and ``.`` as gap characters (e.g., in
-   ``skbio.alignment.Alignment``), both are supported when writing a
-   PHYLIP-formatted file.
+   ``DNA``, ``RNA``, and ``Protein`` sequence objects), both are supported when
+   reading/writing a PHYLIP-formatted file.
 
    When writing a PHYLIP-formatted file, scikit-bio will split up each sequence
    into chunks that are 10 characters long. Each chunk will be separated by a
@@ -116,26 +119,46 @@ improve readability), and both upper and lower case characters are supported.
    format). It will *not* be wrapped across multiple lines. Sequences are
    chunked in this manner for improved readability, and because most example
    PHYLIP files are chunked in a similar way (e.g., see the example file
-   above). Note that this chunking is not required by the PHYLIP format.
+   above). Note that this chunking is not required when reading
+   PHYLIP-formatted files, nor by the PHYLIP format specification itself.
+
+Format Parameters
+-----------------
+The only supported format parameter is ``constructor``, which specifies the
+type of in-memory sequence object to read each aligned sequence into. This must
+be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is
+a required format parameter. For example, if you know that the PHYLIP file
+you're reading contains DNA sequences, you would pass ``constructor=DNA`` to
+the reader call.
 
 Examples
 --------
-Let's create an alignment with three DNA sequences of equal length:
+Let's create a ``TabularMSA`` with three DNA sequences:
 
->>> from skbio import Alignment, DNA
+>>> from skbio import TabularMSA, DNA
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id':'seq1'}),
 ...         DNA('A--GTCGAA-GTACCT', metadata={'id':'sequence-2'}),
 ...         DNA('AGAGTTGAAGGTATCT', metadata={'id':'3'})]
->>> aln = Alignment(seqs)
->>> aln
-<Alignment: n=3; mean +/- std length=16.00 +/- 0.00>
+>>> msa = TabularMSA(seqs, minter='id')
+>>> msa
+TabularMSA[DNA]
+----------------------
+Stats:
+    sequence count: 3
+    position count: 16
+----------------------
+ACCGTTGTA-GTAGCT
+A--GTCGAA-GTACCT
+AGAGTTGAAGGTATCT
+>>> msa.index
+Index(['seq1', 'sequence-2', '3'], dtype='object')
 
-Now let's write the alignment to file in PHYLIP format, and take a look at the
-output:
+Now let's write the ``TabularMSA`` to file in PHYLIP format and take a look at
+the output:
 
 >>> from io import StringIO
 >>> fh = StringIO()
->>> print(aln.write(fh, format='phylip').getvalue())
+>>> print(msa.write(fh, format='phylip').getvalue())
 3 16
 seq1      ACCGTTGTA- GTAGCT
 sequence-2A--GTCGAA- GTACCT
@@ -148,40 +171,36 @@ each sequence appears on a single line (sequential format). Also note that each
 sequence ID is padded with spaces to 10 characters in order to produce a fixed
 width column.
 
-If the sequence IDs in an alignment surpass the 10-character limit, an error
-will be raised when we try to write a PHYLIP file:
+If the index labels in a ``TabularMSA`` surpass the 10-character limit, an
+error will be raised when writing:
 
->>> long_id_seqs = [DNA('ACCGT', metadata={'id':'seq1'}),
-...                 DNA('A--GT', metadata={'id':'long-sequence-2'}),
-...                 DNA('AGAGT', metadata={'id':'seq3'})]
->>> long_id_aln = Alignment(long_id_seqs)
+>>> msa.index = ['seq1', 'long-sequence-2', 'seq3']
 >>> fh = StringIO()
->>> long_id_aln.write(fh, format='phylip')
+>>> msa.write(fh, format='phylip')
 Traceback (most recent call last):
     ...
-skbio.io._exception.PhylipFormatError: Alignment can only be written in \
-PHYLIP format if all sequence IDs have 10 or fewer characters. Found sequence \
-with ID 'long-sequence-2' that exceeds this limit. Use Alignment.update_ids \
-to assign shorter IDs.
+skbio.io._exception.PhylipFormatError: ``TabularMSA`` can only be written in \
+PHYLIP format if all sequence index labels have 10 or fewer characters. Found \
+sequence with index label 'long-sequence-2' that exceeds this limit. Use \
+``TabularMSA.reassign_index`` to assign shorter index labels.
 >>> fh.close()
 
-One way to work around this is to update the IDs to be shorter. The recommended
-way of accomplishing this is via ``Alignment.update_ids``, which provides a
-flexible way of creating a new ``Alignment`` with updated IDs. For example, to
-remap each of the IDs to integer-based IDs:
+One way to work around this is to assign shorter index labels. The recommended
+way to do this is via ``TabularMSA.reassign_index``. For example, to reassign
+default integer index labels:
 
->>> short_id_aln, _ = long_id_aln.update_ids()
->>> short_id_aln.ids()
-['1', '2', '3']
+>>> msa.reassign_index()
+>>> msa.index
+Int64Index([0, 1, 2], dtype='int64')
 
-We can now write the new alignment in PHYLIP format:
+We can now write the ``TabularMSA`` in PHYLIP format:
 
 >>> fh = StringIO()
->>> print(short_id_aln.write(fh, format='phylip').getvalue())
-3 5
-1         ACCGT
-2         A--GT
-3         AGAGT
+>>> print(msa.write(fh, format='phylip').getvalue())
+3 16
+0         ACCGTTGTA- GTAGCT
+1         A--GTCGAA- GTACCT
+2         AGAGTTGAAG GTATCT
 <BLANKLINE>
 >>> fh.close()
 
@@ -207,8 +226,7 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from skbio.alignment import Alignment
-from skbio.sequence import Sequence
+from skbio.alignment import TabularMSA
 from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
 
@@ -233,43 +251,50 @@ def _phylip_sniffer(fh):
     return True, {}
 
 
-@phylip.reader(Alignment)
-def _phylip_to_alignment(fh, constructor=Sequence):
-    return Alignment([constructor(seq, metadata={'id': ID})
-                      for (seq, ID) in _parse_phylip_raw(fh)])
+@phylip.reader(TabularMSA)
+def _phylip_to_tabular_msa(fh, constructor=None):
+    if constructor is None:
+        raise ValueError("Must provide `constructor`.")
+
+    seqs = []
+    index = []
+    for seq, ID in _parse_phylip_raw(fh):
+        seqs.append(constructor(seq))
+        index.append(ID)
+    return TabularMSA(seqs, index=index)
 
 
-@phylip.writer(Alignment)
-def _alignment_to_phylip(obj, fh):
-
-    if obj.is_empty():
+@phylip.writer(TabularMSA)
+def _tabular_msa_to_phylip(obj, fh):
+    sequence_count = obj.shape.sequence
+    if sequence_count < 1:
         raise PhylipFormatError(
-            "Alignment can only be written in PHYLIP format if there is at "
+            "TabularMSA can only be written in PHYLIP format if there is at "
             "least one sequence in the alignment.")
 
-    sequence_length = obj.sequence_length()
-    if sequence_length == 0:
+    sequence_length = obj.shape.position
+    if sequence_length < 1:
         raise PhylipFormatError(
-            "Alignment can only be written in PHYLIP format if there is at "
+            "TabularMSA can only be written in PHYLIP format if there is at "
             "least one position in the alignment.")
 
     chunk_size = 10
-    for id_ in obj.ids():
-        if len(id_) > chunk_size:
+    labels = [str(label) for label in obj.index]
+    for label in labels:
+        if len(label) > chunk_size:
             raise PhylipFormatError(
-                "Alignment can only be written in PHYLIP format if all "
-                "sequence IDs have %d or fewer characters. Found sequence "
-                "with ID '%s' that exceeds this limit. Use "
-                "Alignment.update_ids to assign shorter IDs." %
-                (chunk_size, id_))
+                "``TabularMSA`` can only be written in PHYLIP format if all "
+                "sequence index labels have %d or fewer characters. Found "
+                "sequence with index label '%s' that exceeds this limit. Use "
+                "``TabularMSA.reassign_index`` to assign shorter index labels."
+                % (chunk_size, label))
 
-    sequence_count = obj.sequence_count()
     fh.write('{0:d} {1:d}\n'.format(sequence_count, sequence_length))
 
     fmt = '{0:%d}{1}\n' % chunk_size
-    for seq in obj:
+    for label, seq in zip(labels, obj):
         chunked_seq = chunk_str(str(seq), chunk_size, ' ')
-        fh.write(fmt.format(seq.metadata['id'], chunked_seq))
+        fh.write(fmt.format(label, chunked_seq))
 
 
 def _validate_header(header):
@@ -332,4 +357,4 @@ def _line_generator(fh):
     """Just remove linebreak characters and yield lines.
     """
     for line in fh:
-        yield line[:-1]
+        yield line.rstrip('\n')

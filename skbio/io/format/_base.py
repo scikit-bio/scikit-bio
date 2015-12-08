@@ -164,7 +164,7 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
             id_ = _whitespace_regex.sub(id_whitespace_replacement, id_)
 
         if 'description' in seq.metadata:
-            desc = seq.metadata['description']
+            desc = '%s' % seq.metadata['description']
         else:
             desc = ''
 
@@ -192,10 +192,14 @@ def _format_fasta_like_records(generator, id_whitespace_replacement,
         yield header, "%s" % seq_str, qual
 
 
-def _line_generator(fh, skip_blanks=False):
+def _line_generator(fh, skip_blanks=False, strip=True):
     for line in fh:
-        line = line.strip()
-        if line or not skip_blanks:
+        if strip:
+            line = line.strip()
+        skip = False
+        if skip_blanks:
+            skip = line.isspace() or not line
+        if not skip:
             yield line
 
 

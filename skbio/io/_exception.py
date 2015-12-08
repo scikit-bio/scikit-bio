@@ -24,6 +24,16 @@ class UnrecognizedFormatError(FileFormatError):
     pass
 
 
+class GenBankFormatError(FileFormatError):
+    """Raised when a ``genbank`` formatted file cannot be parsed."""
+    pass
+
+
+class BLAST7FormatError(FileFormatError):
+    """Raised when a ``blast7`` formatted file cannot be parsed."""
+    pass
+
+
 class ClustalFormatError(FileFormatError):
     """Raised when a ``clustal`` formatted file cannot be parsed."""
     pass
@@ -62,7 +72,7 @@ class FASTQFormatError(FileFormatError):
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 
-    May also be raised when an object (e.g., ``Alignment``) cannot be written
+    May also be raised when an object (e.g., ``TabularMSA``) cannot be written
     in ``phylip`` format.
 
     """

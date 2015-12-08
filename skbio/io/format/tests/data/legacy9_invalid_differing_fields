@@ -1,0 +1,20 @@
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject1
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query1
+# Subject: subject3
+# 0 hits found
+# BLASTP 2.2.31+
+# Query: query2
+# Subject: subject1
+# Fields: query id, subject id, q. start
+# 1 hits found
+query1	subject1	4
+# BLASTP 2.2.3 [May-13-2002]
+# Database: other_vertebrate
+# Subject: subject1
+# Fields: 
+Query id,Subject id,subject ids
+query2	subject1	N/A

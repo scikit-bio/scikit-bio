@@ -20,7 +20,11 @@ from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_true
 
 from skbio import OrdinationResults
-from skbio._base import SkbioObject
+from skbio._base import (SkbioObject, MetadataMixin, PositionalMetadataMixin,
+                         ElasticLines)
+from skbio.util._decorator import overrides
+from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
+                                 PositionalMetadataMixinTests)
 
 
 class TestSkbioObject(unittest.TestCase):
@@ -30,6 +34,67 @@ class TestSkbioObject(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             Foo()
+
+
+class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                        MetadataMixinTests):
+    def setUp(self):
+        class ExampleMetadataMixin(MetadataMixin):
+            def __init__(self, metadata=None):
+                MetadataMixin._init_(self, metadata=metadata)
+
+            def __eq__(self, other):
+                return MetadataMixin._eq_(self, other)
+
+            def __ne__(self, other):
+                return MetadataMixin._ne_(self, other)
+
+            def __copy__(self):
+                copy = self.__class__(metadata=None)
+                copy._metadata = MetadataMixin._copy_(self)
+                return copy
+
+            def __deepcopy__(self, memo):
+                copy = self.__class__(metadata=None)
+                copy._metadata = MetadataMixin._deepcopy_(self, memo)
+                return copy
+
+        self._metadata_constructor_ = ExampleMetadataMixin
+
+
+class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                                  PositionalMetadataMixinTests):
+    def setUp(self):
+        class ExamplePositionalMetadataMixin(PositionalMetadataMixin):
+            @overrides(PositionalMetadataMixin)
+            def _positional_metadata_axis_len_(self):
+                return self._axis_len
+
+            def __init__(self, axis_len, positional_metadata=None):
+                self._axis_len = axis_len
+
+                PositionalMetadataMixin._init_(
+                    self, positional_metadata=positional_metadata)
+
+            def __eq__(self, other):
+                return PositionalMetadataMixin._eq_(self, other)
+
+            def __ne__(self, other):
+                return PositionalMetadataMixin._ne_(self, other)
+
+            def __copy__(self):
+                copy = self.__class__(self._axis_len, positional_metadata=None)
+                copy._positional_metadata = \
+                    PositionalMetadataMixin._copy_(self)
+                return copy
+
+            def __deepcopy__(self, memo):
+                copy = self.__class__(self._axis_len, positional_metadata=None)
+                copy._positional_metadata = \
+                    PositionalMetadataMixin._deepcopy_(self, memo)
+                return copy
+
+        self._positional_metadata_constructor_ = ExamplePositionalMetadataMixin
 
 
 class TestOrdinationResults(unittest.TestCase):
@@ -299,6 +364,37 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_svg(self):
         assert_is_instance(self.min_ord_results.svg, SVG)
+
+
+class TestElasticLines(unittest.TestCase):
+    def setUp(self):
+        self.el = ElasticLines()
+
+    def test_empty(self):
+        self.assertEqual(self.el.to_str(), '')
+
+    def test_add_line(self):
+        self.el.add_line('foo')
+        self.assertEqual(self.el.to_str(), 'foo')
+
+    def test_add_lines(self):
+        self.el = ElasticLines()
+        self.el.add_lines(['alice', 'bob', 'carol'])
+        self.assertEqual(self.el.to_str(), 'alice\nbob\ncarol')
+
+    def test_add_separator(self):
+        self.el.add_separator()
+        self.assertEqual(self.el.to_str(), '')
+
+        self.el.add_line('foo')
+        self.assertEqual(self.el.to_str(), '---\nfoo')
+
+        self.el.add_separator()
+        self.el.add_lines(['bar', 'bazzzz'])
+        self.el.add_separator()
+
+        self.assertEqual(self.el.to_str(),
+                         '------\nfoo\n------\nbar\nbazzzz\n------')
 
 
 if __name__ == '__main__':

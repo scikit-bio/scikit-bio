@@ -16,7 +16,8 @@ import numpy as np
 
 import re
 
-from skbio.util._decorator import classproperty, overrides, stable
+from skbio.util._decorator import (classproperty, overrides, stable,
+                                   experimental)
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -33,6 +34,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     positional_metadata
     alphabet
     gap_chars
+    default_gap_char
     nondegenerate_chars
     degenerate_chars
     degenerate_map
@@ -119,6 +121,23 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         """
         return set('-.')
+
+    @classproperty
+    @experimental(as_of='0.4.0-dev')
+    def default_gap_char(cls):
+        """Gap character to use when constructing a new gapped sequence.
+
+        This character is used when it is necessary to represent gap characters
+        in a new sequence. For example, a majority consensus sequence will use
+        this character to represent gaps.
+
+        Returns
+        -------
+        str
+            Default gap character.
+
+        """
+        return '-'
 
     @classproperty
     @stable(as_of='0.4.0')

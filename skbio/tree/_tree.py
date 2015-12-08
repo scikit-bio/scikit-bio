@@ -25,7 +25,7 @@ from skbio.stats.distance import DistanceMatrix
 from ._exception import (NoLengthError, DuplicateNodeError, NoParentError,
                          MissingNodeError, TreeError)
 from skbio.util import RepresentationWarning
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 
 
 def distance_from_r(m1, m2):
@@ -1822,7 +1822,7 @@ class TreeNode(SkbioObject):
 
     lca = lowest_common_ancestor  # for convenience
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_taxonomy(cls, lineage_map):
         """Construct a tree from a taxonomy
@@ -1916,7 +1916,7 @@ class TreeNode(SkbioObject):
             node = node.children[0]
         return distance
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0")
     def from_linkage_matrix(cls, linkage_matrix, id_list):
         """Return tree from SciPy linkage matrix.
@@ -2052,7 +2052,7 @@ class TreeNode(SkbioObject):
                     seen.add(node.id)
 
     @experimental(as_of="0.4.0")
-    def to_array(self, attrs=None):
+    def to_array(self, attrs=None, nan_length_value=None):
         """Return an array representation of self
 
         Parameters
@@ -2061,12 +2061,17 @@ class TreeNode(SkbioObject):
             The attributes and types to return. The expected form is
             [(attribute_name, type)]. If `None`, then `name`, `length`, and
             `id` are returned.
+        nan_length_value : float, optional
+            If provided, replaces any `nan` in the branch length vector
+            (i.e., ``result['length']``) with this value. `nan` branch lengths
+            can arise from an edge not having a length (common for the root
+            node parent edge), which can making summing problematic.
 
         Returns
         -------
         dict of array
             {id_index: {id: TreeNode},
-             child_index: [(node_id, left_child_id, right_child_id)],
+             child_index: ((node_id, left_child_id, right_child_id)),
              attr_1: array(...),
              ...
              attr_N: array(...)}
@@ -2074,10 +2079,7 @@ class TreeNode(SkbioObject):
         Notes
         -----
         Attribute arrays are in index order such that TreeNode.id can be used
-        as a lookup into the the array
-
-        If `length` is an attribute, this will also record the length off the
-        root which is `nan`. Take care when summing.
+        as a lookup into the array.
 
         Examples
         --------
@@ -2088,7 +2090,10 @@ class TreeNode(SkbioObject):
         >>> sorted(res.keys())
         ['child_index', 'id', 'id_index', 'length', 'name']
         >>> res['child_index']
-        [(4, 0, 2), (5, 3, 3), (6, 4, 5), (7, 6, 6)]
+        array([[4, 0, 2],
+               [5, 3, 3],
+               [6, 4, 5],
+               [7, 6, 6]])
         >>> for k, v in res['id_index'].items():
         ...     print(k, v)
         ...
@@ -2132,6 +2137,9 @@ class TreeNode(SkbioObject):
 
         results = {'id_index': id_index, 'child_index': child_index}
         results.update({attr: arr for (attr, dtype), arr in zip(attrs, tmp)})
+        if nan_length_value is not None:
+            length_v = results['length']
+            length_v[np.isnan(length_v)] = nan_length_value
         return results
 
     def _ascii_art(self, char1='-', show_internal=True, compact=False):
@@ -2320,6 +2328,7 @@ class TreeNode(SkbioObject):
                     raise TreeError("No support for single descedent nodes")
                 else:
                     tip_info = [(max(c.MaxDistTips), c) for c in n.children]
+
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
                     tip_a, child_a = tip_info[best_idx[0]]
@@ -2714,10 +2723,12 @@ class TreeNode(SkbioObject):
         -------
         dict
             A mapping {node_id: TreeNode}
-        list of tuple of (int, int, int)
-            The first index in each tuple is the corresponding node_id. The
-            second index is the left most leaf index. The third index is the
-            right most leaf index
+        np.array of ints
+            This arrays describes the IDs of every internal node, and the ID
+            range of the immediate descendents. The first column in the array
+            corresponds to node_id. The second column is the left most
+            descendent's ID. The third column is the right most descendent's
+            ID.
         """
         self.assign_ids()
 
@@ -2742,6 +2753,8 @@ class TreeNode(SkbioObject):
             child_index.append((self.id,
                                 self.children[0].id,
                                 self.children[-1].id))
+        child_index = np.asarray(child_index)
+        child_index = np.atleast_2d(child_index)
 
         return id_index, child_index
 

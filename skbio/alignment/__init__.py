@@ -1,15 +1,12 @@
 r"""
-Alignments and Sequence collections (:mod:`skbio.alignment`)
-============================================================
+Alignments (:mod:`skbio.alignment`)
+===================================
 
 .. currentmodule:: skbio.alignment
 
-This module provides functionality for working with biological sequence
-collections and alignments. These can be composed of generic sequences,
-nucelotide sequences, DNA sequences, and RNA sequences. By default, input is
-not validated, except that sequence ids must be unique, but all
-contructor methods take a validate option which checks different features of
-the input based on ``SequenceCollection`` type.
+This module provides functionality for computing and manipulating sequence
+alignments. DNA, RNA, and protein sequences can be aligned, as well as
+sequences with custom alphabets.
 
 Data Structures
 ---------------
@@ -17,8 +14,7 @@ Data Structures
 .. autosummary::
    :toctree: generated/
 
-   SequenceCollection
-   Alignment
+   TabularMSA
 
 Optimized (i.e., production-ready) Alignment Algorithms
 -------------------------------------------------------
@@ -51,37 +47,26 @@ General functionality
 
     make_identity_substitution_matrix
 
-Exceptions
-----------
-
-.. autosummary::
-   :toctree: generated/
-
-   SequenceCollectionError
-   AlignmentError
-
 Data Structure Examples
 -----------------------
->>> from skbio import SequenceCollection, Alignment, DNA
->>> seqs = [DNA("ACC--G-GGTA..", metadata={'id':"seq1"}),
-...         DNA("TCC--G-GGCA..", metadata={'id':"seqs2"})]
->>> a1 = Alignment(seqs)
->>> a1
-<Alignment: n=2; mean +/- std length=13.00 +/- 0.00>
+Load two DNA sequences that have been previously aligned into a ``TabularMSA``
+object, using sequence IDs as the MSA's index:
 
->>> seqs = [DNA("ACCGGG", metadata={'id':"seq1"}),
-...         DNA("TCCGGGCA", metadata={'id':"seq2"})]
->>> s1 = SequenceCollection(seqs)
->>> s1
-<SequenceCollection: n=2; mean +/- std length=7.00 +/- 1.00>
-
->>> fasta_lines = ['>seq1\n',
-...                'CGATGTCGATCGATCGATCGATCAG\n',
-...                '>seq2\n',
-...                'CATCGATCGATCGATGCATGCATGCATG\n']
->>> s1 = SequenceCollection.read(fasta_lines, constructor=DNA)
->>> s1
-<SequenceCollection: n=2; mean +/- std length=26.50 +/- 1.50>
+>>> from skbio import TabularMSA, DNA
+>>> seqs = [DNA("ACC--G-GGTA..", metadata={'id': "seq1"}),
+...         DNA("TCC--G-GGCA..", metadata={'id': "seq2"})]
+>>> msa = TabularMSA(seqs, minter='id')
+>>> msa
+TabularMSA[DNA]
+----------------------
+Stats:
+    sequence count: 2
+    position count: 13
+----------------------
+ACC--G-GGTA..
+TCC--G-GGCA..
+>>> msa.index
+Index(['seq1', 'seq2'], dtype='object')
 
 Alignment Algorithm Examples
 ----------------------------
@@ -91,16 +76,23 @@ Optimized Alignment Algorithm Examples
 Using the convenient ``local_pairwise_align_ssw`` function:
 
 >>> from skbio.alignment import local_pairwise_align_ssw
->>> alignment = local_pairwise_align_ssw(
-...                 "ACTAAGGCTCTCTACCCCTCTCAGAGA",
-...                 "ACTAAGGCTCCTAACCCCCTTTTCTCAGA"
-...             )
->>> print(alignment)
->query
+>>> alignment, score, start_end_positions = local_pairwise_align_ssw(
+...     DNA("ACTAAGGCTCTCTACCCCTCTCAGAGA"),
+...     DNA("ACTAAGGCTCCTAACCCCCTTTTCTCAGA")
+... )
+>>> alignment
+TabularMSA[DNA]
+------------------------------
+Stats:
+    sequence count: 2
+    position count: 30
+------------------------------
 ACTAAGGCTCTC-TACCC----CTCTCAGA
->target
 ACTAAGGCTC-CTAACCCCCTTTTCTCAGA
-<BLANKLINE>
+>>> score
+27
+>>> start_end_positions
+[(0, 24), (0, 28)]
 
 Using the ``StripedSmithWaterman`` object:
 
@@ -156,44 +148,47 @@ Here we locally align a pair of protein sequences using gap open penalty
 of 11 and a gap extend penalty of 1 (in other words, it is much more
 costly to open a new gap than extend an existing one).
 
+>>> from skbio import Protein
 >>> from skbio.alignment import local_pairwise_align_protein
->>> s1 = "HEAGAWGHEE"
->>> s2 = "PAWHEAE"
->>> r = local_pairwise_align_protein(s1, s2, 11, 1)
+>>> s1 = Protein("HEAGAWGHEE")
+>>> s2 = Protein("PAWHEAE")
+>>> alignment, score, start_end_positions = local_pairwise_align_protein(
+...     s1, s2, 11, 1)
 
-This returns an ``skbio.Alignment`` object. We can look at the aligned
-sequences:
+This returns an ``skbio.TabularMSA`` object, the alignment score, and start/end
+positions of each aligned sequence:
 
->>> print(str(r[0]))
+>>> alignment
+TabularMSA[Protein]
+---------------------
+Stats:
+    sequence count: 2
+    position count: 5
+---------------------
 AWGHE
->>> print(str(r[1]))
 AW-HE
-
-We can identify the start and end positions of each aligned sequence
-as follows:
-
->>> r.start_end_positions()
+>>> score
+25.0
+>>> start_end_positions
 [(4, 8), (1, 4)]
 
-And we can view the score of the alignment using the ``score`` method:
+Similarly, we can perform global alignment of nucleotide sequences:
 
->>> r.score()
-25.0
-
-Similarly, we can perform global alignment of nucleotide sequences, and print
-the resulting alignment in FASTA format:
-
+>>> from skbio import DNA
 >>> from skbio.alignment import global_pairwise_align_nucleotide
->>> s1 = "GCGTGCCTAAGGTATGCAAG"
->>> s2 = "ACGTGCCTAGGTACGCAAG"
->>> r = global_pairwise_align_nucleotide(s1, s2)
->>> print(r)
->0
+>>> s1 = DNA("GCGTGCCTAAGGTATGCAAG")
+>>> s2 = DNA("ACGTGCCTAGGTACGCAAG")
+>>> alignment, score, start_end_positions = global_pairwise_align_nucleotide(
+...     s1, s2)
+>>> alignment
+TabularMSA[DNA]
+----------------------
+Stats:
+    sequence count: 2
+    position count: 20
+----------------------
 GCGTGCCTAAGGTATGCAAG
->1
 ACGTGCCTA-GGTACGCAAG
-<BLANKLINE>
-
 
 """
 
@@ -209,7 +204,7 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
-from ._alignment import Alignment, SequenceCollection
+from ._tabular_msa import TabularMSA
 from ._pairwise import (
     local_pairwise_align_nucleotide, local_pairwise_align_protein,
     local_pairwise_align, global_pairwise_align_nucleotide,
@@ -218,12 +213,9 @@ from ._pairwise import (
 )
 from skbio.alignment._ssw_wrapper import (
     StripedSmithWaterman, AlignmentStructure)
-from ._exception import (SequenceCollectionError, AlignmentError)
 
-__all__ = ['Alignment', 'SequenceCollection',
-           'StripedSmithWaterman', 'AlignmentStructure',
-           'local_pairwise_align_ssw', 'SequenceCollectionError',
-           'AlignmentError', 'global_pairwise_align',
+__all__ = ['TabularMSA', 'StripedSmithWaterman', 'AlignmentStructure',
+           'local_pairwise_align_ssw', 'global_pairwise_align',
            'global_pairwise_align_nucleotide', 'global_pairwise_align_protein',
            'local_pairwise_align', 'local_pairwise_align_nucleotide',
            'local_pairwise_align_protein', 'make_identity_substitution_matrix']

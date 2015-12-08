@@ -23,7 +23,8 @@ from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
 from skbio.io.registry import (IORegistry, FileSentinel, Format,
                                DuplicateRegistrationError,
                                InvalidRegistrationError)
-from skbio.util import TestingUtilError, get_data_path
+from skbio.util import get_data_path
+from skbio.util._exception import TestingUtilError
 from skbio import DNA, read, write
 
 

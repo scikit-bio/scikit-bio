@@ -9,7 +9,6 @@
 from cpython cimport bool
 import numpy as np
 cimport numpy as cnp
-from skbio.alignment import Alignment
 from skbio.sequence import Protein, Sequence
 
 cdef extern from "_lib/ssw.h":

@@ -22,7 +22,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
 
 
@@ -63,8 +63,10 @@ class DissimilarityMatrix(SkbioObject):
     data : array_like or DissimilarityMatrix
         Square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
         (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray``. Can instead be a `DissimilarityMatrix` (or
-        subclass) instance, in which case the instance's data will be used.
+        using ``numpy.asarray`` or a one-dimensional vector of dissimilarities
+        (floats), as defined by `scipy.spatial.distance.squareform`. Can
+        instead be a `DissimilarityMatrix` (or subclass) instance,
+        in which case the instance's data will be used.
         Data will be converted to a float ``dtype`` if necessary. A copy will
         *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
     ids : sequence of str, optional
@@ -76,6 +78,7 @@ class DissimilarityMatrix(SkbioObject):
     See Also
     --------
     DistanceMatrix
+    scipy.spatial.distance.squareform
 
     Notes
     -----
@@ -99,7 +102,8 @@ class DissimilarityMatrix(SkbioObject):
             ids = data.ids if ids is None else ids
             data = data.data
         data = np.asarray(data, dtype='float')
-
+        if data.ndim == 1:
+            data = squareform(data, force='tomatrix', checks=False)
         if ids is None:
             ids = (str(i) for i in range(data.shape[0]))
         ids = tuple(ids)
@@ -412,6 +416,31 @@ class DissimilarityMatrix(SkbioObject):
         plt.close(fig)
         return data
 
+    @experimental(as_of="0.4.0-dev")
+    def to_data_frame(self):
+        """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
+
+        Returns
+        -------
+        pd.DataFrame
+            ``pd.DataFrame`` with IDs on index and columns.
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2],
+        ...                      [1, 0, 3],
+        ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> df = dm.to_data_frame()
+        >>> df
+           a  b  c
+        a  0  1  2
+        b  1  0  3
+        c  2  3  0
+
+        """
+        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+
     @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
@@ -657,7 +686,7 @@ class DistanceMatrix(DissimilarityMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name = 'distance'
 
-    @classmethod
+    @classonlymethod
     @experimental(as_of="0.4.0-dev")
     def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
