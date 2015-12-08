@@ -72,9 +72,25 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
     - ``site_constraints`` is now a ``pd.DataFrame`` object named ``sample_constraints``.
 * ``short_method_name`` and ``long_method_name`` are now required arguments of the ``OrdinationResults`` object.
 * Removed `skbio.diversity.alpha.equitability`. Please use `skbio.diversity.alpha.pielou_e`, which is more accurately named and better documented. Note that `equitability` by default used logarithm base 2 while `pielou_e` uses logarithm base `e` as described in Heip 1974.
-* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function.
-* Deprecated function ``skbio.diversity.beta.pw_distances_from_table`` has been removed from scikit-bio, as scheduled. Code that used this should be adapted to use ``skbio.diversity.beta_diversity``.
+* ``skbio.diversity.beta.pw_distances`` is now called ``skbio.diversity.beta_diversity``. This function no longer defines a default metric, and ``metric`` is now the first argument to this function. This function can also now take a pairwise distances function as ``pairwise_func``.
+* Deprecated function ``skbio.diversity.beta.pw_distances_from_table`` has been removed from scikit-bio as scheduled. Code that used this should be adapted to use ``skbio.diversity.beta_diversity``.
 * ``TreeNode.index_tree`` now returns a 2-D numpy array as its second return value (the child node index) instead of a 1-D numpy array.
+* Deprecated functions `skbio.draw.boxplots` and `skbio.draw.grouped_distributions` have been removed from scikit-bio as scheduled. These functions generated plots that were not specific to bioinformatics. These types of plots can be generated with seaborn or another general-purpose plotting package.
+* Deprecated function `skbio.stats.power.bootstrap_power_curve` has been removed from scikit-bio as scheduled. Use `skbio.stats.power.subsample_power` or `skbio.stats.power.subsample_paired_power` followed by `skbio.stats.power.confidence_bound`.
+* Deprecated function `skbio.stats.spatial.procrustes` has been removed from scikit-bio as scheduled in favor of `scipy.spatial.procrustes`.
+* Deprecated class `skbio.tree.CompressedTrie` and function `skbio.tree.fasta_to_pairlist` have been removed from scikit-bio as scheduled in favor of existing general-purpose Python trie packages.
+* Deprecated function `skbio.util.flatten` has been removed from scikit-bio as scheduled in favor of solutions available in the Python standard library (see [here](http://stackoverflow.com/a/952952/3639023) and [here](http://stackoverflow.com/a/406199/3639023) for examples).
+* Pairwise alignment functions in `skbio.alignment` now return a tuple containing the `TabularMSA` alignment, alignment score, and start/end positions. The returned `TabularMSA`'s `index` is always the default integer index; sequence IDs are no longer propagated to the MSA. Additionally, the pairwise alignment functions now accept the following input types to align:
+    - `local_pairwise_align_nucleotide`: `DNA` or `RNA`
+    - `local_pairwise_align_protein`: `Protein`
+    - `local_pairwise_align`: `IUPACSequence`
+    - `global_pairwise_align_nucleotide`: `DNA`, `RNA`, or `TabularMSA[DNA|RNA]`
+    - `global_pairwise_align_protein`: `Protein` or `TabularMSA[Protein]`
+    - `global_pairwise_align`: `IUPACSequence` or `TabularMSA`
+    - `local_pairwise_align_ssw`: `DNA`, `RNA`, or `Protein`. Additionally, this function now overrides the `protein` kwarg based on input type. `constructor` parameter was removed because the function now determines the return type based on input type.
+* Removed `skbio.alignment.SequenceCollection` in favor of using a list or other standard library containers to store scikit-bio sequence objects (most `SequenceCollection` operations were simple list comprehensions). Use `DistanceMatrix.from_iterable` instead of `SequenceCollection.distances` (pass `key="id"` to exactly match original behavior).
+* Removed `skbio.alignment.Alignment` in favor of `skbio.alignment.TabularMSA`.
+* Removed `skbio.alignment.SequenceCollectionError` and `skbio.alignment.AlignmentError` exceptions as their corresponding classes no longer exist.
 
 ### Bug Fixes
 
@@ -82,12 +98,10 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
 * ``TreeNode._set_max_distance`` would fail if ties were encountered. ([#1077](https://github.com/biocore/scikit-bio/issues/1077))
+* Added missing `nose` dependency to setup.py's `install_requires`. ([#1214](https://github.com/biocore/scikit-bio/issues/1214))
 
 ### Deprecated functionality [stable]
 * `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
-
-### Deprecated functionality [experimental]
-* ``SequenceCollection.distances`` has been deprecated in favor of ``DistanceMatrix.from_iterable``. Use `key="id"` to exactly match original behavior.
 
 ### Miscellaneous
 * Doctests are now written in Python 3.

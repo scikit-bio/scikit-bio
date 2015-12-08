@@ -15,17 +15,15 @@ import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import (
-    local_pairwise_align_ssw, SequenceCollection, Alignment, TabularMSA)
+from skbio.alignment import local_pairwise_align_ssw, TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio._base import OrdinationResults
 
 
 __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
-           'DistanceMatrix', 'local_pairwise_align_ssw', 'SequenceCollection',
-           'Alignment', 'TabularMSA', 'TreeNode', 'nj', 'read', 'write',
-           'OrdinationResults']
+           'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
+           'TreeNode', 'nj', 'read', 'write', 'OrdinationResults']
 
 __credits__ = "https://github.com/biocore/scikit-bio/graphs/contributors"
 __version__ = "0.4.0-dev"

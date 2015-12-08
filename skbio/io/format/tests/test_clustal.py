@@ -8,15 +8,38 @@
 
 from __future__ import absolute_import, division, print_function
 
+import string
 from io import StringIO
 from unittest import TestCase, main
 
+import six
+
+from skbio import TabularMSA
+from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.util._decorator import classproperty, overrides
 from skbio.io.format.clustal import (
-    _clustal_to_alignment, _alignment_to_clustal, _clustal_sniffer,
+    _clustal_to_tabular_msa, _tabular_msa_to_clustal, _clustal_sniffer,
     _is_clustal_seq_line, _delete_trailing_number, _check_length,
     _label_line_parser)
 
 from skbio.io import ClustalFormatError
+
+
+class CustomSequence(IUPACSequence):
+    @classproperty
+    @overrides(IUPACSequence)
+    def gap_chars(cls):
+        return set('-.')
+
+    @classproperty
+    @overrides(IUPACSequence)
+    def nondegenerate_chars(cls):
+        return set(string.ascii_letters)
+
+    @classproperty
+    @overrides(IUPACSequence)
+    def degenerate_map(cls):
+        return {}
 
 
 class ClustalHelperTests(TestCase):
@@ -205,32 +228,33 @@ CGAUCAGUCAGUCGAU---------- 34
 UGCUGCAUCA---------------- 33
 *     ***""")]
 
-    def test_alignment_to_clustal_with_empty_input(self):
-        result = _clustal_to_alignment(StringIO())
+    def test_tabular_msa_to_clustal_with_empty_input(self):
+        result = _clustal_to_tabular_msa(StringIO(),
+                                         constructor=CustomSequence)
         self.assertEqual(dict(result), {})
 
-    def test_alignment_to_clustal_with_bad_input(self):
+    def test_tabular_msa_to_clustal_with_bad_input(self):
         BAD = StringIO(u'\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
-        result = _clustal_to_alignment(BAD, strict=False)
-        self.assertEqual(dict(result), {})
-        # should fail unless we turned strict processing off
-        with self.assertRaises(ClustalFormatError):
-            BAD.seek(0)
-            dict(_clustal_to_alignment(BAD))
 
-    def test_valid_alignment_to_clustal_and_clustal_to_alignment(self):
+        with self.assertRaises(ClustalFormatError):
+            dict(_clustal_to_tabular_msa(BAD, constructor=CustomSequence))
+
+    def test_valid_tabular_msa_to_clustal_and_clustal_to_tabular_msa(self):
         for valid_out in self.valid_clustal_out:
-            result_before = _clustal_to_alignment(valid_out)
+            result_before = _clustal_to_tabular_msa(
+                    valid_out, constructor=CustomSequence)
             with StringIO() as fh:
-                _alignment_to_clustal(result_before, fh)
+                _tabular_msa_to_clustal(result_before, fh)
                 fh.seek(0)
-                result_after = _clustal_to_alignment(fh)
+                result_after = _clustal_to_tabular_msa(
+                        fh, constructor=CustomSequence)
             self.assertEqual(result_before, result_after)
 
-    def test_invalid_alignment_to_clustal_and_clustal_to_alignment(self):
+    def test_invalid_tabular_msa_to_clustal_and_clustal_to_tabular_msa(self):
         for invalid_out in self.invalid_clustal_out:
             with self.assertRaises(ClustalFormatError):
-                dict(_clustal_to_alignment(invalid_out, strict=True))
+                dict(_clustal_to_tabular_msa(invalid_out,
+                                             constructor=CustomSequence))
 
     def test_clustal_sniffer_valid_files(self):
         for valid_out in self.valid_clustal_out:
@@ -242,6 +266,29 @@ UGCUGCAUCA---------------- 33
         # sniffer should return False on empty file (which isn't contained
         # in self.invalid_clustal_out since an empty file is a valid output)
         self.assertEqual(_clustal_sniffer(StringIO()), (False, {}))
+
+    def test_no_constructor(self):
+        with six.assertRaisesRegex(self, ValueError, "`constructor`"):
+            _clustal_to_tabular_msa(self.valid_clustal_out[0])
+
+    def test_duplicate_labels(self):
+        msa = TabularMSA([CustomSequence('foo'),
+                          CustomSequence('bar')], index=['a', 'a'])
+
+        with six.assertRaisesRegex(self, ClustalFormatError, "index.*unique"):
+            with StringIO() as fh:
+                _tabular_msa_to_clustal(msa, fh)
+
+    def test_invalid_lengths(self):
+        fh = StringIO(
+            u"CLUSTAL\n"
+            "\n\n"
+            "abc             GCAU\n"
+            "def             -----\n")
+
+        with six.assertRaisesRegex(self, ClustalFormatError, "not aligned"):
+            _clustal_to_tabular_msa(fh, constructor=CustomSequence)
+
 
 if __name__ == '__main__':
     main()

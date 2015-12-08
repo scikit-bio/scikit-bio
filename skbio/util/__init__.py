@@ -32,7 +32,6 @@ Generally useful functions that don't fit in more specific locations.
    cardinal_to_ordinal
    create_dir
    find_duplicates
-   flatten
    is_casava_v180_or_later
    remove_files
    safe_md5
@@ -59,16 +58,15 @@ Warnings
 from __future__ import absolute_import, division, print_function
 
 from ._warning import EfficiencyWarning, RepresentationWarning
-from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates, flatten,
+from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates,
                     is_casava_v180_or_later, remove_files, safe_md5)
 from ._testing import (get_data_path, TestRunner,
                        assert_ordination_results_equal,
                        assert_data_frame_almost_equal)
 
 __all__ = ['EfficiencyWarning', 'RepresentationWarning', 'cardinal_to_ordinal',
-           'create_dir', 'find_duplicates', 'flatten',
-           'is_casava_v180_or_later', 'remove_files', 'safe_md5',
-           'get_data_path', 'TestRunner', 'assert_ordination_results_equal',
-           'assert_data_frame_almost_equal']
+           'create_dir', 'find_duplicates', 'is_casava_v180_or_later',
+           'remove_files', 'safe_md5', 'get_data_path', 'TestRunner',
+           'assert_ordination_results_equal', 'assert_data_frame_almost_equal']
 
 test = TestRunner(__file__).test

@@ -73,10 +73,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_invalid_dtype(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             TabularMSA([Sequence('')])
 
-        with six.assertRaisesRegex(self, TypeError, 'sequence.*alphabet.*int'):
+        with six.assertRaisesRegex(self, TypeError, 'IUPACSequence.*int'):
             TabularMSA([42, DNA('')])
 
     def test_constructor_not_monomorphic(self):
@@ -929,7 +929,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             msa.append(Sequence(''))
 
         self.assertEqual(msa, TabularMSA([]))
@@ -1187,7 +1187,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'sequence.*alphabet.*Sequence'):
+                                   'IUPACSequence.*Sequence'):
             msa.extend([Sequence('')])
 
         self.assertEqual(msa, TabularMSA([]))
@@ -2209,6 +2209,283 @@ class TestIsSequenceAxis(unittest.TestCase):
 
     def test_negative_int(self):
         self.assertFalse(self.msa._is_sequence_axis(1))
+
+
+class TestRepr(unittest.TestCase):
+    def test_repr(self):
+        # basic sanity checks -- more extensive testing of formatting and
+        # special cases is performed in TabularMSAReprDoctests below. here we
+        # only test that pieces of the repr are present. these tests also
+        # exercise coverage for py2/3 since the doctests in
+        # TabularMSAReprDoctests only currently run in py3.
+
+        # str calls repr
+        self.assertEqual(repr(TabularMSA([])), str(TabularMSA([])))
+        self.assertEqual(repr(TabularMSA([DNA('')])),
+                         str(TabularMSA([DNA('')])))
+        self.assertEqual(repr(TabularMSA([DNA('ACGT')])),
+                         str(TabularMSA([DNA('ACGT')])))
+        self.assertEqual(repr(TabularMSA([DNA('ACGT'*25) for x in range(10)])),
+                         str(TabularMSA([DNA('ACGT'*25) for x in range(10)])))
+
+        # empty
+        obs = repr(TabularMSA([]))
+        self.assertEqual(obs.count('\n'), 5)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('sequence count: 0', obs)
+        self.assertIn('position count: 0', obs)
+
+        # minimal
+        obs = repr(TabularMSA([DNA('')]))
+        self.assertEqual(obs.count('\n'), 5)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('sequence count: 1', obs)
+        self.assertIn('position count: 0', obs)
+        self.assertIn('[DNA]', obs)
+
+        # no metadata
+        obs = repr(TabularMSA([DNA('ACGT')]))
+        self.assertEqual(obs.count('\n'), 6)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('sequence count: 1', obs)
+        self.assertIn('position count: 4', obs)
+        self.assertIn('[DNA]', obs)
+        self.assertTrue(obs.endswith('ACGT'))
+
+        # sequence spanning > 5 lines
+        obs = repr(TabularMSA([DNA('A' * 71) for x in range(6)]))
+        self.assertEqual(obs.count('\n'), 10)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('sequence count: 6', obs)
+        self.assertIn('position count: 71', obs)
+        self.assertIn('\n...\n', obs)
+        self.assertIn('[DNA]', obs)
+        self.assertTrue(obs.endswith('AAAA'))
+
+        # sequences overflowing
+        obs = repr(TabularMSA([DNA('A' * 72)]))
+        self.assertEqual(obs.count('\n'), 6)
+        self.assertTrue(obs.startswith('TabularMSA'))
+        self.assertIn('sequence count: 1', obs)
+        self.assertIn('position count: 72', obs)
+        self.assertIn('[DNA]', obs)
+        self.assertTrue(obs.endswith(' ... ' + 'A'*33))
+
+
+# NOTE: this must be a *separate* class for doctests only (no unit tests). nose
+# will not run the unit tests otherwise
+#
+# these doctests exercise the correct formatting of TabularMSA's repr in a
+# variety of situations. they are more extensive than the unit tests above
+# (TestRepr.test_repr) but are only currently run in py3. thus, they cannot
+# be relied upon for coverage (the unit tests take care of this)
+class TabularMSAReprDoctests(object):
+    r"""
+    >>> from skbio import DNA, TabularMSA
+
+    Empty (minimal) MSA:
+
+    >>> TabularMSA([])
+    TabularMSA
+    ---------------------
+    Stats:
+        sequence count: 0
+        position count: 0
+    ---------------------
+
+    MSA with single empty sequence:
+
+    >>> TabularMSA([DNA('')])
+    TabularMSA[DNA]
+    ---------------------
+    Stats:
+        sequence count: 1
+        position count: 0
+    ---------------------
+
+    MSA with single sequence with single character:
+
+    >>> TabularMSA([DNA('G')])
+    TabularMSA[DNA]
+    ---------------------
+    Stats:
+        sequence count: 1
+        position count: 1
+    ---------------------
+    G
+
+    MSA with multicharacter sequence:
+
+    >>> TabularMSA([DNA('ACGT')])
+    TabularMSA[DNA]
+    ---------------------
+    Stats:
+        sequence count: 1
+        position count: 4
+    ---------------------
+    ACGT
+
+    Full single line:
+
+    >>> TabularMSA([DNA('A' * 71)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 1
+        position count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Full single line with 1 character overflow:
+
+    >>> TabularMSA([DNA('A' * 72)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 1
+        position count: 72
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ... AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Two sequences with full lines:
+
+    >>> TabularMSA([DNA('T' * 71), DNA('T' * 71)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 2
+        position count: 71
+    -----------------------------------------------------------------------
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+    Two sequences with full lines with 1 character overflow:
+
+    >>> TabularMSA([DNA('T' * 72), DNA('T' * 72)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 2
+        position count: 72
+    -----------------------------------------------------------------------
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ... TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ... TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+    Five full lines (maximum amount of information):
+
+    >>> TabularMSA([DNA('A' * 71) for x in range(5)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 5
+        position count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Six lines starts "summarized" output:
+
+    >>> TabularMSA([DNA('A' * 71) for x in range(6)])
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Stats:
+        sequence count: 6
+        position count: 71
+    -----------------------------------------------------------------------
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ...
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+    Supply horrendous metadata and positional metadata to exercise a variety of
+    metadata formatting cases and rules. Sorting should be by type, then by
+    value within each type (Python 3 doesn't allow sorting of mixed types):
+
+    >>> metadata = {
+    ...     # str key, str value
+    ...     'abc': 'some description',
+    ...     # int value
+    ...     'foo': 42,
+    ...     # unsupported type (dict) value
+    ...     'bar': {},
+    ...     # int key, wrapped str (single line)
+    ...     42: 'some words to test text wrapping and such... yada yada yada '
+    ...         'yada yada yada yada yada.',
+    ...     # bool key, wrapped str (multi-line)
+    ...     True: 'abc ' * 34,
+    ...     # float key, truncated str (too long)
+    ...     42.5: 'abc ' * 200,
+    ...     # unsupported type (tuple) key, unsupported type (list) value
+    ...     ('foo', 'bar'): [1, 2, 3],
+    ...     # bytes key, single long word that wraps
+    ...     b'long word': 'abc' * 30,
+    ...     # truncated key (too long), None value
+    ...     'too long of a key name to display in repr': None,
+    ...     # wrapped bytes value (has b'' prefix)
+    ...     'bytes wrapped value': b'abcd' * 25,
+    ...     # float value
+    ...     0.1: 99.9999,
+    ...     # bool value
+    ...     43: False,
+    ...     # None key, complex value
+    ...     None: complex(-1.0, 0.0),
+    ...     # nested quotes
+    ...     10: '"\''
+    ... }
+    >>> positional_metadata = pd.DataFrame.from_items([
+    ...     # str key, int list value
+    ...     ('foo', [1, 2, 3, 4]),
+    ...     # float key, float list value
+    ...     (42.5, [2.5, 3.0, 4.2, -0.00001]),
+    ...     # int key, object list value
+    ...     (42, [[], 4, 5, {}]),
+    ...     # truncated key (too long), bool list value
+    ...     ('abc' * 90, [True, False, False, True]),
+    ...     # None key
+    ...     (None, range(4))])
+    >>> TabularMSA([DNA('ACGT')], metadata=metadata,
+    ...            positional_metadata=positional_metadata)
+    TabularMSA[DNA]
+    -----------------------------------------------------------------------
+    Metadata:
+        None: (-1+0j)
+        True: 'abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc
+               abc abc abc abc '
+        b'long word': 'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca
+                       bcabcabcabcabcabcabcabcabcabcabcabcabc'
+        0.1: 99.9999
+        42.5: <class 'str'>
+        10: '"\''
+        42: 'some words to test text wrapping and such... yada yada yada
+             yada yada yada yada yada.'
+        43: False
+        'abc': 'some description'
+        'bar': <class 'dict'>
+        'bytes wrapped value': b'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab
+                                 cdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
+                                 abcdabcdabcdabcd'
+        'foo': 42
+        <class 'str'>: None
+        <class 'tuple'>: <class 'list'>
+    Positional metadata:
+        'foo': <dtype: int64>
+        42.5: <dtype: float64>
+        42: <dtype: object>
+        <class 'str'>: <dtype: bool>
+        None: <dtype: int64>
+    Stats:
+        sequence count: 1
+        position count: 4
+    -----------------------------------------------------------------------
+    ACGT
+
+    """
+    pass
 
 
 if __name__ == "__main__":

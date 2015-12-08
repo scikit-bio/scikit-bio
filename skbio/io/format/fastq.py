@@ -38,9 +38,7 @@ Format Support
 +======+======+===============================================================+
 |Yes   |Yes   |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.alignment.SequenceCollection`                      |
-+------+------+---------------------------------------------------------------+
-|Yes   |Yes   |:mod:`skbio.alignment.Alignment`                               |
+|Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
@@ -74,8 +72,8 @@ files provided in the publication's supplementary data.
 
 .. note:: IDs and descriptions will be parsed from sequence header lines in
    exactly the same way as FASTA headers (:mod:`skbio.io.format.fasta`). IDs,
-   descriptions, and quality scores are also stored automatically on the
-   object in the same way as with FASTA.
+   descriptions, and quality scores are also stored on, and written from,
+   sequence objects in the same way as with FASTA.
 
 .. note:: Blank or whitespace-only lines are only allowed at the beginning of
    the file, between FASTQ records, or at the end of the file. A blank or
@@ -173,10 +171,10 @@ Suppose we have the following FASTQ file with two DNA sequences::
 
     @seq1 description 1
     AACACCAAACTTCTCCACC
-    ACGTGAGCTACAAAAGGGT
+    ACGTGAGCTACAAAAG
     +seq1 description 1
     ''''Y^T]']C^CABCACC
-    `^LB^CCYT\T\Y\WF^^^
+    `^LB^CCYT\T\Y\WF
     @seq2 description 2
     TATGTATATATAACATATACATATATACATACATA
     +
@@ -195,27 +193,33 @@ registry in practice:
 >>> fs = '\n'.join([
 ...     r"@seq1 description 1",
 ...     r"AACACCAAACTTCTCCACC",
-...     r"ACGTGAGCTACAAAAGGGT",
+...     r"ACGTGAGCTACAAAAG",
 ...     r"+seq1 description 1",
 ...     r"''''Y^T]']C^CABCACC",
-...     r"'^LB^CCYT\T\Y\WF^^^",
+...     r"'^LB^CCYT\T\Y\WF",
 ...     r"@seq2 description 2",
 ...     r"TATGTATATATAACATATACATATATACATACATA",
 ...     r"+",
 ...     r"]KZ[PY]_[YY^'''AC^\\'BT''C'\AT''BBB"])
 >>> fh = StringIO(fs)
 
-To load the sequences into a ``SequenceCollection``, we run:
+To load the sequences into a ``TabularMSA``, we run:
 
->>> from skbio import SequenceCollection
->>> sc = SequenceCollection.read(fh, variant='sanger')
->>> sc
-<SequenceCollection: n=2; mean +/- std length=36.50 +/- 1.50>
+>>> from skbio import TabularMSA, DNA
+>>> msa = TabularMSA.read(fh, constructor=DNA, variant='sanger')
+>>> msa
+TabularMSA[DNA]
+-----------------------------------
+Stats:
+    sequence count: 2
+    position count: 35
+-----------------------------------
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
+TATGTATATATAACATATACATATATACATACATA
 
 Note that quality scores are decoded from Sanger. To load the second sequence
-as a ``DNA``:
+as ``DNA``:
 
->>> from skbio import DNA
 >>> fh = StringIO(fs) # reload the StringIO to read from the beginning again
 >>> seq = DNA.read(fh, variant='sanger', seq_num=2)
 >>> seq
@@ -235,15 +239,15 @@ Stats:
 ----------------------------------------
 0 TATGTATATA TAACATATAC ATATATACAT ACATA
 
-To write our ``SequenceCollection`` to a FASTQ file with quality scores encoded
-using the ``illumina1.3`` variant:
+To write our ``TabularMSA`` to a FASTQ file with quality scores encoded using
+the ``illumina1.3`` variant:
 
 >>> new_fh = StringIO()
->>> print(sc.write(new_fh, format='fastq', variant='illumina1.3').getvalue())
+>>> print(msa.write(new_fh, format='fastq', variant='illumina1.3').getvalue())
 @seq1 description 1
-AACACCAAACTTCTCCACCACGTGAGCTACAAAAGGGT
+AACACCAAACTTCTCCACCACGTGAGCTACAAAAG
 +
-FFFFx}s|F|b}b`ab`bbF}ka}bbxs{s{x{ve}}}
+FFFFx}s|F|b}b`ab`bbF}ka}bbxs{s{x{ve
 @seq2 description 2
 TATGTATATATAACATATACATATATACATACATA
 +
@@ -290,7 +294,7 @@ from skbio.io.format._base import (
     _decode_qual_to_phred, _encode_phred_to_qual, _get_nth_sequence,
     _parse_fasta_like_header, _format_fasta_like_records, _line_generator,
     _too_many_blanks)
-from skbio.alignment import SequenceCollection, Alignment
+from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 _whitespace_regex = re.compile(r'\s')
@@ -382,22 +386,15 @@ def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1,
         seq_num)
 
 
-@fastq.reader(SequenceCollection)
-def _fastq_to_sequence_collection(fh, variant=None, phred_offset=None,
-                                  constructor=Sequence, **kwargs):
-    return SequenceCollection(
-        list(_fastq_to_generator(fh, variant=variant,
-                                 phred_offset=phred_offset,
-                                 constructor=constructor, **kwargs)))
+@fastq.reader(TabularMSA)
+def _fastq_to_tabular_msa(fh, variant=None, phred_offset=None,
+                          constructor=None, **kwargs):
+    if constructor is None:
+        raise ValueError("Must provide `constructor`.")
 
-
-@fastq.reader(Alignment)
-def _fastq_to_alignment(fh, variant=None, phred_offset=None,
-                        constructor=Sequence, **kwargs):
-    return Alignment(
-        list(_fastq_to_generator(fh, variant=variant,
-                                 phred_offset=phred_offset,
-                                 constructor=constructor, **kwargs)))
+    return TabularMSA(
+        _fastq_to_generator(fh, variant=variant, phred_offset=phred_offset,
+                            constructor=constructor, **kwargs))
 
 
 @fastq.writer(None)
@@ -455,21 +452,10 @@ def _protein_to_fastq(obj, fh, variant=None, phred_offset=None,
                         description_newline_replacement, lowercase=lowercase)
 
 
-@fastq.writer(SequenceCollection)
-def _sequence_collection_to_fastq(obj, fh, variant=None, phred_offset=None,
-                                  id_whitespace_replacement='_',
-                                  description_newline_replacement=' ',
-                                  lowercase=None):
-    _sequences_to_fastq(obj, fh, variant, phred_offset,
-                        id_whitespace_replacement,
-                        description_newline_replacement, lowercase=lowercase)
-
-
-@fastq.writer(Alignment)
-def _alignment_to_fastq(obj, fh, variant=None, phred_offset=None,
-                        id_whitespace_replacement='_',
-                        description_newline_replacement=' ',
-                        lowercase=None):
+@fastq.writer(TabularMSA)
+def _tabular_msa_to_fastq(obj, fh, variant=None, phred_offset=None,
+                          id_whitespace_replacement='_',
+                          description_newline_replacement=' ', lowercase=None):
     _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=lowercase)

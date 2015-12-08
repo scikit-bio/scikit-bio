@@ -50,7 +50,6 @@ Functions
     subsample_paired_power
     confidence_bound
     paired_subsamples
-    bootstrap_power_curve
 
 Examples
 --------
@@ -152,7 +151,7 @@ import numpy as np
 import scipy.stats
 import six
 
-from skbio.util._decorator import experimental, deprecated
+from skbio.util._decorator import experimental
 
 
 @experimental(as_of="0.4.0")
@@ -615,109 +614,6 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
         scipy.stats.t.ppf(1 - alpha / 2, df)
 
     return bound
-
-bootstrap_power_curve_deprecation_reason = (
-    "Please use skbio.stats.power.subsample_power or "
-    "skbio.stats.power.subsample_paired_power followed by "
-    "confidence_bound.")
-
-
-@deprecated(as_of="0.2.3-dev", until="0.4.1",
-            reason=bootstrap_power_curve_deprecation_reason)
-def bootstrap_power_curve(test, samples, sample_counts, ratio=None,
-                          alpha=0.05, mode='ind', num_iter=500, num_runs=10):
-    r"""Repeatedly calculates the power curve for a specified alpha level
-
-    Parameters
-    ----------
-    test : function
-        The statistical test which accepts an array_like of sample ids
-        (list of lists or arrays) and returns a p-value.
-    samples : array_like
-        samples can be a list of lists or an array where each sublist or row in
-        the array corresponds to a sampled group.
-    sample_counts : 1-D array_like
-        A vector of the number of samples which should be sampled in each curve
-    ratio : 1-D array_like, optional
-        The fraction of the sample counts which should be
-        assigned to each
-        group. This must be a none-type object, or the same length as samples.
-        If Ratio is None, the same number of observations are drawn from
-        each sample.
-    alpha : float, optional
-        The default is 0.05. The critical value for calculating power.
-    mode : {"ind", "matched"}, optional
-        "matched" samples should be used when observations in
-        samples have corresponding observations in other groups. For instance,
-        this may be useful when working with regression data where
-        :math:`x_{1}, x_{2}, ..., x_{n}` maps to :math:`y_{1}, y_{2}, ... ,
-        y_{n}`.
-    num_iter : positive int, optional
-        The number of p-values to generate for each point on the curve.
-    num_runs : positive int, optional
-        The number of times to calculate each curve.
-
-    Returns
-    -------
-    power_mean : 1-D array
-        The mean p-values from the iterations.
-    power_bound : vector
-        The variance in the p-values.
-
-    Examples
-    --------
-    Suppose we have 100 samples randomly drawn from two normal distributions,
-    the first with mean 0 and standard deviation 1, and the second with mean 3
-    and standard deviation 1.5
-
-    >>> import numpy as np
-    >>> np.random.seed(20)
-    >>> samples_1 = np.random.randn(100)
-    >>> samples_2 = 1.5 * np.random.randn(100) + 1
-
-    We want to test the statistical power of an independent two sample t-test
-    comparing the two populations. We can define an anonymous function, `f`,
-    to wrap the scipy function for independent t tests,
-    `scipy.stats.ttest_ind`. The test function will take a list of value
-    vectors and return a p value.
-
-    >>> from scipy.stats import ttest_ind
-    >>> f = lambda x: ttest_ind(x[0], x[1])[1]
-
-    Now, we can determine the statistical power, or the probability that we do
-    not have a false negative given that we do not have a false positive, by
-    varying a number of subsamples.
-
-    >>> from skbio.stats.power import bootstrap_power_curve
-    >>> sample_counts = np.arange(5, 80, 5)
-    >>> power_mean, power_bound = bootstrap_power_curve(
-    ...     f, [samples_1, samples_2], sample_counts, num_iter=25)
-    >>> sample_counts[power_mean - power_bound.round(3) > .80].min()
-    25
-
-    Based on this analysis, it looks like we need at least 25 observations
-    from each distribution to avoid committing a type II error more than 20%
-    of the time.
-
-    """
-
-    # Corrects the alpha value into a matrix
-    alpha = np.ones((num_runs)) * alpha
-
-    # Boot straps the power curve
-    power = _calculate_power_curve(test=test,
-                                   samples=samples,
-                                   sample_counts=sample_counts,
-                                   ratio=ratio,
-                                   num_iter=num_iter,
-                                   alpha=alpha,
-                                   mode=mode)
-    # Calculates two summary statistics
-    power_mean = power.mean(0)
-    power_bound = confidence_bound(power, alpha=alpha[0], axis=0)
-
-    # Calculates summary statistics
-    return power_mean, power_bound
 
 
 @experimental(as_of="0.4.0")

@@ -14,8 +14,8 @@ import unittest
 
 from skbio.io import PhylipFormatError
 from skbio.io.format.phylip import (
-    _alignment_to_phylip, _phylip_to_alignment, _phylip_sniffer)
-from skbio import Alignment, DNA, RNA, Sequence
+    _tabular_msa_to_phylip, _phylip_to_tabular_msa, _phylip_sniffer)
+from skbio import TabularMSA, DNA, RNA
 from skbio.util import get_data_path
 
 
@@ -85,8 +85,8 @@ class TestReaders(unittest.TestCase):
              ),
 
             ([get_data_path('phylip_variable_length_ids')],
-             [('.-ACGU', ''), ('UGCA-.', 'a'), ('.ACGU-', 'bb'),
-              ('ugca-.', '1'), ('AaAaAa', 'abcdefghij'),
+             [('.-ACGT', ''), ('TGCA-.', 'a'), ('.ACGT-', 'bb'),
+              ('TGCA-.', '1'), ('AAAAAA', 'abcdefghij'),
               ('GGGGGG', 'ab def42ij')]
              ),
 
@@ -148,53 +148,62 @@ class TestReaders(unittest.TestCase):
              'The number of sequences and the length must be positive.'),
         ]]
 
-    def test_phylip_to_alignment_invalid_files(self):
-        # files that should be invalid for all variants, as well as custom
-        # phred offsets
+    def test_phylip_to_tabular_msa_invalid_files(self):
         for fp, error_type, error_msg_regex in self.invalid_files:
             with six.assertRaisesRegex(self, error_type, error_msg_regex):
-                _phylip_to_alignment(fp)
+                _phylip_to_tabular_msa(fp, constructor=DNA)
 
-    def test_phylip_to_alignment_valid_files(self):
+    def test_phylip_to_tabular_msa_no_constructor(self):
+        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+            _phylip_to_tabular_msa(get_data_path('phylip_dna_3_seqs'))
+
+    def test_phylip_to_tabular_msa_valid_files(self):
         for valid_files, components in self.valid_configurations:
             for valid in valid_files:
-                observed = _phylip_to_alignment(valid)
-                expected = Alignment([Sequence(seq, metadata={'id': ID})
-                                      for (seq, ID) in components])
+                observed = _phylip_to_tabular_msa(valid, constructor=DNA)
+
+                expected_seqs = []
+                expected_index = []
+                for seq, ID in components:
+                    expected_seqs.append(DNA(seq))
+                    expected_index.append(ID)
+                expected = TabularMSA(expected_seqs, index=expected_index)
+
                 self.assertEqual(observed, expected)
 
 
 class TestWriters(unittest.TestCase):
     def setUp(self):
         # ids all same length, seqs longer than 10 chars
-        dna_3_seqs = Alignment([
+        dna_3_seqs = TabularMSA([
             DNA('..ACC-GTTGG..', metadata={'id': "d1"}),
             DNA('TTACCGGT-GGCC', metadata={'id': "d2"}),
-            DNA('.-ACC-GTTGC--', metadata={'id': "d3"})])
+            DNA('.-ACC-GTTGC--', metadata={'id': "d3"})], minter='id')
 
         # id lengths from 0 to 10, with mixes of numbers, characters, and
-        # spaces. sequence characters are a mix of cases and gap characters.
-        # sequences are shorter than 10 chars
-        variable_length_ids = Alignment([
-            RNA('.-ACGU', metadata={'id': ''}),
-            RNA('UGCA-.', metadata={'id': 'a'}),
-            RNA('.ACGU-', metadata={'id': 'bb'}),
-            RNA('ugca-.', metadata={'id': '1'}, validate=False),
-            RNA('AaAaAa', metadata={'id': 'abcdefghij'}, validate=False),
-            RNA('GGGGGG', metadata={'id': 'ab def42ij'})])
+        # spaces. sequences are shorter than 10 chars
+        variable_length_ids = TabularMSA([
+            DNA('.-ACGT', metadata={'id': ''}),
+            DNA('TGCA-.', metadata={'id': 'a'}),
+            DNA('.ACGT-', metadata={'id': 'bb'}),
+            DNA('TGCA-.', metadata={'id': '1'}),
+            DNA('AAAAAA', metadata={'id': 'abcdefghij'}),
+            DNA('GGGGGG', metadata={'id': 'ab def42ij'})], minter='id')
 
         # sequences with 20 chars = exactly two chunks of size 10
-        two_chunks = Alignment([
+        two_chunks = TabularMSA([
             DNA('..ACC-GTTGG..AATGC.C', metadata={'id': 'foo'}),
-            DNA('TTACCGGT-GGCCTA-GCAT', metadata={'id': 'bar'})])
+            DNA('TTACCGGT-GGCCTA-GCAT', metadata={'id': 'bar'})], minter='id')
 
         # single sequence with more than two chunks
-        single_seq_long = Alignment([
-            DNA('..ACC-GTTGG..AATGC.C----', metadata={'id': 'foo'})])
+        single_seq_long = TabularMSA([
+            DNA('..ACC-GTTGG..AATGC.C----', metadata={'id': 'foo'})],
+            minter='id')
 
         # single sequence with only a single character (minimal writeable
         # alignment)
-        single_seq_short = Alignment([DNA('-', metadata={'id': ''})])
+        single_seq_short = TabularMSA([DNA('-', metadata={'id': ''})],
+                                      minter='id')
 
         # alignments that can be written in phylip format
         self.objs = [dna_3_seqs, variable_length_ids, two_chunks,
@@ -208,22 +217,23 @@ class TestWriters(unittest.TestCase):
         # expected error message regexps
         self.invalid_objs = [
             # no seqs
-            (Alignment([]), 'one sequence'),
+            (TabularMSA([]), 'one sequence'),
 
             # no positions
-            (Alignment([DNA('', metadata={'id': "d1"}),
-                        DNA('', metadata={'id': "d2"})]), 'one position'),
+            (TabularMSA([DNA('', metadata={'id': "d1"}),
+                         DNA('', metadata={'id': "d2"})]), 'one position'),
 
             # ids too long
-            (Alignment([RNA('ACGU', metadata={'id': "foo"}),
-                        RNA('UGCA', metadata={'id': "alongsequenceid"})]),
+            (TabularMSA([RNA('ACGU', metadata={'id': "foo"}),
+                         RNA('UGCA', metadata={'id': "alongsequenceid"})],
+                        minter='id'),
              '10.*alongsequenceid')
         ]
 
     def test_write(self):
         for fp, obj in zip(self.fps, self.objs):
             fh = io.StringIO()
-            _alignment_to_phylip(obj, fh)
+            _tabular_msa_to_phylip(obj, fh)
             obs = fh.getvalue()
             fh.close()
 
@@ -237,7 +247,7 @@ class TestWriters(unittest.TestCase):
             fh = io.StringIO()
             with six.assertRaisesRegex(self, PhylipFormatError,
                                        error_msg_regexp):
-                _alignment_to_phylip(invalid_obj, fh)
+                _tabular_msa_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was
             # thrown. TODO remove this check when #674 is resolved

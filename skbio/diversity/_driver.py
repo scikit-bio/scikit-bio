@@ -133,8 +133,8 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -147,43 +147,16 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
 
     See Also
     --------
+    skbio.diversity
     skbio.diversity.alpha
+    skbio.diversity.get_alpha_diversity_metrics
     skbio.diversity.beta_diversity
-
-    Notes
-    -----
-    The value that you provide for ``metric`` can be either a string (e.g.,
-    ``"faith_pd"``) or a function (e.g., ``skbio.diversity.alpha.faith_pd``).
-    The metric should generally be passed as a string, as this often uses an
-    optimized version of the metric. For example, passing  ``"faith_pd"`` (a
-    string) will be tens of times faster than passing the function
-    ``skbio.diversity.alpha.faith_pd``. The latter may be faster if computing
-    alpha diversity for only one or a few samples, but in these cases the
-    difference in runtime is negligible, so it's safer to just err on the side
-    of passing ``metric`` as a string.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * if ``counts`` is 2-D, all vectors are of equal length
-     * the correct number of ``ids`` is provided (if any are provided)
-
-    For phylogenetic diversity metrics, validation additional confirms that:
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
 
     """
     metric_map = _get_alpha_diversity_metric_map()
@@ -204,12 +177,14 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
-    results = [metric(c) for c in counts]
+    # kwargs is provided here so an error is raised on extra kwargs
+    results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
+def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
+                   **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -226,14 +201,21 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
         (where the type of the identifiers will be ``str``).
-    validate: bool, optional
+    validate : bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
         messages that are hard to interpret, so this step should not be
         bypassed if you're not certain that your input data are valid. See
-        Notes for the description of what validation entails so you can
-        determine if you can safely disable validation.
+        :mod:`skbio.diversity` for the description of what validation entails
+        so you can determine if you can safely disable validation.
+    pairwise_func : callable, optional
+        The function to use for computing pairwise distances. This function
+        must take ``counts`` and ``metric`` and return a square, hollow, 2-D
+        ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
+        that can be provided are ``scipy.spatial.distance.pdist`` and
+        ``sklearn.metrics.pairwise_distances``. By default,
+        ``scipy.spatial.distance.pdist`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -246,49 +228,25 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
     Raises
     ------
     ValueError, MissingNodeError, DuplicateNodeError
-        If validation fails (see description of validation in Notes). Exact
-        error will depend on what was invalid.
+        If validation fails. Exact error will depend on what was invalid.
     TypeError
         If invalid method-specific parameters are provided.
 
     See Also
     --------
+    skbio.diversity
     skbio.diversity.beta
+    skbio.diversity.get_beta_diversity_metrics
     skbio.diversity.alpha_diversity
     scipy.spatial.distance.pdist
-
-    Notes
-    -----
-    The value that you provide for ``metric`` can be either a string (e.g.,
-    ``"unweighted_unifrac"``) or a function
-    (e.g., ``skbio.diversity.beta.unweighted_unifrac``). The metric should
-    generally be passed as a string, as this often uses an optimized version
-    of the metric. For example, passing  ``"unweighted_unifrac"`` (a string)
-    will be hundreds of times faster than passing the function
-    ``skbio.diversity.beta.unweighted_unifrac``. The latter is faster if
-    computing only one or a few distances, but in these cases the difference in
-    runtime is negligible, so it's safer to just err on the side of passing
-    ``metric`` as a string.
-
-    Validation of input data confirms the following:
-     * ``counts`` data can be safely cast to integers
-     * there are no negative values in ``counts``
-     * ``counts`` has the correct number of dimensions
-     * all vectors in ``counts`` are of equal length
-     * the correct number of ``ids`` is provided (if any are provided)
-
-    For phylogenetic diversity metrics, validation additional confirms that:
-     * ``otu_ids`` does not contain duplicate values
-     * the length of each ``counts`` vector is equal to ``len(otu_ids)``
-     * ``tree`` is rooted
-     * ``tree`` has more than one node
-     * all nodes in ``tree`` except for the root node have branch lengths
-     * all tip names in ``tree`` are unique
-     * all ``otu_ids`` correspond to tip names in ``tree``
+    sklearn.metrics.pairwise_distances
 
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
+
+    if pairwise_func is None:
+        pairwise_func = scipy.spatial.distance.pdist
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -315,5 +273,5 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         # example one of the SciPy metrics
         pass
 
-    distances = scipy.spatial.distance.pdist(counts, metric, **kwargs)
+    distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
