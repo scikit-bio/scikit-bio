@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-from operator import or_
+from operator import or_, itemgetter
 from copy import deepcopy
 from itertools import combinations
 from functools import reduce
@@ -2320,6 +2320,8 @@ class TreeNode(SkbioObject):
         nodes on large trees efficiently. The code has been modified to track
         the specific tips the distance is between
         """
+        maxkey = itemgetter(0)
+
         for n in self.postorder():
             if n.is_tip():
                 n.MaxDistTips = [[0.0, n], [0.0, n]]
@@ -2328,10 +2330,8 @@ class TreeNode(SkbioObject):
                     raise TreeError("No support for single descedent nodes")
                 else:
                     tip_info = []
-                    for c in n.children:
-                        (left_d, _), (right_d, _) = c.MaxDistTips
-                        best_idx = np.argmax([left_d, right_d])
-                        tip_info.append((c.MaxDistTips[best_idx], c))
+                    tip_info = [(max(c.MaxDistTips, key=maxkey), c)
+                                for c in n.children]
 
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
