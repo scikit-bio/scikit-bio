@@ -2329,7 +2329,6 @@ class TreeNode(SkbioObject):
                 if len(n.children) == 1:
                     raise TreeError("No support for single descedent nodes")
                 else:
-                    tip_info = []
                     tip_info = [(max(c.MaxDistTips, key=maxkey), c)
                                 for c in n.children]
 
