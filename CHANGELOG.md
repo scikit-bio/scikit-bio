@@ -98,6 +98,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * ``DissimilarityMatrix.plot()`` no longer leaves a white border around the
   heatmap it plots (PR #1070).
 * ``TreeNode._set_max_distance`` would fail if ties were encountered. ([#1077](https://github.com/biocore/scikit-bio/issues/1077))
+* ``TreeNode._set_max_distance`` would store distance information as ``list``s in the attribute ``MaxDistTips`` on each node, however, these distances were only valid for the node in which the call to ``_set_max_distance`` was called on. ([#1223](https://github.com/biocore/scikit-bio/issues/1223))
 * Added missing `nose` dependency to setup.py's `install_requires`. ([#1214](https://github.com/biocore/scikit-bio/issues/1214))
 
 ### Deprecated functionality [stable]

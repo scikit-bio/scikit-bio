@@ -638,7 +638,7 @@ class TreeTests(TestCase):
         s = StringIO("((a:1,b:1)c:2,(d:3,e:4)f:5)root;")
         t = TreeNode.read(s)
 
-        exp = [[3.0, t.find('a')], [9.0, t.find('e')]]
+        exp = ((3.0, t.find('a')), (9.0, t.find('e')))
 
         # the above tree would trigger an exception in max. The central issue
         # was that the data being passed to max were a tuple of tuple:
@@ -648,6 +648,23 @@ class TreeTests(TestCase):
         t._set_max_distance()
 
         self.assertEqual(t.MaxDistTips, exp)
+
+    def test_set_max_distance_inplace_modification_bug(self):
+        """Corresponds to #1223"""
+        s = StringIO("((a:1,b:1)c:2,(d:3,e:4)f:5)root;")
+        t = TreeNode.read(s)
+
+        exp = [((0.0, t.find('a')), (0.0, t.find('a'))),
+               ((0.0, t.find('b')), (0.0, t.find('b'))),
+               ((1.0, t.find('a')), (1.0, t.find('b'))),
+               ((0.0, t.find('d')), (0.0, t.find('d'))),
+               ((0.0, t.find('e')), (0.0, t.find('e'))),
+               ((3.0, t.find('d')), (4.0, t.find('e'))),
+               ((3.0, t.find('a')), (9.0, t.find('e')))]
+
+        t._set_max_distance()
+
+        self.assertEqual([n.MaxDistTips for n in t.postorder()], exp)
 
     def test_shear(self):
         """Shear the nodes"""
