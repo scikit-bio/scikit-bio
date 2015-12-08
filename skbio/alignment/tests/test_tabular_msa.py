@@ -1927,7 +1927,7 @@ class TestConservation(unittest.TestCase):
         cons = msa.conservation()
         npt.assert_array_equal(cons, np.array([]))
 
-    def test_shannon_entropy(self):
+    def test_shannon_entropy_dna(self):
         msa = TabularMSA([DNA('A'),
                           DNA('G')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty')
@@ -1958,6 +1958,72 @@ class TestConservation(unittest.TestCase):
                              1. - scipy.stats.entropy([1.0], base=4),
                              1. - scipy.stats.entropy([1.0], base=4),
                              1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_rna(self):
+        msa = TabularMSA([RNA('A'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('A'),
+                          RNA('G'),
+                          RNA('C'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AAC'),
+                          RNA('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AACU'),
+                          RNA('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_protein(self):
+        msa = TabularMSA([Protein('A'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('A'),
+                          Protein('G'),
+                          Protein('C'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AAC'),
+                          Protein('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AACT'),
+                          Protein('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=20)])
         npt.assert_array_equal(actual, expected)
 
     def test_nan_on_degenerate_True(self):

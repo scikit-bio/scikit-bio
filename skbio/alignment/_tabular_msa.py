@@ -841,7 +841,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _build_inverse_shannon_uncertainty_f(self, include_gaps):
         base = len(self.dtype.nondegenerate_chars)
         if include_gaps:
-            # This is how [1] suggests handling gaps for Shannon entropy.
+            # Increment the base by one to reflect the possible inclusion of
+            # the default gap character.
             base += 1
 
         def f(p):
@@ -852,7 +853,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @experimental(as_of='0.4.0-dev')
     def conservation(self, metric='inverse_shannon_uncertainty',
                      nan_on_degenerate=False, gap_mode='nan'):
-        """Apply metric to compute positional conservation for the alignment
+        """Apply metric to compute conservation for all alignment positions
 
         Parameters
         ----------
@@ -884,13 +885,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Raises
         ------
         ValueError
-            If an unknown metric is provided.
+            If an unknown ``metric`` is provided.
         ValueError
             If any degenerate characters are present in the alignment when
             ``nan_on_degenerate`` is ``False``.
         ValueError
             If any gaps are present in the alignment when ``gap_mode`` is
             ``"error"``.
+        ValueError
+            If an unknown ``gap_mode`` is provided when there are gaps in the
+            alignment.
 
         Notes
         -----
@@ -935,8 +939,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         result = []
         for p in self.iter_positions():
             cons = None
-            # convert this from Sequence to self.dtype for access to gap-
-            # and degenerate-related functionality
+            # cast p to self.dtype for access to gap/degenerate related
+            # functionality
             pos_seq = self.dtype(p)
 
             # handle degenerate characters if present
@@ -967,8 +971,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                         pos_seq._bytes[pos_seq.gaps()] = \
                             ord(pos_seq.default_gap_char)
                 else:
-                    # Do we care that this error only comes up if gaps are
-                    # present?
                     raise ValueError("Unknown gap_mode provided: %s" % metric)
 
             if cons is None:
