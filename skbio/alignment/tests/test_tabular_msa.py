@@ -2026,83 +2026,79 @@ class TestConservation(unittest.TestCase):
                              1. - scipy.stats.entropy([0.5, 0.5], base=20)])
         npt.assert_array_equal(actual, expected)
 
-    def test_nan_on_degenerate_True(self):
+    def test_degenerate_mode_nan(self):
         msa = TabularMSA([DNA('NAC'),
                           DNA('NNC')])
         actual = msa.conservation(metric='inverse_shannon_uncertainty',
-                                  nan_on_degenerate=True)
+                                  degenerate_mode='nan')
         expected = np.array([np.nan,
                              np.nan,
                              1. - scipy.stats.entropy([1.0], base=4)])
         npt.assert_array_equal(actual, expected)
 
-    def test_nan_on_degenerate_False(self):
+    def test_degenerate_mode_error(self):
         msa = TabularMSA([DNA('NACN'),
                           DNA('NNCA')])
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False)
+                          degenerate_mode='error')
 
         msa = TabularMSA([DNA('AACA'),
                           DNA('ANCA')])
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False)
+                          degenerate_mode='error')
 
     def test_error_on_degenerate_w_nan_on_gap(self):
         msa = TabularMSA([DNA('-ACA'),
                           DNA('-NCA')])
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False,
+                          degenerate_mode='error',
                           gap_mode='nan')
 
     def test_column_with_degen_and_gap(self):
         msa = TabularMSA([DNA('N'),
                           DNA('-')])
-        # degenerate results in nan
+        # test all eight combinations of gap_mode and degenerate_mode
         actual = msa.conservation(metric='inverse_shannon_uncertainty',
-                                  nan_on_degenerate=True,
+                                  degenerate_mode='nan',
                                   gap_mode='nan')
         npt.assert_array_equal(actual, np.array([np.nan]))
 
-        # degenerate results in nan
         actual = msa.conservation(metric='inverse_shannon_uncertainty',
-                                  nan_on_degenerate=True,
+                                  degenerate_mode='nan',
                                   gap_mode='ignore')
         npt.assert_array_equal(actual, np.array([np.nan]))
 
-        # degenerate results in nan
         actual = msa.conservation(metric='inverse_shannon_uncertainty',
-                                  nan_on_degenerate=True,
+                                  degenerate_mode='nan',
                                   gap_mode='include')
         npt.assert_array_equal(actual, np.array([np.nan]))
 
-        # gap_mode=error overrides nan_on_degenerate
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=True,
+                          degenerate_mode='nan',
                           gap_mode='error')
 
-        # degenerates results in error regardless of gap handling
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False,
+                          degenerate_mode='error',
                           gap_mode='nan')
 
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False,
+                          degenerate_mode='error',
                           gap_mode='error')
 
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False,
+                          degenerate_mode='error',
                           gap_mode='include')
 
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
-                          nan_on_degenerate=False,
+                          degenerate_mode='error',
                           gap_mode='ignore')
 
     def test_gap_mode_nan(self):
@@ -2176,6 +2172,36 @@ class TestConservation(unittest.TestCase):
         self.assertRaises(ValueError, msa.conservation,
                           metric='inverse_shannon_uncertainty',
                           gap_mode="error")
+
+    def test_bad_metric(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+    def test_bad_gap_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+    def test_bad_degenerate_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
 
 
 class TestGapFrequencies(unittest.TestCase):

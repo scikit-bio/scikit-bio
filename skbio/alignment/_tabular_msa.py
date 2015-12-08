@@ -852,20 +852,21 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of='0.4.0-dev')
     def conservation(self, metric='inverse_shannon_uncertainty',
-                     nan_on_degenerate=False, gap_mode='nan'):
+                     degenerate_mode='error', gap_mode='nan'):
         """Apply metric to compute conservation for all alignment positions
 
         Parameters
         ----------
-        metric : str, optional, {'inverse_shannon_uncertainty'}
+        metric : {'inverse_shannon_uncertainty'}, optional
             Metric that should be applied for computing conservation. Resulting
             values should be larger when a position is more conserved.
-        nan_on_degenerate : bool, optional
-            If ``True``, positions in the resulting array that correspond to
-            alignment positions containing degenerate characters will have
-            ``np.nan`` as their value. If ``False``, the presence of degenerate
-            characters will result in an error.
-        gap_mode : str, optional, {'nan', 'ignore', 'error', 'include'}
+        degenerate_mode : {'nan', 'error'}, optional
+            Mode for handling positions with degenerate characters. If
+            ``"nan"``, positions with degenerate characters will be assigned a
+            conservation score of ``np.nan``. If ``"error"``, an
+            error will be raised if one or more degenerate characters are
+            present.
+        gap_mode : {'nan', 'ignore', 'error', 'include'}, optional
             Mode for handling positions with gap characters. If ``"nan"``,
             positions with gaps will be assigned a conservation score of
             ``np.nan``. If ``"ignore"``, positions with gaps will be filtered
@@ -885,16 +886,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Raises
         ------
         ValueError
-            If an unknown ``metric`` is provided.
+            If an unknown ``metric``, ``degenerate_mode`` or ``gap_mode`` is
+            provided.
         ValueError
             If any degenerate characters are present in the alignment when
-            ``nan_on_degenerate`` is ``False``.
+            ``degenerate_mode`` is ``"error"``.
         ValueError
             If any gaps are present in the alignment when ``gap_mode`` is
             ``"error"``.
-        ValueError
-            If an unknown ``gap_mode`` is provided when there are gaps in the
-            alignment.
 
         Notes
         -----
@@ -926,15 +925,28 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
 
+        if gap_mode not in {'nan', 'error', 'include', 'ignore'}:
+            raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
+
+        if degenerate_mode not in {'nan', 'error'}:
+            raise ValueError("Unknown degenerate_mode provided: %s" %
+                             degenerate_mode)
+
+        if metric not in {'inverse_shannon_uncertainty'}:
+            raise ValueError("Unknown metric provided: %s" %
+                             metric)
+
         if self.shape[0] == 0:
             # handle empty alignment to avoid error on lookup of character sets
             return np.array([])
 
-        if metric == 'inverse_shannon_uncertainty':
-            metric_f = self._build_inverse_shannon_uncertainty_f(
-                            gap_mode == 'include')
-        else:
-            raise ValueError("Unknown metric provided: %s" % metric)
+        # Since the only currently allowed metric is
+        # inverse_shannon_uncertainty, and we already know that a valid metric
+        # was provided, we just define metric_f here. When additional metrics
+        # are supported, this will be handled differently (e.g., via a lookup
+        # or if/elif/else).
+        metric_f = self._build_inverse_shannon_uncertainty_f(
+                        gap_mode == 'include')
 
         result = []
         for p in self.iter_positions():
@@ -945,9 +957,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             # handle degenerate characters if present
             if pos_seq.has_degenerates():
-                if nan_on_degenerate:
+                if degenerate_mode == 'nan':
                     cons = np.nan
-                else:
+                else:  # degenerate_mode == 'error' is the only choice left
                     degenerate_chars = pos_seq[pos_seq.degenerates()]
                     raise ValueError("Conservation is undefined for positions "
                                      "with degenerate characters. The "
@@ -962,7 +974,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     raise ValueError("Gap characters present in alignment.")
                 elif gap_mode == 'ignore':
                     pos_seq = pos_seq.degap()
-                elif gap_mode == 'include':
+                else:  # gap_mode == 'include' is the only choice left
                     # Recode all gap characters with pos_seq.default_gap_char.
                     # This logic should be replaced with a call to
                     # pos_seq.replace when it exists.
@@ -970,8 +982,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     with pos_seq._byte_ownership():
                         pos_seq._bytes[pos_seq.gaps()] = \
                             ord(pos_seq.default_gap_char)
-                else:
-                    raise ValueError("Unknown gap_mode provided: %s" % metric)
 
             if cons is None:
                 cons = metric_f(pos_seq)
