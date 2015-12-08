@@ -858,8 +858,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ----------
         metric : str, optional, {'inverse_shannon_uncertainty'}
             Metric that should be applied for computing conservation. Resulting
-            conservation values should be higher when a position is more
-            conserved.
+            values should be larger when a position is more conserved.
         nan_on_degenerate : bool, optional
             If ``True``, positions in the resulting array that correspond to
             alignment positions containing degenerate characters will have
@@ -869,25 +868,25 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             Mode for handling positions with gap characters. If ``"nan"``,
             positions with gaps will be assigned a conservation score of
             ``np.nan``. If ``"ignore"``, positions with gaps will be filtered
-            to remove gaps before metric is applied. If ``"error"``, an error
-            will be raised if gap characters are present. If ``"include"``,
-            conservation will be computed on alignment positions without any
-            modification to gaps
-            included. In this case, it is up to the metric to ensure that gaps
-            are handled as they should be, or an error is raised if gaps are
-            not supported.
+            to remove gaps before ``metric`` is applied. If ``"error"``, an
+            error will be raised if one or more gap characters are present. If
+            ``"include"``, conservation will be computed on alignment positions
+            with gaps included. In this case, it is up to the metric to ensure
+            that gaps are handled as they should be or to raise an error if
+            gaps are not supported by that metric.
 
         Returns
         -------
         np.array of floats
-            Value of applying ``metric`` to each position in the alignment.
+            Values resulting from the application of ``metric`` to each
+            position in the alignment.
 
         Raises
         ------
         ValueError
             If an unknown metric is provided.
         ValueError
-            If a degenerate character is encountered at a position and
+            If any degenerate characters are present in the alignment when
             ``nan_on_degenerate`` is ``False``.
         ValueError
             If any gaps are present in the alignment when ``gap_mode`` is
@@ -896,10 +895,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Notes
         -----
         Users should be careful interpreting results when
-        ``gap_mode = "include"``. As pointed out in [1]_, a position composed
-        nearly entirely of gaps would score as more highly conserved than a
-        protein sequence position composed of alanine and glycine in equal
-        frequencies.
+        ``gap_mode = "include"`` as the results may be misleading. For example,
+        as pointed out in [1]_, a protein alignment position composed of 90%
+        gaps and 10% tryptophans would score as more highly conserved than a
+        position composed of alanine and glycine in equal frequencies with the
+        ``"inverse_shannon_uncertainty"`` metric.
 
         ``gap_mode = "include"`` will result in all gap characters being
         recoded to ``Alignment.dtype.default_gap_char``. Because no
@@ -918,7 +918,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ----------
         .. [1] Valdar WS. Scoring residue conservation. Proteins. (2002)
         .. [2] Schneider T. Pitfalls in information theory (website, ca. 2015).
-        https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
+           https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
 
         """
 
@@ -959,8 +959,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 elif gap_mode == 'ignore':
                     pos_seq = pos_seq.degap()
                 elif gap_mode == 'include':
-                    # recode gaps here!
-                    pass
+                    # Recode all gap characters with pos_seq.default_gap_char.
+                    # This logic should be replaced with a call to
+                    # pos_seq.replace when it exists.
+                    # https://github.com/biocore/scikit-bio/issues/1222
+                    with pos_seq._byte_ownership():
+                        pos_seq._bytes[pos_seq.gaps()] = \
+                            ord(pos_seq.default_gap_char)
                 else:
                     # Do we care that this error only comes up if gaps are
                     # present?
