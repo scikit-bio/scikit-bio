@@ -18,6 +18,7 @@ import six
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import scipy.stats
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.sequence._iupac_sequence import IUPACSequence
@@ -1917,6 +1918,290 @@ class TestConsensus(unittest.TestCase):
         cons = msa.consensus()
 
         self.assertEqual(cons, DNA('-'))
+
+
+class TestConservation(unittest.TestCase):
+
+    def test_no_sequences(self):
+        msa = TabularMSA([])
+        cons = msa.conservation()
+        npt.assert_array_equal(cons, np.array([]))
+
+    def test_shannon_entropy_dna(self):
+        msa = TabularMSA([DNA('A'),
+                          DNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('A'),
+                          DNA('G'),
+                          DNA('C'),
+                          DNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AAC'),
+                          DNA('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AACT'),
+                          DNA('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_rna(self):
+        msa = TabularMSA([RNA('A'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('A'),
+                          RNA('G'),
+                          RNA('C'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AAC'),
+                          RNA('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AACU'),
+                          RNA('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_protein(self):
+        msa = TabularMSA([Protein('A'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('A'),
+                          Protein('G'),
+                          Protein('C'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AAC'),
+                          Protein('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AACT'),
+                          Protein('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_degenerate_mode_nan(self):
+        msa = TabularMSA([DNA('NAC'),
+                          DNA('NNC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan')
+        expected = np.array([np.nan,
+                             np.nan,
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_degenerate_mode_error(self):
+        msa = TabularMSA([DNA('NACN'),
+                          DNA('NNCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error')
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('ANCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error')
+
+    def test_error_on_degenerate_w_nan_on_gap(self):
+        msa = TabularMSA([DNA('-ACA'),
+                          DNA('-NCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='nan')
+
+    def test_column_with_degen_and_gap(self):
+        msa = TabularMSA([DNA('N'),
+                          DNA('-')])
+        # test all eight combinations of gap_mode and degenerate_mode
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='nan')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='ignore')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='include')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='nan',
+                          gap_mode='error')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='nan')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='error')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='include')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='ignore')
+
+    def test_gap_mode_nan(self):
+        msa = TabularMSA([DNA('-AC.'),
+                          DNA('--CA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='nan')
+        expected = np.array([np.nan,
+                             np.nan,
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             np.nan])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_include(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=5),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AC'),
+                          DNA('.G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=5),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_include_gaps_treated_as_single_char(self):
+        msa = TabularMSA([DNA('.'),
+                          DNA('-')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_ignore(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='ignore')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AC'),
+                          DNA('.G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='ignore')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_error(self):
+        msa = TabularMSA([DNA('-AC-'),
+                          DNA('--CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('A-CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('A.CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+    def test_bad_metric(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+    def test_bad_gap_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+    def test_bad_degenerate_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
 
 
 class TestGapFrequencies(unittest.TestCase):

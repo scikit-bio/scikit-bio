@@ -15,6 +15,7 @@ from future.builtins import range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
@@ -836,6 +837,158 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return dtype(''.join(consensus),
                      positional_metadata=positional_metadata)
+
+    def _build_inverse_shannon_uncertainty_f(self, include_gaps):
+        base = len(self.dtype.nondegenerate_chars)
+        if include_gaps:
+            # Increment the base by one to reflect the possible inclusion of
+            # the default gap character.
+            base += 1
+
+        def f(p):
+            freqs = list(p.kmer_frequencies(k=1).values())
+            return 1. - scipy.stats.entropy(freqs, base=base)
+        return f
+
+    @experimental(as_of='0.4.0-dev')
+    def conservation(self, metric='inverse_shannon_uncertainty',
+                     degenerate_mode='error', gap_mode='nan'):
+        """Apply metric to compute conservation for all alignment positions
+
+        Parameters
+        ----------
+        metric : {'inverse_shannon_uncertainty'}, optional
+            Metric that should be applied for computing conservation. Resulting
+            values should be larger when a position is more conserved.
+        degenerate_mode : {'nan', 'error'}, optional
+            Mode for handling positions with degenerate characters. If
+            ``"nan"``, positions with degenerate characters will be assigned a
+            conservation score of ``np.nan``. If ``"error"``, an
+            error will be raised if one or more degenerate characters are
+            present.
+        gap_mode : {'nan', 'ignore', 'error', 'include'}, optional
+            Mode for handling positions with gap characters. If ``"nan"``,
+            positions with gaps will be assigned a conservation score of
+            ``np.nan``. If ``"ignore"``, positions with gaps will be filtered
+            to remove gaps before ``metric`` is applied. If ``"error"``, an
+            error will be raised if one or more gap characters are present. If
+            ``"include"``, conservation will be computed on alignment positions
+            with gaps included. In this case, it is up to the metric to ensure
+            that gaps are handled as they should be or to raise an error if
+            gaps are not supported by that metric.
+
+        Returns
+        -------
+        np.array of floats
+            Values resulting from the application of ``metric`` to each
+            position in the alignment.
+
+        Raises
+        ------
+        ValueError
+            If an unknown ``metric``, ``degenerate_mode`` or ``gap_mode`` is
+            provided.
+        ValueError
+            If any degenerate characters are present in the alignment when
+            ``degenerate_mode`` is ``"error"``.
+        ValueError
+            If any gaps are present in the alignment when ``gap_mode`` is
+            ``"error"``.
+
+        Notes
+        -----
+        Users should be careful interpreting results when
+        ``gap_mode = "include"`` as the results may be misleading. For example,
+        as pointed out in [1]_, a protein alignment position composed of 90%
+        gaps and 10% tryptophans would score as more highly conserved than a
+        position composed of alanine and glycine in equal frequencies with the
+        ``"inverse_shannon_uncertainty"`` metric.
+
+        ``gap_mode = "include"`` will result in all gap characters being
+        recoded to ``Alignment.dtype.default_gap_char``. Because no
+        conservation metrics that we are aware of consider different gap
+        characters differently (e.g., none of the metrics described in [1]_),
+        they are all treated the same within this method.
+
+        The ``inverse_shannon_uncertainty`` metric is simiply one minus
+        Shannon's uncertainty metric. This method uses the inverse of Shannon's
+        uncertainty so that larger values imply higher conservation. Shannon's
+        uncertainty is also referred to as Shannon's entropy, but when making
+        computations from symbols, as is done here, "uncertainty" is the
+        preferred term ([2]_).
+
+        References
+        ----------
+        .. [1] Valdar WS. Scoring residue conservation. Proteins. (2002)
+        .. [2] Schneider T. Pitfalls in information theory (website, ca. 2015).
+           https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
+
+        """
+
+        if gap_mode not in {'nan', 'error', 'include', 'ignore'}:
+            raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
+
+        if degenerate_mode not in {'nan', 'error'}:
+            raise ValueError("Unknown degenerate_mode provided: %s" %
+                             degenerate_mode)
+
+        if metric not in {'inverse_shannon_uncertainty'}:
+            raise ValueError("Unknown metric provided: %s" %
+                             metric)
+
+        if self.shape[0] == 0:
+            # handle empty alignment to avoid error on lookup of character sets
+            return np.array([])
+
+        # Since the only currently allowed metric is
+        # inverse_shannon_uncertainty, and we already know that a valid metric
+        # was provided, we just define metric_f here. When additional metrics
+        # are supported, this will be handled differently (e.g., via a lookup
+        # or if/elif/else).
+        metric_f = self._build_inverse_shannon_uncertainty_f(
+                        gap_mode == 'include')
+
+        result = []
+        for p in self.iter_positions():
+            cons = None
+            # cast p to self.dtype for access to gap/degenerate related
+            # functionality
+            pos_seq = self.dtype(p)
+
+            # handle degenerate characters if present
+            if pos_seq.has_degenerates():
+                if degenerate_mode == 'nan':
+                    cons = np.nan
+                else:  # degenerate_mode == 'error' is the only choice left
+                    degenerate_chars = pos_seq[pos_seq.degenerates()]
+                    raise ValueError("Conservation is undefined for positions "
+                                     "with degenerate characters. The "
+                                     "following degenerate characters were "
+                                     "observed: %s." % degenerate_chars)
+
+            # handle gap characters if present
+            if pos_seq.has_gaps():
+                if gap_mode == 'nan':
+                    cons = np.nan
+                elif gap_mode == 'error':
+                    raise ValueError("Gap characters present in alignment.")
+                elif gap_mode == 'ignore':
+                    pos_seq = pos_seq.degap()
+                else:  # gap_mode == 'include' is the only choice left
+                    # Recode all gap characters with pos_seq.default_gap_char.
+                    # This logic should be replaced with a call to
+                    # pos_seq.replace when it exists.
+                    # https://github.com/biocore/scikit-bio/issues/1222
+                    with pos_seq._byte_ownership():
+                        pos_seq._bytes[pos_seq.gaps()] = \
+                            ord(pos_seq.default_gap_char)
+
+            if cons is None:
+                cons = metric_f(pos_seq)
+
+            result.append(cons)
+
+        return np.array(result)
 
     @experimental(as_of='0.4.0-dev')
     def gap_frequencies(self, axis='sequence', relative=False):
