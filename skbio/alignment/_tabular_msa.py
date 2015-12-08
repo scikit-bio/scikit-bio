@@ -347,6 +347,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _constructor_(self, sequences=NotImplemented, metadata=NotImplemented,
                       positional_metadata=NotImplemented,
                       index=NotImplemented):
+        """Return new copy of the MSA with overridden properties.
+
+        NotImplemented is used as a sentinel so that None may be used to
+        override values.
+        """
+
         if sequences is NotImplemented:
             sequences = self._seqs
 
@@ -705,7 +711,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._seqs.iloc[i]
 
     def _slice_sequences_(self, i):
-        return self._constructor_(self._seqs.iloc[i])
+        new_seqs = self._seqs.iloc[i]
+        # TODO: change for #1198
+        if len(new_seqs) == 0:
+            return self._constructor_(new_seqs, positional_metadata=None)
+        return self._constructor_(new_seqs)
 
     def _get_sequence_loc_(self, l):
         new_seqs = self._seqs.loc[l]
@@ -726,6 +736,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _slice_sequences_loc_(self, l):
         new_seqs = self._seqs.loc[l]
         try:
+            # TODO: change for #1198
+            if len(new_seqs) == 0:
+                return self._constructor_(new_seqs, positional_metadata=None)
             return self._constructor_(new_seqs)
         except TypeError:  # NaN hit the constructor, key was bad... probably
             raise KeyError("Part of `%r` was not in the index.")
