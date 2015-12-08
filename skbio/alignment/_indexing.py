@@ -32,7 +32,8 @@ class _Indexing(object):
 
         if type(indexable) is tuple:
             if len(indexable) > 2:
-                raise ValueError("TODO")
+                raise ValueError("Can only slice on two axis. Tuple is length:"
+                                 " %r" % len(indexable))
             elif len(indexable) > 1:
                 return self._handle_both_axes(*indexable)
             else:
@@ -105,7 +106,9 @@ class _Indexing(object):
             return indexable
 
         if indexable.dtype == bool and len(indexable) != self._obj.shape[axis]:
-            raise IndexError()
+            raise IndexError("Boolean index's length (%r) does not match the"
+                             " axis length (%r)" % (len(indexable),
+                                                    self._obj.shape[axis]))
 
         return indexable
 

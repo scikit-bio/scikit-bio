@@ -1281,10 +1281,9 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
         self.assertEqual(self.get(msa, (([False, True, False, True],
                                          'x', 2), Ellipsis)),
                          TabularMSA([], metadata={'x': 'y'},
-                                    # TODO: Change for #1198 
+                                    # TODO: Change for #1198
                                     positional_metadata=None,
                                     index=[]))
-
 
     def test_bool_index_scalar_bool_label(self):
         a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
@@ -1390,7 +1389,7 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
                          index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
 
         with six.assertRaisesRegex(self, TypeError,
-                                  'tuple.*independent.*MultiIndex'):
+                                   'tuple.*independent.*MultiIndex'):
             self.get(msa, ['a', 'b'])
 
     def test_missing_first_nonscalar_fancy_index(self):
@@ -1404,16 +1403,16 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')],
                          index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
 
-        with six.assertRaisesRegex(self, TypeError, 
+        with six.assertRaisesRegex(self, TypeError,
                                    'tuple.*pd.MultiIndex.*label'):
-            self.get(msa, ((('a', 0 , 1), ('b', 0, 1)), Ellipsis))
+            self.get(msa, ((('a', 0, 1), ('b', 0, 1)), Ellipsis))
 
     def test_non_multiindex_tuple(self):
         msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')])
 
         with six.assertRaisesRegex(self, TypeError, 'tuple.*first axis'):
             self.get(msa, ((0, 1), Ellipsis))
-    
+
     def test_assertion_exists_for_future_failure_of_get_sequence_loc(self):
         # Ideally we wouldn't need this test or the branch, but the most common
         # failure for pandas would be returning a series instead of the value.
@@ -1521,28 +1520,6 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
         with self.assertRaises(IndexError):
             self.get(TabularMSA([DNA('AC')]), (Ellipsis, [0, 1, 2]))
 
-    def test_fancy_empty_first_axis(self):
-        msa = TabularMSA([DNA("ACGT"), DNA("TGCA")], index=list("AB"))
-
-        new_np_simple = self.get(msa, np.arange(0))
-        new_list_simple = self.get(msa, [])
-
-        self.assertEqual(TabularMSA([]), new_np_simple)
-
-        self.assertEqual(TabularMSA([]), new_list_simple)
-
-    def test_fancy_empty_second_axis(self):
-        msa = TabularMSA([DNA("ACGT", metadata={'x': 1}),
-                          DNA("TGCA", metadata={'y': 2})], index=list("AB"))
-        exp = TabularMSA([DNA("", metadata={'x': 1}),
-                          DNA("", metadata={'y': 2})], index=list("AB"))
-
-        new_np_simple = self.get(msa, (Ellipsis, np.arange(0)))
-        new_list_simple = self.get(msa, (Ellipsis, []))
-
-        self.assertEqual(exp, new_np_simple)
-        self.assertEqual(exp, new_list_simple)
-
     def test_fancy_empty_both_axis(self):
         msa = TabularMSA([DNA("ACGT", metadata={'x': 1}),
                           DNA("TGCA", metadata={'y': 2})], index=list("AB"))
@@ -1562,7 +1539,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
                          positional_metadata={3: [1, 2, 3, 4]})
 
         self.assertEqual(self.get(msa, [0, 2]),
-                         TabularMSA([a, c], metadata={3: 3}, 
+                         TabularMSA([a, c], metadata={3: 3},
                                     positional_metadata={3: [1, 2, 3, 4]},
                                     index=[0, 2]))
 
@@ -1575,10 +1552,10 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
                          positional_metadata={3: [1, 2, 3, 4]})
 
         self.assertEqual(self.get(msa, (Ellipsis, [0, 2])),
-                         TabularMSA([a[0, 2], b[0, 2], c[0, 2]], 
-                                     metadata={3: 3}, 
-                                     positional_metadata={3: [1, 3]},
-                                     index=[0, 1, 2]))
+                         TabularMSA([a[0, 2], b[0, 2], c[0, 2]],
+                                    metadata={3: 3},
+                                    positional_metadata={3: [1, 3]},
+                                    index=[0, 1, 2]))
 
     def test_fancy_standard_both_axes(self):
         a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
@@ -1589,11 +1566,11 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
                          positional_metadata={3: [1, 2, 3, 4]})
 
         self.assertEqual(self.get(msa, ([0, 2], [0, 2])),
-                         TabularMSA([a[0, 2], c[0, 2]], 
-                                     metadata={3: 3}, 
-                                     positional_metadata={3: [1, 3]},
-                                     index=[0, 2]))
-   
+                         TabularMSA([a[0, 2], c[0, 2]],
+                                    metadata={3: 3},
+                                    positional_metadata={3: [1, 3]},
+                                    index=[0, 2]))
+
     def test_fancy_empty_first_axis(self):
         a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
         b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
@@ -1601,7 +1578,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
 
         msa = TabularMSA([a, b, c], metadata={3: 3},
                          positional_metadata={3: [1, 2, 3, 4]})
-        # TODO: Change for #1198 
+        # TODO: Change for #1198
         self.assertEqual(self.get(msa, []),
                          TabularMSA([], metadata={3: 3}))
 
@@ -1612,9 +1589,9 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
 
         msa = TabularMSA([a, b, c], metadata={3: 3},
                          positional_metadata={3: [1, 2, 3, 4]})
-        
+
         self.assertEqual(self.get(msa, (Ellipsis, [])),
-                         TabularMSA([a[0:0], b[0:0], c[0:0]], 
+                         TabularMSA([a[0:0], b[0:0], c[0:0]],
                                     metadata={3: 3},
                                     positional_metadata={3: np.array(
                                         [], dtype=int)}))
@@ -1626,7 +1603,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
 
         msa = TabularMSA([a, b, c], metadata={3: 3},
                          positional_metadata={3: [1, 2, 3, 4]})
-        # TODO: Change for #1198 
+        # TODO: Change for #1198
         self.assertEqual(self.get(msa, ([], [])),
                          TabularMSA([], metadata={3: 3}))
 
@@ -1662,18 +1639,18 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
     def test_get_scalar_second_axis(self):
         a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
         b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
-        msa = TabularMSA([a, b], positional_metadata={'z':[5, 6]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
 
         new0 = self.get(msa, (Ellipsis, 0))
         new1 = self.get(msa, (Ellipsis, 1))
 
         self.assertEqual(new0,
                          Sequence("AG", metadata={'z': 5},
-                                  positional_metadata={'x': [1, np.nan], 
+                                  positional_metadata={'x': [1, np.nan],
                                                        'y': [np.nan, 3]}))
         self.assertEqual(new1,
                          Sequence("AC", metadata={'z': 6},
-                                  positional_metadata={'x': [2, np.nan], 
+                                  positional_metadata={'x': [2, np.nan],
                                                        'y': [np.nan, 4]}))
 
     def test_scalar_sliced_first_axis(self):
@@ -1683,9 +1660,9 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
 
         msa = TabularMSA([a, b, c], metadata={3: 3},
                          positional_metadata={3: [1, 2, 3, 4]})
-        
+
         self.assertEqual(self.get(msa, (1, [1, 3])),
-                         DNA("CT", metadata={1: 1}, 
+                         DNA("CT", metadata={1: 1},
                              positional_metadata={1: [2, 4]}))
 
     def test_scalar_sliced_second_axis(self):
@@ -1695,16 +1672,16 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
 
         msa = TabularMSA([a, b, c], metadata={3: 3},
                          positional_metadata={3: [1, 2, 3, 4]})
-        
+
         self.assertEqual(self.get(msa, ([1, 2], 3)),
-                         Sequence("AT", metadata={3: 4}, 
+                         Sequence("AT", metadata={3: 4},
                                   positional_metadata={1: [4, np.nan],
                                                        2: [np.nan, 4]}))
 
     def test_get_scalar_out_of_bound_first_axis(self):
         a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
         b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
-        msa = TabularMSA([a, b], positional_metadata={'z':[5, 6]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
 
         with self.assertRaises(IndexError):
             self.get(msa, 3)
@@ -1712,7 +1689,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
     def test_get_scalar_out_of_bound_second_axis(self):
         a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
         b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
-        msa = TabularMSA([a, b], positional_metadata={'z':[5, 6]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
 
         with self.assertRaises(IndexError):
             self.get(msa, (..., 3))
@@ -1734,10 +1711,10 @@ class TestGetItem(SharedIndexTests, unittest.TestCase):
 class TestConstructor(unittest.TestCase):
     def setUp(self):
         self.seqs = [DNA("ACGT"), DNA("GCTA")]
-        self.m = {'x': 'y', 0:1}
+        self.m = {'x': 'y', 0: 1}
         self.pm = pd.DataFrame({'foo': [1, 2, 3, 4]})
         self.index = pd.Index(['a', 'b'])
-        self.msa = TabularMSA(self.seqs, metadata=self.m, 
+        self.msa = TabularMSA(self.seqs, metadata=self.m,
                               positional_metadata=self.pm, index=self.index)
 
     def test_no_override(self):
@@ -1756,12 +1733,12 @@ class TestConstructor(unittest.TestCase):
 
     def test_no_override_no_md(self):
         msa = TabularMSA(self.seqs, index=self.index)
-        
+
         self.assertEqual(msa, msa._constructor_())
 
     def test_metadata_override(self):
-        new_md = {'foo':{'x': 0}}
-        
+        new_md = {'foo': {'x': 0}}
+
         result = self.msa._constructor_(metadata=new_md)
 
         self.assertNotEqual(result, self.msa)
