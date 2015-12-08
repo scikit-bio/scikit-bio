@@ -886,6 +886,18 @@ class TreeTests(TestCase):
         obs = t.root_at_midpoint()
         self.assertEqual(str(obs), nwk)
 
+    def test_root_at_midpoint_tie(self):
+        nwk = u"(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1)root;"
+        t = TreeNode.read(StringIO(nwk))
+        exp = u"((d:3,e:4)f:2,((a:1,b:1)c:2,(g:1)):3)root;"
+        texp = TreeNode.read(StringIO(exp))
+
+        obs = t.root_at_midpoint()
+
+        for o, e in zip(obs.traverse(), texp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
+
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""
         t = TreeNode.read(StringIO(u'((H,G),(R,M));'))
