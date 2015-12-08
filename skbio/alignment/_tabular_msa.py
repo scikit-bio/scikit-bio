@@ -838,31 +838,44 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return dtype(''.join(consensus),
                      positional_metadata=positional_metadata)
 
-    def _build_shannon_entropy_f(self, include_gaps):
+    def _build_inverse_shannon_uncertainty_f(self, include_gaps):
         base = len(self.dtype.nondegenerate_chars)
         if include_gaps:
-            # This is how [1] suggests handling gaps for Shannon entropy
+            # This is how [1] suggests handling gaps for Shannon entropy.
             base += 1
+
         def f(p):
             freqs = list(p.kmer_frequencies(k=1).values())
-            return scipy.stats.entropy(freqs, base=base)
+            return 1. - scipy.stats.entropy(freqs, base=base)
         return f
 
     @experimental(as_of='0.4.0-dev')
-    def conservation(self, metric='shannon_entropy', nan_on_degenerate=False,
-                     gap_mode='include'):
+    def conservation(self, metric='inverse_shannon_uncertainty',
+                     nan_on_degenerate=False, gap_mode='nan'):
         """Apply metric to compute positional conservation for the alignment
 
         Parameters
         ----------
-        metric : str, optional, {'shannon_entropy'}
-            Metric that should be applied for computing conservation.
+        metric : str, optional, {'inverse_shannon_uncertainty'}
+            Metric that should be applied for computing conservation. Resulting
+            conservation values should be higher when a position is more
+            conserved.
         nan_on_degenerate : bool, optional
             If ``True``, positions in the resulting array that correspond to
             alignment positions containing degenerate characters will have
-            np.nan as their value.
+            ``np.nan`` as their value. If ``False``, the presence of degenerate
+            characters will result in an error.
         gap_mode : str, optional, {'nan', 'ignore', 'error', 'include'}
-            Mode for handling positions with gap characters.
+            Mode for handling positions with gap characters. If ``"nan"``,
+            positions with gaps will be assigned a conservation score of
+            ``np.nan``. If ``"ignore"``, positions with gaps will be filtered
+            to remove gaps before metric is applied. If ``"error"``, an error
+            will be raised if gap characters are present. If ``"include"``,
+            conservation will be computed on alignment positions without any
+            modification to gaps
+            included. In this case, it is up to the metric to ensure that gaps
+            are handled as they should be, or an error is raised if gaps are
+            not supported.
 
         Returns
         -------
@@ -882,12 +895,30 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        A good discussion of conservation metrics (focused on protein
-        sequences) is provided in [1]_.
+        Users should be careful interpreting results when
+        ``gap_mode = "include"``. As pointed out in [1]_, a position composed
+        nearly entirely of gaps would score as more highly conserved than a
+        protein sequence position composed of alanine and glycine in equal
+        frequencies.
+
+        ``gap_mode = "include"`` will result in all gap characters being
+        recoded to ``Alignment.dtype.default_gap_char``. Because no
+        conservation metrics that we are aware of consider different gap
+        characters differently (e.g., none of the metrics described in [1]_),
+        they are all treated the same within this method.
+
+        The ``inverse_shannon_uncertainty`` metric is simiply one minus
+        Shannon's uncertainty metric. This method uses the inverse of Shannon's
+        uncertainty so that larger values imply higher conservation. Shannon's
+        uncertainty is also referred to as Shannon's entropy, but when making
+        computations from symbols, as is done here, "uncertainty" is the
+        preferred term ([2]_).
 
         References
         ----------
         .. [1] Valdar WS. Scoring residue conservation. Proteins. (2002)
+        .. [2] Schneider T. Pitfalls in information theory (website, ca. 2015).
+        https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
 
         """
 
@@ -895,8 +926,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             # handle empty alignment to avoid error on lookup of character sets
             return np.array([])
 
-        if metric == 'shannon_entropy':
-            metric_f = self._build_shannon_entropy_f(gap_mode == 'include')
+        if metric == 'inverse_shannon_uncertainty':
+            metric_f = self._build_inverse_shannon_uncertainty_f(
+                            gap_mode == 'include')
         else:
             raise ValueError("Unknown metric provided: %s" % metric)
 
