@@ -151,7 +151,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         True
 
         """
-        return type(self._get_sequence_(0)) if len(self) > 0 else None
+        return type(self._get_sequence_iloc_(0)) if len(self) > 0 else None
 
     @property
     @experimental(as_of='0.4.0-dev')
@@ -189,7 +189,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         sequence_count = len(self)
 
         if sequence_count > 0:
-            position_count = len(self._get_sequence_(0))
+            position_count = len(self._get_sequence_iloc_(0))
         else:
             position_count = 0
 
@@ -352,10 +352,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         NotImplemented is used as a sentinel so that None may be used to
         override values.
         """
-
-        if sequences is NotImplemented:
-            sequences = self._seqs
-
         if metadata is NotImplemented:
             if self.has_metadata():
                 metadata = self.metadata
@@ -372,6 +368,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 index = sequences.index
             else:
                 index = self.index
+
+        if sequences is NotImplemented:
+            sequences = self._seqs
+
+        sequences = [copy.copy(s) for s in sequences]
 
         return self.__class__(sequences, metadata=metadata,
                               positional_metadata=positional_metadata,
@@ -707,10 +708,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self.iloc[indexable]
 
     # Helpers for TabularMSAILoc and TabularMSALoc
-    def _get_sequence_(self, i):
+    def _get_sequence_iloc_(self, i):
         return self._seqs.iloc[i]
 
-    def _slice_sequences_(self, i):
+    def _slice_sequences_iloc_(self, i):
         new_seqs = self._seqs.iloc[i]
         # TODO: change for #1198
         if len(new_seqs) == 0:

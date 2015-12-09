@@ -925,8 +925,13 @@ class SharedIndexTests(object):
         new_ellipsis = self.get(msa, Ellipsis)
 
         self.assertIsNot(msa, new_slice)
+        for s1, s2 in zip(msa, new_slice):
+            self.assertIsNot(s1, s2)
         self.assertEqual(msa, new_slice)
+
         self.assertIsNot(msa, new_ellipsis)
+        for s1, s2 in zip(msa, new_ellipsis):
+            self.assertIsNot(s1, s2)
         self.assertEqual(msa, new_ellipsis)
 
     def test_msa_slice_all_both_axes(self):
@@ -938,8 +943,13 @@ class SharedIndexTests(object):
         new_ellipsis = self.get(msa, (Ellipsis, Ellipsis))
 
         self.assertIsNot(msa, new_slice)
+        for s1, s2 in zip(msa, new_slice):
+            self.assertIsNot(s1, s2)
         self.assertEqual(msa, new_slice)
+
         self.assertIsNot(msa, new_ellipsis)
+        for s1, s2 in zip(msa, new_ellipsis):
+            self.assertIsNot(s1, s2)
         self.assertEqual(msa, new_ellipsis)
 
     def test_bool_index_first_axis(self):
@@ -956,7 +966,7 @@ class SharedIndexTests(object):
                                          positional_metadata={0: [1, 2, 3]},
                                          index=[True, False]))
 
-    def test_bool_index_second_second(self):
+    def test_bool_index_second_axis(self):
         a = DNA("AAA", metadata={1: 1})
         b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
         c = DNA("AAC")
@@ -1317,26 +1327,26 @@ class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
         msa = TabularMSA([Protein(""), Protein(""), Protein("")],
                          index=[s, slice(1, 2), slice(2, 3)])
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, Ellipsis, axis=0)
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, s, axis=0)
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, 0, axis=0)
 
     def test_unhashable_index_second_axis(self):
         msa = TabularMSA([Protein("AA"), Protein("CC"), Protein("AA")],
                          index=[slice(0, 1), slice(1, 2), slice(2, 3)])
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, Ellipsis, axis=1)
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, [0, 1], axis=1)
 
-        with six.assertRaisesRegex(self, TypeError, 'unhashable.*slice'):
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
             self.get(msa, 0, axis=1)
 
     def test_unhashable_index_both_axes(self):
@@ -1718,7 +1728,28 @@ class TestConstructor(unittest.TestCase):
                               positional_metadata=self.pm, index=self.index)
 
     def test_no_override(self):
-        self.assertEqual(self.msa, self.msa._constructor_())
+        result = self.msa._constructor_()
+
+        self.assertEqual(self.msa, result)
+
+        for seq1, seq2 in zip(result, self.msa):
+            self.assertIsNot(seq1, seq2)
+
+        self.assertIsNot(result.metadata, self.msa.metadata)
+        self.assertIsNot(result.positional_metadata,
+                         self.msa.positional_metadata)
+
+    def test_sequence_override_same_seqs(self):
+        result = self.msa._constructor_(sequences=self.seqs)
+
+        self.assertEqual(self.msa, result)
+
+        for seq1, seq2 in zip(result, self.msa):
+            self.assertIsNot(seq1, seq2)
+
+        self.assertIsNot(result.metadata, self.msa.metadata)
+        self.assertIsNot(result.positional_metadata,
+                         self.msa.positional_metadata)
 
     def test_sequence_override(self):
         seqs = [RNA("ACGU"), RNA("GCUA")]

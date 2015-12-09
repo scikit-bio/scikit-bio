@@ -7,12 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from future.utils import with_metaclass
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import pandas as pd
 
 
-class _Indexing(object):
+class _Indexing(with_metaclass(ABCMeta, object)):
     def __init__(self, instance, axis=None):
         self._obj = instance
         self._axis = axis
@@ -32,7 +34,7 @@ class _Indexing(object):
 
         if type(indexable) is tuple:
             if len(indexable) > 2:
-                raise ValueError("Can only slice on two axis. Tuple is length:"
+                raise ValueError("Can only slice on two axes. Tuple is length:"
                                  " %r" % len(indexable))
             elif len(indexable) > 1:
                 return self._handle_both_axes(*indexable)
@@ -45,8 +47,7 @@ class _Indexing(object):
         seq_index = self._convert_ellipsis(seq_index)
         pos_index = self._convert_ellipsis(pos_index)
 
-        if not hasattr(seq_index, '__iter__') and (seq_index is Ellipsis or
-                                                   seq_index == slice(None)):
+        if not hasattr(seq_index, '__iter__') and seq_index == slice(None):
             # Only slice second axis
             return self._slice_on_second_axis(self._obj, pos_index)
         else:
@@ -80,6 +81,18 @@ class _Indexing(object):
         if indexable is Ellipsis:
             return slice(None)
         return indexable
+
+    @abstractmethod
+    def is_scalar(self, indexable, axis):
+        pass
+
+    @abstractmethod
+    def _get_sequence(self, obj, indexable):
+        pass
+
+    @abstractmethod
+    def _slice_sequences(self, obj, indexable):
+        pass
 
     def _get_position(self, obj, indexable):
         return obj._get_position_(indexable)
@@ -118,12 +131,12 @@ class TabularMSAILoc(_Indexing):
         return np.isscalar(indexable)
 
     def _get_sequence(self, obj, indexable):
-        return obj._get_sequence_(indexable)
+        return obj._get_sequence_iloc_(indexable)
 
     def _slice_sequences(self, obj, indexable):
         indexable = self._assert_bool_vector_right_size(indexable, axis=0)
         indexable = self._convert_iterable_of_slices(indexable)
-        return obj._slice_sequences_(indexable)
+        return obj._slice_sequences_iloc_(indexable)
 
 
 class TabularMSALoc(_Indexing):
@@ -191,11 +204,11 @@ class TabularMSALoc(_Indexing):
             if not self._has_fancy_index():
                 # prevents unfriendly errors
                 raise TypeError("Cannot provide a tuple to the first axis of"
-                                " `loc` unless the msa's `index` is a"
+                                " `loc` unless the MSA's `index` is a"
                                 " `pd.MultiIndex`.")
             elif self.is_scalar(indexable[0], axis=0):
                 # prevents unreasonable results
-                # pd.Series.loc[('a', 0), ('b', 1)] would be interepreted as
+                # pd.Series.loc[('a', 0), ('b', 1)] would be interpreted as
                 # pd.Series.loc[('a', 1)] which is horrifying.
                 raise TypeError("A tuple provided to the first axis of `loc`"
                                 " represents a selection for each index of a"
