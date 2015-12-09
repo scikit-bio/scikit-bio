@@ -22,33 +22,37 @@ from skbio.util._decorator import (classproperty, overrides, stable,
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
+
 class GrammaredSequenceException(Exception):
     pass
 
 
 class GrammaredSequenceMeta(ABCMeta, type):
-    def __new__(cls, name, parents, dct):
-        cls = super(GrammaredSequenceMeta, cls).__new__(cls, name, parents,
-                                                        dct)
+    def __new__(mcls, name, parents, dct):
+        cls = super(GrammaredSequenceMeta, mcls).__new__(mcls, name, parents,
+                                                         dct)
 
         if cls.default_gap_char not in cls.gap_chars:
             raise GrammaredSequenceException(
                 "default_gap_char must be in gap_chars for class %s" %
                 name)
 
-        for key in cls.degenerate_map.keys():
-            for nondegenerate in cls.degenerate_map[key]:
-                if nondegenerate not in cls.nondegenerate_chars:
-                    raise GrammaredSequenceException(
-                        "degenerate_map must expand only to "
-                        "characters included in nondegenerate_chars for "
-                        "class %s" % name)
-
-        #if cls.alphabet != (cls.degenerate_chars | cls.nondegenerate_chars |
-        #                    cls.gap_chars):
-        #    raise GrammaredSequenceException("fail")
-
+        if mcls._can_validate_map(mcls, cls):
+            for key in cls.degenerate_map.keys():
+                for nondegenerate in cls.degenerate_map[key]:
+                    if nondegenerate not in cls.nondegenerate_chars:
+                        raise GrammaredSequenceException(
+                            "degenerate_map must expand only to "
+                            "characters included in nondegenerate_chars for "
+                            "class %s" % name)
         return cls
+
+    def _can_validate_map(mcls, cls):
+        return (not mcls._is_abstract(cls.degenerate_map) and
+                not mcls._is_abstract(cls.nondegenerate_chars))
+
+    def _is_abstract(prop):
+        return type(prop) is abstractproperty
 
 
 # Note: apparently ABCMeta needs to be applied before GrammaredSequenceMeta
@@ -211,7 +215,7 @@ class GrammaredSequence(Sequence):
             non-degenerate characters it represents.
 
         """
-        return {}  # pragma: no cover
+        return set()  # pragma: no cover
 
     @property
     def _motifs(self):
