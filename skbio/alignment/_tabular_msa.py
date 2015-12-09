@@ -260,7 +260,261 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @property
     @experimental(as_of="0.4.0-dev")
     def loc(self):
-        """ TODO
+        """Slice the MSA on first axis by index label, second axis by position.
+
+        This will return an object with the following interface:
+
+        .. code-block:: python
+
+           msa.loc[seq_idx]
+           msa.loc[seq_idx, pos_idx]
+           msa.loc(axis='sequence')[seq_idx]
+           msa.loc(axis='position')[pos_idx]
+
+        Parameters
+        ----------
+        seq_idx : label, slice, 1D array_like (bool or label)
+            Slice the first axis of the MSA. When this value is a scalar, a
+            sequence of ``msa.dtype`` will be returned. This may be further
+            sliced by `pos_idx`.
+        pos_idx : (same as seq_idx), optional
+            Slice the second axis of the MSA. When this value is a scalar, a
+            sequence of type :class:`skbio.sequence.Sequence` will be returned.
+            This represents a column of the MSA and may have been additionally
+            sliced by `seq_idx`.
+        axis : {'sequence', 'position', 0, 1, None}, optional
+            Limit the axis to slice on. When set, a tuple as the argument will
+            no longer be split into `seq_idx` and `pos_idx`.
+
+        Returns
+        -------
+        TabularMSA, IUPACSequence, Sequence
+            A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
+            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
+            when `seq_idx` is a scalar (this object will match the dtype of the
+            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
+            `pos_idx` is scalar.
+
+        Notes
+        -----
+        If the slice operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will be unset.
+
+        When the MSA's index is a ``pd.MultiIndex`` a tuple may be given to
+        `seq_idx` to indicate the slicing operations to perform on each
+        component index.
+
+        See Also
+        --------
+        iloc
+        __getitem__
+
+        Examples
+        --------
+        First we need to set up an MSA to slice:
+
+        >>> from skbio import TabularMSA, DNA
+        >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
+        ...                   DNA("ACGA")], index=['a', 'b', 'c', 'd'])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 4
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+        ACGA
+
+        When we slice by a scalar we get the original sequence back out of the
+        MSA:
+
+        >>> msa.loc['b']
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 A-GT
+
+        Similarly when we slice the second axis by a scalar we get a column of
+        the MSA:
+
+        >>> msa.loc[..., 1]
+        Sequence
+        -------------
+        Stats:
+            length: 4
+        -------------
+        0 C-CC
+
+        Note: we return an ``skbio.Sequence`` object because the column of an
+        alignment has no biological meaning and many operations defined for the
+        MSA's sequence `dtype` would be meaningless.
+
+        When we slice both axis by a scalar, operations are applied left to
+        right:
+
+        >>> msa.loc['a', 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        In other words, it exactly matches slicing the resulting sequence
+        object directly:
+
+        >>> msa.loc['a'][0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        When our slice is non-scalar we get back an MSA of the same `dtype`:
+
+        >>> msa.loc[['a', 'c']]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AC-T
+
+        We can similarly slice out a column of that:
+
+        >>> msa.loc[['a', 'c'], 2]
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 G-
+
+        Slice syntax works as well:
+
+        >>> msa.loc[:'c']
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+
+        Notice how the end label is included in the results. This is different
+        from how positional slices behave:
+
+        >>> msa.loc[[True, False, False, True], 2:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 1
+        ---------------------
+        G
+        G
+
+        Here we sliced the first axis by a boolean vector, but then restricted
+        the columns to a single column. Because the second axis was given a
+        nonscalar we still recieve an MSA even though only one column is
+        present.
+
+        Duplicate labels can be an unfortunate reality in the real world,
+        however `loc` is capable of handling this:
+
+        >>> msa.index = ['a', 'a', 'b', 'c']
+
+        Notice how the label 'a' happens twice. If we were to access 'a' we get
+        back an MSA with both sequences:
+
+        >>> msa.loc['a']
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+
+        Remember that `iloc` can always be used to differentiate sequences.
+
+        More advanced slicing patterns are possible with different index types.
+
+        Let's use a `pd.MultiIndex`:
+
+        >>> msa.index = [('a', 0), ('a', 1), ('b', 0), ('b', 1)]
+
+        Here we will explicitly set the axis that we are slicing by to make
+        things easier to read:
+
+        >>> msa.loc(axis='sequence')['a', 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGT
+
+        This selected the first sequence because the complete label was
+        provided. In other words `('a', 0)` was treated as a scalar for this
+        index.
+
+        We can also slice along the component indices of the multi-index:
+
+        >>> msa.loc(axis='sequence')[:, 1]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        A-GT
+        ACGA
+
+        If we were to do that again without the `axis` argument, it would look
+        like this:
+
+        >>> msa.loc[(slice(None), 1), ...]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        A-GT
+        ACGA
+
+        Notice how we needed to specify the second axis. If we had left that
+        out we would have simply gotten the 2nd column back instead. We also
+        lost the syntactic sugar for slice objects. These are a few of the
+        reasons specifying the `axis` preemptively can be useful.
 
         """
         return self._loc
@@ -268,7 +522,170 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     @property
     @experimental(as_of="0.4.0-dev")
     def iloc(self):
-        """ TODO
+        """Slice the MSA on either axis by index position.
+
+        This will return an object with the following interface:
+
+        .. code-block:: python
+
+           msa.iloc[seq_idx]
+           msa.iloc[seq_idx, pos_idx]
+           msa.iloc(axis='sequence')[seq_idx]
+           msa.iloc(axis='position')[pos_idx]
+
+        Parameters
+        ----------
+        seq_idx : int, slice, iterable (int and slice), 1D array_like (bool)
+            Slice the first axis of the MSA. When this value is a scalar, a
+            sequence of ``msa.dtype`` will be returned. This may be further
+            sliced by `pos_idx`.
+        pos_idx : (same as seq_idx), optional
+            Slice the second axis of the MSA. When this value is a scalar, a
+            sequence of type :class:`skbio.sequence.Sequence` will be returned.
+            This represents a column of the MSA and may have been additionally
+            sliced by `seq_idx`.
+        axis : {'sequence', 'position', 0, 1, None}, optional
+            Limit the axis to slice on. When set, a tuple as the argument will
+            no longer be split into `seq_idx` and `pos_idx`.
+
+        Returns
+        -------
+        TabularMSA, IUPACSequence, Sequence
+            A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
+            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
+            when `seq_idx` is a scalar (this object will match the dtype of the
+            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
+            `pos_idx` is scalar.
+
+        Notes
+        -----
+        If the slice operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will be unset.
+
+        See Also
+        --------
+        __getitem__
+        loc
+
+        Examples
+        --------
+        First we need to set up an MSA to slice:
+
+        >>> from skbio import TabularMSA, DNA
+        >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
+        ...                   DNA("ACGA")])
+
+        When we slice by a scalar we get the original sequence back out of the
+        MSA:
+
+        >>> msa.iloc[1]
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 A-GT
+
+        Similarly when we slice the second axis by a scalar we get a column of
+        the MSA:
+
+        >>> msa.iloc[..., 1]
+        Sequence
+        -------------
+        Stats:
+            length: 4
+        -------------
+        0 C-CC
+
+        Note: we return an ``skbio.Sequence`` object because the column of an
+        alignment has no biological meaning and many operations defined for the
+        MSA's sequence `dtype` would be meaningless.
+
+        When we slice both axis by a scalar, operations are applied left to
+        right:
+
+        >>> msa.iloc[0, 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        In other words, it exactly matches slicing the resulting sequence
+        object directly:
+
+        >>> msa.iloc[0][0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        When our slice is non-scalar we get back an MSA of the same `dtype`:
+
+        >>> msa.iloc[[0, 2]]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AC-T
+
+        We can similarly slice out a column of that:
+
+        >>> msa.iloc[[0, 2], 2]
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 G-
+
+        Slice syntax works as well:
+
+        >>> msa.iloc[:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+
+        We can also use boolean vectors:
+
+        >>> msa.iloc[[True, False, False, True], 2:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 1
+        ---------------------
+        G
+        G
+
+        Here we sliced the first axis by a boolean vector, but then restricted
+        the columns to a single column. Because the second axis was given a
+        nonscalar we still recieve an MSA even though only one column is
+        present.
 
         """
         return self._iloc
@@ -702,8 +1119,21 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @experimental(as_of="0.4.0-dev")
     def __getitem__(self, indexable):
-        """ TODO
+        """Slice the MSA on either axis.
 
+        This is a pass-through for :func:`skbio.alignment.TabularMSA.iloc`.
+        Please refer to the associated documentation.
+
+        Notes
+        -----
+        Axis restriction is not possible for this method.
+
+        To slice by labels, use ``loc``.
+
+        See Also
+        --------
+        iloc
+        loc
         """
         return self.iloc[indexable]
 
