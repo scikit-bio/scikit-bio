@@ -1692,7 +1692,7 @@ class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
         msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
 
         with self.assertRaises(IndexError):
-            self.get(msa, (..., 3))
+            self.get(msa, (Ellipsis, 3))
 
 
 class TestGetItem(SharedIndexTests, unittest.TestCase):
