@@ -479,6 +479,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
 
         seqs = list(sequences)
+        if len(seqs) == 0:
+            return cls("")
+
         for seq in seqs:
             seq._assert_can_cast_to(cls)
 
