@@ -295,6 +295,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
             `pos_idx` is scalar.
 
+        See Also
+        --------
+        iloc
+        __getitem__
+
         Notes
         -----
         If the slice operation results in a ``TabularMSA`` without any
@@ -303,11 +308,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         When the MSA's index is a ``pd.MultiIndex`` a tuple may be given to
         `seq_idx` to indicate the slicing operations to perform on each
         component index.
-
-        See Also
-        --------
-        iloc
-        __getitem__
 
         Examples
         --------
@@ -327,6 +327,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         A-GT
         AC-T
         ACGA
+        >>> msa.index
+        Index(['a', 'b', 'c', 'd'], dtype='object')
+
 
         When we slice by a scalar we get the original sequence back out of the
         MSA:
@@ -358,7 +361,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         alignment has no biological meaning and many operations defined for the
         MSA's sequence `dtype` would be meaningless.
 
-        When we slice both axis by a scalar, operations are applied left to
+        When we slice both axes by a scalar, operations are applied left to
         right:
 
         >>> msa.loc['a', 0]
@@ -459,7 +462,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACGT
         A-GT
 
-        Remember that `iloc` can always be used to differentiate sequences.
+        Remember that `iloc` can always be used to differentiate sequences with
+        duplicate labels.
 
         More advanced slicing patterns are possible with different index types.
 
@@ -557,15 +561,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
             `pos_idx` is scalar.
 
-        Notes
-        -----
-        If the slice operation results in a ``TabularMSA`` without any
-        sequences, the MSA's ``positional_metadata`` will be unset.
-
         See Also
         --------
         __getitem__
         loc
+
+        Notes
+        -----
+        If the slice operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will be unset.
 
         Examples
         --------
@@ -574,6 +578,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         >>> from skbio import TabularMSA, DNA
         >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
         ...                   DNA("ACGA")])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 4
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+        ACGA
 
         When we slice by a scalar we get the original sequence back out of the
         MSA:
@@ -605,7 +620,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         alignment has no biological meaning and many operations defined for the
         MSA's sequence `dtype` would be meaningless.
 
-        When we slice both axis by a scalar, operations are applied left to
+        When we slice both axes by a scalar, operations are applied left to
         right:
 
         >>> msa.iloc[0, 0]
@@ -1068,12 +1083,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         False
 
         """
-        seqs = (copy.copy(seq) for seq in self._seqs)
-
-        # Copying index isn't necessary because pd.Index is immutable.
-        msa_copy = self.__class__(sequences=seqs, index=self.index,
-                                  metadata=None,
-                                  positional_metadata=None)
+        msa_copy = self._constructor_()
 
         msa_copy._metadata = MetadataMixin._copy_(self)
         msa_copy._positional_metadata = PositionalMetadataMixin._copy_(self)
@@ -1106,10 +1116,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         seqs = (copy.deepcopy(seq, memo) for seq in self._seqs)
-
-        # Copying index isn't necessary because pd.Index is immutable.
-        msa_copy = self.__class__(sequences=seqs, index=self.index,
-                                  metadata=None, positional_metadata=None)
+        msa_copy = self._constructor_(sequences=seqs)
 
         msa_copy._metadata = MetadataMixin._deepcopy_(self, memo)
         msa_copy._positional_metadata = \
@@ -1124,16 +1131,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         This is a pass-through for :func:`skbio.alignment.TabularMSA.iloc`.
         Please refer to the associated documentation.
 
+        See Also
+        --------
+        iloc
+        loc
+
         Notes
         -----
         Axis restriction is not possible for this method.
 
         To slice by labels, use ``loc``.
 
-        See Also
-        --------
-        iloc
-        loc
         """
         return self.iloc[indexable]
 
