@@ -652,7 +652,7 @@ class TreeNode(SkbioObject):
         else:
             return len(list(self.traverse(include_self=True)))
 
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def observed_node_counts(self, tip_counts):
         """Returns counts of node observations from counts of tip observations
 

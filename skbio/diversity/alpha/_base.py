@@ -748,7 +748,7 @@ def osd(counts):
     return observed_otus(counts), singles(counts), doubles(counts)
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def pielou_e(counts):
     r"""Calculate Pielou's Evenness index J'.
 

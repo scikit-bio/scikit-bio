@@ -1,6 +1,6 @@
 # scikit-bio changelog
 
-## Version 0.4.0-dev (changes since 0.4.0 release go here)
+## Version 0.4.1 (2015-12-09)
 
 ### Features
 * Added `skbio.io.format.blast7` for reading BLAST+ output format 7 or BLAST output format 9 files into a `pd.DataFrame`. ([#1110](https://github.com/biocore/scikit-bio/issues/1110))
