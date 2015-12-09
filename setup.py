@@ -108,7 +108,8 @@ setup(name='scikit-bio',
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
           'bz2file >= 0.98',
-          'CacheControl[FileCache] >= 0.11.5',
+          'lockfile >= 0.10.2'
+          'CacheControl >= 0.11.5',
           'contextlib2 >= 0.4.0',
           'decorator >= 3.4.2',
           'future >= 0.14.3',
