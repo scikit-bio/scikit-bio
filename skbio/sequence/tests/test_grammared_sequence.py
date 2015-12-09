@@ -15,6 +15,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import GrammaredSequence
+from skbio.sequence._grammared_sequence import GrammaredSequenceException
 from skbio.util._decorator import classproperty
 
 
@@ -39,6 +40,54 @@ class ExampleMotifsTester(ExampleGrammaredSequence):
 
 
 class TestGrammaredSequence(TestCase):
+    def test_default_gap_must_be_in_gap_chars(self):
+        with six.assertRaisesRegex(
+            self, GrammaredSequenceException,
+            ("default_gap_char must be in gap_chars for class "
+             "GrammaredSequenceInvalidDefaultGap")):
+
+            class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+                @classproperty
+                def default_gap_char(cls):
+                    return '*'
+
+    def test_degenerates_must_expand_to_valid_nondegenerates(self):
+        with six.assertRaisesRegex(
+            self, GrammaredSequenceException,
+            ("degenerate_map must expand only to characters included in "
+             "nondegenerate_chars for class "
+             "GrammaredSequenceInvalidDefaultGap")):
+
+            class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("B")}
+
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("A")
+
+    #def test_alphabet_includes_all_possible_characters(self):
+    #    with six.assertRaisesRegex(
+    #        self, GrammaredSequenceException,
+    #        ("degenerate_map must expand only to characters included in "
+    #         "nondegenerate_chars for class "
+    #         "GrammaredSequenceInvalidDefaultGap")):
+
+    #        class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+    #            @classproperty
+    #            def degenerate_map(cls):
+    #                return {"X": set("B")}
+
+    #            @classproperty
+    #            def nondegenerate_chars(cls):
+    #                return set("B")
+
+    #            @classproperty
+    #            def alphabet(cls):
+    #                return set("ABX")
+
+
     def test_instantiation_with_no_implementation(self):
         class GrammaredSequenceSubclassNoImplementation(GrammaredSequence):
             pass

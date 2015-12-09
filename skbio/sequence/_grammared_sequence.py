@@ -7,9 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
 
 from abc import ABCMeta, abstractproperty
+from six import add_metaclass
+
 from itertools import product
 
 import numpy as np
@@ -21,8 +22,39 @@ from skbio.util._decorator import (classproperty, overrides, stable,
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
+class GrammaredSequenceException(Exception):
+    pass
 
-class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
+
+class GrammaredSequenceMeta(ABCMeta, type):
+    def __new__(cls, name, parents, dct):
+        cls = super(GrammaredSequenceMeta, cls).__new__(cls, name, parents,
+                                                        dct)
+
+        if cls.default_gap_char not in cls.gap_chars:
+            raise GrammaredSequenceException(
+                "default_gap_char must be in gap_chars for class %s" %
+                name)
+
+        for key in cls.degenerate_map.keys():
+            for nondegenerate in cls.degenerate_map[key]:
+                if nondegenerate not in cls.nondegenerate_chars:
+                    raise GrammaredSequenceException(
+                        "degenerate_map must expand only to "
+                        "characters included in nondegenerate_chars for "
+                        "class %s" % name)
+
+        #if cls.alphabet != (cls.degenerate_chars | cls.nondegenerate_chars |
+        #                    cls.gap_chars):
+        #    raise GrammaredSequenceException("fail")
+
+        return cls
+
+
+# Note: apparently ABCMeta needs to be applied before GrammaredSequenceMeta
+@add_metaclass(GrammaredSequenceMeta)
+@add_metaclass(ABCMeta)
+class GrammaredSequence(Sequence):
     """Store sequence data conforming to a character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -179,7 +211,7 @@ class GrammaredSequence(with_metaclass(ABCMeta, Sequence)):
             non-degenerate characters it represents.
 
         """
-        return set()  # pragma: no cover
+        return {}  # pragma: no cover
 
     @property
     def _motifs(self):
