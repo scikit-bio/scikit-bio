@@ -100,6 +100,7 @@ constructor. ([#6240](https://github.com/biocore/scikit-bio/issues/624))
 * TreeNode.root_at_midpoint`` no longer fails when a node with two equal length child branches exists in the tree. ([#1077](https://github.com/biocore/scikit-bio/issues/1077))
 * ``TreeNode._set_max_distance``, as called through ``TreeNode.get_max_distance`` or ``TreeNode.root_at_midpoint`` would store distance information as ``list``s in the attribute ``MaxDistTips`` on each node in the tree, however, these distances were only valid for the node in which the call to ``_set_max_distance`` was made. The values contained in ``MaxDistTips`` are now correct across the tree following a call to ``get_max_distance``. The scope of impact of this bug is limited to users that were interacting directly with ``MaxDistTips`` on descendant nodes; this bug does not impact any known method within scikit-bio. ([#1223](https://github.com/biocore/scikit-bio/issues/1223))
 * Added missing `nose` dependency to setup.py's `install_requires`. ([#1214](https://github.com/biocore/scikit-bio/issues/1214))
+* Fixed issue that resulted in legends of ``OrdinationResult`` plots sometimes being truncated. ([#1210](https://github.com/biocore/scikit-bio/issues/1210))
 
 ### Deprecated functionality [stable]
 * `skbio.Sequence.copy` has been deprecated in favor of `copy.copy(seq)` and `copy.deepcopy(seq)`.
