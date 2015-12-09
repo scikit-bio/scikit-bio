@@ -106,9 +106,12 @@ def _validate_otu_ids_and_tree(counts, otu_ids, tree):
                          "length.")
     missing_tip_names = set_otu_ids - set_tip_names
     if missing_tip_names != set():
+        n_missing_tip_names = len(missing_tip_names)
         raise MissingNodeError("All ``otu_ids`` must be present as tip names "
                                "in ``tree``. ``otu_ids`` not corresponding to "
-                               "tip names: %s" % " ".join(missing_tip_names))
+                               "tip names (n=%d): %s" %
+                               (n_missing_tip_names,
+                                " ".join(missing_tip_names)))
 
 
 def _vectorize_counts_and_tree(counts, otu_ids, tree):
