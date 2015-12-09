@@ -9,7 +9,7 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-from operator import or_
+from operator import or_, itemgetter
 from copy import deepcopy
 from itertools import combinations
 from functools import reduce
@@ -2320,22 +2320,25 @@ class TreeNode(SkbioObject):
         nodes on large trees efficiently. The code has been modified to track
         the specific tips the distance is between
         """
+        maxkey = itemgetter(0)
+
         for n in self.postorder():
             if n.is_tip():
-                n.MaxDistTips = [[0.0, n], [0.0, n]]
+                n.MaxDistTips = ((0.0, n), (0.0, n))
             else:
                 if len(n.children) == 1:
                     raise TreeError("No support for single descedent nodes")
                 else:
-                    tip_info = [(max(c.MaxDistTips), c) for c in n.children]
+                    tip_info = [(max(c.MaxDistTips, key=maxkey), c)
+                                for c in n.children]
 
                     dists = [i[0][0] for i in tip_info]
                     best_idx = np.argsort(dists)[-2:]
-                    tip_a, child_a = tip_info[best_idx[0]]
-                    tip_b, child_b = tip_info[best_idx[1]]
-                    tip_a[0] += child_a.length or 0.0
-                    tip_b[0] += child_b.length or 0.0
-                n.MaxDistTips = [tip_a, tip_b]
+                    (tip_a_d, tip_a), child_a = tip_info[best_idx[0]]
+                    (tip_b_d, tip_b), child_b = tip_info[best_idx[1]]
+                    tip_a_d += child_a.length or 0.0
+                    tip_b_d += child_b.length or 0.0
+                n.MaxDistTips = ((tip_a_d, tip_a), (tip_b_d, tip_b))
 
     def _get_max_distance_singledesc(self):
         """returns the max distance between any pair of tips
