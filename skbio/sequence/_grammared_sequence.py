@@ -63,6 +63,9 @@ class GrammaredSequence(Sequence):
 
     This is an abstract base class (ABC) that cannot be instantiated.
 
+    This class is intended to be inherited from to create grammared sequences
+    with custom alphabets.
+
     Attributes
     ----------
     values
@@ -92,6 +95,47 @@ class GrammaredSequence(Sequence):
        sequences: recommendations 1984.
        Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
        A Cornish-Bowden
+
+    Examples
+    --------
+
+    Note in the example below that properties either need to be static or
+    use skbio's `classproperty` decorator.
+
+    >>> from skbio.sequence import GrammaredSequence
+    >>> from skbio.util import classproperty
+    >>> class CustomSequence(GrammaredSequence):
+    ...     @classproperty
+    ...     def degenerate_map(cls):
+    ...         return {"X": set("AB")}
+    ...
+    ...     @classproperty
+    ...     def nondegenerate_chars(cls):
+    ...         return set("ABC")
+
+    >>> seq = CustomSequence('ABABACAC')
+    >>> seq
+    CustomSequence
+    -----------------------------
+    Stats:
+        length: 8
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ABABACAC
+
+    >>> seq = CustomSequence('XXXXXX')
+    >>> seq
+    CustomSequence
+    ------------------------------
+    Stats:
+        length: 6
+        has gaps: False
+        has degenerates: True
+        has non-degenerates: False
+    ------------------------------
+    0 XXXXXX
 
     """
     __validation_mask = None

@@ -11,7 +11,8 @@ import unittest
 import inspect
 import warnings
 
-from skbio.util._decorator import classproperty, overrides, classonlymethod
+from skbio.util import classproperty
+from skbio.util._decorator import overrides, classonlymethod
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    _state_decorator)
 from skbio.util._exception import OverrideError
