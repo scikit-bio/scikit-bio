@@ -67,6 +67,59 @@ class TestGrammaredSequence(TestCase):
                 def nondegenerate_chars(cls):
                     return set("A")
 
+    def test_gap_chars_and_degenerates_share(self):
+        with six.assertRaisesRegex(
+            self, GrammaredSequenceException,
+            ("gap_chars and degenerate_chars must not share any characters "
+             "for class GrammaredSequenceGapInDegenerateMap")):
+
+            class GrammaredSequenceGapInDegenerateMap(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("AB")}
+
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("ABC")
+
+                @classproperty
+                def gap_chars(cls):
+                    return set(".-X")
+
+    def test_gap_chars_and_nondegenerates_share(self):
+        with six.assertRaisesRegex(
+            self, GrammaredSequenceException,
+            ("gap_chars and nondegenerate_chars must not share any characters "
+             "for class GrammaredSequenceGapInNondegenerateMap")):
+
+            class GrammaredSequenceGapInNondegenerateMap(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("AB")}
+
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("ABC")
+
+                @classproperty
+                def gap_chars(cls):
+                    return set(".-A")
+
+    def test_degenerates_and_nondegenerates_share(self):
+        with six.assertRaisesRegex(
+            self, GrammaredSequenceException,
+            ("degenerate_chars and nondegenerate_chars must not share any "
+             "characters for class GrammaredSequenceInvalid")):
+
+            class GrammaredSequenceInvalid(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("AB")}
+
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("ABCX")
+
     def test_instantiation_with_no_implementation(self):
         class GrammaredSequenceSubclassNoImplementation(GrammaredSequence):
             pass

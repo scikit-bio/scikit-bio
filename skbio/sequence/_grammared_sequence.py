@@ -37,7 +37,7 @@ class GrammaredSequenceMeta(ABCMeta, type):
                 "default_gap_char must be in gap_chars for class %s" %
                 name)
 
-        if mcls._can_validate_map(mcls, cls):
+        if mcls._can_validate(mcls, cls):
             for key in cls.degenerate_map.keys():
                 for nondegenerate in cls.degenerate_map[key]:
                     if nondegenerate not in cls.nondegenerate_chars:
@@ -45,9 +45,25 @@ class GrammaredSequenceMeta(ABCMeta, type):
                             "degenerate_map must expand only to "
                             "characters included in nondegenerate_chars for "
                             "class %s" % name)
+
+            if len(cls.gap_chars & cls.degenerate_chars) > 0:
+                raise GrammaredSequenceException(
+                    "gap_chars and degenerate_chars must not share any "
+                    "characters for class %s" % name)
+
+            if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+                raise GrammaredSequenceException(
+                    "gap_chars and nondegenerate_chars must not share any "
+                    "characters for class %s" % name)
+
+            if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
+                raise GrammaredSequenceException(
+                    "degenerate_chars and nondegenerate_chars must not share "
+                    "any characters for class %s" % name)
+
         return cls
 
-    def _can_validate_map(mcls, cls):
+    def _can_validate(mcls, cls):
         return (not mcls._is_abstract(cls.degenerate_map) and
                 not mcls._is_abstract(cls.nondegenerate_chars))
 
