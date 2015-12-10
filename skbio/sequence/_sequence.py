@@ -349,7 +349,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._bytes.view('|S1')
 
     @property
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def observed_chars(self):
         """Set of observed characters in the sequence.
 
@@ -372,7 +372,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._bytes.tostring()
 
     @classonlymethod
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def concat(cls, sequences, how='strict'):
         """Concatenate an iterable of ``Sequence`` objects.
 
@@ -1141,7 +1141,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """
         return self._copy(True, memo)
 
-    @deprecated(as_of="0.4.0-dev", until="0.5.1",
+    @deprecated(as_of="0.4.1", until="0.5.1",
                 reason="Use `copy.copy(seq)` instead of "
                        "`seq.copy(deep=False)`, and `copy.deepcopy(seq)` "
                        "instead of `seq.copy(deep=True)`.")
@@ -1678,7 +1678,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         else:
             return int(self.mismatches(other).sum())
 
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def frequencies(self, chars=None, relative=False):
         """Compute frequencies of characters in the sequence.
 

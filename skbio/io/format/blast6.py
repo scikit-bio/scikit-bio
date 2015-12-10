@@ -20,7 +20,7 @@ Format Support
 --------------
 **Has Sniffer: No**
 
-**State: Experimental as of 0.4.0-dev.**
+**State: Experimental as of 0.4.1.**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
