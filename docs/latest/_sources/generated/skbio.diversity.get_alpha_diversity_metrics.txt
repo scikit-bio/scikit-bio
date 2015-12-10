@@ -1,0 +1,6 @@
+skbio.diversity.get_alpha_diversity_metrics
+===========================================
+
+.. currentmodule:: skbio.diversity
+
+.. autofunction:: get_alpha_diversity_metrics

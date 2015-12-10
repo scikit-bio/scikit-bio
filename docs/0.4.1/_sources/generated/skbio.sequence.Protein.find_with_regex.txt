@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.find_with_regex
+======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.find_with_regex

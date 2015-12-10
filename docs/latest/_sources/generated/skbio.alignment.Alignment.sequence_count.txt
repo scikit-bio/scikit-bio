@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.sequence_count
-========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.sequence_count

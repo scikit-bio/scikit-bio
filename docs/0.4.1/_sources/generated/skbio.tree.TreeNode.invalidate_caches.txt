@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.invalidate_caches
+=====================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.invalidate_caches

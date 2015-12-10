@@ -1,0 +1,6 @@
+skbio.stats.composition.inner
+=============================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: inner

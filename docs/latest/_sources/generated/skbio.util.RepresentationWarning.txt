@@ -1,0 +1,6 @@
+skbio.util.RepresentationWarning
+================================
+
+.. currentmodule:: skbio.util
+
+.. autoexception:: RepresentationWarning

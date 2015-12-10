@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.consensus
+====================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: TabularMSA.consensus

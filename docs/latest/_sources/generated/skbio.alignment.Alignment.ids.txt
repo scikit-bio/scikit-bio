@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.ids
-=============================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.ids

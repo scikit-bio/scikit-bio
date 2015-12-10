@@ -1,6 +1,0 @@
-skbio.draw.grouped_distributions
-================================
-
-.. currentmodule:: skbio.draw
-
-.. autofunction:: grouped_distributions

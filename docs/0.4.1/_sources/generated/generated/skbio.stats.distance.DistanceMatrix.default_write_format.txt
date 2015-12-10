@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.default_write_format
+========================================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoattribute:: DistanceMatrix.default_write_format

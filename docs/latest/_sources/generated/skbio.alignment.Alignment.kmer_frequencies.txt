@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.kmer_frequencies
-==========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.kmer_frequencies

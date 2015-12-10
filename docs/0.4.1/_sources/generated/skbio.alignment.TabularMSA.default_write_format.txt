@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.default_write_format
+===============================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: TabularMSA.default_write_format
