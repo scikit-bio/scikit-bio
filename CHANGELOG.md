@@ -3,7 +3,6 @@
 ## Version 0.4.1 (2015-12-09)
 
 ### Features
-### Features
 * The ``TabularMSA`` object was added to represent and operate on tabular multiple sequence alignments. This statisfies [RFC 1](https://github.com/biocore/scikit-bio-rfcs/blob/master/active/001-tabular-msa.md). See the ``TabularMSA`` docs for full details.
 * Added phylogenetic diversity metrics, including weighted UniFrac, unweighted UniFrac, and Faith's Phylogenetic Diversity. These are accessible as ``skbio.diversity.beta.unweighted_unifrac``, ``skbio.diversity.beta.weighted_unifrac``, and ``skbio.diversity.alpha.faith_pd``, respectively.
 * Addition of the function ``skbio.diversity.alpha_diversity`` to support applying an alpha diversity metric to multiple samples in one call.
