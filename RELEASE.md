@@ -110,7 +110,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
 6. Next, we'll prepare and post the release to [anaconda.org](http://www.anaconda.org).
 
-    You'll need to have ``conda-build`` and ``anaconda-client`` installed to perform these steps. Both can be conda-installed. First, log into anaconda using the following command. You should log into the ``biocore`` anaconda account (if you don't have login info, get in touch with [@gregcaporaso](https://github.com/gregcaporaso) who is the owner of that account).
+    You'll need to have ``conda-build`` and ``anaconda-client`` installed to perform these steps. Both can be conda-installed. First, log into anaconda with your anaconda username using the following command. You should have access to push to the ``biocore`` anaconda account through your account (if you don't, get in touch with [@gregcaporaso](https://github.com/gregcaporaso) who is the owner of that account).
 
         anaconda login
 
@@ -126,7 +126,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
     If the tests pass, you're ready to upload.
 
-        anaconda upload <package-filepath>
+        anaconda upload -u biocore <package-filepath>
 
     ``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 2.7 and 3.5 packages).
 
