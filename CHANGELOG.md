@@ -1,5 +1,7 @@
 # scikit-bio changelog
 
+## Version 0.4.1-dev (changes since 0.4.1 go here)
+
 ## Version 0.4.1 (2015-12-09)
 
 ### Features
