@@ -1,6 +1,0 @@
-skbio.draw.boxplots
-===================
-
-.. currentmodule:: skbio.draw
-
-.. autofunction:: boxplots

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.degap
-===============================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.degap

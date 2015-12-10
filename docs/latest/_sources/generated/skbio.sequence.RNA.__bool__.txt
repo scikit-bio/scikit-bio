@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.__bool__
+===========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.__bool__

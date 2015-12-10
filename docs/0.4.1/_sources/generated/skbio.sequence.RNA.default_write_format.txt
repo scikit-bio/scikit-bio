@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.default_write_format
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.default_write_format

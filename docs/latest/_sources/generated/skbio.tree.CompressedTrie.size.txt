@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.CompressedTrie.size
-==============================
-
-.. currentmodule:: skbio.tree
-
-.. autoattribute:: CompressedTrie.size

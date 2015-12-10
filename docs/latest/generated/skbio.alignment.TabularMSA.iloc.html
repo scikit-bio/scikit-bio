@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.alignment.TabularMSA.iloc &mdash; scikit-bio 0.4.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.1 documentation" href="../index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.alignment.TabularMSA.iloc</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="skbio-alignment-tabularmsa-iloc">
+<h1>skbio.alignment.TabularMSA.iloc<a class="headerlink" href="#skbio-alignment-tabularmsa-iloc" title="Permalink to this headline">¶</a></h1>
+<dl class="attribute">
+<dt id="skbio.alignment.TabularMSA.iloc">
+<code class="descclassname">TabularMSA.</code><code class="descname">iloc</code><a class="headerlink" href="#skbio.alignment.TabularMSA.iloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slice the MSA on either axis by index position.</p>
+<p>State: Experimental as of 0.4.1.</p>
+<p>This will return an object with the following interface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">seq_idx</span><span class="p">]</span>
+<span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">seq_idx</span><span class="p">,</span> <span class="n">pos_idx</span><span class="p">]</span>
+<span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s">&#39;sequence&#39;</span><span class="p">)[</span><span class="n">seq_idx</span><span class="p">]</span>
+<span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s">&#39;position&#39;</span><span class="p">)[</span><span class="n">pos_idx</span><span class="p">]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>seq_idx</strong> : int, slice, iterable (int and slice), 1D array_like (bool)</p>
+<blockquote>
+<div><p>Slice the first axis of the MSA. When this value is a scalar, a
+sequence of <code class="docutils literal"><span class="pre">msa.dtype</span></code> will be returned. This may be further
+sliced by <cite>pos_idx</cite>.</p>
+</div></blockquote>
+<p><strong>pos_idx</strong> : (same as seq_idx), optional</p>
+<blockquote>
+<div><p>Slice the second axis of the MSA. When this value is a scalar, a
+sequence of type <a class="reference internal" href="skbio.sequence.Sequence.html#skbio.sequence.Sequence" title="skbio.sequence.Sequence"><code class="xref py py-class docutils literal"><span class="pre">skbio.sequence.Sequence</span></code></a> will be returned.
+This represents a column of the MSA and may have been additionally
+sliced by <cite>seq_idx</cite>.</p>
+</div></blockquote>
+<p><strong>axis</strong> : {&#8216;sequence&#8217;, &#8216;position&#8217;, 0, 1, None}, optional</p>
+<blockquote>
+<div><p>Limit the axis to slice on. When set, a tuple as the argument will
+no longer be split into <cite>seq_idx</cite> and <cite>pos_idx</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">TabularMSA, IUPACSequence, Sequence</p>
+<blockquote class="last">
+<div><p>A <code class="docutils literal"><span class="pre">TabularMSA</span></code> is returned when <cite>seq_idx</cite> and <cite>pos_idx</cite> are
+non-scalars. A <code class="docutils literal"><span class="pre">IUPACSequence</span></code> of type <code class="docutils literal"><span class="pre">msa.dtype</span></code> is returned
+when <cite>seq_idx</cite> is a scalar (this object will match the dtype of the
+MSA). A <code class="docutils literal"><span class="pre">Sequence</span></code> is returned when <cite>seq_idx</cite> is non-scalar and
+<cite>pos_idx</cite> is scalar.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.alignment.TabularMSA.__getitem__.html#skbio.alignment.TabularMSA.__getitem__" title="skbio.alignment.TabularMSA.__getitem__"><code class="xref py py-obj docutils literal"><span class="pre">__getitem__</span></code></a>, <a class="reference internal" href="skbio.alignment.TabularMSA.loc.html#skbio.alignment.TabularMSA.loc" title="skbio.alignment.TabularMSA.loc"><code class="xref py py-obj docutils literal"><span class="pre">loc</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>If the slice operation results in a <code class="docutils literal"><span class="pre">TabularMSA</span></code> without any
+sequences, the MSA&#8217;s <code class="docutils literal"><span class="pre">positional_metadata</span></code> will be unset.</p>
+<p class="rubric">Examples</p>
+<p>First we need to set up an MSA to slice:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio</span> <span class="kn">import</span> <span class="n">TabularMSA</span><span class="p">,</span> <span class="n">DNA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span> <span class="o">=</span> <span class="n">TabularMSA</span><span class="p">([</span><span class="n">DNA</span><span class="p">(</span><span class="s">&quot;ACGT&quot;</span><span class="p">),</span> <span class="n">DNA</span><span class="p">(</span><span class="s">&quot;A-GT&quot;</span><span class="p">),</span> <span class="n">DNA</span><span class="p">(</span><span class="s">&quot;AC-T&quot;</span><span class="p">),</span>
+<span class="gp">... </span>                  <span class="n">DNA</span><span class="p">(</span><span class="s">&quot;ACGA&quot;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 4</span>
+<span class="go">    position count: 4</span>
+<span class="go">---------------------</span>
+<span class="go">ACGT</span>
+<span class="go">A-GT</span>
+<span class="go">AC-T</span>
+<span class="go">ACGA</span>
+</pre></div>
+</div>
+<p>When we slice by a scalar we get the original sequence back out of the
+MSA:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">DNA</span>
+<span class="go">-----------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 4</span>
+<span class="go">    has gaps: True</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has non-degenerates: True</span>
+<span class="go">    GC-content: 33.33%</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 A-GT</span>
+</pre></div>
+</div>
+<p>Similarly when we slice the second axis by a scalar we get a column of
+the MSA:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="go">Sequence</span>
+<span class="go">-------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 4</span>
+<span class="go">-------------</span>
+<span class="go">0 C-CC</span>
+</pre></div>
+</div>
+<p>Note: we return an <code class="docutils literal"><span class="pre">skbio.Sequence</span></code> object because the column of an
+alignment has no biological meaning and many operations defined for the
+MSA&#8217;s sequence <cite>dtype</cite> would be meaningless.</p>
+<p>When we slice both axes by a scalar, operations are applied left to
+right:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="go">DNA</span>
+<span class="go">-----------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 1</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has non-degenerates: True</span>
+<span class="go">    GC-content: 0.00%</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 A</span>
+</pre></div>
+</div>
+<p>In other words, it exactly matches slicing the resulting sequence
+object directly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">DNA</span>
+<span class="go">-----------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 1</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has non-degenerates: True</span>
+<span class="go">    GC-content: 0.00%</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 A</span>
+</pre></div>
+</div>
+<p>When our slice is non-scalar we get back an MSA of the same <cite>dtype</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 2</span>
+<span class="go">    position count: 4</span>
+<span class="go">---------------------</span>
+<span class="go">ACGT</span>
+<span class="go">AC-T</span>
+</pre></div>
+</div>
+<p>We can similarly slice out a column of that:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">]</span>
+<span class="go">Sequence</span>
+<span class="go">-------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 2</span>
+<span class="go">-------------</span>
+<span class="go">0 G-</span>
+</pre></div>
+</div>
+<p>Slice syntax works as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 3</span>
+<span class="go">    position count: 4</span>
+<span class="go">---------------------</span>
+<span class="go">ACGT</span>
+<span class="go">A-GT</span>
+<span class="go">AC-T</span>
+</pre></div>
+</div>
+<p>We can also use boolean vectors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msa</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">TabularMSA[DNA]</span>
+<span class="go">---------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    sequence count: 2</span>
+<span class="go">    position count: 1</span>
+<span class="go">---------------------</span>
+<span class="go">G</span>
+<span class="go">G</span>
+</pre></div>
+</div>
+<p>Here we sliced the first axis by a boolean vector, but then restricted
+the columns to a single column. Because the second axis was given a
+nonscalar we still recieve an MSA even though only one column is
+present.</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

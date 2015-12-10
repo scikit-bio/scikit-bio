@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.omit_gap_sequences
-============================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.omit_gap_sequences

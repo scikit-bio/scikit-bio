@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.tree.CompressedTrie.insert
-================================
-
-.. currentmodule:: skbio.tree
-
-.. automethod:: CompressedTrie.insert

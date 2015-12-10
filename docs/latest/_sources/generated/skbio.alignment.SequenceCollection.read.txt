@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.SequenceCollection.read
-=======================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: SequenceCollection.read

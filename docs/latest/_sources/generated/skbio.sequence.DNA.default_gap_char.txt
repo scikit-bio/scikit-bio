@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.DNA.default_gap_char
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: DNA.default_gap_char

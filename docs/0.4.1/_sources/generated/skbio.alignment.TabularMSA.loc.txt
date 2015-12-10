@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.loc
+==============================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: TabularMSA.loc

@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.alignment.Alignment.iter_positions
-========================================
-
-.. currentmodule:: skbio.alignment
-
-.. automethod:: Alignment.iter_positions
