@@ -16,11 +16,19 @@ class NewAuto(autosummary.Autosummary):
         first_cap_re = re.compile('(.)([A-Z][a-z]+)')
         all_cap_re = re.compile('([a-z0-9])([A-Z])')
         def fix_item(display_name, sig, summary, real_name):
+            class_names = {
+                'TreeNode': 'tree',
+                'TabularMSA': 'msa'
+            }
+
             class_name = real_name.split('.')[-2]
-            s1 = first_cap_re.sub(r'\1_\2', class_name)
-            nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
-            if len(nice_name) > 10:
-                nice_name = ''.join([e[0] for e in nice_name.split('_')])
+            if class_name in class_names:
+                nice_name = class_names[class_name]
+            else:
+                s1 = first_cap_re.sub(r'\1_\2', class_name)
+                nice_name = all_cap_re.sub(r'\1_\2', s1).lower()
+                if len(nice_name) > 10:
+                    nice_name = ''.join([e[0] for e in nice_name.split('_')])
             def fmt(string):
                 count = string.count('%s')
                 return string % tuple([nice_name] * count)

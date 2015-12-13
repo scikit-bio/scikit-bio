@@ -14,9 +14,14 @@ blockquote {
     font-size: 14px !important;
 }
 
-cite, code {
+code {
+    color: #259D57 !important;
+    font-size: 100% !important;
+}
+
+cite, code.docutils.literal:not(.xref) {
     padding: 1px 4px !important;
-    font-size: 90% !important;
+    font-size: 100% !important;
     color: #000 !important;
     background-color: #F5F5F5 !important;
     white-space: nowrap !important;
@@ -24,6 +29,24 @@ cite, code {
     border: 1px solid #CCC !important;
     font-style: normal !important;
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace !important;
+}
+
+a code.docutils.literal:not(.xref) {
+    color: #259D57 !important;
+    background: none !important;
+    border: none !important;
+}
+
+a:active code.docutils.literal:not(.xref),
+a:hover code.docutils.literal:not(.xref),
+a:focus code.docutils.literal:not(.xref) {
+    color: #00B84D !important;
+}
+
+#navbar .dropdown-menu > li > a:active code.docutils.literal:not(.xref),
+#navbar .dropdown-menu > li > a:hover code.docutils.literal:not(.xref),
+#navbar .dropdown-menu > li > a:focus code.docutils.literal:not(.xref) {
+    color: #FFF !important;
 }
 
 .label {

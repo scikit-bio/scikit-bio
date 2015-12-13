@@ -59,7 +59,7 @@ def _get_alpha_diversity_metric_map():
         'lladser_ci': skbio.diversity.alpha.lladser_ci}
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
     """ List scikit-bio's alpha diversity metrics
 
@@ -82,7 +82,7 @@ def get_alpha_diversity_metrics():
     return sorted(metrics.keys())
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
     """ List scikit-bio's beta diversity metrics
 
@@ -111,7 +111,7 @@ def get_beta_diversity_metrics():
     return sorted(['unweighted_unifrac', 'weighted_unifrac'])
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     """ Compute alpha diversity for one or more samples
 

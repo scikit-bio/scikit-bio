@@ -416,7 +416,7 @@ class DissimilarityMatrix(SkbioObject):
         plt.close(fig)
         return data
 
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def to_data_frame(self):
         """Create a ``pandas.DataFrame`` from this ``DissimilarityMatrix``.
 
@@ -687,7 +687,7 @@ class DistanceMatrix(DissimilarityMatrix):
     _matrix_element_name = 'distance'
 
     @classonlymethod
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 

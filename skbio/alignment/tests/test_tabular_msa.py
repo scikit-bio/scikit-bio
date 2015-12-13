@@ -18,13 +18,15 @@ import six
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import scipy.stats
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests,
-                                 assert_index_equal)
+                                 assert_index_equal,
+                                 assert_data_frame_almost_equal)
 
 
 class TabularMSASubclass(TabularMSA):
@@ -356,11 +358,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
         msa.index = [('foo', 42), ('bar', 43)]
 
-        self.assertIsInstance(msa.index, pd.Index)
-        self.assertNotIsInstance(msa.index, pd.MultiIndex)
+        self.assertIsInstance(msa.index, pd.MultiIndex)
         assert_index_equal(
             msa.index,
-            pd.Index([('foo', 42), ('bar', 43)], tupleize_cols=False))
+            pd.Index([('foo', 42), ('bar', 43)], tupleize_cols=True))
 
     def test_index_deleter(self):
         msa = TabularMSA([RNA('UUU'), RNA('AAA')], minter=str)
@@ -819,9 +820,8 @@ class TestCopy(unittest.TestCase):
         self.assertEqual(msa, msa_copy)
         self.assertIsNot(msa, msa_copy)
         self.assertIsNot(msa._seqs, msa_copy._seqs)
-        # TODO: use __getitem__ when it exists.
-        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
-        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+        self.assertIsNot(msa[0], msa_copy[0])
+        self.assertIsNot(msa[1], msa_copy[1])
 
         msa_copy.append(DNA('AAAA'))
         self.assertEqual(
@@ -869,9 +869,8 @@ class TestDeepCopy(unittest.TestCase):
         self.assertEqual(msa, msa_copy)
         self.assertIsNot(msa, msa_copy)
         self.assertIsNot(msa._seqs, msa_copy._seqs)
-        # TODO: use __getitem__ when it exists.
-        self.assertIsNot(msa._seqs[0], msa_copy._seqs[0])
-        self.assertIsNot(msa._seqs[1], msa_copy._seqs[1])
+        self.assertIsNot(msa[0], msa_copy[0])
+        self.assertIsNot(msa[1], msa_copy[1])
 
         msa_copy.append(DNA('AAAA'))
         self.assertEqual(
@@ -899,6 +898,907 @@ class TestDeepCopy(unittest.TestCase):
         msa_copy.index = [1, 2]
         assert_index_equal(msa_copy.index, pd.Index([1, 2]))
         assert_index_equal(msa.index, pd.Index(['foo', 'bar']))
+
+
+class SharedIndexTests(object):
+    def get(self, obj, indexable):
+        raise NotImplementedError()
+
+    def test_tuple_too_big(self):
+        with self.assertRaises(ValueError):
+            self.get(TabularMSA([]), (None, None, None))
+
+    def test_empty_msa_slice(self):
+        msa = TabularMSA([])
+
+        new = self.get(msa, slice(None, None))
+
+        self.assertIsNot(msa, new)
+        self.assertEqual(msa, new)
+
+    def test_msa_slice_all_first_axis(self):
+        msa = TabularMSA([RNA("AAA", metadata={1: 1}),
+                          RNA("AAU", positional_metadata={0: [1, 2, 3]})],
+                         metadata={0: 0}, positional_metadata={1: [3, 2, 1]})
+
+        new_slice = self.get(msa, slice(None))
+        new_ellipsis = self.get(msa, Ellipsis)
+
+        self.assertIsNot(msa, new_slice)
+        for s1, s2 in zip(msa, new_slice):
+            self.assertIsNot(s1, s2)
+        self.assertEqual(msa, new_slice)
+
+        self.assertIsNot(msa, new_ellipsis)
+        for s1, s2 in zip(msa, new_ellipsis):
+            self.assertIsNot(s1, s2)
+        self.assertEqual(msa, new_ellipsis)
+
+    def test_msa_slice_all_both_axes(self):
+        msa = TabularMSA([RNA("AAA", metadata={1: 1}),
+                          RNA("AAU", positional_metadata={0: [1, 2, 3]})],
+                         metadata={0: 0}, positional_metadata={1: [3, 2, 1]})
+
+        new_slice = self.get(msa, (slice(None), slice(None)))
+        new_ellipsis = self.get(msa, (Ellipsis, Ellipsis))
+
+        self.assertIsNot(msa, new_slice)
+        for s1, s2 in zip(msa, new_slice):
+            self.assertIsNot(s1, s2)
+        self.assertEqual(msa, new_slice)
+
+        self.assertIsNot(msa, new_ellipsis)
+        for s1, s2 in zip(msa, new_ellipsis):
+            self.assertIsNot(s1, s2)
+        self.assertEqual(msa, new_ellipsis)
+
+    def test_bool_index_first_axis(self):
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, [True, True, False])
+
+        self.assertEqual(new, TabularMSA([a, b], metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2, 3]},
+                                         index=[True, False]))
+
+    def test_bool_index_second_axis(self):
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, (Ellipsis, [True, True, False]))
+
+        self.assertEqual(new, TabularMSA([a[0, 1], b[0, 1], c[0, 1]],
+                                         metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2]},
+                                         index=[True, False, True]))
+
+    def test_bool_index_both_axes(self):
+        a = DNA("AAA", metadata={1: 1})
+        b = DNA("NNN", positional_metadata={1: ['x', 'y', 'z']})
+        c = DNA("AAC")
+        msa = TabularMSA([a, b, c], metadata={0: 'x'},
+                         positional_metadata={0: [1, 2, 3]},
+                         index=[True, False, True])
+
+        new = self.get(msa, ([False, True, True], [True, True, False]))
+
+        self.assertEqual(new, TabularMSA([b[0, 1], c[0, 1]],
+                                         metadata={0: 'x'},
+                                         positional_metadata={0: [1, 2]},
+                                         index=[False, True]))
+
+    def test_bool_index_too_big(self):
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")],
+                         index=[False, True, False])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, [False, False, False, False])
+        with self.assertRaises(IndexError):
+            self.get(msa, [True, True, True, True])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [True, False, True, False, True]))
+
+        with self.assertRaises(IndexError):
+            self.get(msa, ([True, False, True, False],
+                           [True, False, True, False, False]))
+
+    def test_bool_index_too_small(self):
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")],
+                         index=[False, True, False])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, [False])
+        with self.assertRaises(IndexError):
+            self.get(msa, [True])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [True]))
+
+        with self.assertRaises(IndexError):
+            self.get(msa, ([True, False], [True, False, True, False]))
+
+    def test_bad_scalar(self):
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")])
+
+        with self.assertRaises((KeyError, TypeError)):
+            self.get(msa, "foo")
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, "foo"))
+
+    def test_bad_fancy_index(self):
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")])
+
+        with self.assertRaises((KeyError, TypeError)):
+            self.get(msa, [0, "foo"])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [0, "foo"]))
+
+    def test_asburd_slice(self):
+        msa = TabularMSA([DNA("ABCD"), DNA("GHKM"), DNA("NRST")])
+
+        with self.assertRaises(TypeError):
+            self.get(msa, {set(1): 0})
+
+
+class SharedPropertyIndexTests(SharedIndexTests):
+    def setUp(self):
+        self.combo_msa = TabularMSA([
+            DNA('ACGTA', metadata={0: 0},
+                positional_metadata={0: [1, 2, 3, 4, 5]}),
+            DNA('CGTAC', metadata={1: 1},
+                positional_metadata={1: [1, 2, 3, 4, 5]}),
+            DNA('GTACG', metadata={2: 2},
+                positional_metadata={2: [1, 2, 3, 4, 5]}),
+            DNA('TACGT', metadata={3: 3},
+                positional_metadata={3: [1, 2, 3, 4, 5]}),
+            DNA('ACGTT', metadata={4: 4},
+                positional_metadata={4: [1, 2, 3, 4, 5]})
+            ], index=list('ABCDE'), metadata={'x': 'x'},
+            positional_metadata={'y': [5, 4, 3, 2, 1]})
+
+        """First off, sorry to the next person who has to deal with this.
+
+           The next few tests will try and slice by a bunch of stuff, with
+           all combinations. Each element in the two lists is a tuple where
+           the first element is the thing to slice with, and the second is
+           the equivalent fancy index which describes the same range.
+
+           This lets us describe the results a little more declaratively
+           without setting up a thousand tests for each possible combination.
+           This does mean the iloc via a fancy index and simple scalar must
+           work correctly.
+        """
+        # This will be overriden for TestLoc because the first axis are labels
+        self.combo_first_axis = [
+            ([], []),
+            (slice(0, 0), []),
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice(0, 10000), [0, 1, 2, 3, 4]),
+            (3, 3),
+            (-4, 1),
+            ([0], [0]),
+            ([2], [2]),
+            (slice(1, 3), [1, 2]),
+            (slice(3, 0, -1), [3, 2, 1]),
+            ([-3, 2, 1], [2, 2, 1]),
+            ([-4, -3, -2, -1], [1, 2, 3, 4]),
+            (np.array([-3, 2, 1]), [2, 2, 1]),
+            ([True, True, False, False, True], [0, 1, 4]),
+            (np.array([True, True, False, True, False]), [0, 1, 3]),
+            (range(3), [0, 1, 2]),
+            ([slice(0, 2), slice(3, 4), 4], [0, 1, 3, 4])
+        ]
+        # Same in both TestLoc and TestILoc
+        self.combo_second_axis = self.combo_first_axis
+
+    def test_combo_single_axis_natural(self):
+        for idx, exp in self.combo_first_axis:
+            self.assertEqual(self.get(self.combo_msa, idx),
+                             self.combo_msa.iloc[exp],
+                             msg="%r did not match iloc[%r]" % (idx, exp))
+
+    def test_combo_first_axis_only(self):
+        for idx, exp in self.combo_first_axis:
+            self.assertEqual(self.get(self.combo_msa, idx, axis=0),
+                             self.combo_msa.iloc[exp, ...],
+                             msg="%r did not match iloc[%r, ...]" % (idx, exp))
+
+    def test_combo_second_axis_only(self):
+        for idx, exp in self.combo_second_axis:
+            self.assertEqual(self.get(self.combo_msa, idx, axis=1),
+                             self.combo_msa.iloc[..., exp],
+                             msg="%r did not match iloc[..., %r]" % (idx, exp))
+
+    def test_combo_both_axes(self):
+        for idx1, exp1 in self.combo_first_axis:
+            for idx2, exp2 in self.combo_second_axis:
+                self.assertEqual(self.get(self.combo_msa, (idx1, idx2)),
+                                 self.combo_msa.iloc[exp1, exp2],
+                                 msg=("%r did not match iloc[%r, %r]"
+                                      % ((idx1, idx2), exp1, exp2)))
+
+
+class TestLoc(SharedPropertyIndexTests, unittest.TestCase):
+    def setUp(self):
+        SharedPropertyIndexTests.setUp(self)
+        self.combo_first_axis = [
+            ([], []),
+            (slice('X', "Z"), []),
+            ('A', 0),
+            ('E', 4),
+            (['B'], [1]),
+            (np.asarray(['B']), [1]),
+            (slice('A', 'C', 2), [0, 2]),
+            (slice('C', 'A', -2), [2, 0]),
+            (slice('A', 'B'), [0, 1]),
+            (slice(None), [0, 1, 2, 3, 4]),
+            (slice('A', None), [0, 1, 2, 3, 4]),
+            (slice(None, 'C'), [0, 1, 2]),
+            (Ellipsis, [0, 1, 2, 3, 4]),
+            (self.combo_msa.index, [0, 1, 2, 3, 4]),
+            (['B', 'A', 'A', 'C'], [1, 0, 0, 2]),
+            (np.asarray(['B', 'A', 'A', 'C']), [1, 0, 0, 2]),
+            ([True, False, True, True, False], [0, 2, 3]),
+            (np.asarray([True, False, True, True, False]), [0, 2, 3]),
+        ]
+
+    def test_forced_axis_returns_copy(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertIsNot(msa.loc(axis=1), msa.loc)
+
+    def test_forced_axis_no_mutate(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertEqual(msa.loc(axis=1)[0], Sequence("EE"))
+        self.assertEqual(msa.loc[0], Protein("EVANTHQMVS"))
+        self.assertIsNone(msa.loc._axis)
+
+    def get(self, obj, indexable, axis=None):
+        if axis is None:
+            return obj.loc[indexable]
+        else:
+            return obj.loc(axis=axis)[indexable]
+
+    def test_complex_single_label(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+
+        self.assertIs(a, self.get(msa, (('a', 0),)))
+        self.assertIs(b, self.get(msa, (('a', 1),)))
+        self.assertIs(c, self.get(msa, (('b', 0),)))
+
+    def test_partial_label(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+        exp_a = TabularMSA([a, b], index=[0, 1])
+        exp_b = TabularMSA([c], index=[0])
+
+        self.assertEqual(self.get(msa, 'a'), exp_a)
+        self.assertEqual(self.get(msa, 'b'), exp_b)
+
+    def test_label_not_exists(self):
+        msa = TabularMSA([DNA("ACG")], index=['foo'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, 'bar')
+
+    def test_duplicate_index_nonscalar_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[0, 0, 1, 2])
+
+        self.assertEqual(self.get(msa, 0),
+                         TabularMSA([a, b], metadata={'x': 'y'},
+                                    positional_metadata={'z': [1, 2, 3, 4]},
+                                    index=[0, 0]))
+
+    def test_duplicate_index_scalar_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[0, 0, 1, 2])
+
+        self.assertEqual(self.get(msa, 1), c)
+
+    def test_multiindex_complex(self):
+        a = DNA("ACG")
+        b = DNA("ACT")
+        c = DNA("ACA")
+        msa = TabularMSA([a, b, c], index=[('a', 0), ('a', 1), ('b', 0)])
+        exp = TabularMSA([a, c], index=[('a', 0), ('b', 0)])
+
+        self.assertEqual(self.get(msa, [('a', 0), ('b', 0)]), exp)
+
+    def test_fancy_index_missing_label(self):
+        msa = TabularMSA([DNA("ACG")], index=['foo'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, ['foo', 'bar'])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, ['bar'])
+
+    def test_multiindex_fancy_indexing_incomplete_label(self):
+        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
+        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
+        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
+                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
+                                ('b', 'x', 0)])
+
+        self.assertEqual(self.get(msa, (('a', 'x'), Ellipsis)),
+                         TabularMSA([a, b], metadata={'x': 'y'},
+                                    positional_metadata={'c': ['a', 'b', 'c',
+                                                               'd']},
+                                    index=[0, 1]))
+
+    def test_multiindex_complicated_axis(self):
+        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
+        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
+        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
+                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
+                                ('b', 'x', 0)])
+
+        self.assertEqual(self.get(msa, (([False, True, False, True],
+                                         'x', 0), Ellipsis)),
+                         TabularMSA([d], metadata={'x': 'y'},
+                                    positional_metadata={'c': ['a', 'b', 'c',
+                                                               'd']},
+                                    index=[('b', 'x', 0)]))
+
+    def test_multiindex_complicated_axis_empty_selection(self):
+        a = RNA("UUAG", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = RNA("UAAG", metadata={1: 0}, positional_metadata={1: [1, 2, 3, 4]})
+        c = RNA("UAA-", metadata={2: 0}, positional_metadata={2: [1, 2, 3, 4]})
+        d = RNA("UA-G", metadata={3: 0}, positional_metadata={3: [1, 2, 3, 4]})
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'c': ['a', 'b', 'c', 'd']},
+                         index=[('a', 'x', 0), ('a', 'x', 1), ('a', 'y', 2),
+                                ('b', 'x', 0)])
+
+        self.assertEqual(self.get(msa, (([False, True, False, True],
+                                         'x', 2), Ellipsis)),
+                         TabularMSA([], metadata={'x': 'y'},
+                                    # TODO: Change for #1198
+                                    positional_metadata=None,
+                                    index=[]))
+
+    def test_bool_index_scalar_bool_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[False, True, False, False])
+
+        self.assertEqual(self.get(msa, True), b)
+
+    def test_bool_index_nonscalar_bool_label(self):
+        a = DNA("ACGA", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("A-GA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("AAGA", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+        d = DNA("ACCA", metadata={3: 3}, positional_metadata={3: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c, d], metadata={'x': 'y'},
+                         positional_metadata={'z': [1, 2, 3, 4]},
+                         index=[False, True, False, True])
+
+        self.assertEqual(self.get(msa, True),
+                         TabularMSA([b, d], metadata={'x': 'y'},
+                                    positional_metadata={'z': [1, 2, 3, 4]},
+                                    index=[True, True]))
+
+    def test_unhashable_index_first_axis(self):
+        s = slice(0, 1)
+        msa = TabularMSA([Protein(""), Protein(""), Protein("")],
+                         index=[s, slice(1, 2), slice(2, 3)])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, Ellipsis, axis=0)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, s, axis=0)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, 0, axis=0)
+
+    def test_unhashable_index_second_axis(self):
+        msa = TabularMSA([Protein("AA"), Protein("CC"), Protein("AA")],
+                         index=[slice(0, 1), slice(1, 2), slice(2, 3)])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, Ellipsis, axis=1)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, [0, 1], axis=1)
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable'):
+            self.get(msa, 0, axis=1)
+
+    def test_unhashable_index_both_axes(self):
+        s = [0, 1]
+        msa = TabularMSA([RNA("AA"), RNA("CC"), RNA("AA")],
+                         index=[s, [1, 2], [2, 3]])
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            # This implies copy cannot be derived from getitem
+            self.get(msa, (Ellipsis, Ellipsis))
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            self.get(msa, (s, 0))
+
+        with six.assertRaisesRegex(self, TypeError, 'unhashable.*list'):
+            self.get(msa, ('x', 10))
+
+    def test_categorical_index_scalar_label(self):
+        msa = TabularMSA([RNA("ACUG"), RNA("ACUA"), RNA("AAUG"), RNA("AC-G")],
+                         index=pd.CategoricalIndex(['a', 'b', 'b', 'c']))
+
+        self.assertEqual(self.get(msa, 'a'), RNA("ACUG"))
+
+    def test_categorical_index_nonscalar_label(self):
+        msa = TabularMSA([RNA("ACUG"), RNA("ACUA"), RNA("AAUG"), RNA("AC-G")],
+                         index=pd.CategoricalIndex(['a', 'b', 'b', 'c']))
+
+        self.assertEqual(self.get(msa, 'b'),
+                         TabularMSA([RNA("ACUA"), RNA("AAUG")],
+                                    index=pd.CategoricalIndex(
+                                        ['b', 'b'], categories=['a', 'b', 'c'])
+                                    ))
+
+    def test_float_index_out_of_order_slice(self):
+        msa = TabularMSA([DNA("ACGG"), DNA("AAGC"), DNA("AAAA"), DNA("ACTC")],
+                         index=[0.1, 2.4, 5.1, 2.6])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, slice(0.1, 2.7))
+
+        msa.sort()
+        result = self.get(msa, slice(0.1, 2.7))
+
+        self.assertEqual(result, TabularMSA([DNA("ACGG"), DNA("AAGC"),
+                                             DNA("ACTC")],
+                                            index=[0.1, 2.4, 2.6]))
+
+    def test_nonscalar_fancy_index(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')],
+                         index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
+
+        with six.assertRaisesRegex(self, TypeError,
+                                   'tuple.*independent.*MultiIndex'):
+            self.get(msa, ['a', 'b'])
+
+    def test_missing_first_nonscalar_fancy_index(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')],
+                         index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
+
+        with self.assertRaises(KeyError):
+            self.get(msa, ['x', 'a', 'b'])
+
+    def test_tuple_fancy_index(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')],
+                         index=[('a', 0, 1), ('a', 1, 1), ('b', 0, 1)])
+
+        with six.assertRaisesRegex(self, TypeError,
+                                   'tuple.*pd.MultiIndex.*label'):
+            self.get(msa, ((('a', 0, 1), ('b', 0, 1)), Ellipsis))
+
+    def test_non_multiindex_tuple(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')])
+
+        with six.assertRaisesRegex(self, TypeError, 'tuple.*first axis'):
+            self.get(msa, ((0, 1), Ellipsis))
+
+    def test_assertion_exists_for_future_failure_of_get_sequence_loc(self):
+        # Ideally we wouldn't need this test or the branch, but the most common
+        # failure for pandas would be returning a series instead of the value.
+        # We should make sure that the user get's an error should this ever
+        # happen again. Getting a series of DNA looks pretty weird...
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGT'), DNA('ACGT')])
+
+        with self.assertRaises(AssertionError):
+            msa._get_sequence_loc_([1, 2])
+
+
+class TestILoc(SharedPropertyIndexTests, unittest.TestCase):
+    def setUp(self):
+        SharedPropertyIndexTests.setUp(self)
+        self.combo_first_axis = self.combo_second_axis
+
+    def test_forced_axis_returns_copy(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertIsNot(msa.iloc(axis=1), msa.iloc)
+
+    def test_forced_axis_no_mutate(self):
+        msa = TabularMSA([Protein("EVANTHQMVS"), Protein("EVANTH*MVS")])
+
+        self.assertEqual(msa.iloc(axis=1)[0], Sequence("EE"))
+        self.assertEqual(msa.iloc[0], Protein("EVANTHQMVS"))
+        self.assertIsNone(msa.iloc._axis)
+
+    def get(self, obj, indexable, axis=None):
+        if axis is None:
+            return obj.iloc[indexable]
+        else:
+            return obj.iloc(axis=axis)[indexable]
+
+    def test_entire_fancy_first_axis(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
+
+        new_np_simple = self.get(msa, np.arange(2))
+        new_list_simple = self.get(msa, [0, 1])
+        new_list_backwards = self.get(msa, [-2, -1])
+
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+
+    def test_fancy_entire_second_axis(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
+
+        new_np_simple = self.get(msa, (Ellipsis, np.arange(4)))
+        new_list_simple = self.get(msa, (Ellipsis, [0, 1, 2, 3]))
+        new_list_backwards = self.get(msa, (Ellipsis, [-4, -3, -2, -1]))
+
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+
+    def test_fancy_entire_both_axes(self):
+        msa = TabularMSA([
+            DNA("ACCA", metadata={'a': 'foo'},
+                positional_metadata={'a': [7, 6, 5, 4]}),
+            DNA("GGAA", metadata={'b': 'bar'},
+                positional_metadata={'b': [3, 4, 5, 6]})
+            ], metadata={'c': 'baz'},
+            positional_metadata={'foo': [1, 2, 3, 4]})
+
+        new_np_simple = self.get(msa, (np.arange(2), np.arange(4)))
+        new_list_simple = self.get(msa, ([0, 1], [0, 1, 2, 3]))
+        new_list_backwards = self.get(msa, ([-2, -1], [-4, -3, -2, -1]))
+
+        self.assertIsNot(msa, new_np_simple)
+        self.assertEqual(msa, new_np_simple)
+
+        self.assertIsNot(msa, new_list_simple)
+        self.assertEqual(msa, new_list_simple)
+
+        self.assertIsNot(msa, new_list_backwards)
+        self.assertEqual(msa, new_list_backwards)
+
+    def test_fancy_out_of_bound(self):
+        with self.assertRaises(IndexError):
+            self.get(TabularMSA([DNA('AC')]), [0, 1, 2])
+
+        with self.assertRaises(IndexError):
+            self.get(TabularMSA([DNA('AC')]), (Ellipsis, [0, 1, 2]))
+
+    def test_fancy_empty_both_axis(self):
+        msa = TabularMSA([DNA("ACGT", metadata={'x': 1}),
+                          DNA("TGCA", metadata={'y': 2})], index=list("AB"))
+
+        new_np_simple = self.get(msa, (np.arange(0), np.arange(0)))
+        new_list_simple = self.get(msa, ([], []))
+
+        self.assertEqual(TabularMSA([]), new_np_simple)
+        self.assertEqual(TabularMSA([]), new_list_simple)
+
+    def test_fancy_standard_first_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, [0, 2]),
+                         TabularMSA([a, c], metadata={3: 3},
+                                    positional_metadata={3: [1, 2, 3, 4]},
+                                    index=[0, 2]))
+
+    def test_fancy_standard_second_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, (Ellipsis, [0, 2])),
+                         TabularMSA([a[0, 2], b[0, 2], c[0, 2]],
+                                    metadata={3: 3},
+                                    positional_metadata={3: [1, 3]},
+                                    index=[0, 1, 2]))
+
+    def test_fancy_standard_both_axes(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, ([0, 2], [0, 2])),
+                         TabularMSA([a[0, 2], c[0, 2]],
+                                    metadata={3: 3},
+                                    positional_metadata={3: [1, 3]},
+                                    index=[0, 2]))
+
+    def test_fancy_empty_first_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+        # TODO: Change for #1198
+        self.assertEqual(self.get(msa, []),
+                         TabularMSA([], metadata={3: 3}))
+
+    def test_fancy_empty_second_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, (Ellipsis, [])),
+                         TabularMSA([a[0:0], b[0:0], c[0:0]],
+                                    metadata={3: 3},
+                                    positional_metadata={3: np.array(
+                                        [], dtype=int)}))
+
+    def test_fancy_empty_both_axes(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+        # TODO: Change for #1198
+        self.assertEqual(self.get(msa, ([], [])),
+                         TabularMSA([], metadata={3: 3}))
+
+    def test_fancy_out_of_bounds_first_axis(self):
+        msa = TabularMSA([DNA("ACGT"), DNA("GCAT")])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, [10])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, [0, 1, 10])
+
+    def test_fancy_out_of_bounds_second_axis(self):
+        msa = TabularMSA([DNA("ACGT"), DNA("GCAT")])
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [10]))
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, [1, 2, 4]))
+
+    def test_get_scalar_first_axis(self):
+        a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
+        b = DNA("GG", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
+        msa = TabularMSA([a, b])
+
+        new0 = self.get(msa, 0)
+        new1 = self.get(msa, 1)
+
+        self.assertEqual(new0, a)
+        self.assertEqual(new1, b)
+
+    def test_get_scalar_second_axis(self):
+        a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
+        b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
+
+        new0 = self.get(msa, (Ellipsis, 0))
+        new1 = self.get(msa, (Ellipsis, 1))
+
+        self.assertEqual(new0,
+                         Sequence("AG", metadata={'z': 5},
+                                  positional_metadata={'x': [1, np.nan],
+                                                       'y': [np.nan, 3]}))
+        self.assertEqual(new1,
+                         Sequence("AC", metadata={'z': 6},
+                                  positional_metadata={'x': [2, np.nan],
+                                                       'y': [np.nan, 4]}))
+
+    def test_scalar_sliced_first_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGT", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, (1, [1, 3])),
+                         DNA("CT", metadata={1: 1},
+                             positional_metadata={1: [2, 4]}))
+
+    def test_scalar_sliced_second_axis(self):
+        a = DNA("ACGT", metadata={0: 0}, positional_metadata={0: [1, 2, 3, 4]})
+        b = DNA("ACGA", metadata={1: 1}, positional_metadata={1: [1, 2, 3, 4]})
+        c = DNA("ACGT", metadata={2: 2}, positional_metadata={2: [1, 2, 3, 4]})
+
+        msa = TabularMSA([a, b, c], metadata={3: 3},
+                         positional_metadata={3: [1, 2, 3, 4]})
+
+        self.assertEqual(self.get(msa, ([1, 2], 3)),
+                         Sequence("AT", metadata={3: 4},
+                                  positional_metadata={1: [4, np.nan],
+                                                       2: [np.nan, 4]}))
+
+    def test_get_scalar_out_of_bound_first_axis(self):
+        a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
+        b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
+
+        with self.assertRaises(IndexError):
+            self.get(msa, 3)
+
+    def test_get_scalar_out_of_bound_second_axis(self):
+        a = DNA("AA", metadata={'a': 'foo'}, positional_metadata={'x': [1, 2]})
+        b = DNA("GC", metadata={'b': 'bar'}, positional_metadata={'y': [3, 4]})
+        msa = TabularMSA([a, b], positional_metadata={'z': [5, 6]})
+
+        with self.assertRaises(IndexError):
+            self.get(msa, (Ellipsis, 3))
+
+
+class TestGetItem(SharedIndexTests, unittest.TestCase):
+    def get(self, obj, indexable):
+        return obj[indexable]
+
+    def test_uses_iloc_not_loc(self):
+        a = DNA("ACGA")
+        b = DNA("ACGT")
+        msa = TabularMSA([a, b], index=[1, 0])
+
+        self.assertIs(msa[0], a)
+        self.assertIs(msa[1], b)
+
+
+class TestConstructor(unittest.TestCase):
+    def setUp(self):
+        self.seqs = [DNA("ACGT"), DNA("GCTA")]
+        self.m = {'x': 'y', 0: 1}
+        self.pm = pd.DataFrame({'foo': [1, 2, 3, 4]})
+        self.index = pd.Index(['a', 'b'])
+        self.msa = TabularMSA(self.seqs, metadata=self.m,
+                              positional_metadata=self.pm, index=self.index)
+
+    def test_no_override(self):
+        result = self.msa._constructor_()
+
+        self.assertEqual(self.msa, result)
+
+        for seq1, seq2 in zip(result, self.msa):
+            self.assertIsNot(seq1, seq2)
+
+        self.assertIsNot(result.metadata, self.msa.metadata)
+        self.assertIsNot(result.positional_metadata,
+                         self.msa.positional_metadata)
+
+    def test_sequence_override_same_seqs(self):
+        result = self.msa._constructor_(sequences=self.seqs)
+
+        self.assertEqual(self.msa, result)
+
+        for seq1, seq2 in zip(result, self.msa):
+            self.assertIsNot(seq1, seq2)
+
+        self.assertIsNot(result.metadata, self.msa.metadata)
+        self.assertIsNot(result.positional_metadata,
+                         self.msa.positional_metadata)
+
+    def test_sequence_override(self):
+        seqs = [RNA("ACGU"), RNA("GCUA")]
+
+        result = self.msa._constructor_(sequences=seqs)
+
+        self.assertNotEqual(result, self.msa)
+        self.assertEqual(list(result), seqs)
+        assert_index_equal(result.index, self.index)
+        self.assertEqual(result.metadata, self.m)
+        assert_data_frame_almost_equal(result.positional_metadata, self.pm)
+
+    def test_no_override_no_md(self):
+        msa = TabularMSA(self.seqs, index=self.index)
+
+        self.assertEqual(msa, msa._constructor_())
+
+    def test_metadata_override(self):
+        new_md = {'foo': {'x': 0}}
+
+        result = self.msa._constructor_(metadata=new_md)
+
+        self.assertNotEqual(result, self.msa)
+        self.assertEqual(list(result), self.seqs)
+        assert_index_equal(result.index, self.index)
+        self.assertEqual(result.metadata, new_md)
+        assert_data_frame_almost_equal(result.positional_metadata, self.pm)
+
+    def test_positional_metadata_override(self):
+        new_pm = pd.DataFrame({'x': [1, 2, 3, 4]})
+
+        result = self.msa._constructor_(positional_metadata=new_pm)
+
+        self.assertNotEqual(result, self.msa)
+        self.assertEqual(list(result), self.seqs)
+        assert_index_equal(result.index, self.index)
+        self.assertEqual(result.metadata, self.m)
+        assert_data_frame_almost_equal(result.positional_metadata, new_pm)
+
+    def test_index_override(self):
+        new_index = pd.Index([('a', 0), ('b', 1)])
+
+        result = self.msa._constructor_(index=new_index)
+
+        self.assertNotEqual(result, self.msa)
+        self.assertEqual(list(result), self.seqs)
+        assert_index_equal(result.index, new_index)
+        self.assertEqual(result.metadata, self.m)
+        assert_data_frame_almost_equal(result.positional_metadata, self.pm)
 
 
 class TestAppend(unittest.TestCase):
@@ -1919,6 +2819,290 @@ class TestConsensus(unittest.TestCase):
         self.assertEqual(cons, DNA('-'))
 
 
+class TestConservation(unittest.TestCase):
+
+    def test_no_sequences(self):
+        msa = TabularMSA([])
+        cons = msa.conservation()
+        npt.assert_array_equal(cons, np.array([]))
+
+    def test_shannon_entropy_dna(self):
+        msa = TabularMSA([DNA('A'),
+                          DNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('A'),
+                          DNA('G'),
+                          DNA('C'),
+                          DNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AAC'),
+                          DNA('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AACT'),
+                          DNA('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_rna(self):
+        msa = TabularMSA([RNA('A'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('A'),
+                          RNA('G'),
+                          RNA('C'),
+                          RNA('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AAC'),
+                          RNA('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([RNA('AACU'),
+                          RNA('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_shannon_entropy_protein(self):
+        msa = TabularMSA([Protein('A'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('A'),
+                          Protein('G'),
+                          Protein('C'),
+                          Protein('G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.25, 0.25],
+                                                      base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AAC'),
+                          Protein('GAC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([Protein('AACT'),
+                          Protein('GACA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([1.0], base=20),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=20)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_degenerate_mode_nan(self):
+        msa = TabularMSA([DNA('NAC'),
+                          DNA('NNC')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan')
+        expected = np.array([np.nan,
+                             np.nan,
+                             1. - scipy.stats.entropy([1.0], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_degenerate_mode_error(self):
+        msa = TabularMSA([DNA('NACN'),
+                          DNA('NNCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error')
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('ANCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error')
+
+    def test_error_on_degenerate_w_nan_on_gap(self):
+        msa = TabularMSA([DNA('-ACA'),
+                          DNA('-NCA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='nan')
+
+    def test_column_with_degen_and_gap(self):
+        msa = TabularMSA([DNA('N'),
+                          DNA('-')])
+        # test all eight combinations of gap_mode and degenerate_mode
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='nan')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='ignore')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  degenerate_mode='nan',
+                                  gap_mode='include')
+        npt.assert_array_equal(actual, np.array([np.nan]))
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='nan',
+                          gap_mode='error')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='nan')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='error')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='include')
+
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          degenerate_mode='error',
+                          gap_mode='ignore')
+
+    def test_gap_mode_nan(self):
+        msa = TabularMSA([DNA('-AC.'),
+                          DNA('--CA')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='nan')
+        expected = np.array([np.nan,
+                             np.nan,
+                             1. - scipy.stats.entropy([1.0], base=4),
+                             np.nan])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_include(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=5),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AC'),
+                          DNA('.G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([0.5, 0.5], base=5),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_include_gaps_treated_as_single_char(self):
+        msa = TabularMSA([DNA('.'),
+                          DNA('-')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='include')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=5)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_ignore(self):
+        msa = TabularMSA([DNA('AC'),
+                          DNA('-G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='ignore')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+        msa = TabularMSA([DNA('AC'),
+                          DNA('.G')])
+        actual = msa.conservation(metric='inverse_shannon_uncertainty',
+                                  gap_mode='ignore')
+        expected = np.array([1. - scipy.stats.entropy([1.0], base=4),
+                             1. - scipy.stats.entropy([0.5, 0.5], base=4)])
+        npt.assert_array_equal(actual, expected)
+
+    def test_gap_mode_error(self):
+        msa = TabularMSA([DNA('-AC-'),
+                          DNA('--CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('A-CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+        msa = TabularMSA([DNA('AACA'),
+                          DNA('A.CA')])
+        self.assertRaises(ValueError, msa.conservation,
+                          metric='inverse_shannon_uncertainty',
+                          gap_mode="error")
+
+    def test_bad_metric(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(metric='xyz')
+
+    def test_bad_gap_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(gap_mode='xyz')
+
+    def test_bad_degenerate_mode(self):
+        msa = TabularMSA([DNA('AA'),
+                          DNA('A-')])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
+
+        msa = TabularMSA([])
+        with six.assertRaisesRegex(self, ValueError, 'xyz'):
+            msa.conservation(degenerate_mode='xyz')
+
+
 class TestGapFrequencies(unittest.TestCase):
     def test_default_behavior(self):
         msa = TabularMSA([DNA('AA.'),
@@ -2162,7 +3346,7 @@ class TestGetPosition(unittest.TestCase):
         msa = TabularMSA([DNA('ACG'),
                           DNA('A-G')])
 
-        position = msa._get_position(1)
+        position = msa._get_position_(1)
 
         self.assertEqual(position, Sequence('C-'))
 
@@ -2172,7 +3356,7 @@ class TestGetPosition(unittest.TestCase):
                          positional_metadata={'foo': [42, 43, 44],
                                               'bar': ['abc', 'def', 'ghi']})
 
-        position = msa._get_position(1)
+        position = msa._get_position_(1)
 
         self.assertEqual(position,
                          Sequence('C-', metadata={'foo': 43, 'bar': 'def'}))
@@ -2181,7 +3365,7 @@ class TestGetPosition(unittest.TestCase):
         msa = TabularMSA([DNA('AA'),
                           DNA('--')])
 
-        msa._get_position(1)
+        msa._get_position_(1)
 
         self.assertIsNone(msa._positional_metadata)
 

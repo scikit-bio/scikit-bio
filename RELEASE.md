@@ -106,7 +106,33 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
         pip install scikit-bio
         python -m skbio.test
 
-If this succeeds, the release appears to be a success!
+    If this succeeds, the pypi release appears to be a success.
+
+6. Next, we'll prepare and post the release to [anaconda.org](http://www.anaconda.org).
+
+    You'll need to have ``conda-build`` and ``anaconda-client`` installed to perform these steps. Both can be conda-installed. First, log into anaconda with your anaconda username using the following command. You should have access to push to the ``biocore`` anaconda account through your account (if you don't, get in touch with [@gregcaporaso](https://github.com/gregcaporaso) who is the owner of that account).
+
+        anaconda login
+
+    Due to its C extensions, releasing scikit-bio packages for different platforms will require you to perform the following steps on each of those platforms. For example, an ``osx-64`` package will need to be built on OS X, and a ``linux-64`` package will need to be built on 64-bit Linux. These steps will be the same on all platforms, so you should repeat them for every platform you want to release for.
+
+        conda skeleton pypi scikit-bio
+        conda build scikit-bio --python 2.7
+        conda build scikit-bio --python 3.5
+
+    At this stage you have built Python 2.7 and 3.5 packages. The absolute path to the packages will be provided as output from each ``conda build`` commands. You should now create conda environments for each, and run the tests as described above. You can install these local packages as follows:
+
+        conda install --use-local scikit-bio
+
+    If the tests pass, you're ready to upload.
+
+        anaconda upload -u biocore <package-filepath>
+
+    ``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 2.7 and 3.5 packages).
+
+    After uploading, you should create new environments for every package you uploaded, install scikit-bio from each package, and re-run the tests. You can install the packages you uploaded as follows:
+
+        conda install -c https://conda.anaconda.org/biocore scikit-bio
 
 ## Post-release cleanup
 
