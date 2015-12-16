@@ -17,8 +17,6 @@ Format Support
 +======+======+===============================================================+
 |Yes   |No    |generator of :mod:`skbio.sequence.Sequence` objects            |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |:mod:`skbio.alignment.SequenceCollection`                      |
-+------+------+---------------------------------------------------------------+
 |Yes   |No    |:mod:`skbio.sequence.Sequence`                                 |
 +------+------+---------------------------------------------------------------+
 |Yes   |No    |:mod:`skbio.sequence.DNA`                                      |
@@ -71,8 +69,8 @@ The following additional parameters are the same as in FASTA format
 - ``constructor``: see ``constructor`` parameter in FASTA format
 - ``seq_num``: see ``seq_num`` parameter in FASTA format
 
-SequenceCollection and Generators Only
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Generators Only
+^^^^^^^^^^^^^^^
 - ``filter``: If `True`, excludes sequences that did not pass filtering
   (i.e., filter field is 0). Default is `True`.
 
@@ -98,12 +96,50 @@ registry in practice:
 ... ])
 >>> fh = StringIO(fs)
 
-To load the sequences into a ``SequenceCollection``, we run:
+To iterate over the sequences using the generator reader, we run:
 
->>> from skbio import SequenceCollection
->>> sc = SequenceCollection.read(fh, variant='illumina1.3')
->>> sc
-<SequenceCollection: n=2; mean +/- std length=13.00 +/- 0.00>
+>>> import skbio.io
+>>> for seq in skbio.io.read(fh, format='qseq', variant='illumina1.3'):
+...     seq
+...     print('')
+Sequence
+--------------------------------------
+Metadata:
+    'id': 'illumina_1:3:34:-30:30#0/1'
+    'index': 0
+    'lane_number': 3
+    'machine_name': 'illumina'
+    'read_number': 1
+    'run_number': 1
+    'tile_number': 34
+    'x': -30
+    'y': 30
+Positional metadata:
+    'quality': <dtype: uint8>
+Stats:
+    length: 13
+--------------------------------------
+0 ACG....ACG TAC
+<BLANKLINE>
+Sequence
+--------------------------------------
+Metadata:
+    'id': 'illumina_1:3:35:-30:30#0/2'
+    'index': 0
+    'lane_number': 3
+    'machine_name': 'illumina'
+    'read_number': 2
+    'run_number': 1
+    'tile_number': 35
+    'x': -30
+    'y': 30
+Positional metadata:
+    'quality': <dtype: uint8>
+Stats:
+    length: 13
+--------------------------------------
+0 ACGTA.AATA AAC
+<BLANKLINE>
 
 Note that only two sequences were loaded because the QSeq reader filters out
 sequences whose filter field is 0 (unless ``filter=False`` is supplied).
@@ -129,7 +165,6 @@ from future.builtins import zip, range
 
 from skbio.io import create_format, QSeqFormatError
 from skbio.io.format._base import _decode_qual_to_phred, _get_nth_sequence
-from skbio.alignment import SequenceCollection
 from skbio.sequence import Sequence, DNA, RNA, Protein
 
 _default_phred_offset = None
@@ -173,16 +208,6 @@ def _qseq_to_generator(fh, constructor=Sequence, filter=_will_filter,
                                              'read_number': int(read)},
                               positional_metadata={'quality': phred},
                               **kwargs)
-
-
-@qseq.reader(SequenceCollection)
-def _qseq_to_sequence_collection(fh, constructor=Sequence,
-                                 filter=_will_filter,
-                                 phred_offset=_default_phred_offset,
-                                 variant=_default_variant):
-    return SequenceCollection(list(_qseq_to_generator(
-        fh, constructor=constructor, filter=filter, phred_offset=phred_offset,
-        variant=variant)))
 
 
 @qseq.reader(Sequence)

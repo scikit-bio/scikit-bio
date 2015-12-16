@@ -615,7 +615,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def ancom(table, grouping,
           alpha=0.05,
           tau=0.02,

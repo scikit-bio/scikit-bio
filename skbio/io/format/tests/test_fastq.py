@@ -11,19 +11,19 @@ from future.builtins import zip
 import six
 
 import io
+import string
 import unittest
 import warnings
 from functools import partial
 
-from skbio import (read, write, Sequence, DNA, RNA, Protein,
-                   SequenceCollection, Alignment)
+from skbio import read, write, Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.io import FASTQFormatError
 from skbio.io.format.fastq import (
-    _fastq_sniffer, _fastq_to_generator, _fastq_to_sequence_collection,
-    _fastq_to_alignment, _generator_to_fastq, _sequence_collection_to_fastq,
-    _alignment_to_fastq)
-
+    _fastq_sniffer, _fastq_to_generator, _fastq_to_tabular_msa,
+    _generator_to_fastq, _tabular_msa_to_fastq)
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.util import get_data_path
+from skbio.util._decorator import classproperty, overrides
 
 import numpy as np
 
@@ -391,41 +391,36 @@ class TestReaders(unittest.TestCase):
                                         **observed_kwargs)
                         self.assertEqual(observed, expected)
 
-    def test_fastq_to_sequence_collection(self):
+    def test_fastq_to_tabular_msa(self):
+        class CustomSequence(IUPACSequence):
+            @classproperty
+            @overrides(IUPACSequence)
+            def gap_chars(cls):
+                return set('-.')
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def nondegenerate_chars(cls):
+                return set(string.ascii_letters)
+
+            @classproperty
+            @overrides(IUPACSequence)
+            def degenerate_map(cls):
+                return {}
+
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
                 for observed_kwargs in kwargs:
                     _drop_kwargs(observed_kwargs, 'seq_num')
-                    constructor = observed_kwargs.get('constructor', Sequence)
+                    if 'constructor' not in observed_kwargs:
+                        observed_kwargs['constructor'] = CustomSequence
+                    constructor = observed_kwargs['constructor']
 
                     expected_kwargs = {}
                     expected_kwargs['lowercase'] = 'introns'
                     observed_kwargs['lowercase'] = 'introns'
 
-                    expected = SequenceCollection(
-                        [constructor(
-                            c[2], metadata={'id': c[0], 'description': c[1]},
-                            positional_metadata={'quality': np.array(c[3],
-                                                 np.uint8)},
-                            **expected_kwargs)
-                         for c in components])
-
-                    observed = _fastq_to_sequence_collection(valid,
-                                                             **observed_kwargs)
-                    self.assertEqual(observed, expected)
-
-    def test_fastq_to_alignment(self):
-        for valid_files, kwargs, components in self.valid_configurations:
-            for valid in valid_files:
-                for observed_kwargs in kwargs:
-                    _drop_kwargs(observed_kwargs, 'seq_num')
-                    constructor = observed_kwargs.get('constructor', Sequence)
-
-                    expected_kwargs = {}
-                    expected_kwargs['lowercase'] = 'introns'
-                    observed_kwargs['lowercase'] = 'introns'
-
-                    expected = Alignment(
+                    expected = TabularMSA(
                         [constructor(
                             c[2], metadata={'id': c[0],
                                             'description': c[1]},
@@ -434,8 +429,12 @@ class TestReaders(unittest.TestCase):
                             **expected_kwargs)
                          for c in components])
 
-                    observed = _fastq_to_alignment(valid, **observed_kwargs)
+                    observed = _fastq_to_tabular_msa(valid, **observed_kwargs)
                     self.assertEqual(observed, expected)
+
+    def test_fastq_to_tabular_msa_no_constructor(self):
+        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+            _fastq_to_tabular_msa(get_data_path('fastq_multi_seq_sanger'))
 
 
 class TestWriters(unittest.TestCase):
@@ -515,30 +514,10 @@ class TestWriters(unittest.TestCase):
 
                     self.assertEqual(observed, expected)
 
-    def test_sequence_collection_to_fastq_kwargs_passed(self):
+    def test_tabular_msa_to_fastq_kwargs_passed(self):
         for components, kwargs_expected_fp in self.valid_files:
             for kwargs, expected_fp in kwargs_expected_fp:
-                obj = SequenceCollection([
-                    DNA(c[2], metadata={'id': c[0], 'description': c[1]},
-                        positional_metadata={'quality': c[3]},
-                        lowercase='introns')
-                    for c in components])
-
-                fh = io.StringIO()
-                kwargs['lowercase'] = 'introns'
-                _sequence_collection_to_fastq(obj, fh, **kwargs)
-                observed = fh.getvalue()
-                fh.close()
-
-                with io.open(expected_fp) as f:
-                    expected = f.read()
-
-                self.assertEqual(observed, expected)
-
-    def test_alignment_to_fastq_kwargs_passed(self):
-        for components, kwargs_expected_fp in self.valid_files:
-            for kwargs, expected_fp in kwargs_expected_fp:
-                obj = Alignment([
+                obj = TabularMSA([
                     Protein(c[2], metadata={'id': c[0], 'description': c[1]},
                             positional_metadata={'quality': c[3]},
                             lowercase='introns')
@@ -546,7 +525,7 @@ class TestWriters(unittest.TestCase):
 
                 fh = io.StringIO()
                 kwargs['lowercase'] = 'introns'
-                _alignment_to_fastq(obj, fh, **kwargs)
+                _tabular_msa_to_fastq(obj, fh, **kwargs)
                 observed = fh.getvalue()
                 fh.close()
 

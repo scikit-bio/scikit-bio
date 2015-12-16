@@ -151,8 +151,9 @@ documentation with the ```.. plot::``` directive. For example:
 
     .. plot::
 
-       >>> from skbio.draw import boxplots
-       >>> fig = boxplots([[2, 2, 1, 3, 4, 4.2, 7], [0, -1, 4, 5, 6, 7]])
+       >>> import pandas as pd
+       >>> df = pd.DataFrame({'col1': [1, 2, 3, 4], 'col2': [10, 11, 12, 13]})
+       >>> fig = df.boxplot()
 
 This will include the plot, a link to the source code used to generate the
 plot, and links to different image formats (e.g., PNG and PDF) so that users

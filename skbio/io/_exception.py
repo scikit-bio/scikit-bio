@@ -72,7 +72,7 @@ class FASTQFormatError(FileFormatError):
 class PhylipFormatError(FileFormatError):
     """Raised when a ``phylip`` formatted file cannot be parsed.
 
-    May also be raised when an object (e.g., ``Alignment``) cannot be written
+    May also be raised when an object (e.g., ``TabularMSA``) cannot be written
     in ``phylip`` format.
 
     """

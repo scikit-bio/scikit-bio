@@ -16,7 +16,6 @@ Subpackages
    distance
    evolve
    ordination
-   spatial
    gradient
    power
    composition

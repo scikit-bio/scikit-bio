@@ -29,12 +29,15 @@ from skbio.util._decorator import (stable, experimental, deprecated,
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                SkbioObject):
-    """Store biological sequence data and optional associated metadata.
+    """Store generic sequence data and optional associated metadata.
 
-    ``Sequence`` objects do not enforce an alphabet and are thus the most
-    generic objects for storing biological sequence data. Subclasses ``DNA``,
-    ``RNA``, and ``Protein`` enforce the IUPAC character set [1]_ for, and
-    provide operations specific to, each respective molecule type.
+    ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
+    most generic objects for storing sequence data. ``Sequence`` objects do not
+    necessarily represent biological sequences. For example, ``Sequence`` can
+    be used to represent a position in a multiple sequence alignment.
+    Subclasses ``DNA``, ``RNA``, and ``Protein`` enforce the IUPAC character
+    set [1]_ for, and provide operations specific to, each respective molecule
+    type.
 
     ``Sequence`` objects consist of the underlying sequence data, as well
     as optional metadata and positional metadata. The underlying sequence
@@ -43,16 +46,16 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the biological sequence itself.
+        Characters representing the sequence itself.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy
         of the ``dict`` will be made (see Examples section below for details).
     positional_metadata : pd.DataFrame consumable, optional
         Arbitrary per-character metadata (e.g., sequence read quality
         scores). Must be able to be passed directly to ``pd.DataFrame``
-        constructor. Each column of metadata must be the same length as the
-        biological sequence. A shallow copy of the positional metadata will be
-        made if necessary (see Examples section below for details).
+        constructor. Each column of metadata must be the same length as
+        `sequence`. A shallow copy of the positional metadata will be made if
+        necessary (see Examples section below for details).
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters. If ``False``, no characters will be converted.
@@ -346,7 +349,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._bytes.view('|S1')
 
     @property
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def observed_chars(self):
         """Set of observed characters in the sequence.
 
@@ -369,7 +372,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._bytes.tostring()
 
     @classonlymethod
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def concat(cls, sequences, how='strict'):
         """Concatenate an iterable of ``Sequence`` objects.
 
@@ -476,6 +479,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             raise ValueError("`how` must be 'strict', 'inner', or 'outer'.")
 
         seqs = list(sequences)
+        if len(seqs) == 0:
+            return cls("")
+
         for seq in seqs:
             seq._assert_can_cast_to(cls)
 
@@ -613,7 +619,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __contains__(self, subsequence):
-        """Determine if a subsequence is contained in the biological sequence.
+        """Determine if a subsequence is contained in this sequence.
 
         Parameters
         ----------
@@ -623,14 +629,13 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         bool
-            Indicates whether `subsequence` is contained in the biological
-            sequence.
+            Indicates whether `subsequence` is contained in this sequence.
 
         Raises
         ------
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -646,11 +651,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __eq__(self, other):
-        """Determine if the biological sequence is equal to another.
+        """Determine if this sequence is equal to another.
 
-        Biological sequences are equal if they are *exactly* the same type and
-        their sequence characters, metadata, and positional metadata are the
-        same.
+        Sequences are equal if they are *exactly* the same type and their
+        sequence characters, metadata, and positional metadata are the same.
 
         Parameters
         ----------
@@ -660,11 +664,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         bool
-            Indicates whether the biological sequence is equal to `other`.
+            Indicates whether this sequence is equal to `other`.
 
         Examples
         --------
-        Define two biological sequences that have the same underlying sequence
+        Define two ``Sequence`` objects that have the same underlying sequence
         of characters:
 
         >>> from skbio import Sequence
@@ -681,15 +685,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         >>> t == s
         True
 
-        Define another biological sequence with a different sequence of
-        characters than the previous two biological sequences:
+        Define another sequence object with a different sequence of characters
+        than the previous two sequence objects:
 
         >>> u = Sequence('ACGA')
         >>> u == t
         False
 
-        Define a biological sequence with the same sequence of characters as
-        ``u`` but with different metadata and positional metadata:
+        Define a sequence with the same sequence of characters as ``u`` but
+        with different metadata and positional metadata:
 
         >>> v = Sequence('ACGA', metadata={'id': 'abc'},
         ...              positional_metadata={'quality':[1, 5, 3, 3]})
@@ -718,11 +722,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __ne__(self, other):
-        """Determine if the biological sequence is not equal to another.
+        """Determine if this sequence is not equal to another.
 
-        Biological sequences are not equal if they are not *exactly* the same
-        type, or their sequence characters, metadata, or positional metadata
-        differ.
+        Sequences are not equal if they are not *exactly* the same type, or
+        their sequence characters, metadata, or positional metadata differ.
 
         Parameters
         ----------
@@ -732,7 +735,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         bool
-            Indicates whether the biological sequence is not equal to `other`.
+            Indicates whether this sequence is not equal to `other`.
 
         Examples
         --------
@@ -753,32 +756,31 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
-        """Slice the biological sequence.
+        """Slice this sequence.
 
         Parameters
         ----------
         indexable : int, slice, iterable (int and slice), 1D array_like (bool)
-            The position(s) to return from the biological sequence. If
-            `indexable` is an iterable of integers, these are assumed to be
-            indices in the sequence to keep. If `indexable` is a 1D
-            ``array_like`` of booleans, these are assumed to be the positions
-            in the sequence to keep.
+            The position(s) to return from this sequence. If `indexable` is an
+            iterable of integers, these are assumed to be indices in the
+            sequence to keep. If `indexable` is a 1D ``array_like`` of
+            booleans, these are assumed to be the positions in the sequence to
+            keep.
 
         Returns
         -------
         Sequence
-            New biological sequence containing the position(s) specified by
-            `indexable` in the current biological sequence. If quality scores
-            are present, they will be sliced in the same manner and included in
-            the returned biological sequence. ID and description are also
-            included.
+            New sequence containing the position(s) specified by `indexable` in
+            this sequence. Positional metadata will be sliced in the same
+            manner and included in the returned sequence. `metadata` is
+            included in the returned sequence.
 
         Examples
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
 
-        Obtain a single character from the biological sequence:
+        Obtain a single character from the sequence:
 
         >>> s[1]
         Sequence
@@ -881,12 +883,12 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __len__(self):
-        """Return the number of characters in the biological sequence.
+        """Return the number of characters in this sequence.
 
         Returns
         -------
         int
-            The length of the biological sequence.
+            The length of this sequence.
 
         Examples
         --------
@@ -922,7 +924,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __iter__(self):
-        """Iterate over positions in the biological sequence.
+        """Iterate over positions in this sequence.
 
         Yields
         ------
@@ -947,7 +949,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __reversed__(self):
-        """Iterate over positions in the biological sequence in reverse order.
+        """Iterate over positions in this sequence in reverse order.
 
         Yields
         ------
@@ -971,7 +973,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __str__(self):
-        """Return biological sequence characters as a string.
+        """Return sequence characters as a string.
 
         Returns
         -------
@@ -995,7 +997,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __repr__(self):
-        r"""Return a string representation of the biological sequence object.
+        r"""Return a string representation of this sequence object.
 
         Representation includes:
 
@@ -1015,7 +1017,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         str
-            String representation of the biological sequence object.
+            String representation of this sequence object.
 
         Notes
         -----
@@ -1111,7 +1113,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __copy__(self):
-        """Return a shallow copy of the biological sequence.
+        """Return a shallow copy of this sequence.
 
         See Also
         --------
@@ -1126,7 +1128,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def __deepcopy__(self, memo):
-        """Return a deep copy of the biological sequence.
+        """Return a deep copy of this sequence.
 
         See Also
         --------
@@ -1139,12 +1141,12 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """
         return self._copy(True, memo)
 
-    @deprecated(as_of="0.4.0-dev", until="0.5.1",
+    @deprecated(as_of="0.4.1", until="0.5.1",
                 reason="Use `copy.copy(seq)` instead of "
                        "`seq.copy(deep=False)`, and `copy.deepcopy(seq)` "
                        "instead of `seq.copy(deep=True)`.")
     def copy(self, deep=False):
-        """Return a copy of the biological sequence.
+        """Return a copy of this sequence.
 
         Parameters
         ----------
@@ -1154,7 +1156,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         Sequence
-            Copy of the biological sequence.
+            Copy of this sequence.
 
         Notes
         -----
@@ -1340,7 +1342,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def count(self, subsequence, start=None, end=None):
-        """Count occurrences of a subsequence in the biological sequence.
+        """Count occurrences of a subsequence in this sequence.
 
         Parameters
         ----------
@@ -1354,7 +1356,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         int
-            Number of occurrences of `subsequence` in the biological sequence.
+            Number of occurrences of `subsequence` in this sequence.
 
         Raises
         ------
@@ -1362,7 +1364,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             If `subsequence` is of length 0.
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -1391,7 +1393,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Parameters
         ----------
         subsequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Subsequence to search for in the biological sequence.
+            Subsequence to search for in this sequence.
         start : int, optional
             The position at which to start searching (inclusive).
         end : int, optional
@@ -1400,16 +1402,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         int
-            Position where `subsequence` first occurs in the biological
-            sequence.
+            Position where `subsequence` first occurs in this sequence.
 
         Raises
         ------
         ValueError
-            If `subsequence` is not present in the biological sequence.
+            If `subsequence` is not present in this sequence.
         TypeError
             If `subsequence` is a ``Sequence`` object with a different type
-            than the biological sequence.
+            than this sequence.
 
         Examples
         --------
@@ -1435,15 +1436,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
             Sequence to compute the distance to.
         metric : function, optional
-            Function used to compute the distance between the biological
-            sequence and `other`. If ``None`` (the default),
+            Function used to compute the distance between this sequence and
+            `other`. If ``None`` (the default),
             ``scipy.spatial.distance.hamming`` will be used. This function
             should take two ``skbio.Sequence`` objects and return a ``float``.
 
         Returns
         -------
         float
-            Distance between the biological sequence and `other`.
+            Distance between this sequence and `other`.
 
         Raises
         ------
@@ -1459,8 +1460,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             removed from this method when the ``skbio.sequence.stats`` module
             is created (track progress on issue #913).
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1517,8 +1518,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1559,8 +1560,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1601,8 +1602,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1651,8 +1652,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         ValueError
             If the sequences are not the same length.
         TypeError
-            If `other` is a ``Sequence`` object with a different type than the
-            biological sequence.
+            If `other` is a ``Sequence`` object with a different type than this
+            sequence.
 
         See Also
         --------
@@ -1677,7 +1678,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         else:
             return int(self.mismatches(other).sum())
 
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def frequencies(self, chars=None, relative=False):
         """Compute frequencies of characters in the sequence.
 
@@ -1811,7 +1812,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def iter_kmers(self, k, overlap=True):
-        """Generate kmers of length `k` from the biological sequence.
+        """Generate kmers of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1823,7 +1824,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Yields
         ------
         Sequence
-            kmer of length `k` contained in the biological sequence.
+            kmer of length `k` contained in this sequence.
 
         Raises
         ------
@@ -1872,7 +1873,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
-        """Return counts of words of length `k` from the biological sequence.
+        """Return counts of words of length `k` from this sequence.
 
         Parameters
         ----------
@@ -1887,8 +1888,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         dict
-            Frequencies of words of length `k` contained in the biological
-            sequence.
+            Frequencies of words of length `k` contained in this sequence.
 
         Raises
         ------
@@ -2043,18 +2043,17 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                 yield r
 
     def _to(self, sequence=None, metadata=None, positional_metadata=None):
-        """Return a copy of the current biological sequence.
+        """Return a copy of this sequence.
 
-        Returns a copy of the current biological sequence, optionally with
-        updated attributes specified as keyword arguments.
+        Returns a copy of this sequence, optionally with updated attributes
+        specified as keyword arguments.
 
         Arguments are the same as those passed to the ``Sequence`` constructor.
         The returned copy will have its attributes updated based on the
         arguments. If an attribute is missing, the copy will keep the same
-        attribute as the current biological sequence. Valid attribute names
-        are `'sequence'`, `'metadata'`, and `'positional_metadata'`. Default
-        behavior is to return a copy of the current biological sequence
-        without changing any attributes.
+        attribute as this sequence. Valid attribute names are `'sequence'`,
+        `'metadata'`, and `'positional_metadata'`. Default behavior is to
+        return a copy of this sequence without changing any attributes.
 
         Parameters
         ----------
@@ -2065,9 +2064,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Returns
         -------
         Sequence
-            Copy of the current biological sequence, optionally with updated
-            attributes based on arguments. Will be the same type as the current
-            biological sequence (`self`).
+            Copy of this sequence, optionally with updated attributes based on
+            arguments. Will be the same type as this sequence (`self`).
 
         Notes
         -----
@@ -2077,9 +2075,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         `Sequence.copy`, which will actually copy `sequence`.
 
         This method is the preferred way of creating new instances from an
-        existing biological sequence, instead of calling
-        ``self.__class__(...)``, as the latter can be error-prone (e.g.,
-        it's easy to forget to propagate attributes to the new instance).
+        existing sequence, instead of calling ``self.__class__(...)``, as the
+        latter can be error-prone (e.g., it's easy to forget to propagate
+        attributes to the new instance).
 
         """
         if sequence is None:

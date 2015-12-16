@@ -21,7 +21,7 @@ To install the latest release of scikit-bio::
 
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and its dependencies without having to compile them::
 
-    conda install scikit-bio
+    conda install -c https://conda.anaconda.org/biocore scikit-bio
 
 Finally, most of scikit-bio's dependencies (in particular, the ones that are trickier to build) are also available, albeit only for Python 2, in `Canopy Express <https://www.enthought.com/canopy-express/>`_.
 
