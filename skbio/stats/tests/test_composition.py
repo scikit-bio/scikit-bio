@@ -79,6 +79,14 @@ class CompositionTests(TestCase):
         closure(self.cdata2)
         npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
 
+    def test_closure_warning(self):
+        with self.assertRaises(ValueError):
+            closure([0., 0., 0.])
+
+        with self.assertRaises(ValueError):
+            closure([[0., 0., 0.],
+                     [0., 5., 5.]])
+
     def test_perturb(self):
         pmat = perturb(closure(self.cdata1),
                        closure(np.array([1, 1, 1])))
@@ -213,6 +221,10 @@ class CompositionTests(TestCase):
         # make sure that inplace modification is not occurring
         multiplicative_replacement(self.cdata4)
         npt.assert_allclose(self.cdata4, np.array([1, 2, 3, 0, 5]))
+
+    def multiplicative_replacement_warning(self):
+        with self.assertRaises(ValueError):
+            multiplicative_replacement([0, 1, 2], delta=1)
 
     def test_clr(self):
         cmat = clr(closure(self.cdata1))
