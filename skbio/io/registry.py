@@ -512,9 +512,8 @@ class IORegistry(object):
         with _resolve_file(file, **io_kwargs) as (file, _, _):
             reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
                                                io_kwargs)
-            generator = reader(file, **kwargs)
-            while True:
-                yield next(generator)
+            for item in reader(file, **kwargs):
+                yield item
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
@@ -977,9 +976,8 @@ class Format(object):
                         file_params, file, encoding, newline, kwargs)
                     with open_files(files, mode='r', **io_kwargs) as fhs:
                         kwargs.update(zip(file_keys, fhs[:-1]))
-                        generator = reader_function(fhs[-1], **kwargs)
-                        while True:
-                            yield next(generator)
+                        for item in reader_function(fhs[-1], **kwargs):
+                            yield item
 
             self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader

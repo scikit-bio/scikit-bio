@@ -839,7 +839,10 @@ def _parse_fasta_raw(fh, data_parser, error_type):
 
     """
     # Skip any blank or whitespace-only lines at beginning of file
-    seq_header = next(_line_generator(fh, skip_blanks=True))
+    try:
+        seq_header = next(_line_generator(fh, skip_blanks=True))
+    except StopIteration:
+        return
 
     # header check inlined here and below for performance
     if seq_header.startswith('>'):

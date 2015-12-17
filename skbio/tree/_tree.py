@@ -1176,7 +1176,7 @@ class TreeNode(SkbioObject):
         if not self.children:
             if include_self:
                 yield self
-            raise StopIteration
+            return
         child_index_stack = [0]
         curr = self
         curr_children = self.children

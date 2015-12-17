@@ -61,7 +61,7 @@ class TestSequence(TestCase, ReallyEqualMixin):
             lambda s: np.fromstring(s, dtype=np.uint8)])
 
         def empty_generator():
-            raise StopIteration()
+            return
             yield
 
         self.getitem_empty_indices = [

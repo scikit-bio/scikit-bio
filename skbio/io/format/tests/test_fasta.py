@@ -709,7 +709,7 @@ class WriterTests(TestCase):
         self.msa = TabularMSA(seqs)
 
         def empty_gen():
-            raise StopIteration()
+            return
             yield
 
         def single_seq_gen():

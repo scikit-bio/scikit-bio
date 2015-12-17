@@ -326,7 +326,10 @@ def _fastq_sniffer(fh):
 def _fastq_to_generator(fh, variant=None, phred_offset=None,
                         constructor=Sequence, **kwargs):
     # Skip any blank or whitespace-only lines at beginning of file
-    seq_header = next(_line_generator(fh, skip_blanks=True))
+    try:
+        seq_header = next(_line_generator(fh, skip_blanks=True))
+    except StopIteration:
+        return
 
     if not seq_header.startswith('@'):
         raise FASTQFormatError(
