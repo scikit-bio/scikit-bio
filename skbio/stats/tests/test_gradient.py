@@ -228,7 +228,7 @@ class GradientTests(BaseTests):
                                              's7': np.array([7]),
                                              's8': np.array([8])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 5, 8, 12, 45, 80, 85, 90]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
@@ -242,7 +242,7 @@ class GradientTests(BaseTests):
                                       's8': np.array([20.3428571428])},
                                      orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1]),
                                              's2': np.array([2]),
@@ -253,7 +253,7 @@ class GradientTests(BaseTests):
                                              's7': np.array([7]),
                                              's8': np.array([8])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
@@ -264,7 +264,7 @@ class GradientTests(BaseTests):
                                       },
                                      orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s2': np.array([2]),
                                              's3': np.array([3]),
@@ -272,21 +272,21 @@ class GradientTests(BaseTests):
                                              's5': np.array([5]),
                                              's6': np.array([6])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
                              ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
         exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
                                       's4': np.array([4]), 's5': np.array([5]),
                                       's6': np.array([6])}, orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
-        assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         trajectory = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
                                              's2': np.array([2, 3, 4]),
                                              's3': np.array([5, 6, 7]),
                                              's4': np.array([8, 9, 10])},
                                             orient='index')
-        trajectory.sort(columns=0, inplace=True)
+        trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([1, 2, 3, 4]),
                              ['s1', 's2', 's3', 's4']).astype(np.float64)
         exp = pd.DataFrame.from_dict({'s1': np.array([1, 2, 3]),
@@ -295,7 +295,7 @@ class GradientTests(BaseTests):
                                       's4': np.array([8, 9, 10])},
                                      orient='index').astype(np.float64)
         obs = _weight_by_vector(trajectory, w_vector)
-        assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
         sample_ids = ['PC.356', 'PC.481', 'PC.355', 'PC.593', 'PC.354']
         trajectory = pd.DataFrame.from_dict({'PC.356': np.array([5.65948525,
@@ -334,7 +334,7 @@ class GradientTests(BaseTests):
                                       }, orient='index')
         obs = _weight_by_vector(trajectory.ix[sample_ids],
                                 w_vector[sample_ids])
-        assert_data_frame_almost_equal(obs.sort(axis=0), exp.sort(axis=0))
+        assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
     def test_weight_by_vector_single_element(self):
         trajectory = pd.DataFrame.from_dict({'s1': np.array([42])},
@@ -578,20 +578,20 @@ class GradientANOVATests(BaseTests):
         # Takes a subset from metadata_map
         bv = GradientANOVA(subset_coords, self.prop_expl, self.metadata_map)
         assert_data_frame_almost_equal(
-            bv._coords.sort(axis=0),
-            subset_coords.sort(axis=0))
+            bv._coords.sort_index(),
+            subset_coords.sort_index())
         assert_data_frame_almost_equal(
-            bv._metadata_map.sort(axis=0),
-            subset_metadata_map.sort(axis=0))
+            bv._metadata_map.sort_index(),
+            subset_metadata_map.sort_index())
 
         # Takes a subset from coords
         bv = GradientANOVA(self.coords, self.prop_expl, subset_metadata_map)
         assert_data_frame_almost_equal(
-            bv._coords.sort(axis=0),
-            subset_coords.sort(axis=0))
+            bv._coords.sort_index(),
+            subset_coords.sort_index())
         assert_data_frame_almost_equal(
-            bv._metadata_map.sort(axis=0),
-            subset_metadata_map.sort(axis=0))
+            bv._metadata_map.sort_index(),
+            subset_metadata_map.sort_index())
 
         # Takes a subset from metadata_map and coords at the same time
         coord_data = {
@@ -625,8 +625,8 @@ class GradientANOVATests(BaseTests):
                                  -0.0301637746424])},
             orient='index')
         assert_data_frame_almost_equal(
-            bv._coords.sort(axis=0),
-            exp_coords.sort(axis=0))
+            bv._coords.sort_index(),
+            exp_coords.sort_index())
         exp_metadata_map = pd.DataFrame.from_dict(
             {'PC.355': {'Treatment': 'Control',
                         'DOB': '20061218',
@@ -634,8 +634,8 @@ class GradientANOVATests(BaseTests):
                         'Description': 'Control_mouse_I.D._355'}},
             orient='index')
         assert_data_frame_almost_equal(
-            bv._metadata_map.sort(axis=0),
-            exp_metadata_map.sort(axis=0))
+            bv._metadata_map.sort_index(),
+            exp_metadata_map.sort_index())
 
     def test_normalize_samples_error(self):
         """Raises an error if coords and metadata_map does not have samples in

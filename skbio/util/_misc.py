@@ -38,14 +38,20 @@ def make_sentinel(name):
 
 def find_sentinels(function, sentinel):
     keys = []
-    function_spec = inspect.getargspec(function)
-    if function_spec.defaults is not None:
-        # Concept from http://stackoverflow.com/a/12627202/579416
-        keywords_start = -len(function_spec.defaults)
-        for key, default in zip(function_spec.args[keywords_start:],
-                                function_spec.defaults):
-            if default is sentinel:
-                keys.append(key)
+    if hasattr(inspect, 'signature'):
+        params = inspect.signature(function).parameters
+        for name, param in params.items():
+            if param.default is sentinel:
+                keys.append(name)
+    else:  # Py2
+        function_spec = inspect.getargspec(function)
+        if function_spec.defaults is not None:
+            # Concept from http://stackoverflow.com/a/12627202/579416
+            keywords_start = -len(function_spec.defaults)
+            for key, default in zip(function_spec.args[keywords_start:],
+                                    function_spec.defaults):
+                if default is sentinel:
+                    keys.append(key)
     return keys
 
 

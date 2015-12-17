@@ -9,7 +9,12 @@
 from __future__ import absolute_import, division, print_function
 
 
-class EfficiencyWarning(Warning):
+class SkbioWarning(Warning):
+    """Used to filter our warnings from warnings given by 3rd parties"""
+    pass
+
+
+class EfficiencyWarning(SkbioWarning):
     """Warn about potentially accidental use of inefficient code.
 
     For example, if a user doesn't have an optimized version of a
@@ -22,7 +27,7 @@ class EfficiencyWarning(Warning):
     pass
 
 
-class RepresentationWarning(Warning):
+class RepresentationWarning(SkbioWarning):
     """Warn about assumptions made for the successful completion of a process.
 
     Warn about substitutions, assumptions, or particular alterations that were
@@ -31,4 +36,9 @@ class RepresentationWarning(Warning):
     deleterious value could be used, accompanied by this warning.
 
     """
+    pass
+
+
+class DeprecationWarning(DeprecationWarning, SkbioWarning):
+    """Used to indicate deprecated functionality in scikit-bio."""
     pass
