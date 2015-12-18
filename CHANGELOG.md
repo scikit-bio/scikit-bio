@@ -2,6 +2,20 @@
 
 ## Version 0.4.1-dev (changes since 0.4.1 go here)
 
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Bug fixes
+* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen.
+
+### Deprecated functionality [stable]
+
+### Miscellaneous
+* Warnings raised by scikit-bio now share a common subclass ``skbio.util.SkbioWarning``.
+
 ## Version 0.4.1 (2015-12-09)
 
 ### Features
@@ -139,8 +153,6 @@ The APIs of these subpackages are now stable, and all others are experimental. S
 * The speed of `NucleotideSequence.reverse_complement` has been improved (~6x).
 
 ### Bug fixes
-* Changed `skbio.stats.composition.multiplicative_replacement` to raise an
-	error whenever a large value of `delta` is chosen.
 * Changed `Sequence.distance` to raise an error any time two sequences are passed of different lengths regardless of the `distance_fn` being passed. [(#514)](https://github.com/biocore/scikit-bio/issues/514)
 * Fixed issue with ``TreeNode.extend`` where if given the children of another ``TreeNode`` object (``tree.children``), both trees would be left in an incorrect and unpredictable state. ([#889](https://github.com/biocore/scikit-bio/issues/889))
 * Changed the way power was calculated in `subsample_paired_power` to move the subsample selection before the test is performed. This increases the number of Monte Carlo simulations performed during power estimation, and improves the accuracy of the returned estimate. Previous power estimates from `subsample_paired_power` should be disregarded and re-calculated. ([#910](https://github.com/biocore/scikit-bio/issues/910))
