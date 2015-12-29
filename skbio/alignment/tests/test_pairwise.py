@@ -24,7 +24,7 @@ from skbio.alignment._pairwise import (
     _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _compute_substitution_score)
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 
 
