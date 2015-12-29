@@ -2115,6 +2115,11 @@ class TestGapFrequencies(unittest.TestCase):
 
             @classproperty
             @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '0'
+
+            @classproperty
+            @overrides(GrammaredSequence)
             def nondegenerate_chars(cls):
                 return set('')
 
@@ -2135,6 +2140,11 @@ class TestGapFrequencies(unittest.TestCase):
             @overrides(GrammaredSequence)
             def gap_chars(cls):
                 return set('#$*')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '#'
 
             @classproperty
             @overrides(GrammaredSequence)
