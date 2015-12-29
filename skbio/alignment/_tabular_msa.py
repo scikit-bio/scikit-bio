@@ -15,12 +15,14 @@ from future.builtins import range
 from future.utils import viewkeys, viewvalues
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
 from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
+from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
@@ -131,7 +133,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     default_write_format = 'fasta'
 
     @property
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def dtype(self):
         """Data type of the stored sequences.
 
@@ -149,10 +151,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         True
 
         """
-        return type(self._get_sequence(0)) if len(self) > 0 else None
+        return type(self._get_sequence_iloc_(0)) if len(self) > 0 else None
 
     @property
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def shape(self):
         """Number of sequences (rows) and positions (columns).
 
@@ -187,14 +189,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         sequence_count = len(self)
 
         if sequence_count > 0:
-            position_count = len(self._get_sequence(0))
+            position_count = len(self._get_sequence_iloc_(0))
         else:
             position_count = 0
 
         return _Shape(sequence=sequence_count, position=position_count)
 
     @property
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def index(self):
         """Index containing labels along the sequence axis.
 
@@ -244,14 +246,467 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     @index.setter
     def index(self, index):
-        self._seqs.index = index
+        # Cast to Index to identify tuples as a MultiIndex to match
+        # pandas constructor. Just setting would make an index of tuples.
+        if not isinstance(index, pd.Index):
+            self._seqs.index = pd.Index(index)
+        else:
+            self._seqs.index = index
 
     @index.deleter
     def index(self):
         self.reassign_index()
 
+    @property
+    @experimental(as_of="0.4.1")
+    def loc(self):
+        """Slice the MSA on first axis by index label, second axis by position.
+
+        This will return an object with the following interface:
+
+        .. code-block:: python
+
+           msa.loc[seq_idx]
+           msa.loc[seq_idx, pos_idx]
+           msa.loc(axis='sequence')[seq_idx]
+           msa.loc(axis='position')[pos_idx]
+
+        Parameters
+        ----------
+        seq_idx : label, slice, 1D array_like (bool or label)
+            Slice the first axis of the MSA. When this value is a scalar, a
+            sequence of ``msa.dtype`` will be returned. This may be further
+            sliced by `pos_idx`.
+        pos_idx : (same as seq_idx), optional
+            Slice the second axis of the MSA. When this value is a scalar, a
+            sequence of type :class:`skbio.sequence.Sequence` will be returned.
+            This represents a column of the MSA and may have been additionally
+            sliced by `seq_idx`.
+        axis : {'sequence', 'position', 0, 1, None}, optional
+            Limit the axis to slice on. When set, a tuple as the argument will
+            no longer be split into `seq_idx` and `pos_idx`.
+
+        Returns
+        -------
+        TabularMSA, IUPACSequence, Sequence
+            A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
+            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
+            when `seq_idx` is a scalar (this object will match the dtype of the
+            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
+            `pos_idx` is scalar.
+
+        See Also
+        --------
+        iloc
+        __getitem__
+
+        Notes
+        -----
+        If the slice operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will be unset.
+
+        When the MSA's index is a ``pd.MultiIndex`` a tuple may be given to
+        `seq_idx` to indicate the slicing operations to perform on each
+        component index.
+
+        Examples
+        --------
+        First we need to set up an MSA to slice:
+
+        >>> from skbio import TabularMSA, DNA
+        >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
+        ...                   DNA("ACGA")], index=['a', 'b', 'c', 'd'])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 4
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+        ACGA
+        >>> msa.index
+        Index(['a', 'b', 'c', 'd'], dtype='object')
+
+
+        When we slice by a scalar we get the original sequence back out of the
+        MSA:
+
+        >>> msa.loc['b']
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 A-GT
+
+        Similarly when we slice the second axis by a scalar we get a column of
+        the MSA:
+
+        >>> msa.loc[..., 1]
+        Sequence
+        -------------
+        Stats:
+            length: 4
+        -------------
+        0 C-CC
+
+        Note: we return an ``skbio.Sequence`` object because the column of an
+        alignment has no biological meaning and many operations defined for the
+        MSA's sequence `dtype` would be meaningless.
+
+        When we slice both axes by a scalar, operations are applied left to
+        right:
+
+        >>> msa.loc['a', 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        In other words, it exactly matches slicing the resulting sequence
+        object directly:
+
+        >>> msa.loc['a'][0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        When our slice is non-scalar we get back an MSA of the same `dtype`:
+
+        >>> msa.loc[['a', 'c']]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AC-T
+
+        We can similarly slice out a column of that:
+
+        >>> msa.loc[['a', 'c'], 2]
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 G-
+
+        Slice syntax works as well:
+
+        >>> msa.loc[:'c']
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+
+        Notice how the end label is included in the results. This is different
+        from how positional slices behave:
+
+        >>> msa.loc[[True, False, False, True], 2:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 1
+        ---------------------
+        G
+        G
+
+        Here we sliced the first axis by a boolean vector, but then restricted
+        the columns to a single column. Because the second axis was given a
+        nonscalar we still recieve an MSA even though only one column is
+        present.
+
+        Duplicate labels can be an unfortunate reality in the real world,
+        however `loc` is capable of handling this:
+
+        >>> msa.index = ['a', 'a', 'b', 'c']
+
+        Notice how the label 'a' happens twice. If we were to access 'a' we get
+        back an MSA with both sequences:
+
+        >>> msa.loc['a']
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+
+        Remember that `iloc` can always be used to differentiate sequences with
+        duplicate labels.
+
+        More advanced slicing patterns are possible with different index types.
+
+        Let's use a `pd.MultiIndex`:
+
+        >>> msa.index = [('a', 0), ('a', 1), ('b', 0), ('b', 1)]
+
+        Here we will explicitly set the axis that we are slicing by to make
+        things easier to read:
+
+        >>> msa.loc(axis='sequence')['a', 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 50.00%
+        -----------------------------
+        0 ACGT
+
+        This selected the first sequence because the complete label was
+        provided. In other words `('a', 0)` was treated as a scalar for this
+        index.
+
+        We can also slice along the component indices of the multi-index:
+
+        >>> msa.loc(axis='sequence')[:, 1]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        A-GT
+        ACGA
+
+        If we were to do that again without the `axis` argument, it would look
+        like this:
+
+        >>> msa.loc[(slice(None), 1), ...]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        A-GT
+        ACGA
+
+        Notice how we needed to specify the second axis. If we had left that
+        out we would have simply gotten the 2nd column back instead. We also
+        lost the syntactic sugar for slice objects. These are a few of the
+        reasons specifying the `axis` preemptively can be useful.
+
+        """
+        return self._loc
+
+    @property
+    @experimental(as_of="0.4.1")
+    def iloc(self):
+        """Slice the MSA on either axis by index position.
+
+        This will return an object with the following interface:
+
+        .. code-block:: python
+
+           msa.iloc[seq_idx]
+           msa.iloc[seq_idx, pos_idx]
+           msa.iloc(axis='sequence')[seq_idx]
+           msa.iloc(axis='position')[pos_idx]
+
+        Parameters
+        ----------
+        seq_idx : int, slice, iterable (int and slice), 1D array_like (bool)
+            Slice the first axis of the MSA. When this value is a scalar, a
+            sequence of ``msa.dtype`` will be returned. This may be further
+            sliced by `pos_idx`.
+        pos_idx : (same as seq_idx), optional
+            Slice the second axis of the MSA. When this value is a scalar, a
+            sequence of type :class:`skbio.sequence.Sequence` will be returned.
+            This represents a column of the MSA and may have been additionally
+            sliced by `seq_idx`.
+        axis : {'sequence', 'position', 0, 1, None}, optional
+            Limit the axis to slice on. When set, a tuple as the argument will
+            no longer be split into `seq_idx` and `pos_idx`.
+
+        Returns
+        -------
+        TabularMSA, IUPACSequence, Sequence
+            A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
+            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
+            when `seq_idx` is a scalar (this object will match the dtype of the
+            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
+            `pos_idx` is scalar.
+
+        See Also
+        --------
+        __getitem__
+        loc
+
+        Notes
+        -----
+        If the slice operation results in a ``TabularMSA`` without any
+        sequences, the MSA's ``positional_metadata`` will be unset.
+
+        Examples
+        --------
+        First we need to set up an MSA to slice:
+
+        >>> from skbio import TabularMSA, DNA
+        >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
+        ...                   DNA("ACGA")])
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 4
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+        ACGA
+
+        When we slice by a scalar we get the original sequence back out of the
+        MSA:
+
+        >>> msa.iloc[1]
+        DNA
+        -----------------------------
+        Stats:
+            length: 4
+            has gaps: True
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 33.33%
+        -----------------------------
+        0 A-GT
+
+        Similarly when we slice the second axis by a scalar we get a column of
+        the MSA:
+
+        >>> msa.iloc[..., 1]
+        Sequence
+        -------------
+        Stats:
+            length: 4
+        -------------
+        0 C-CC
+
+        Note: we return an ``skbio.Sequence`` object because the column of an
+        alignment has no biological meaning and many operations defined for the
+        MSA's sequence `dtype` would be meaningless.
+
+        When we slice both axes by a scalar, operations are applied left to
+        right:
+
+        >>> msa.iloc[0, 0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        In other words, it exactly matches slicing the resulting sequence
+        object directly:
+
+        >>> msa.iloc[0][0]
+        DNA
+        -----------------------------
+        Stats:
+            length: 1
+            has gaps: False
+            has degenerates: False
+            has non-degenerates: True
+            GC-content: 0.00%
+        -----------------------------
+        0 A
+
+        When our slice is non-scalar we get back an MSA of the same `dtype`:
+
+        >>> msa.iloc[[0, 2]]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 4
+        ---------------------
+        ACGT
+        AC-T
+
+        We can similarly slice out a column of that:
+
+        >>> msa.iloc[[0, 2], 2]
+        Sequence
+        -------------
+        Stats:
+            length: 2
+        -------------
+        0 G-
+
+        Slice syntax works as well:
+
+        >>> msa.iloc[:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        A-GT
+        AC-T
+
+        We can also use boolean vectors:
+
+        >>> msa.iloc[[True, False, False, True], 2:3]
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 2
+            position count: 1
+        ---------------------
+        G
+        G
+
+        Here we sliced the first axis by a boolean vector, but then restricted
+        the columns to a single column. Because the second axis was given a
+        nonscalar we still recieve an MSA even though only one column is
+        present.
+
+        """
+        return self._iloc
+
     @classonlymethod
-    @experimental(as_of="0.4.0-dev")
+    @experimental(as_of="0.4.1")
     def from_dict(cls, dictionary):
         """Create a ``TabularMSA`` from a ``dict``.
 
@@ -298,7 +753,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         #         dictionary-view-objects
         return cls(viewvalues(dictionary), index=viewkeys(dictionary))
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
         if isinstance(sequences, TabularMSA):
@@ -317,7 +772,45 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
 
-    @experimental(as_of='0.4.0-dev')
+        # Set up our indexers
+        self._loc = TabularMSALoc(self)
+        self._iloc = TabularMSAILoc(self)
+
+    def _constructor_(self, sequences=NotImplemented, metadata=NotImplemented,
+                      positional_metadata=NotImplemented,
+                      index=NotImplemented):
+        """Return new copy of the MSA with overridden properties.
+
+        NotImplemented is used as a sentinel so that None may be used to
+        override values.
+        """
+        if metadata is NotImplemented:
+            if self.has_metadata():
+                metadata = self.metadata
+            else:
+                metadata = None
+        if positional_metadata is NotImplemented:
+            if self.has_positional_metadata():
+                positional_metadata = self.positional_metadata
+            else:
+                positional_metadata = None
+
+        if index is NotImplemented:
+            if isinstance(sequences, pd.Series):
+                index = sequences.index
+            else:
+                index = self.index
+
+        if sequences is NotImplemented:
+            sequences = self._seqs
+
+        sequences = [copy.copy(s) for s in sequences]
+
+        return self.__class__(sequences, metadata=metadata,
+                              positional_metadata=positional_metadata,
+                              index=index)
+
+    @experimental(as_of='0.4.1')
     def __repr__(self):
         """String summary of this MSA."""
         pep8_line_length_limit = 79
@@ -332,7 +825,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return [("sequence count", str(self.shape.sequence)),
                 ("position count", str(self.shape.position))]
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __bool__(self):
         """Boolean indicating whether the MSA is empty or not.
 
@@ -371,7 +864,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     # Python 2 compatibility.
     __nonzero__ = __bool__
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __contains__(self, label):
         """Determine if an index label is in this MSA.
 
@@ -399,7 +892,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return label in self.index
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __len__(self):
         """Number of sequences in the MSA.
 
@@ -425,7 +918,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return len(self._seqs)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __iter__(self):
         """Iterate over sequences in the MSA.
 
@@ -446,7 +939,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return iter(self._seqs)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __reversed__(self):
         """Iterate in reverse order over sequences in the MSA.
 
@@ -467,12 +960,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return reversed(self._seqs)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __str__(self):
         """String summary of this MSA."""
         return self.__repr__()
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __eq__(self, other):
         """Determine if this MSA is equal to another.
 
@@ -541,7 +1034,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return self._seqs.equals(other._seqs)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __ne__(self, other):
         """Determine if this MSA is not equal to another.
 
@@ -565,7 +1058,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return not (self == other)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __copy__(self):
         """Return a shallow copy of this MSA.
 
@@ -590,19 +1083,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         False
 
         """
-        seqs = (copy.copy(seq) for seq in self._seqs)
-
-        # Copying index isn't necessary because pd.Index is immutable.
-        msa_copy = self.__class__(sequences=seqs, index=self.index,
-                                  metadata=None,
-                                  positional_metadata=None)
+        msa_copy = self._constructor_()
 
         msa_copy._metadata = MetadataMixin._copy_(self)
         msa_copy._positional_metadata = PositionalMetadataMixin._copy_(self)
 
         return msa_copy
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def __deepcopy__(self, memo):
         """Return a deep copy of this MSA.
 
@@ -628,10 +1116,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         seqs = (copy.deepcopy(seq, memo) for seq in self._seqs)
-
-        # Copying index isn't necessary because pd.Index is immutable.
-        msa_copy = self.__class__(sequences=seqs, index=self.index,
-                                  metadata=None, positional_metadata=None)
+        msa_copy = self._constructor_(sequences=seqs)
 
         msa_copy._metadata = MetadataMixin._deepcopy_(self, memo)
         msa_copy._positional_metadata = \
@@ -639,7 +1124,79 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return msa_copy
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of="0.4.1")
+    def __getitem__(self, indexable):
+        """Slice the MSA on either axis.
+
+        This is a pass-through for :func:`skbio.alignment.TabularMSA.iloc`.
+        Please refer to the associated documentation.
+
+        See Also
+        --------
+        iloc
+        loc
+
+        Notes
+        -----
+        Axis restriction is not possible for this method.
+
+        To slice by labels, use ``loc``.
+
+        """
+        return self.iloc[indexable]
+
+    # Helpers for TabularMSAILoc and TabularMSALoc
+    def _get_sequence_iloc_(self, i):
+        return self._seqs.iloc[i]
+
+    def _slice_sequences_iloc_(self, i):
+        new_seqs = self._seqs.iloc[i]
+        # TODO: change for #1198
+        if len(new_seqs) == 0:
+            return self._constructor_(new_seqs, positional_metadata=None)
+        return self._constructor_(new_seqs)
+
+    def _get_sequence_loc_(self, l):
+        new_seqs = self._seqs.loc[l]
+        if type(new_seqs) is self.dtype:
+            return new_seqs
+        else:
+            # Thanks CategoricalIndex, you understand no such thing as a scalar
+            if len(new_seqs) == 1:
+                return new_seqs.iloc[0]
+            else:
+                # This was a common failure mode; shouldn't happen anymore, but
+                # it could strike again.
+                raise AssertionError(
+                    "Something went wrong with the index %r provided to"
+                    " `_get_sequence_loc_`, please report this stack trace to"
+                    "\nhttps://github.com/biocore/scikit-bio/issues" % l)
+
+    def _slice_sequences_loc_(self, l):
+        new_seqs = self._seqs.loc[l]
+        try:
+            # TODO: change for #1198
+            if len(new_seqs) == 0:
+                return self._constructor_(new_seqs, positional_metadata=None)
+            return self._constructor_(new_seqs)
+        except TypeError:  # NaN hit the constructor, key was bad... probably
+            raise KeyError("Part of `%r` was not in the index.")
+
+    def _get_position_(self, i):
+        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
+        if self.has_positional_metadata():
+            seq.metadata = dict(self.positional_metadata.iloc[i])
+        return seq
+
+    def _slice_positions_(self, i):
+        seqs = self._seqs.apply(lambda seq: seq[i])
+        pm = None
+        if self.has_positional_metadata():
+            pm = self.positional_metadata.iloc[i]
+        return self._constructor_(seqs, positional_metadata=pm)
+    # end of helpers
+
+    @experimental(as_of='0.4.1')
     def iter_positions(self, reverse=False):
         """Iterate over positions (columns) in the MSA.
 
@@ -756,9 +1313,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
-        return (self._get_position(index) for index in indices)
+        return (self._get_position_(index) for index in indices)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def consensus(self):
         """Compute the majority consensus sequence for this MSA.
 
@@ -837,7 +1394,159 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return dtype(''.join(consensus),
                      positional_metadata=positional_metadata)
 
-    @experimental(as_of='0.4.0-dev')
+    def _build_inverse_shannon_uncertainty_f(self, include_gaps):
+        base = len(self.dtype.nondegenerate_chars)
+        if include_gaps:
+            # Increment the base by one to reflect the possible inclusion of
+            # the default gap character.
+            base += 1
+
+        def f(p):
+            freqs = list(p.kmer_frequencies(k=1).values())
+            return 1. - scipy.stats.entropy(freqs, base=base)
+        return f
+
+    @experimental(as_of='0.4.1')
+    def conservation(self, metric='inverse_shannon_uncertainty',
+                     degenerate_mode='error', gap_mode='nan'):
+        """Apply metric to compute conservation for all alignment positions
+
+        Parameters
+        ----------
+        metric : {'inverse_shannon_uncertainty'}, optional
+            Metric that should be applied for computing conservation. Resulting
+            values should be larger when a position is more conserved.
+        degenerate_mode : {'nan', 'error'}, optional
+            Mode for handling positions with degenerate characters. If
+            ``"nan"``, positions with degenerate characters will be assigned a
+            conservation score of ``np.nan``. If ``"error"``, an
+            error will be raised if one or more degenerate characters are
+            present.
+        gap_mode : {'nan', 'ignore', 'error', 'include'}, optional
+            Mode for handling positions with gap characters. If ``"nan"``,
+            positions with gaps will be assigned a conservation score of
+            ``np.nan``. If ``"ignore"``, positions with gaps will be filtered
+            to remove gaps before ``metric`` is applied. If ``"error"``, an
+            error will be raised if one or more gap characters are present. If
+            ``"include"``, conservation will be computed on alignment positions
+            with gaps included. In this case, it is up to the metric to ensure
+            that gaps are handled as they should be or to raise an error if
+            gaps are not supported by that metric.
+
+        Returns
+        -------
+        np.array of floats
+            Values resulting from the application of ``metric`` to each
+            position in the alignment.
+
+        Raises
+        ------
+        ValueError
+            If an unknown ``metric``, ``degenerate_mode`` or ``gap_mode`` is
+            provided.
+        ValueError
+            If any degenerate characters are present in the alignment when
+            ``degenerate_mode`` is ``"error"``.
+        ValueError
+            If any gaps are present in the alignment when ``gap_mode`` is
+            ``"error"``.
+
+        Notes
+        -----
+        Users should be careful interpreting results when
+        ``gap_mode = "include"`` as the results may be misleading. For example,
+        as pointed out in [1]_, a protein alignment position composed of 90%
+        gaps and 10% tryptophans would score as more highly conserved than a
+        position composed of alanine and glycine in equal frequencies with the
+        ``"inverse_shannon_uncertainty"`` metric.
+
+        ``gap_mode = "include"`` will result in all gap characters being
+        recoded to ``Alignment.dtype.default_gap_char``. Because no
+        conservation metrics that we are aware of consider different gap
+        characters differently (e.g., none of the metrics described in [1]_),
+        they are all treated the same within this method.
+
+        The ``inverse_shannon_uncertainty`` metric is simiply one minus
+        Shannon's uncertainty metric. This method uses the inverse of Shannon's
+        uncertainty so that larger values imply higher conservation. Shannon's
+        uncertainty is also referred to as Shannon's entropy, but when making
+        computations from symbols, as is done here, "uncertainty" is the
+        preferred term ([2]_).
+
+        References
+        ----------
+        .. [1] Valdar WS. Scoring residue conservation. Proteins. (2002)
+        .. [2] Schneider T. Pitfalls in information theory (website, ca. 2015).
+           https://schneider.ncifcrf.gov/glossary.html#Shannon_entropy
+
+        """
+
+        if gap_mode not in {'nan', 'error', 'include', 'ignore'}:
+            raise ValueError("Unknown gap_mode provided: %s" % gap_mode)
+
+        if degenerate_mode not in {'nan', 'error'}:
+            raise ValueError("Unknown degenerate_mode provided: %s" %
+                             degenerate_mode)
+
+        if metric not in {'inverse_shannon_uncertainty'}:
+            raise ValueError("Unknown metric provided: %s" %
+                             metric)
+
+        if self.shape[0] == 0:
+            # handle empty alignment to avoid error on lookup of character sets
+            return np.array([])
+
+        # Since the only currently allowed metric is
+        # inverse_shannon_uncertainty, and we already know that a valid metric
+        # was provided, we just define metric_f here. When additional metrics
+        # are supported, this will be handled differently (e.g., via a lookup
+        # or if/elif/else).
+        metric_f = self._build_inverse_shannon_uncertainty_f(
+                        gap_mode == 'include')
+
+        result = []
+        for p in self.iter_positions():
+            cons = None
+            # cast p to self.dtype for access to gap/degenerate related
+            # functionality
+            pos_seq = self.dtype(p)
+
+            # handle degenerate characters if present
+            if pos_seq.has_degenerates():
+                if degenerate_mode == 'nan':
+                    cons = np.nan
+                else:  # degenerate_mode == 'error' is the only choice left
+                    degenerate_chars = pos_seq[pos_seq.degenerates()]
+                    raise ValueError("Conservation is undefined for positions "
+                                     "with degenerate characters. The "
+                                     "following degenerate characters were "
+                                     "observed: %s." % degenerate_chars)
+
+            # handle gap characters if present
+            if pos_seq.has_gaps():
+                if gap_mode == 'nan':
+                    cons = np.nan
+                elif gap_mode == 'error':
+                    raise ValueError("Gap characters present in alignment.")
+                elif gap_mode == 'ignore':
+                    pos_seq = pos_seq.degap()
+                else:  # gap_mode == 'include' is the only choice left
+                    # Recode all gap characters with pos_seq.default_gap_char.
+                    # This logic should be replaced with a call to
+                    # pos_seq.replace when it exists.
+                    # https://github.com/biocore/scikit-bio/issues/1222
+                    with pos_seq._byte_ownership():
+                        pos_seq._bytes[pos_seq.gaps()] = \
+                            ord(pos_seq.default_gap_char)
+
+            if cons is None:
+                cons = metric_f(pos_seq)
+
+            result.append(cons)
+
+        return np.array(result)
+
+    @experimental(as_of='0.4.1')
     def gap_frequencies(self, axis='sequence', relative=False):
         """Compute frequency of gap characters across an axis.
 
@@ -921,7 +1630,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         return gap_freqs
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def reassign_index(self, mapping=None, minter=None):
         """Reassign index labels to sequences in this MSA.
 
@@ -995,7 +1704,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         else:
             self._seqs.reset_index(drop=True, inplace=True)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def append(self, sequence, minter=None, index=None):
         """Append a sequence to the MSA without recomputing alignment.
 
@@ -1077,7 +1786,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             index = [index]
         self.extend([sequence], minter=minter, index=index)
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def extend(self, sequences, minter=None, index=None):
         """Extend this MSA with sequences without recomputing alignment.
 
@@ -1510,8 +2219,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     def _get_sequence_for_join(self, label):
         if label in self.index:
-            # TODO: use .loc when it is implemented.
-            return self._get_sequence(self.index.get_loc(label))
+            return self.loc[label]
         else:
             return self.dtype(
                 self.dtype.default_gap_char * self.shape.position)
@@ -1583,7 +2291,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         series = self._seqs.sort_index(ascending=ascending, level=level)
         self._seqs = series
 
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def to_dict(self):
         """Create a ``dict`` from this ``TabularMSA``.
 
@@ -1619,15 +2327,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         else:
             raise ValueError("Cannot convert to dict. Index labels are not"
                              " unique.")
-
-    def _get_sequence(self, i):
-        return self._seqs.iloc[i]
-
-    def _get_position(self, i):
-        seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
-        if self.has_positional_metadata():
-            seq.metadata = dict(self.positional_metadata.iloc[i])
-        return seq
 
     def _is_sequence_axis(self, axis):
         if axis == 'sequence' or axis == 0:

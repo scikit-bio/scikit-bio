@@ -124,6 +124,15 @@ def closure(mat):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
+    Raises
+    ------
+    ValueError
+       Raises an error if any values are negative.
+    ValueError
+       Raises an error if the matrix has more than 2 dimension.
+    ValueError
+       Raises an error if there is a row that has all zeros.
+
     Examples
     --------
     >>> import numpy as np
@@ -139,6 +148,8 @@ def closure(mat):
         raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
+    if np.all(mat == 0, axis=1).sum() > 0:
+        raise ValueError("Input matrix cannot have rows with all zeros")
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
@@ -170,6 +181,16 @@ def multiplicative_replacement(mat, delta=None):
        A matrix of proportions where all of the values
        are nonzero and each composition (row) adds up to 1
 
+    Raises
+    ------
+    ValueError
+       Raises an error if negative proportions are created due to a large
+       `delta`.
+
+    Notes
+    -----
+    This method will result in negative proportions if a large delta is chosen.
+
     References
     ----------
     .. [1] J. A. Martin-Fernandez. "Dealing With Zeros and Missing Values in
@@ -196,6 +217,9 @@ def multiplicative_replacement(mat, delta=None):
         delta = (1. / num_feats)**2
 
     zcnts = 1 - tot * delta
+    if np.any(zcnts) < 0:
+        raise ValueError('The multiplicative replacment created negative '
+                         'proportions. Consider using a smaller `delta`.')
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
 
@@ -615,7 +639,7 @@ def centralize(mat):
     return perturb_inv(mat, cen)
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def ancom(table, grouping,
           alpha=0.05,
           tau=0.02,

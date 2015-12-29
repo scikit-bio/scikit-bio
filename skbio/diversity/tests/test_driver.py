@@ -13,6 +13,7 @@ from unittest import TestCase, main
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import six
 
 from skbio import DistanceMatrix, TreeNode
 from skbio.io._fileobject import StringIO
@@ -279,39 +280,44 @@ class BetaDiversityTests(TestCase):
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        self.assertRaises(ValueError, beta_diversity, self.table1, list('AB'),
-                          'euclidean')
+        error_msg = ("Number of rows")
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity(self.table1, list('AB'), 'euclidean')
 
         # unknown metric provided
-        self.assertRaises(ValueError, beta_diversity, 'not-a-metric',
-                          self.table1)
+        error_msg = "not-a-metric"
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('not-a-metric', self.table1)
 
         # 3-D list provided as input
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[[43]]])
+        error_msg = ("Only 1-D and 2-D")
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[[43]]])
 
         # negative counts
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, 4], [0, 3, -12, 42]])
-        self.assertRaises(ValueError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, -4], [0, 3, 12, 42]])
+        error_msg = "negative values."
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3, 4], [0, 3, -12, 42]])
+        with six.assertRaisesRegex(self, ValueError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3, -4], [0, 3, 12, 42]])
 
         # additional kwargs
-        self.assertRaises(TypeError, beta_diversity, 'euclidean',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
-                          not_a_real_kwarg=42.0)
-        self.assertRaises(TypeError, beta_diversity, 'unweighted_unifrac',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
-        self.assertRaises(TypeError, beta_diversity, 'weighted_unifrac',
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
-        self.assertRaises(TypeError, beta_diversity, weighted_unifrac,
-                          [[0, 1, 3, 4], [0, 3, 12, 42]],
-                          not_a_real_kwarg=42.0, tree=self.tree1,
-                          otu_ids=['OTU1', 'OTU2', 'OTU3', 'OTU4'])
+        error_msg = ("'not_a_real_kwarg'")
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('euclidean', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0)
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('unweighted_unifrac', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity('weighted_unifrac', [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
+        with six.assertRaisesRegex(self, TypeError, error_msg):
+            beta_diversity(weighted_unifrac, [[0, 1, 3], [0, 3, 12]],
+                           not_a_real_kwarg=42.0, tree=self.tree1,
+                           otu_ids=['O1', 'O2', 'O3'])
 
     def test_invalid_input_phylogenetic(self):
         # otu_ids not provided
@@ -569,6 +575,33 @@ class BetaDiversityTests(TestCase):
             for id2 in self.sids1:
                 if id1 != id2:
                     self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
+
+    def test_alt_pairwise_func(self):
+        # confirm that pairwise_func is actually being used
+        def not_a_real_pdist(counts, metric):
+            return [[0.0, 42.0], [42.0, 0.0]]
+        dm1 = beta_diversity('unweighted_unifrac', self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pairwise_func=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity('weighted_unifrac', self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pairwise_func=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity(unweighted_unifrac, self.table1,
+                             otu_ids=self.oids1, tree=self.tree1,
+                             pairwise_func=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
+
+        dm1 = beta_diversity("euclidean", self.table1,
+                             pairwise_func=not_a_real_pdist)
+        expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
+        self.assertEqual(dm1, expected)
 
 
 class MetricGetters(TestCase):

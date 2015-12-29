@@ -230,7 +230,7 @@ class GrammaredSequence(Sequence):
         return set('-.')
 
     @classproperty
-    @experimental(as_of='0.4.0-dev')
+    @experimental(as_of='0.4.1')
     def default_gap_char(cls):
         """Gap character to use when constructing a new gapped sequence.
 
@@ -599,7 +599,7 @@ class GrammaredSequence(Sequence):
         return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
                 result)
 
-    @stable(as_of='0.4.0-dev')
+    @stable(as_of='0.4.1')
     def to_regex(self):
         """Return regular expression object that accounts for degenerate chars.
 

@@ -18,7 +18,7 @@ def _faith_pd(counts_by_node, branch_lengths):
     return (branch_lengths * (counts_by_node > 0)).sum()
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def faith_pd(counts, otu_ids, tree, validate=True):
     """ Compute Faith's phylogenetic diversity metric (PD)
 

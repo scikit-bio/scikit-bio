@@ -138,7 +138,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
     def _motifs(self):
         return _motifs
 
-    @stable(as_of="0.4.0-dev")
+    @stable(as_of="0.4.1")
     def reverse_transcribe(self):
         """Reverse transcribe RNA into DNA.
 

@@ -633,6 +633,39 @@ class TreeTests(TestCase):
         self.assertEqual(tip_a[0] + tip_b[0], 1.6)
         self.assertEqual(sorted([tip_a[1].name, tip_b[1].name]), ['b', 'e'])
 
+    def test_set_max_distance_tie_bug(self):
+        """Corresponds to #1077"""
+        s = StringIO("((a:1,b:1)c:2,(d:3,e:4)f:5)root;")
+        t = TreeNode.read(s)
+
+        exp = ((3.0, t.find('a')), (9.0, t.find('e')))
+
+        # the above tree would trigger an exception in max. The central issue
+        # was that the data being passed to max were a tuple of tuple:
+        # ((left_d, left_n), (right_d, right_n))
+        # the call to max would break in this scenario as it would fall onto
+        # idx 1 of each tuple to assess the "max".
+        t._set_max_distance()
+
+        self.assertEqual(t.MaxDistTips, exp)
+
+    def test_set_max_distance_inplace_modification_bug(self):
+        """Corresponds to #1223"""
+        s = StringIO("((a:1,b:1)c:2,(d:3,e:4)f:5)root;")
+        t = TreeNode.read(s)
+
+        exp = [((0.0, t.find('a')), (0.0, t.find('a'))),
+               ((0.0, t.find('b')), (0.0, t.find('b'))),
+               ((1.0, t.find('a')), (1.0, t.find('b'))),
+               ((0.0, t.find('d')), (0.0, t.find('d'))),
+               ((0.0, t.find('e')), (0.0, t.find('e'))),
+               ((3.0, t.find('d')), (4.0, t.find('e'))),
+               ((3.0, t.find('a')), (9.0, t.find('e')))]
+
+        t._set_max_distance()
+
+        self.assertEqual([n.MaxDistTips for n in t.postorder()], exp)
+
     def test_shear(self):
         """Shear the nodes"""
         t = TreeNode.read(StringIO(u'((H:1,G:1):2,(R:0.5,M:0.7):3);'))
@@ -852,6 +885,18 @@ class TreeTests(TestCase):
         t = TreeNode.read(StringIO(nwk))
         obs = t.root_at_midpoint()
         self.assertEqual(str(obs), nwk)
+
+    def test_root_at_midpoint_tie(self):
+        nwk = u"(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1)root;"
+        t = TreeNode.read(StringIO(nwk))
+        exp = u"((d:3,e:4)f:2,((a:1,b:1)c:2,(g:1)):3)root;"
+        texp = TreeNode.read(StringIO(exp))
+
+        obs = t.root_at_midpoint()
+
+        for o, e in zip(obs.traverse(), texp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
 
     def test_compare_subsets(self):
         """compare_subsets should return the fraction of shared subsets"""

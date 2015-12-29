@@ -12,16 +12,17 @@ from future.utils import PY3
 import copy
 import os
 import inspect
+import warnings
 
 import six
 import pandas as pd
-from nose import core
-from nose.tools import nottest
+import nose
 
 import numpy as np
 import numpy.testing as npt
 import pandas.util.testing as pdt
 
+from skbio.util import SkbioWarning
 from ._decorator import experimental
 
 
@@ -891,7 +892,20 @@ class PositionalMetadataMixinTests(object):
         self.assertTrue(obj.has_positional_metadata())
 
 
-@nottest
+@nose.tools.nottest
+class SuppressSkbioWarnings(nose.plugins.Plugin):
+    def configure(self, options, conf):
+        super(SuppressSkbioWarnings, self).configure(options, conf)
+        self.enabled = True
+
+    def beforeTest(self, test):
+        warnings.simplefilter("ignore", category=SkbioWarning)
+
+    def afterTest(self, test):
+        warnings.resetwarnings()
+
+
+@nose.tools.nottest
 class TestRunner(object):
     """Simple wrapper class around nosetests functionality.
 
@@ -936,7 +950,8 @@ class TestRunner(object):
             argv.extend(['--with-doctest', '--doctest-tests'])
         if verbose:
             argv.append('-v')
-        return core.run(argv=argv, defaultTest=self._test_dir)
+        return nose.core.run(argv=argv, defaultTest=self._test_dir,
+                             addplugins=[SuppressSkbioWarnings()])
 
 
 @experimental(as_of="0.4.0")

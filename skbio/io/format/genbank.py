@@ -37,7 +37,7 @@ Format Support
 
 Format Specification
 --------------------
-**State: Experimental as of 0.4.0-dev.**
+**State: Experimental as of 0.4.1.**
 
 The International Nucleotide Sequence Database Collaboration (INSDC)
 foundational initiative between the DDBJ, EMBL, and GenBank

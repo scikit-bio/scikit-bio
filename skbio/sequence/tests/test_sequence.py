@@ -61,7 +61,7 @@ class TestSequence(TestCase, ReallyEqualMixin):
             lambda s: np.fromstring(s, dtype=np.uint8)])
 
         def empty_generator():
-            raise StopIteration()
+            return
             yield
 
         self.getitem_empty_indices = [
@@ -84,6 +84,11 @@ class TestSequence(TestCase, ReallyEqualMixin):
         result = SequenceSubclass.concat([seq1, seq2])
         self.assertIs(type(result), SequenceSubclass)
         self.assertEqual(result, SequenceSubclass("123123"))
+
+    def test_concat_on_empty_iterator(self):
+        result = SequenceSubclass.concat((_ for _ in []))
+        self.assertIs(type(result), SequenceSubclass)
+        self.assertEqual(result, SequenceSubclass(""))
 
     def test_concat_on_bad_subclass(self):
         seq1 = Sequence("123")

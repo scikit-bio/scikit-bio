@@ -26,7 +26,7 @@ from skbio.diversity._phylogenetic import _tip_distances
 _normalize_weighted_unifrac_by_default = False
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     """ Compute unweighted UniFrac
 
@@ -151,7 +151,7 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
                                tree_index['length'])
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
                      normalized=_normalize_weighted_unifrac_by_default,
                      validate=True):

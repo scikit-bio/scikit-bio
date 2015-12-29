@@ -261,7 +261,7 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     `scipy.stats.chisquare` to look for the difference in frequency between
     groups.
 
-    >>> from scipy.stats import chisquare, nanmean
+    >>> from scipy.stats import chisquare
     >>> test = lambda x: chisquare(np.array([x[i].sum() for i in
     ...     range(len(x))]))[1]
 
@@ -287,10 +287,10 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     ...                                   counts_interval=5)
     >>> counts
     array([ 5, 10, 15, 20, 25, 30, 35, 40, 45])
-    >>> nanmean(pwr_est, 0) # doctest: +NORMALIZE_WHITESPACE
+    >>> np.nanmean(pwr_est, axis=0) # doctest: +NORMALIZE_WHITESPACE
     array([ 0.056,  0.074,  0.226,  0.46 ,  0.61 ,  0.806,  0.952,  1.   ,
             1.   ])
-    >>> counts[nanmean(pwr_est, 0) > 0.8].min()
+    >>> counts[np.nanmean(pwr_est, axis=0) > 0.8].min()
     30
 
     So, we can estimate that we will see a significant difference in the
@@ -338,9 +338,9 @@ def subsample_power(test, samples, draw_mode='ind', alpha_pwr=0.05, ratio=None,
     ...                                     ratio=[2, 1])
     >>> counts2
     array([  5.,  10.,  15.,  20.,  25.,  30.])
-    >>> nanmean(pwr_est2, 0)
+    >>> np.nanmean(pwr_est2, axis=0)
     array([ 0.14 ,  0.272,  0.426,  0.646,  0.824,  0.996])
-    >>> counts2[nanmean(pwr_est2, 0) > 0.8].min()
+    >>> counts2[np.nanmean(pwr_est2, axis=0) > 0.8].min()
     25.0
 
     When we consider the number of samples per group needed in the power
@@ -610,7 +610,9 @@ def confidence_bound(vec, alpha=0.05, df=None, axis=None):
         df = num_counts - 1
 
     # Calculates the bound
-    bound = scipy.stats.nanstd(vec, axis=axis) / np.sqrt(num_counts - 1) * \
+    # In the conversion from scipy.stats.nanstd -> np.nanstd `ddof=1` had to be
+    # added to match the scipy default of `bias=False`.
+    bound = np.nanstd(vec, axis=axis, ddof=1) / np.sqrt(num_counts - 1) * \
         scipy.stats.t.ppf(1 - alpha / 2, df)
 
     return bound

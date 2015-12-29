@@ -59,7 +59,7 @@ def _get_alpha_diversity_metric_map():
         'lladser_ci': skbio.diversity.alpha.lladser_ci}
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def get_alpha_diversity_metrics():
     """ List scikit-bio's alpha diversity metrics
 
@@ -82,7 +82,7 @@ def get_alpha_diversity_metrics():
     return sorted(metrics.keys())
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def get_beta_diversity_metrics():
     """ List scikit-bio's beta diversity metrics
 
@@ -111,7 +111,7 @@ def get_beta_diversity_metrics():
     return sorted(['unweighted_unifrac', 'weighted_unifrac'])
 
 
-@experimental(as_of="0.4.0-dev")
+@experimental(as_of="0.4.1")
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     """ Compute alpha diversity for one or more samples
 
@@ -177,12 +177,14 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     else:
         raise ValueError('Unknown metric provided: %r.' % metric)
 
-    results = [metric(c) for c in counts]
+    # kwargs is provided here so an error is raised on extra kwargs
+    results = [metric(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
 
 @experimental(as_of="0.4.0")
-def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
+def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
+                   **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -199,7 +201,7 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
         (where the type of the identifiers will be ``str``).
-    validate: bool, optional
+    validate : bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
         However, invalid input data can lead to invalid results or error
@@ -207,6 +209,13 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         bypassed if you're not certain that your input data are valid. See
         :mod:`skbio.diversity` for the description of what validation entails
         so you can determine if you can safely disable validation.
+    pairwise_func : callable, optional
+        The function to use for computing pairwise distances. This function
+        must take ``counts`` and ``metric`` and return a square, hollow, 2-D
+        ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
+        that can be provided are ``scipy.spatial.distance.pdist`` and
+        ``sklearn.metrics.pairwise_distances``. By default,
+        ``scipy.spatial.distance.pdist`` will be used.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -229,10 +238,15 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
     skbio.diversity.beta
     skbio.diversity.get_beta_diversity_metrics
     skbio.diversity.alpha_diversity
+    scipy.spatial.distance.pdist
+    sklearn.metrics.pairwise_distances
 
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
+
+    if pairwise_func is None:
+        pairwise_func = scipy.spatial.distance.pdist
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
@@ -259,5 +273,5 @@ def beta_diversity(metric, counts, ids=None, validate=True, **kwargs):
         # example one of the SciPy metrics
         pass
 
-    distances = scipy.spatial.distance.pdist(counts, metric, **kwargs)
+    distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
