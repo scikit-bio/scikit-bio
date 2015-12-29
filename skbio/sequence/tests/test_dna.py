@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 import unittest
 
@@ -39,6 +40,11 @@ class TestDNA(unittest.TestCase):
         seq = DNA('ATAT')
         self.assertEqual(seq.transcribe(), RNA('AUAU'))
         self.assertEqual(seq, DNA('ATAT'))
+
+    def test_cannot_subclass(self):
+        with six.assertRaisesRegex(self, TypeError, "Subclassing disabled"):
+            class CustomSequence(DNA):
+                pass
 
 
 if __name__ == '__main__':

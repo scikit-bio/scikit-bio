@@ -7,14 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+from six import add_metaclass
 
 import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
-from ._grammared_sequence import GrammaredSequence
+from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 
+@add_metaclass(DisableSubclassingMeta)
 class DNA(GrammaredSequence, NucleotideMixin):
     """Store DNA sequence data and optional associated metadata.
 

@@ -15,6 +15,8 @@ import numpy as np
 
 from skbio import DNA, RNA, Protein, GeneticCode
 from skbio.sequence._nucleotide_mixin import NucleotideMixin
+from skbio.sequence import GrammaredSequence
+from skbio.util import classproperty
 
 
 # This file contains tests for functionality of sequence types which implement
@@ -408,12 +410,21 @@ class TestNucelotideSequence(unittest.TestCase):
 
     def test_is_reverse_complement_type_mismatch(self):
         for Class in (DNA, RNA):
-            class Subclass(Class):
-                pass
-            seq1 = Class('ABC')
-            seq2 = Subclass('ABC')
+            class DifferentSequenceClass(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("AB")}
 
-            with self.assertRaises(TypeError):
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("ABC")
+
+            seq1 = Class('ABC')
+            seq2 = DifferentSequenceClass('ABC')
+
+            with six.assertRaisesRegex(self, TypeError,
+                                       "Cannot use.*and "
+                                       "DifferentSequenceClass together"):
                 seq1.is_reverse_complement(seq2)
 
     def test_motif_purine_run(self):

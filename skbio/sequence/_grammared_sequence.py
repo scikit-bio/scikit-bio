@@ -71,6 +71,17 @@ class GrammaredSequenceMeta(ABCMeta, type):
         return type(prop) is abstractproperty
 
 
+class DisableSubclassingMeta(GrammaredSequenceMeta):
+    def __new__(cls, name, bases, classdict):
+        for b in bases:
+            if isinstance(b, DisableSubclassingMeta):
+                raise TypeError("Subclassing disabled for class %s. To create"
+                                " a custom sequence class, inherit directly"
+                                " from %s" %
+                                (b.__name__, GrammaredSequence.__name__))
+        return type.__new__(cls, name, bases, dict(classdict))
+
+
 # Note: apparently ABCMeta needs to be applied before GrammaredSequenceMeta
 @add_metaclass(GrammaredSequenceMeta)
 @add_metaclass(ABCMeta)
