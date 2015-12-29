@@ -16,7 +16,7 @@ from future.builtins import range, zip
 from skbio.alignment import TabularMSA
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
-from skbio.sequence._grammared_sequence import GrammaredSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
