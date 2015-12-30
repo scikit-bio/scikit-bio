@@ -37,7 +37,9 @@ class GrammaredSequenceMeta(ABCMeta, type):
                 "default_gap_char must be in gap_chars for class %s" %
                 name)
 
-        if mcls._can_validate(mcls, cls):
+        # Only perform validation on classes that aren't abstract.
+        if (type(cls.degenerate_map) is not abstractproperty and
+                type(cls.nondegenerate_chars) is not abstractproperty):
             for key in cls.degenerate_map.keys():
                 for nondegenerate in cls.degenerate_map[key]:
                     if nondegenerate not in cls.nondegenerate_chars:
@@ -62,13 +64,6 @@ class GrammaredSequenceMeta(ABCMeta, type):
                     "any characters for class %s" % name)
 
         return cls
-
-    def _can_validate(mcls, cls):
-        return (not mcls._is_abstract(cls.degenerate_map) and
-                not mcls._is_abstract(cls.nondegenerate_chars))
-
-    def _is_abstract(prop):
-        return type(prop) is abstractproperty
 
 
 class DisableSubclassingMeta(GrammaredSequenceMeta):
