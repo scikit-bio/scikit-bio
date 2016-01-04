@@ -2,6 +2,20 @@
 
 ## Version 0.4.1-dev (changes since 0.4.1 go here)
 
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Bug fixes
+* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen.
+
+### Deprecated functionality [stable]
+
+### Miscellaneous
+* Warnings raised by scikit-bio now share a common subclass ``skbio.util.SkbioWarning``.
+
 ## Version 0.4.1 (2015-12-09)
 
 ### Features

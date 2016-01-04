@@ -213,7 +213,7 @@ def _get_interval_for_r_new_otus(seq, r):
 
         # bail out if not enough unseen
         if not count or (unseen < r):
-            raise StopIteration
+            return
 
         # make a copy of seen before yielding, as we'll continue to add to the
         # set in subsequent iterations

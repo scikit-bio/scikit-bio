@@ -224,6 +224,8 @@ class TestStable(TestStabilityState):
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
+        # Py2: update this to use inspect.signature when we drop Python 2
+        # inspect.getargspec is deprecated and won't exist in 3.6
         expected = inspect.ArgSpec(
             args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)
@@ -261,6 +263,8 @@ class TestExperimental(TestStabilityState):
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
+        # Py2: update this to use inspect.signature when we drop Python 2
+        # inspect.getargspec is deprecated and won't exist in 3.6
         expected = inspect.ArgSpec(
             args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)
@@ -318,6 +322,8 @@ class TestDeprecated(TestStabilityState):
     def test_function_signature(self):
         f = self._get_f('0.1.0', until='0.1.4',
                         reason='You should now use skbio.g().')
+        # Py2: update this to use inspect.signature when we drop Python 2
+        # inspect.getargspec is deprecated and won't exist in 3.6
         expected = inspect.ArgSpec(
             args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
         self.assertEqual(inspect.getargspec(f), expected)

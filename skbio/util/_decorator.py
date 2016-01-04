@@ -13,6 +13,7 @@ import textwrap
 import decorator
 
 from ._exception import OverrideError
+from ._warning import DeprecationWarning as SkbioDeprecationWarning
 
 
 class _state_decorator(object):
@@ -254,7 +255,7 @@ class deprecated(_state_decorator):
             warnings.warn('%s is deprecated as of scikit-bio version %s, and '
                           'will be removed in version %s. %s' %
                           (func.__name__, self.as_of, self.until, self.reason),
-                          DeprecationWarning)
+                          SkbioDeprecationWarning)
             # args[0] is the function being wrapped when this is called
             # after wrapping with decorator.decorator, but why???
             return func(*args[1:], **kwargs)

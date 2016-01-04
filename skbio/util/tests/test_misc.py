@@ -286,7 +286,7 @@ class CardinalToOrdinalTests(unittest.TestCase):
 class TestFindDuplicates(unittest.TestCase):
     def test_empty_input(self):
         def empty_gen():
-            raise StopIteration()
+            return
             yield
 
         for empty in [], (), '', set(), {}, empty_gen():
