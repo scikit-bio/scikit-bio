@@ -350,7 +350,7 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 
 def _parse_stockholm_line_gf(line, metadata):
     """Takes ``#=GF`` line and returns parsed data."""
-    line = _remove_newline(line.split(' ', maxsplit=2))
+    line = _remove_newline(line.split(' ', 2))
     if line[1] in metadata.keys():
         metadata[line[1]] = metadata[line[1]] + ' ' + line[2]
     else:
@@ -360,7 +360,7 @@ def _parse_stockholm_line_gf(line, metadata):
 
 def _parse_stockholm_line_gs(line, dna_data):
     """Takes ``#=GS`` line and returns parsed data."""
-    line = _remove_newline(line.split(' ', maxsplit=3))
+    line = _remove_newline(line.split(' ', 3))
     if line[1] in dna_data.keys():
         dna_data[line[1]][1][line[2]] = line[3]
     else:

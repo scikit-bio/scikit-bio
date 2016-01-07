@@ -8,6 +8,7 @@
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from six import assertRaisesRegex
 
 import unittest
 
@@ -107,36 +108,36 @@ class TestStockholmReader(unittest.TestCase):
 
     def test_nonexistent_data_errors(self):
         fp = get_data_path('stockholm_invalid_nonexistent_gr')
-        with self.assertRaisesRegex(StockholmFormatError, 'Markup line referen'
-                                                          'ces.*RL1355.'):
+        with assertRaisesRegex(self, StockholmFormatError,
+                               'Markup line references.*RL1355.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
         fp = get_data_path('stockholm_invalid_nonexistent_gs')
-        with self.assertRaisesRegex(StockholmFormatError, 'Markup line referen'
-                                                          'ces.*AC14.'):
+        with assertRaisesRegex(self, StockholmFormatError,
+                               'Markup line references.*AC14.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_duplicate_data_error(self):
         fp = get_data_path('stockholm_duplicate_data')
-        with self.assertRaisesRegex(StockholmFormatError, 'Found multiple dat'
-                                                          'a.*ASR132'):
+        with assertRaisesRegex(self, StockholmFormatError,
+                               'Found multiple data.*ASR132'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_no_data_error(self):
         fp = get_data_path('empty')
-        with self.assertRaisesRegex(StockholmFormatError, 'No data present'):
+        with assertRaisesRegex(self, StockholmFormatError, 'No data present'):
             _stockholm_to_tabular_msa(fp)
         fp = get_data_path('stockholm_no_data')
-        with self.assertRaisesRegex(StockholmFormatError, 'No data present'):
+        with assertRaisesRegex(self, StockholmFormatError, 'No data present'):
             _stockholm_to_tabular_msa(fp)
 
     def test_duplicate_label_errors(self):
         fp = get_data_path('stockholm_duplicate_gr')
-        with self.assertRaisesRegex(StockholmFormatError, 'Found duplicate '
-                                                          'GR.*OS.*LFDR3'):
+        with assertRaisesRegex(self, StockholmFormatError,
+                               'Found duplicate GR.*OS.*LFDR3'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
         fp = get_data_path('stockholm_duplicate_gc')
-        with self.assertRaisesRegex(StockholmFormatError, 'Found duplicate '
-                                                          'GC.*SS_cons'):
+        with assertRaisesRegex(self, StockholmFormatError,
+                               'Found duplicate GC.*SS_cons'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
 if __name__ == '__main__':
