@@ -72,7 +72,7 @@ class DisableSubclassingMeta(GrammaredSequenceMeta):
             if isinstance(b, DisableSubclassingMeta):
                 raise TypeError("Subclassing disabled for class %s. To create"
                                 " a custom sequence class, inherit directly"
-                                " from %s" %
+                                " from skbio.sequence.%s" %
                                 (b.__name__, GrammaredSequence.__name__))
         return type.__new__(cls, name, bases, dict(classdict))
 

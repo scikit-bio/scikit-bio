@@ -64,6 +64,13 @@ class Protein(GrammaredSequence):
     degenerate_chars
     degenerate_map
 
+    Notes
+    -----
+    Subclassing is disabled for Protein, because subclassing makes
+    it possible to change the alphabet, and certain methods rely on the
+    IUPAC alphabet. If a custom sequence is needed, inherit directly from
+    ``skbio.sequence.GrammaredSequence``.
+
     References
     ----------
     .. [1] Nomenclature for incompletely specified bases in nucleic acid
