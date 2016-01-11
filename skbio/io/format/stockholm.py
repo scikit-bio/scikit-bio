@@ -5,7 +5,7 @@ Stockholm format (:mod:`skbio.io.format.stockholm`)
 .. currentmodule:: skbio.io.format.stockholm
 
 The Stockholm format is a multiple sequence alignment format written in Markup
-as opposed to a simple text-based format. Data is stored on seperate lines,
+as opposed to a simple text-based format. Data is stored on separate lines,
 each with a unique data 'name' preceding it. The alignment can just contain
 data, or contain data and related metadata.
 
@@ -46,8 +46,9 @@ Format Support
 
 Format Specification
 ====================
-Stockholm format contains two types of data: raw DNA, RNA, or Protein data and
-associated metadata. Raw data lines begin with an associated 'name', which
+Stockholm format contains two types of data. The first can contain raw DNA,
+RNA, or Protein data and the second is comprised of associated metadata.
+Raw data lines begin with an associated 'name', which
 often times is an id comprised of letters and numbers, such as
 'M24804.1/82-104' ([1]_). After the id and a few tab characters,
 the data is displayed. Metadata lines, however, begin with a '#' and a
@@ -71,72 +72,6 @@ For example:
 
 Example taken from [2]_.
 
-GF Types
-^^^^^^^^
-+---+------------------------+------------------------------------------------+
-|Tag|Name                    |Description                                     |
-+===+====+===================+================================================+
-|AC |Accession Number        |Accession number in form PFxxxxx (Pfam) or RFxx\|
-|   |                        |xxx (Rfam)                                      |
-+---+------------------------+------------------------------------------------+
-|ID |Identification          |One word name for family                        |
-+---+------------------------+------------------------------------------------+
-|DE |Definition              |Short description of family                     |
-+---+------------------------+------------------------------------------------+
-|AU |Author                  |Authors of the entry                            |
-+---+------------------------+------------------------------------------------+
-|SE |Source of seed          |The source suggesting the seed members belong t\|
-|   |                        |o one family                                    |
-+---+------------------------+------------------------------------------------+
-|SS |Source of structure     |The source (prediction or publication) of the c\|
-|   |                        |onsensus RNA secondary structure used by Rfam   |
-+---+------------------------+------------------------------------------------+
-|BM |Build method            |Command line used to generate the model         |
-+---+------------------------+------------------------------------------------+
-|SM |Search method           |Command line used to perform the search         |
-+---+------------------------+------------------------------------------------+
-|GA |Gathering threshold     |Search threshold to build the full alignment    |
-+---+------------------------+------------------------------------------------+
-|TC |Trusted cutoff          |Lowest sequence score (and domain score for Pfa\|
-|   |                        |m) of match in the full alignment               |
-+---+------------------------+------------------------------------------------+
-|NC |Noise cutoff            |Highest sequence score (and domain score for Pf\|
-|   |                        |am) of match not in full alignment              |
-+---+------------------------+------------------------------------------------+
-|TP |Type                    |Type of family                                  |
-+---+------------------------+------------------------------------------------+
-|SQ |Sequence                |Number of sequences in alignment                |
-+---+------------------------+------------------------------------------------+
-|DC |Database comment        |Comment about database reference                |
-+---+------------------------+------------------------------------------------+
-|DR |Database reference      |Reference to external database                  |
-+---+------------------------+------------------------------------------------+
-|RC |Reference comment       |Comment about literature reference              |
-+---+------------------------+------------------------------------------------+
-|RN |Reference number        |Reference number                                |
-+---+------------------------+------------------------------------------------+
-|RM |Reference medline       |Eight digit medline UI number                   |
-+---+------------------------+------------------------------------------------+
-|RT |Reference title         |Reference title                                 |
-+---+------------------------+------------------------------------------------+
-|RA |Reference author        |Reference author                                |
-+---+------------------------+------------------------------------------------+
-|RL |Reference location      |Journal location                                |
-+---+------------------------+------------------------------------------------+
-|PI |Previous identifier     |Record of all previous ID lines                 |
-+---+------------------------+------------------------------------------------+
-|KW |Keywords                |Keywords                                        |
-+---+------------------------+------------------------------------------------+
-|CC |Comment                 |Comment                                         |
-+---+------------------------+------------------------------------------------+
-|NE |Pfam accession          |Indicates a nested domain                       |
-+---+------------------------+------------------------------------------------+
-|NL |Location                |Location of nested domains - sequence ID, start |
-|   |                        |and end of insert                               |
-+---+------------------------+------------------------------------------------+
-
-Descriptions taken from [1]_.
-
 GS
 --
 Data relating to a specific sequence in the multiple sequence alignment.
@@ -149,26 +84,6 @@ For example:
     #=GS O83071/259-312 AC O83071
 
 Example taken from [2]_.
-
-GS Types
-^^^^^^^^
-+---+-------------------------------------------+
-|Tag|Description                                |
-+===+===========================================+
-|AC |Accession number                           |
-+---+-------------------------------------------+
-|DE |Description                                |
-+---+-------------------------------------------+
-|DR |Database reference                         |
-+---+-------------------------------------------+
-|OS |Organism (species)                         |
-+---+-------------------------------------------+
-|OC |Organism classification (clade, etc.)      |
-+---+-------------------------------------------+
-|LO |Look (color, etc.)                         |
-+---+-------------------------------------------+
-
-Descriptions taken from [1]_.
 
 GR
 --
@@ -184,32 +99,6 @@ For example:
 
 Example taken from [2]_.
 
-GR Types
-^^^^^^^^
-+---+-------------------------------------------+
-|Tag|Description                                |
-+===+===========================================+
-|SS |Secondary structure                        |
-+---+-------------------------------------------+
-|SA |Surface accessability                      |
-+---+-------------------------------------------+
-|TM |Transmembrane                              |
-+---+-------------------------------------------+
-|PP |Posterior probability                      |
-+---+-------------------------------------------+
-|LI |Ligand binding                             |
-+---+-------------------------------------------+
-|AS |Active site                                |
-+---+-------------------------------------------+
-|pAS|AS - Pfam predicted                        |
-+---+-------------------------------------------+
-|sAS|AS - from SwissProt                        |
-+---+-------------------------------------------+
-|IN |Intron (in or after)                       |
-+---+-------------------------------------------+
-
-Descriptions taken from [2]_.
-
 GC
 --
 Data relating to the columns of the multiple sequence alignment as a whole.
@@ -222,10 +111,6 @@ For example:
     #=GC SS_cons            CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEEEEEEEH
 
 Example taken from [2]_.
-
-GC Types
-^^^^^^^^
-Same as GR Types, but add "_cons" to the end of tag.
 
 Examples
 ========
