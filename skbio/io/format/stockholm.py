@@ -230,7 +230,8 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
         positional_metadata = None
     # Constructs TabularMSA
     return TabularMSA(seqs, metadata=metadata,
-                      positional_metadata=positional_metadata)
+                      positional_metadata=positional_metadata,
+                      index=list(dna_data.keys()))
 
 
 def _parse_stockholm_line_gf(line, metadata):

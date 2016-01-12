@@ -76,13 +76,15 @@ class TestStockholmReader(unittest.TestCase):
                          positional_metadata={'SS_cons': list('CCCCCHHHHHHHH'
                                                               'HHHHH..EEEEEE'
                                                               'EE....EEEEEEE'
-                                                              'EEEH')})
+                                                              'EEEH')},
+                         index=['O83071/192-246', 'O31698/88-139',
+                                'O31699/88-139'])
         self.assertEqual(msa, exp)
 
     def test_stockholm_minimal(self):
         fp = get_data_path('stockholm_minimal')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG')])
+        exp = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG')], index=['0235244'])
         self.assertEqual(msa, exp)
 
     def test_stockholm_rna(self):
@@ -94,7 +96,8 @@ class TestStockholmReader(unittest.TestCase):
                           RNA('UUAGAAACCGAUGGACCGAA')],
                          metadata={'AC': 'G2134T23', 'ID': 'ARD'},
                          positional_metadata=(
-                         {'AC_cons': list('GGGACUGGACAUCUAUUCAG')}))
+                         {'AC_cons': list('GGGACUGGACAUCUAUUCAG')}),
+                         index=['RTC2231', 'RTF2124', 'RTH3322', 'RTB1512'])
         self.assertEqual(msa, exp)
 
     def test_stockholm_runon_gf(self):
@@ -103,7 +106,8 @@ class TestStockholmReader(unittest.TestCase):
         exp = TabularMSA([DNA('ACTGGTTCAATG')],
                          metadata={'CC': 'CBS domains are small intracellular'
                                          ' modules mostly found in 2 or four '
-                                         'copies within a protein.'})
+                                         'copies within a protein.'},
+                         index=['GG1344'])
         self.assertEqual(msa, exp)
 
     def test_nonexistent_data_errors(self):
