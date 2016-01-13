@@ -46,7 +46,7 @@ Format Support
 
 Format Specification
 ====================
-Stockholm format contains two types of data. The first can contain raw DNA,
+The Stockholm format contains two types of data. The first can contain raw DNA,
 RNA, or Protein data and the second is comprised of associated metadata.
 Raw data lines begin with an associated 'name', which
 often times is an id comprised of letters and numbers, such as
@@ -61,7 +61,7 @@ Metadata Types
 ++++++++++++++
 GF
 --
-Data relating to multiple sequence alignment as a whole, such as authors or
+Data relating to the multiple sequence alignment as a whole, such as authors or
 number of sequences in the alignment. Starts with #=GF followed by a tag and
 data relating to the tag. Typically comes first in a Stockholm file.
 For example:
@@ -85,6 +85,19 @@ For example:
 
 Example taken from [2]_.
 
+GC
+--
+Data relating to the columns of the multiple sequence alignment as a whole.
+Starts with #=GC followed by a tag and data relating to the tag. Typically
+comes at the end of the multiple sequence alignment.
+For example:
+
+.. code-block:: none
+
+    #=GC SS_cons            CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEEEEEEEH
+
+Example taken from [2]_.
+
 GR
 --
 Data relating to the columns of a specific sequence in a multiple sequence
@@ -99,27 +112,13 @@ For example:
 
 Example taken from [2]_.
 
-GC
---
-Data relating to the columns of the multiple sequence alignment as a whole.
-Starts with #=GC followed by a tag and data relating to the tag. Typically
-comes at the end of the multiple sequence alignment.
-For example:
-
-.. code-block:: none
-
-    #=GC SS_cons            CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEEEEEEEH
-
-Example taken from [2]_.
-
 Examples
 ========
 Suppose we have a Stockholm file:
 
 >>> import skbio.io
 >>> from io import StringIO
->>> from skbio.sequence import RNA
->>> from skbio.alignment import TabularMSA
+>>> from skbio import RNA, TabularMSA
 >>> fs = '\\n'.join([
 ...         '# STOCKHOLM 1.0',
 ...         '#=GF RA    Deiman BA, Kortlever RM, Pleij CW;',
@@ -195,10 +194,10 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
     positional_metadata = {}
     seqs = []
 
-    # Retrieves data from file
+    # Retrieves data from file, reads first so that data order will be kept
+    # consistent.
     for line in fh:
-        if not (line.startswith("#") or line.startswith("//") or
-                line.isspace() == True):
+        if is_data_line(line):
             dna_data = _parse_stockholm_line_data(line, dna_data)
     fh.seek(0)
 
@@ -206,11 +205,11 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
     for line in fh:
         if line.startswith("#=GF"):
             metadata = _parse_stockholm_line_gf(line, metadata)
-        if line.startswith("#=GS"):
+        elif line.startswith("#=GS"):
             dna_data = _parse_stockholm_line_gs(line, dna_data)
-        if line.startswith("#=GR"):
+        elif line.startswith("#=GR"):
             dna_data = _parse_stockholm_line_gr(line, dna_data)
-        if line.startswith('#=GC'):
+        elif line.startswith('#=GC'):
             positional_metadata = _parse_stockholm_line_gc(line,
                                                            positional_metadata)
 
@@ -237,8 +236,9 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 def _parse_stockholm_line_gf(line, metadata):
     """Takes ``#=GF`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 2))
-    if line[1] in metadata.keys():
-        metadata[line[1]] = metadata[line[1]] + ' ' + line[2]
+    gf_tag = line[1]
+    if gf_tag in metadata.keys():
+        metadata[gf_tag] = metadata[gf_tag] + ' ' + line[2]
     else:
         metadata[line[1]] = line[2]
     return metadata
@@ -247,55 +247,61 @@ def _parse_stockholm_line_gf(line, metadata):
 def _parse_stockholm_line_gs(line, dna_data):
     """Takes ``#=GS`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 3))
-    if line[1] in dna_data.keys():
-        dna_data[line[1]][1][line[2]] = line[3]
+    data_tag = line[1]
+    if data_tag in dna_data.keys():
+        dna_data[data_tag][1][line[2]] = line[3]
     else:
         raise StockholmFormatError("Markup line references nonexistent "
-                                   "data %r." % line[1])
+                                   "data %r." % data_tag)
     return dna_data
 
 
 def _parse_stockholm_line_gr(line, dna_data):
     """Takes ``#=GR`` line and returns parsed data."""
-    line = _remove_newline(line.split(' '))
-    if len(line) != 4:
-        del(line[3:len(line)-1])
-    if line[1] in dna_data.keys():
-        if line[2] in dna_data[line[1]][2].keys():
+    line = _remove_newline(line.split())
+    data_tag = line[1]
+    gr_tag = line[2]
+    if data_tag in dna_data.keys():
+        if gr_tag in dna_data[data_tag][2].keys():
             raise StockholmFormatError("Found duplicate GR label %r associated"
-                                       " with data label %r" % (line[2],
-                                                                line[1]))
-        dna_data[line[1]][2][line[2]] = list(line[3])
+                                       " with data label %r" % (gr_tag,
+                                                                data_tag))
+        dna_data[data_tag][2][gr_tag] = list(line[3])
     else:
         raise StockholmFormatError("Markup line references nonexistent "
-                                   "data %r." % line[1])
+                                   "data %r." % data_tag)
     return dna_data
 
 
 def _parse_stockholm_line_gc(line, positional_metadata):
     """Takes ``#=GC`` line and returns parsed data."""
-    line = _remove_newline(line.split(' '))
-    if len(line) > 3:
-        del(line[2:len(line)-1])
-    if line[1] in positional_metadata.keys():
-        raise StockholmFormatError("Found duplicate GC label %r." % (line[1]))
-    positional_metadata[line[1]] = list(line[2])
+    line = _remove_newline(line.split())
+    gc_tag = line[1]
+    if gc_tag in positional_metadata.keys():
+        raise StockholmFormatError("Found duplicate GC label %r." % (gc_tag))
+    positional_metadata[gc_tag] = list(line[2])
     return positional_metadata
 
 
 def _parse_stockholm_line_data(line, dna_data):
     """Takes data line and returns parsed data."""
     line = line.split()
-    if line[0] not in dna_data.keys():
-        dna_data[line[0]] = [line[1], {}, {}]
-    elif line[0] in dna_data.keys():
+    data_tag = line[0]
+    if data_tag not in dna_data.keys():
+        dna_data[data_tag] = [line[1], {}, {}]
+    elif data_tag in dna_data.keys():
         raise StockholmFormatError("Found multiple data lines under same "
-                                   "name: %r" % line[0])
+                                   "name: %r" % data_tag)
     return dna_data
 
 
 def _remove_newline(line):
     """Removes '\n' from line and returns line."""
-    if '\n' in line[len(line)-1]:
-        line[len(line)-1] = line[len(line)-1].rstrip('\n')
+    n_line = line[len(line)-1]
+    if '\n' in n_line:
+        line[len(line)-1] = n_line.rstrip('\n')
     return line
+
+def is_data_line(line):
+    return not (line.startswith("#") or line.startswith("//") or
+                line.isspace())
