@@ -302,6 +302,7 @@ def _remove_newline(line):
         line[len(line)-1] = n_line.rstrip('\n')
     return line
 
+
 def is_data_line(line):
     return not (line.startswith("#") or line.startswith("//") or
                 line.isspace())
