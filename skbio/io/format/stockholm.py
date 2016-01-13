@@ -53,7 +53,7 @@ often times is an id comprised of letters and numbers, such as
 'M24804.1/82-104' ([1]_). After the id and a few tab characters,
 the data is displayed. Metadata lines, however, begin with a '#' and a
 two-letter marker which describes the metadata type, for example '#=GF' (see
-Metadata Types). Each metadata line also contains an extra two-letter tag,
+Metadata Types). Each metadata line also contains an extra two-letter feature,
 such as 'AS' or 'CC' which tells what type of data it precedes. All metadata
 is optional.
 
@@ -62,8 +62,8 @@ Metadata Types
 GF
 --
 Data relating to the multiple sequence alignment as a whole, such as authors or
-number of sequences in the alignment. Starts with #=GF followed by a tag and
-data relating to the tag. Typically comes first in a Stockholm file.
+number of sequences in the alignment. Starts with #=GF followed by a feature
+and data relating to the feature. Typically comes first in a Stockholm file.
 For example:
 
 .. code-block:: none
@@ -75,8 +75,8 @@ Example taken from [2]_.
 GS
 --
 Data relating to a specific sequence in the multiple sequence alignment.
-Starts with #=GS followed by the sequence name followed by a tag and data
-relating to the tag. Typically comes second in a Stockholm file.
+Starts with #=GS followed by the sequence name followed by a feature and data
+relating to the feature. Typically comes second in a Stockholm file.
 For example:
 
 .. code-block:: none
@@ -88,8 +88,8 @@ Example taken from [2]_.
 GC
 --
 Data relating to the columns of the multiple sequence alignment as a whole.
-Starts with #=GC followed by a tag and data relating to the tag. Typically
-comes at the end of the multiple sequence alignment.
+Starts with #=GC followed by a feature and data relating to the feature.
+Typically comes at the end of the multiple sequence alignment.
 For example:
 
 .. code-block:: none
@@ -101,9 +101,9 @@ Example taken from [2]_.
 GR
 --
 Data relating to the columns of a specific sequence in a multiple sequence
-alignment. Starts with #=GR followed by the sequence name followed by a tag
-and data relating to the tag. Typically comes after the data line it relates
-to.
+alignment. Starts with #=GR followed by the sequence name followed by a feature
+and data relating to the feature. Typically comes after the data line it
+relates to.
 For example:
 
 .. code-block:: none
@@ -239,9 +239,9 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 def _parse_stockholm_line_gf(line, metadata):
     """Takes ``#=GF`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 2))
-    gf_tag = line[1]
-    if gf_tag in metadata.keys():
-        metadata[gf_tag] = metadata[gf_tag] + ' ' + line[2]
+    gf_feature = line[1]
+    if gf_feature in metadata.keys():
+        metadata[gf_feature] = metadata[gf_feature] + ' ' + line[2]
     else:
         metadata[line[1]] = line[2]
     return metadata
@@ -250,51 +250,52 @@ def _parse_stockholm_line_gf(line, metadata):
 def _parse_stockholm_line_gs(line, dna_data):
     """Takes ``#=GS`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 3))
-    data_tag = line[1]
-    if data_tag in dna_data.keys():
-        dna_data[data_tag][1][line[2]] = line[3]
+    data_seq_name = line[1]
+    if data_seq_name in dna_data.keys():
+        dna_data[data_seq_name][1][line[2]] = line[3]
     else:
         raise StockholmFormatError("Markup line references nonexistent "
-                                   "data %r." % data_tag)
+                                   "data %r." % data_seq_name)
     return dna_data
 
 
 def _parse_stockholm_line_gr(line, dna_data):
     """Takes ``#=GR`` line and returns parsed data."""
     line = _remove_newline(line.split())
-    data_tag = line[1]
-    gr_tag = line[2]
-    if data_tag in dna_data.keys():
-        if gr_tag in dna_data[data_tag][2].keys():
+    data_seq_name = line[1]
+    gr_feature = line[2]
+    if data_seq_name in dna_data.keys():
+        if gr_feature in dna_data[data_seq_name][2].keys():
             raise StockholmFormatError("Found duplicate GR label %r associated"
-                                       " with data label %r" % (gr_tag,
-                                                                data_tag))
-        dna_data[data_tag][2][gr_tag] = list(line[3])
+                                       " with data label %r" % (gr_feature,
+                                                                data_seq_name))
+        dna_data[data_seq_name][2][gr_feature] = list(line[3])
     else:
         raise StockholmFormatError("Markup line references nonexistent "
-                                   "data %r." % data_tag)
+                                   "data %r." % data_seq_name)
     return dna_data
 
 
 def _parse_stockholm_line_gc(line, positional_metadata):
     """Takes ``#=GC`` line and returns parsed data."""
     line = _remove_newline(line.split())
-    gc_tag = line[1]
-    if gc_tag in positional_metadata.keys():
-        raise StockholmFormatError("Found duplicate GC label %r." % (gc_tag))
-    positional_metadata[gc_tag] = list(line[2])
+    gc_feature = line[1]
+    if gc_feature in positional_metadata.keys():
+        raise StockholmFormatError("Found duplicate GC label %r."
+                                   % (gc_feature))
+    positional_metadata[gc_feature] = list(line[2])
     return positional_metadata
 
 
 def _parse_stockholm_line_data(line, dna_data):
     """Takes data line and returns parsed data."""
     line = line.split()
-    data_tag = line[0]
-    if data_tag not in dna_data.keys():
-        dna_data[data_tag] = [line[1], {}, {}]
-    elif data_tag in dna_data.keys():
+    data_seq_name = line[0]
+    if data_seq_name not in dna_data.keys():
+        dna_data[data_seq_name] = [line[1], {}, {}]
+    elif data_seq_name in dna_data.keys():
         raise StockholmFormatError("Found multiple data lines under same "
-                                   "name: %r" % data_tag)
+                                   "name: %r" % data_seq_name)
     return dna_data
 
 
