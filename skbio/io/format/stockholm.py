@@ -179,7 +179,10 @@ stockholm = create_format('stockholm')
 def _stockholm_sniffer(fh):
     # Smells a Stockholm file if the first line contains 'Stockholm' and the
     # version number.
-    line = next(fh)
+    try:
+        line = next(fh)
+    except StopIteration:
+        return False, {}
     if line[:15] == "# STOCKHOLM 1.0":
         return True, {}
 
