@@ -930,7 +930,7 @@ class TestRunner(object):
         self._test_dir = os.path.dirname(filename)
 
     @experimental(as_of="0.4.0")
-    def test(self, verbose=False):
+    def test(self, verbose=True):
         """Performs the actual running of the tests.
 
         Parameters
