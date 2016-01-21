@@ -221,13 +221,18 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 
     for key in dna_data.keys():
         # Sets blank dictionaries and lists to None instead
+        # Note: _replace is not a private function, see
+        # https://docs.python.org/2/library/collections.html#namedtuple-factory
+        # -function-for-tuples-with-named-fields
         if not dna_data[key].metadata:
             dna_data[key] = dna_data[key]._replace(metadata=None)
         if not dna_data[key].pos_metadata:
             dna_data[key] = dna_data[key]._replace(pos_metadata=None)
         # Adds each sequence to the MSA data
-        seqs.append(constructor(dna_data[key].seq, metadata=dna_data[key].metadata,
-                                positional_metadata=dna_data[key].pos_metadata))
+        seqs.append(constructor(dna_data[key].seq,
+                                metadata=dna_data[key].metadata,
+                                positional_metadata=(dna_data
+                                                     [key].pos_metadata)))
 
     if not seqs:
         raise StockholmFormatError("No data present in file.")
@@ -255,7 +260,7 @@ def _parse_stockholm_line_gs(line, dna_data):
     line = _remove_newline(line.split(' ', 3))
     data_seq_name = line[1]
     if data_seq_name in dna_data.keys():
-        if dna_data[data_seq_name].metadata == {}:
+        if not dna_data[data_seq_name].metadata:
             dna_data[data_seq_name].metadata[line[2]] = line[3]
     else:
         raise StockholmFormatError("Markup line references nonexistent "
