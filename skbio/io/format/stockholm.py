@@ -166,13 +166,14 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 from skbio.alignment import TabularMSA
 from skbio.sequence import Protein
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
+_SeqData = namedtuple("SeqData", ["seq", "metadata", "pos_metadata"])
 
 
 @stockholm.sniffer()
@@ -193,6 +194,8 @@ def _stockholm_sniffer(fh):
 def _stockholm_to_tabular_msa(fh, constructor=Protein):
     # Uses OrderedDict() to make sure dna_data isn't arranged randomly
     dna_data = OrderedDict()
+    # Creates SeqData class to store all sequence data and make code more
+    # readable
     metadata = {}
     positional_metadata = {}
     seqs = []
@@ -218,13 +221,13 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 
     for key in dna_data.keys():
         # Sets blank dictionaries and lists to None instead
-        if not dna_data[key][1]:
-            dna_data[key][1] = None
-        if not dna_data[key][2]:
-            dna_data[key][2] = None
+        if not dna_data[key].metadata:
+            dna_data[key] = dna_data[key]._replace(metadata=None)
+        if not dna_data[key].pos_metadata:
+            dna_data[key] = dna_data[key]._replace(pos_metadata=None)
         # Adds each sequence to the MSA data
-        seqs.append(constructor(dna_data[key][0], metadata=dna_data[key][1],
-                                positional_metadata=dna_data[key][2]))
+        seqs.append(constructor(dna_data[key].seq, metadata=dna_data[key].metadata,
+                                positional_metadata=dna_data[key].pos_metadata))
 
     if not seqs:
         raise StockholmFormatError("No data present in file.")
@@ -252,7 +255,8 @@ def _parse_stockholm_line_gs(line, dna_data):
     line = _remove_newline(line.split(' ', 3))
     data_seq_name = line[1]
     if data_seq_name in dna_data.keys():
-        dna_data[data_seq_name][1][line[2]] = line[3]
+        if dna_data[data_seq_name].metadata == {}:
+            dna_data[data_seq_name].metadata[line[2]] = line[3]
     else:
         raise StockholmFormatError("Markup line references nonexistent "
                                    "data %r." % data_seq_name)
@@ -265,11 +269,11 @@ def _parse_stockholm_line_gr(line, dna_data):
     data_seq_name = line[1]
     gr_feature = line[2]
     if data_seq_name in dna_data.keys():
-        if gr_feature in dna_data[data_seq_name][2].keys():
+        if gr_feature in dna_data[data_seq_name].pos_metadata.keys():
             raise StockholmFormatError("Found duplicate GR label %r associated"
                                        " with data label %r" % (gr_feature,
                                                                 data_seq_name))
-        dna_data[data_seq_name][2][gr_feature] = list(line[3])
+        dna_data[data_seq_name].pos_metadata[gr_feature] = list(line[3])
     else:
         raise StockholmFormatError("Markup line references nonexistent "
                                    "data %r." % data_seq_name)
@@ -292,7 +296,8 @@ def _parse_stockholm_line_data(line, dna_data):
     line = line.split()
     data_seq_name = line[0]
     if data_seq_name not in dna_data.keys():
-        dna_data[data_seq_name] = [line[1], {}, {}]
+        dna_data[data_seq_name] = _SeqData(seq=line[1], metadata={},
+                                           pos_metadata={})
     elif data_seq_name in dna_data.keys():
         raise StockholmFormatError("Found multiple data lines under same "
                                    "name: %r" % data_seq_name)
