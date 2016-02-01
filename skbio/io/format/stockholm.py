@@ -252,7 +252,7 @@ def _parse_stockholm_line_gf(line, metadata):
     if gf_feature in metadata.keys():
         metadata[gf_feature] = metadata[gf_feature] + ' ' + gf_feature_data
     else:
-        metadata[gf_feature] = line[2]
+        metadata[gf_feature] = gf_feature_data
     return metadata
 
 
