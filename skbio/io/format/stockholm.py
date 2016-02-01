@@ -222,8 +222,8 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
     for key in dna_data.keys():
         # Sets blank dictionaries and lists to None instead
         # Note: _replace is not a private function, see
-        # https://docs.python.org/2/library/collections.html#namedtuple-factory
-        # -function-for-tuples-with-named-fields
+        # https://docs.python.org/2/library/collections.html#namedtuple-
+        # factory-function-for-tuples-with-named-fields
         if not dna_data[key].metadata:
             dna_data[key] = dna_data[key]._replace(metadata=None)
         if not dna_data[key].pos_metadata:
@@ -248,10 +248,11 @@ def _parse_stockholm_line_gf(line, metadata):
     """Takes ``#=GF`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 2))
     gf_feature = line[1]
+    gf_feature_data = line[2]
     if gf_feature in metadata.keys():
-        metadata[gf_feature] = metadata[gf_feature] + ' ' + line[2]
+        metadata[gf_feature] = metadata[gf_feature] + ' ' + gf_feature_data
     else:
-        metadata[line[1]] = line[2]
+        metadata[gf_feature] = line[2]
     return metadata
 
 
@@ -259,9 +260,10 @@ def _parse_stockholm_line_gs(line, dna_data):
     """Takes ``#=GS`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 3))
     data_seq_name = line[1]
+    gs_feature = line[2]
     if data_seq_name in dna_data.keys():
         if not dna_data[data_seq_name].metadata:
-            dna_data[data_seq_name].metadata[line[2]] = line[3]
+            dna_data[data_seq_name].metadata[gs_feature] = line[3]
     else:
         raise StockholmFormatError("Markup line references nonexistent "
                                    "data %r." % data_seq_name)
