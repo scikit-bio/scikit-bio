@@ -12,7 +12,6 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 import pandas.util.testing as pdt
-
 from numpy.random import normal
 import pandas as pd
 import scipy
@@ -336,7 +335,6 @@ class AncomTests(TestCase):
             [10, 11, 10, 10, 10, 11],
             [10, 13, 10, 10, 10, 12]]).T
         self.cats1 = pd.Series([0, 0, 0, 1, 1, 1])
-
         # Real valued data with 2 groupings
         D, L = 40, 80
         np.random.seed(0)
@@ -634,8 +632,8 @@ class AncomTests(TestCase):
         result = ancom(self.table1,
                        self.cats1,
                        multiple_comparisons_correction=None,
-                       significance_test=scipy.stats.mannwhitneyu)
-        exp = pd.DataFrame({'W': np.array([6, 6, 2, 2, 2, 2, 2]),
+                       significance_test=scipy.stats.ttest_ind)
+        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
                             'reject': np.array([True,  True, False, False,
                                                 False, False, False],
                                                dtype=bool)})
@@ -645,7 +643,7 @@ class AncomTests(TestCase):
         result = ancom(self.table2,
                        self.cats2,
                        multiple_comparisons_correction=None,
-                       significance_test=scipy.stats.mannwhitneyu)
+                       significance_test=scipy.stats.ttest_ind)
         exp = pd.DataFrame({'W': np.array([8, 8, 3, 3,
                                            8, 3, 3, 3, 3]),
                             'reject': np.array([True, True, False, False,
