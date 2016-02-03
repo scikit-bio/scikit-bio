@@ -1,6 +1,6 @@
 HTTPretty <= 0.8.10
 bz2file
-contextlib2
+contextlib2 >= 0.4.0, < 0.5
 coveralls
 natsort
 lockfile
