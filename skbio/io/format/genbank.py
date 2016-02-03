@@ -265,7 +265,6 @@ from future.builtins import range, zip
 import re
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from functools import partial
 
 from skbio.io import create_format, GenBankFormatError
@@ -277,8 +276,6 @@ from skbio.sequence import Sequence, DNA, RNA, Protein
 
 genbank = create_format('genbank')
 
-# date format in locus line of genbank record
-_TIME_FORMAT = '%d-%b-%Y'
 # This list is ordered
 # used to read and write genbank file.
 _HEADERS = ['LOCUS',
@@ -510,12 +507,11 @@ def _parse_locus(lines):
             "Could not parse the LOCUS line:\n%s" % line)
 
     res['size'] = int(res['size'])
-    res['date'] = datetime.strptime(res['date'], _TIME_FORMAT)
     return res
 
 
 def _serialize_locus(header, obj, indent=12):
-    '''Serilize LOCUS line.
+    '''Serialize LOCUS line.
 
     Parameters
     ----------
@@ -523,8 +519,6 @@ def _serialize_locus(header, obj, indent=12):
     '''
     # use 'or' to convert None to ''
     kwargs = {k: v or '' for k, v in obj.items()}
-    # convert datetime to str
-    kwargs['date'] = kwargs['date'].strftime(_TIME_FORMAT).upper()
 
     return ('{header:<{indent}}{locus_name}   {size} {unit}'
             '   {mol_type}   {shape}   {division}   {date}\n').format(

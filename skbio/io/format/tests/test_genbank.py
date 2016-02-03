@@ -15,7 +15,6 @@ import pandas as pd
 import numpy.testing as npt
 import six
 from unittest import TestCase, main
-from datetime import datetime
 
 from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
@@ -63,17 +62,17 @@ class GenBankIOTests(TestCase):
             (['LOCUS       NC_005816   9609 bp   '
               'DNA   circular   CON   07-FEB-2015'],
              {'division': 'CON', 'mol_type': 'DNA', 'shape': 'circular',
-              'locus_name': 'NC_005816', 'date': datetime(2015, 2, 7, 0, 0),
+              'locus_name': 'NC_005816', 'date': '07-FEB-2015',
               'unit': 'bp', 'size': 9609}),
             (['LOCUS       SCU49845   5028 bp   '
               'DNA      PLN   21-JUN-1999'],
              {'division': 'PLN', 'mol_type': 'DNA', 'shape': None,
-             'locus_name': 'SCU49845', 'date': datetime(1999, 6, 21, 0, 0),
+             'locus_name': 'SCU49845', 'date': '21-JUN-1999',
               'unit': 'bp', 'size': 5028}),
             (['LOCUS       NP_001832   360 aa      '
               'linear   PRI   18-DEC-2001'],
              {'division': 'PRI', 'mol_type': None, 'shape': 'linear',
-              'locus_name': 'NP_001832', 'date': datetime(2001, 12, 18, 0, 0),
+              'locus_name': 'NP_001832', 'date': '18-DEC-2001',
               'unit': 'aa', 'size': 360}))
 
         # test single record and read uppercase sequence
@@ -81,7 +80,7 @@ class GenBankIOTests(TestCase):
         self.single_lower_fp = get_data_path('genbank_single_record_lower')
         self.single = (
             'GSREILDFK',
-            {'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
+            {'LOCUS': {'date': '23-SEP-1994',
                        'division': 'BCT',
                        'locus_name': 'AAB29917',
                        'mol_type': None,
@@ -120,7 +119,7 @@ class GenBankIOTests(TestCase):
                            'translation': '"MKQSTIALAVLPLLFTPVTKA"',
                            'type_': 'CDS'}],
              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
-             'LOCUS': {'date': datetime(1993, 4, 26, 0, 0),
+             'LOCUS': {'date': '26-APR-1993',
                        'division': 'BCT',
                        'locus_name': 'ECOALKP',
                        'mol_type': 'mRNA',
@@ -163,7 +162,7 @@ class GenBankIOTests(TestCase):
                             'right_partial_': True,
                             'type_': 'Protein'}],
               'KEYWORDS': '.',
-              'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
+              'LOCUS': {'date': '23-SEP-1994',
                         'division': 'BCT',
                         'locus_name': 'AAB29917',
                         'mol_type': None,
@@ -207,7 +206,7 @@ class GenBankIOTests(TestCase):
                             'right_partial_': True,
                             'type_': 'rRNA'}],
               'KEYWORDS': 'ENV.',
-              'LOCUS': {'date': datetime(2010, 8, 29, 0, 0),
+              'LOCUS': {'date': '29-AUG-2010',
                         'division': 'ENV',
                         'locus_name': 'HQ018078',
                         'mol_type': 'DNA',
