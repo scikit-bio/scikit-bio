@@ -8,9 +8,10 @@
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. This backward-incompatible change to a stable API is necessary because it fixes a bug (more details in bug fix section below).
 
 ### Backward-incompatible changes [experimental]
+* `skbio.io.format.genbank`: When reading GenBank files, the date field of the LOCUS line is no longer parsed into a `datetime.datetime` object and is left as a string. When writing GenBank files, the locus date metadata is expected to be a string instead of a `datetime.datetime` object ([#1153](https://github.com/biocore/scikit-bio/issues/1153))
 
 ### Bug fixes
-* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen.
+* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen ([#1241](https://github.com/biocore/scikit-bio/issues/1241))
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. The file format's `newline` character will be used when opening the file. Previous behavior allowed overriding the format's `newline` character but this could cause issues with readers that assume newline characters are those defined by the file format (which is an entirely reasonable assumption). This bug is very unlikely to have surfaced in practice as the default `newline` behavior is *universal newlines mode*.
 
 ### Deprecated functionality [stable]
