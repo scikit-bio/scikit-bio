@@ -36,7 +36,7 @@ Format Support
 ==============
 **Has Sniffer: Yes**
 
-**State: Experimental as of 0.4.0-dev.**
+**State: Experimental as of 0.4.1-dev.**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
@@ -169,42 +169,77 @@ from __future__ import (absolute_import, division, print_function,
 from collections import OrderedDict, namedtuple
 
 from skbio.alignment import TabularMSA
-from skbio.sequence import Protein
+from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
-_SeqData = namedtuple("SeqData", ["seq", "metadata", "pos_metadata"])
+# Creates _SeqData namedtuple to increase readability and efficiency
+_SeqData = namedtuple("SeqData", ["seq", "metadata", "positional_metadata"])
+supported_data_types = ['#=GF', '#=GS', '#=GR', '#=GC']
 
 
 @stockholm.sniffer()
 def _stockholm_sniffer(fh):
-    # Smells a Stockholm file if the first line contains 'Stockholm' and the
-    # version number.
+    # Smells a Stockholm file if the following conditions are met:
+    # - File isn't empty
+    # - File contains correct header
+    # - FIle contains correct footer
     try:
         line = next(fh)
     except StopIteration:
         return False, {}
-    if line[:15] == "# STOCKHOLM 1.0":
+
+    header = line
+    for line in fh:
+        pass
+    if line.startswith('//') and header == "# STOCKHOLM 1.0\n":
         return True, {}
 
     return False, {}
 
 
 @stockholm.reader(TabularMSA)
-def _stockholm_to_tabular_msa(fh, constructor=Protein):
+def _stockholm_to_tabular_msa(fh, constructor=None):
+    # Checks that user has passed required constructor parameter
+    if constructor is None:
+        raise ValueError("Must provide `constructor` parameter.")
+    # Checks that contructor parameter is supported
+    elif not issubclass(constructor, IUPACSequence):
+        raise TypeError("`constructor` must be a subclass of `IUPACSequence`.")
+
+    # Checks that the file isn't empty
+    try:
+        line = next(fh)
+    except StopIteration:
+        raise StockholmFormatError("File is empty.")
+    # Checks that the file follows basic format (includes the required header)
+    if not line == "# STOCKHOLM 1.0\n":
+        raise StockholmFormatError("File missing required header: "
+                                   "`# STOCKHOLM 1.0\\n`.")
+
     # Uses OrderedDict() to make sure dna_data isn't arranged randomly
     dna_data = OrderedDict()
-    # Creates SeqData class to store all sequence data and make code more
-    # readable
     metadata = {}
     positional_metadata = {}
     seqs = []
 
     # Retrieves data from file, reads first so that data order will be kept
     # consistent.
+    # print(len(fh.readlines()[-1]))
     for line in fh:
         if is_data_line(line):
             dna_data = _parse_stockholm_line_data(line, dna_data)
+        if not line.isspace():
+            data_type = line.split()[0]
+        if (data_type.startswith('#=') and
+            data_type not in supported_data_types):
+            raise StockholmFormatError("Unrecognized data "
+                                       "type %r." % data_type)
+        if line.startswith('//'):
+            break
+    if not line.startswith('//'):
+        raise StockholmFormatError('Final line does not conform to Stockholm '
+                                   'format. Must contain only `//`.')
     fh.seek(0)
 
     # Retrieves metadata from file
@@ -218,6 +253,8 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
         elif line.startswith('#=GC'):
             positional_metadata = _parse_stockholm_line_gc(line,
                                                            positional_metadata)
+        elif line.startswith('//'):
+            break
 
     for key in dna_data.keys():
         # Sets blank dictionaries and lists to None instead
@@ -226,16 +263,15 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
         # factory-function-for-tuples-with-named-fields
         if not dna_data[key].metadata:
             dna_data[key] = dna_data[key]._replace(metadata=None)
-        if not dna_data[key].pos_metadata:
-            dna_data[key] = dna_data[key]._replace(pos_metadata=None)
+        if not dna_data[key].positional_metadata:
+            dna_data[key] = dna_data[key]._replace(positional_metadata=None)
         # Adds each sequence to the MSA data
-        seqs.append(constructor(dna_data[key].seq,
-                                metadata=dna_data[key].metadata,
-                                positional_metadata=(dna_data
-                                                     [key].pos_metadata)))
+        seqs.append(
+            constructor(
+                dna_data[key].seq,
+                metadata=dna_data[key].metadata,
+                positional_metadata=(dna_data[key].positional_metadata)))
 
-    if not seqs:
-        raise StockholmFormatError("No data present in file.")
     if not positional_metadata:
         positional_metadata = None
     # Constructs TabularMSA
@@ -247,10 +283,32 @@ def _stockholm_to_tabular_msa(fh, constructor=Protein):
 def _parse_stockholm_line_gf(line, metadata):
     """Takes ``#=GF`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 2))
+    _check_for_malformed_line(len(line), 3)
     gf_feature = line[1]
     gf_feature_data = line[2]
+    # Handles first instance of labelled tree (New Hampshire eXtended format)
+    if gf_feature == 'TN' and 'NH' not in metadata.keys():
+        metadata['NH'] = OrderedDict()
+        metadata['NH'][gf_feature_data] = ''
+        return metadata
+
+    # Handles second instance of labelled tree (NHX)
+    if gf_feature == 'TN' and 'NH' in metadata.keys():
+        if gf_feature_data in metadata['NH'].keys():
+            raise StockholmFormatError("Tree name %r used multiple times in "
+                                       "file." % gf_feature_data)
+        metadata['NH'][gf_feature_data] = ''
+        return metadata
+
+    # Handles extra line(s) of an already created tree (NHX)
+    if gf_feature == 'NH' and gf_feature in metadata.keys():
+        trees = metadata[gf_feature]
+        tree_id =  list(trees.keys())[-1]
+        metadata[gf_feature][tree_id] = trees[tree_id] + gf_feature_data
+        return metadata
+
     if gf_feature in metadata.keys():
-        metadata[gf_feature] = metadata[gf_feature] + ' ' + gf_feature_data
+        metadata[gf_feature] = metadata[gf_feature] + gf_feature_data
     else:
         metadata[gf_feature] = gf_feature_data
     return metadata
@@ -259,11 +317,17 @@ def _parse_stockholm_line_gf(line, metadata):
 def _parse_stockholm_line_gs(line, dna_data):
     """Takes ``#=GS`` line and returns parsed data."""
     line = _remove_newline(line.split(' ', 3))
+    _check_for_malformed_line(len(line), 4)
     data_seq_name = line[1]
     gs_feature = line[2]
     if data_seq_name in dna_data.keys():
-        if not dna_data[data_seq_name].metadata:
+        existing_metadata = dna_data[data_seq_name].metadata
+        if not existing_metadata or gs_feature not in existing_metadata.keys():
             dna_data[data_seq_name].metadata[gs_feature] = line[3]
+        else:
+            existing_data = dna_data[data_seq_name].metadata[gs_feature]
+            dna_data[data_seq_name].metadata[gs_feature] = (existing_data +
+                                                            line[3])
     else:
         raise StockholmFormatError("Markup line references nonexistent "
                                    "data %r." % data_seq_name)
@@ -273,14 +337,15 @@ def _parse_stockholm_line_gs(line, dna_data):
 def _parse_stockholm_line_gr(line, dna_data):
     """Takes ``#=GR`` line and returns parsed data."""
     line = _remove_newline(line.split())
+    _check_for_malformed_line(len(line), 4)
     data_seq_name = line[1]
     gr_feature = line[2]
     if data_seq_name in dna_data.keys():
-        if gr_feature in dna_data[data_seq_name].pos_metadata.keys():
-            raise StockholmFormatError("Found duplicate GR label %r associated"
-                                       " with data label %r" % (gr_feature,
-                                                                data_seq_name))
-        dna_data[data_seq_name].pos_metadata[gr_feature] = list(line[3])
+        if gr_feature in dna_data[data_seq_name].positional_metadata.keys():
+            _raise_duplicate_error("Found duplicate GR label %r associated"
+                                   " with data label %r" % (gr_feature,
+                                                            data_seq_name))
+        dna_data[data_seq_name].positional_metadata[gr_feature] = list(line[3])
     else:
         raise StockholmFormatError("Markup line references nonexistent "
                                    "data %r." % data_seq_name)
@@ -290,10 +355,10 @@ def _parse_stockholm_line_gr(line, dna_data):
 def _parse_stockholm_line_gc(line, positional_metadata):
     """Takes ``#=GC`` line and returns parsed data."""
     line = _remove_newline(line.split())
+    _check_for_malformed_line(len(line), 3)
     gc_feature = line[1]
     if gc_feature in positional_metadata.keys():
-        raise StockholmFormatError("Found duplicate GC label %r."
-                                   % (gc_feature))
+        _raise_duplicate_error("Found duplicate GC label %r." % (gc_feature))
     positional_metadata[gc_feature] = list(line[2])
     return positional_metadata
 
@@ -301,13 +366,14 @@ def _parse_stockholm_line_gc(line, positional_metadata):
 def _parse_stockholm_line_data(line, dna_data):
     """Takes data line and returns parsed data."""
     line = line.split()
+    _check_for_malformed_line(len(line), 2)
     data_seq_name = line[0]
     if data_seq_name not in dna_data.keys():
         dna_data[data_seq_name] = _SeqData(seq=line[1], metadata={},
-                                           pos_metadata={})
+                                           positional_metadata={})
     elif data_seq_name in dna_data.keys():
-        raise StockholmFormatError("Found multiple data lines under same "
-                                   "name: %r" % data_seq_name)
+        _raise_duplicate_error("Found multiple data lines under same "
+                               "name: %r" % data_seq_name)
     return dna_data
 
 
@@ -322,3 +388,13 @@ def _remove_newline(line):
 def is_data_line(line):
     return not (line.startswith("#") or line.startswith("//") or
                 line.isspace())
+
+def _raise_duplicate_error(message):
+    raise StockholmFormatError(message+' Note: If the file being used is in '
+                                       'Stockholm interleaved format, this '
+                                       'is not supported by the reader.')
+
+def _check_for_malformed_line(num_present, num_needed):
+    if num_present != num_needed:
+        raise StockholmFormatError('Line only contains %r item(s). It must '
+                                   'contain %r.' % (num_present, num_needed))
