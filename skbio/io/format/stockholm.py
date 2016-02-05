@@ -231,8 +231,8 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
             dna_data = _parse_stockholm_line_data(line, dna_data)
         if not line.isspace():
             data_type = line.split()[0]
-        if (data_type.startswith('#=') and
-            data_type not in supported_data_types):
+        if (data_type.startswith('#=') and (data_type not in
+                                            supported_data_types)):
             raise StockholmFormatError("Unrecognized data "
                                        "type %r." % data_type)
         if line.startswith('//'):
@@ -303,7 +303,7 @@ def _parse_stockholm_line_gf(line, metadata):
     # Handles extra line(s) of an already created tree (NHX)
     if gf_feature == 'NH' and gf_feature in metadata.keys():
         trees = metadata[gf_feature]
-        tree_id =  list(trees.keys())[-1]
+        tree_id = list(trees.keys())[-1]
         metadata[gf_feature][tree_id] = trees[tree_id] + gf_feature_data
         return metadata
 
@@ -389,10 +389,12 @@ def is_data_line(line):
     return not (line.startswith("#") or line.startswith("//") or
                 line.isspace())
 
+
 def _raise_duplicate_error(message):
     raise StockholmFormatError(message+' Note: If the file being used is in '
                                        'Stockholm interleaved format, this '
                                        'is not supported by the reader.')
+
 
 def _check_for_malformed_line(num_present, num_needed):
     if num_present != num_needed:

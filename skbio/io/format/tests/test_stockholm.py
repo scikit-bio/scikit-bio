@@ -246,7 +246,6 @@ class TestStockholmReader(unittest.TestCase):
                          index=['RTC2231', 'RTF2124', 'RTH3322', 'RTB1512'])
         self.assertEqual(msa, exp)
 
-
     def test_stockholm_duplicate_tree_id_error(self):
         fp = get_data_path('stockholm_duplicate_tree_ids')
         with self.assertRaisesRegex(StockholmFormatError,
@@ -313,31 +312,31 @@ class TestStockholmReader(unittest.TestCase):
     def test_malformed_gf_line_error(self):
         fp = get_data_path('stockholm_malformed_gf_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                    'Line only contains 2.*must contain 3.'):
+                                   'Line only contains 2.*must contain 3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gs_line_error(self):
         fp = get_data_path('stockholm_malformed_gs_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                    'Line only contains 3.*must contain 4.'):
+                                   'Line only contains 3.*must contain 4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gr_line_error(self):
         fp = get_data_path('stockholm_malformed_gr_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                    'Line only contains 2.*must contain 4.'):
+                                   'Line only contains 2.*must contain 4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gc_line_error(self):
         fp = get_data_path('stockholm_malformed_gc_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                    'Line only contains 2.*must contain 3.'):
+                                   'Line only contains 2.*must contain 3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_data_line_error(self):
         fp = get_data_path('stockholm_malformed_data_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                    'Line only contains 1.*must contain 2.'):
+                                   'Line only contains 1.*must contain 2.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_differing_sequence_lengths_error(self):
