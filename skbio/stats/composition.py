@@ -405,8 +405,8 @@ def inner(x, y):
     >>> from skbio.stats.composition import inner
     >>> x = np.array([.1, .3, .4, .2])
     >>> y = np.array([.2, .4, .2, .2])
-    >>> inner(x, y)
-    0.21078524737545556
+    >>> inner(x, y)  # doctest: +ELLIPSIS
+    0.2107852473...
     """
     x = closure(x)
     y = closure(y)
