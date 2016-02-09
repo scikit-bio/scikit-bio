@@ -106,6 +106,7 @@ class TestRDAResults(TestCase):
             eigvals=eigvals)
 
         assert_ordination_results_equal(scores, exp,
+                                        ignore_directionality=True,
                                         ignore_biplot_scores_labels=True,
                                         decimal=6)
 
@@ -163,6 +164,7 @@ class TestRDAResults(TestCase):
             eigvals=eigvals)
 
         assert_ordination_results_equal(scores, exp,
+                                        ignore_directionality=True,
                                         ignore_biplot_scores_labels=True,
                                         decimal=6)
 
