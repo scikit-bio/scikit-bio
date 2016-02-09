@@ -32,6 +32,7 @@ Classes
    RNA
    Protein
    GeneticCode
+   GrammaredSequence
 
 Examples
 --------

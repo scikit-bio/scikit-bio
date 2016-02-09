@@ -16,7 +16,7 @@ import numpy.testing as npt
 
 from skbio.sequence import GrammaredSequence
 from skbio.sequence._grammared_sequence import GrammaredSequenceException
-from skbio.util._decorator import classproperty
+from skbio.util import classproperty
 
 
 class ExampleGrammaredSequence(GrammaredSequence):
@@ -42,9 +42,9 @@ class ExampleMotifsTester(ExampleGrammaredSequence):
 class TestGrammaredSequence(TestCase):
     def test_default_gap_must_be_in_gap_chars(self):
         with six.assertRaisesRegex(
-            self, GrammaredSequenceException,
-            ("default_gap_char must be in gap_chars for class "
-             "GrammaredSequenceInvalidDefaultGap")):
+                self, GrammaredSequenceException,
+                "default_gap_char must be in gap_chars for class "
+                "GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
                 @classproperty
@@ -53,10 +53,10 @@ class TestGrammaredSequence(TestCase):
 
     def test_degenerates_must_expand_to_valid_nondegenerates(self):
         with six.assertRaisesRegex(
-            self, GrammaredSequenceException,
-            ("degenerate_map must expand only to characters included in "
-             "nondegenerate_chars for class "
-             "GrammaredSequenceInvalidDefaultGap")):
+                self, GrammaredSequenceException,
+                "degenerate_map must expand only to characters included in "
+                "nondegenerate_chars for class "
+                "GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
                 @classproperty
@@ -69,9 +69,9 @@ class TestGrammaredSequence(TestCase):
 
     def test_gap_chars_and_degenerates_share(self):
         with six.assertRaisesRegex(
-            self, GrammaredSequenceException,
-            ("gap_chars and degenerate_chars must not share any characters "
-             "for class GrammaredSequenceGapInDegenerateMap")):
+                self, GrammaredSequenceException,
+                "gap_chars and degenerate_chars must not share any characters "
+                "for class GrammaredSequenceGapInDegenerateMap"):
 
             class GrammaredSequenceGapInDegenerateMap(GrammaredSequence):
                 @classproperty

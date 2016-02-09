@@ -1730,7 +1730,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
-            If the sequence object isn't an ``GrammaredSequence``.
+            If the sequence object isn't a ``GrammaredSequence``.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -1816,7 +1816,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ValueError
             If `index` is not the same length as `sequences`.
         TypeError
-            If `sequences` contains an object that isn't an
+            If `sequences` contains an object that isn't a
             ``GrammaredSequence``.
         TypeError
             If `sequence` contains a type that does not match the dtype of the

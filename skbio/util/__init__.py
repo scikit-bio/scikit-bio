@@ -24,7 +24,7 @@ Common functionality to support testing in skbio.
 Miscellaneous functionality
 ---------------------------
 
-Generally useful functions that don't fit in more specific locations.
+Generally useful functionality that doesn't fit in more specific locations.
 
 .. autosummary::
    :toctree: generated/
@@ -35,6 +35,7 @@ Generally useful functions that don't fit in more specific locations.
    is_casava_v180_or_later
    remove_files
    safe_md5
+   classproperty
 
 Warnings
 --------

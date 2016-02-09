@@ -72,8 +72,8 @@ class RNA(GrammaredSequence, NucleotideMixin):
     -----
     Subclassing is disabled for RNA, because subclassing makes
     it possible to change the alphabet, and certain methods rely on the
-    IUPAC alphabet. If a custom sequence is needed, inherit directly from
-    ``GrammaredSequence``.
+    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
+    from ``GrammaredSequence``.
 
     References
     ----------

@@ -9,13 +9,12 @@
 from __future__ import absolute_import, division, print_function
 
 from abc import ABCMeta, abstractproperty
-from six import add_metaclass
-
 from itertools import product
+import re
 
 import numpy as np
+from six import add_metaclass
 
-import re
 
 from skbio.util._decorator import (classproperty, overrides, stable,
                                    experimental)
@@ -23,14 +22,13 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
-class GrammaredSequenceException(Exception):
+class GrammaredSequenceException(TypeError):
     pass
 
 
 class GrammaredSequenceMeta(ABCMeta, type):
-    def __new__(mcls, name, parents, dct):
-        cls = super(GrammaredSequenceMeta, mcls).__new__(mcls, name, parents,
-                                                         dct)
+    def __new__(mcs, name, bases, dct):
+        cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
         if cls.default_gap_char not in cls.gap_chars:
             raise GrammaredSequenceException(
@@ -66,20 +64,26 @@ class GrammaredSequenceMeta(ABCMeta, type):
         return cls
 
 
+# Adapted from http://stackoverflow.com/a/16056691/943814
+# Note that inheriting from GrammaredSequenceMeta, rather than something
+# more general, is intentional. Multiple inheritance with metaclasses can be
+# tricky and is not handled automatically in Python. Since this class needs to
+# inherit both from ABCMeta and GrammaredSequenceMeta, the only way we could
+# find to make this work was to have GrammaredSequenceMeta inherit from ABCMeta
+# and then inherit from GrammaredSequenceMeta here.
 class DisableSubclassingMeta(GrammaredSequenceMeta):
-    def __new__(cls, name, bases, classdict):
+    def __new__(mcs, name, bases, dct):
         for b in bases:
             if isinstance(b, DisableSubclassingMeta):
                 raise TypeError("Subclassing disabled for class %s. To create"
                                 " a custom sequence class, inherit directly"
                                 " from skbio.sequence.%s" %
                                 (b.__name__, GrammaredSequence.__name__))
-        return type.__new__(cls, name, bases, dict(classdict))
+        return super(DisableSubclassingMeta, mcs).__new__(mcs, name, bases,
+                                                          dict(dct))
 
 
-# Note: apparently ABCMeta needs to be applied before GrammaredSequenceMeta
 @add_metaclass(GrammaredSequenceMeta)
-@add_metaclass(ABCMeta)
 class GrammaredSequence(Sequence):
     """Store sequence data conforming to a character set.
 
@@ -312,15 +316,13 @@ class GrammaredSequence(Sequence):
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
             raise ValueError(
                 "Invalid character%s in sequence: %r. \n"
-                "Note that lowercase letters are not valid by default. "
-                "You can "
-                "pass `lowercase=True` if your sequence contains lowercase "
-                "letters.\n"
-                "Valid characters: "
-                "%r" % ('s' if len(bad) > 1 else '',
-                        [str(b.tostring().decode("ascii")) for b in bad] if
-                        len(bad) > 1 else bad[0],
-                        list(self.alphabet)))
+                "Valid characters: %r\n"
+                "Note: Use `lowercase` if your sequence contains lowercase "
+                "characters not in the sequence's alphabet."
+                % ('s' if len(bad) > 1 else '',
+                   [str(b.tostring().decode("ascii")) for b in bad] if
+                   len(bad) > 1 else bad[0],
+                   list(self.alphabet)))
 
     @stable(as_of='0.4.0')
     def gaps(self):
