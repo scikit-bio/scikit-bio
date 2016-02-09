@@ -30,36 +30,39 @@ class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
-        if cls.default_gap_char not in cls.gap_chars:
-            raise GrammaredSequenceException(
-                "default_gap_char must be in gap_chars for class %s" %
-                name)
-
         # Only perform validation on classes that aren't abstract.
-        if (type(cls.degenerate_map) is not abstractproperty and
-                type(cls.nondegenerate_chars) is not abstractproperty):
-            for key in cls.degenerate_map.keys():
-                for nondegenerate in cls.degenerate_map[key]:
-                    if nondegenerate not in cls.nondegenerate_chars:
-                        raise GrammaredSequenceException(
-                            "degenerate_map must expand only to "
-                            "characters included in nondegenerate_chars for "
-                            "class %s" % name)
+        if (type(cls.default_gap_char) is not abstractproperty and
+                type(cls.gap_chars) is not abstractproperty):
+            if cls.default_gap_char not in cls.gap_chars:
+                raise GrammaredSequenceException(
+                    "default_gap_char must be in gap_chars for class %s" %
+                    name)
 
             if len(cls.gap_chars & cls.degenerate_chars) > 0:
                 raise GrammaredSequenceException(
                     "gap_chars and degenerate_chars must not share any "
                     "characters for class %s" % name)
 
-            if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
-                raise GrammaredSequenceException(
-                    "gap_chars and nondegenerate_chars must not share any "
-                    "characters for class %s" % name)
+            if (type(cls.degenerate_map) is not abstractproperty and
+                    type(cls.nondegenerate_chars) is not abstractproperty):
 
-            if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
-                raise GrammaredSequenceException(
-                    "degenerate_chars and nondegenerate_chars must not share "
-                    "any characters for class %s" % name)
+                for key in cls.degenerate_map.keys():
+                    for nondegenerate in cls.degenerate_map[key]:
+                        if nondegenerate not in cls.nondegenerate_chars:
+                            raise GrammaredSequenceException(
+                                "degenerate_map must expand only to "
+                                "characters included in nondegenerate_chars "
+                                "for class %s" % name)
+
+                if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+                    raise GrammaredSequenceException(
+                        "gap_chars and nondegenerate_chars must not share any "
+                        "characters for class %s" % name)
+
+                if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
+                    raise GrammaredSequenceException(
+                        "degenerate_chars and nondegenerate_chars must not "
+                        "share any characters for class %s" % name)
 
         return cls
 
@@ -138,6 +141,14 @@ class GrammaredSequence(Sequence):
     ...     @classproperty
     ...     def nondegenerate_chars(cls):
     ...         return set("ABC")
+    ...
+    ...     @classproperty
+    ...     def default_gap_char(cls):
+    ...         return '-'
+    ...
+    ...     @classproperty
+    ...     def gap_chars(cls):
+    ...         return set('-.')
 
     >>> seq = CustomSequence('ABABACAC')
     >>> seq
@@ -215,6 +226,7 @@ class GrammaredSequence(Sequence):
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
+    @abstractproperty
     @classproperty
     @stable(as_of='0.4.0')
     def gap_chars(cls):
@@ -228,6 +240,7 @@ class GrammaredSequence(Sequence):
         """
         return set('-.')
 
+    @abstractproperty
     @classproperty
     @experimental(as_of='0.4.1')
     def default_gap_char(cls):
@@ -243,7 +256,7 @@ class GrammaredSequence(Sequence):
             Default gap character.
 
         """
-        return '-'
+        return set()  # pragma: no cover
 
     @classproperty
     @stable(as_of='0.4.0')

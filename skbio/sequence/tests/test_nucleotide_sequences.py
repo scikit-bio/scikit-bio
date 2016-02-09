@@ -419,6 +419,14 @@ class TestNucelotideSequence(unittest.TestCase):
                 def nondegenerate_chars(cls):
                     return set("ABC")
 
+                @classproperty
+                def default_gap_char(cls):
+                    return '-'
+
+                @classproperty
+                def gap_chars(cls):
+                    return set('-.')
+
             seq1 = Class('ABC')
             seq2 = DifferentSequenceClass('ABC')
 

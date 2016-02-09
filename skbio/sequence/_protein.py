@@ -155,6 +155,34 @@ class Protein(GrammaredSequence):
         """
         return set('*')
 
+    @classproperty
+    def gap_chars(cls):
+        """Return characters defined as gaps.
+
+        Returns
+        -------
+        set
+            Characters defined as gaps.
+
+        """
+        return set('-.')
+
+    @classproperty
+    def default_gap_char(cls):
+        """Gap character to use when constructing a new gapped sequence.
+
+        This character is used when it is necessary to represent gap characters
+        in a new sequence. For example, a majority consensus sequence will use
+        this character to represent gaps.
+
+        Returns
+        -------
+        str
+            Default gap character.
+
+        """
+        return '-'
+
     @property
     def _motifs(self):
         return _motifs

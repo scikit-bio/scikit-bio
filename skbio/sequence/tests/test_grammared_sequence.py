@@ -28,6 +28,14 @@ class ExampleGrammaredSequence(GrammaredSequence):
     def nondegenerate_chars(cls):
         return set("ABC")
 
+    @classproperty
+    def default_gap_char(cls):
+        return '-'
+
+    @classproperty
+    def gap_chars(cls):
+        return set('-.')
+
 
 class ExampleMotifsTester(ExampleGrammaredSequence):
     @property
@@ -46,7 +54,7 @@ class TestGrammaredSequence(TestCase):
                 "default_gap_char must be in gap_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
-            class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+            class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
                 @classproperty
                 def default_gap_char(cls):
                     return '*'
@@ -58,7 +66,7 @@ class TestGrammaredSequence(TestCase):
                 "nondegenerate_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
-            class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+            class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
                 @classproperty
                 def degenerate_map(cls):
                     return {"X": set("B")}
@@ -73,7 +81,8 @@ class TestGrammaredSequence(TestCase):
                 "gap_chars and degenerate_chars must not share any characters "
                 "for class GrammaredSequenceGapInDegenerateMap"):
 
-            class GrammaredSequenceGapInDegenerateMap(GrammaredSequence):
+            class GrammaredSequenceGapInDegenerateMap(
+                    ExampleGrammaredSequence):
                 @classproperty
                 def degenerate_map(cls):
                     return {"X": set("AB")}
@@ -92,7 +101,8 @@ class TestGrammaredSequence(TestCase):
             ("gap_chars and nondegenerate_chars must not share any characters "
              "for class GrammaredSequenceGapInNondegenerateMap")):
 
-            class GrammaredSequenceGapInNondegenerateMap(GrammaredSequence):
+            class GrammaredSequenceGapInNondegenerateMap(
+                    ExampleGrammaredSequence):
                 @classproperty
                 def degenerate_map(cls):
                     return {"X": set("AB")}
@@ -111,7 +121,7 @@ class TestGrammaredSequence(TestCase):
             ("degenerate_chars and nondegenerate_chars must not share any "
              "characters for class GrammaredSequenceInvalid")):
 
-            class GrammaredSequenceInvalid(GrammaredSequence):
+            class GrammaredSequenceInvalid(ExampleGrammaredSequence):
                 @classproperty
                 def degenerate_map(cls):
                     return {"X": set("AB")}
