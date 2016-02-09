@@ -1015,7 +1015,7 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
         Ignore differences in `biplot_scores` row and column labels.
     ignore_directionality : bool, optional
         Ignore differences in directionality (i.e., differences in signs) for
-        attributes `samples` and `features`.
+        attributes `samples`, `features` and `biplot_scores`.
 
     Raises
     ------
@@ -1042,6 +1042,7 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
     _assert_frame_equal(left.biplot_scores, right.biplot_scores,
                         ignore_biplot_scores_labels,
                         ignore_biplot_scores_labels,
+                        ignore_directionality=ignore_directionality,
                         decimal=decimal)
 
     _assert_frame_equal(left.sample_constraints, right.sample_constraints,
