@@ -248,8 +248,8 @@ class TestStockholmReader(unittest.TestCase):
 
     def test_stockholm_duplicate_tree_id_error(self):
         fp = get_data_path('stockholm_duplicate_tree_ids')
-        with self.assertRaisesRegex(StockholmFormatError,
-                                    'Tree.*tree1.*in file.'):
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'Tree.*tree1.*in file.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_nonexistent_gr_error(self):
