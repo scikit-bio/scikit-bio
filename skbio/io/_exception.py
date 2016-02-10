@@ -84,6 +84,11 @@ class QSeqFormatError(FileFormatError):
     pass
 
 
+class StockholmFormatError(FileFormatError):
+    """Raised when a ``stockholm`` formatted file cannot be parsed."""
+    pass
+
+
 class InvalidRegistrationError(Exception):
     """Raised if function doesn't meet the expected API of its registration."""
     pass
