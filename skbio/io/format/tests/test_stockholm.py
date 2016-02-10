@@ -56,7 +56,6 @@ class TestStockholmSniffer(unittest.TestCase):
 
         self.negatives = [get_data_path(e) for e in [
             'stockholm_missing_header',
-            'stockholm_missing_footer',
             'empty',
             'whitespace_only'
             ]]
@@ -255,20 +254,20 @@ class TestStockholmReader(unittest.TestCase):
     def test_nonexistent_gr_error(self):
         fp = get_data_path('stockholm_invalid_nonexistent_gr')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Markup line references.*RL1355.'):
+                                   'GS or GR.*nonexistent sequence.*RL1355.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_nonexistent_gs_error(self):
         fp = get_data_path('stockholm_invalid_nonexistent_gs')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Markup line references.*AC14.'):
+                                   'GS or GR.*nonexistent sequence.*AC14.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_duplicate_sequence_names_error(self):
         fp = get_data_path('stockholm_duplicate_sequence_names')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Found multiple data.*ASR132.*supported by '
-                                   'the reader.'):
+                                   'duplicate sequence name.*ASR132.*supported'
+                                   ' by the reader.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_duplicate_gr_error(self):
@@ -294,49 +293,49 @@ class TestStockholmReader(unittest.TestCase):
     def test_missing_header_error(self):
         fp = get_data_path('stockholm_missing_header')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   r'File missing.*`# STOCKHOLM 1.0\\n`.'):
+                                   'File missing.*header'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_missing_footer_error(self):
         fp = get_data_path('stockholm_missing_footer')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Final line.*only `//`.'):
+                                   'Final line.*only "//".'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_data_type_error(self):
         fp = get_data_path('stockholm_invalid_data_type')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   "Unrecognized.*'#=GZ'"):
+                                   "Unrecognized.*'#=GZ"):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gf_line_error(self):
         fp = get_data_path('stockholm_malformed_gf_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line only contains 2.*must contain 3.'):
+                                   'Line contains 2.*must contain.*3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gs_line_error(self):
         fp = get_data_path('stockholm_malformed_gs_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line only contains 3.*must contain 4.'):
+                                   'Line contains 3.*must contain.*4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gr_line_error(self):
         fp = get_data_path('stockholm_malformed_gr_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line only contains 2.*must contain 4.'):
+                                   'Line contains 2.*must contain.*4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gc_line_error(self):
         fp = get_data_path('stockholm_malformed_gc_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line only contains 2.*must contain 3.'):
+                                   'Line contains 2.*must contain.*3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_data_line_error(self):
         fp = get_data_path('stockholm_malformed_data_line')
         with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line only contains 1.*must contain 2.'):
+                                   'Line contains 1.*must contain.*2.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_differing_sequence_lengths_error(self):
@@ -367,6 +366,15 @@ class TestStockholmReader(unittest.TestCase):
         with six.assertRaisesRegex(self, TypeError,
                                    '`constructor`.*`IUPACSequence`'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
+
+    def test_handles_missing_metadata_efficiently(self):
+        msa = _stockholm_to_tabular_msa(get_data_path('stockholm_minimal'),
+                                        constructor=DNA)
+        self.assertIsNone(msa._metadata)
+        self.assertIsNone(msa._positional_metadata)
+        self.assertIsNone(msa[0]._metadata)
+        self.assertIsNone(msa[0]._positional_metadata)
+
 
 if __name__ == '__main__':
     unittest.main()

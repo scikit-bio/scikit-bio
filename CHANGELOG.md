@@ -3,6 +3,7 @@
 ## Version 0.4.1-dev (changes since 0.4.1 go here)
 
 ### Features
+* Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA`. ([#937](https://github.com/biocore/scikit-bio/issues/967))
 
 ### Backward-incompatible changes [stable]
 
