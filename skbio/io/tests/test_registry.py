@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
+import six
 from six.moves import zip_longest
 
 from io import StringIO
@@ -590,18 +592,17 @@ class TestSniff(RegistryTest):
         fmt, _ = self.registry.sniff(fp, encoding='big5')
         self.assertEqual(fmt, 'formatx')
 
-    def test_that_newline_is_used(self):
+    def test_passing_newline_raises_error(self):
         formatx = self.registry.create_format('formatx')
 
         fp = get_data_path('real_file')
 
         @formatx.sniffer()
         def sniffer(fh):
-            self.assertEqual(fh.readlines(), ['a\nb\nc\nd\ne\n'])
             return True, {}
 
-        fmt, _ = self.registry.sniff(fp, newline='\r')
-        self.assertEqual(fmt, 'formatx')
+        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+            self.registry.sniff(fp, newline='\r')
 
     def test_non_default_encoding(self):
         big5_format = self.registry.create_format('big5_format',
@@ -627,15 +628,10 @@ class TestSniff(RegistryTest):
 
         @formatx.sniffer()
         def sniffer(fh):
-            self.assertEqual(fh.readlines(), self._expected_lines)
+            self.assertEqual(fh.readlines(), ['a\nb\nc\nd\ne\n'])
             return True, {}
 
-        self._expected_lines = ['a\nb\nc\nd\ne\n']
         fmt, _ = self.registry.sniff(fp)
-        self.assertEqual(fmt, 'formatx')
-
-        self._expected_lines = ['a\n', 'b\n', 'c\n', 'd\n', 'e\n']
-        fmt, _ = self.registry.sniff(fp, newline=None)
         self.assertEqual(fmt, 'formatx')
 
     def test_position_not_mutated_real_file(self):
@@ -1142,7 +1138,7 @@ class TestRead(RegistryTest):
         with self.assertRaises(UnicodeDecodeError):
             self.registry.read(fp, format='format1', encoding='utf8')
 
-    def test_that_newline_is_used(self):
+    def test_passing_newline_raises_error(self):
         formatx = self.registry.create_format('formatx')
 
         fp = get_data_path('real_file')
@@ -1159,12 +1155,11 @@ class TestRead(RegistryTest):
         def reader_gen(fh):
             yield TestClass(fh.readlines())
 
-        instance = self.registry.read(fp, into=TestClass, newline='\r')
-        self.assertEqual(instance, TestClass(['a\nb\nc\nd\ne\n']))
+        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+            self.registry.read(fp, into=TestClass, newline='\r')
 
-        gen = self.registry.read(fp, format='formatx', newline='\r')
-        self.assertEqual(next(gen), TestClass(['a\nb\nc\nd\ne\n']))
-        gen.close()
+        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+            self.registry.read(fp, format='formatx', newline='\r')
 
     def test_non_default_newline(self):
         formatx = self.registry.create_format('formatx', newline='\r')
@@ -1188,15 +1183,6 @@ class TestRead(RegistryTest):
 
         gen = self.registry.read(fp, format='formatx')
         self.assertEqual(next(gen), TestClass(['a\nb\nc\nd\ne\n']))
-        gen.close()
-
-        instance = self.registry.read(fp, into=TestClass, newline=None)
-        self.assertEqual(instance, TestClass(['a\n', 'b\n', 'c\n', 'd\n',
-                                              'e\n']))
-
-        gen = self.registry.read(fp, format='formatx', newline=None)
-        self.assertEqual(next(gen), TestClass(['a\n', 'b\n', 'c\n', 'd\n',
-                                               'e\n']))
         gen.close()
 
     def test_file_sentinel_many(self):

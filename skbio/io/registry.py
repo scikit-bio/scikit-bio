@@ -371,7 +371,8 @@ class IORegistry(object):
         file : openable (filepath, URL, filehandle, etc.)
             The file to sniff. Something that is understood by `skbio.io.open`.
         kwargs : dict, optional
-            Keyword arguments will be passed to `skbio.io.open`.
+            Keyword arguments will be passed to `skbio.io.open`. `newline`
+            cannot be provided.
 
         Returns
         -------
@@ -385,8 +386,14 @@ class IORegistry(object):
             This occurs when the format is not 'claimed' by any registered
             sniffer or when the format is ambiguous and has been 'claimed' by
             more than one sniffer.
+        TypeError
+            If `newline` is provided in `kwargs`.
 
         """
+        if 'newline' in kwargs:
+            raise TypeError(
+                "Cannot provide `newline` keyword argument when sniffing.")
+
         # By resolving the input here, we have the oppurtunity to reuse the
         # file (which is potentially ephemeral). Each sniffer will also resolve
         # the file, but that call will short-circuit and won't claim
@@ -457,7 +464,8 @@ class IORegistry(object):
             When True, will double check the `format` if provided.
         kwargs : dict, optional
             Keyword arguments will be passed to their respective handlers
-            (`skbio.io.open` and the reader for `format`)
+            (`skbio.io.open` and the reader for `format`). `newline` cannot be
+            provided.
 
         Returns
         -------
@@ -468,6 +476,8 @@ class IORegistry(object):
         ------
         ValueError
             Raised when `format` and `into` are both None.
+        TypeError
+            If `newline` is provided in `kwargs`.
         UnrecognizedFormatError
             Raised when a reader could not be found for a given `format` or the
             format could not be guessed.
@@ -479,6 +489,10 @@ class IORegistry(object):
             overriding the suggestion provided by the sniffer of `format`.
 
         """
+        if 'newline' in kwargs:
+            raise TypeError(
+                "Cannot provide `newline` keyword argument when reading.")
+
         # Context managers do not compose well with generators. We have to
         # duplicate the logic so that the file will stay open while yielding.
         # Otherwise the context exits as soon as the generator is returned
