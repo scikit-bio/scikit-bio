@@ -218,13 +218,11 @@ Examples
 Suppose we have a Stockholm file containing an MSA of protein sequences
 (modified from [2]_):
 
->>> from pprint import pprint
 >>> import skbio.io
 >>> from io import StringIO
 >>> from skbio import Protein, TabularMSA
 >>> fs = '\\n'.join([
 ...         '# STOCKHOLM 1.0',
-...         '#=GF ID CBS',
 ...         '#=GF CC CBS domains are small intracellular modules mostly'
 ...         ' found ',
 ...         '#=GF CC in 2 or four copies within a protein.',
@@ -249,7 +247,6 @@ TabularMSA[Protein]
 Metadata:
     'CC': 'CBS domains are small intracellular modules mostly found in
            2 or four copies within a protein.'
-    'ID': 'CBS'
 Positional metadata:
     'SS_cons': <dtype: object>
 Stats:
@@ -264,10 +261,9 @@ EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
->>> pprint(msa.metadata) # using pprint to display dict in sorted order
-{'CC': 'CBS domains are small intracellular modules mostly found in 2 or '
-       'four copies within a protein.',
- 'ID': 'CBS'}
+>>> msa.metadata
+{'CC': 'CBS domains are small intracellular modules mostly found in 2 or four \
+copies within a protein.'}
 
 GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 
