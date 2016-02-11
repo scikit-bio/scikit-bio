@@ -262,8 +262,8 @@ EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
 >>> msa.metadata
-{'CC': 'CBS domains are small intracellular modules mostly found in 2 or four \
-copies within a protein.'}
+OrderedDict([('CC', 'CBS domains are small intracellular modules mostly found \
+in 2 or four copies within a protein.')])
 
 GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 
@@ -284,7 +284,7 @@ GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 GS metadata is stored in the sequence-specific ``metadata`` dictionary:
 
 >>> msa[0].metadata
-{'AC': 'O83071'}
+OrderedDict([('AC', 'O83071')])
 
 GR metadata is stored in sequence-specific ``positional_metadata``:
 
@@ -403,8 +403,8 @@ class _MSAData(object):
     def __init__(self):
         self._seqs = {}
         self._seq_order = []
-        self._metadata = {}
-        self._positional_metadata = {}
+        self._metadata = OrderedDict()
+        self._positional_metadata = OrderedDict()
 
     def add_sequence(self, seq_name, seq_data):
         if seq_name not in self._seqs:
@@ -498,7 +498,7 @@ class _SeqData(object):
 
     def add_metadata_feature(self, feature_name, feature_data):
         if self.metadata is None:
-            self.metadata = {}
+            self.metadata = OrderedDict()
         if feature_name in self.metadata:
             self.metadata[feature_name] += feature_data
         else:
@@ -506,7 +506,7 @@ class _SeqData(object):
 
     def add_positional_metadata_feature(self, feature_name, feature_data):
         if self.positional_metadata is None:
-            self.positional_metadata = {}
+            self.positional_metadata = OrderedDict()
         if feature_name in self.positional_metadata:
             _raise_duplicate_error("Found duplicate GR label %r associated "
                                    "with sequence name %r"

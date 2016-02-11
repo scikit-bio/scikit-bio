@@ -12,6 +12,8 @@ import six
 
 import unittest
 
+from collections import OrderedDict
+
 from skbio import TabularMSA, Protein, DNA, RNA
 from skbio.io import StockholmFormatError
 from skbio.io.format.stockholm import (_stockholm_to_tabular_msa,
@@ -244,6 +246,14 @@ class TestStockholmReader(unittest.TestCase):
                          {'AC_cons': list('GGGACUGGACAUCUAUUCAG')}),
                          index=['RTC2231', 'RTF2124', 'RTH3322', 'RTB1512'])
         self.assertEqual(msa, exp)
+
+    def test_stockholm_maintains_order(self):
+        fp = get_data_path('stockholm_metadata_only')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        msa_order = msa.metadata.items()
+        exp_order = OrderedDict([('NM', 'Kestrel Gorlick'),
+                                 ('DT', 'February 5th, 2016')]).items()
+        self.assertEqual(msa_order, exp_order)
 
     def test_stockholm_duplicate_tree_id_error(self):
         fp = get_data_path('stockholm_duplicate_tree_ids')
