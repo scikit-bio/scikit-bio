@@ -1,0 +1,13 @@
+# STOCKHOLM 1.0
+#=GF NM Kestrel Gorlick
+#=GF DT February 11, 2016
+#=GF FN Writer test file
+#=GS seq1 DT February 1, 2016
+#=GS seq2 DT Unknown
+#=GS seq3 DT Unknown
+seq1         GAGGCCATGCCCAGGTGAAG
+seq2         ACCTGAGCCACAGTAGAAGT
+seq3         CCCTTCGCTGGAAATGTATG
+#=GR seq3 SS CCGAAAGTCGTTCGAAAATG
+#=GC SS_cons CGTTCGTTCTAACAATTCCA
+//

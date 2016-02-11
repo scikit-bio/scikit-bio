@@ -10,6 +10,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
 
+import io
 import unittest
 
 from collections import OrderedDict
@@ -17,6 +18,7 @@ from collections import OrderedDict
 from skbio import TabularMSA, Protein, DNA, RNA
 from skbio.io import StockholmFormatError
 from skbio.io.format.stockholm import (_stockholm_to_tabular_msa,
+                                       _tabular_msa_to_stockholm,
                                        _stockholm_sniffer)
 from skbio.util import get_data_path
 
@@ -53,7 +55,8 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_runon_gs',
             'stockholm_single_tree_with_id',
             'stockholm_single_tree_without_id',
-            'stockholm_whitespace_only_lines'
+            'stockholm_whitespace_only_lines',
+            'stockholm_all_data_types'
             ]]
 
         self.negatives = [get_data_path(e) for e in [
@@ -388,8 +391,107 @@ class TestStockholmReader(unittest.TestCase):
 
 class TestStockholmWriter(unittest.TestCase):
     def test_msa_to_stockholm_extensive(self):
-        pass
+        fp = get_data_path('stockholm_all_data_types')
+        msa = TabularMSA([DNA('GAGGCCATGCCCAGGTGAAG',
+                              metadata={'DT': 'February 1, 2016'}),
+                          DNA('ACCTGAGCCACAGTAGAAGT',
+                              metadata={'DT': 'Unknown'}),
+                          DNA('CCCTTCGCTGGAAATGTATG',
+                              metadata={'DT': 'Unknown'},
+                              positional_metadata={'SS': list('CCGAAAGTCGTTCG'
+                                                              'AAAATG')})],
+                         metadata=OrderedDict([('NM', 'Kestrel Gorlick'),
+                                              ('DT', 'February 11, 2016'),
+                                              ('FN', 'Writer test file')]),
+                         positional_metadata={'SS_cons': list('CGTTCGTTCTAACAA'
+                                                              'TTCCA')},
+                         index=['seq1', 'seq2', 'seq3'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
 
+    def test_msa_to_stockholm_minimal(self):
+        fp = get_data_path('stockholm_minimal')
+        msa = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG')], index=['0235244'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_single_tree(self):
+        fp = get_data_path('stockholm_single_tree_without_id')
+        msa = TabularMSA([], metadata={'NH': 'ABCD'})
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_multiple_trees(self):
+        fp = get_data_path('stockholm_multiple_trees')
+        msa = TabularMSA([], metadata={'NH': OrderedDict([('tree1', 'ABCD'),
+                                                          ('tree2', 'EFGH'),
+                                                          ('tree3', 'IJKL')])})
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_extensive(self):
+        fp = get_data_path('stockholm_extensive')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_minimal(self):
+        fp = get_data_path('stockholm_minimal')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_single_tree(self):
+        fp = get_data_path('stockholm_single_tree_without_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_multiple_trees(self):
+        fp = get_data_path('stockholm_multiple_trees')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     unittest.main()

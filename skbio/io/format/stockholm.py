@@ -320,14 +320,13 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
 from skbio.alignment import TabularMSA
 from skbio.sequence._iupac_sequence import IUPACSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
-_SeqData = namedtuple("SeqData", ["seq", "metadata", "pos_metadata"])
 
 
 @stockholm.sniffer()
@@ -582,74 +581,73 @@ def _check_for_malformed_line(line, expected_len):
 @stockholm.writer(TabularMSA)
 def _tabular_msa_to_stockholm(obj, fh):
     index = list(obj.index)
-    data = OrderedDict()
-    # Fills data in to _SeqData object
-    for i in range(len(obj)):
-        msa_data = _SeqData(seq=str(obj[i]), metadata={}, pos_metadata={})
-        if obj[i].has_metadata():
-            for j in range(len(obj[i].metadata)):
-                gs_feature = list(obj[i].metadata.keys())[j]
-                msa_data.metadata[gs_feature] = obj[i].metadata[gs_feature]
-        if obj[i].has_positional_metadata():
-            for j in range(len(obj[i].positional_metadata.keys())):
-                gr_feature = list(obj[i].positional_metadata.keys())[j]
-                gr_feature_data = obj[i].positional_metadata[gr_feature]
-                msa_data.pos_metadata[gr_feature] = ''.join(gr_feature_data)
-        data[index[i]] = msa_data
-
+    # Writes header
     fh.write("# STOCKHOLM 1.0\n")
 
     # Writes GF data to file
     if obj.has_metadata():
         for i in range(len(obj.metadata)):
-            gf_feature = list(obj.metadata.keys())[i]
-            fh.write("#=GF %s %s\n" % (gf_feature.strip("'"),
-                                       obj.metadata[gf_feature].strip("'")))
+            gf_feature = list(obj.metadata.keys())[i].strip("'")
+            if gf_feature == 'NH' and (type(obj.metadata[gf_feature]) is
+                                       OrderedDict):
+                tree_data = obj.metadata[gf_feature]
+                for j in range(len(tree_data)):
+                    gf_feature_data = list(tree_data.keys())[j]
+                    fh.write("#=GF TN %s\n" % gf_feature_data)
+                    gf_feature_data = list(tree_data.values())[j]
+                    fh.write("#=GF NH %s\n" % gf_feature_data)
+            else:
+                gf_feature_data = obj.metadata[gf_feature].strip("'")
+                fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
+
     # Writes GS data to file
-    for i in range(len(data)):
-        metadata = data[index[i]].metadata
+    for i in range(len(obj)):
+        metadata = obj[i].metadata
         if metadata:
             for j in range(len(metadata.keys())):
                 gs_feature = list(metadata.keys())[j]
+                gs_feature_data = metadata[gs_feature]
                 fh.write("#=GS %s %s %s\n" % (index[i], gs_feature,
-                                              metadata[gs_feature]))
+                                              gs_feature_data))
 
     unpadded_data = []
     # Retrieves GR and raw data
-    for i in range(len(data)):
+    for i in range(len(obj)):
         data_label = index[i]
-        unpadded_data.append((data_label, data[data_label].seq))
-        positional_metadata = data[data_label].pos_metadata
-        if positional_metadata:
+        unpadded_data.append((data_label, str(obj[i])))
+        if obj[i].has_positional_metadata():
+            positional_metadata = obj[i].positional_metadata
             for j in range(len(positional_metadata.keys())):
                 gr_feature = list(positional_metadata.keys())[j]
+                gr_feature_data = ''.join(positional_metadata[gr_feature])
                 gr_string = "#=GR %s %s" % (data_label, gr_feature)
-                unpadded_data.append((gr_string,
-                                      positional_metadata[gr_feature]))
+                unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
     if obj.has_positional_metadata():
         positional_metadata = obj.positional_metadata
         for i in range(len(positional_metadata.keys())):
             gc_feature = list(positional_metadata.keys())[i]
+            gc_feature_data = ''.join(positional_metadata[gc_feature])
             gc_string = "#=GC %s" % gc_feature
-            unpadded_data.append((gc_string,
-                                  ''.join(positional_metadata[gc_feature])))
+            unpadded_data.append((gc_string, gc_feature_data))
 
     # Writes GR, GC, and raw data to file with padding
     _write_padded_data(unpadded_data, fh)
 
-    fh.write("//")
+    # Writes footer
+    fh.write("//\n")
 
 
 def _write_padded_data(data, fh):
-    n=0
+    n = 0
     for i in range(len(data)):
-        tag_string = data[i][0]
+        tag_string = str(data[i][0])
         if len(tag_string) > n:
             n = len(tag_string)
     for i in range(len(data)):
         tag_string, data_string = data[i]
+        tag_string = str(tag_string)
         # Padding is extended by 1 to account for the extra space after
         # longest tag string
         padding = ''.join(' ' for j in range(n-len(tag_string)+1))
