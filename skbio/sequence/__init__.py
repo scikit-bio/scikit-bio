@@ -304,7 +304,12 @@ from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
+from ._feature import Feature
+from ._interval import IntervalMetadataMixin, IntervalMetadata
+from .intersection import Interval, IntervalTree
 
-__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
+
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
+           'Feature', 'Interval', 'IntervalTree', "IntervalMetadata"]
 
 test = TestRunner(__file__).test

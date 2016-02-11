@@ -27,7 +27,7 @@ from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests)
-
+from skbio.sequence import Feature
 
 class SequenceSubclass(Sequence):
     """Used for testing purposes."""
@@ -818,6 +818,17 @@ class TestSequence(TestCase, ReallyEqualMixin):
                         metadata={'id': 'id11', 'description': 'dsc11'})
 
         self.assertEqual(seq[np.array([False, True] * 8)], eseq)
+
+    def test_getitem_with_feature(self):
+        x = Feature(gene='sag')
+        s = "0123456789abcdef"
+        seq = Sequence(s, metadata={'id': 'id11', 'description': 'dsc11'},
+                       interval_metadata={x : ((0, 2), (4, 6))})
+
+        eseq = Sequence("0145",
+                        metadata={'id': 'id11', 'description': 'dsc11'})
+
+        self.assertEqual(seq[x], eseq)
 
     def test_getitem_with_invalid(self):
         seq = Sequence("123456",
