@@ -376,5 +376,10 @@ class TestStockholmReader(unittest.TestCase):
         self.assertIsNone(msa[0]._positional_metadata)
 
 
+class TestStockholmWriter(unittest.TestCase):
+    def test_msa_to_stockholm_extensive(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()
