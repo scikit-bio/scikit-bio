@@ -20,15 +20,15 @@ class IntervalMetadata():
     def __init__(self, features=None):
         # maps features attributes to intervals
         if features is None:
-            self.feature_metadata = {}
-            self.interval_metadata = IntervalTree()
+            self.features = {}
+            self.intervals = IntervalTree()
         else:
-            self.interval_metadata = IntervalTree()
+            self.intervals = IntervalTree()
             for k, invs in features.items():
                 for inv in invs:
                     start, end = _polish_interval(inv)
-                    self.interval_metadata.add(start, end, k)
-            self.feature_metadata = features
+                    self.intervals.add(start, end, k)
+            self.features = features
 
     def add(self, x, *intervals):
         """ Adds a feature to the metadata object.
@@ -55,25 +55,25 @@ class IntervalMetadata():
             loc = _polish_interval(interval)
             if loc is not None:
                 start, end = loc
-                self.interval_metadata.add(start, end, x)
+                self.intervals.add(start, end, x)
 
         # TODO: The below will require careful consideration
         # since this will be using a little more memory, since the whole
         # feature object will be stored.
-        if x not in self.feature_metadata.keys():
-            self.feature_metadata[x] = []
+        if x not in self.features.keys():
+            self.features[x] = []
 
-        self.feature_metadata[x] = list(map(_polish_interval, intervals))
+        self.features[x] = list(map(_polish_interval, intervals))
 
 
     def _query_interval(self, interval):
         start, end = _polish_interval(interval)
-        features = self.interval_metadata.find(start, end)
+        features = self.intervals.find(start, end)
         return features
 
     def _query_feature(self, key, value):
         queries = []
-        for feature in self.feature_metadata.keys():
+        for feature in self.features.keys():
             if feature[key] == value:
                  queries.append(feature)
         return queries
@@ -113,7 +113,7 @@ class IntervalMetadata():
         for (key, value) in kwargs.items():
             feats += self._query_feature(key, value)
 
-        return feats
+        return list(set(feats))
 
 class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     ''' Store metadata corresponding to Features and Intervals.

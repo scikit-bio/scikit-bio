@@ -22,7 +22,7 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         d = {Feature(gene='sagA'): [(0, 2), (4, 7)],
              Feature(gene='sagB'): [(3, 5)]}
         md = IntervalMetadata(features=d)
-        self.assertEquals(md.feature_metadata, d)
+        self.assertEquals(md.features, d)
 
     def test_polish_interval_empty(self):
         res = _polish_interval(())
@@ -55,6 +55,27 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         feats = interval_metadata.query(gene='sagB')
         self.assertEqual(feats, [Feature(gene='sagB')])
 
+    def test_query_duplicate1(self):
+        interval_metadata = IntervalMetadata(features={
+                           Feature(gene='sagA'): [(0, 2), (4, 7)],
+                           Feature(gene='sagB'): [(3, 5)]
+                       })
+
+        feats = interval_metadata.query((1, 5))
+        self.assertEqual(set(feats),
+                         {Feature(gene='sagA'),
+                          Feature(gene='sagB')})
+
+    def test_query_duplicate2(self):
+        interval_metadata = IntervalMetadata(features={
+                           Feature(gene='sagA'): [(0, 2), (4, 7)],
+                           Feature(gene='sagB'): [(3, 5)],
+                           Feature(gene='sagB'): [(14, 29)]
+                       })
+        feats = interval_metadata.query(gene='sagB')
+        self.assertEqual(feats, [Feature(gene='sagB')])
+
+
     def test_add(self):
         interval_metadata = IntervalMetadata()
         interval_metadata.add(Feature(gene='sagA'), 1, (4, 7))
@@ -78,4 +99,4 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         self.assertEqual(feats, [Feature(gene='sagB')])
 
 if __name__=='__main__':
-    pass
+    unittest.main()

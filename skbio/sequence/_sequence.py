@@ -837,7 +837,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         """
         if isinstance(indexable, Feature):
-            intervals = self.interval_metadata.feature_metadata[indexable]
+            intervals = self.interval_metadata.features[indexable]
             _indexable = list(map(lambda x: slice(x[0], x[1]), map(_polish_interval, intervals)))
             seq = np.concatenate(
                         list(_slices_from_iter(self._bytes, _indexable)))
