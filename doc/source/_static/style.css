@@ -19,6 +19,10 @@ code {
     font-size: 100% !important;
 }
 
+code.descclassname, code.descname {
+    padding: 2px 0px;
+}
+
 cite, code.docutils.literal:not(.xref) {
     padding: 1px 4px !important;
     font-size: 100% !important;
