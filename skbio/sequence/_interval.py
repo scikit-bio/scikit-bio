@@ -30,12 +30,12 @@ class IntervalMetadata():
                     self.intervals.add(start, end, k)
             self.features = features
 
-    def add(self, x, *intervals):
+    def add(self, feature, *intervals):
         """ Adds a feature to the metadata object.
 
         Parameters
         ----------
-        x : skbio.sequence.feature
+        feature : skbio.sequence.feature
             The feature object being added.
         intervals : iteerable of intervals
             A list of intervals associated with the feature
@@ -45,8 +45,8 @@ class IntervalMetadata():
         The intervals associated with a feature is assumed to be under
         the `location` keyword by default.
         """
-        if not isinstance(x, Feature):
-            raise ValueError('x is not an instance of `Feature`')
+        if not isinstance(feature, Feature):
+            raise ValueError('feature is not an instance of `Feature`')
 
         # TODO: The below will require careful consideration
         # since this will be using a little more memory, since the whole
@@ -55,15 +55,15 @@ class IntervalMetadata():
             loc = _polish_interval(interval)
             if loc is not None:
                 start, end = loc
-                self.intervals.add(start, end, x)
+                self.intervals.add(start, end, feature)
 
         # TODO: The below will require careful consideration
         # since this will be using a little more memory, since the whole
         # feature object will be stored.
-        if x not in self.features.keys():
-            self.features[x] = []
+        if feature not in self.features.keys():
+            self.features[feature] = []
 
-        self.features[x] = list(map(_polish_interval, intervals))
+        self.features[feature] = list(map(_polish_interval, intervals))
 
 
     def _query_interval(self, interval):
