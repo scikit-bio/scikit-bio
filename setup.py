@@ -78,6 +78,8 @@ if platform.machine() == 'i686':
     ssw_extra_compile_args.append('-msse2')
 
 extensions = [
+    Extension("skbio.sequence.intersection",
+              ["skbio/sequence/intersection" + ext]),
     Extension("skbio.stats.__subsample",
               ["skbio/stats/__subsample" + ext]),
     Extension("skbio.alignment._ssw_wrapper",
