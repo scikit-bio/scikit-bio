@@ -12,6 +12,7 @@ from six.moves import zip_longest
 
 import copy
 import functools
+import itertools
 import re
 from types import GeneratorType
 from collections import Hashable
@@ -20,8 +21,10 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import scipy.spatial.distance
 
-from skbio import Sequence
+import skbio.sequence.distance
+from skbio import Sequence, DNA
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
@@ -53,12 +56,18 @@ class TestSequencePositionalMetadata(TestCase, ReallyEqualMixin,
         self._positional_metadata_constructor_ = factory
 
 
-class TestSequence(TestCase, ReallyEqualMixin):
+class TestSequenceBase(TestCase):
     def setUp(self):
-        self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
         self.sequence_kinds = frozenset([
             str, Sequence, lambda s: np.fromstring(s, dtype='|S1'),
             lambda s: np.fromstring(s, dtype=np.uint8)])
+
+
+class TestSequence(TestSequenceBase, ReallyEqualMixin):
+    def setUp(self):
+        super(TestSequence, self).setUp()
+
+        self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
 
         def empty_generator():
             return
@@ -453,6 +462,19 @@ class TestSequence(TestCase, ReallyEqualMixin):
         # test that we can't set the property
         with self.assertRaises(AttributeError):
             seq.values = np.array("GGGG", dtype='c')
+
+    def test_sequence_numpy_compatibility(self):
+        seq = Sequence('abc123')
+
+        array = np.asarray(seq)
+
+        self.assertIsInstance(array, np.ndarray)
+        self.assertEqual(array.dtype, '|S1')
+        npt.assert_equal(array, np.array('abc123', dtype='c'))
+        npt.assert_equal(array, seq.values)
+
+        with self.assertRaises(ValueError):
+            array[1] = 'B'
 
     def test_observed_chars_property(self):
         self.assertEqual(Sequence('').observed_chars, set())
@@ -1154,50 +1176,6 @@ class TestSequence(TestCase, ReallyEqualMixin):
                                        True, True])))
         self.assertEqual('AaAAaAAA',
                          self.lowercase_seq.lowercase([1, 4]))
-
-    def test_distance(self):
-        tested = 0
-        for constructor in self.sequence_kinds:
-            tested += 1
-            seq1 = Sequence("abcdef")
-            seq2 = constructor("12bcef")
-
-            self.assertIsInstance(seq1.distance(seq1), float)
-            self.assertEqual(seq1.distance(seq2), 2.0/3.0)
-
-        self.assertEqual(tested, 4)
-
-    def test_distance_arbitrary_function(self):
-        def metric(x, y):
-            return len(x) ** 2 + len(y) ** 2
-
-        seq1 = Sequence("12345678")
-        seq2 = Sequence("1234")
-        result = seq1.distance(seq2, metric=metric)
-        self.assertIsInstance(result, float)
-        self.assertEqual(result, 80.0)
-
-    def test_distance_default_metric(self):
-        seq1 = Sequence("abcdef")
-        seq2 = Sequence("12bcef")
-        seq_wrong = Sequence("abcdefghijklmnop")
-
-        self.assertIsInstance(seq1.distance(seq1), float)
-        self.assertEqual(seq1.distance(seq1), 0.0)
-        self.assertEqual(seq1.distance(seq2), 2.0/3.0)
-
-        with self.assertRaises(ValueError):
-            seq1.distance(seq_wrong)
-
-        with self.assertRaises(ValueError):
-            seq_wrong.distance(seq1)
-
-    def test_distance_on_subclass(self):
-        seq1 = Sequence("abcdef")
-        seq2 = SequenceSubclass("12bcef")
-
-        with self.assertRaises(TypeError):
-            seq1.distance(seq2)
 
     def test_matches(self):
         tested = 0
@@ -2221,6 +2199,148 @@ class TestSequence(TestCase, ReallyEqualMixin):
                                        ".*in position.*: ordinal not in"
                                        " range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
+
+
+class TestDistance(TestSequenceBase):
+    def test_mungeable_inputs_to_sequence(self):
+        def metric(a, b):
+            self.assertEqual(a, Sequence("abcdef"))
+            self.assertEqual(b, Sequence("12bcef"))
+            return 42.0
+
+        for constructor in self.sequence_kinds:
+            seq1 = Sequence("abcdef")
+            seq2 = constructor("12bcef")
+
+            distance = seq1.distance(seq2, metric=metric)
+
+            self.assertEqual(distance, 42.0)
+
+    def test_mungeable_inputs_to_sequence_subclass(self):
+        def metric(a, b):
+            self.assertEqual(a, SequenceSubclass("abcdef"))
+            self.assertEqual(b, SequenceSubclass("12bcef"))
+            return -42.0
+
+        sequence_kinds = frozenset([
+            str, SequenceSubclass, lambda s: np.fromstring(s, dtype='|S1'),
+            lambda s: np.fromstring(s, dtype=np.uint8)])
+
+        for constructor in sequence_kinds:
+            seq1 = SequenceSubclass("abcdef")
+            seq2 = constructor("12bcef")
+
+            distance = seq1.distance(seq2, metric=metric)
+
+            self.assertEqual(distance, -42.0)
+
+    def test_sequence_type_mismatch(self):
+        seq1 = SequenceSubclass("abcdef")
+        seq2 = Sequence("12bcef")
+
+        with six.assertRaisesRegex(self, TypeError,
+                                   'SequenceSubclass.*Sequence.*`distance`'):
+            seq1.distance(seq2)
+
+        with six.assertRaisesRegex(self, TypeError,
+                                   'Sequence.*SequenceSubclass.*`distance`'):
+            seq2.distance(seq1)
+
+    def test_munging_invalid_characters_to_self_type(self):
+        with six.assertRaisesRegex(self, ValueError, 'Invalid characters.*X'):
+            DNA("ACGT").distance("WXYZ")
+
+    def test_munging_invalid_type_to_self_type(self):
+        with self.assertRaises(TypeError):
+            Sequence("ACGT").distance(42)
+
+    def test_return_type_coercion(self):
+        def metric(a, b):
+            return 42
+
+        distance = Sequence('abc').distance('cba', metric=metric)
+
+        self.assertIsInstance(distance, float)
+
+    def test_invalid_return_type(self):
+        def metric(a, b):
+            return 'too far'
+
+        with six.assertRaisesRegex(self, ValueError, 'string.*float'):
+            Sequence('abc').distance('cba', metric=metric)
+
+    def test_arbitrary_metric(self):
+        def metric(x, y):
+            return len(x) ** 2 + len(y) ** 2
+
+        seq1 = Sequence("12345678")
+        seq2 = Sequence("1234")
+
+        distance = seq1.distance(seq2, metric=metric)
+
+        self.assertEqual(distance, 80.0)
+
+    def test_scipy_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs1 = [
+            Sequence("ACGT"),
+            Sequence("ACGT", metadata={'id': 'abc'}),
+            Sequence("ACGT", positional_metadata={'qual': range(4)})
+        ]
+        seqs2 = [
+            Sequence("AAAA"),
+            Sequence("AAAA", metadata={'id': 'def'}),
+            Sequence("AAAA", positional_metadata={'qual': range(4, 8)})
+        ]
+
+        for seqs in seqs1, seqs2:
+            for seq1, seq2 in itertools.product(seqs, repeat=2):
+                distance = seq1.distance(seq2,
+                                         metric=scipy.spatial.distance.hamming)
+                self.assertEqual(distance, 0.0)
+
+        for seq1, seq2 in itertools.product(seqs1, seqs2):
+            distance = seq1.distance(seq2,
+                                     metric=scipy.spatial.distance.hamming)
+            self.assertEqual(distance, 0.75)
+
+    def test_default_metric_with_metadata(self):
+        # test for #1254
+        seqs1 = [
+            Sequence("ACGT"),
+            Sequence("ACGT", metadata={'id': 'abc'}),
+            Sequence("ACGT", positional_metadata={'qual': range(4)})
+        ]
+        seqs2 = [
+            Sequence("AAAA"),
+            Sequence("AAAA", metadata={'id': 'def'}),
+            Sequence("AAAA", positional_metadata={'qual': range(4, 8)})
+        ]
+
+        for seqs in seqs1, seqs2:
+            for seq1, seq2 in itertools.product(seqs, repeat=2):
+                distance = seq1.distance(seq2)
+                self.assertEqual(distance, 0.0)
+
+        for seq1, seq2 in itertools.product(seqs1, seqs2):
+            distance = seq1.distance(seq2)
+            self.assertEqual(distance, 0.75)
+
+    def test_default_metric_matches_hamming(self):
+        seq1 = Sequence("abcdef")
+        seq2 = Sequence("12bcef")
+        seq_wrong = Sequence("abcdefghijklmnop")
+
+        distance1 = seq1.distance(seq2)
+        distance2 = skbio.sequence.distance.hamming(seq1, seq2)
+
+        self.assertEqual(distance1, distance2)
+
+        with self.assertRaises(ValueError):
+            seq1.distance(seq_wrong)
+
+        with self.assertRaises(ValueError):
+            seq_wrong.distance(seq1)
 
 
 # NOTE: this must be a *separate* class for doctests only (no unit tests). nose

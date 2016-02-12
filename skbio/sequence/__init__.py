@@ -33,6 +33,14 @@ Classes
    Protein
    GeneticCode
 
+Subpackages
+-----------
+
+.. autosummary::
+   :toctree: generated/
+
+   distance
+
 Examples
 --------
 New sequences are created with optional metadata and positional metadata.
