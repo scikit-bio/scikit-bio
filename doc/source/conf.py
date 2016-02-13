@@ -414,7 +414,7 @@ import scipy as sp
 np.random.seed(123)
 """
 plot_include_source = True
-#plot_formats = [('png', 96), 'pdf']
+plot_formats = [('png', 96), ]
 #plot_html_show_formats = False
 
 import math
