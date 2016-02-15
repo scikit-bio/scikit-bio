@@ -15,7 +15,6 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import GrammaredSequence
-from skbio.sequence._grammared_sequence import GrammaredSequenceException
 from skbio.util import classproperty
 
 
@@ -50,7 +49,7 @@ class ExampleMotifsTester(ExampleGrammaredSequence):
 class TestGrammaredSequence(TestCase):
     def test_default_gap_must_be_in_gap_chars(self):
         with six.assertRaisesRegex(
-                self, GrammaredSequenceException,
+                self, TypeError,
                 "default_gap_char must be in gap_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
@@ -61,7 +60,7 @@ class TestGrammaredSequence(TestCase):
 
     def test_degenerates_must_expand_to_valid_nondegenerates(self):
         with six.assertRaisesRegex(
-                self, GrammaredSequenceException,
+                self, TypeError,
                 "degenerate_map must expand only to characters included in "
                 "nondegenerate_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
@@ -77,7 +76,7 @@ class TestGrammaredSequence(TestCase):
 
     def test_gap_chars_and_degenerates_share(self):
         with six.assertRaisesRegex(
-                self, GrammaredSequenceException,
+                self, TypeError,
                 "gap_chars and degenerate_chars must not share any characters "
                 "for class GrammaredSequenceGapInDegenerateMap"):
 
@@ -97,7 +96,7 @@ class TestGrammaredSequence(TestCase):
 
     def test_gap_chars_and_nondegenerates_share(self):
         with six.assertRaisesRegex(
-            self, GrammaredSequenceException,
+            self, TypeError,
             ("gap_chars and nondegenerate_chars must not share any characters "
              "for class GrammaredSequenceGapInNondegenerateMap")):
 
@@ -117,7 +116,7 @@ class TestGrammaredSequence(TestCase):
 
     def test_degenerates_and_nondegenerates_share(self):
         with six.assertRaisesRegex(
-            self, GrammaredSequenceException,
+            self, TypeError,
             ("degenerate_chars and nondegenerate_chars must not share any "
              "characters for class GrammaredSequenceInvalid")):
 

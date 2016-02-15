@@ -122,19 +122,16 @@ class Protein(GrammaredSequence):
         return cls.__stop_codes
 
     @classproperty
-    @stable(as_of="0.4.0")
     @overrides(GrammaredSequence)
     def alphabet(cls):
         return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
-    @stable(as_of="0.4.0")
     @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
-    @stable(as_of="0.4.0")
     @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
@@ -156,31 +153,13 @@ class Protein(GrammaredSequence):
         return set('*')
 
     @classproperty
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
-        """Return characters defined as gaps.
-
-        Returns
-        -------
-        set
-            Characters defined as gaps.
-
-        """
         return set('-.')
 
     @classproperty
+    @overrides(GrammaredSequence)
     def default_gap_char(cls):
-        """Gap character to use when constructing a new gapped sequence.
-
-        This character is used when it is necessary to represent gap characters
-        in a new sequence. For example, a majority consensus sequence will use
-        this character to represent gaps.
-
-        Returns
-        -------
-        str
-            Default gap character.
-
-        """
         return '-'
 
     @property

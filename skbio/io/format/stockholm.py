@@ -352,7 +352,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
         raise ValueError("Must provide `constructor` parameter.")
     # Checks that contructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
-        raise TypeError("`constructor` must be a subclass of"
+        raise TypeError("`constructor` must be a subclass of "
                         "`GrammaredSequence`.")
 
     # Checks that the file isn't empty

@@ -288,12 +288,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Returns
         -------
-        TabularMSA, IUPACSequence, Sequence
+        TabularMSA, GrammaredSequence, Sequence
             A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
-            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
-            when `seq_idx` is a scalar (this object will match the dtype of the
-            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
-            `pos_idx` is scalar.
+            non-scalars. A ``GrammaredSequence`` of type ``msa.dtype`` is
+            returned when `seq_idx` is a scalar (this object will match the
+            dtype of the MSA). A ``Sequence`` is returned when `seq_idx` is
+            non-scalar and `pos_idx` is scalar.
 
         See Also
         --------
@@ -554,12 +554,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Returns
         -------
-        TabularMSA, IUPACSequence, Sequence
+        TabularMSA, GrammaredSequence, Sequence
             A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
-            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
-            when `seq_idx` is a scalar (this object will match the dtype of the
-            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
-            `pos_idx` is scalar.
+            non-scalars. A ``GrammaredSequence`` of type ``msa.dtype`` is
+            returned when `seq_idx` is a scalar (this object will match the
+            dtype of the MSA). A ``Sequence`` is returned when `seq_idx` is
+            non-scalar and `pos_idx` is scalar.
 
         See Also
         --------

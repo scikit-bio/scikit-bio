@@ -28,11 +28,11 @@ Classes
    :toctree: generated/
 
    Sequence
+   GrammaredSequence
    DNA
    RNA
    Protein
    GeneticCode
-   GrammaredSequence
 
 Subpackages
 -----------

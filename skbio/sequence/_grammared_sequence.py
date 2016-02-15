@@ -22,10 +22,6 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
-class GrammaredSequenceException(TypeError):
-    pass
-
-
 class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
@@ -34,12 +30,12 @@ class GrammaredSequenceMeta(ABCMeta, type):
         if (type(cls.default_gap_char) is not abstractproperty and
                 type(cls.gap_chars) is not abstractproperty):
             if cls.default_gap_char not in cls.gap_chars:
-                raise GrammaredSequenceException(
+                raise TypeError(
                     "default_gap_char must be in gap_chars for class %s" %
                     name)
 
             if len(cls.gap_chars & cls.degenerate_chars) > 0:
-                raise GrammaredSequenceException(
+                raise TypeError(
                     "gap_chars and degenerate_chars must not share any "
                     "characters for class %s" % name)
 
@@ -49,18 +45,18 @@ class GrammaredSequenceMeta(ABCMeta, type):
                 for key in cls.degenerate_map.keys():
                     for nondegenerate in cls.degenerate_map[key]:
                         if nondegenerate not in cls.nondegenerate_chars:
-                            raise GrammaredSequenceException(
+                            raise TypeError(
                                 "degenerate_map must expand only to "
                                 "characters included in nondegenerate_chars "
                                 "for class %s" % name)
 
                 if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
-                    raise GrammaredSequenceException(
+                    raise TypeError(
                         "gap_chars and nondegenerate_chars must not share any "
                         "characters for class %s" % name)
 
                 if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
-                    raise GrammaredSequenceException(
+                    raise TypeError(
                         "degenerate_chars and nondegenerate_chars must not "
                         "share any characters for class %s" % name)
 
@@ -238,7 +234,7 @@ class GrammaredSequence(Sequence):
             Characters defined as gaps.
 
         """
-        return set('-.')
+        pass  # pragma: no cover
 
     @abstractproperty
     @classproperty
@@ -256,7 +252,7 @@ class GrammaredSequence(Sequence):
             Default gap character.
 
         """
-        return set()  # pragma: no cover
+        pass  # pragma: no cover
 
     @classproperty
     @stable(as_of='0.4.0')
@@ -283,7 +279,7 @@ class GrammaredSequence(Sequence):
             Non-degenerate characters.
 
         """
-        return set()  # pragma: no cover
+        pass  # pragma: no cover
 
     @abstractproperty
     @classproperty
@@ -298,7 +294,7 @@ class GrammaredSequence(Sequence):
             non-degenerate characters it represents.
 
         """
-        return set()  # pragma: no cover
+        pass  # pragma: no cover
 
     @property
     def _motifs(self):
