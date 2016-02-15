@@ -56,7 +56,9 @@ to the reader call.
 
 Examples
 --------
-Assume we have a clustal-formatted file of RNA sequences::
+Assume we have a clustal-formatted file of RNA sequences:
+
+.. code-block:: none
 
     CLUSTAL W (1.82) multiple sequence alignment
 
