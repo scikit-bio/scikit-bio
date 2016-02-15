@@ -364,7 +364,7 @@ class TestStockholmReader(unittest.TestCase):
     def test_unsupported_constructor_error(self):
         fp = get_data_path('empty')
         with six.assertRaisesRegex(self, TypeError,
-                                   '`constructor`.*`IUPACSequence`'):
+                                   '`constructor`.*`GrammaredSequence`'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
 
     def test_handles_missing_metadata_efficiently(self):

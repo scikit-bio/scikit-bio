@@ -16,7 +16,7 @@ from future.builtins import range, zip
 from skbio.alignment import TabularMSA
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
 
@@ -273,9 +273,9 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
 
     Parameters
     ----------
-    seq1 : IUPACSequence
+    seq1 : GrammaredSequence
         The first unaligned sequence.
-    seq2 : IUPACSequence
+    seq2 : GrammaredSequence
         The second unaligned sequence.
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -323,10 +323,10 @@ def local_pairwise_align(seq1, seq2, gap_open_penalty,
          EfficiencyWarning)
 
     for seq in seq1, seq2:
-        if not isinstance(seq, IUPACSequence):
+        if not isinstance(seq, GrammaredSequence):
             raise TypeError(
-                "`seq1` and `seq2` must be IUPACSequence subclasses, not type "
-                "%r" % type(seq).__name__)
+                "`seq1` and `seq2` must be %r subclasses, not type %r" %
+                (GrammaredSequence.__name__, type(seq).__name__))
 
     if type(seq1) is not type(seq2):
         raise TypeError(
@@ -538,9 +538,9 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     Parameters
     ----------
-    seq1 : IUPACSequence or TabularMSA
+    seq1 : GrammaredSequence or TabularMSA
         The first unaligned sequence(s).
-    seq2 : IUPACSequence or TabularMSA
+    seq2 : GrammaredSequence or TabularMSA
         The second unaligned sequence(s).
     gap_open_penalty : int or float
         Penalty for opening a gap (this is substracted from previous best
@@ -602,11 +602,11 @@ def global_pairwise_align(seq1, seq2, gap_open_penalty, gap_extend_penalty,
 
     for seq in seq1, seq2:
         # We don't need to check the case where `seq` is a `TabularMSA` with a
-        # dtype that isn't a subclass of `IUPACSequence`, this is guaranteed by
-        # `TabularMSA`.
-        if not isinstance(seq, (IUPACSequence, TabularMSA)):
+        # dtype that isn't a subclass of `GrammaredSequence`, this is
+        # guaranteed by `TabularMSA`.
+        if not isinstance(seq, (GrammaredSequence, TabularMSA)):
             raise TypeError(
-                "`seq1` and `seq2` must be IUPACSequence subclasses or "
+                "`seq1` and `seq2` must be GrammaredSequence subclasses or "
                 "TabularMSA, not type %r" % type(seq).__name__)
 
     seq1 = _coerce_alignment_input_type(seq1)
@@ -774,7 +774,7 @@ def make_identity_substitution_matrix(match_score, mismatch_score,
 
 
 def _coerce_alignment_input_type(seq):
-    if isinstance(seq, IUPACSequence):
+    if isinstance(seq, GrammaredSequence):
         return TabularMSA([seq])
     else:
         return seq

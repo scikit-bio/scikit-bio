@@ -7,14 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
 
 from abc import ABCMeta, abstractproperty
 from itertools import product
+import re
 
 import numpy as np
+from six import add_metaclass
 
-import re
 
 from skbio.util._decorator import (classproperty, overrides, stable,
                                    experimental)
@@ -22,10 +22,78 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
-class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
-    """Store biological sequence data conforming to the IUPAC character set.
+class GrammaredSequenceException(TypeError):
+    pass
+
+
+class GrammaredSequenceMeta(ABCMeta, type):
+    def __new__(mcs, name, bases, dct):
+        cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
+
+        # Only perform validation on classes that aren't abstract.
+        if (type(cls.default_gap_char) is not abstractproperty and
+                type(cls.gap_chars) is not abstractproperty):
+            if cls.default_gap_char not in cls.gap_chars:
+                raise GrammaredSequenceException(
+                    "default_gap_char must be in gap_chars for class %s" %
+                    name)
+
+            if len(cls.gap_chars & cls.degenerate_chars) > 0:
+                raise GrammaredSequenceException(
+                    "gap_chars and degenerate_chars must not share any "
+                    "characters for class %s" % name)
+
+            if (type(cls.degenerate_map) is not abstractproperty and
+                    type(cls.nondegenerate_chars) is not abstractproperty):
+
+                for key in cls.degenerate_map.keys():
+                    for nondegenerate in cls.degenerate_map[key]:
+                        if nondegenerate not in cls.nondegenerate_chars:
+                            raise GrammaredSequenceException(
+                                "degenerate_map must expand only to "
+                                "characters included in nondegenerate_chars "
+                                "for class %s" % name)
+
+                if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+                    raise GrammaredSequenceException(
+                        "gap_chars and nondegenerate_chars must not share any "
+                        "characters for class %s" % name)
+
+                if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
+                    raise GrammaredSequenceException(
+                        "degenerate_chars and nondegenerate_chars must not "
+                        "share any characters for class %s" % name)
+
+        return cls
+
+
+# Adapted from http://stackoverflow.com/a/16056691/943814
+# Note that inheriting from GrammaredSequenceMeta, rather than something
+# more general, is intentional. Multiple inheritance with metaclasses can be
+# tricky and is not handled automatically in Python. Since this class needs to
+# inherit both from ABCMeta and GrammaredSequenceMeta, the only way we could
+# find to make this work was to have GrammaredSequenceMeta inherit from ABCMeta
+# and then inherit from GrammaredSequenceMeta here.
+class DisableSubclassingMeta(GrammaredSequenceMeta):
+    def __new__(mcs, name, bases, dct):
+        for b in bases:
+            if isinstance(b, DisableSubclassingMeta):
+                raise TypeError("Subclassing disabled for class %s. To create"
+                                " a custom sequence class, inherit directly"
+                                " from skbio.sequence.%s" %
+                                (b.__name__, GrammaredSequence.__name__))
+        return super(DisableSubclassingMeta, mcs).__new__(mcs, name, bases,
+                                                          dict(dct))
+
+
+@add_metaclass(GrammaredSequenceMeta)
+class GrammaredSequence(Sequence):
+    """Store sequence data conforming to a character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.
+
+    This class is intended to be inherited from to create grammared sequences
+    with custom alphabets.
 
     Attributes
     ----------
@@ -42,7 +110,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     Raises
     ------
     ValueError
-        If sequence characters are not in the IUPAC character set [1]_.
+        If sequence characters are not in the character set [1]_.
 
     See Also
     --------
@@ -56,6 +124,55 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
        sequences: recommendations 1984.
        Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
        A Cornish-Bowden
+
+    Examples
+    --------
+
+    Note in the example below that properties either need to be static or
+    use skbio's `classproperty` decorator.
+
+    >>> from skbio.sequence import GrammaredSequence
+    >>> from skbio.util import classproperty
+    >>> class CustomSequence(GrammaredSequence):
+    ...     @classproperty
+    ...     def degenerate_map(cls):
+    ...         return {"X": set("AB")}
+    ...
+    ...     @classproperty
+    ...     def nondegenerate_chars(cls):
+    ...         return set("ABC")
+    ...
+    ...     @classproperty
+    ...     def default_gap_char(cls):
+    ...         return '-'
+    ...
+    ...     @classproperty
+    ...     def gap_chars(cls):
+    ...         return set('-.')
+
+    >>> seq = CustomSequence('ABABACAC')
+    >>> seq
+    CustomSequence
+    -----------------------------
+    Stats:
+        length: 8
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+    -----------------------------
+    0 ABABACAC
+
+    >>> seq = CustomSequence('XXXXXX')
+    >>> seq
+    CustomSequence
+    ------------------------------
+    Stats:
+        length: 6
+        has gaps: False
+        has degenerates: True
+        has non-degenerates: False
+    ------------------------------
+    0 XXXXXX
 
     """
     __validation_mask = None
@@ -97,18 +214,19 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @classproperty
     @stable(as_of='0.4.0')
     def alphabet(cls):
-        """Return valid IUPAC characters.
+        """Return valid characters.
 
         This includes gap, non-degenerate, and degenerate characters.
 
         Returns
         -------
         set
-            Valid IUPAC characters.
+            Valid characters.
 
         """
         return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
 
+    @abstractproperty
     @classproperty
     @stable(as_of='0.4.0')
     def gap_chars(cls):
@@ -122,6 +240,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         """
         return set('-.')
 
+    @abstractproperty
     @classproperty
     @experimental(as_of='0.4.1')
     def default_gap_char(cls):
@@ -137,17 +256,17 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
             Default gap character.
 
         """
-        return '-'
+        return set()  # pragma: no cover
 
     @classproperty
     @stable(as_of='0.4.0')
     def degenerate_chars(cls):
-        """Return degenerate IUPAC characters.
+        """Return degenerate characters.
 
         Returns
         -------
         set
-            Degenerate IUPAC characters.
+            Degenerate characters.
 
         """
         return set(cls.degenerate_map)
@@ -156,12 +275,12 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @classproperty
     @stable(as_of='0.4.0')
     def nondegenerate_chars(cls):
-        """Return non-degenerate IUPAC characters.
+        """Return non-degenerate characters.
 
         Returns
         -------
         set
-            Non-degenerate IUPAC characters.
+            Non-degenerate characters.
 
         """
         return set()  # pragma: no cover
@@ -175,8 +294,8 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
         Returns
         -------
         dict (set)
-            Mapping of each degenerate IUPAC character to the set of
-            non-degenerate IUPAC characters it represents.
+            Mapping of each degenerate character to the set of
+            non-degenerate characters it represents.
 
         """
         return set()  # pragma: no cover
@@ -188,7 +307,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False, validate=True):
-        super(IUPACSequence, self).__init__(
+        super(GrammaredSequence, self).__init__(
             sequence, metadata, positional_metadata, lowercase)
 
         if validate:
@@ -210,14 +329,13 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
                 invalid_characters > 0)[0].astype(np.uint8).view('|S1'))
             raise ValueError(
                 "Invalid character%s in sequence: %r. \n"
-                "Lowercase letters are not used in IUPAC notation. You can "
-                "pass `lowercase=True` if your sequence contains lowercase "
-                "letters.\n"
-                "Valid IUPAC characters: "
-                "%r" % ('s' if len(bad) > 1 else '',
-                        [str(b.tostring().decode("ascii")) for b in bad] if
-                        len(bad) > 1 else bad[0],
-                        list(self.alphabet)))
+                "Valid characters: %r\n"
+                "Note: Use `lowercase` if your sequence contains lowercase "
+                "characters not in the sequence's alphabet."
+                % ('s' if len(bad) > 1 else '',
+                   [str(b.tostring().decode("ascii")) for b in bad] if
+                   len(bad) > 1 else bad[0],
+                   list(self.alphabet)))
 
     @stable(as_of='0.4.0')
     def gaps(self):
@@ -387,7 +505,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Returns
         -------
-        IUPACSequence
+        GrammaredSequence
             A new sequence with all gap characters removed.
 
         See Also
@@ -429,7 +547,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Non-degenerate version of the sequence.
 
         See Also
@@ -590,7 +708,7 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
     @overrides(Sequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
-        stats = super(IUPACSequence, self)._repr_stats()
+        stats = super(GrammaredSequence, self)._repr_stats()
         stats.append(('has gaps', '%r' % self.has_gaps()))
         stats.append(('has degenerates', '%r' % self.has_degenerates()))
         stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
@@ -600,4 +718,4 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 _motifs = MiniRegistry()
 
 # Leave this at the bottom
-_motifs.interpolate(IUPACSequence, "find_motifs")
+_motifs.interpolate(GrammaredSequence, "find_motifs")

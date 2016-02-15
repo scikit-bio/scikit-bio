@@ -24,7 +24,7 @@ Common functionality to support testing in skbio.
 Miscellaneous functionality
 ---------------------------
 
-Generally useful functions that don't fit in more specific locations.
+Generally useful functionality that doesn't fit in more specific locations.
 
 .. autosummary::
    :toctree: generated/
@@ -35,6 +35,7 @@ Generally useful functions that don't fit in more specific locations.
    is_casava_v180_or_later
    remove_files
    safe_md5
+   classproperty
 
 Warnings
 --------
@@ -63,11 +64,12 @@ from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates,
 from ._testing import (get_data_path, TestRunner,
                        assert_ordination_results_equal,
                        assert_data_frame_almost_equal)
+from ._decorator import classproperty
 
 __all__ = ['SkbioWarning', 'EfficiencyWarning', 'RepresentationWarning',
            'cardinal_to_ordinal', 'create_dir', 'find_duplicates',
            'is_casava_v180_or_later', 'remove_files', 'safe_md5',
            'get_data_path', 'TestRunner', 'assert_ordination_results_equal',
-           'assert_data_frame_almost_equal']
+           'assert_data_frame_almost_equal', 'classproperty']
 
 test = TestRunner(__file__).test

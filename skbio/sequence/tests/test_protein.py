@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+import six
 
 import unittest
 
@@ -118,6 +119,11 @@ class TestProtein(unittest.TestCase):
         obs = repr(Protein('*****'))
         self.assertIn('has gaps: False', obs)
         self.assertIn('has stops: True', obs)
+
+    def test_cannot_subclass(self):
+        with six.assertRaisesRegex(self, TypeError, "Subclassing disabled"):
+            class CustomSequence(Protein):
+                pass
 
 
 if __name__ == "__main__":
