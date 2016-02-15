@@ -203,8 +203,8 @@ When reading into a ``Sequence`` generator, ``constructor`` defaults to
 ``Sequence`` and must be a subclass of ``Sequence`` if supplied.
 
 When reading into a ``TabularMSA``, ``constructor`` is a required format
-parameter and must be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``,
-``Protein``).
+parameter and must be a subclass of ``GrammaredSequence`` (e.g., ``DNA``,
+``RNA``, ``Protein``).
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
    parameter.

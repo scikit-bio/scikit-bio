@@ -21,7 +21,7 @@ import pandas as pd
 import scipy.stats
 
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests,
@@ -75,10 +75,10 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
 
     def test_constructor_invalid_dtype(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   'IUPACSequence.*Sequence'):
+                                   'GrammaredSequence.*Sequence'):
             TabularMSA([Sequence('')])
 
-        with six.assertRaisesRegex(self, TypeError, 'IUPACSequence.*int'):
+        with six.assertRaisesRegex(self, TypeError, 'GrammaredSequence.*int'):
             TabularMSA([42, DNA('')])
 
     def test_constructor_not_monomorphic(self):
@@ -1829,7 +1829,7 @@ class TestAppend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'IUPACSequence.*Sequence'):
+                                   'GrammaredSequence.*Sequence'):
             msa.append(Sequence(''))
 
         self.assertEqual(msa, TabularMSA([]))
@@ -2087,7 +2087,7 @@ class TestExtend(unittest.TestCase):
         msa = TabularMSA([])
 
         with six.assertRaisesRegex(self, TypeError,
-                                   'IUPACSequence.*Sequence'):
+                                   'GrammaredSequence.*Sequence'):
             msa.extend([Sequence('')])
 
         self.assertEqual(msa, TabularMSA([]))
@@ -3291,19 +3291,24 @@ class TestGapFrequencies(unittest.TestCase):
         npt.assert_array_equal(np.array([0.0, 2/3, 1/3, 1.0, 1.0]), freqs)
 
     def test_relative_frequencies_precise(self):
-        class CustomSequence(IUPACSequence):
+        class CustomSequence(GrammaredSequence):
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def gap_chars(cls):
                 return set('0123456789')
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '0'
+
+            @classproperty
+            @overrides(GrammaredSequence)
             def nondegenerate_chars(cls):
                 return set('')
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def degenerate_map(cls):
                 return {}
 
@@ -3314,19 +3319,24 @@ class TestGapFrequencies(unittest.TestCase):
         npt.assert_array_equal(np.array([1.0]), freqs)
 
     def test_custom_gap_characters(self):
-        class CustomSequence(IUPACSequence):
+        class CustomSequence(GrammaredSequence):
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def gap_chars(cls):
                 return set('#$*')
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '#'
+
+            @classproperty
+            @overrides(GrammaredSequence)
             def nondegenerate_chars(cls):
                 return set('ABC-.')
 
             @classproperty
-            @overrides(IUPACSequence)
+            @overrides(GrammaredSequence)
             def degenerate_map(cls):
                 return {'D': 'ABC-.'}
 
