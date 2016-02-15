@@ -312,7 +312,8 @@ from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
+from ._feature import Feature
 
-__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode', 'Feature']
 
 test = TestRunner(__file__).test
