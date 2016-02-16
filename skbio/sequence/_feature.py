@@ -32,6 +32,8 @@ class Feature(Mapping):
         # make sure the values in the dict are also hashable/immutable
         for k in self.__d:
             hash(self.__d[k])
+        if "location" not in kwargs:
+            raise ValueError('`location` not in Feature')
 
     def __len__(self):
         return len(self.__d)
@@ -50,3 +52,20 @@ class Feature(Mapping):
             self._hash = hash(frozenset(self.items()))
         return self._hash
 
+    def __lt__(self, other):
+        return self['location'] < other['location']
+
+    def __le__(self, other):
+        return self['location'] <= other['location']
+
+    def __gt__(self, other):
+        return self['location'] > other['location']
+
+    def __ge__(self, other):
+        return self['location'] >= other['location']
+
+    def __eq__(self, other):
+        return self['location'] == other['location']
+
+    def __ne__(self, other):
+        return self['location'] != other['location']

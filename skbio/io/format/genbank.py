@@ -379,10 +379,13 @@ def _construct(record, constructor=None, **kwargs):
 
     if constructor == RNA:
         return DNA(
-            seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
+            seq, metadata=md, positional_metadata=pmd,
+            interval_metadata=imd,
+            **kwargs).transcribe()
     else:
         return constructor(
-            seq, metadata=md, positional_metadata=pmd, **kwargs)
+            seq, metadata=md, positional_metadata=pmd,
+            interval_metadata=imd, **kwargs)
 
 
 def _parse_genbanks(fh):
@@ -426,6 +429,7 @@ def _parse_single_genbank(chunks):
         elif header == 'FEATURES':
             # merge the two dictionaries together. Note this is only
             # available in Python-3.5
+
             feature_metadata = {**parsed, **feature_metadata}
         else:
             metadata[header] = parsed
@@ -447,7 +451,8 @@ def _serialize_single_genbank(obj, fh):
             out = serializer(header, md[header])
         elif header == 'FEATURES':
             # This will need to change
-            out = serializer(header, obj.positional_metadata.columns)
+            features = obj.interval_metadata.features.keys()
+            out = serializer(header, sorted(features))
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
         else:
@@ -620,7 +625,8 @@ def _parse_features(lines, length):
     for section in section_splitter(lines):
         # print(i) ; continue
         feature, intervals = _parse_single_feature(section, length)
-        features[feature] = intervals
+
+        features[feature] = intervals[0]
     return features
 
 
@@ -778,7 +784,8 @@ def _parse_interval(loc_str, length):
             raise GenBankFormatError(
                 'Could not parse location string: "%s"' %
                 loc_str)
-        intervals+=index
+        intervals += index
+
     return res, intervals
 
 def _parse_loc_str(loc_str, length):

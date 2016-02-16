@@ -586,6 +586,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
+
         IntervalMetadataMixin._init_(self, features=interval_metadata)
         if lowercase is False:
             pass

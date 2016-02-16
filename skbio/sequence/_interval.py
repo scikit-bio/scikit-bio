@@ -142,6 +142,9 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     def _init_(self, features=None):
         self.interval_metadata = IntervalMetadata(features=features)
 
+    def has_interval_metadata(self):
+        return self.interval_metadata is not None
+
 def _polish_interval(interval):
     if isinstance(interval, tuple):
         if len(interval) == 0:

@@ -112,17 +112,16 @@ class GenBankIOTests(TestCase):
                         'Gammaproteobacteria; Enterobacteriales; '
                         'Enterobacteriaceae; Escherichia.'},
              'VERSION': 'M14399.1  GI:145229'},
-            pd.DataFrame(
-                data=np.ones([63, 2], dtype=bool),
-                columns=[Feature(db_xref='"taxon:562"',
+            {
+                Feature(db_xref='"taxon:562"',
                                  left_partial_=False,
                                  location='1..63',
                                  mol_type='"mRNA"',
                                  organism='"Escherichia coli"',
                                  rc_=False,
                                  right_partial_=False,
-                                 type_='source'),
-                         Feature(codon_start='1',
+                                 type_='source'):[(1, 63)],
+                Feature(codon_start='1',
                                  db_xref=('"GI:145230"',
                                           '"taxon:562"',
                                           '"taxon:561"'),
@@ -134,92 +133,9 @@ class GenBankIOTests(TestCase):
                                  right_partial_=True,
                                  transl_table='11',
                                  translation='"MKQSTIALAVLPLLFTPVTKA"',
-                                 type_='CDS')]),
+                                 type_='CDS'):[(1, 63)]
+            },
             RNA)
-
-        # test:
-        # 1. multiple records in one file
-        # 2. lowercase sequence
-        # 3. DNA, RNA, Protein type
-        # 4. variation of formats
-        self.multi_fp = get_data_path('genbank_multi_records')
-        self.multi = (
-            ('gsreildfk',
-             {'ACCESSION': 'AAB29917',
-              'COMMENT': 'Method: direct peptide sequencing.',
-              'DBSOURCE': 'accession AAB29917.1',
-              'DEFINITION': 'L-carnitine amidase {N-terminal}',
-              'KEYWORDS': '.',
-              'LOCUS': {'date': datetime(1994, 9, 23, 0, 0),
-                        'division': 'BCT',
-                        'locus_name': 'AAB29917',
-                        'mol_type': None,
-                        'shape': 'linear',
-                        'size': 9,
-                        'unit': 'aa'},
-              'REFERENCE': [{'AUTHORS': 'Joeres,U. and Kula,M.R.',
-                             'JOURNAL': 'AMB 40 (5), 606-610 (1994)',
-                             'PUBMED': '7764422',
-                             'REFERENCE': '1  (residues 1 to 9)',
-                             'REMARK': 'from the original journal article.',
-                             'TITLE': 'a microbial L-carnitine amidase'},
-                            {'AUTHORS': 'Joeres,U. and Kula,M.R.',
-                             'JOURNAL': 'AMB 40 (5), 606-610 (1994)',
-                             'PUBMED': '7764422',
-                             'REFERENCE': '1  (residues 1 to 9)',
-                             'TITLE': 'a microbial L-carnitine amidase'}],
-              'SOURCE': {'ORGANISM': 'Bacteria',
-                         'taxonomy': 'Unclassified.'},
-              'VERSION': 'AAB29917.1  GI:545426'},
-             pd.DataFrame(data=np.ones([9, 2], dtype=bool),
-                          columns=[
-                              Feature(left_partial_=False,
-                                      location='1..9',
-                                      organism='"Bacteria"',
-                                      rc_=False,
-                                      right_partial_=False,
-                                      type_='source'),
-                              Feature(left_partial_=False,
-                                      location='1..>9',
-                                      product='"L-carnitine amidase"',
-                                      rc_=False,
-                                      right_partial_=True,
-                                      type_='Protein')]),
-             Protein),
-
-            ('catgcaggc',
-             {'ACCESSION': 'HQ018078',
-              'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
-              'KEYWORDS': 'ENV.',
-              'LOCUS': {'date': datetime(2010, 8, 29, 0, 0),
-                        'division': 'ENV',
-                        'locus_name': 'HQ018078',
-                        'mol_type': 'DNA',
-                        'shape': 'linear',
-                        'size': 9,
-                        'unit': 'bp'},
-              'SOURCE': {'ORGANISM': 'uncultured Xylanimonas sp.',
-                         'taxonomy': 'Bacteria; Actinobacteria; '
-                         'Micrococcales; Promicromonosporaceae; '
-                         'Xylanimonas; environmental samples.'},
-              'VERSION': 'HQ018078.1  GI:304421728'},
-             pd.DataFrame(data=np.array([[1] * 9, [0] + [1] * 7 + [0]],
-                                        dtype=bool).T,
-                          columns=[
-                              Feature(country='"Brazil: Parana, Paranavai"',
-                                      environmental_sample='',
-                                      left_partial_=False,
-                                      location='1..9',
-                                      rc_=False,
-                                      right_partial_=False,
-                                      type_='source'),
-                              Feature(left_partial_=True,
-                                      location='complement(<2..>8)',
-                                      product='"16S ribosomal RNA"',
-                                      rc_=True,
-                                      right_partial_=True,
-                                      type_='rRNA')]),
-             DNA))
 
         # test:
         # 1. multiple records in one file
@@ -270,7 +186,6 @@ class GenBankIOTests(TestCase):
                                       type_='Protein') : [(0, 9)]
              },
              Protein),
-
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
@@ -288,20 +203,19 @@ class GenBankIOTests(TestCase):
                          'Xylanimonas; environmental samples.'},
               'VERSION': 'HQ018078.1  GI:304421728'},
              {
-              Feature(country='"Brazil: Parana, Paranavai"',
-                      environmental_sample='',
-                      left_partial_=False,
-                      location='1..9',
-                      rc_=False,
-                      right_partial_=False,
-                      type_='source') : [(0, 9)],
-              Feature(left_partial_=True,
-                      location='complement(<2..>8)',
-                      product='"16S ribosomal RNA"',
-                      rc_=True,
-                      right_partial_=True,
-                      type_='rRNA'): [(1, 8)]
-              },
+                              Feature(country='"Brazil: Parana, Paranavai"',
+                                      environmental_sample='',
+                                      left_partial_=False,
+                                      location='1..9',
+                                      rc_=False,
+                                      right_partial_=False,
+                                      type_='source'):[(1, 9)],
+                              Feature(left_partial_=True,
+                                      location='complement(<2..>8)',
+                                      product='"16S ribosomal RNA"',
+                                      rc_=True,
+                                      right_partial_=True,
+                                      type_='rRNA'):[(2, 8)]},
              DNA))
 
 
@@ -469,28 +383,14 @@ REFERENCE   1  (bases 1 to 154478)
                     positional_metadata=self.single[2])
             self.assertEqual(exp, obs)
 
-    def test_genbank_to_generator_positional_metadata(self):
-        for i, obs in enumerate(_genbank_to_generator(self.multi_fp)):
-            seq, md, pmd, constructor = self.multi[i]
-            exp = constructor(seq, metadata=md, lowercase=True,
-                              positional_metadata=pmd)
-            self.assertEqual(exp, obs)
-
-    def test_genbank_to_generator_interval_metadata(self):
+    def test_genbank_to_generator(self):
         for i, obs in enumerate(_genbank_to_generator(self.multi_fp)):
             seq, md, pmd, constructor = self.multi_invs[i]
             exp = constructor(seq, metadata=md, lowercase=True,
                               interval_metadata=pmd)
             self.assertEqual(exp, obs)
 
-    def test_genbank_to_sequence_positional_metadata(self):
-        for i, exp in enumerate(self.multi):
-            obs = _genbank_to_sequence(self.multi_fp, seq_num=i+1)
-            exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
-                           positional_metadata=exp[2])
-            self.assertEqual(exp, obs)
-
-    def test_genbank_to_sequence_interval_metadata(self):
+    def test_genbank_to_sequence(self):
         for i, exp in enumerate(self.multi_invs):
             obs = _genbank_to_sequence(self.multi_fp, seq_num=i+1)
             exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
@@ -501,23 +401,23 @@ REFERENCE   1  (bases 1 to 154478)
         seq, md, pmd, constructor = self.single_rna
         obs = _genbank_to_rna(self.single_rna_fp)
         exp = constructor(seq, metadata=md,
-                          lowercase=True, positional_metadata=pmd)
+                          lowercase=True, interval_metadata=pmd)
         self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
         i = 1
-        exp = self.multi[i]
+        exp = self.multi_invs[i]
         obs = _genbank_to_dna(self.multi_fp, seq_num=i+1)
         exp = DNA(exp[0], metadata=exp[1], lowercase=True,
-                  positional_metadata=exp[2])
+                  interval_metadata=exp[2])
         self.assertEqual(exp, obs)
 
     def test_genbank_to_protein(self):
         i = 0
-        exp = self.multi[i]
+        exp = self.multi_invs[i]
         obs = _genbank_to_protein(self.multi_fp, seq_num=i+1)
         exp = Protein(exp[0], metadata=exp[1],
-                      lowercase=True, positional_metadata=exp[2])
+                      lowercase=True, interval_metadata=exp[2])
         self.assertEqual(exp, obs)
 
 
@@ -542,22 +442,24 @@ class WriterTests(GenBankIOTests):
 
     def test_sequence_to_genbank(self):
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
-            obj = Sequence(seq, md, pmd, lowercase=True)
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi_invs):
+            obj = Sequence(seq, md, interval_metadata=pmd, lowercase=True)
+            features = obj.interval_metadata.features.keys()
+
             _sequence_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
-
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
+
         self.assertEqual(obs, exp)
 
     def test_dna_protein_to_genbank(self):
         writers = [_protein_to_genbank,
                    _dna_to_genbank]
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
-            obj = constructor(seq, md, pmd, lowercase=True)
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi_invs):
+            obj = constructor(seq, md, interval_metadata=pmd, lowercase=True)
             writers[i](obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -570,7 +472,7 @@ class WriterTests(GenBankIOTests):
     def test_rna_to_genbank(self):
         fh = io.StringIO()
         seq, md, pmd, constructor = self.single_rna
-        obj = constructor(seq, md, pmd, lowercase=True)
+        obj = constructor(seq, md, interval_metadata=pmd, lowercase=True)
         _rna_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -583,6 +485,7 @@ class WriterTests(GenBankIOTests):
 
 class RoundtripTests(GenBankIOTests):
     def test_roundtrip_generator(self):
+        self.maxDiff = None
         fh = io.StringIO()
         _generator_to_genbank(_genbank_to_generator(self.multi_fp), fh)
         obs = fh.getvalue()
@@ -590,10 +493,10 @@ class RoundtripTests(GenBankIOTests):
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
-
         self.assertEqual(obs, exp)
 
     def test_roundtrip_rna(self):
+        self.maxDiff = None
         fh = io.StringIO()
         _rna_to_genbank(_genbank_to_rna(self.single_rna_fp), fh)
         obs = fh.getvalue()

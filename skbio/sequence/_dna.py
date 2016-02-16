@@ -198,13 +198,15 @@ class DNA(IUPACSequence, NucleotideMixin):
         if self.has_metadata():
             metadata = self.metadata
 
-        positional_metadata = None
+        positional_metadata, interval_metadata = None, None
         if self.has_positional_metadata():
             positional_metadata = self.positional_metadata
-
+        if self.has_interval_metadata():
+            interval_metadata = self.interval_metadata.features
         # turn off validation because `seq` is guaranteed to be valid
         return skbio.RNA(seq, metadata=metadata,
                          positional_metadata=positional_metadata,
+                         interval_metadata=interval_metadata,
                          validate=False)
 
     @stable(as_of="0.4.0")
