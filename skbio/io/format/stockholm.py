@@ -608,22 +608,21 @@ def _tabular_msa_to_stockholm(obj, fh):
                                               gs_feature_data))
         unpadded_data.append((seq_name, seq))
         if seq.has_positional_metadata():
-            _check_positional_metadata(seq.positional_metadata,
-                                       'Sequence-specific positional '
-                                       'metadata (GR)')
-            for (gr_feature,
-                 gr_dataframe) in viewitems(seq.positional_metadata):
-                gr_feature_data = ''.join(gr_dataframe)
+            df = _format_positional_metadata(seq.positional_metadata,
+                                             'Sequence-specific positional '
+                                             'metadata (GR)')
+            for gr_feature in df.columns:
+                gr_feature_data = ''.join(df[gr_feature])
                 gr_string = "#=GR %s %s" % (seq_name, gr_feature)
                 unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
     if obj.has_positional_metadata():
-        _check_positional_metadata(obj.positional_metadata,
-                                   'Multiple sequence alignment positional '
-                                   'metadata (GC)')
-        for gc_feature, gc_dataframe in viewitems(obj.positional_metadata):
-            gc_feature_data = ''.join(gc_dataframe)
+        df = _format_positional_metadata(obj.positional_metadata,
+                                         'Multiple sequence alignment '
+                                         'positional metadata (GC)')
+        for gc_feature in df.columns:
+            gc_feature_data = ''.join(df[gc_feature])
             gc_string = "#=GC %s" % gc_feature
             unpadded_data.append((gc_string, gc_feature_data))
 
@@ -646,7 +645,7 @@ def _write_padded_data(data, fh):
         fh.write(fmt.format(label, value))
 
 
-def _check_positional_metadata(df, data_type):
+def _format_positional_metadata(df, data_type):
     # Asserts positional metadata feature names are unique
     columns = df.columns
     data_len = len(columns)
@@ -657,10 +656,13 @@ def _check_positional_metadata(df, data_type):
                                    'Caught %d non-unique name(s).'
                                    % (data_type, num_repeated_characters))
 
+    str_df = df.astype(str)
+
     # Asserts positional metadata dataframe items are one character long
     for column in columns:
-        if (df[column].astype(str).str.len() != 1).any():
+        if (str_df[column].str.len() != 1).any():
             raise StockholmFormatError("%s DataFrame items must contain "
                                        "a single character. Caught item "
                                        "in column %s of incorrect length."
                                        % (data_type, column))
+    return str_df
