@@ -26,22 +26,37 @@ class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
-        # Only perform validation on classes that aren't abstract.
-        if (type(cls.default_gap_char) is not abstractproperty and
-                type(cls.gap_chars) is not abstractproperty):
-            if cls.default_gap_char not in cls.gap_chars:
-                raise TypeError(
-                    "default_gap_char must be in gap_chars for class %s" %
-                    name)
+        concrete_gap_chars = \
+            type(cls.gap_chars) is not abstractproperty
+        concrete_degenerate_map = \
+            type(cls.degenerate_map) is not abstractproperty
+        # degenerate_chars is not abstract but it depends on degenerate_map
+        # which is abstract.
+        concrete_degenerate_chars = concrete_degenerate_map
 
-            if len(cls.gap_chars & cls.degenerate_chars) > 0:
-                raise TypeError(
-                    "gap_chars and degenerate_chars must not share any "
-                    "characters for class %s" % name)
+        if concrete_gap_chars:
 
-            if (type(cls.degenerate_map) is not abstractproperty and
-                    type(cls.nondegenerate_chars) is not abstractproperty):
+            concrete_default_gap_char = \
+                type(cls.default_gap_char) is not abstractproperty
 
+            if concrete_default_gap_char:
+                if cls.default_gap_char not in cls.gap_chars:
+                    raise TypeError(
+                        "default_gap_char must be in gap_chars for class %s" %
+                        name)
+
+            if concrete_degenerate_chars:
+                if len(cls.gap_chars & cls.degenerate_chars) > 0:
+                    raise TypeError(
+                        "gap_chars and degenerate_chars must not share any "
+                        "characters for class %s" % name)
+
+        concrete_nondegenerate_chars = \
+            type(cls.nondegenerate_chars) is not abstractproperty
+
+        if concrete_nondegenerate_chars:
+
+            if concrete_degenerate_map:
                 for key in cls.degenerate_map.keys():
                     for nondegenerate in cls.degenerate_map[key]:
                         if nondegenerate not in cls.nondegenerate_chars:
@@ -50,15 +65,17 @@ class GrammaredSequenceMeta(ABCMeta, type):
                                 "characters included in nondegenerate_chars "
                                 "for class %s" % name)
 
-                if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
-                    raise TypeError(
-                        "gap_chars and nondegenerate_chars must not share any "
-                        "characters for class %s" % name)
-
+            if concrete_degenerate_chars:
                 if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
                     raise TypeError(
                         "degenerate_chars and nondegenerate_chars must not "
                         "share any characters for class %s" % name)
+
+            if concrete_gap_chars:
+                if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+                    raise TypeError(
+                        "gap_chars and nondegenerate_chars must not share any "
+                        "characters for class %s" % name)
 
         return cls
 
