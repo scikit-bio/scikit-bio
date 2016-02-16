@@ -2717,6 +2717,52 @@ class TreeNode(SkbioObject):
         return dist_f(self_matrix, other_matrix)
 
     @experimental(as_of="0.4.0")
+    def bifurcate(self, insert_length=None, remove_singles=True):
+        r"""Reorders the tree into a bifurcating tree, so that
+        every internal node will have at most two children.
+
+        All nodes that have more than 2 children will
+        have additional intermediate nodes inserted to ensure that
+        every node has only 2 children.
+
+        Parameters
+        ----------
+        insert_length : int, optional
+            The branch length assigned to all inserted nodes.
+
+        remove_singles : bool, optional
+            Removes all nodes that have only a single child and relink
+            of their childrent to their parent node.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b,g,h)c,(d,e)f)root;"])
+        >>> tree.bifurcate()
+        >>> print(tree)
+        ((h,(g,(a,b)))c,(d,e)f)root;
+        <BLANKLINE>
+
+
+        Notes
+        -----
+        Any nodes that have a single child will be collapsed.
+        """
+        for n in self.traverse(include_self=True):
+            if len(n.children) > 2:
+                stack = n.children
+                while len(stack) > 2:
+                    ind = stack.pop()
+                    intermediate = TreeNode()
+                    intermediate.length = insert_length
+                    intermediate.extend(stack)
+                    n.append(intermediate)
+                    for k in stack:
+                        n.remove(k)
+                    n.extend([ind, intermediate])
+        if remove_singles:
+            self.prune()
+
     def index_tree(self):
         """Index a tree for rapid lookups within a tree array
 
