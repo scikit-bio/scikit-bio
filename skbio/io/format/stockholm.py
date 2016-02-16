@@ -319,6 +319,8 @@ References
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.utils import viewitems
+from future.builtins import zip
 
 from collections import OrderedDict
 
@@ -580,55 +582,48 @@ def _check_for_malformed_line(line, expected_len):
 
 @stockholm.writer(TabularMSA)
 def _tabular_msa_to_stockholm(obj, fh):
-    index = list(obj.index)
+    if not obj.index.is_unique:
+        raise StockholmFormatError("The TabularMSA's index labels must be"
+                                   " unique.")
     # Writes header
     fh.write("# STOCKHOLM 1.0\n")
 
     # Writes GF data to file
     if obj.has_metadata():
-        for i in range(len(obj.metadata)):
-            gf_feature = list(obj.metadata.keys())[i].strip("'")
-            if gf_feature == 'NH' and (type(obj.metadata[gf_feature]) is
-                                       OrderedDict):
-                tree_data = obj.metadata[gf_feature]
-                for j in range(len(tree_data)):
-                    gf_feature_data = list(tree_data.keys())[j]
-                    fh.write("#=GF TN %s\n" % gf_feature_data)
-                    gf_feature_data = list(tree_data.values())[j]
-                    fh.write("#=GF NH %s\n" % gf_feature_data)
+        for gf_feature, gf_feature_data in viewitems(obj.metadata):
+            if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
+                for tree_id, tree in viewitems(obj.metadata[gf_feature]):
+                    fh.write("#=GF TN %s\n" % tree_id)
+                    fh.write("#=GF NH %s\n" % tree)
             else:
-                gf_feature_data = obj.metadata[gf_feature].strip("'")
                 fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
-    # Writes GS data to file
-    for i in range(len(obj)):
-        metadata = obj[i].metadata
-        if metadata:
-            for j in range(len(metadata.keys())):
-                gs_feature = list(metadata.keys())[j]
-                gs_feature_data = metadata[gs_feature]
-                fh.write("#=GS %s %s %s\n" % (index[i], gs_feature,
-                                              gs_feature_data))
-
     unpadded_data = []
-    # Retrieves GR and raw data
-    for i in range(len(obj)):
-        data_label = index[i]
-        unpadded_data.append((data_label, str(obj[i])))
-        if obj[i].has_positional_metadata():
-            positional_metadata = obj[i].positional_metadata
-            for j in range(len(positional_metadata.keys())):
-                gr_feature = list(positional_metadata.keys())[j]
-                gr_feature_data = ''.join(positional_metadata[gr_feature])
-                gr_string = "#=GR %s %s" % (data_label, gr_feature)
+    # Writes GS data to file, retrieves GR data, and retrieves sequence data
+    for seq, seq_name in zip(obj, obj.index):
+        seq_name = str(seq_name)
+        if seq.has_metadata():
+            for gs_feature, gs_feature_data in viewitems(seq.metadata):
+                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
+                                              gs_feature_data))
+        unpadded_data.append((seq_name, seq))
+        if seq.has_positional_metadata():
+            _check_positional_metadata(seq.positional_metadata,
+                                       'Sequence-specific positional '
+                                       'metadata (GR)')
+            for (gr_feature,
+                 gr_dataframe) in viewitems(seq.positional_metadata):
+                gr_feature_data = ''.join(gr_dataframe)
+                gr_string = "#=GR %s %s" % (seq_name, gr_feature)
                 unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
     if obj.has_positional_metadata():
-        positional_metadata = obj.positional_metadata
-        for i in range(len(positional_metadata.keys())):
-            gc_feature = list(positional_metadata.keys())[i]
-            gc_feature_data = ''.join(positional_metadata[gc_feature])
+        _check_positional_metadata(obj.positional_metadata,
+                                   'Multiple sequence alignment positional '
+                                   'metadata (GC)')
+        for gc_feature, gc_dataframe in viewitems(obj.positional_metadata):
+            gc_feature_data = ''.join(gc_dataframe)
             gc_string = "#=GC %s" % gc_feature
             unpadded_data.append((gc_string, gc_feature_data))
 
@@ -640,15 +635,32 @@ def _tabular_msa_to_stockholm(obj, fh):
 
 
 def _write_padded_data(data, fh):
-    n = 0
-    for i in range(len(data)):
-        tag_string = str(data[i][0])
-        if len(tag_string) > n:
-            n = len(tag_string)
-    for i in range(len(data)):
-        tag_string, data_string = data[i]
-        tag_string = str(tag_string)
+    max_data_len = 0
+    for label, _ in data:
+        if len(label) > max_data_len:
+            max_data_len = len(label)
+    fmt = '{0:%d} {1}\n' % max_data_len
+    for label, value in data:
         # Padding is extended by 1 to account for the extra space after
         # longest tag string
-        padding = ''.join(' ' for j in range(n-len(tag_string)+1))
-        fh.write("%s%s%s\n" % (tag_string, padding, data_string))
+        fh.write(fmt.format(label, value))
+
+
+def _check_positional_metadata(df, data_type):
+    # Asserts positional metadata feature names are unique
+    columns = df.columns
+    data_len = len(columns)
+    unique_ids_len = len(set(columns))
+    if data_len > unique_ids_len:
+        num_repeated_characters = data_len - unique_ids_len
+        raise StockholmFormatError('%s feature names must be unique. '
+                                   'Caught %d non-unique name(s).'
+                                   % (data_type, num_repeated_characters))
+
+    # Asserts positional metadata dataframe items are one character long
+    for column in columns:
+        if (df[column].astype(str).str.len() != 1).any():
+            raise StockholmFormatError("%s DataFrame items must contain "
+                                       "a single character. Caught item "
+                                       "in column %s of incorrect length."
+                                       % (data_type, column))
