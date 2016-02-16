@@ -187,9 +187,10 @@ class IUPACSequence(with_metaclass(ABCMeta, Sequence)):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
+                 interval_metadata=None,
                  lowercase=False, validate=True):
         super(IUPACSequence, self).__init__(
-            sequence, metadata, positional_metadata, lowercase)
+            sequence, metadata, positional_metadata, interval_metadata, lowercase)
 
         if validate:
             self._validate()

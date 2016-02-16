@@ -528,7 +528,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 lowercase=False, interval_metadata=None):
+                 interval_metadata=None, lowercase=False):
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
