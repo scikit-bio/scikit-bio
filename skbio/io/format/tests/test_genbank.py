@@ -485,7 +485,6 @@ class WriterTests(GenBankIOTests):
 
 class RoundtripTests(GenBankIOTests):
     def test_roundtrip_generator(self):
-        self.maxDiff = None
         fh = io.StringIO()
         _generator_to_genbank(_genbank_to_generator(self.multi_fp), fh)
         obs = fh.getvalue()
@@ -496,7 +495,6 @@ class RoundtripTests(GenBankIOTests):
         self.assertEqual(obs, exp)
 
     def test_roundtrip_rna(self):
-        self.maxDiff = None
         fh = io.StringIO()
         _rna_to_genbank(_genbank_to_rna(self.single_rna_fp), fh)
         obs = fh.getvalue()
