@@ -320,6 +320,13 @@ class WritableBinarySourceTests(object):
             self.assertTrue(result.closed)
             self.check_closed(file, True)
 
+    def compare_gzip_file_contents(self, a, b):
+        # The first 10 bytes of a gzip header include a timestamp. The header
+        # can be followed by other "volatile" metadata, so only compare gzip
+        # footers (last 8 bytes) which contain a CRC-32 checksum and the length
+        # of the uncompressed data.
+        self.assertEqual(a[-8:], b[-8:])
+
     def test_open_binary(self):
         self.check_open_state_contents(self.binary_file, self.binary_contents,
                                        True, encoding='binary',
@@ -332,9 +339,8 @@ class WritableBinarySourceTests(object):
         self.check_open_state_contents(self.gzip_file, self.text_contents,
                                        False, compression='gzip')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_file)[10:],
-                         self.gzip_contents[10:])
+        self.compare_gzip_file_contents(self.get_contents(self.gzip_file),
+                                        self.gzip_contents)
 
     def test_open_bz2(self):
         self.check_open_state_contents(self.bz2_file, self.text_contents,
@@ -355,9 +361,9 @@ class WritableBinarySourceTests(object):
                                        self.decoded_contents, False,
                                        compression='gzip', encoding='big5')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
-                         self.gzip_encoded_contents[10:])
+        self.compare_gzip_file_contents(
+            self.get_contents(self.gzip_encoded_file),
+            self.gzip_encoded_contents)
 
     def test_open_bz2_encoding(self):
         self.check_open_state_contents(self.bz2_encoded_file,
@@ -482,18 +488,17 @@ class TestWriteBytesIO(WritableBinarySourceTests, WritableSourceTest):
         self.check_open_state_contents(self.gzip_file, self.text_contents,
                                        False, compression='gzip')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_file)[10:],
-                         self.gzip_contents[23:])
+        self.compare_gzip_file_contents(self.get_contents(self.gzip_file),
+                                        self.gzip_contents)
 
     def test_open_gzip_encoding(self):
         self.check_open_state_contents(self.gzip_encoded_file,
                                        self.decoded_contents, False,
                                        compression='gzip', encoding='big5')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
-                         self.gzip_encoded_contents[20:])
+        self.compare_gzip_file_contents(
+            self.get_contents(self.gzip_encoded_file),
+            self.gzip_encoded_contents)
 
 
 class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
