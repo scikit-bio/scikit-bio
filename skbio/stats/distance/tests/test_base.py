@@ -12,6 +12,7 @@ from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
+import six
 import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
@@ -490,6 +491,10 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         # Ensure that the superclass validation is still being performed.
         with self.assertRaises(DissimilarityMatrixError):
             DistanceMatrix([[1, 2, 3]], ['a'])
+
+    def test_init_nans(self):
+        with six.assertRaisesRegex(self, DistanceMatrixError, 'NaNs'):
+            DistanceMatrix([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
 
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))

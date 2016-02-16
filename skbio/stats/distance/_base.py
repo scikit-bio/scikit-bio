@@ -38,7 +38,6 @@ class DistanceMatrixError(DissimilarityMatrixError):
 class MissingIDError(DissimilarityMatrixError):
     """Error for ID lookup that doesn't exist in the dissimilarity matrix."""
 
-    @experimental(as_of="0.4.0")
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
         self.args = ("The ID '%s' is not in the dissimilarity matrix." %
@@ -816,7 +815,8 @@ class DistanceMatrix(DissimilarityMatrix):
         super(DistanceMatrix, self)._validate(data, ids)
 
         if (data.T != data).any():
-            raise DistanceMatrixError("Data must be symmetric.")
+            raise DistanceMatrixError(
+                "Data must be symmetric and cannot contain NaNs.")
 
 
 @experimental(as_of="0.4.0")
