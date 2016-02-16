@@ -6,6 +6,8 @@
 * Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA`. ([#967](https://github.com/biocore/scikit-bio/issues/967))
 * scikit-bio `Sequence` objects have better compatibility with numpy. For example, calling `np.asarray(sequence)` now converts the sequence to a numpy array of characters (the same as calling `sequence.values`).
 * Added `skbio.sequence.distance` subpackage for computing distances between scikit-bio `Sequence` objects ([#913](https://github.com/biocore/scikit-bio/issues/913))
+* Added ``skbio.sequence.GrammaredSequence``, which can be inherited from to create grammared sequences with custom alphabets (e.g., for use with TabularMSA) ([#1175](https://github.com/biocore/scikit-bio/issues/1175)) 
+* Added ``skbio.util.classproperty`` decorator
 
 ### Backward-incompatible changes [stable]
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. This backward-incompatible change to a stable API is necessary because it fixes a bug (more details in bug fix section below).
@@ -19,6 +21,7 @@
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. The file format's `newline` character will be used when opening the file. Previous behavior allowed overriding the format's `newline` character but this could cause issues with readers that assume newline characters are those defined by the file format (which is an entirely reasonable assumption). This bug is very unlikely to have surfaced in practice as the default `newline` behavior is *universal newlines mode*.
 * Fixed bug when using `Sequence.distance` or `DistanceMatrix.from_iterable` to compute distances between `Sequence` objects with differing `metadata`/`positional_metadata` and passing `metric=scipy.spatial.distance.hamming` ([#1254](https://github.com/biocore/scikit-bio/issues/1254))
 * Fixed performance bug when computing Hamming distances between `Sequence` objects in `DistanceMatrix.from_iterable` ([#1250](https://github.com/biocore/scikit-bio/issues/1250))
+* DNA, RNA, and Protein are no longer inheritable because they assume an IUPAC alphabet.
 
 ### Deprecated functionality [stable]
 

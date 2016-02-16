@@ -9,13 +9,16 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+from six import add_metaclass
 
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
-from ._iupac_sequence import IUPACSequence, _motifs as parent_motifs
+from ._grammared_sequence import (GrammaredSequence, DisableSubclassingMeta,
+                                  _motifs as parent_motifs)
 
 
-class Protein(IUPACSequence):
+@add_metaclass(DisableSubclassingMeta)
+class Protein(GrammaredSequence):
     """Store protein sequence data and optional associated metadata.
 
     Only characters in the IUPAC protein character set [1]_ are supported.
@@ -60,6 +63,17 @@ class Protein(IUPACSequence):
     nondegenerate_chars
     degenerate_chars
     degenerate_map
+
+    See Also
+    --------
+    GrammaredSequence
+
+    Notes
+    -----
+    Subclassing is disabled for Protein, because subclassing makes
+    it possible to change the alphabet, and certain methods rely on the
+    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
+    from ``GrammaredSequence``.
 
     References
     ----------
@@ -108,20 +122,17 @@ class Protein(IUPACSequence):
         return cls.__stop_codes
 
     @classproperty
-    @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def alphabet(cls):
         return super(Protein, cls).alphabet | cls.stop_chars
 
     @classproperty
-    @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty
-    @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
             "B": set("DN"), "Z": set("EQ"),
@@ -140,6 +151,16 @@ class Protein(IUPACSequence):
 
         """
         return set('*')
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def gap_chars(cls):
+        return set('-.')
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def default_gap_char(cls):
+        return '-'
 
     @property
     def _motifs(self):
@@ -195,7 +216,7 @@ class Protein(IUPACSequence):
         """
         return bool(self.stops().any())
 
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(Protein, self)._repr_stats()

@@ -25,24 +25,29 @@ from skbio.io.format.fasta import (
     _fasta_to_tabular_msa, _generator_to_fasta,
     _sequence_to_fasta, _dna_to_fasta, _rna_to_fasta, _protein_to_fasta,
     _tabular_msa_to_fasta)
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util import get_data_path
 from skbio.util._decorator import classproperty, overrides
 
 
-class CustomSequence(IUPACSequence):
+class CustomSequence(GrammaredSequence):
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
         return set('-.')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
+    def default_gap_char(cls):
+        return '-'
+
+    @classproperty
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set(string.ascii_letters)
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {}
 
