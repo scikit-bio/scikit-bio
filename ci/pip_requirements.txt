@@ -1,4 +1,4 @@
-HTTPretty <= 0.8.10
+HTTPretty >= 0.8.14
 bz2file
 contextlib2
 coveralls

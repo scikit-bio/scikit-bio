@@ -15,7 +15,11 @@ import shutil
 import io
 import os.path
 
-import httpretty
+try:
+    import httpretty
+    has_httpretty = True
+except ImportError:
+    has_httpretty = False
 
 import skbio.io
 from skbio.io.registry import open_file
@@ -440,6 +444,7 @@ class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
             return f.read()
 
 
+@unittest.skipIf(not has_httpretty, "HTTPretty not available to mock tests.")
 class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = True
 
