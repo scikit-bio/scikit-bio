@@ -1,6 +1,8 @@
 # scikit-bio changelog
 
-## Version 0.4.1-dev (changes since 0.4.1 go here)
+## Version 0.4.2 (2016-02-17)
+
+Minor maintenance release. **This is the last Python 2.7 compatible release. Future scikit-bio releases will only support Python 3.**
 
 ### Features
 * Added `skbio.tree.TreeNode.bifurcate` for converting multifurcating trees into bifurcating trees. ([#896](https://github.com/biocore/scikit-bio/issues/896))
@@ -19,14 +21,12 @@
 * `Sequence.distance` now converts the input sequence (`other`) to its type before passing both sequences to `metric`. Previous behavior was to always convert to `Sequence`.
 
 ### Bug fixes
-* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen ([#1241](https://github.com/biocore/scikit-bio/issues/1241))
-* When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. The file format's `newline` character will be used when opening the file. Previous behavior allowed overriding the format's `newline` character but this could cause issues with readers that assume newline characters are those defined by the file format (which is an entirely reasonable assumption). This bug is very unlikely to have surfaced in practice as the default `newline` behavior is *universal newlines mode*.
 * Fixed bug when using `Sequence.distance` or `DistanceMatrix.from_iterable` to compute distances between `Sequence` objects with differing `metadata`/`positional_metadata` and passing `metric=scipy.spatial.distance.hamming` ([#1254](https://github.com/biocore/scikit-bio/issues/1254))
 * Fixed performance bug when computing Hamming distances between `Sequence` objects in `DistanceMatrix.from_iterable` ([#1250](https://github.com/biocore/scikit-bio/issues/1250))
+* Changed `skbio.stats.composition.multiplicative_replacement` to raise an error whenever a large value of `delta` is chosen ([#1241](https://github.com/biocore/scikit-bio/issues/1241))
+* When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. The file format's `newline` character will be used when opening the file. Previous behavior allowed overriding the format's `newline` character but this could cause issues with readers that assume newline characters are those defined by the file format (which is an entirely reasonable assumption). This bug is very unlikely to have surfaced in practice as the default `newline` behavior is *universal newlines mode*.
 * DNA, RNA, and Protein are no longer inheritable because they assume an IUPAC alphabet.
 * `DistanceMatrix` constructor provides more informative error message when data contains NaNs ([#1276](https://github.com/biocore/scikit-bio/issues/1276))
-
-### Deprecated functionality [stable]
 
 ### Miscellaneous
 * Warnings raised by scikit-bio now share a common subclass ``skbio.util.SkbioWarning``.
