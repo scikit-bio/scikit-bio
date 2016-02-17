@@ -10,11 +10,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import six
 
+import pandas as pd
+
+import io
 import unittest
+from collections import OrderedDict
 
 from skbio import TabularMSA, Protein, DNA, RNA
 from skbio.io import StockholmFormatError
 from skbio.io.format.stockholm import (_stockholm_to_tabular_msa,
+                                       _tabular_msa_to_stockholm,
                                        _stockholm_sniffer)
 from skbio.util import get_data_path
 
@@ -51,7 +56,11 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_runon_gs',
             'stockholm_single_tree_with_id',
             'stockholm_single_tree_without_id',
-            'stockholm_whitespace_only_lines'
+            'stockholm_whitespace_only_lines',
+            'stockholm_all_data_types',
+            'stockholm_two_of_each_metadata',
+            'stockholm_data_only',
+            'stockholm_nonstring_labels'
             ]]
 
         self.negatives = [get_data_path(e) for e in [
@@ -245,6 +254,22 @@ class TestStockholmReader(unittest.TestCase):
                          index=['RTC2231', 'RTF2124', 'RTH3322', 'RTB1512'])
         self.assertEqual(msa, exp)
 
+    def test_stockholm_maintains_order(self):
+        fp = get_data_path('stockholm_two_of_each_metadata')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        msa_order = list(msa.metadata.items())
+        exp_order = [('NM', 'Kestrel Gorlick'), ('DT', 'February 5th, 2016')]
+        self.assertEqual(msa_order, exp_order)
+        msa_order = list(msa[0].metadata.items())
+        exp_order = [('AL', 'ABCD'), ('NS', '1234')]
+        self.assertEqual(msa_order, exp_order)
+        msa_order = list(msa.positional_metadata.columns)
+        exp_order = ['SS_cons', 'AS_cons']
+        self.assertEqual(msa_order, exp_order)
+        msa_order = list(msa[0].positional_metadata.columns)
+        exp_order = ['SS', 'AS']
+        self.assertEqual(msa_order, exp_order)
+
     def test_stockholm_duplicate_tree_id_error(self):
         fp = get_data_path('stockholm_duplicate_tree_ids')
         with six.assertRaisesRegex(self, StockholmFormatError,
@@ -375,6 +400,302 @@ class TestStockholmReader(unittest.TestCase):
         self.assertIsNone(msa[0]._metadata)
         self.assertIsNone(msa[0]._positional_metadata)
 
+
+class TestStockholmWriter(unittest.TestCase):
+    def test_msa_to_stockholm_extensive(self):
+        fp = get_data_path('stockholm_all_data_types')
+        msa = TabularMSA([DNA('GAGGCCATGCCCAGGTGAAG',
+                              metadata=OrderedDict([('DT', 'February 1, 2016'),
+                                                    ('NM', 'Unknown')])),
+                          DNA('ACCTGAGCCACAGTAGAAGT'),
+                          DNA('CCCTTCGCTGGAAATGTATG',
+                              metadata={'DT': 'Unknown'},
+                              positional_metadata=OrderedDict([('AS',
+                                                                list('CCGAAAGT'
+                                                                     'CGTTCGA'
+                                                                     'AAATG')),
+                                                               ('SS',
+                                                                list('GGCGAGTC'
+                                                                     'GTTCGAGC'
+                                                                     'TGG'
+                                                                     'C'))]))],
+                         metadata=OrderedDict([('NM', 'Kestrel Gorlick'),
+                                              ('DT', 'February 11, 2016'),
+                                              ('FN', 'Writer test file')]),
+                         positional_metadata=OrderedDict([('AS_cons',
+                                                           list('CGTTCGTTCTAAC'
+                                                                'AATTCCA')),
+                                                          ('SS_cons',
+                                                           list('GGCGCTACGACCT'
+                                                                'ACGACCG'))]),
+                         index=['seq1', 'seq2', 'seq3'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_minimal(self):
+        fp = get_data_path('stockholm_minimal')
+        msa = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG')], index=['0235244'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_single_tree(self):
+        fp = get_data_path('stockholm_single_tree_without_id')
+        msa = TabularMSA([], metadata=OrderedDict([('NH', 'ABCD')]))
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_single_tree_as_dict(self):
+        fp = get_data_path('stockholm_single_tree_with_id')
+        msa = TabularMSA([], metadata={'NH': {'tree1': 'ABCD'}})
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_multiple_trees(self):
+        fp = get_data_path('stockholm_multiple_trees')
+        msa = TabularMSA([], metadata=OrderedDict([('NH',
+                                                    OrderedDict([('tree1',
+                                                                  'ABCD'),
+                                                                 ('tree2',
+                                                                  'EFGH'),
+                                                                 ('tree3',
+                                                                  'IJKL')]))]))
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_data_only(self):
+        fp = get_data_path('stockholm_data_only')
+        msa = TabularMSA([RNA('ACUCCGACAUGCUCC'),
+                          RNA('UAGUGCCGAACGCUG'),
+                          RNA('GUGUGGGCGUGAUUC')],
+                         index=['seq1', 'seq2', 'seq3'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_nonstring_values(self):
+        fp = get_data_path('stockholm_nonstring_labels')
+        msa = TabularMSA([DNA('ACTG', metadata=OrderedDict([(8, 123)]),
+                              positional_metadata=OrderedDict([(1.0,
+                                                                [1, 2, 3, 4])])
+                              )],
+                         metadata=OrderedDict([(1.3, 2857)]),
+                         positional_metadata=OrderedDict([(25, [4, 3, 2, 1])]),
+                         index=[11214])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_empty(self):
+        fp = get_data_path('stockholm_no_data')
+        msa = TabularMSA([])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_extensive(self):
+        fp = get_data_path('stockholm_extensive')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_minimal(self):
+        fp = get_data_path('stockholm_minimal')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_single_tree(self):
+        fp = get_data_path('stockholm_single_tree_without_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_multiple_trees(self):
+        fp = get_data_path('stockholm_multiple_trees')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_data_only(self):
+        fp = get_data_path('stockholm_data_only')
+        msa = _stockholm_to_tabular_msa(fp, constructor=RNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_nonstring_index_values(self):
+        fp = get_data_path('stockholm_nonstring_labels')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_empty(self):
+        fp = get_data_path('stockholm_no_data')
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_handles_missing_metadata_efficiently(self):
+        msa = TabularMSA([DNA('ACTG'), DNA('GTCA')], index=['seq1', 'seq2'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        self.assertIsNone(msa._metadata)
+        self.assertIsNone(msa._positional_metadata)
+        self.assertIsNone(msa[0]._metadata)
+        self.assertIsNone(msa[0]._positional_metadata)
+
+    def test_unoriginal_index_error(self):
+        msa = TabularMSA([DNA('ATCGCCAGCT'), DNA('TTGTGCTGGC')],
+                         index=['seq1', 'seq1'])
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'index labels must be unique.'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_unoriginal_gr_feature_names_error(self):
+        pos_metadata_dataframe = pd.DataFrame.from_items([('AC',
+                                                           list('GAGCAAGCCACTA'
+                                                                'GA')),
+                                                          ('SS',
+                                                           list('TCCTTGAACTACC'
+                                                                'CG')),
+                                                          ('AS',
+                                                           list('TCAGCTCTGCAGC'
+                                                                'GT')),
+                                                          ('SS',
+                                                           list('GTCAGGCGCTCGG'
+                                                                'TG'))])
+        msa = TabularMSA([DNA('CGTCAATCTCGAACT',
+                          positional_metadata=pos_metadata_dataframe)],
+                         index=['seq1'])
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'Sequence-specific positional metadata.*'
+                                   'must be unique. Found 1 duplicate'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_unoriginal_gc_feature_names_error(self):
+        pos_metadata_dataframe = pd.DataFrame.from_items([('AC',
+                                                           list('GAGCAAGCCACTA'
+                                                                'GA')),
+                                                          ('SS',
+                                                           list('TCCTTGAACTACC'
+                                                                'CG')),
+                                                          ('SS',
+                                                           list('TCAGCTCTGCAGC'
+                                                                'GT')),
+                                                          ('AC',
+                                                           list('GTCAGGCGCTCGG'
+                                                                'TG'))])
+        msa = TabularMSA([DNA('CCCCTGCTTTCGTAG')],
+                         positional_metadata=pos_metadata_dataframe)
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'Multiple sequence alignment positional '
+                                   'metadata.*must be unique. Found 2 '
+                                   'duplicate'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_gr_wrong_dataframe_item_length_error(self):
+        seq1 = list('GAGCAAGCCACTAGA')
+        seq1.append('GG')
+        pos_metadata_dataframe = pd.DataFrame({'AC': seq1,
+                                               'SS': list('TCCTTGAACTACCCGA'),
+                                               'AS': list('TCAGCTCTGCAGCGTT')})
+        msa = TabularMSA([DNA('TCCTTGAACTACCCGA',
+                              positional_metadata=pos_metadata_dataframe)])
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'Sequence-specific positional metadata.*'
+                                   'must contain a single character.*Found '
+                                   'value\(s\) in column AC'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_gc_wrong_dataframe_item_length_error(self):
+        seq1 = list('GAGCAAGCCACTAGA')
+        seq1.append('GG')
+        pos_metadata_dataframe = pd.DataFrame({'AC': seq1,
+                                               'SS': list('TCCTTGAACTACCCGA'),
+                                               'AS': list('TCAGCTCTGCAGCGTT')})
+        msa = TabularMSA([DNA('TCCTTGAACTACCCGA')],
+                         positional_metadata=pos_metadata_dataframe)
+        with six.assertRaisesRegex(self, StockholmFormatError,
+                                   'Multiple sequence alignment positional '
+                                   'metadata.*must contain a single character'
+                                   '.*Found value\(s\) in column AC'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
 
 if __name__ == '__main__':
     unittest.main()
