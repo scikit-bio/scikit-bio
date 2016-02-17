@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.nondegenerates
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.nondegenerates

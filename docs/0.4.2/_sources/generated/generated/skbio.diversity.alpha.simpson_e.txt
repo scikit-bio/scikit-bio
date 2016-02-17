@@ -1,0 +1,6 @@
+skbio.diversity.alpha.simpson_e
+===============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: simpson_e

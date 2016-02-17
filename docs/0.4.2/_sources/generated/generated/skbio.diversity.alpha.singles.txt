@@ -1,0 +1,6 @@
+skbio.diversity.alpha.singles
+=============================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: singles

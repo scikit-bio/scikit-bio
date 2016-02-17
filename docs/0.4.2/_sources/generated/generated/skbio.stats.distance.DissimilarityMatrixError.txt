@@ -1,0 +1,6 @@
+skbio.stats.distance.DissimilarityMatrixError
+=============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoexception:: DissimilarityMatrixError

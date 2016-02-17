@@ -1,0 +1,6 @@
+skbio.util.get_data_path
+========================
+
+.. currentmodule:: skbio.util
+
+.. autofunction:: get_data_path

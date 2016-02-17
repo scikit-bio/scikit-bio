@@ -1,0 +1,81 @@
+skbio.stats.distance.DistanceMatrix
+===================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoclass:: DistanceMatrix
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         DistanceMatrix.__contains__
+         
+         
+         DistanceMatrix.__eq__
+         
+         DistanceMatrix.__format__
+         
+         DistanceMatrix.__getitem__
+         
+         
+         DistanceMatrix.__ne__
+         
+         
+         
+         
+         
+         DistanceMatrix.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         DistanceMatrix.condensed_form
+         
+         DistanceMatrix.copy
+         
+         DistanceMatrix.filter
+         
+         DistanceMatrix.from_iterable
+         
+         DistanceMatrix.index
+         
+         DistanceMatrix.permute
+         
+         DistanceMatrix.plot
+         
+         DistanceMatrix.read
+         
+         DistanceMatrix.redundant_form
+         
+         DistanceMatrix.to_data_frame
+         
+         DistanceMatrix.transpose
+         
+         DistanceMatrix.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DistanceMatrix.T
+         DistanceMatrix.data
+         DistanceMatrix.default_write_format
+         DistanceMatrix.dtype
+         DistanceMatrix.ids
+         DistanceMatrix.png
+         DistanceMatrix.shape
+         DistanceMatrix.size
+         DistanceMatrix.svg
+

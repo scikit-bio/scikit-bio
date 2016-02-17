@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.tree.TreeNode.find_by_func
+================================
+
+.. currentmodule:: skbio.tree
+
+.. automethod:: TreeNode.find_by_func

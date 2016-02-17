@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DissimilarityMatrix.read
+=============================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DissimilarityMatrix.read

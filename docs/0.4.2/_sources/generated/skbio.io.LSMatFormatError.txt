@@ -1,0 +1,6 @@
+skbio.io.LSMatFormatError
+=========================
+
+.. currentmodule:: skbio.io
+
+.. autoexception:: LSMatFormatError

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.nondegenerate_chars
+======================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.nondegenerate_chars

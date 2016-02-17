@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.reassign_index
+=========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: TabularMSA.reassign_index

@@ -1,0 +1,6 @@
+skbio.io.util.open_file
+=======================
+
+.. currentmodule:: skbio.io.util
+
+.. autofunction:: open_file
