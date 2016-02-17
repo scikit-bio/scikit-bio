@@ -460,8 +460,8 @@ class TestStockholmWriter(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_msa_to_stockholm_single_tree_as_dict(self):
-        fp = get_data_path('stockholm_single_tree_without_id')
-        msa = TabularMSA([], metadata={'NH': 'ABCD'})
+        fp = get_data_path('stockholm_single_tree_with_id')
+        msa = TabularMSA([], metadata={'NH': {'tree1': 'ABCD'}})
         fh = io.StringIO()
         _tabular_msa_to_stockholm(msa, fh)
         obs = fh.getvalue()
