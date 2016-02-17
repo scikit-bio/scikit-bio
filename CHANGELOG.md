@@ -1,5 +1,17 @@
 # scikit-bio changelog
 
+## Version 0.4.2-dev (changes since 0.4.2 go here)
+
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Bug fixes
+
+### Miscellaneous
+
 ## Version 0.4.2 (2016-02-17)
 
 Minor maintenance release. **This is the last Python 2.7 compatible release. Future scikit-bio releases will only support Python 3.**
