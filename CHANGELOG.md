@@ -11,6 +11,7 @@
 
 ### Backward-incompatible changes [stable]
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. This backward-incompatible change to a stable API is necessary because it fixes a bug (more details in bug fix section below).
+* When reading a FASTQ or QSEQ file and passing `variant='solexa'`, `ValueError` is now raised instead of `NotImplementedError`. This backward-incompatible change to a stable API is necessary to avoid creating a spin-locked process due to [a bug in Python](https://bugs.python.org/issue25786). See [#1256](https://github.com/biocore/scikit-bio/issues/1256) for details. This change is temporary and will be reverted to `NotImplementedError` when the bug is fixed in Python.
 
 ### Backward-incompatible changes [experimental]
 * `skbio.io.format.genbank`: When reading GenBank files, the date field of the LOCUS line is no longer parsed into a `datetime.datetime` object and is left as a string. When writing GenBank files, the locus date metadata is expected to be a string instead of a `datetime.datetime` object ([#1153](https://github.com/biocore/scikit-bio/issues/1153))
