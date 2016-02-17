@@ -3,6 +3,7 @@
 ## Version 0.4.1-dev (changes since 0.4.1 go here)
 
 ### Features
+* Added `skbio.tree.TreeNode.bifurcate` for converting multifurcating trees into bifurcating trees. ([#896](https://github.com/biocore/scikit-bio/issues/896))
 * Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA`. ([#967](https://github.com/biocore/scikit-bio/issues/967))
 * scikit-bio `Sequence` objects have better compatibility with numpy. For example, calling `np.asarray(sequence)` now converts the sequence to a numpy array of characters (the same as calling `sequence.values`).
 * Added `skbio.sequence.distance` subpackage for computing distances between scikit-bio `Sequence` objects ([#913](https://github.com/biocore/scikit-bio/issues/913))
