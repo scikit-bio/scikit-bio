@@ -1,0 +1,153 @@
+skbio.sequence.Protein
+======================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: Protein
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         Protein.__bool__
+         
+         Protein.__contains__
+         
+         Protein.__copy__
+         
+         Protein.__deepcopy__
+         
+         
+         Protein.__eq__
+         
+         Protein.__format__
+         
+         Protein.__getitem__
+         
+         
+         Protein.__iter__
+         
+         Protein.__len__
+         
+         Protein.__ne__
+         
+         
+         Protein.__nonzero__
+         
+         
+         
+         
+         Protein.__reversed__
+         
+         
+         Protein.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         Protein.concat
+         
+         Protein.copy
+         
+         Protein.count
+         
+         Protein.degap
+         
+         Protein.degenerates
+         
+         Protein.distance
+         
+         Protein.expand_degenerates
+         
+         Protein.find_motifs
+         
+         Protein.find_with_regex
+         
+         Protein.frequencies
+         
+         Protein.gaps
+         
+         Protein.has_degenerates
+         
+         Protein.has_gaps
+         
+         Protein.has_metadata
+         
+         Protein.has_nondegenerates
+         
+         Protein.has_positional_metadata
+         
+         Protein.has_stops
+         
+         Protein.index
+         
+         Protein.iter_contiguous
+         
+         Protein.iter_kmers
+         
+         Protein.kmer_frequencies
+         
+         Protein.lowercase
+         
+         Protein.match_frequency
+         
+         Protein.matches
+         
+         Protein.mismatch_frequency
+         
+         Protein.mismatches
+         
+         Protein.nondegenerates
+         
+         Protein.read
+         
+         Protein.stops
+         
+         Protein.to_regex
+         
+         Protein.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Protein.alphabet
+         Protein.default_gap_char
+         Protein.default_write_format
+         Protein.degenerate_chars
+         Protein.degenerate_map
+         Protein.gap_chars
+         Protein.metadata
+         Protein.nondegenerate_chars
+         Protein.observed_chars
+         Protein.positional_metadata
+         Protein.stop_chars
+         Protein.values
+

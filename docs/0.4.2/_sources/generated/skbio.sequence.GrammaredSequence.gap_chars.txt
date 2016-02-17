@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.gap_chars
+==========================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GrammaredSequence.gap_chars

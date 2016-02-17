@@ -1,0 +1,121 @@
+skbio.sequence.Sequence
+=======================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: Sequence
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         Sequence.__bool__
+         
+         Sequence.__contains__
+         
+         Sequence.__copy__
+         
+         Sequence.__deepcopy__
+         
+         
+         Sequence.__eq__
+         
+         Sequence.__format__
+         
+         Sequence.__getitem__
+         
+         
+         Sequence.__iter__
+         
+         Sequence.__len__
+         
+         Sequence.__ne__
+         
+         
+         Sequence.__nonzero__
+         
+         
+         
+         
+         Sequence.__reversed__
+         
+         
+         Sequence.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         Sequence.concat
+         
+         Sequence.copy
+         
+         Sequence.count
+         
+         Sequence.distance
+         
+         Sequence.find_with_regex
+         
+         Sequence.frequencies
+         
+         Sequence.has_metadata
+         
+         Sequence.has_positional_metadata
+         
+         Sequence.index
+         
+         Sequence.iter_contiguous
+         
+         Sequence.iter_kmers
+         
+         Sequence.kmer_frequencies
+         
+         Sequence.lowercase
+         
+         Sequence.match_frequency
+         
+         Sequence.matches
+         
+         Sequence.mismatch_frequency
+         
+         Sequence.mismatches
+         
+         Sequence.read
+         
+         Sequence.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Sequence.default_write_format
+         Sequence.metadata
+         Sequence.observed_chars
+         Sequence.positional_metadata
+         Sequence.values
+

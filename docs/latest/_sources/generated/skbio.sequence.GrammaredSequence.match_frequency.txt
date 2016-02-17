@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.match_frequency
+================================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.match_frequency

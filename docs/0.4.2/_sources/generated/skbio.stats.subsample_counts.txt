@@ -1,0 +1,6 @@
+skbio.stats.subsample_counts
+============================
+
+.. currentmodule:: skbio.stats
+
+.. autofunction:: subsample_counts

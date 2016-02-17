@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.fdel
+=============================
+
+.. currentmodule:: skbio.util
+
+.. autoattribute:: classproperty.fdel

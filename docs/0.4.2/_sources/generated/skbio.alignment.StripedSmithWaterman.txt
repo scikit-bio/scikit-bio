@@ -1,0 +1,13 @@
+skbio.alignment.StripedSmithWaterman
+====================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoclass:: StripedSmithWaterman
+
+   
+
+
+
+   
+

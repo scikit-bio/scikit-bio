@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.default_write_format
+=====================================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GrammaredSequence.default_write_format

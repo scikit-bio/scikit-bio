@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>skbio.sequence.GrammaredSequence &mdash; scikit-bio 0.4.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/united/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="scikit-bio 0.4.2 documentation" href="../index.html" />
+    <link rel="up" title="Sequences (skbio.sequence)" href="../sequence.html" />
+    <link rel="next" title="skbio.sequence.DNA" href="skbio.sequence.DNA.html" />
+    <link rel="prev" title="skbio.sequence.Sequence" href="skbio.sequence.Sequence.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+  
+  <a href="https://github.com/biocore/scikit-bio"
+     class="visible-desktop hidden-xs"><img
+    id="gh-banner"
+    style="position: absolute; top: 50px; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+    alt="Fork me on GitHub"></a>
+  <script>
+    // Adjust banner height.
+    $(function () {
+      var navHeight = $(".navbar .container").css("height");
+      $("#gh-banner").css("top", navHeight);
+    });
+  </script>
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-bio docs</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.4.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../io.html">File I/O (<code class="docutils literal"><span class="pre">skbio.io</span></code>)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../sequence.html">Sequences (<code class="docutils literal"><span class="pre">skbio.sequence</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../alignment.html">Alignments (<code class="docutils literal"><span class="pre">skbio.alignment</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tree.html">Tree representations (<code class="docutils literal"><span class="pre">skbio.tree</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html">Constructing workflows (<code class="docutils literal"><span class="pre">skbio.workflow</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diversity.html">Diversity calculations (<code class="docutils literal"><span class="pre">skbio.diversity</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Statistics (<code class="docutils literal"><span class="pre">skbio.stats</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">Utility functionality (<code class="docutils literal"><span class="pre">skbio.util</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/api_stability.html">API Stability</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/py3.html">Supporting Python 2 and Python 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/new_module.html">Adding a new module to skbio</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">skbio.sequence.GrammaredSequence</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="skbio-sequence-grammaredsequence">
+<h1>skbio.sequence.GrammaredSequence<a class="headerlink" href="#skbio-sequence-grammaredsequence" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="skbio.sequence.GrammaredSequence">
+<em class="property">class </em><code class="descclassname">skbio.sequence.</code><code class="descname">GrammaredSequence</code><span class="sig-paren">(</span><em>sequence</em>, <em>metadata=None</em>, <em>positional_metadata=None</em>, <em>lowercase=False</em>, <em>validate=True</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/biocore/scikit-bio/blob/0.4.2/skbio/sequence/_grammared_sequence.py#L101"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skbio.sequence.GrammaredSequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store sequence data conforming to a character set.</p>
+<p>This is an abstract base class (ABC) that cannot be instantiated.</p>
+<p>This class is intended to be inherited from to create grammared sequences
+with custom alphabets.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If sequence characters are not in the character set <a class="reference internal" href="#r198" id="id1">[R198]</a>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="skbio.sequence.DNA.html#skbio.sequence.DNA" title="skbio.sequence.DNA"><code class="xref py py-obj docutils literal"><span class="pre">DNA</span></code></a>, <a class="reference internal" href="skbio.sequence.RNA.html#skbio.sequence.RNA" title="skbio.sequence.RNA"><code class="xref py py-obj docutils literal"><span class="pre">RNA</span></code></a>, <a class="reference internal" href="skbio.sequence.Protein.html#skbio.sequence.Protein" title="skbio.sequence.Protein"><code class="xref py py-obj docutils literal"><span class="pre">Protein</span></code></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r198" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R198]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Nomenclature for incompletely specified bases in nucleic acid
+sequences: recommendations 1984.
+Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
+A Cornish-Bowden</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Note in the example below that properties either need to be static or
+use skbio&#8217;s <cite>classproperty</cite> decorator.</p>
+<div class="highlight-python3"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.sequence</span> <span class="k">import</span> <span class="n">GrammaredSequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skbio.util</span> <span class="k">import</span> <span class="n">classproperty</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomSequence</span><span class="p">(</span><span class="n">GrammaredSequence</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nd">@classproperty</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">degenerate_map</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="s2">&quot;AB&quot;</span><span class="p">)}</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classproperty</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">nondegenerate_chars</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="s2">&quot;ABC&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classproperty</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">default_gap_char</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="s1">&#39;-&#39;</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classproperty</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">gap_chars</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="s1">&#39;-.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python3"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">CustomSequence</span><span class="p">(</span><span class="s1">&#39;ABABACAC&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">CustomSequence</span>
+<span class="go">-----------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 8</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: False</span>
+<span class="go">    has non-degenerates: True</span>
+<span class="go">-----------------------------</span>
+<span class="go">0 ABABACAC</span>
+</pre></div>
+</div>
+<div class="highlight-python3"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="n">CustomSequence</span><span class="p">(</span><span class="s1">&#39;XXXXXX&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span>
+<span class="go">CustomSequence</span>
+<span class="go">------------------------------</span>
+<span class="go">Stats:</span>
+<span class="go">    length: 6</span>
+<span class="go">    has gaps: False</span>
+<span class="go">    has degenerates: True</span>
+<span class="go">    has non-degenerates: False</span>
+<span class="go">------------------------------</span>
+<span class="go">0 XXXXXX</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.values.html#skbio.sequence.GrammaredSequence.values" title="skbio.sequence.GrammaredSequence.values"><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></a></td>
+<td>Array containing underlying sequence characters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.metadata.html#skbio.sequence.GrammaredSequence.metadata" title="skbio.sequence.GrammaredSequence.metadata"><code class="xref py py-obj docutils literal"><span class="pre">metadata</span></code></a></td>
+<td><code class="docutils literal"><span class="pre">dict</span></code> containing metadata which applies to the entire object.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.positional_metadata.html#skbio.sequence.GrammaredSequence.positional_metadata" title="skbio.sequence.GrammaredSequence.positional_metadata"><code class="xref py py-obj docutils literal"><span class="pre">positional_metadata</span></code></a></td>
+<td><code class="docutils literal"><span class="pre">pd.DataFrame</span></code> containing metadata along an axis.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.alphabet.html#skbio.sequence.GrammaredSequence.alphabet" title="skbio.sequence.GrammaredSequence.alphabet"><code class="xref py py-obj docutils literal"><span class="pre">alphabet</span></code></a></td>
+<td>Return valid characters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.gap_chars.html#skbio.sequence.GrammaredSequence.gap_chars" title="skbio.sequence.GrammaredSequence.gap_chars"><code class="xref py py-obj docutils literal"><span class="pre">gap_chars</span></code></a></td>
+<td>Return characters defined as gaps.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.default_gap_char.html#skbio.sequence.GrammaredSequence.default_gap_char" title="skbio.sequence.GrammaredSequence.default_gap_char"><code class="xref py py-obj docutils literal"><span class="pre">default_gap_char</span></code></a></td>
+<td>Gap character to use when constructing a new gapped sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.nondegenerate_chars.html#skbio.sequence.GrammaredSequence.nondegenerate_chars" title="skbio.sequence.GrammaredSequence.nondegenerate_chars"><code class="xref py py-obj docutils literal"><span class="pre">nondegenerate_chars</span></code></a></td>
+<td>Return non-degenerate characters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.degenerate_chars.html#skbio.sequence.GrammaredSequence.degenerate_chars" title="skbio.sequence.GrammaredSequence.degenerate_chars"><code class="xref py py-obj docutils literal"><span class="pre">degenerate_chars</span></code></a></td>
+<td>Return degenerate characters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.degenerate_map.html#skbio.sequence.GrammaredSequence.degenerate_map" title="skbio.sequence.GrammaredSequence.degenerate_map"><code class="xref py py-obj docutils literal"><span class="pre">degenerate_map</span></code></a></td>
+<td>Return mapping of degenerate to non-degenerate characters.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__bool__.html#skbio.sequence.GrammaredSequence.__bool__" title="skbio.sequence.GrammaredSequence.__bool__"><code class="xref py py-obj docutils literal"><span class="pre">bool(gs)</span></code></a></td>
+<td>Returns truth value (truthiness) of sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__contains__.html#skbio.sequence.GrammaredSequence.__contains__" title="skbio.sequence.GrammaredSequence.__contains__"><code class="xref py py-obj docutils literal"><span class="pre">x</span> <span class="pre">in</span> <span class="pre">gs</span></code></a></td>
+<td>Determine if a subsequence is contained in this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__copy__.html#skbio.sequence.GrammaredSequence.__copy__" title="skbio.sequence.GrammaredSequence.__copy__"><code class="xref py py-obj docutils literal"><span class="pre">copy.copy(gs)</span></code></a></td>
+<td>Return a shallow copy of this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__deepcopy__.html#skbio.sequence.GrammaredSequence.__deepcopy__" title="skbio.sequence.GrammaredSequence.__deepcopy__"><code class="xref py py-obj docutils literal"><span class="pre">copy.deepcopy(gs)</span></code></a></td>
+<td>Return a deep copy of this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__eq__.html#skbio.sequence.GrammaredSequence.__eq__" title="skbio.sequence.GrammaredSequence.__eq__"><code class="xref py py-obj docutils literal"><span class="pre">gs1</span> <span class="pre">==</span> <span class="pre">gs2</span></code></a></td>
+<td>Determine if this sequence is equal to another.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__getitem__.html#skbio.sequence.GrammaredSequence.__getitem__" title="skbio.sequence.GrammaredSequence.__getitem__"><code class="xref py py-obj docutils literal"><span class="pre">gs[x]</span></code></a></td>
+<td>Slice this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__iter__.html#skbio.sequence.GrammaredSequence.__iter__" title="skbio.sequence.GrammaredSequence.__iter__"><code class="xref py py-obj docutils literal"><span class="pre">iter(gs)</span></code></a></td>
+<td>Iterate over positions in this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__len__.html#skbio.sequence.GrammaredSequence.__len__" title="skbio.sequence.GrammaredSequence.__len__"><code class="xref py py-obj docutils literal"><span class="pre">len(gs)</span></code></a></td>
+<td>Return the number of characters in this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__ne__.html#skbio.sequence.GrammaredSequence.__ne__" title="skbio.sequence.GrammaredSequence.__ne__"><code class="xref py py-obj docutils literal"><span class="pre">gs1</span> <span class="pre">!=</span> <span class="pre">gs2</span></code></a></td>
+<td>Determine if this sequence is not equal to another.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__reversed__.html#skbio.sequence.GrammaredSequence.__reversed__" title="skbio.sequence.GrammaredSequence.__reversed__"><code class="xref py py-obj docutils literal"><span class="pre">reversed(gs)</span></code></a></td>
+<td>Iterate over positions in this sequence in reverse order.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.__str__.html#skbio.sequence.GrammaredSequence.__str__" title="skbio.sequence.GrammaredSequence.__str__"><code class="xref py py-obj docutils literal"><span class="pre">str(gs)</span></code></a></td>
+<td>Return sequence characters as a string.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.concat.html#skbio.sequence.GrammaredSequence.concat" title="skbio.sequence.GrammaredSequence.concat"><code class="xref py py-obj docutils literal"><span class="pre">concat</span></code></a>(sequences[,&nbsp;how])</td>
+<td>Concatenate an iterable of <code class="docutils literal"><span class="pre">Sequence</span></code> objects.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.copy.html#skbio.sequence.GrammaredSequence.copy" title="skbio.sequence.GrammaredSequence.copy"><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code></a>([deep])</td>
+<td>Return a copy of this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.count.html#skbio.sequence.GrammaredSequence.count" title="skbio.sequence.GrammaredSequence.count"><code class="xref py py-obj docutils literal"><span class="pre">count</span></code></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Count occurrences of a subsequence in this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.degap.html#skbio.sequence.GrammaredSequence.degap" title="skbio.sequence.GrammaredSequence.degap"><code class="xref py py-obj docutils literal"><span class="pre">degap</span></code></a>()</td>
+<td>Return a new sequence with gap characters removed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.degenerates.html#skbio.sequence.GrammaredSequence.degenerates" title="skbio.sequence.GrammaredSequence.degenerates"><code class="xref py py-obj docutils literal"><span class="pre">degenerates</span></code></a>()</td>
+<td>Find positions containing degenerate characters in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.distance.html#skbio.sequence.GrammaredSequence.distance" title="skbio.sequence.GrammaredSequence.distance"><code class="xref py py-obj docutils literal"><span class="pre">distance</span></code></a>(other[,&nbsp;metric])</td>
+<td>Compute the distance to another sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.expand_degenerates.html#skbio.sequence.GrammaredSequence.expand_degenerates" title="skbio.sequence.GrammaredSequence.expand_degenerates"><code class="xref py py-obj docutils literal"><span class="pre">expand_degenerates</span></code></a>()</td>
+<td>Yield all possible non-degenerate versions of the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.find_motifs.html#skbio.sequence.GrammaredSequence.find_motifs" title="skbio.sequence.GrammaredSequence.find_motifs"><code class="xref py py-obj docutils literal"><span class="pre">find_motifs</span></code></a>(motif_type[,&nbsp;min_length,&nbsp;ignore])</td>
+<td>Search the biological sequence for motifs.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.find_with_regex.html#skbio.sequence.GrammaredSequence.find_with_regex" title="skbio.sequence.GrammaredSequence.find_with_regex"><code class="xref py py-obj docutils literal"><span class="pre">find_with_regex</span></code></a>(regex[,&nbsp;ignore])</td>
+<td>Generate slices for patterns matched by a regular expression.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.frequencies.html#skbio.sequence.GrammaredSequence.frequencies" title="skbio.sequence.GrammaredSequence.frequencies"><code class="xref py py-obj docutils literal"><span class="pre">frequencies</span></code></a>([chars,&nbsp;relative])</td>
+<td>Compute frequencies of characters in the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.gaps.html#skbio.sequence.GrammaredSequence.gaps" title="skbio.sequence.GrammaredSequence.gaps"><code class="xref py py-obj docutils literal"><span class="pre">gaps</span></code></a>()</td>
+<td>Find positions containing gaps in the biological sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.has_degenerates.html#skbio.sequence.GrammaredSequence.has_degenerates" title="skbio.sequence.GrammaredSequence.has_degenerates"><code class="xref py py-obj docutils literal"><span class="pre">has_degenerates</span></code></a>()</td>
+<td>Determine if sequence contains one or more degenerate characters.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.has_gaps.html#skbio.sequence.GrammaredSequence.has_gaps" title="skbio.sequence.GrammaredSequence.has_gaps"><code class="xref py py-obj docutils literal"><span class="pre">has_gaps</span></code></a>()</td>
+<td>Determine if the sequence contains one or more gap characters.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.has_metadata.html#skbio.sequence.GrammaredSequence.has_metadata" title="skbio.sequence.GrammaredSequence.has_metadata"><code class="xref py py-obj docutils literal"><span class="pre">has_metadata</span></code></a>()</td>
+<td>Determine if the object has metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.has_nondegenerates.html#skbio.sequence.GrammaredSequence.has_nondegenerates" title="skbio.sequence.GrammaredSequence.has_nondegenerates"><code class="xref py py-obj docutils literal"><span class="pre">has_nondegenerates</span></code></a>()</td>
+<td>Determine if sequence contains one or more non-degenerate characters</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.has_positional_metadata.html#skbio.sequence.GrammaredSequence.has_positional_metadata" title="skbio.sequence.GrammaredSequence.has_positional_metadata"><code class="xref py py-obj docutils literal"><span class="pre">has_positional_metadata</span></code></a>()</td>
+<td>Determine if the object has positional metadata.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.index.html#skbio.sequence.GrammaredSequence.index" title="skbio.sequence.GrammaredSequence.index"><code class="xref py py-obj docutils literal"><span class="pre">index</span></code></a>(subsequence[,&nbsp;start,&nbsp;end])</td>
+<td>Find position where subsequence first occurs in the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.iter_contiguous.html#skbio.sequence.GrammaredSequence.iter_contiguous" title="skbio.sequence.GrammaredSequence.iter_contiguous"><code class="xref py py-obj docutils literal"><span class="pre">iter_contiguous</span></code></a>(included[,&nbsp;min_length,&nbsp;invert])</td>
+<td>Yield contiguous subsequences based on <cite>included</cite>.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.iter_kmers.html#skbio.sequence.GrammaredSequence.iter_kmers" title="skbio.sequence.GrammaredSequence.iter_kmers"><code class="xref py py-obj docutils literal"><span class="pre">iter_kmers</span></code></a>(k[,&nbsp;overlap])</td>
+<td>Generate kmers of length <cite>k</cite> from this sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.kmer_frequencies.html#skbio.sequence.GrammaredSequence.kmer_frequencies" title="skbio.sequence.GrammaredSequence.kmer_frequencies"><code class="xref py py-obj docutils literal"><span class="pre">kmer_frequencies</span></code></a>(k[,&nbsp;overlap,&nbsp;relative])</td>
+<td>Return counts of words of length <cite>k</cite> from this sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.lowercase.html#skbio.sequence.GrammaredSequence.lowercase" title="skbio.sequence.GrammaredSequence.lowercase"><code class="xref py py-obj docutils literal"><span class="pre">lowercase</span></code></a>(lowercase)</td>
+<td>Return a case-sensitive string representation of the sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.match_frequency.html#skbio.sequence.GrammaredSequence.match_frequency" title="skbio.sequence.GrammaredSequence.match_frequency"><code class="xref py py-obj docutils literal"><span class="pre">match_frequency</span></code></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that are the same between two sequences.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.matches.html#skbio.sequence.GrammaredSequence.matches" title="skbio.sequence.GrammaredSequence.matches"><code class="xref py py-obj docutils literal"><span class="pre">matches</span></code></a>(other)</td>
+<td>Find positions that match with another sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.mismatch_frequency.html#skbio.sequence.GrammaredSequence.mismatch_frequency" title="skbio.sequence.GrammaredSequence.mismatch_frequency"><code class="xref py py-obj docutils literal"><span class="pre">mismatch_frequency</span></code></a>(other[,&nbsp;relative])</td>
+<td>Return count of positions that differ between two sequences.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.mismatches.html#skbio.sequence.GrammaredSequence.mismatches" title="skbio.sequence.GrammaredSequence.mismatches"><code class="xref py py-obj docutils literal"><span class="pre">mismatches</span></code></a>(other)</td>
+<td>Find positions that do not match with another sequence.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.nondegenerates.html#skbio.sequence.GrammaredSequence.nondegenerates" title="skbio.sequence.GrammaredSequence.nondegenerates"><code class="xref py py-obj docutils literal"><span class="pre">nondegenerates</span></code></a>()</td>
+<td>Find positions containing non-degenerate characters in the sequence.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.read.html#skbio.sequence.GrammaredSequence.read" title="skbio.sequence.GrammaredSequence.read"><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></a>(file[,&nbsp;format])</td>
+<td>Create a new <code class="docutils literal"><span class="pre">Sequence</span></code> instance from a file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.to_regex.html#skbio.sequence.GrammaredSequence.to_regex" title="skbio.sequence.GrammaredSequence.to_regex"><code class="xref py py-obj docutils literal"><span class="pre">to_regex</span></code></a>()</td>
+<td>Return regular expression object that accounts for degenerate chars.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="skbio.sequence.GrammaredSequence.write.html#skbio.sequence.GrammaredSequence.write" title="skbio.sequence.GrammaredSequence.write"><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></a>(file[,&nbsp;format])</td>
+<td>Write an instance of <code class="docutils literal"><span class="pre">Sequence</span></code> to a file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+  
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014--, scikit-bio development team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4a1+.<br/>
+    </p>
+  </div>
+</footer>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-6636235-9', 'scikit-bio.org');
+    ga('send', 'pageview');
+  </script>
+
+  </body>
+</html>

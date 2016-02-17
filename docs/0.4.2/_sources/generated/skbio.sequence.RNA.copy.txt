@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.copy
+=======================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.copy

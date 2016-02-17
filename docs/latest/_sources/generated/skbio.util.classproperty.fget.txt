@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.fget
+=============================
+
+.. currentmodule:: skbio.util
+
+.. autoattribute:: classproperty.fget

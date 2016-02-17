@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.workflow.method.highest_priority
+======================================
+
+.. currentmodule:: skbio.workflow
+
+.. autoattribute:: method.highest_priority

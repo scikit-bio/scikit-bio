@@ -1,0 +1,6 @@
+skbio.io.util.open
+==================
+
+.. currentmodule:: skbio.io.util
+
+.. autofunction:: open
