@@ -37,7 +37,7 @@ import skbio
 from skbio.util._decorator import experimental
 
 
-@experimental(as_of='0.4.1-dev')
+@experimental(as_of='0.4.2')
 def hamming(seq1, seq2):
     """Compute Hamming distance between two sequences.
 

@@ -36,7 +36,7 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-**State: Experimental as of 0.4.1-dev.**
+**State: Experimental as of 0.4.2.**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |

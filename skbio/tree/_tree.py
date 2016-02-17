@@ -2716,7 +2716,7 @@ class TreeNode(SkbioObject):
 
         return dist_f(self_matrix, other_matrix)
 
-    @experimental(as_of="0.4.1-dev")
+    @experimental(as_of="0.4.2")
     def bifurcate(self, insert_length=None):
         r"""Reorders the tree into a bifurcating tree.
 
