@@ -346,7 +346,7 @@ class TestReaders(unittest.TestCase):
     def test_fastq_to_generator_solexa(self):
         # solexa support isn't implemented yet. should raise error even with
         # valid solexa file
-        with self.assertRaises(NotImplementedError):
+        with six.assertRaisesRegex(self, ValueError, 'Solexa'):
             list(_fastq_to_generator(
                 get_data_path('solexa_full_range_original_solexa.fastq'),
                 variant='solexa'))

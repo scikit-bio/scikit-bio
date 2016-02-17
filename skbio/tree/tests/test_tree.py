@@ -817,6 +817,19 @@ class TreeTests(TestCase):
         obs = [n.name for n in self.simple_t.levelorder()]
         self.assertEqual(obs, exp)
 
+    def test_bifurcate(self):
+        t1 = TreeNode.read(StringIO(u'(((a,b),c),(d,e));'))
+        t2 = TreeNode.read(StringIO(u'((a,b,c));'))
+        t3 = t2.copy()
+
+        t1.bifurcate()
+        t2.bifurcate()
+        t3.bifurcate(insert_length=0)
+
+        self.assertEqual(str(t1), '(((a,b),c),(d,e));\n')
+        self.assertEqual(str(t2), '((c,(a,b)));\n')
+        self.assertEqual(str(t3), '((c,(a,b):0));\n')
+
     def test_index_tree_single_node(self):
         """index_tree handles single node tree"""
         t1 = TreeNode.read(StringIO(u'root;'))

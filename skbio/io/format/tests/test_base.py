@@ -39,7 +39,7 @@ class PhredDecoderTests(unittest.TestCase):
         self.assertIn('`phred_offset`', str(cm.exception))
 
     def test_solexa_variant(self):
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred('abcd', variant='solexa')
         self.assertIn('719', str(cm.exception))
 
@@ -124,7 +124,7 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('`phred_offset`', str(cm.exception))
 
     def test_solexa_variant(self):
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(ValueError) as cm:
             _encode_phred_to_qual([1, 2, 3], variant='solexa')
         self.assertIn('719', str(cm.exception))
 
