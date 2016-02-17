@@ -7,6 +7,10 @@ import os
 import types
 import re
 
+# Force matplotlib to not use any Xwindows backend.
+import matplotlib
+matplotlib.use('Agg')
+
 import sphinx
 import sphinx.ext.autosummary as autosummary
 
@@ -128,6 +132,7 @@ extensions = [
 
 # Determine if the matplotlib has a recent enough version of the
 # plot_directive.
+
 try:
     from matplotlib.sphinxext import plot_directive
 except ImportError:
@@ -409,7 +414,7 @@ import scipy as sp
 np.random.seed(123)
 """
 plot_include_source = True
-#plot_formats = [('png', 96), 'pdf']
+plot_formats = [('png', 96), ]
 #plot_html_show_formats = False
 
 import math
