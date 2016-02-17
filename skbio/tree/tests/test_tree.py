@@ -821,7 +821,7 @@ class TreeTests(TestCase):
         t1 = TreeNode.read(StringIO(u'(((a,b),c),(d,e));'))
         t2 = TreeNode.read(StringIO(u'((a,b,c));'))
         t3 = t2.copy()
-        t4 = TreeNode.read(StringIO(u'((a,b,c));'))
+
         t1.bifurcate()
         t2.bifurcate()
         t3.bifurcate(insert_length=0)
