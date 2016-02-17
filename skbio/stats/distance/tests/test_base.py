@@ -12,13 +12,16 @@ from six import StringIO, binary_type, text_type
 
 from unittest import TestCase, main
 
+import six
 import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import scipy.spatial.distance
 from IPython.core.display import Image, SVG
 
-from skbio import DistanceMatrix
+import skbio.sequence.distance
+from skbio import DistanceMatrix, Sequence
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm)
@@ -489,6 +492,10 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             DistanceMatrix([[1, 2, 3]], ['a'])
 
+    def test_init_nans(self):
+        with six.assertRaisesRegex(self, DistanceMatrixError, 'NaNs'):
+            DistanceMatrix([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
+
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
 
@@ -535,6 +542,50 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(ValueError):
             DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a),
                                          key=str, keys=['1', '2', '3', '4'])
+
+    def test_from_iterable_scipy_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DistanceMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DistanceMatrix.from_iterable(
+            seqs,
+            metric=scipy.spatial.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
+
+    def test_from_iterable_skbio_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DistanceMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DistanceMatrix.from_iterable(
+            seqs,
+            metric=skbio.sequence.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
 
     def test_condensed_form(self):
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):

@@ -24,28 +24,28 @@ from skbio.alignment._pairwise import (
     _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _compute_substitution_score)
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 
 
-class CustomSequence(IUPACSequence):
+class CustomSequence(GrammaredSequence):
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
         return set('^$')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def default_gap_char(cls):
         return '^'
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set('WXYZ')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {}
 
@@ -134,7 +134,8 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_global_pairwise_align_invalid_type(self):
         with six.assertRaisesRegex(self, TypeError,
-                                   "IUPACSequence.*TabularMSA.*'Sequence'"):
+                                   "GrammaredSequence.*"
+                                   "TabularMSA.*'Sequence'"):
             global_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_global_pairwise_align_dtype_mismatch(self):
@@ -460,7 +461,8 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(start_end_no_sub, start_end_alt_sub)
 
     def test_local_pairwise_align_invalid_type(self):
-        with six.assertRaisesRegex(self, TypeError, 'IUPACSequence.*Sequence'):
+        with six.assertRaisesRegex(self, TypeError,
+                                   'GrammaredSequence.*Sequence'):
             local_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_local_pairwise_align_type_mismatch(self):

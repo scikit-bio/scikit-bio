@@ -17,10 +17,9 @@ import numbers
 from contextlib import contextmanager
 
 import numpy as np
-from scipy.spatial.distance import hamming
-
 import pandas as pd
 
+import skbio.sequence.distance
 from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
@@ -347,6 +346,29 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         """
         return self._bytes.view('|S1')
+
+    @property
+    def __array_interface__(self):
+        """Array interface for compatibility with numpy.
+
+        This property allows a ``Sequence`` object to share its underlying data
+        buffer (``Sequence.values``) with numpy. See [1]_ for more details.
+
+        References
+        ----------
+        .. [1] http://docs.scipy.org/doc/numpy/reference/arrays.interface.html
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ABC123')
+        >>> np.asarray(seq) # doctest: +NORMALIZE_WHITESPACE
+        array([b'A', b'B', b'C', b'1', b'2', b'3'],
+              dtype='|S1')
+
+        """
+        return self.values.__array_interface__
 
     @property
     @experimental(as_of="0.4.1")
@@ -1434,69 +1456,60 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Parameters
         ----------
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Sequence to compute the distance to.
+            Sequence to compute the distance to. If `other` is a ``Sequence``
+            object, it must be the same type as this sequence. Other input
+            types will be converted into a ``Sequence`` object of the same type
+            as this sequence.
         metric : function, optional
             Function used to compute the distance between this sequence and
-            `other`. If ``None`` (the default),
-            ``scipy.spatial.distance.hamming`` will be used. This function
-            should take two ``skbio.Sequence`` objects and return a ``float``.
+            `other`. If ``None`` (the default), Hamming distance will be used
+            (:func:`skbio.sequence.distance.hamming`). `metric` should take two
+            ``skbio.Sequence`` objects and return a ``float``. The sequence
+            objects passed to `metric` will be the same type as this sequence.
+            See :mod:`skbio.sequence.distance` for other predefined metrics
+            that can be supplied via `metric`.
 
         Returns
         -------
         float
-            Distance between this sequence and `other`.
+            Distance between this sequence and `other` as defined by `metric`.
 
         Raises
         ------
-        ValueError
-            If the sequences are not the same length when `metric` is ``None``
-            (i.e., `metric` is ``scipy.spatial.distance.hamming``). This is
-            only checked when using this metric, as equal length is not a
-            requirement of all sequence distance metrics. In general, the
-            metric itself should test and give an informative error message,
-            but the message from ``scipy.spatial.distance.hamming`` is somewhat
-            cryptic (as of this writing), and it's the default metric, so we
-            explicitly do this check here. This metric-specific check will be
-            removed from this method when the ``skbio.sequence.stats`` module
-            is created (track progress on issue #913).
         TypeError
             If `other` is a ``Sequence`` object with a different type than this
             sequence.
 
         See Also
         --------
+        skbio.sequence.distance
         fraction_diff
         fraction_same
-        scipy.spatial.distance.hamming
 
         Examples
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
+
+        Compute Hamming distance (the default metric):
+
         >>> s.distance(t)
         0.25
-        >>> def custom_dist(s1, s2): return 0.42
-        >>> s.distance(t, custom_dist)
+
+        Use a custom metric:
+
+        >>> def custom_metric(s1, s2): return 0.42
+        >>> s.distance(t, custom_metric)
         0.42
 
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
-        other = self._munge_to_sequence(other, 'distance')
+        other = self._munge_to_self_type(other, 'distance')
         if metric is None:
-            return self._hamming(other)
+            metric = skbio.sequence.distance.hamming
         return float(metric(self, other))
-
-    def _hamming(self, other):
-        # Hamming requires equal length sequences. We are checking this
-        # here because the error you would get otherwise is cryptic.
-        if len(self) != len(other):
-            raise ValueError(
-                "Sequences do not have equal length. "
-                "Hamming distances can only be computed between "
-                "sequences of equal length.")
-        return float(hamming(self.values, other.values))
 
     @stable(as_of="0.4.0")
     def matches(self, other):
@@ -2144,6 +2157,17 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                 raise ValueError("Index regions are out of order.")
 
         return normalized
+
+    def _munge_to_self_type(self, other, method):
+        if isinstance(other, Sequence):
+            if type(other) != type(self):
+                raise TypeError("Cannot use %s and %s together with `%s`" %
+                                (self.__class__.__name__,
+                                 other.__class__.__name__, method))
+            else:
+                return other
+
+        return self.__class__(other)
 
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):

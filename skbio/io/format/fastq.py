@@ -18,7 +18,9 @@ FASTA/QUAL because the quality scores are stored in the same file as the
 biological sequence data.
 
 An example FASTQ-formatted file containing two DNA sequences and their quality
-scores::
+scores:
+
+.. code-block:: none
 
     @seq1 description 1
     AACACCAAACTTCTCCACCACGTGAGCTACAAAAG

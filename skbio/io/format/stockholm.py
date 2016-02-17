@@ -224,10 +224,10 @@ Format Parameters
 -----------------
 The only supported format parameter is ``constructor``, which specifies the
 type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is
-a required format parameter. For example, if you know that the Stockholm file
-you're reading contains DNA sequences, you would pass ``constructor=DNA`` to
-the reader call.
+be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
+and is a required format parameter. For example, if you know that the Stockholm
+file you're reading contains DNA sequences, you would pass ``constructor=DNA``
+to the reader call.
 
 Examples
 --------
@@ -371,7 +371,7 @@ from future.builtins import zip
 from collections import OrderedDict
 
 from skbio.alignment import TabularMSA
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
@@ -399,8 +399,9 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
     if constructor is None:
         raise ValueError("Must provide `constructor` parameter.")
     # Checks that contructor parameter is supported
-    elif not issubclass(constructor, IUPACSequence):
-        raise TypeError("`constructor` must be a subclass of `IUPACSequence`.")
+    elif not issubclass(constructor, GrammaredSequence):
+        raise TypeError("`constructor` must be a subclass of "
+                        "`GrammaredSequence`.")
 
     # Checks that the file isn't empty
     try:
