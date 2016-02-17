@@ -79,8 +79,7 @@ class IntervalMetadata():
         return queries
 
     def query(self, *args, **kwargs):
-        """ Looks up features that overlaps with a given set of
-        intervals and has specified keyword attributes.
+        """ Looks up features that with intervals and keywords.
 
         Parameters
         ----------
@@ -114,6 +113,24 @@ class IntervalMetadata():
             feats += self._query_feature(key, value)
 
         return list(set(feats))
+
+    def concat(self, other):
+        """ Concatenates two interval metadata objects
+
+        Parameters
+        ----------
+        other : IntervalMetadata
+            An IntervalMetadata object that is being concatenated with
+            the current IntervalMetadata object.
+
+        Returns
+        -------
+        IntervalMetadata
+            Concatenated IntervalMetadata object.
+        """
+        features = {**self.features, **other.features}
+        return IntervalMetadata(features)
+
 
 class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     ''' Store metadata corresponding to Features and Intervals.
