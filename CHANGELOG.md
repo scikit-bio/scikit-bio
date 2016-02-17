@@ -3,7 +3,7 @@
 ## Version 0.4.1-dev (changes since 0.4.1 go here)
 
 ### Features
-* Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA`. ([#967](https://github.com/biocore/scikit-bio/issues/967))
+* Added `skbio.io.format.stockholm` for reading Stockholm files into a `TabularMSA` and writing from a `TabularMSA`. ([#967](https://github.com/biocore/scikit-bio/issues/967))
 
 ### Backward-incompatible changes [stable]
 * When sniffing or reading a file (`skbio.io.sniff`, `skbio.io.read`, or the object-oriented `.read()` interface), passing `newline` as a keyword argument to `skbio.io.open` now raises a `TypeError`. This backward-incompatible change to a stable API is necessary because it fixes a bug (more details in bug fix section below).

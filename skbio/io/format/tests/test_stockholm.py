@@ -503,12 +503,12 @@ class TestStockholmWriter(unittest.TestCase):
 
     def test_msa_to_stockholm_nonstring_values(self):
         fp = get_data_path('stockholm_nonstring_labels')
-        msa = TabularMSA([DNA('ACTG', metadata=OrderedDict([(8, 'DNA')]),
+        msa = TabularMSA([DNA('ACTG', metadata=OrderedDict([(8, 123)]),
                               positional_metadata=OrderedDict([(1.0,
-                                                                list('ATTC'))])
+                                                                [1, 2, 3, 4])])
                               )],
-                         metadata=OrderedDict([(1.3, '2857')]),
-                         positional_metadata=OrderedDict([(25, list('CC-A'))]),
+                         metadata=OrderedDict([(1.3, 2857)]),
+                         positional_metadata=OrderedDict([(25, [4, 3, 2, 1])]),
                          index=[11214])
         fh = io.StringIO()
         _tabular_msa_to_stockholm(msa, fh)
@@ -606,6 +606,15 @@ class TestStockholmWriter(unittest.TestCase):
             exp = fh.read()
         self.assertEqual(obs, exp)
 
+    def test_handles_missing_metadata_efficiently(self):
+        msa = TabularMSA([DNA('ACTG'), DNA('GTCA')], index=['seq1', 'seq2'])
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        self.assertIsNone(msa._metadata)
+        self.assertIsNone(msa._positional_metadata)
+        self.assertIsNone(msa[0]._metadata)
+        self.assertIsNone(msa[0]._positional_metadata)
+
     def test_unoriginal_index_error(self):
         msa = TabularMSA([DNA('ATCGCCAGCT'), DNA('TTGTGCTGGC')],
                          index=['seq1', 'seq1'])
@@ -632,7 +641,7 @@ class TestStockholmWriter(unittest.TestCase):
                          index=['seq1'])
         with six.assertRaisesRegex(self, StockholmFormatError,
                                    'Sequence-specific positional metadata.*'
-                                   'must be unique. Caught 1 non-unique'):
+                                   'must be unique. Found 1 duplicate'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -653,8 +662,8 @@ class TestStockholmWriter(unittest.TestCase):
                          positional_metadata=pos_metadata_dataframe)
         with six.assertRaisesRegex(self, StockholmFormatError,
                                    'Multiple sequence alignment positional '
-                                   'metadata.*must be unique. Caught 2 '
-                                   'non-unique'):
+                                   'metadata.*must be unique. Found 2 '
+                                   'duplicate'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -668,8 +677,8 @@ class TestStockholmWriter(unittest.TestCase):
                               positional_metadata=pos_metadata_dataframe)])
         with six.assertRaisesRegex(self, StockholmFormatError,
                                    'Sequence-specific positional metadata.*'
-                                   'must contain a single character. Caught '
-                                   'item in column AC'):
+                                   'must contain a single character.*Found '
+                                   'value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -683,8 +692,8 @@ class TestStockholmWriter(unittest.TestCase):
                          positional_metadata=pos_metadata_dataframe)
         with six.assertRaisesRegex(self, StockholmFormatError,
                                    'Multiple sequence alignment positional '
-                                   'metadata.*must contain a single character.'
-                                   ' Caught item in column AC'):
+                                   'metadata.*must contain a single character'
+                                   '.*Found value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 

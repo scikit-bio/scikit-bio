@@ -65,11 +65,16 @@ the aligned sequence. For example::
     seq1 ACG-T-GGT
     seq2 ACCGTTCG-
 
+Sequence names (``seq1``, ``seq2``) are stored in the ``TabularMSA``
+``index``.
+
 .. note:: scikit-bio currently supports reading Stockholm files where each
    sequence is contained on a single line. Interleaved/wrap-around Stockholm
-   files are not supported.
+   files are not supported. When writing, each sequence will be placed on its
+   own line.
 
-.. warning:: Sequence names must be unique.
+.. warning:: Sequence names must be unique in the Stockholm file. Likewise,
+   when writing from a ``TabularMSA``, ``index`` must be unique.
 
 Metadata
 ^^^^^^^^
@@ -83,7 +88,16 @@ alignment.
    list of common features output by Pfam/Rfam. scikit-bio does not
    require that these features are present. These features are processed in the
    same way as any arbitrary feature would be, as a simple key-value pair of
-   strings.
+   strings. When writing, feature names, feature data, and sequence names are
+   converted to type ``str``.
+
+.. note:: When writing a Stockholm file, scikit-bio will place the metadata in
+   the format's recommended order:
+
+   - GF: Above the alignment
+   - GS: Above the alignment (after GF)
+   - GR: Below corresponding sequence
+   - GC: Below the alignment
 
 GF metadata
 +++++++++++
@@ -102,8 +116,9 @@ Where ``DE`` is the feature name and ``CBS Domain`` is the feature data.
 
 GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
-.. note:: Duplicate GF feature names will have their values concatenated in the
-   order they appear in the file.
+.. note:: When reading, duplicate GF feature names will have their values
+   concatenated in the order they appear in the file. When writing, each GF
+   feature will be placed on its own line, regardless of length.
 
 .. note:: Trees labelled with ``NH``/``TN`` are handled differently than other
    GF features. When reading a Stockholm file with these features, the reader
@@ -150,8 +165,9 @@ Where ``O83071/259-312`` is the sequence name, ``AC`` is the feature name, and
 
 GS metadata is stored in the sequence-specific ``metadata`` dictionary.
 
-.. note:: Duplicate GS feature names will have their values concatenated in the
-   order they appear in the file.
+.. note:: When reading, duplicate GS feature names will have their values
+   concatenated in the order they appear in the file. When writing, each GS
+   feature will be placed on its own line, regardless of length.
 
 GR metadata
 +++++++++++
@@ -259,6 +275,13 @@ MIEADKVAHVQVGNNLEH..ALLVLTKT....GYTAI
 EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 
+The sequence names are stored in the ``index``:
+
+>>> msa.index
+Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
+       'O31699/88-139'],
+      dtype='object')
+
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
 >>> msa.metadata
@@ -301,6 +324,29 @@ GR metadata is stored in sequence-specific ``positional_metadata``:
 8   _  _
 9   _  _
 ...
+
+Let's write this ``TabularMSA`` in Stockholm format:
+
+>>> fh = StringIO()
+>>> _ = msa.write(fh, format='stockholm')
+>>> print(fh.getvalue())
+# STOCKHOLM 1.0
+#=GF CC CBS domains are small intracellular modules mostly found in 2 or four \
+copies within a protein.
+#=GS O83071/192-246 AC O83071
+#=GS O31698/88-139 OS Bacillus subtilis
+O83071/192-246         MTCRAQLIAVPRASSLAE..AIACAQKM....RVSRV
+#=GR O83071/192-246 SA 999887756453524252..55152525....36463
+O83071/259-312         MQHVSAPVFVFECTRLAY..VQHKLRAH....SRAVA
+O31698/18-71           MIEADKVAHVQVGNNLEH..ALLVLTKT....GYTAI
+O31698/88-139          EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
+O31699/88-139          EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
+#=GR O31699/88-139 AS  ________________*____________________
+#=GR O31699/88-139 IN  ____________1______________2_________
+#=GC SS_cons           CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEE
+//
+<BLANKLINE>
+>>> fh.close()
 
 References
 ==========
@@ -606,7 +652,7 @@ def _tabular_msa_to_stockholm(obj, fh):
             for gs_feature, gs_feature_data in viewitems(seq.metadata):
                 fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
                                               gs_feature_data))
-        unpadded_data.append((seq_name, seq))
+        unpadded_data.append((seq_name, str(seq)))
         if seq.has_positional_metadata():
             df = _format_positional_metadata(seq.positional_metadata,
                                              'Sequence-specific positional '
@@ -640,27 +686,24 @@ def _write_padded_data(data, fh):
             max_data_len = len(label)
     fmt = '{0:%d} {1}\n' % max_data_len
     for label, value in data:
-        # Padding is extended by 1 to account for the extra space after
-        # longest tag string
         fh.write(fmt.format(label, value))
 
 
 def _format_positional_metadata(df, data_type):
     # Asserts positional metadata feature names are unique
-    columns = df.columns
     if not df.columns.is_unique:
-        num_repeated_characters = len(columns) - len(set(columns))
+        num_repeated_columns = len(df.columns) - len(set(df.columns))
         raise StockholmFormatError('%s feature names must be unique. '
-                                   'Caught %d non-unique name(s).'
-                                   % (data_type, num_repeated_characters))
+                                   'Found %d duplicate names.'
+                                   % (data_type, num_repeated_columns))
 
     str_df = df.astype(str)
 
     # Asserts positional metadata dataframe items are one character long
-    for column in columns:
+    for column in str_df.columns:
         if (str_df[column].str.len() != 1).any():
-            raise StockholmFormatError("%s DataFrame items must contain "
-                                       "a single character. Caught item "
-                                       "in column %s of incorrect length."
+            raise StockholmFormatError("%s must contain a single character for"
+                                       " each position's value. Found value(s)"
+                                       " in column %s of incorrect length."
                                        % (data_type, column))
     return str_df
