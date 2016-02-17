@@ -648,10 +648,8 @@ def _write_padded_data(data, fh):
 def _format_positional_metadata(df, data_type):
     # Asserts positional metadata feature names are unique
     columns = df.columns
-    data_len = len(columns)
-    unique_ids_len = len(set(columns))
-    if data_len > unique_ids_len:
-        num_repeated_characters = data_len - unique_ids_len
+    if not df.columns.is_unique:
+        num_repeated_characters = len(columns) - len(set(columns))
         raise StockholmFormatError('%s feature names must be unique. '
                                    'Caught %d non-unique name(s).'
                                    % (data_type, num_repeated_characters))
