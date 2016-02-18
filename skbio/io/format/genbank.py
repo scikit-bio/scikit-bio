@@ -268,7 +268,7 @@ from functools import partial
 from skbio.io import create_format, GenBankFormatError
 from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
-from skbio.util._misc import chunk_str
+from skbio.util._misc import chunk_str, merge_dicts
 from skbio.sequence import Sequence, DNA, RNA, Protein, Feature
 
 
@@ -430,7 +430,7 @@ def _parse_single_genbank(chunks):
             # merge the two dictionaries together. Note this is only
             # available in Python-3.5
 
-            feature_metadata = {**parsed, **feature_metadata}
+            feature_metadata = merge_dicts(parsed, feature_metadata)
         else:
             metadata[header] = parsed
     return sequence, metadata, None, feature_metadata

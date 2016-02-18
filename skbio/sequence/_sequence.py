@@ -1019,6 +1019,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         """
         return str(self._string.decode("ascii"))
 
+    # FIXME: Update this to include interval metadata
     @stable(as_of="0.4.0")
     def __repr__(self):
         r"""Return a string representation of this sequence object.

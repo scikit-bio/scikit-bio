@@ -14,7 +14,7 @@ from ._feature import Feature
 from .intersection import Interval, IntervalTree
 import itertools
 from collections import defaultdict
-
+from skbio.util._misc import merge_dicts
 
 class IntervalMetadata():
     def __init__(self, features=None):
@@ -114,7 +114,7 @@ class IntervalMetadata():
 
         return list(set(feats))
 
-    def concat(self, other):
+    def concat(self, other, inplace=False):
         """ Concatenates two interval metadata objects
 
         Parameters
@@ -127,9 +127,17 @@ class IntervalMetadata():
         -------
         IntervalMetadata
             Concatenated IntervalMetadata object.
+
+        Notes
+        -----
+        If the two IntervalMetadata objects contain the same features,
+        the features present in other will be used.
         """
-        features = {**self.features, **other.features}
-        return IntervalMetadata(features)
+        features = merge_dicts(self.features, other.features)
+        if inplace:
+            self.__init__(features=features)
+        else:
+            return IntervalMetadata(features)
 
 
 class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):

@@ -114,5 +114,23 @@ class TestIntervalMetadataMixin(unittest.TestCase):
                            Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
                            Feature(gene='sagD', location='13'): [(13, 15)]})
 
+    def test_concat_inplace(self):
+        interval_metadata1 = IntervalMetadata(features={
+                   Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                   Feature(gene='sagB', location='3'): [(3, 5)]
+               })
+
+        interval_metadata2 = IntervalMetadata(features={
+                   Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
+                   Feature(gene='sagD', location='13'): [(13, 15)]
+               })
+        interval_metadata1.concat(interval_metadata2, inplace=True)
+        self.assertEqual(interval_metadata1.features, {
+                         Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                         Feature(gene='sagB', location='3'): [(3, 5)],
+                         Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
+                         Feature(gene='sagD', location='13'): [(13, 15)]})
+
+
 if __name__=='__main__':
     unittest.main()
