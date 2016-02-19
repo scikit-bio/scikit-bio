@@ -87,16 +87,7 @@ def hamming(seq1, seq2):
     0.5
 
     """
-    for seq in seq1, seq2:
-        if not isinstance(seq, skbio.Sequence):
-            raise TypeError(
-                "`seq1` and `seq2` must be Sequence instances, not %r"
-                % type(seq).__name__)
-
-    if type(seq1) is not type(seq2):
-        raise TypeError(
-            "Sequences must have matching type. Type %r does not match type %r"
-            % (type(seq1).__name__, type(seq2).__name__))
+    _check_seqs(seq1, seq2)
 
     # Hamming requires equal length sequences. We are checking this here
     # because the error you would get otherwise is cryptic.
@@ -113,3 +104,54 @@ def hamming(seq1, seq2):
         distance = scipy.spatial.distance.hamming(seq1.values, seq2.values)
 
     return float(distance)
+
+
+@experimental(as_of='0.4.2')
+def kmer_distance(seq1, seq2, k=3, overlap=True):
+    """Compute the kmer distance between a pair of sequences
+    Parameters
+    ----------
+    seq1 : skbio.Sequence
+    seq2 : skbio.Sequence
+    k : int, optional
+        The word length.
+    overlap : bool, optional
+        Defines whether the k-words should be overlapping or not
+        overlapping.
+    Returns
+    -------
+    float
+        Fraction of the set of k-mers from both seq1 and
+        seq2 that are unique to either seq1 or
+        seq2.
+    Raises
+    ------
+    ValueError
+        If k < 1.
+    Notes
+    -----
+    k-mer counts are not incorporated in this distance metric.
+    """
+    _check_seqs(seq1, seq2)
+    seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap)))
+    seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap)))
+    all_kmers = seq1_kmers | seq2_kmers
+    shared_kmers = seq1_kmers & seq2_kmers
+    number_unique = len(all_kmers) - len(shared_kmers)
+    fraction_unique = number_unique / len(all_kmers)
+    return fraction_unique
+
+
+def _check_seqs(seq1, seq2):
+    # Asserts both sequences are skbio.sequence objects
+    for seq in seq1, seq2:
+        if not isinstance(seq, skbio.Sequence):
+            raise TypeError(
+                "`seq1` and `seq2` must be Sequence instances, not %r"
+                % type(seq).__name__)
+
+    # Asserts sequences have the same type
+    if type(seq1) is not type(seq2):
+        raise TypeError(
+            "Sequences must have matching type. Type %r does not match type %r"
+            % (type(seq1).__name__, type(seq2).__name__))
