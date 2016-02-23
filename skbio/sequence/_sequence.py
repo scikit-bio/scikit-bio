@@ -1408,6 +1408,47 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._string.count(
             self._munge_to_bytestring(subsequence, "count"), start, end)
 
+    @experimental(as_of="0.4.2-dev")
+    def replace(self, where, character):
+        """Replace values in this sequence with a different character.
+
+        Parameters
+        ----------
+        where: boolean vector
+            Vector containing boolean values. True values indicate a point at
+            which replacement will occur.
+        character: str
+            Character that will replace chosen items in this sequence.
+
+        Returns
+        -------
+        Sequence
+            Copy of this sequence, with chosen items replaced with chosen
+            character. All metadata is retained.
+
+        Examples
+        --------
+        >>> from skbio import Sequence
+        >>> seq = Sequence('GGTACCAACG')
+        >>> where = [False, False, False, True, False, False, True, True,
+        ...          False, False]
+        >>> seq = seq.replace(where, '-')
+        >>> seq
+        Sequence
+        --------------
+        Stats:
+            length: 10
+        --------------
+        0 GGT-CC--CG
+
+        """
+        index = self._munge_to_index_array(where)
+        seq_bytes = self._bytes.copy()
+        seq_bytes[index] = ord(character)
+        return self.__class__(seq_bytes,
+                              metadata=self.metadata,
+                              positional_metadata=self.positional_metadata)
+
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         """Find position where subsequence first occurs in the sequence.

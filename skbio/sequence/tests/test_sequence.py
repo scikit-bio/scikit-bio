@@ -1156,6 +1156,43 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
 
+    def test_replace_sanity(self):
+        seq = Sequence('AAGCATGCCCTTTACATTTG')
+        index = self._make_index('10011011001111110111')
+        obs = seq.replace(index, '_')
+        exp = Sequence('_AG__T__CC______T___')
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_metadata(self):
+        seq = Sequence('GCACGGCAAGAAGCGCCCCA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        index = self._make_index('01100001110010001100')
+        obs = seq.replace(index, '-')
+        exp = Sequence('G--CGGC---AA-CGC--CA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_subclass(self):
+        seq = DNA('CGACAACCGATGTGCTGTAA')
+        index = self._make_index('10101000111111110011')
+        obs = seq.replace(index, '-')
+        exp = DNA('-G-C-ACC--------GT--')
+        self.assertEqual(obs, exp)
+
+    def test_unsupported_char_error(self):
+        seq = DNA('TAAACGGAACGCTACGTCTG')
+        index = self._make_index('01000001101011001001')
+        with six.assertRaisesRegex(self, ValueError,
+                                   "Invalid character.*'F'"):
+            seq.replace(index, 'F')
+
+    def _make_index(self, bools):
+        return [bool(int(bools[i])) for i in range(len(bools))]
+
     def test_lowercase_mungeable_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
         # properly. If the internal implementation of the lowercase method
