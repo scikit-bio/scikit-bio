@@ -1874,7 +1874,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             step = k
             count = len(self) // k
 
-        if self.has_positional_metadata():
+        if len(self) == 0 or self.has_positional_metadata():
             for i in range(0, len(self) - k + 1, step):
                 yield self[i:i+k]
         # Optimized path when no positional metadata

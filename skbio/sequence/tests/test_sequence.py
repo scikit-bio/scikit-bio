@@ -1707,6 +1707,16 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         ]
         self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
 
+    def test_iter_kmers_empty_sequence(self):
+        seq = Sequence('')
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
+    def test_iter_kmers_empty_sequence_with_positional_metadata(self):
+        seq = Sequence('', positional_metadata={'quality': []})
+        expected = []
+        self._compare_kmers_results(seq.iter_kmers(3, overlap=False), expected)
+
     def test_kmer_frequencies_empty_sequence(self):
         seq = Sequence('')
 

@@ -17,6 +17,7 @@ Functions
    :toctree: generated/
 
    hamming
+   kmer_distance
 
 """
 
@@ -106,36 +107,58 @@ def hamming(seq1, seq2):
     return float(distance)
 
 
-@experimental(as_of='0.4.2')
-def kmer_distance(seq1, seq2, k=3, overlap=True):
+@experimental(as_of='0.4.2-dev')
+def kmer_distance(seq1, seq2, k, overlap=True):
     """Compute the kmer distance between a pair of sequences
+
+    The kmer distance between two sequences is the fraction of kmers that are
+    unique to either sequence.
+
     Parameters
     ----------
-    seq1 : skbio.Sequence
-    seq2 : skbio.Sequence
-    k : int, optional
-        The word length.
+    seq1, seq2 : Sequence
+        Sequences to compute kmer distance between.
+    k : int
+        The kmer length.
     overlap : bool, optional
-        Defines whether the k-words should be overlapping or not
-        overlapping.
+        Defines whether the kmers should be overlapping or not.
+
     Returns
     -------
     float
-        Fraction of the set of k-mers from both seq1 and
-        seq2 that are unique to either seq1 or
-        seq2.
+    kmer distance between seq1 and seq2.
+
     Raises
     ------
     ValueError
-        If k < 1.
+        If `k` is less than 1.
+    TypeError
+    If `seq1` and `seq2` are not ``Sequence`` instances.
+    TypeError
+    If `seq1` and `seq2` are not the same type.
+
     Notes
     -----
-    k-mer counts are not incorporated in this distance metric.
+    kmer counts are not incorporated in this distance metric.
+
+    ``np.nan`` will be returned if there are no kmers defined for the
+    sequences.
+
+    Examples
+    --------
+    >>> from skbio import Sequence
+    >>> seq1 = Sequence('ATCGGCGAT')
+    >>> seq2 = Sequence('GCAGATGTG')
+    >>> kmer_distance(seq1, seq2, 3)
+    0.9230769230769231
+
     """
     _check_seqs(seq1, seq2)
-    seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap)))
-    seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap)))
+    seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap=overlap)))
+    seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap=overlap)))
     all_kmers = seq1_kmers | seq2_kmers
+    if not all_kmers:
+        return np.nan
     shared_kmers = seq1_kmers & seq2_kmers
     number_unique = len(all_kmers) - len(shared_kmers)
     fraction_unique = number_unique / len(all_kmers)
