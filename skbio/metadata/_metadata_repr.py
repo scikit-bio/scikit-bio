@@ -16,7 +16,7 @@ import textwrap
 
 from abc import ABCMeta, abstractmethod
 from skbio._base import ElasticLines
-
+from skbio.metadata._interval import IntervalMetadata
 
 class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
     """Abstract base class for building  a repr for an object containing

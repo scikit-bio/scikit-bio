@@ -27,7 +27,7 @@ from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests)
-from skbio.sequence import Feature
+from skbio.metadata import Feature
 
 class SequenceSubclass(Sequence):
     """Used for testing purposes."""

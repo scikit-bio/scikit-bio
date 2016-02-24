@@ -10,8 +10,8 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-from skbio.sequence import IntervalMetadataMixin, IntervalMetadata, Interval, Feature
-from skbio.sequence._interval import _polish_interval
+from skbio.metadata import IntervalMetadataMixin, IntervalMetadata, Interval, Feature
+from skbio.metadata._interval import _polish_interval
 
 
 class TestIntervalMetadataMixin(unittest.TestCase):

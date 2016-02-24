@@ -270,7 +270,7 @@ from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str, merge_dicts
 from skbio.sequence import Sequence, DNA, RNA, Protein
-from skbio.sequence import Feature
+from skbio.metadata import Feature
 
 genbank = create_format('genbank')
 

@@ -16,6 +16,7 @@ import itertools
 from collections import defaultdict
 from skbio.util._misc import merge_dicts
 
+
 class IntervalMetadata():
     def __init__(self, features=None):
         # maps features attributes to intervals
@@ -151,37 +152,6 @@ class IntervalMetadata():
             self.__init__(features=features)
         else:
             return IntervalMetadata(features)
-
-
-class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
-    ''' Store metadata corresponding to Features and Intervals.
-
-    Parameters
-    ----------
-    features : dict of list
-        The dictionary of features and intervals where
-        the keys are hashble Feature objects and the values
-        are a list of intervals associated with each feature.
-
-    There are two underlying data structures namely
-    1. An IntervalTree (interval_metadata).
-    2. A hash table indexed by a Feature, where each entry contains a
-       list of Intervals(feature_metadata).
-
-    Attributes
-    ----------
-    interval_metadata
-    feature_metadata
-
-    '''
-    def __init__(self, features=None):
-        self._init_(features)
-
-    def _init_(self, features=None):
-        self.interval_metadata = IntervalMetadata(features=features)
-
-    def has_interval_metadata(self):
-        return self.interval_metadata is not None
 
 
 def _polish_interval(interval):

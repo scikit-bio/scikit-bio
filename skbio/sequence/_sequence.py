@@ -21,13 +21,13 @@ from scipy.spatial.distance import hamming
 
 import pandas as pd
 
-from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio._base import SkbioObject
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
-from skbio.sequence._feature import Feature
-from skbio.sequence._interval import IntervalMetadataMixin, _polish_interval
-
+from skbio.metadata._feature import Feature
+from skbio.metadata._interval import _polish_interval
+from skbio.metadata import MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                collections.Sequence, SkbioObject):
