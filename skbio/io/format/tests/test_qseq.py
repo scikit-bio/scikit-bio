@@ -8,8 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from future.builtins import zip
-
 import unittest
 
 from skbio import Sequence, DNA, RNA, Protein

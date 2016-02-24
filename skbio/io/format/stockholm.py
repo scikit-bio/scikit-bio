@@ -365,8 +365,6 @@ References
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import viewitems
-from future.builtins import zip
 
 from collections import OrderedDict
 
@@ -637,9 +635,9 @@ def _tabular_msa_to_stockholm(obj, fh):
 
     # Writes GF data to file
     if obj.has_metadata():
-        for gf_feature, gf_feature_data in viewitems(obj.metadata):
+        for gf_feature, gf_feature_data in obj.metadata.items():
             if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
-                for tree_id, tree in viewitems(obj.metadata[gf_feature]):
+                for tree_id, tree in obj.metadata[gf_feature].items():
                     fh.write("#=GF TN %s\n" % tree_id)
                     fh.write("#=GF NH %s\n" % tree)
             else:
@@ -650,7 +648,7 @@ def _tabular_msa_to_stockholm(obj, fh):
     for seq, seq_name in zip(obj, obj.index):
         seq_name = str(seq_name)
         if seq.has_metadata():
-            for gs_feature, gs_feature_data in viewitems(seq.metadata):
+            for gs_feature, gs_feature_data in seq.metadata.items():
                 fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
                                               gs_feature_data))
         unpadded_data.append((seq_name, str(seq)))

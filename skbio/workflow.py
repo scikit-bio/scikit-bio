@@ -202,16 +202,12 @@ allow you to indicate ``anything`` as an option value, anything that is
 
 from __future__ import absolute_import, division, print_function
 
-from future.utils import viewitems
-
 import sys
 from copy import deepcopy
 from time import time
 from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
-
-import six
 
 from skbio.util._decorator import experimental
 
@@ -295,7 +291,7 @@ class Workflow(object):
         self.state = state
         self.iter_ = None
 
-        for k, v in viewitems(kwargs):
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 raise AttributeError("'%s' already exists in self." % k)
             setattr(self, k, v)
@@ -507,7 +503,7 @@ class requires(object):
         elif isinstance(values, set):
             self.values = values
         else:
-            if isinstance(values, six.string_types):
+            if isinstance(values, str):
                 self.values = values
             elif isinstance(values, Iterable):
                 self.values = set(values)

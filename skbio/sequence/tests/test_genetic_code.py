@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import unittest
 
-import six
 import numpy as np
 import numpy.testing as npt
 
@@ -35,9 +34,9 @@ class TestGeneticCode(unittest.TestCase):
                          'Candidate Division SR1 and Gracilibacteria')
 
     def test_from_ncbi_invalid_input(self):
-        with six.assertRaisesRegex(self, ValueError, 'table_id.*7'):
+        with self.assertRaisesRegex(ValueError, 'table_id.*7'):
             GeneticCode.from_ncbi(7)
-        with six.assertRaisesRegex(self, ValueError, 'table_id.*42'):
+        with self.assertRaisesRegex(ValueError, 'table_id.*42'):
             GeneticCode.from_ncbi(42)
 
     def test_reading_frames(self):
@@ -75,29 +74,27 @@ class TestGeneticCode(unittest.TestCase):
 
     def test_init_invalid_input(self):
         # `amino_acids` invalid protein
-        with six.assertRaisesRegex(self, ValueError, 'Invalid character.*J'):
+        with self.assertRaisesRegex(ValueError, 'Invalid character.*J'):
             GeneticCode('J' * 64, '-' * 64)
 
         # wrong number of amino acids
-        with six.assertRaisesRegex(self, ValueError, 'amino_acids.*64.*42'):
+        with self.assertRaisesRegex(ValueError, 'amino_acids.*64.*42'):
             GeneticCode('M' * 42, '-' * 64)
 
         # `amino_acids` missing M
-        with six.assertRaisesRegex(self, ValueError,
-                                   'amino_acids.*M.*character'):
+        with self.assertRaisesRegex(ValueError, 'amino_acids.*M.*character'):
             GeneticCode('A' * 64, '-' * 64)
 
         # `starts` invalid protein
-        with six.assertRaisesRegex(self, ValueError, 'Invalid character.*J'):
+        with self.assertRaisesRegex(ValueError, 'Invalid character.*J'):
             GeneticCode('M' * 64, 'J' * 64)
 
         # wrong number of starts
-        with six.assertRaisesRegex(self, ValueError, 'starts.*64.*42'):
+        with self.assertRaisesRegex(ValueError, 'starts.*64.*42'):
             GeneticCode('M' * 64, '-' * 42)
 
         # invalid characters in `starts`
-        with six.assertRaisesRegex(self, ValueError,
-                                   'starts.*M and - characters'):
+        with self.assertRaisesRegex(ValueError, 'starts.*M and - characters'):
             GeneticCode('M' * 64, '-M' * 30 + '*AQR')
 
     def test_str(self):
@@ -253,8 +250,8 @@ class TestGeneticCode(unittest.TestCase):
                 obs = self.sgc.translate(seq, start=start)
                 self.assertEqual(obs, exp)
 
-            with six.assertRaisesRegex(self, ValueError,
-                                       'reading_frame=1.*start=\'require\''):
+            with self.assertRaisesRegex(ValueError,
+                                        'reading_frame=1.*start=\'require\''):
                 self.sgc.translate(seq, start='require')
 
     def test_translate_start_with_start_codon(self):
@@ -297,8 +294,8 @@ class TestGeneticCode(unittest.TestCase):
             obs = self.sgc.translate(seq, start=start)
             self.assertEqual(obs, exp)
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=1.*start=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=1.*start=\'require\''):
             self.sgc.translate(seq, start='require')
 
         # non-start codon that translates to an AA that start codons also map
@@ -310,8 +307,8 @@ class TestGeneticCode(unittest.TestCase):
             obs = self.sgc.translate(seq, start=start)
             self.assertEqual(obs, exp)
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=1.*start=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=1.*start=\'require\''):
             self.sgc.translate(seq, start='require')
 
     def test_translate_start_no_accidental_mutation(self):
@@ -335,8 +332,8 @@ class TestGeneticCode(unittest.TestCase):
                 obs = self.sgc.translate(seq, stop=stop)
                 self.assertEqual(obs, exp)
 
-            with six.assertRaisesRegex(self, ValueError,
-                                       'reading_frame=1.*stop=\'require\''):
+            with self.assertRaisesRegex(ValueError,
+                                        'reading_frame=1.*stop=\'require\''):
                 self.sgc.translate(seq, stop='require')
 
     def test_translate_stop_with_stop_codon(self):
@@ -381,8 +378,8 @@ class TestGeneticCode(unittest.TestCase):
             obs = self.sgc.translate(seq, stop=stop)
             self.assertEqual(obs, exp)
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=1.*stop=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=1.*stop=\'require\''):
             self.sgc.translate(seq, stop='require')
 
     def test_translate_trim_to_cds(self):
@@ -403,11 +400,11 @@ class TestGeneticCode(unittest.TestCase):
         # alternative reading frame disrupts cds:
         #     AAUUGCCUCAUUAAUAACAAUGA
         #     NCLINNN
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=2.*start=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=2.*start=\'require\''):
             self.sgc.translate(seq, reading_frame=2, start='require')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=2.*stop=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=2.*stop=\'require\''):
             self.sgc.translate(seq, reading_frame=2, stop='require')
 
         exp = Protein('NCLINNN')
@@ -418,30 +415,29 @@ class TestGeneticCode(unittest.TestCase):
 
     def test_translate_invalid_input(self):
         # invalid sequence type
-        with six.assertRaisesRegex(self, TypeError, 'RNA.*DNA'):
+        with self.assertRaisesRegex(TypeError, 'RNA.*DNA'):
             self.sgc.translate(DNA('ACG'))
-        with six.assertRaisesRegex(self, TypeError, 'RNA.*str'):
+        with self.assertRaisesRegex(TypeError, 'RNA.*str'):
             self.sgc.translate('ACG')
 
         # invalid reading frame
-        with six.assertRaisesRegex(self, ValueError,
-                                   '\[1, 2, 3, -1, -2, -3\].*0'):
+        with self.assertRaisesRegex(ValueError, '\[1, 2, 3, -1, -2, -3\].*0'):
             self.sgc.translate(RNA('AUG'), reading_frame=0)
 
         # invalid start
-        with six.assertRaisesRegex(self, ValueError, 'start.*foo'):
+        with self.assertRaisesRegex(ValueError, 'start.*foo'):
             self.sgc.translate(RNA('AUG'), start='foo')
 
         # invalid stop
-        with six.assertRaisesRegex(self, ValueError, 'stop.*foo'):
+        with self.assertRaisesRegex(ValueError, 'stop.*foo'):
             self.sgc.translate(RNA('AUG'), stop='foo')
 
         # gapped sequence
-        with six.assertRaisesRegex(self, ValueError, 'gapped'):
+        with self.assertRaisesRegex(ValueError, 'gapped'):
             self.sgc.translate(RNA('UU-G'))
 
         # degenerate sequence
-        with six.assertRaisesRegex(self, NotImplementedError, 'degenerate'):
+        with self.assertRaisesRegex(NotImplementedError, 'degenerate'):
             self.sgc.translate(RNA('RUG'))
 
     def test_translate_varied_genetic_codes(self):
@@ -463,8 +459,8 @@ class TestGeneticCode(unittest.TestCase):
         obs = GeneticCode.from_ncbi(22).translate(seq)
         self.assertEqual(obs, exp)
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=1.*start=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=1.*start=\'require\''):
             GeneticCode.from_ncbi(22).translate(seq, start='require',
                                                 stop='require')
 
@@ -474,8 +470,8 @@ class TestGeneticCode(unittest.TestCase):
         obs = gc.translate(seq)
         self.assertEqual(obs, exp)
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'reading_frame=1.*start=\'require\''):
+        with self.assertRaisesRegex(ValueError,
+                                    'reading_frame=1.*start=\'require\''):
             gc.translate(seq, start='require', stop='require')
 
     def test_translate_six_frames(self):

@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import unittest
 
-import six
 import numpy as np
 import numpy.testing as npt
 
@@ -24,27 +23,25 @@ class TestHamming(unittest.TestCase):
         seq1 = Sequence('abc')
         seq2 = 'abc'
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
             hamming(seq1, seq2)
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
             hamming(seq2, seq1)
 
     def test_type_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ACG')
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Sequence.*does not match.*DNA'):
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*does not match.*DNA'):
             hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABCD')
 
-        with six.assertRaisesRegex(self, ValueError, 'equal length.*3 != 4'):
+        with self.assertRaisesRegex(ValueError, 'equal length.*3 != 4'):
             hamming(seq1, seq2)
 
     def test_return_type(self):

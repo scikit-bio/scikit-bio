@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import string_types
 
 from copy import deepcopy
 
@@ -588,7 +587,7 @@ class DissimilarityMatrix(SkbioObject):
         The lookup based on ID(s) is quick.
 
         """
-        if isinstance(index, string_types):
+        if isinstance(index, str):
             return self.data[self.index(index)]
         elif self._is_id_pair(index):
             return self.data[self.index(index[0]), self.index(index[1])]
@@ -647,7 +646,7 @@ class DissimilarityMatrix(SkbioObject):
     def _is_id_pair(self, index):
         return (isinstance(index, tuple) and
                 len(index) == 2 and
-                all(map(lambda e: isinstance(e, string_types), index)))
+                all(map(lambda e: isinstance(e, str), index)))
 
 
 class DistanceMatrix(DissimilarityMatrix):

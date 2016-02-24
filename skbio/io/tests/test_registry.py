@@ -8,11 +8,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-import six
-from six.moves import zip_longest
-
 from io import StringIO
 import io
+import itertools
 import os
 import unittest
 import warnings
@@ -601,7 +599,7 @@ class TestSniff(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, '`newline`'):
             self.registry.sniff(fp, newline='\r')
 
     def test_non_default_encoding(self):
@@ -914,7 +912,7 @@ class TestRead(RegistryTest):
                 yield value
 
         generator = self.registry.read(fp, format='format1')
-        for a, b in zip_longest(generator, [1, 2, 3, 4]):
+        for a, b in itertools.zip_longest(generator, [1, 2, 3, 4]):
             self.assertEqual(a, b)
         self.assertTrue(self._test_fh.closed)
 
@@ -1155,10 +1153,10 @@ class TestRead(RegistryTest):
         def reader_gen(fh):
             yield TestClass(fh.readlines())
 
-        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, '`newline`'):
             self.registry.read(fp, into=TestClass, newline='\r')
 
-        with six.assertRaisesRegex(self, TypeError, '`newline`'):
+        with self.assertRaisesRegex(TypeError, '`newline`'):
             self.registry.read(fp, format='formatx', newline='\r')
 
     def test_non_default_newline(self):

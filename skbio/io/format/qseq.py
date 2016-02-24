@@ -161,8 +161,6 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from future.builtins import zip, range
-
 from skbio.io import create_format, QSeqFormatError
 from skbio.io.format._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.sequence import Sequence, DNA, RNA, Protein

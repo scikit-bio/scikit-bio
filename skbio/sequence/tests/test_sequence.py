@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-import six
-from six.moves import zip_longest
 
 import copy
 import functools
@@ -112,8 +110,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         result1 = Sequence.concat([seq1, seq2])
         result2 = Sequence.concat([seq1, seq2], how='strict')
         self.assertEqual(result1, result2)
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2, seqbad])
 
     def test_concat_strict_simple(self):
@@ -143,8 +141,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_concat_strict_fail(self):
         seq1 = Sequence("1", positional_metadata={'a': [1]})
         seq2 = Sequence("2", positional_metadata={'b': [2]})
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2], how='strict')
 
     def test_concat_outer_simple(self):
@@ -415,23 +413,23 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with six.assertRaisesRegex(self, TypeError, 'tuple'):
+        with self.assertRaisesRegex(TypeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with six.assertRaisesRegex(self, TypeError, 'list'):
+        with self.assertRaisesRegex(TypeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with six.assertRaisesRegex(self, TypeError, 'set'):
+        with self.assertRaisesRegex(TypeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with six.assertRaisesRegex(self, TypeError, 'dict'):
+        with self.assertRaisesRegex(TypeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with six.assertRaisesRegex(self, TypeError, 'int'):
+        with self.assertRaisesRegex(TypeError, 'int'):
             Sequence(42)
-        with six.assertRaisesRegex(self, TypeError, 'float'):
+        with self.assertRaisesRegex(TypeError, 'float'):
             Sequence(4.2)
-        with six.assertRaisesRegex(self, TypeError, 'int64'):
+        with self.assertRaisesRegex(TypeError, 'int64'):
             Sequence(np.int_(50))
-        with six.assertRaisesRegex(self, TypeError, 'float64'):
+        with self.assertRaisesRegex(TypeError, 'float64'):
             Sequence(np.float_(50))
-        with six.assertRaisesRegex(self, TypeError, 'Foo'):
+        with self.assertRaisesRegex(TypeError, 'Foo'):
             class Foo(object):
                 pass
             Sequence(Foo())
@@ -1561,32 +1559,33 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_frequencies_invalid_chars(self):
         seq = Sequence('abcabc')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars='')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars={''})
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars='ab')
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars={'b', 'ab'})
 
-        with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
+        with self.assertRaisesRegex(TypeError, 'string.*NoneType'):
             seq.frequencies(chars={'a', None})
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
             seq.frequencies(chars=u'\u1F30')
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
             seq.frequencies(chars={'c', u'\u1F30'})
 
-        with six.assertRaisesRegex(self, TypeError, 'set.*int'):
+        with self.assertRaisesRegex(TypeError, 'set.*int'):
             seq.frequencies(chars=42)
 
     def _compare_kmers_results(self, observed, expected):
-        for obs, exp in zip_longest(observed, expected, fillvalue=None):
+        for obs, exp in itertools.zip_longest(observed, expected,
+                                              fillvalue=None):
             self.assertEqual(obs, exp)
 
     def test_iter_kmers(self):
@@ -2281,15 +2280,15 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence(seq_str,
                        positional_metadata={'quality': range(len(seq_str))})
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   "No positional metadata associated with "
-                                   "key 'introns'"):
+        with self.assertRaisesRegex(ValueError,
+                                    "No positional metadata associated with "
+                                    "key 'introns'"):
             seq._munge_to_index_array('introns')
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   "Column 'quality' in positional metadata "
-                                   "does not correspond to a boolean "
-                                   "vector"):
+        with self.assertRaisesRegex(TypeError,
+                                    "Column 'quality' in positional metadata "
+                                    "does not correspond to a boolean "
+                                    "vector"):
             seq._munge_to_index_array('quality')
 
     def test_munge_to_bytestring_return_bytes(self):
@@ -2311,10 +2310,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence('')
         all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
         for input_ in all_inputs:
-            with six.assertRaisesRegex(self, UnicodeEncodeError,
-                                       "'ascii' codec can't encode character"
-                                       ".*in position.*: ordinal not in"
-                                       " range\(128\)"):
+            with self.assertRaisesRegex(UnicodeEncodeError,
+                                        "'ascii' codec can't encode character"
+                                        ".*in position.*: ordinal not in"
+                                        " range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
 
 
@@ -2355,16 +2354,16 @@ class TestDistance(TestSequenceBase):
         seq1 = SequenceSubclass("abcdef")
         seq2 = Sequence("12bcef")
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'SequenceSubclass.*Sequence.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'SequenceSubclass.*Sequence.*`distance`'):
             seq1.distance(seq2)
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Sequence.*SequenceSubclass.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*SequenceSubclass.*`distance`'):
             seq2.distance(seq1)
 
     def test_munging_invalid_characters_to_self_type(self):
-        with six.assertRaisesRegex(self, ValueError, 'Invalid characters.*X'):
+        with self.assertRaisesRegex(ValueError, 'Invalid characters.*X'):
             DNA("ACGT").distance("WXYZ")
 
     def test_munging_invalid_type_to_self_type(self):
@@ -2383,7 +2382,7 @@ class TestDistance(TestSequenceBase):
         def metric(a, b):
             return 'too far'
 
-        with six.assertRaisesRegex(self, ValueError, 'string.*float'):
+        with self.assertRaisesRegex(ValueError, 'string.*float'):
             Sequence('abc').distance('cba', metric=metric)
 
     def test_arbitrary_metric(self):

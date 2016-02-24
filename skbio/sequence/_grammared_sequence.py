@@ -13,8 +13,6 @@ from itertools import product
 import re
 
 import numpy as np
-from six import add_metaclass
-
 
 from skbio.util._decorator import (classproperty, overrides, stable,
                                    experimental)
@@ -97,8 +95,7 @@ class DisableSubclassingMeta(GrammaredSequenceMeta):
                                                           dict(dct))
 
 
-@add_metaclass(GrammaredSequenceMeta)
-class GrammaredSequence(Sequence):
+class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     """Store sequence data conforming to a character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.

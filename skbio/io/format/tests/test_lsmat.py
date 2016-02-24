@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-import six
 
 from unittest import TestCase, main
 
@@ -121,8 +120,8 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
     def test_read_invalid_files(self):
         for fn in _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
-                with six.assertRaisesRegex(self, LSMatFormatError,
-                                           error_msg_regexp):
+                with self.assertRaisesRegex(LSMatFormatError,
+                                            error_msg_regexp):
                     invalid_fh.seek(0)
                     fn(invalid_fh)
 

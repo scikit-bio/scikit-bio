@@ -7,9 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
 
-import six
 import itertools
 import numbers
 import textwrap
@@ -18,7 +16,7 @@ from abc import ABCMeta, abstractmethod
 from skbio._base import ElasticLines
 
 
-class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
+class _MetadataReprBuilder(object, metaclass=ABCMeta):
     """Abstract base class for building  a repr for an object containing
     metadata and/or positional metadata.
 
@@ -84,7 +82,7 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
         key_fmt = self._format_key(key)
 
         supported_type = True
-        if isinstance(value, (six.text_type, six.binary_type)):
+        if isinstance(value, (str, bytes)):
             # for stringy values, there may be u'' or b'' depending on the type
             # of `value` and version of Python. find the starting quote
             # character so that wrapped text will line up with that instead of
@@ -135,8 +133,7 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
 
         """
         key_fmt = self._indent + repr(key)
-        supported_types = (six.text_type, six.binary_type, numbers.Number,
-                           type(None))
+        supported_types = (str, bytes, numbers.Number, type(None))
         if len(key_fmt) > (self._width / 2) or not isinstance(key,
                                                               supported_types):
             key_fmt = self._indent + str(type(key))

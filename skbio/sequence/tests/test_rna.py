@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-import six
 
 import unittest
 
@@ -42,7 +41,7 @@ class TestRNA(unittest.TestCase):
         self.assertEqual(seq, RNA('AUAU'))
 
     def test_cannot_subclass(self):
-        with six.assertRaisesRegex(self, TypeError, "Subclassing disabled"):
+        with self.assertRaisesRegex(TypeError, "Subclassing disabled"):
             class CustomSequence(RNA):
                 pass
 

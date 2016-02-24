@@ -141,15 +141,12 @@ we need to be confident that we have not committed a type II error increases.
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import viewitems
-from future.builtins import range
 
 import collections
 import copy
 
 import numpy as np
 import scipy.stats
-import six
 
 from skbio.util._decorator import experimental
 
@@ -728,7 +725,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 def _check_nans(x, switch=False):
     r"""Returns False if x is a nan and True is x is a string or number
     """
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return True
     elif isinstance(x, (float, int)):
         return not np.isnan(x)
@@ -1078,7 +1075,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     subs = []
 
     # Draws the other groups
-    for set_, num_ in viewitems(collections.Counter(set_pos)):
+    for set_, num_ in collections.Counter(set_pos).items():
         r2 = [np.random.choice(col, num_, replace=False) for col in
               meta_pairs[set_]]
         subs.append(r2)

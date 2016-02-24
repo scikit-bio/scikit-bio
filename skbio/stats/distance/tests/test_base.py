@@ -7,12 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-from six import StringIO, binary_type, text_type
 
+import io
 from unittest import TestCase, main
 
-import six
 import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
@@ -318,15 +316,14 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_repr_png(self):
         dm = self.dm_1x1
         obs = dm._repr_png_()
-        self.assertIsInstance(obs, binary_type)
+        self.assertIsInstance(obs, bytes)
         self.assertTrue(len(obs) > 0)
 
     def test_repr_svg(self):
         obs = self.dm_1x1._repr_svg_()
-        # print_figure(format='svg') can return text or bytes depending on the
+        # print_figure(format='svg') can return str or bytes depending on the
         # version of IPython
-        self.assertTrue(isinstance(obs, text_type) or
-                        isinstance(obs, binary_type))
+        self.assertIsInstance(obs, (str, bytes))
         self.assertTrue(len(obs) > 0)
 
     def test_png(self):
@@ -493,7 +490,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
             DistanceMatrix([[1, 2, 3]], ['a'])
 
     def test_init_nans(self):
-        with six.assertRaisesRegex(self, DistanceMatrixError, 'NaNs'):
+        with self.assertRaisesRegex(DistanceMatrixError, 'NaNs'):
             DistanceMatrix([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
 
     def test_from_iterable_no_key(self):
@@ -719,10 +716,10 @@ class CategoricalStatsHelperFunctionTests(TestCase):
         self.grouping = [1, 2, 1]
         # Ordering of IDs shouldn't matter, nor should extra IDs.
         self.df = pd.read_csv(
-            StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
+            io.StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
             index_col=0)
         self.df_missing_id = pd.read_csv(
-            StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
+            io.StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
 
     def test_preprocess_input_with_valid_input(self):
         # Should obtain same result using grouping vector or data frame.

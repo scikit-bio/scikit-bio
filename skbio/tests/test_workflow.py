@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from future.builtins import zip
 from collections import defaultdict
 from skbio.workflow import (Exists, NotExecuted, NotNone, Workflow, not_none,
                             requires, method)

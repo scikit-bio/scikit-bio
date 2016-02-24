@@ -7,14 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import PY3
 
 import copy
 import os
 import inspect
 import warnings
 
-import six
 import pandas as pd
 import nose
 
@@ -44,13 +42,6 @@ class ReallyEqualMixin(object):
         self.assertFalse(a != b)
         self.assertFalse(b != a)
 
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertEqual(0, cmp(a, b))  # noqa
-            self.assertEqual(0, cmp(b, a))  # noqa
-
     def assertReallyNotEqual(self, a, b):
         # assertNotEqual first, because it will have a good message if the
         # assertion fails.
@@ -61,19 +52,11 @@ class ReallyEqualMixin(object):
         self.assertTrue(a != b)
         self.assertTrue(b != a)
 
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertNotEqual(0, cmp(a, b))  # noqa
-            self.assertNotEqual(0, cmp(b, a))  # noqa
-
 
 class MetadataMixinTests(object):
     def test_constructor_invalid_type(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
-            with six.assertRaisesRegex(self, TypeError,
-                                       'metadata must be a dict'):
+            with self.assertRaisesRegex(TypeError, 'metadata must be a dict'):
                 self._metadata_constructor_(metadata=md)
 
     def test_constructor_no_metadata(self):
@@ -275,8 +258,7 @@ class MetadataMixinTests(object):
 
         for md in (None, 0, 'a', ('f', 'o', 'o'), np.array([]),
                    pd.DataFrame()):
-            with six.assertRaisesRegex(self, TypeError,
-                                       'metadata must be a dict'):
+            with self.assertRaisesRegex(TypeError, 'metadata must be a dict'):
                 obj.metadata = md
             self.assertEqual(obj.metadata, {123: 456})
 
@@ -321,44 +303,44 @@ class MetadataMixinTests(object):
 
 class PositionalMetadataMixinTests(object):
     def test_constructor_invalid_positional_metadata_type(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Invalid positional metadata. Must be '
-                                   'consumable by `pd.DataFrame` constructor. '
-                                   'Original pandas error message: '):
+        with self.assertRaisesRegex(TypeError,
+                                    'Invalid positional metadata. Must be '
+                                    'consumable by `pd.DataFrame` constructor.'
+                                    ' Original pandas error message: '):
             self._positional_metadata_constructor_(0, positional_metadata=2)
 
     def test_constructor_positional_metadata_len_mismatch(self):
         # Zero elements.
-        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(0\).*\(4\)'):
             self._positional_metadata_constructor_(4, positional_metadata=[])
 
         # Not enough elements.
-        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=[2, 3, 4])
 
         # Too many elements.
-        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=[2, 3, 4, 5, 6])
 
         # Series not enough rows.
-        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.Series(range(3)))
 
         # Series too many rows.
-        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.Series(range(5)))
 
         # DataFrame not enough rows.
-        with six.assertRaisesRegex(self, ValueError, '\(3\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(3\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.DataFrame({'quality': range(3)}))
 
         # DataFrame too many rows.
-        with six.assertRaisesRegex(self, ValueError, '\(5\).*\(4\)'):
+        with self.assertRaisesRegex(ValueError, '\(5\).*\(4\)'):
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.DataFrame({'quality': range(5)}))
 
@@ -719,9 +701,9 @@ class PositionalMetadataMixinTests(object):
         # array-like objects will fail if wrong size.
         for array_like in (np.array(range(length-1)), range(length-1),
                            np.array(range(length+1)), range(length+1)):
-            with six.assertRaisesRegex(self, ValueError,
-                                       "Length of values does not match "
-                                       "length of index"):
+            with self.assertRaisesRegex(ValueError,
+                                        "Length of values does not match "
+                                        "length of index"):
                 obj.positional_metadata['bar'] = array_like
 
     def test_positional_metadata_setter_pandas_consumable(self):
@@ -813,10 +795,10 @@ class PositionalMetadataMixinTests(object):
         obj = self._positional_metadata_constructor_(
             3, positional_metadata={'foo': [1, 2, 42]})
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Invalid positional metadata. Must be '
-                                   'consumable by `pd.DataFrame` constructor. '
-                                   'Original pandas error message: '):
+        with self.assertRaisesRegex(TypeError,
+                                    'Invalid positional metadata. Must be '
+                                    'consumable by `pd.DataFrame` constructor.'
+                                    ' Original pandas error message: '):
             obj.positional_metadata = 2
 
         assert_data_frame_almost_equal(obj.positional_metadata,
@@ -827,13 +809,13 @@ class PositionalMetadataMixinTests(object):
             3, positional_metadata={'foo': [1, 2, 42]})
 
         # `None` behavior differs from constructor.
-        with six.assertRaisesRegex(self, ValueError, '\(0\).*\(3\)'):
+        with self.assertRaisesRegex(ValueError, '\(0\).*\(3\)'):
             obj.positional_metadata = None
 
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [1, 2, 42]}))
 
-        with six.assertRaisesRegex(self, ValueError, '\(4\).*\(3\)'):
+        with self.assertRaisesRegex(ValueError, '\(4\).*\(3\)'):
             obj.positional_metadata = [1, 2, 3, 4]
 
         assert_data_frame_almost_equal(obj.positional_metadata,
@@ -945,9 +927,8 @@ class TestRunner(object):
         """
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
-        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
-        if PY3:
-            argv.extend(['--with-doctest', '--doctest-tests'])
+        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
+                '--doctest-tests']
         if verbose:
             argv.append('-v')
         return nose.core.run(argv=argv, defaultTest=self._test_dir,

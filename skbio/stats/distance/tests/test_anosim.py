@@ -7,8 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import StringIO
 
+import io
 from functools import partial
 from unittest import TestCase, main
 
@@ -29,8 +29,8 @@ class TestANOSIM(TestCase):
         dm_ids = ['s1', 's2', 's3', 's4']
         self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
         self.df = pd.read_csv(
-            StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
-                     's1,Control'), index_col=0)
+            io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
+                        's1,Control'), index_col=0)
 
         self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
                                        [1, 0, 3, 2],

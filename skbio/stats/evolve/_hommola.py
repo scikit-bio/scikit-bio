@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range
 
 import numpy as np
 from scipy.stats import pearsonr

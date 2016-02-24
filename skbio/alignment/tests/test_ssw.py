@@ -20,8 +20,6 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase, main
 
-import six
-
 from skbio import (local_pairwise_align_ssw, Sequence, DNA, RNA, Protein,
                    TabularMSA)
 from skbio.alignment import StripedSmithWaterman, AlignmentStructure
@@ -616,15 +614,14 @@ class TestAlignStripedSmithWaterman(TestSSW):
         self._check_TabularMSA_to_AlignmentStructure(align2, align1, DNA)
 
     def test_invalid_type(self):
-        with six.assertRaisesRegex(self, TypeError, "not type 'Sequence'"):
+        with self.assertRaisesRegex(TypeError, "not type 'Sequence'"):
             local_pairwise_align_ssw(DNA('ACGT'), Sequence('ACGT'))
 
-        with six.assertRaisesRegex(self, TypeError, "not type 'str'"):
+        with self.assertRaisesRegex(TypeError, "not type 'str'"):
             local_pairwise_align_ssw('ACGU', RNA('ACGU'))
 
     def test_type_mismatch(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "same type: 'DNA' != 'RNA'"):
+        with self.assertRaisesRegex(TypeError, "same type: 'DNA' != 'RNA'"):
             local_pairwise_align_ssw(DNA('ACGT'), RNA('ACGU'))
 
 

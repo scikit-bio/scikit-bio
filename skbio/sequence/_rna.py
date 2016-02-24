@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from six import add_metaclass
 
 import skbio
 from skbio.util._decorator import classproperty, overrides
@@ -16,8 +15,8 @@ from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 
-@add_metaclass(DisableSubclassingMeta)
-class RNA(GrammaredSequence, NucleotideMixin):
+class RNA(GrammaredSequence, NucleotideMixin,
+          metaclass=DisableSubclassingMeta):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.

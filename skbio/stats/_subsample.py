@@ -7,22 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import viewitems
 
 import sys
-from warnings import warn
 from heapq import heappush, heappop
 from collections import defaultdict
 from copy import copy
 
 import numpy as np
 
-from skbio.util import EfficiencyWarning
-try:
-    from .__subsample import _subsample_counts_without_replacement
-except ImportError:
-    pass
 from skbio.util._decorator import experimental
+from .__subsample import _subsample_counts_without_replacement
 
 
 @experimental(as_of="0.4.0")
@@ -147,7 +141,7 @@ def isubsample(items, maximum, minimum=1, buf_size=1000, bin_f=None):
             heappop(heap)
 
     # yield items
-    for bin_, heap in viewitems(result):
+    for bin_, heap in result.items():
         if len(heap) < minimum:
             continue
 
@@ -250,20 +244,6 @@ def subsample_counts(counts, n, replace=False):
         if counts_sum == n:
             result = counts
         else:
-            try:
-                result = _subsample_counts_without_replacement(counts, n,
-                                                               counts_sum)
-            except NameError:
-                warn("Accelerated subsampling without replacement isn't"
-                     " available.", EfficiencyWarning)
-
-                nz = counts.nonzero()[0]
-                unpacked = np.concatenate([np.repeat(np.array(i,), counts[i])
-                                           for i in nz])
-                permuted = np.random.permutation(unpacked)[:n]
-
-                result = np.zeros(len(counts), dtype=int)
-                for p in permuted:
-                    result[p] += 1
-
+            result = _subsample_counts_without_replacement(counts, n,
+                                                           counts_sum)
     return result

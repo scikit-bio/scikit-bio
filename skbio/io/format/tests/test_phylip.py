@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-import six
 
 import io
 import unittest
@@ -150,11 +149,11 @@ class TestReaders(unittest.TestCase):
 
     def test_phylip_to_tabular_msa_invalid_files(self):
         for fp, error_type, error_msg_regex in self.invalid_files:
-            with six.assertRaisesRegex(self, error_type, error_msg_regex):
+            with self.assertRaisesRegex(error_type, error_msg_regex):
                 _phylip_to_tabular_msa(fp, constructor=DNA)
 
     def test_phylip_to_tabular_msa_no_constructor(self):
-        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+        with self.assertRaisesRegex(ValueError, '`constructor`'):
             _phylip_to_tabular_msa(get_data_path('phylip_dna_3_seqs'))
 
     def test_phylip_to_tabular_msa_valid_files(self):
@@ -245,8 +244,7 @@ class TestWriters(unittest.TestCase):
     def test_write_invalid_alignment(self):
         for invalid_obj, error_msg_regexp in self.invalid_objs:
             fh = io.StringIO()
-            with six.assertRaisesRegex(self, PhylipFormatError,
-                                       error_msg_regexp):
+            with self.assertRaisesRegex(PhylipFormatError, error_msg_regexp):
                 _tabular_msa_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was

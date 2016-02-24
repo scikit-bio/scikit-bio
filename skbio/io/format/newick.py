@@ -223,8 +223,6 @@ References
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from future.builtins import zip, range
-
 from skbio.io import create_format, NewickFormatError
 from skbio.tree import TreeNode
 

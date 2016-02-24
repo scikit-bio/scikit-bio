@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from six import add_metaclass
 
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
@@ -17,8 +16,7 @@ from ._grammared_sequence import (GrammaredSequence, DisableSubclassingMeta,
                                   _motifs as parent_motifs)
 
 
-@add_metaclass(DisableSubclassingMeta)
-class Protein(GrammaredSequence):
+class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     """Store protein sequence data and optional associated metadata.
 
     Only characters in the IUPAC protein character set [1]_ are supported.

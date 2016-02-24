@@ -7,14 +7,13 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import pandas as pd
 
 
-class _Indexing(with_metaclass(ABCMeta, object)):
+class _Indexing(object, metaclass=ABCMeta):
     def __init__(self, instance, axis=None):
         self._obj = instance
         self._axis = axis

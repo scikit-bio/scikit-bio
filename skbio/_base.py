@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-from future.builtins import zip
 
 import abc
 import copy
@@ -26,7 +24,7 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util._decorator import stable, experimental
 
 
-class SkbioObject(with_metaclass(abc.ABCMeta, object)):
+class SkbioObject(object, metaclass=abc.ABCMeta):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
@@ -39,7 +37,7 @@ class SkbioObject(with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class MetadataMixin(object, metaclass=abc.ABCMeta):
     @property
     @stable(as_of="0.4.0")
     def metadata(self):
@@ -202,7 +200,7 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
         return self._metadata is not None and bool(self.metadata)
 
 
-class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class PositionalMetadataMixin(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.

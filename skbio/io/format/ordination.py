@@ -188,7 +188,6 @@ Load the ordination results from the file:
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import zip
 
 import numpy as np
 import pandas as pd

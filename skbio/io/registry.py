@@ -176,8 +176,6 @@ import itertools
 import inspect
 from functools import wraps
 
-from future.builtins import zip
-
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
 from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
                FormatIdentificationWarning)

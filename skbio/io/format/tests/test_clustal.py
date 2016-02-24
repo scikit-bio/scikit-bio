@@ -12,8 +12,6 @@ import string
 from io import StringIO
 from unittest import TestCase, main
 
-import six
-
 from skbio import TabularMSA
 from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
@@ -273,14 +271,14 @@ UGCUGCAUCA---------------- 33
         self.assertEqual(_clustal_sniffer(StringIO()), (False, {}))
 
     def test_no_constructor(self):
-        with six.assertRaisesRegex(self, ValueError, "`constructor`"):
+        with self.assertRaisesRegex(ValueError, "`constructor`"):
             _clustal_to_tabular_msa(self.valid_clustal_out[0])
 
     def test_duplicate_labels(self):
         msa = TabularMSA([CustomSequence('foo'),
                           CustomSequence('bar')], index=['a', 'a'])
 
-        with six.assertRaisesRegex(self, ClustalFormatError, "index.*unique"):
+        with self.assertRaisesRegex(ClustalFormatError, "index.*unique"):
             with StringIO() as fh:
                 _tabular_msa_to_clustal(msa, fh)
 
@@ -291,7 +289,7 @@ UGCUGCAUCA---------------- 33
             "abc             GCAU\n"
             "def             -----\n")
 
-        with six.assertRaisesRegex(self, ClustalFormatError, "not aligned"):
+        with self.assertRaisesRegex(ClustalFormatError, "not aligned"):
             _clustal_to_tabular_msa(fh, constructor=CustomSequence)
 
 

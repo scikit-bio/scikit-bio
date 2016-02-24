@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import map, range, zip
-import six
 
 import io
 import string
@@ -493,7 +491,7 @@ class ReaderTests(TestCase):
 
     def test_fasta_to_generator_invalid_files(self):
         for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
-            with six.assertRaisesRegex(self, error_type, error_msg_regex):
+            with self.assertRaisesRegex(error_type, error_msg_regex):
                 list(_fasta_to_generator(fp, **kwargs))
 
     # light testing of fasta -> object readers to ensure interface is present
@@ -520,9 +518,9 @@ class ReaderTests(TestCase):
 
             # empty file
             empty_fp = get_data_path('empty')
-            with six.assertRaisesRegex(self, ValueError, '1st sequence'):
+            with self.assertRaisesRegex(ValueError, '1st sequence'):
                 reader_fn(empty_fp)
-            with six.assertRaisesRegex(self, ValueError, '1st sequence'):
+            with self.assertRaisesRegex(ValueError, '1st sequence'):
                 reader_fn(empty_fp, qual=empty_fp)
 
             # the sequences in the following files don't necessarily make sense
@@ -612,19 +610,17 @@ class ReaderTests(TestCase):
                     self.assertEqual(obs, exp)
 
                 # seq_num too large
-                with six.assertRaisesRegex(self, ValueError, '8th sequence'):
+                with self.assertRaisesRegex(ValueError, '8th sequence'):
                     reader_fn(fasta_fp, seq_num=8)
                 for qual_fp in qual_fps:
-                    with six.assertRaisesRegex(self, ValueError,
-                                               '8th sequence'):
+                    with self.assertRaisesRegex(ValueError, '8th sequence'):
                         reader_fn(fasta_fp, seq_num=8, qual=qual_fp)
 
                 # seq_num too small
-                with six.assertRaisesRegex(self, ValueError, '`seq_num`=0'):
+                with self.assertRaisesRegex(ValueError, '`seq_num`=0'):
                     reader_fn(fasta_fp, seq_num=0)
                 for qual_fp in qual_fps:
-                    with six.assertRaisesRegex(self, ValueError,
-                                               '`seq_num`=0'):
+                    with self.assertRaisesRegex(ValueError, '`seq_num`=0'):
                         reader_fn(fasta_fp, seq_num=0, qual=qual_fp)
 
     def test_fasta_to_tabular_msa(self):
@@ -656,7 +652,7 @@ class ReaderTests(TestCase):
                     self.assertEqual(obs, exp)
 
     def test_fasta_to_tabular_msa_no_constructor(self):
-        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+        with self.assertRaisesRegex(ValueError, '`constructor`'):
             _fasta_to_tabular_msa(get_data_path('fasta_single_seq'))
 
 
@@ -881,7 +877,7 @@ class WriterTests(TestCase):
     def test_generator_to_fasta_invalid_input(self):
         for obj, kwargs, error_type, error_msg_regexp in self.invalid_objs:
             fh = io.StringIO()
-            with six.assertRaisesRegex(self, error_type, error_msg_regexp):
+            with self.assertRaisesRegex(error_type, error_msg_regexp):
                 _generator_to_fasta(obj, fh, **kwargs)
             fh.close()
 

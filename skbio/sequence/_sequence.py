@@ -7,9 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.builtins import range, zip
-from future.utils import viewitems
-import six
 
 import re
 import collections
@@ -582,7 +579,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         else:
             # Python 3 will not raise a UnicodeEncodeError so we force it by
             # encoding it as ascii
-            if isinstance(sequence, six.text_type):
+            if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)
 
@@ -605,7 +602,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         if lowercase is False:
             pass
-        elif lowercase is True or isinstance(lowercase, six.string_types):
+        elif lowercase is True or isinstance(lowercase, str):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
             self._convert_to_uppercase(lowercase_mask)
 
@@ -846,7 +843,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         """
         if (not isinstance(indexable, np.ndarray) and
-            ((not isinstance(indexable, six.string_types)) and
+            ((not isinstance(indexable, str)) and
              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
@@ -871,7 +868,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
                     return self._to(sequence=seq,
                                     positional_metadata=positional_metadata)
-        elif (isinstance(indexable, six.string_types) or
+        elif (isinstance(indexable, str) or
                 isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
@@ -1865,8 +1862,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     def _chars_to_indices(self, chars):
         """Helper for Sequence.frequencies."""
-        if isinstance(chars, six.string_types) or \
-                isinstance(chars, six.binary_type):
+        if isinstance(chars, (str, bytes)):
             chars = set([chars])
         elif not isinstance(chars, set):
             raise TypeError(
@@ -1877,8 +1873,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         chars = list(chars)
         indices = []
         for char in chars:
-            if not (isinstance(char, six.string_types) or
-                    isinstance(char, six.binary_type)):
+            if not isinstance(char, (str, bytes)):
                 raise TypeError(
                     "Each element of `chars` must be string-like, not %r" %
                     type(char).__name__)
@@ -2003,7 +1998,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                 num_kmers = len(self) // k
 
             relative_freqs = {}
-            for kmer, count in viewitems(freqs):
+            for kmer, count in freqs.items():
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs
 
@@ -2040,7 +2035,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         'TATAA'
 
         """
-        if isinstance(regex, six.string_types):
+        if isinstance(regex, str):
             regex = re.compile(regex)
 
         lookup = np.arange(len(self))
@@ -2181,7 +2176,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """Return an index array from something isomorphic to a boolean vector.
 
         """
-        if isinstance(sliceable, six.string_types):
+        if isinstance(sliceable, str):
             if sliceable in self.positional_metadata:
                 if self.positional_metadata[sliceable].dtype == np.bool:
                     sliceable = self.positional_metadata[sliceable]
@@ -2258,7 +2253,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     def _munge_to_bytestring(self, other, method):
         if type(other) is bytes:
             return other
-        elif isinstance(other, six.string_types):
+        elif isinstance(other, str):
             return other.encode('ascii')
         else:
             return self._munge_to_sequence(other, method)._string
