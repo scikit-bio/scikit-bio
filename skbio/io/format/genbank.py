@@ -172,8 +172,9 @@ Metadata:
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
-Positional metadata:
-    <class 'skbio.sequence._feature.Feature'>: <dtype: bool>
+Interval metadata:
+    Number of features: 1
+    Number of intervals: 1
 Stats:
     length: 34
     has gaps: False
@@ -201,8 +202,9 @@ Metadata:
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
-Positional metadata:
-    <class 'skbio.sequence._feature.Feature'>: <dtype: bool>
+Interval metadata:
+    Number of features: 1
+    Number of intervals: 1
 Stats:
     length: 34
     has gaps: False
@@ -429,7 +431,6 @@ def _parse_single_genbank(chunks):
         elif header == 'FEATURES':
             # merge the two dictionaries together. Note this is only
             # available in Python-3.5
-
             feature_metadata = merge_dicts(parsed, feature_metadata)
         else:
             metadata[header] = parsed

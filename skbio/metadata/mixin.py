@@ -441,4 +441,4 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         self.interval_metadata = IntervalMetadata(features=features)
 
     def has_interval_metadata(self):
-        return self.interval_metadata is not None
+        return len(self.interval_metadata.features) > 0

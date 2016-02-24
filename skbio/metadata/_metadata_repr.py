@@ -52,6 +52,7 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
         self._process_header()
         self._process_metadata()
         self._process_positional_metadata()
+        self._process_interval_metadata()
         self._process_stats()
         self._process_data()
 
@@ -112,6 +113,15 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
             extra_indent = 1
 
         return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
+
+    def _process_interval_metadata(self):
+        if self._obj.has_interval_metadata():
+            self._lines.add_line('Interval metadata:')
+            num_feats = len(self._obj.interval_metadata.features.keys())
+            x = self._obj.interval_metadata.features
+            num_intervals = len(list(itertools.chain(*x.values())))
+            self._lines.add_line('    Number of features: %d' % num_feats)
+            self._lines.add_line('    Number of intervals: %d' % num_intervals)
 
     def _process_positional_metadata(self):
         if self._obj.has_positional_metadata():
