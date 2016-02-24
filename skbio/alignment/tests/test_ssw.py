@@ -16,8 +16,6 @@
 # the resulting alignments are verified by hand. Creating tests from the base
 # C API is impractical at this time.
 
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase, main
 
 from skbio import (local_pairwise_align_ssw, Sequence, DNA, RNA, Protein,

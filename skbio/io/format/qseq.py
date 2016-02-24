@@ -158,9 +158,6 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 from skbio.io import create_format, QSeqFormatError
 from skbio.io.format._base import _decode_qual_to_phred, _get_nth_sequence
 from skbio.sequence import Sequence, DNA, RNA, Protein

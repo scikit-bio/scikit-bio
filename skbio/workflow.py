@@ -200,8 +200,6 @@ allow you to indicate ``anything`` as an option value, anything that is
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import sys
 from copy import deepcopy
 from time import time

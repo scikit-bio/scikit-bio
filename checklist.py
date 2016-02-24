@@ -8,8 +8,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 import os
 import os.path
@@ -39,7 +37,7 @@ def main():
     root = 'skbio'
     validators = [InitValidator(), CopyrightHeadersValidator(),
                   ExecPermissionValidator(), GeneratedCythonValidator(),
-                  APIRegressionValidator(), FluxCapacitorValidator()]
+                  APIRegressionValidator()]
 
     return_code = 0
     for validator in validators:
@@ -448,33 +446,6 @@ class APIRegressionValidator(RepoValidator):
             if import_.split(".")[0] == "skbio":
                 skbio_imports.append(import_)
         return skbio_imports
-
-
-class FluxCapacitorValidator(RepoValidator):
-    """Ensure that the __future__ statements are fluxing correctly"""
-    reason = ("These files do not have the following import at the start:\n\n"
-              "from __future__ import absolute_import, division,"
-              " print_function\n")
-
-    def _validate(self, root, dirs, files):
-        failures = []
-        expected = {"absolute_import", "division", "print_function"}
-        for file in files:
-            if file.endswith(".py"):
-                filename = os.path.join(root, file)
-                failures.append(filename)
-                with open(filename) as f:
-                    source = ast.parse(f.read())
-                    for node, _ in zip(ast.iter_child_nodes(source), range(2)):
-                        if isinstance(node, ast.Expr):
-                            continue
-                        if isinstance(node, ast.ImportFrom):
-                            if node.module == "__future__":
-                                if expected.issubset(
-                                        {n.name for n in node.names}):
-                                    failures.pop()
-                            break
-        return failures
 
 
 if __name__ == '__main__':

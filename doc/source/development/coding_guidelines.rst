@@ -196,8 +196,6 @@ The structure of your module should be similar to the example below. scikit-bio 
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
-    from __future__ import absolute_import, division, print_function
-
     import numpy as np
     from random import choice, random
     from utils import indices
@@ -308,8 +306,6 @@ Example of a ``nose`` test module structure
     #
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
-
-    from __future__ import absolute_import, division, print_function
 
     import numpy as np
     from nose.tools import assert_almost_equal, assert_raises

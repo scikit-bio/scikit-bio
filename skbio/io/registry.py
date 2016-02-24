@@ -167,8 +167,6 @@ The following are not yet used but should be avoided as well:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from warnings import warn
 import types
 import traceback
