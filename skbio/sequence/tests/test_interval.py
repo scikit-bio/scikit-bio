@@ -75,6 +75,9 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         feats = interval_metadata.query(gene='sagB')
         self.assertEqual(feats, [Feature(gene='sagB', location=0)])
 
+    def test_update(self):
+        pass
+
     def test_add(self):
         interval_metadata = IntervalMetadata()
         interval_metadata.add(Feature(gene='sagA', location=0), 1, (4, 7))

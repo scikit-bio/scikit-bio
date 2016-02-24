@@ -18,8 +18,8 @@ from unittest import TestCase, main
 from datetime import datetime
 
 from skbio import Protein, DNA, RNA, Sequence
-from skbio.sequence import Feature
 from skbio.util import get_data_path
+from skbio.sequence import Feature
 from skbio.io import GenBankFormatError
 from skbio.io.format.genbank import (
     _genbank_sniffer,
@@ -27,7 +27,7 @@ from skbio.io.format.genbank import (
     _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
     _parse_interval,
-    _parse_loc_str, _parse_section_default,
+    _parse_section_default,
     _generator_to_genbank, _sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
     _serialize_locus)
@@ -319,51 +319,7 @@ REFERENCE   1  (bases 1 to 154478)
             self.assertDictEqual(parsed[0], expect[0])
             npt.assert_equal(parsed[1], expect[1])
 
-    def test_parse_loc_str(self):
-        length = 12
-
-        examples = [
-            '',
-            '9',  # a single base in the presented sequence
-            '3..8',
-            '<3..8',
-            '1..>8',
-            'complement(3..8)',
-            'complement(join(3..5,7..9))',
-            'join(3..5,7..9)',
-            'J00194.1:1..9',
-            '1.9',
-            '1^9']
-
-        expects = [
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': True, 'rc_': False},
-             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': True, 'left_partial_': False, 'rc_': False},
-             np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
-             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
-             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.zeros(length, dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.zeros(length, dtype=bool)),
-            ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             np.zeros(length, dtype=bool))]
-        for example, expect in zip(examples, expects):
-            parsed = _parse_loc_str(example, length)
-            self.assertDictEqual(parsed[0], expect[0])
-            npt.assert_equal(parsed[1], expect[1])
-
-    def test_parse_loc_str_invalid(self):
+    def test_parse_interval_invalid(self):
         length = 12
         examples = [
             'abc',
@@ -372,7 +328,7 @@ REFERENCE   1  (bases 1 to 154478)
             with six.assertRaisesRegex(self, GenBankFormatError,
                                        'Could not parse location string: '
                                        '"%s"' % example):
-                _parse_loc_str(example, length)
+                _parse_interval(example, length)
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence

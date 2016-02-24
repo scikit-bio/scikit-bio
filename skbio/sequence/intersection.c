@@ -234,8 +234,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__micronota__lib__intersection
-#define __PYX_HAVE_API__micronota__lib__intersection
+#define __PYX_HAVE__skbio__sequence__intersection
+#define __PYX_HAVE_API__skbio__sequence__intersection
 #include "stdlib.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -445,52 +445,52 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "micronota/lib/intersection.pyx",
+  "skbio/sequence/intersection.pyx",
 };
 
 /*--- Type declarations ---*/
-struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode;
-struct __pyx_obj_9micronota_3lib_12intersection_Interval;
-struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree;
-struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left;
-struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right;
+struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode;
+struct __pyx_obj_5skbio_8sequence_12intersection_Interval;
+struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree;
+struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left;
+struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right;
 
-/* "micronota/lib/intersection.pyx":231
+/* "skbio/sequence/intersection.pyx":247
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
  *         """
  *         find n features with a start > than `position`
  */
-struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left {
+struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left {
   int __pyx_n;
   int n;
   int max_dist;
 };
 
-/* "micronota/lib/intersection.pyx":246
+/* "skbio/sequence/intersection.pyx":262
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
  *         """
  *         find n features with a end < than position
  */
-struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right {
+struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right {
   int __pyx_n;
   int n;
   int max_dist;
 };
 
-/* "micronota/lib/intersection.pyx":60
+/* "skbio/sequence/intersection.pyx":60
  * cdef float nlog = -1.0 / log(0.5)
  * 
  * cdef class IntervalNode:             # <<<<<<<<<<<<<<
  *     """
  *     A single node of an `IntervalTree`.
  */
-struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode {
+struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode {
   PyObject_HEAD
-  struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *__pyx_vtab;
+  struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *__pyx_vtab;
   float priority;
   PyObject *interval;
   int start;
@@ -498,20 +498,20 @@ struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode {
   int minend;
   int maxend;
   int minstart;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *cleft;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *cright;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *croot;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *cleft;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *cright;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *croot;
 };
 
 
-/* "micronota/lib/intersection.pyx":273
+/* "skbio/sequence/intersection.pyx":289
  * ## ---- Wrappers that retain the old interface -------------------------------
  * 
  * cdef class Interval:             # <<<<<<<<<<<<<<
  *     """
  *     Basic feature, with required integer start and end properties.
  */
-struct __pyx_obj_9micronota_3lib_12intersection_Interval {
+struct __pyx_obj_5skbio_8sequence_12intersection_Interval {
   PyObject_HEAD
   int start;
   int end;
@@ -521,21 +521,21 @@ struct __pyx_obj_9micronota_3lib_12intersection_Interval {
 };
 
 
-/* "micronota/lib/intersection.pyx":325
+/* "skbio/sequence/intersection.pyx":341
  *             return self == other or self > other
  * 
  * cdef class IntervalTree:             # <<<<<<<<<<<<<<
  *     """
  *     Data structure for performing window intersect queries on a set of
  */
-struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree {
+struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree {
   PyObject_HEAD
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *root;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *root;
 };
 
 
 
-/* "micronota/lib/intersection.pyx":60
+/* "skbio/sequence/intersection.pyx":60
  * cdef float nlog = -1.0 / log(0.5)
  * 
  * cdef class IntervalNode:             # <<<<<<<<<<<<<<
@@ -543,20 +543,21 @@ struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree {
  *     A single node of an `IntervalTree`.
  */
 
-struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*insert)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, int, PyObject *, int __pyx_skip_dispatch);
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*rotate_right)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *);
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*rotate_left)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *);
-  void (*set_ends)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *);
-  void (*_intersect)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, int, PyObject *);
-  void (*_seek_left)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, PyObject *, int, int);
-  void (*_seek_right)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, PyObject *, int, int);
-  PyObject *(*left)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left *__pyx_optional_args);
-  PyObject *(*right)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right *__pyx_optional_args);
-  void (*_traverse)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *);
+struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*insert)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *, int __pyx_skip_dispatch);
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*rotate_right)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *);
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*rotate_left)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *);
+  void (*set_ends)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *);
+  void (*_intersect)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *);
+  void (*update)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *, PyObject *, int __pyx_skip_dispatch);
+  void (*_seek_left)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, PyObject *, int, int);
+  void (*_seek_right)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, PyObject *, int, int);
+  PyObject *(*left)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left *__pyx_optional_args);
+  PyObject *(*right)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right *__pyx_optional_args);
+  void (*_traverse)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *);
 };
-static struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *__pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode;
-static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *);
+static struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *__pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode;
+static CYTHON_INLINE void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *);
 
 /* --- Runtime support code (head) --- */
 #ifndef CYTHON_REFNANNY
@@ -764,31 +765,32 @@ static int __Pyx_check_binary_version(void);
 
 static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval, int __pyx_skip_dispatch); /* proto*/
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto*/
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto*/
-static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto*/
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_results); /* proto*/
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
-static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left *__pyx_optional_args); /* proto*/
-static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right *__pyx_optional_args); /* proto*/
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto*/
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval, int __pyx_skip_dispatch); /* proto*/
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto*/
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto*/
+static CYTHON_INLINE void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__intersect(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_results); /* proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature, int __pyx_skip_dispatch); /* proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
+static PyObject *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left *__pyx_optional_args); /* proto*/
+static PyObject *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right *__pyx_optional_args); /* proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto*/
 
-/* Module declarations from 'micronota.lib.intersection' */
-static PyTypeObject *__pyx_ptype_9micronota_3lib_12intersection_IntervalNode = 0;
-static PyTypeObject *__pyx_ptype_9micronota_3lib_12intersection_Interval = 0;
-static PyTypeObject *__pyx_ptype_9micronota_3lib_12intersection_IntervalTree = 0;
-static float __pyx_v_9micronota_3lib_12intersection_nlog;
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_9micronota_3lib_12intersection_EmptyNode = 0;
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int, int); /*proto*/
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int, int, int); /*proto*/
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int, int, int); /*proto*/
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int, int); /*proto*/
-#define __Pyx_MODULE_NAME "micronota.lib.intersection"
-int __pyx_module_is_main_micronota__lib__intersection = 0;
+/* Module declarations from 'skbio.sequence.intersection' */
+static PyTypeObject *__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode = 0;
+static PyTypeObject *__pyx_ptype_5skbio_8sequence_12intersection_Interval = 0;
+static PyTypeObject *__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree = 0;
+static float __pyx_v_5skbio_8sequence_12intersection_nlog;
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_5skbio_8sequence_12intersection_EmptyNode = 0;
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imax2(int, int); /*proto*/
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imax3(int, int, int); /*proto*/
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imin3(int, int, int); /*proto*/
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imin2(int, int); /*proto*/
+#define __Pyx_MODULE_NAME "skbio.sequence.intersection"
+int __pyx_module_is_main_skbio__sequence__intersection = 0;
 
-/* Implementation of 'micronota.lib.intersection' */
+/* Implementation of 'skbio.sequence.intersection' */
 static char __pyx_k_n[] = "n";
 static char __pyx_k__3[] = ")";
 static char __pyx_k__4[] = "-";
@@ -807,6 +809,7 @@ static char __pyx_k_value[] = "value";
 static char __pyx_k_import[] = "__import__";
 static char __pyx_k_insert[] = "insert";
 static char __pyx_k_strand[] = "strand";
+static char __pyx_k_update[] = "update";
 static char __pyx_k_reverse[] = "reverse";
 static char __pyx_k_value_2[] = ", value=";
 static char __pyx_k_interval[] = "interval";
@@ -818,6 +821,8 @@ static char __pyx_k_intersect[] = "intersect";
 static char __pyx_k_attrgetter[] = "attrgetter";
 static char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static char __pyx_k_Intersecter[] = "Intersecter";
+static char __pyx_k_new_feature[] = "new_feature";
+static char __pyx_k_old_feature[] = "old_feature";
 static char __pyx_k_Interval_d_d[] = "Interval(%d, %d";
 static char __pyx_k_add_interval[] = "add_interval";
 static char __pyx_k_num_intervals[] = "num_intervals";
@@ -846,7 +851,9 @@ static PyObject *__pyx_n_s_left;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_max_dist;
 static PyObject *__pyx_n_s_n;
+static PyObject *__pyx_n_s_new_feature;
 static PyObject *__pyx_n_s_num_intervals;
+static PyObject *__pyx_n_s_old_feature;
 static PyObject *__pyx_n_s_operator;
 static PyObject *__pyx_n_s_position;
 static PyObject *__pyx_n_s_pyx_vtable;
@@ -858,55 +865,58 @@ static PyObject *__pyx_kp_s_start_must_be_less_than_end;
 static PyObject *__pyx_n_s_strand;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_traverse;
+static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_value;
 static PyObject *__pyx_kp_s_value_2;
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6intersect(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, CYTHON_UNUSED PyObject *__pyx_v_sort); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_12traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value, PyObject *__pyx_v_chrom, PyObject *__pyx_v_strand); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, PyObject *__pyx_v_op); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5start_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_3end_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5value___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_6strand___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self); /* proto */
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(CYTHON_UNUSED struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstream_of_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downstream_of_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn); /* proto */
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalNode(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_Interval(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9left_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10right_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9root_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode___repr__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_2__cinit__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_4insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_6intersect(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, CYTHON_UNUSED PyObject *__pyx_v_sort); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_12right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_14traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval___init__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value, PyObject *__pyx_v_chrom, PyObject *__pyx_v_strand); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_2__repr__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_4__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, PyObject *__pyx_v_op); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5start___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5start_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_3end___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_3end_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5value___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self); /* proto */
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree___cinit__(CYTHON_UNUSED struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_2insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_4update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_6find(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_8before(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_10after(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_12insert_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_14before_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_16after_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_18upstream_of_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_20downstream_of_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_22traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn); /* proto */
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_IntervalNode(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_Interval(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_IntervalTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_2;
@@ -919,7 +929,7 @@ static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__5;
 
-/* "micronota/lib/intersection.pyx":32
+/* "skbio/sequence/intersection.pyx":32
  *     int iabs(int)
  * 
  * cdef inline int imax2(int a, int b):             # <<<<<<<<<<<<<<
@@ -927,13 +937,13 @@ static PyObject *__pyx_tuple__5;
  *     return a
  */
 
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int __pyx_v_a, int __pyx_v_b) {
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imax2(int __pyx_v_a, int __pyx_v_b) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("imax2", 0);
 
-  /* "micronota/lib/intersection.pyx":33
+  /* "skbio/sequence/intersection.pyx":33
  * 
  * cdef inline int imax2(int a, int b):
  *     if b > a: return b             # <<<<<<<<<<<<<<
@@ -946,7 +956,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int __pyx_
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":34
+  /* "skbio/sequence/intersection.pyx":34
  * cdef inline int imax2(int a, int b):
  *     if b > a: return b
  *     return a             # <<<<<<<<<<<<<<
@@ -956,7 +966,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int __pyx_
   __pyx_r = __pyx_v_a;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":32
+  /* "skbio/sequence/intersection.pyx":32
  *     int iabs(int)
  * 
  * cdef inline int imax2(int a, int b):             # <<<<<<<<<<<<<<
@@ -970,7 +980,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int __pyx_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":36
+/* "skbio/sequence/intersection.pyx":36
  *     return a
  * 
  * cdef inline int imax3(int a, int b, int c):             # <<<<<<<<<<<<<<
@@ -978,13 +988,13 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax2(int __pyx_
  *         if c > b:
  */
 
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_v_a, int __pyx_v_b, int __pyx_v_c) {
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imax3(int __pyx_v_a, int __pyx_v_b, int __pyx_v_c) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("imax3", 0);
 
-  /* "micronota/lib/intersection.pyx":37
+  /* "skbio/sequence/intersection.pyx":37
  * 
  * cdef inline int imax3(int a, int b, int c):
  *     if b > a:             # <<<<<<<<<<<<<<
@@ -994,7 +1004,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
   __pyx_t_1 = ((__pyx_v_b > __pyx_v_a) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":38
+    /* "skbio/sequence/intersection.pyx":38
  * cdef inline int imax3(int a, int b, int c):
  *     if b > a:
  *         if c > b:             # <<<<<<<<<<<<<<
@@ -1004,7 +1014,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
     __pyx_t_1 = ((__pyx_v_c > __pyx_v_b) != 0);
     if (__pyx_t_1) {
 
-      /* "micronota/lib/intersection.pyx":39
+      /* "skbio/sequence/intersection.pyx":39
  *     if b > a:
  *         if c > b:
  *             return c             # <<<<<<<<<<<<<<
@@ -1014,7 +1024,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
       __pyx_r = __pyx_v_c;
       goto __pyx_L0;
 
-      /* "micronota/lib/intersection.pyx":38
+      /* "skbio/sequence/intersection.pyx":38
  * cdef inline int imax3(int a, int b, int c):
  *     if b > a:
  *         if c > b:             # <<<<<<<<<<<<<<
@@ -1023,7 +1033,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
  */
     }
 
-    /* "micronota/lib/intersection.pyx":40
+    /* "skbio/sequence/intersection.pyx":40
  *         if c > b:
  *             return c
  *         return b             # <<<<<<<<<<<<<<
@@ -1033,7 +1043,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
     __pyx_r = __pyx_v_b;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":37
+    /* "skbio/sequence/intersection.pyx":37
  * 
  * cdef inline int imax3(int a, int b, int c):
  *     if b > a:             # <<<<<<<<<<<<<<
@@ -1042,7 +1052,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
  */
   }
 
-  /* "micronota/lib/intersection.pyx":41
+  /* "skbio/sequence/intersection.pyx":41
  *             return c
  *         return b
  *     if a > c:             # <<<<<<<<<<<<<<
@@ -1052,7 +1062,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
   __pyx_t_1 = ((__pyx_v_a > __pyx_v_c) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":42
+    /* "skbio/sequence/intersection.pyx":42
  *         return b
  *     if a > c:
  *         return a             # <<<<<<<<<<<<<<
@@ -1062,7 +1072,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
     __pyx_r = __pyx_v_a;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":41
+    /* "skbio/sequence/intersection.pyx":41
  *             return c
  *         return b
  *     if a > c:             # <<<<<<<<<<<<<<
@@ -1071,7 +1081,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
  */
   }
 
-  /* "micronota/lib/intersection.pyx":43
+  /* "skbio/sequence/intersection.pyx":43
  *     if a > c:
  *         return a
  *     return c             # <<<<<<<<<<<<<<
@@ -1081,7 +1091,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
   __pyx_r = __pyx_v_c;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":36
+  /* "skbio/sequence/intersection.pyx":36
  *     return a
  * 
  * cdef inline int imax3(int a, int b, int c):             # <<<<<<<<<<<<<<
@@ -1095,7 +1105,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":45
+/* "skbio/sequence/intersection.pyx":45
  *     return c
  * 
  * cdef inline int imin3(int a, int b, int c):             # <<<<<<<<<<<<<<
@@ -1103,13 +1113,13 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imax3(int __pyx_
  *         if c < b:
  */
 
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_v_a, int __pyx_v_b, int __pyx_v_c) {
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imin3(int __pyx_v_a, int __pyx_v_b, int __pyx_v_c) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("imin3", 0);
 
-  /* "micronota/lib/intersection.pyx":46
+  /* "skbio/sequence/intersection.pyx":46
  * 
  * cdef inline int imin3(int a, int b, int c):
  *     if b < a:             # <<<<<<<<<<<<<<
@@ -1119,7 +1129,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
   __pyx_t_1 = ((__pyx_v_b < __pyx_v_a) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":47
+    /* "skbio/sequence/intersection.pyx":47
  * cdef inline int imin3(int a, int b, int c):
  *     if b < a:
  *         if c < b:             # <<<<<<<<<<<<<<
@@ -1129,7 +1139,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
     __pyx_t_1 = ((__pyx_v_c < __pyx_v_b) != 0);
     if (__pyx_t_1) {
 
-      /* "micronota/lib/intersection.pyx":48
+      /* "skbio/sequence/intersection.pyx":48
  *     if b < a:
  *         if c < b:
  *             return c             # <<<<<<<<<<<<<<
@@ -1139,7 +1149,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
       __pyx_r = __pyx_v_c;
       goto __pyx_L0;
 
-      /* "micronota/lib/intersection.pyx":47
+      /* "skbio/sequence/intersection.pyx":47
  * cdef inline int imin3(int a, int b, int c):
  *     if b < a:
  *         if c < b:             # <<<<<<<<<<<<<<
@@ -1148,7 +1158,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
  */
     }
 
-    /* "micronota/lib/intersection.pyx":49
+    /* "skbio/sequence/intersection.pyx":49
  *         if c < b:
  *             return c
  *         return b             # <<<<<<<<<<<<<<
@@ -1158,7 +1168,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
     __pyx_r = __pyx_v_b;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":46
+    /* "skbio/sequence/intersection.pyx":46
  * 
  * cdef inline int imin3(int a, int b, int c):
  *     if b < a:             # <<<<<<<<<<<<<<
@@ -1167,7 +1177,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
  */
   }
 
-  /* "micronota/lib/intersection.pyx":50
+  /* "skbio/sequence/intersection.pyx":50
  *             return c
  *         return b
  *     if a < c:             # <<<<<<<<<<<<<<
@@ -1177,7 +1187,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
   __pyx_t_1 = ((__pyx_v_a < __pyx_v_c) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":51
+    /* "skbio/sequence/intersection.pyx":51
  *         return b
  *     if a < c:
  *         return a             # <<<<<<<<<<<<<<
@@ -1187,7 +1197,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
     __pyx_r = __pyx_v_a;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":50
+    /* "skbio/sequence/intersection.pyx":50
  *             return c
  *         return b
  *     if a < c:             # <<<<<<<<<<<<<<
@@ -1196,7 +1206,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
  */
   }
 
-  /* "micronota/lib/intersection.pyx":52
+  /* "skbio/sequence/intersection.pyx":52
  *     if a < c:
  *         return a
  *     return c             # <<<<<<<<<<<<<<
@@ -1206,7 +1216,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
   __pyx_r = __pyx_v_c;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":45
+  /* "skbio/sequence/intersection.pyx":45
  *     return c
  * 
  * cdef inline int imin3(int a, int b, int c):             # <<<<<<<<<<<<<<
@@ -1220,7 +1230,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":54
+/* "skbio/sequence/intersection.pyx":54
  *     return c
  * 
  * cdef inline int imin2(int a, int b):             # <<<<<<<<<<<<<<
@@ -1228,13 +1238,13 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin3(int __pyx_
  *     return a
  */
 
-static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int __pyx_v_a, int __pyx_v_b) {
+static CYTHON_INLINE int __pyx_f_5skbio_8sequence_12intersection_imin2(int __pyx_v_a, int __pyx_v_b) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("imin2", 0);
 
-  /* "micronota/lib/intersection.pyx":55
+  /* "skbio/sequence/intersection.pyx":55
  * 
  * cdef inline int imin2(int a, int b):
  *     if b < a: return b             # <<<<<<<<<<<<<<
@@ -1247,7 +1257,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int __pyx_
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":56
+  /* "skbio/sequence/intersection.pyx":56
  * cdef inline int imin2(int a, int b):
  *     if b < a: return b
  *     return a             # <<<<<<<<<<<<<<
@@ -1257,7 +1267,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int __pyx_
   __pyx_r = __pyx_v_a;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":54
+  /* "skbio/sequence/intersection.pyx":54
  *     return c
  * 
  * cdef inline int imin2(int a, int b):             # <<<<<<<<<<<<<<
@@ -1271,7 +1281,7 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int __pyx_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":74
+/* "skbio/sequence/intersection.pyx":74
  * 
  *     property left_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1280,26 +1290,26 @@ static CYTHON_INLINE int __pyx_f_9micronota_3lib_12intersection_imin2(int __pyx_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left_node_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left_node_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9left_node_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9left_node_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_node___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9left_node___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9left_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "micronota/lib/intersection.pyx":75
+  /* "skbio/sequence/intersection.pyx":75
  *     property left_node:
  *         def __get__(self):
  *             return self.cleft if self.cleft is not EmptyNode else None             # <<<<<<<<<<<<<<
@@ -1307,7 +1317,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_no
  *         def __get__(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   if ((__pyx_t_2 != 0)) {
     __Pyx_INCREF(((PyObject *)__pyx_v_self->cleft));
     __pyx_t_1 = ((PyObject *)__pyx_v_self->cleft);
@@ -1319,7 +1329,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_no
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":74
+  /* "skbio/sequence/intersection.pyx":74
  * 
  *     property left_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1334,7 +1344,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_no
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":77
+/* "skbio/sequence/intersection.pyx":77
  *             return self.cleft if self.cleft is not EmptyNode else None
  *     property right_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1343,26 +1353,26 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9left_no
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_10right_node_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_10right_node_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_10right_node_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_10right_node_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_node___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10right_node___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10right_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "micronota/lib/intersection.pyx":78
+  /* "skbio/sequence/intersection.pyx":78
  *     property right_node:
  *         def __get__(self):
  *             return self.cright if self.cright is not EmptyNode else None             # <<<<<<<<<<<<<<
@@ -1370,7 +1380,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_
  *         def __get__(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   if ((__pyx_t_2 != 0)) {
     __Pyx_INCREF(((PyObject *)__pyx_v_self->cright));
     __pyx_t_1 = ((PyObject *)__pyx_v_self->cright);
@@ -1382,7 +1392,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":77
+  /* "skbio/sequence/intersection.pyx":77
  *             return self.cleft if self.cleft is not EmptyNode else None
  *     property right_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1397,7 +1407,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":80
+/* "skbio/sequence/intersection.pyx":80
  *             return self.cright if self.cright is not EmptyNode else None
  *     property root_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1406,26 +1416,26 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9root_node_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9root_node_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9root_node_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9root_node_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_node___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9root_node___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_node___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_9root_node___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "micronota/lib/intersection.pyx":81
+  /* "skbio/sequence/intersection.pyx":81
  *     property root_node:
  *         def __get__(self):
  *             return self.croot if self.croot is not EmptyNode else None             # <<<<<<<<<<<<<<
@@ -1433,7 +1443,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_no
  *     def __repr__(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = (__pyx_v_self->croot != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->croot != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   if ((__pyx_t_2 != 0)) {
     __Pyx_INCREF(((PyObject *)__pyx_v_self->croot));
     __pyx_t_1 = ((PyObject *)__pyx_v_self->croot);
@@ -1445,7 +1455,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_no
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":80
+  /* "skbio/sequence/intersection.pyx":80
  *             return self.cright if self.cright is not EmptyNode else None
  *     property root_node:
  *         def __get__(self):             # <<<<<<<<<<<<<<
@@ -1460,7 +1470,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_no
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":83
+/* "skbio/sequence/intersection.pyx":83
  *             return self.croot if self.croot is not EmptyNode else None
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -1469,19 +1479,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_9root_no
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_1__repr__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_1__repr__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_1__repr__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_1__repr__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__repr__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode___repr__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode___repr__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1492,7 +1502,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__repr__", 0);
 
-  /* "micronota/lib/intersection.pyx":84
+  /* "skbio/sequence/intersection.pyx":84
  * 
  *     def __repr__(self):
  *         return "IntervalNode(%i, %i)" % (self.start, self.end)             # <<<<<<<<<<<<<<
@@ -1519,7 +1529,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":83
+  /* "skbio/sequence/intersection.pyx":83
  *             return self.croot if self.croot is not EmptyNode else None
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -1532,7 +1542,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.__repr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.__repr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1540,7 +1550,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":86
+/* "skbio/sequence/intersection.pyx":86
  *         return "IntervalNode(%i, %i)" % (self.start, self.end)
  * 
  *     def __cinit__(IntervalNode self, int start, int end, object interval):             # <<<<<<<<<<<<<<
@@ -1549,8 +1559,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode___repr__
  */
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_interval = 0;
@@ -1607,18 +1617,18 @@ static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3__cinit__(PyO
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_interval);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_2__cinit__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_interval);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_2__cinit__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -1628,7 +1638,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "micronota/lib/intersection.pyx":91
+  /* "skbio/sequence/intersection.pyx":91
  *         # tree size.  Also, python's uniform is perfect since the
  *         # upper limit is not inclusive, which gives us undefined here.
  *         self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/RAND_MAX - 1)))             # <<<<<<<<<<<<<<
@@ -1645,9 +1655,9 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     {__pyx_filename = __pyx_f[0]; __pyx_lineno = 91; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  __pyx_v_self->priority = ceil((__pyx_v_9micronota_3lib_12intersection_nlog * log((-1.0 / __pyx_t_2))));
+  __pyx_v_self->priority = ceil((__pyx_v_5skbio_8sequence_12intersection_nlog * log((-1.0 / __pyx_t_2))));
 
-  /* "micronota/lib/intersection.pyx":92
+  /* "skbio/sequence/intersection.pyx":92
  *         # upper limit is not inclusive, which gives us undefined here.
  *         self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/RAND_MAX - 1)))
  *         self.start    = start             # <<<<<<<<<<<<<<
@@ -1656,7 +1666,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  */
   __pyx_v_self->start = __pyx_v_start;
 
-  /* "micronota/lib/intersection.pyx":93
+  /* "skbio/sequence/intersection.pyx":93
  *         self.priority = ceil(nlog * log(-1.0/(1.0 * rand()/RAND_MAX - 1)))
  *         self.start    = start
  *         self.end      = end             # <<<<<<<<<<<<<<
@@ -1665,7 +1675,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  */
   __pyx_v_self->end = __pyx_v_end;
 
-  /* "micronota/lib/intersection.pyx":94
+  /* "skbio/sequence/intersection.pyx":94
  *         self.start    = start
  *         self.end      = end
  *         self.interval = interval             # <<<<<<<<<<<<<<
@@ -1678,7 +1688,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
   __Pyx_DECREF(__pyx_v_self->interval);
   __pyx_v_self->interval = __pyx_v_interval;
 
-  /* "micronota/lib/intersection.pyx":95
+  /* "skbio/sequence/intersection.pyx":95
  *         self.end      = end
  *         self.interval = interval
  *         self.maxend   = end             # <<<<<<<<<<<<<<
@@ -1687,7 +1697,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  */
   __pyx_v_self->maxend = __pyx_v_end;
 
-  /* "micronota/lib/intersection.pyx":96
+  /* "skbio/sequence/intersection.pyx":96
  *         self.interval = interval
  *         self.maxend   = end
  *         self.minstart = start             # <<<<<<<<<<<<<<
@@ -1696,7 +1706,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  */
   __pyx_v_self->minstart = __pyx_v_start;
 
-  /* "micronota/lib/intersection.pyx":97
+  /* "skbio/sequence/intersection.pyx":97
  *         self.maxend   = end
  *         self.minstart = start
  *         self.minend   = end             # <<<<<<<<<<<<<<
@@ -1705,46 +1715,46 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  */
   __pyx_v_self->minend = __pyx_v_end;
 
-  /* "micronota/lib/intersection.pyx":98
+  /* "skbio/sequence/intersection.pyx":98
  *         self.minstart = start
  *         self.minend   = end
  *         self.cleft    = EmptyNode             # <<<<<<<<<<<<<<
  *         self.cright   = EmptyNode
  *         self.croot    = EmptyNode
  */
-  __Pyx_INCREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
+  __Pyx_INCREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
+  __Pyx_GIVEREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
   __Pyx_GOTREF(__pyx_v_self->cleft);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cleft));
-  __pyx_v_self->cleft = __pyx_v_9micronota_3lib_12intersection_EmptyNode;
+  __pyx_v_self->cleft = __pyx_v_5skbio_8sequence_12intersection_EmptyNode;
 
-  /* "micronota/lib/intersection.pyx":99
+  /* "skbio/sequence/intersection.pyx":99
  *         self.minend   = end
  *         self.cleft    = EmptyNode
  *         self.cright   = EmptyNode             # <<<<<<<<<<<<<<
  *         self.croot    = EmptyNode
  * 
  */
-  __Pyx_INCREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
+  __Pyx_INCREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
+  __Pyx_GIVEREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
   __Pyx_GOTREF(__pyx_v_self->cright);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cright));
-  __pyx_v_self->cright = __pyx_v_9micronota_3lib_12intersection_EmptyNode;
+  __pyx_v_self->cright = __pyx_v_5skbio_8sequence_12intersection_EmptyNode;
 
-  /* "micronota/lib/intersection.pyx":100
+  /* "skbio/sequence/intersection.pyx":100
  *         self.cleft    = EmptyNode
  *         self.cright   = EmptyNode
  *         self.croot    = EmptyNode             # <<<<<<<<<<<<<<
  * 
  *     cpdef IntervalNode insert(IntervalNode self, int start, int end, object interval):
  */
-  __Pyx_INCREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
+  __Pyx_INCREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
+  __Pyx_GIVEREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
   __Pyx_GOTREF(__pyx_v_self->croot);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->croot));
-  __pyx_v_self->croot = __pyx_v_9micronota_3lib_12intersection_EmptyNode;
+  __pyx_v_self->croot = __pyx_v_5skbio_8sequence_12intersection_EmptyNode;
 
-  /* "micronota/lib/intersection.pyx":86
+  /* "skbio/sequence/intersection.pyx":86
  *         return "IntervalNode(%i, %i)" % (self.start, self.end)
  * 
  *     def __cinit__(IntervalNode self, int start, int end, object interval):             # <<<<<<<<<<<<<<
@@ -1756,14 +1766,14 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":102
+/* "skbio/sequence/intersection.pyx":102
  *         self.croot    = EmptyNode
  * 
  *     cpdef IntervalNode insert(IntervalNode self, int start, int end, object interval):             # <<<<<<<<<<<<<<
@@ -1771,11 +1781,11 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_2__cinit__(str
  *         Insert a new IntervalNode into the tree of which this node is
  */
 
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval, int __pyx_skip_dispatch) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_croot = 0;
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval, int __pyx_skip_dispatch) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_croot = 0;
   int __pyx_v_decision_endpoint;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_r = NULL;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -1797,7 +1807,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
     __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_insert); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert)) {
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5insert)) {
       __Pyx_XDECREF(((PyObject *)__pyx_r));
       __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
@@ -1834,8 +1844,8 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_9micronota_3lib_12intersection_IntervalNode))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __pyx_r = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_2);
+      if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5skbio_8sequence_12intersection_IntervalNode))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_r = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_2);
       __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       goto __pyx_L0;
@@ -1843,7 +1853,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "micronota/lib/intersection.pyx":108
+  /* "skbio/sequence/intersection.pyx":108
  *         may or may not be this node!)
  *         """
  *         cdef IntervalNode croot = self             # <<<<<<<<<<<<<<
@@ -1853,7 +1863,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_INCREF(((PyObject *)__pyx_v_self));
   __pyx_v_croot = __pyx_v_self;
 
-  /* "micronota/lib/intersection.pyx":111
+  /* "skbio/sequence/intersection.pyx":111
  *         # If starts are the same, decide which to add interval to based on
  *         # end, thus maintaining sortedness relative to start/end
  *         cdef int decision_endpoint = start             # <<<<<<<<<<<<<<
@@ -1862,7 +1872,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
   __pyx_v_decision_endpoint = __pyx_v_start;
 
-  /* "micronota/lib/intersection.pyx":112
+  /* "skbio/sequence/intersection.pyx":112
  *         # end, thus maintaining sortedness relative to start/end
  *         cdef int decision_endpoint = start
  *         if start == self.start:             # <<<<<<<<<<<<<<
@@ -1872,7 +1882,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __pyx_t_9 = ((__pyx_v_start == __pyx_v_self->start) != 0);
   if (__pyx_t_9) {
 
-    /* "micronota/lib/intersection.pyx":113
+    /* "skbio/sequence/intersection.pyx":113
  *         cdef int decision_endpoint = start
  *         if start == self.start:
  *             decision_endpoint = end             # <<<<<<<<<<<<<<
@@ -1881,7 +1891,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
     __pyx_v_decision_endpoint = __pyx_v_end;
 
-    /* "micronota/lib/intersection.pyx":112
+    /* "skbio/sequence/intersection.pyx":112
  *         # end, thus maintaining sortedness relative to start/end
  *         cdef int decision_endpoint = start
  *         if start == self.start:             # <<<<<<<<<<<<<<
@@ -1890,7 +1900,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
   }
 
-  /* "micronota/lib/intersection.pyx":115
+  /* "skbio/sequence/intersection.pyx":115
  *             decision_endpoint = end
  * 
  *         if decision_endpoint > self.start:             # <<<<<<<<<<<<<<
@@ -1900,33 +1910,33 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __pyx_t_9 = ((__pyx_v_decision_endpoint > __pyx_v_self->start) != 0);
   if (__pyx_t_9) {
 
-    /* "micronota/lib/intersection.pyx":117
+    /* "skbio/sequence/intersection.pyx":117
  *         if decision_endpoint > self.start:
  *             # insert to cright tree
  *             if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
  *                 self.cright = self.cright.insert( start, end, interval )
  *             else:
  */
-    __pyx_t_9 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+    __pyx_t_9 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
     __pyx_t_10 = (__pyx_t_9 != 0);
     if (__pyx_t_10) {
 
-      /* "micronota/lib/intersection.pyx":118
+      /* "skbio/sequence/intersection.pyx":118
  *             # insert to cright tree
  *             if self.cright is not EmptyNode:
  *                 self.cright = self.cright.insert( start, end, interval )             # <<<<<<<<<<<<<<
  *             else:
  *                 self.cright = IntervalNode( start, end, interval )
  */
-      __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->insert(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->insert(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 0)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_GIVEREF(__pyx_t_1);
       __Pyx_GOTREF(__pyx_v_self->cright);
       __Pyx_DECREF(((PyObject *)__pyx_v_self->cright));
-      __pyx_v_self->cright = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1);
+      __pyx_v_self->cright = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "micronota/lib/intersection.pyx":117
+      /* "skbio/sequence/intersection.pyx":117
  *         if decision_endpoint > self.start:
  *             # insert to cright tree
  *             if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -1936,7 +1946,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
       goto __pyx_L5;
     }
 
-    /* "micronota/lib/intersection.pyx":120
+    /* "skbio/sequence/intersection.pyx":120
  *                 self.cright = self.cright.insert( start, end, interval )
  *             else:
  *                 self.cright = IntervalNode( start, end, interval )             # <<<<<<<<<<<<<<
@@ -1959,18 +1969,18 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
       PyTuple_SET_ITEM(__pyx_t_5, 2, __pyx_v_interval);
       __pyx_t_1 = 0;
       __pyx_t_2 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 120; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GIVEREF(__pyx_t_2);
       __Pyx_GOTREF(__pyx_v_self->cright);
       __Pyx_DECREF(((PyObject *)__pyx_v_self->cright));
-      __pyx_v_self->cright = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_2);
+      __pyx_v_self->cright = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_2);
       __pyx_t_2 = 0;
     }
     __pyx_L5:;
 
-    /* "micronota/lib/intersection.pyx":122
+    /* "skbio/sequence/intersection.pyx":122
  *                 self.cright = IntervalNode( start, end, interval )
  *             # rebalance tree
  *             if self.priority < self.cright.priority:             # <<<<<<<<<<<<<<
@@ -1980,19 +1990,19 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
     __pyx_t_10 = ((__pyx_v_self->priority < __pyx_v_self->cright->priority) != 0);
     if (__pyx_t_10) {
 
-      /* "micronota/lib/intersection.pyx":123
+      /* "skbio/sequence/intersection.pyx":123
  *             # rebalance tree
  *             if self.priority < self.cright.priority:
  *                 croot = self.rotate_left()             # <<<<<<<<<<<<<<
  *         else:
  *             # insert to cleft tree
  */
-      __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->rotate_left(__pyx_v_self)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 123; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->rotate_left(__pyx_v_self)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 123; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF_SET(__pyx_v_croot, ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_2));
+      __Pyx_DECREF_SET(__pyx_v_croot, ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_2));
       __pyx_t_2 = 0;
 
-      /* "micronota/lib/intersection.pyx":122
+      /* "skbio/sequence/intersection.pyx":122
  *                 self.cright = IntervalNode( start, end, interval )
  *             # rebalance tree
  *             if self.priority < self.cright.priority:             # <<<<<<<<<<<<<<
@@ -2001,7 +2011,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
     }
 
-    /* "micronota/lib/intersection.pyx":115
+    /* "skbio/sequence/intersection.pyx":115
  *             decision_endpoint = end
  * 
  *         if decision_endpoint > self.start:             # <<<<<<<<<<<<<<
@@ -2011,7 +2021,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
     goto __pyx_L4;
   }
 
-  /* "micronota/lib/intersection.pyx":126
+  /* "skbio/sequence/intersection.pyx":126
  *         else:
  *             # insert to cleft tree
  *             if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -2019,26 +2029,26 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  *             else:
  */
   /*else*/ {
-    __pyx_t_10 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+    __pyx_t_10 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
     __pyx_t_9 = (__pyx_t_10 != 0);
     if (__pyx_t_9) {
 
-      /* "micronota/lib/intersection.pyx":127
+      /* "skbio/sequence/intersection.pyx":127
  *             # insert to cleft tree
  *             if self.cleft is not EmptyNode:
  *                 self.cleft = self.cleft.insert( start, end, interval)             # <<<<<<<<<<<<<<
  *             else:
  *                 self.cleft = IntervalNode( start, end, interval)
  */
-      __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->insert(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 0)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->insert(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 0)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_GIVEREF(__pyx_t_2);
       __Pyx_GOTREF(__pyx_v_self->cleft);
       __Pyx_DECREF(((PyObject *)__pyx_v_self->cleft));
-      __pyx_v_self->cleft = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_2);
+      __pyx_v_self->cleft = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_2);
       __pyx_t_2 = 0;
 
-      /* "micronota/lib/intersection.pyx":126
+      /* "skbio/sequence/intersection.pyx":126
  *         else:
  *             # insert to cleft tree
  *             if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -2048,7 +2058,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
       goto __pyx_L7;
     }
 
-    /* "micronota/lib/intersection.pyx":129
+    /* "skbio/sequence/intersection.pyx":129
  *                 self.cleft = self.cleft.insert( start, end, interval)
  *             else:
  *                 self.cleft = IntervalNode( start, end, interval)             # <<<<<<<<<<<<<<
@@ -2071,18 +2081,18 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
       PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_v_interval);
       __pyx_t_2 = 0;
       __pyx_t_5 = 0;
-      __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode), __pyx_t_1, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 129; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode), __pyx_t_1, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 129; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_GIVEREF(__pyx_t_5);
       __Pyx_GOTREF(__pyx_v_self->cleft);
       __Pyx_DECREF(((PyObject *)__pyx_v_self->cleft));
-      __pyx_v_self->cleft = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_5);
+      __pyx_v_self->cleft = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_5);
       __pyx_t_5 = 0;
     }
     __pyx_L7:;
 
-    /* "micronota/lib/intersection.pyx":131
+    /* "skbio/sequence/intersection.pyx":131
  *                 self.cleft = IntervalNode( start, end, interval)
  *             # rebalance tree
  *             if self.priority < self.cleft.priority:             # <<<<<<<<<<<<<<
@@ -2092,19 +2102,19 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
     __pyx_t_9 = ((__pyx_v_self->priority < __pyx_v_self->cleft->priority) != 0);
     if (__pyx_t_9) {
 
-      /* "micronota/lib/intersection.pyx":132
+      /* "skbio/sequence/intersection.pyx":132
  *             # rebalance tree
  *             if self.priority < self.cleft.priority:
  *                 croot = self.rotate_right()             # <<<<<<<<<<<<<<
  * 
  *         croot.set_ends()
  */
-      __pyx_t_5 = ((PyObject *)((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->rotate_right(__pyx_v_self)); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->rotate_right(__pyx_v_self)); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
-      __Pyx_DECREF_SET(__pyx_v_croot, ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_5));
+      __Pyx_DECREF_SET(__pyx_v_croot, ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_5));
       __pyx_t_5 = 0;
 
-      /* "micronota/lib/intersection.pyx":131
+      /* "skbio/sequence/intersection.pyx":131
  *                 self.cleft = IntervalNode( start, end, interval)
  *             # rebalance tree
  *             if self.priority < self.cleft.priority:             # <<<<<<<<<<<<<<
@@ -2115,16 +2125,16 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   }
   __pyx_L4:;
 
-  /* "micronota/lib/intersection.pyx":134
+  /* "skbio/sequence/intersection.pyx":134
  *                 croot = self.rotate_right()
  * 
  *         croot.set_ends()             # <<<<<<<<<<<<<<
  *         self.cleft.croot  = croot
  *         self.cright.croot = croot
  */
-  __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(__pyx_v_croot);
+  __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(__pyx_v_croot);
 
-  /* "micronota/lib/intersection.pyx":135
+  /* "skbio/sequence/intersection.pyx":135
  * 
  *         croot.set_ends()
  *         self.cleft.croot  = croot             # <<<<<<<<<<<<<<
@@ -2137,7 +2147,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cleft->croot));
   __pyx_v_self->cleft->croot = __pyx_v_croot;
 
-  /* "micronota/lib/intersection.pyx":136
+  /* "skbio/sequence/intersection.pyx":136
  *         croot.set_ends()
  *         self.cleft.croot  = croot
  *         self.cright.croot = croot             # <<<<<<<<<<<<<<
@@ -2150,7 +2160,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cright->croot));
   __pyx_v_self->cright->croot = __pyx_v_croot;
 
-  /* "micronota/lib/intersection.pyx":137
+  /* "skbio/sequence/intersection.pyx":137
  *         self.cleft.croot  = croot
  *         self.cright.croot = croot
  *         return croot             # <<<<<<<<<<<<<<
@@ -2162,7 +2172,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __pyx_r = __pyx_v_croot;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":102
+  /* "skbio/sequence/intersection.pyx":102
  *         self.croot    = EmptyNode
  * 
  *     cpdef IntervalNode insert(IntervalNode self, int start, int end, object interval):             # <<<<<<<<<<<<<<
@@ -2179,7 +2189,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_croot);
@@ -2189,9 +2199,9 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_4insert[] = "\n        Insert a new IntervalNode into the tree of which this node is\n        currently the root. The return value is the new root of the tree (which\n        may or may not be this node!)\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_4insert[] = "\n        Insert a new IntervalNode into the tree of which this node is\n        currently the root. The return value is the new root of the tree (which\n        may or may not be this node!)\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_interval = 0;
@@ -2248,18 +2258,18 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert(
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("insert", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_interval);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_4insert(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_interval);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_4insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2268,7 +2278,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("insert", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = ((PyObject *)__pyx_f_9micronota_3lib_12intersection_12IntervalNode_insert(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 1)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((PyObject *)__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_insert(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_interval, 1)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2277,7 +2287,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2285,7 +2295,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":139
+/* "skbio/sequence/intersection.pyx":139
  *         return croot
  * 
  *     cdef IntervalNode rotate_right(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2293,14 +2303,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_4insert(
  *         self.cleft  = self.cleft.cright
  */
 
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_croot = 0;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_r = NULL;
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_croot = 0;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("rotate_right", 0);
 
-  /* "micronota/lib/intersection.pyx":140
+  /* "skbio/sequence/intersection.pyx":140
  * 
  *     cdef IntervalNode rotate_right(IntervalNode self):
  *         cdef IntervalNode croot = self.cleft             # <<<<<<<<<<<<<<
@@ -2309,10 +2319,10 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
   __pyx_t_1 = ((PyObject *)__pyx_v_self->cleft);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_v_croot = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1);
+  __pyx_v_croot = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":141
+  /* "skbio/sequence/intersection.pyx":141
  *     cdef IntervalNode rotate_right(IntervalNode self):
  *         cdef IntervalNode croot = self.cleft
  *         self.cleft  = self.cleft.cright             # <<<<<<<<<<<<<<
@@ -2324,10 +2334,10 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->cleft);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cleft));
-  __pyx_v_self->cleft = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1);
+  __pyx_v_self->cleft = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":142
+  /* "skbio/sequence/intersection.pyx":142
  *         cdef IntervalNode croot = self.cleft
  *         self.cleft  = self.cleft.cright
  *         croot.cright = self             # <<<<<<<<<<<<<<
@@ -2340,16 +2350,16 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_DECREF(((PyObject *)__pyx_v_croot->cright));
   __pyx_v_croot->cright = __pyx_v_self;
 
-  /* "micronota/lib/intersection.pyx":143
+  /* "skbio/sequence/intersection.pyx":143
  *         self.cleft  = self.cleft.cright
  *         croot.cright = self
  *         self.set_ends()             # <<<<<<<<<<<<<<
  *         return croot
  * 
  */
-  __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(__pyx_v_self);
+  __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(__pyx_v_self);
 
-  /* "micronota/lib/intersection.pyx":144
+  /* "skbio/sequence/intersection.pyx":144
  *         croot.cright = self
  *         self.set_ends()
  *         return croot             # <<<<<<<<<<<<<<
@@ -2361,7 +2371,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __pyx_r = __pyx_v_croot;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":139
+  /* "skbio/sequence/intersection.pyx":139
  *         return croot
  * 
  *     cdef IntervalNode rotate_right(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2377,7 +2387,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":146
+/* "skbio/sequence/intersection.pyx":146
  *         return croot
  * 
  *     cdef IntervalNode rotate_left(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2385,14 +2395,14 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  *         self.cright = self.cright.cleft
  */
 
-static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_croot = 0;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_r = NULL;
+static struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_croot = 0;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("rotate_left", 0);
 
-  /* "micronota/lib/intersection.pyx":147
+  /* "skbio/sequence/intersection.pyx":147
  * 
  *     cdef IntervalNode rotate_left(IntervalNode self):
  *         cdef IntervalNode croot = self.cright             # <<<<<<<<<<<<<<
@@ -2401,10 +2411,10 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  */
   __pyx_t_1 = ((PyObject *)__pyx_v_self->cright);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_v_croot = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1);
+  __pyx_v_croot = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":148
+  /* "skbio/sequence/intersection.pyx":148
  *     cdef IntervalNode rotate_left(IntervalNode self):
  *         cdef IntervalNode croot = self.cright
  *         self.cright = self.cright.cleft             # <<<<<<<<<<<<<<
@@ -2416,10 +2426,10 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->cright);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->cright));
-  __pyx_v_self->cright = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1);
+  __pyx_v_self->cright = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":149
+  /* "skbio/sequence/intersection.pyx":149
  *         cdef IntervalNode croot = self.cright
  *         self.cright = self.cright.cleft
  *         croot.cleft  = self             # <<<<<<<<<<<<<<
@@ -2432,16 +2442,16 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __Pyx_DECREF(((PyObject *)__pyx_v_croot->cleft));
   __pyx_v_croot->cleft = __pyx_v_self;
 
-  /* "micronota/lib/intersection.pyx":150
+  /* "skbio/sequence/intersection.pyx":150
  *         self.cright = self.cright.cleft
  *         croot.cleft  = self
  *         self.set_ends()             # <<<<<<<<<<<<<<
  *         return croot
  * 
  */
-  __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(__pyx_v_self);
+  __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(__pyx_v_self);
 
-  /* "micronota/lib/intersection.pyx":151
+  /* "skbio/sequence/intersection.pyx":151
  *         croot.cleft  = self
  *         self.set_ends()
  *         return croot             # <<<<<<<<<<<<<<
@@ -2453,7 +2463,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   __pyx_r = __pyx_v_croot;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":146
+  /* "skbio/sequence/intersection.pyx":146
  *         return croot
  * 
  *     cdef IntervalNode rotate_left(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2469,7 +2479,7 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":153
+/* "skbio/sequence/intersection.pyx":153
  *         return croot
  * 
  *     cdef inline void set_ends(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2477,61 +2487,61 @@ static struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_f_9mi
  *             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)
  */
 
-static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static CYTHON_INLINE void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("set_ends", 0);
 
-  /* "micronota/lib/intersection.pyx":154
+  /* "skbio/sequence/intersection.pyx":154
  * 
  *     cdef inline void set_ends(IntervalNode self):
  *         if self.cright is not EmptyNode and self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
  *             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
  */
-  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_3 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_3 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_3 != 0);
   __pyx_t_1 = __pyx_t_2;
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":155
+    /* "skbio/sequence/intersection.pyx":155
  *     cdef inline void set_ends(IntervalNode self):
  *         if self.cright is not EmptyNode and self.cleft is not EmptyNode:
  *             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)             # <<<<<<<<<<<<<<
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
  */
-    __pyx_v_self->maxend = __pyx_f_9micronota_3lib_12intersection_imax3(__pyx_v_self->end, __pyx_v_self->cright->maxend, __pyx_v_self->cleft->maxend);
+    __pyx_v_self->maxend = __pyx_f_5skbio_8sequence_12intersection_imax3(__pyx_v_self->end, __pyx_v_self->cright->maxend, __pyx_v_self->cleft->maxend);
 
-    /* "micronota/lib/intersection.pyx":156
+    /* "skbio/sequence/intersection.pyx":156
  *         if self.cright is not EmptyNode and self.cleft is not EmptyNode:
  *             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)             # <<<<<<<<<<<<<<
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
  *         elif self.cright is not EmptyNode:
  */
-    __pyx_v_self->minend = __pyx_f_9micronota_3lib_12intersection_imin3(__pyx_v_self->end, __pyx_v_self->cright->minend, __pyx_v_self->cleft->minend);
+    __pyx_v_self->minend = __pyx_f_5skbio_8sequence_12intersection_imin3(__pyx_v_self->end, __pyx_v_self->cright->minend, __pyx_v_self->cleft->minend);
 
-    /* "micronota/lib/intersection.pyx":157
+    /* "skbio/sequence/intersection.pyx":157
  *             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)             # <<<<<<<<<<<<<<
  *         elif self.cright is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cright.maxend)
  */
-    __pyx_v_self->minstart = __pyx_f_9micronota_3lib_12intersection_imin3(__pyx_v_self->start, __pyx_v_self->cright->minstart, __pyx_v_self->cleft->minstart);
+    __pyx_v_self->minstart = __pyx_f_5skbio_8sequence_12intersection_imin3(__pyx_v_self->start, __pyx_v_self->cright->minstart, __pyx_v_self->cleft->minstart);
 
-    /* "micronota/lib/intersection.pyx":154
+    /* "skbio/sequence/intersection.pyx":154
  * 
  *     cdef inline void set_ends(IntervalNode self):
  *         if self.cright is not EmptyNode and self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -2541,45 +2551,45 @@ static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_
     goto __pyx_L3;
   }
 
-  /* "micronota/lib/intersection.pyx":158
+  /* "skbio/sequence/intersection.pyx":158
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
  *         elif self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
  *             self.maxend = imax2(self.end, self.cright.maxend)
  *             self.minend = imin2(self.end, self.cright.minend)
  */
-  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":159
+    /* "skbio/sequence/intersection.pyx":159
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
  *         elif self.cright is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cright.maxend)             # <<<<<<<<<<<<<<
  *             self.minend = imin2(self.end, self.cright.minend)
  *             self.minstart = imin2(self.start, self.cright.minstart)
  */
-    __pyx_v_self->maxend = __pyx_f_9micronota_3lib_12intersection_imax2(__pyx_v_self->end, __pyx_v_self->cright->maxend);
+    __pyx_v_self->maxend = __pyx_f_5skbio_8sequence_12intersection_imax2(__pyx_v_self->end, __pyx_v_self->cright->maxend);
 
-    /* "micronota/lib/intersection.pyx":160
+    /* "skbio/sequence/intersection.pyx":160
  *         elif self.cright is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cright.maxend)
  *             self.minend = imin2(self.end, self.cright.minend)             # <<<<<<<<<<<<<<
  *             self.minstart = imin2(self.start, self.cright.minstart)
  *         elif self.cleft is not EmptyNode:
  */
-    __pyx_v_self->minend = __pyx_f_9micronota_3lib_12intersection_imin2(__pyx_v_self->end, __pyx_v_self->cright->minend);
+    __pyx_v_self->minend = __pyx_f_5skbio_8sequence_12intersection_imin2(__pyx_v_self->end, __pyx_v_self->cright->minend);
 
-    /* "micronota/lib/intersection.pyx":161
+    /* "skbio/sequence/intersection.pyx":161
  *             self.maxend = imax2(self.end, self.cright.maxend)
  *             self.minend = imin2(self.end, self.cright.minend)
  *             self.minstart = imin2(self.start, self.cright.minstart)             # <<<<<<<<<<<<<<
  *         elif self.cleft is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cleft.maxend)
  */
-    __pyx_v_self->minstart = __pyx_f_9micronota_3lib_12intersection_imin2(__pyx_v_self->start, __pyx_v_self->cright->minstart);
+    __pyx_v_self->minstart = __pyx_f_5skbio_8sequence_12intersection_imin2(__pyx_v_self->start, __pyx_v_self->cright->minstart);
 
-    /* "micronota/lib/intersection.pyx":158
+    /* "skbio/sequence/intersection.pyx":158
  *             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
  *             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
  *         elif self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -2589,45 +2599,45 @@ static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_
     goto __pyx_L3;
   }
 
-  /* "micronota/lib/intersection.pyx":162
+  /* "skbio/sequence/intersection.pyx":162
  *             self.minend = imin2(self.end, self.cright.minend)
  *             self.minstart = imin2(self.start, self.cright.minstart)
  *         elif self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
  *             self.maxend = imax2(self.end, self.cleft.maxend)
  *             self.minend = imin2(self.end, self.cleft.minend)
  */
-  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":163
+    /* "skbio/sequence/intersection.pyx":163
  *             self.minstart = imin2(self.start, self.cright.minstart)
  *         elif self.cleft is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cleft.maxend)             # <<<<<<<<<<<<<<
  *             self.minend = imin2(self.end, self.cleft.minend)
  *             self.minstart = imin2(self.start, self.cleft.minstart)
  */
-    __pyx_v_self->maxend = __pyx_f_9micronota_3lib_12intersection_imax2(__pyx_v_self->end, __pyx_v_self->cleft->maxend);
+    __pyx_v_self->maxend = __pyx_f_5skbio_8sequence_12intersection_imax2(__pyx_v_self->end, __pyx_v_self->cleft->maxend);
 
-    /* "micronota/lib/intersection.pyx":164
+    /* "skbio/sequence/intersection.pyx":164
  *         elif self.cleft is not EmptyNode:
  *             self.maxend = imax2(self.end, self.cleft.maxend)
  *             self.minend = imin2(self.end, self.cleft.minend)             # <<<<<<<<<<<<<<
  *             self.minstart = imin2(self.start, self.cleft.minstart)
  * 
  */
-    __pyx_v_self->minend = __pyx_f_9micronota_3lib_12intersection_imin2(__pyx_v_self->end, __pyx_v_self->cleft->minend);
+    __pyx_v_self->minend = __pyx_f_5skbio_8sequence_12intersection_imin2(__pyx_v_self->end, __pyx_v_self->cleft->minend);
 
-    /* "micronota/lib/intersection.pyx":165
+    /* "skbio/sequence/intersection.pyx":165
  *             self.maxend = imax2(self.end, self.cleft.maxend)
  *             self.minend = imin2(self.end, self.cleft.minend)
  *             self.minstart = imin2(self.start, self.cleft.minstart)             # <<<<<<<<<<<<<<
  * 
- * 
+ *     def intersect( self, int start, int end, sort=True ):
  */
-    __pyx_v_self->minstart = __pyx_f_9micronota_3lib_12intersection_imin2(__pyx_v_self->start, __pyx_v_self->cleft->minstart);
+    __pyx_v_self->minstart = __pyx_f_5skbio_8sequence_12intersection_imin2(__pyx_v_self->start, __pyx_v_self->cleft->minstart);
 
-    /* "micronota/lib/intersection.pyx":162
+    /* "skbio/sequence/intersection.pyx":162
  *             self.minend = imin2(self.end, self.cright.minend)
  *             self.minstart = imin2(self.start, self.cright.minstart)
  *         elif self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -2637,7 +2647,7 @@ static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_
   }
   __pyx_L3:;
 
-  /* "micronota/lib/intersection.pyx":153
+  /* "skbio/sequence/intersection.pyx":153
  *         return croot
  * 
  *     cdef inline void set_ends(IntervalNode self):             # <<<<<<<<<<<<<<
@@ -2649,8 +2659,8 @@ static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_
   __Pyx_RefNannyFinishContext();
 }
 
-/* "micronota/lib/intersection.pyx":168
- * 
+/* "skbio/sequence/intersection.pyx":167
+ *             self.minstart = imin2(self.start, self.cleft.minstart)
  * 
  *     def intersect( self, int start, int end, sort=True ):             # <<<<<<<<<<<<<<
  *         """
@@ -2658,9 +2668,9 @@ static CYTHON_INLINE void __pyx_f_9micronota_3lib_12intersection_12IntervalNode_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7intersect(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_6intersect[] = "\n        given a start and a end, return a list of features\n        falling within that range\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7intersect(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_7intersect(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_6intersect[] = "\n        given a start and a end, return a list of features\n        falling within that range\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_7intersect(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   CYTHON_UNUSED PyObject *__pyx_v_sort = 0;
@@ -2692,7 +2702,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7interse
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("intersect", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 168; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("intersect", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 167; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
@@ -2701,7 +2711,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7interse
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "intersect") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 168; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "intersect") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 167; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2712,26 +2722,26 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7interse
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 168; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 168; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 167; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 167; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_sort = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("intersect", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 168; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("intersect", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 167; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.intersect", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.intersect", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6intersect(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_sort);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_6intersect(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_sort);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6intersect(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, CYTHON_UNUSED PyObject *__pyx_v_sort) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_6intersect(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, CYTHON_UNUSED PyObject *__pyx_v_sort) {
   PyObject *__pyx_v_results = 0;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -2741,28 +2751,28 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6interse
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("intersect", 0);
 
-  /* "micronota/lib/intersection.pyx":173
+  /* "skbio/sequence/intersection.pyx":172
  *         falling within that range
  *         """
  *         cdef list results = []             # <<<<<<<<<<<<<<
  *         self._intersect( start, end, results )
  *         return results
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 173; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 172; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_results = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":174
+  /* "skbio/sequence/intersection.pyx":173
  *         """
  *         cdef list results = []
  *         self._intersect( start, end, results )             # <<<<<<<<<<<<<<
  *         return results
  * 
  */
-  ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_intersect(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_results);
+  ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_intersect(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_results);
 
-  /* "micronota/lib/intersection.pyx":175
+  /* "skbio/sequence/intersection.pyx":174
  *         cdef list results = []
  *         self._intersect( start, end, results )
  *         return results             # <<<<<<<<<<<<<<
@@ -2774,8 +2784,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6interse
   __pyx_r = __pyx_v_results;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":168
- * 
+  /* "skbio/sequence/intersection.pyx":167
+ *             self.minstart = imin2(self.start, self.cleft.minstart)
  * 
  *     def intersect( self, int start, int end, sort=True ):             # <<<<<<<<<<<<<<
  *         """
@@ -2785,7 +2795,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6interse
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.intersect", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.intersect", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_results);
@@ -2794,7 +2804,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6interse
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":179
+/* "skbio/sequence/intersection.pyx":178
  *     find = intersect
  * 
  *     cdef void _intersect( IntervalNode self, int start, int end, list results):             # <<<<<<<<<<<<<<
@@ -2802,7 +2812,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_6interse
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:
  */
 
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_results) {
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__intersect(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_results) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -2814,14 +2824,14 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_intersect", 0);
 
-  /* "micronota/lib/intersection.pyx":181
+  /* "skbio/sequence/intersection.pyx":180
  *     cdef void _intersect( IntervalNode self, int start, int end, list results):
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
  *             self.cleft._intersect( start, end, results )
  *         # This interval
  */
-  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (__pyx_t_3) {
   } else {
@@ -2833,16 +2843,16 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":182
+    /* "skbio/sequence/intersection.pyx":181
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:
  *             self.cleft._intersect( start, end, results )             # <<<<<<<<<<<<<<
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_intersect(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_results);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_intersect(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_results);
 
-    /* "micronota/lib/intersection.pyx":181
+    /* "skbio/sequence/intersection.pyx":180
  *     cdef void _intersect( IntervalNode self, int start, int end, list results):
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
@@ -2851,7 +2861,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":184
+  /* "skbio/sequence/intersection.pyx":183
  *             self.cleft._intersect( start, end, results )
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
@@ -2869,7 +2879,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":185
+    /* "skbio/sequence/intersection.pyx":184
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):
  *             results.append( self.interval )             # <<<<<<<<<<<<<<
@@ -2878,14 +2888,14 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
  */
     if (unlikely(__pyx_v_results == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 185; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 184; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_t_4 = __pyx_v_self->interval;
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 185; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 184; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "micronota/lib/intersection.pyx":184
+    /* "skbio/sequence/intersection.pyx":183
  *             self.cleft._intersect( start, end, results )
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
@@ -2894,14 +2904,14 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":187
+  /* "skbio/sequence/intersection.pyx":186
  *             results.append( self.interval )
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
  *             self.cright._intersect( start, end, results )
  * 
  */
-  __pyx_t_3 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_3 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_3 != 0);
   if (__pyx_t_2) {
   } else {
@@ -2913,16 +2923,16 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
   __pyx_L10_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":188
+    /* "skbio/sequence/intersection.pyx":187
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:
  *             self.cright._intersect( start, end, results )             # <<<<<<<<<<<<<<
  * 
- * 
+ *     cpdef void update(IntervalNode self, int start, int end,
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_intersect(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_results);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_intersect(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_results);
 
-    /* "micronota/lib/intersection.pyx":187
+    /* "skbio/sequence/intersection.pyx":186
  *             results.append( self.interval )
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
@@ -2931,7 +2941,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":179
+  /* "skbio/sequence/intersection.pyx":178
  *     find = intersect
  * 
  *     cdef void _intersect( IntervalNode self, int start, int end, list results):             # <<<<<<<<<<<<<<
@@ -2943,20 +2953,362 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect(str
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_WriteUnraisable("micronota.lib.intersection.IntervalNode._intersect", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __Pyx_WriteUnraisable("skbio.sequence.intersection.IntervalNode._intersect", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "micronota/lib/intersection.pyx":191
+/* "skbio/sequence/intersection.pyx":189
+ *             self.cright._intersect( start, end, results )
  * 
+ *     cpdef void update(IntervalNode self, int start, int end,             # <<<<<<<<<<<<<<
+ *                       object old_feature, object new_feature):
+ *         """
+ */
+
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode_update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature, int __pyx_skip_dispatch) {
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  Py_ssize_t __pyx_t_7;
+  PyObject *__pyx_t_8 = NULL;
+  int __pyx_t_9;
+  int __pyx_t_10;
+  int __pyx_t_11;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("update", 0);
+  /* Check if called by wrapper */
+  if (unlikely(__pyx_skip_dispatch)) ;
+  /* Check if overridden in Python */
+  else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_update); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_1);
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9update)) {
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_1);
+      __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
+      __pyx_t_7 = 0;
+      if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_5))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+        if (likely(__pyx_t_6)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+          __Pyx_INCREF(__pyx_t_6);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_5, function);
+          __pyx_t_7 = 1;
+        }
+      }
+      __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_8);
+      if (__pyx_t_6) {
+        __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
+      }
+      __Pyx_GIVEREF(__pyx_t_3);
+      PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, __pyx_t_3);
+      __Pyx_GIVEREF(__pyx_t_4);
+      PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_t_4);
+      __Pyx_INCREF(__pyx_v_old_feature);
+      __Pyx_GIVEREF(__pyx_v_old_feature);
+      PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_v_old_feature);
+      __Pyx_INCREF(__pyx_v_new_feature);
+      __Pyx_GIVEREF(__pyx_v_new_feature);
+      PyTuple_SET_ITEM(__pyx_t_8, 3+__pyx_t_7, __pyx_v_new_feature);
+      __pyx_t_3 = 0;
+      __pyx_t_4 = 0;
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      goto __pyx_L0;
+    }
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  }
+
+  /* "skbio/sequence/intersection.pyx":197
+ * 
+ *         # Left subtree
+ *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
+ *             self.cleft.update( start, end, old_feature, new_feature )
+ *         # This interval
+ */
+  __pyx_t_10 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
+  __pyx_t_11 = (__pyx_t_10 != 0);
+  if (__pyx_t_11) {
+  } else {
+    __pyx_t_9 = __pyx_t_11;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_11 = ((__pyx_v_self->cleft->maxend > __pyx_v_start) != 0);
+  __pyx_t_9 = __pyx_t_11;
+  __pyx_L4_bool_binop_done:;
+  if (__pyx_t_9) {
+
+    /* "skbio/sequence/intersection.pyx":198
+ *         # Left subtree
+ *         if self.cleft is not EmptyNode and self.cleft.maxend > start:
+ *             self.cleft.update( start, end, old_feature, new_feature )             # <<<<<<<<<<<<<<
+ *         # This interval
+ *         if ( self.end > start ) and ( self.start < end ):
+ */
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->update(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 0);
+
+    /* "skbio/sequence/intersection.pyx":197
+ * 
+ *         # Left subtree
+ *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
+ *             self.cleft.update( start, end, old_feature, new_feature )
+ *         # This interval
+ */
+  }
+
+  /* "skbio/sequence/intersection.pyx":200
+ *             self.cleft.update( start, end, old_feature, new_feature )
+ *         # This interval
+ *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
+ *             if self.interval == old_feature:
+ *                 self.interval = new_feature
+ */
+  __pyx_t_11 = ((__pyx_v_self->end > __pyx_v_start) != 0);
+  if (__pyx_t_11) {
+  } else {
+    __pyx_t_9 = __pyx_t_11;
+    goto __pyx_L7_bool_binop_done;
+  }
+  __pyx_t_11 = ((__pyx_v_self->start < __pyx_v_end) != 0);
+  __pyx_t_9 = __pyx_t_11;
+  __pyx_L7_bool_binop_done:;
+  if (__pyx_t_9) {
+
+    /* "skbio/sequence/intersection.pyx":201
+ *         # This interval
+ *         if ( self.end > start ) and ( self.start < end ):
+ *             if self.interval == old_feature:             # <<<<<<<<<<<<<<
+ *                 self.interval = new_feature
+ *         # Right subtree
+ */
+    __pyx_t_1 = PyObject_RichCompare(__pyx_v_self->interval, __pyx_v_old_feature, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 201; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 201; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (__pyx_t_9) {
+
+      /* "skbio/sequence/intersection.pyx":202
+ *         if ( self.end > start ) and ( self.start < end ):
+ *             if self.interval == old_feature:
+ *                 self.interval = new_feature             # <<<<<<<<<<<<<<
+ *         # Right subtree
+ *         if self.cright is not EmptyNode and self.start < end:
+ */
+      __Pyx_INCREF(__pyx_v_new_feature);
+      __Pyx_GIVEREF(__pyx_v_new_feature);
+      __Pyx_GOTREF(__pyx_v_self->interval);
+      __Pyx_DECREF(__pyx_v_self->interval);
+      __pyx_v_self->interval = __pyx_v_new_feature;
+
+      /* "skbio/sequence/intersection.pyx":201
+ *         # This interval
+ *         if ( self.end > start ) and ( self.start < end ):
+ *             if self.interval == old_feature:             # <<<<<<<<<<<<<<
+ *                 self.interval = new_feature
+ *         # Right subtree
+ */
+    }
+
+    /* "skbio/sequence/intersection.pyx":200
+ *             self.cleft.update( start, end, old_feature, new_feature )
+ *         # This interval
+ *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
+ *             if self.interval == old_feature:
+ *                 self.interval = new_feature
+ */
+  }
+
+  /* "skbio/sequence/intersection.pyx":204
+ *                 self.interval = new_feature
+ *         # Right subtree
+ *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
+ *             self.cright.update( start, end, old_feature, new_feature )
+ * 
+ */
+  __pyx_t_11 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
+  __pyx_t_10 = (__pyx_t_11 != 0);
+  if (__pyx_t_10) {
+  } else {
+    __pyx_t_9 = __pyx_t_10;
+    goto __pyx_L11_bool_binop_done;
+  }
+  __pyx_t_10 = ((__pyx_v_self->start < __pyx_v_end) != 0);
+  __pyx_t_9 = __pyx_t_10;
+  __pyx_L11_bool_binop_done:;
+  if (__pyx_t_9) {
+
+    /* "skbio/sequence/intersection.pyx":205
+ *         # Right subtree
+ *         if self.cright is not EmptyNode and self.start < end:
+ *             self.cright.update( start, end, old_feature, new_feature )             # <<<<<<<<<<<<<<
+ * 
+ *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
+ */
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->update(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 0);
+
+    /* "skbio/sequence/intersection.pyx":204
+ *                 self.interval = new_feature
+ *         # Right subtree
+ *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
+ *             self.cright.update( start, end, old_feature, new_feature )
+ * 
+ */
+  }
+
+  /* "skbio/sequence/intersection.pyx":189
+ *             self.cright._intersect( start, end, results )
+ * 
+ *     cpdef void update(IntervalNode self, int start, int end,             # <<<<<<<<<<<<<<
+ *                       object old_feature, object new_feature):
+ *         """
+ */
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_WriteUnraisable("skbio.sequence.intersection.IntervalNode.update", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_8update[] = "\n        given a start and end, replace all objects that\n        match the old_feature with new_feature.\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  int __pyx_v_start;
+  int __pyx_v_end;
+  PyObject *__pyx_v_old_feature = 0;
+  PyObject *__pyx_v_new_feature = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("update (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_start,&__pyx_n_s_end,&__pyx_n_s_old_feature,&__pyx_n_s_new_feature,0};
+    PyObject* values[4] = {0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_start)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+        case  2:
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_old_feature)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+        case  3:
+        if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_new_feature)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+    }
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_old_feature = values[2];
+    __pyx_v_new_feature = values[3];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8update(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("update", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_void_to_None(__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_update(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 1)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 189; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "skbio/sequence/intersection.pyx":207
+ *             self.cright.update( start, end, old_feature, new_feature )
  * 
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:
  */
 
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist) {
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -2968,7 +3320,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_seek_left", 0);
 
-  /* "micronota/lib/intersection.pyx":193
+  /* "skbio/sequence/intersection.pyx":209
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:             # <<<<<<<<<<<<<<
@@ -2978,7 +3330,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
   __pyx_t_1 = (((__pyx_v_self->maxend + __pyx_v_max_dist) < __pyx_v_position) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":194
+    /* "skbio/sequence/intersection.pyx":210
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:
  *             return             # <<<<<<<<<<<<<<
@@ -2987,7 +3339,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":193
+    /* "skbio/sequence/intersection.pyx":209
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:             # <<<<<<<<<<<<<<
@@ -2996,7 +3348,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":195
+  /* "skbio/sequence/intersection.pyx":211
  *         if self.maxend + max_dist < position:
  *             return
  *         if self.minstart > position:             # <<<<<<<<<<<<<<
@@ -3006,7 +3358,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
   __pyx_t_1 = ((__pyx_v_self->minstart > __pyx_v_position) != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":196
+    /* "skbio/sequence/intersection.pyx":212
  *             return
  *         if self.minstart > position:
  *             return             # <<<<<<<<<<<<<<
@@ -3015,7 +3367,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":195
+    /* "skbio/sequence/intersection.pyx":211
  *         if self.maxend + max_dist < position:
  *             return
  *         if self.minstart > position:             # <<<<<<<<<<<<<<
@@ -3024,27 +3376,27 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":200
+  /* "skbio/sequence/intersection.pyx":216
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
  *             self.cright._seek_left(position, results, n, max_dist)
  * 
  */
-  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":201
+    /* "skbio/sequence/intersection.pyx":217
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:
  *             self.cright._seek_left(position, results, n, max_dist)             # <<<<<<<<<<<<<<
  * 
  *         if -1 < position - self.end < max_dist:
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_left(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_left(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "micronota/lib/intersection.pyx":200
+    /* "skbio/sequence/intersection.pyx":216
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3053,7 +3405,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":203
+  /* "skbio/sequence/intersection.pyx":219
  *             self.cright._seek_left(position, results, n, max_dist)
  * 
  *         if -1 < position - self.end < max_dist:             # <<<<<<<<<<<<<<
@@ -3068,7 +3420,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":204
+    /* "skbio/sequence/intersection.pyx":220
  * 
  *         if -1 < position - self.end < max_dist:
  *             results.append(self.interval)             # <<<<<<<<<<<<<<
@@ -3077,14 +3429,14 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
     if (unlikely(__pyx_v_results == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 220; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_t_4 = __pyx_v_self->interval;
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 220; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "micronota/lib/intersection.pyx":203
+    /* "skbio/sequence/intersection.pyx":219
  *             self.cright._seek_left(position, results, n, max_dist)
  * 
  *         if -1 < position - self.end < max_dist:             # <<<<<<<<<<<<<<
@@ -3093,27 +3445,27 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":207
+  /* "skbio/sequence/intersection.pyx":223
  * 
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
  *                 self.cleft._seek_left(position, results, n, max_dist)
  * 
  */
-  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":208
+    /* "skbio/sequence/intersection.pyx":224
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:
  *                 self.cleft._seek_left(position, results, n, max_dist)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_left(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_left(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "micronota/lib/intersection.pyx":207
+    /* "skbio/sequence/intersection.pyx":223
  * 
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3122,8 +3474,8 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":191
- * 
+  /* "skbio/sequence/intersection.pyx":207
+ *             self.cright.update( start, end, old_feature, new_feature )
  * 
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
  *         # we know we can bail in these 2 cases.
@@ -3134,12 +3486,12 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_WriteUnraisable("micronota.lib.intersection.IntervalNode._seek_left", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __Pyx_WriteUnraisable("skbio.sequence.intersection.IntervalNode._seek_left", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "micronota/lib/intersection.pyx":212
+/* "skbio/sequence/intersection.pyx":228
  * 
  * 
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3147,7 +3499,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left(str
  *         if self.maxend < position: return
  */
 
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist) {
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -3159,7 +3511,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_seek_right", 0);
 
-  /* "micronota/lib/intersection.pyx":214
+  /* "skbio/sequence/intersection.pyx":230
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend < position: return             # <<<<<<<<<<<<<<
@@ -3171,7 +3523,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":215
+  /* "skbio/sequence/intersection.pyx":231
  *         # we know we can bail in these 2 cases.
  *         if self.maxend < position: return
  *         if self.minstart - max_dist > position: return             # <<<<<<<<<<<<<<
@@ -3183,27 +3535,27 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":221
+  /* "skbio/sequence/intersection.pyx":237
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
  *                 self.cleft._seek_right(position, results, n, max_dist)
  * 
  */
-  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":222
+    /* "skbio/sequence/intersection.pyx":238
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:
  *                 self.cleft._seek_right(position, results, n, max_dist)             # <<<<<<<<<<<<<<
  * 
  *         if -1 < self.start - position < max_dist:
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_right(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_right(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "micronota/lib/intersection.pyx":221
+    /* "skbio/sequence/intersection.pyx":237
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3212,7 +3564,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
  */
   }
 
-  /* "micronota/lib/intersection.pyx":224
+  /* "skbio/sequence/intersection.pyx":240
  *                 self.cleft._seek_right(position, results, n, max_dist)
  * 
  *         if -1 < self.start - position < max_dist:             # <<<<<<<<<<<<<<
@@ -3227,7 +3579,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "micronota/lib/intersection.pyx":225
+    /* "skbio/sequence/intersection.pyx":241
  * 
  *         if -1 < self.start - position < max_dist:
  *             results.append(self.interval)             # <<<<<<<<<<<<<<
@@ -3236,14 +3588,14 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
  */
     if (unlikely(__pyx_v_results == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 225; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 241; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_t_4 = __pyx_v_self->interval;
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 225; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 241; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "micronota/lib/intersection.pyx":224
+    /* "skbio/sequence/intersection.pyx":240
  *                 self.cleft._seek_right(position, results, n, max_dist)
  * 
  *         if -1 < self.start - position < max_dist:             # <<<<<<<<<<<<<<
@@ -3252,27 +3604,27 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
  */
   }
 
-  /* "micronota/lib/intersection.pyx":227
+  /* "skbio/sequence/intersection.pyx":243
  *             results.append(self.interval)
  * 
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
  *                 self.cright._seek_right(position, results, n, max_dist)
  * 
  */
-  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":228
+    /* "skbio/sequence/intersection.pyx":244
  * 
  *         if self.cright is not EmptyNode:
  *                 self.cright._seek_right(position, results, n, max_dist)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_right(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_right(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "micronota/lib/intersection.pyx":227
+    /* "skbio/sequence/intersection.pyx":243
  *             results.append(self.interval)
  * 
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3281,7 +3633,7 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
  */
   }
 
-  /* "micronota/lib/intersection.pyx":212
+  /* "skbio/sequence/intersection.pyx":228
  * 
  * 
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3293,12 +3645,12 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_WriteUnraisable("micronota.lib.intersection.IntervalNode._seek_right", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __Pyx_WriteUnraisable("skbio.sequence.intersection.IntervalNode._seek_right", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "micronota/lib/intersection.pyx":231
+/* "skbio/sequence/intersection.pyx":247
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3306,8 +3658,8 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right(st
  *         find n features with a start > than `position`
  */
 
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left *__pyx_optional_args) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left *__pyx_optional_args) {
   int __pyx_v_n = ((int)1);
   int __pyx_v_max_dist = ((int)0x9C4);
   PyObject *__pyx_v_results = 0;
@@ -3340,13 +3692,13 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_left); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_left); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left)) {
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_11left)) {
       __Pyx_XDECREF(__pyx_r);
-      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
@@ -3361,7 +3713,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
           __pyx_t_7 = 1;
         }
       }
-      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_8);
       if (__pyx_t_6) {
         __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -3375,7 +3727,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
       PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_t_4);
       __pyx_t_3 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3387,39 +3739,39 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "micronota/lib/intersection.pyx":238
+  /* "skbio/sequence/intersection.pyx":254
  *         max_dist: the maximum distance to look before giving up.
  *         """
  *         cdef list results = []             # <<<<<<<<<<<<<<
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 238; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 254; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_results = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":240
+  /* "skbio/sequence/intersection.pyx":256
  *         cdef list results = []
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )             # <<<<<<<<<<<<<<
  *         if len(results) == n: return results
  *         r = results
  */
-  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 240; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_left(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+  ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_left(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-  /* "micronota/lib/intersection.pyx":241
+  /* "skbio/sequence/intersection.pyx":257
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )
  *         if len(results) == n: return results             # <<<<<<<<<<<<<<
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)
  */
-  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 241; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 257; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_10 = ((__pyx_t_7 == __pyx_v_n) != 0);
   if (__pyx_t_10) {
     __Pyx_XDECREF(__pyx_r);
@@ -3428,7 +3780,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":242
+  /* "skbio/sequence/intersection.pyx":258
  *         self._seek_left( position - 1, results, n, max_dist )
  *         if len(results) == n: return results
  *         r = results             # <<<<<<<<<<<<<<
@@ -3438,35 +3790,35 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
   __Pyx_INCREF(__pyx_v_results);
   __pyx_v_r = __pyx_v_results;
 
-  /* "micronota/lib/intersection.pyx":243
+  /* "skbio/sequence/intersection.pyx":259
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "micronota/lib/intersection.pyx":244
+  /* "skbio/sequence/intersection.pyx":260
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)
  *         return r[:n]             # <<<<<<<<<<<<<<
@@ -3474,13 +3826,13 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
  *     cpdef right(self, position, int n=1, int max_dist=2500):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 260; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_r = __pyx_t_5;
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":231
+  /* "skbio/sequence/intersection.pyx":247
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3497,7 +3849,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_results);
@@ -3508,9 +3860,9 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left(stru
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_8left[] = "\n        find n features with a start > than `position`\n        f: a Interval object (or anything with an `end` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_10left[] = "\n        find n features with a start > than `position`\n        f: a Interval object (or anything with an `end` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   int __pyx_v_n;
   int __pyx_v_max_dist;
@@ -3550,7 +3902,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left(Py
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "left") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "left") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3563,36 +3915,36 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left(Py
     }
     __pyx_v_position = values[0];
     if (values[1]) {
-      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     } else {
       __pyx_v_n = ((int)1);
     }
     if (values[2]) {
-      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     } else {
       __pyx_v_max_dist = ((int)0x9C4);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("left", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("left", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10left(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_10left(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left __pyx_t_2;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left __pyx_t_2;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -3601,7 +3953,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(st
   __pyx_t_2.__pyx_n = 2;
   __pyx_t_2.n = __pyx_v_n;
   __pyx_t_2.max_dist = __pyx_v_max_dist;
-  __pyx_t_1 = __pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode->left(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode->left(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3610,7 +3962,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(st
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3618,7 +3970,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(st
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":246
+/* "skbio/sequence/intersection.pyx":262
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3626,8 +3978,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8left(st
  *         find n features with a end < than position
  */
 
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right *__pyx_optional_args) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right *__pyx_optional_args) {
   int __pyx_v_n = ((int)1);
   int __pyx_v_max_dist = ((int)0x9C4);
   PyObject *__pyx_v_results = 0;
@@ -3660,13 +4012,13 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_right); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_right); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right)) {
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_13right)) {
       __Pyx_XDECREF(__pyx_r);
-      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
@@ -3681,7 +4033,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
           __pyx_t_7 = 1;
         }
       }
-      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_8);
       if (__pyx_t_6) {
         __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -3695,7 +4047,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
       PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_t_4);
       __pyx_t_3 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3707,39 +4059,39 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "micronota/lib/intersection.pyx":253
+  /* "skbio/sequence/intersection.pyx":269
  *         max_dist: the maximum distance to look before giving up.
  *         """
  *         cdef list results = []             # <<<<<<<<<<<<<<
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 253; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_results = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":255
+  /* "skbio/sequence/intersection.pyx":271
  *         cdef list results = []
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)             # <<<<<<<<<<<<<<
  *         if len(results) == n: return results
  *         r = results
  */
-  __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 255; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 255; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_right(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
+  ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_right(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-  /* "micronota/lib/intersection.pyx":256
+  /* "skbio/sequence/intersection.pyx":272
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)
  *         if len(results) == n: return results             # <<<<<<<<<<<<<<
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))
  */
-  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 272; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_10 = ((__pyx_t_7 == __pyx_v_n) != 0);
   if (__pyx_t_10) {
     __Pyx_XDECREF(__pyx_r);
@@ -3748,7 +4100,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":257
+  /* "skbio/sequence/intersection.pyx":273
  *         self._seek_right(position + 1, results, n, max_dist)
  *         if len(results) == n: return results
  *         r = results             # <<<<<<<<<<<<<<
@@ -3758,34 +4110,34 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
   __Pyx_INCREF(__pyx_v_results);
   __pyx_v_r = __pyx_v_results;
 
-  /* "micronota/lib/intersection.pyx":258
+  /* "skbio/sequence/intersection.pyx":274
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "micronota/lib/intersection.pyx":259
+  /* "skbio/sequence/intersection.pyx":275
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))
  *         return r[:n]             # <<<<<<<<<<<<<<
@@ -3793,13 +4145,13 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
  *     def traverse(self, func):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_r = __pyx_t_5;
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":246
+  /* "skbio/sequence/intersection.pyx":262
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3816,7 +4168,7 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_results);
@@ -3827,9 +4179,9 @@ static PyObject *__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right(str
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_10right[] = "\n        find n features with a end < than position\n        f: a Interval object (or anything with a `start` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_12right[] = "\n        find n features with a end < than position\n        f: a Interval object (or anything with a `start` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   int __pyx_v_n;
   int __pyx_v_max_dist;
@@ -3869,7 +4221,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right(
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "right") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "right") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3882,36 +4234,36 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right(
     }
     __pyx_v_position = values[0];
     if (values[1]) {
-      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     } else {
       __pyx_v_n = ((int)1);
     }
     if (values[2]) {
-      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     } else {
       __pyx_v_max_dist = ((int)0x9C4);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("right", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("right", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_12right(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_12right(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right __pyx_t_2;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right __pyx_t_2;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -3920,7 +4272,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(
   __pyx_t_2.__pyx_n = 2;
   __pyx_t_2.n = __pyx_v_n;
   __pyx_t_2.max_dist = __pyx_v_max_dist;
-  __pyx_t_1 = __pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode->right(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode->right(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3929,7 +4281,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3937,7 +4289,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":261
+/* "skbio/sequence/intersection.pyx":277
  *         return r[:n]
  * 
  *     def traverse(self, func):             # <<<<<<<<<<<<<<
@@ -3946,33 +4298,33 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_10right(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_13traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_13traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_15traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_15traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_12traverse(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_func));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_14traverse(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_func));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_12traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_14traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse", 0);
 
-  /* "micronota/lib/intersection.pyx":262
+  /* "skbio/sequence/intersection.pyx":278
  * 
  *     def traverse(self, func):
  *         self._traverse(func)             # <<<<<<<<<<<<<<
  * 
  *     cdef void _traverse(IntervalNode self, object func):
  */
-  ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_traverse(__pyx_v_self, __pyx_v_func);
+  ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_traverse(__pyx_v_self, __pyx_v_func);
 
-  /* "micronota/lib/intersection.pyx":261
+  /* "skbio/sequence/intersection.pyx":277
  *         return r[:n]
  * 
  *     def traverse(self, func):             # <<<<<<<<<<<<<<
@@ -3987,7 +4339,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_12traver
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":264
+/* "skbio/sequence/intersection.pyx":280
  *         self._traverse(func)
  * 
  *     cdef void _traverse(IntervalNode self, object func):             # <<<<<<<<<<<<<<
@@ -3995,7 +4347,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_12traver
  *         func(self)
  */
 
-static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
+static void __pyx_f_5skbio_8sequence_12intersection_12IntervalNode__traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -4008,20 +4360,20 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(stru
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_traverse", 0);
 
-  /* "micronota/lib/intersection.pyx":265
+  /* "skbio/sequence/intersection.pyx":281
  * 
  *     cdef void _traverse(IntervalNode self, object func):
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)             # <<<<<<<<<<<<<<
  *         func(self)
  *         if self.cright is not EmptyNode: self.cright._traverse(func)
  */
-  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_1 = (__pyx_v_self->cleft != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_traverse(__pyx_v_self->cleft, __pyx_v_func);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_traverse(__pyx_v_self->cleft, __pyx_v_func);
   }
 
-  /* "micronota/lib/intersection.pyx":266
+  /* "skbio/sequence/intersection.pyx":282
  *     cdef void _traverse(IntervalNode self, object func):
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)
  *         func(self)             # <<<<<<<<<<<<<<
@@ -4040,36 +4392,36 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(stru
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, ((PyObject *)__pyx_v_self)); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, ((PyObject *)__pyx_v_self)); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 282; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
   } else {
-    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 282; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
     __Pyx_INCREF(((PyObject *)__pyx_v_self));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
     PyTuple_SET_ITEM(__pyx_t_6, 0+1, ((PyObject *)__pyx_v_self));
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 282; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "micronota/lib/intersection.pyx":267
+  /* "skbio/sequence/intersection.pyx":283
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)
  *         func(self)
  *         if self.cright is not EmptyNode: self.cright._traverse(func)             # <<<<<<<<<<<<<<
  * 
  * cdef IntervalNode EmptyNode = IntervalNode( 0, 0, Interval(0, 0))
  */
-  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_9micronota_3lib_12intersection_EmptyNode);
+  __pyx_t_2 = (__pyx_v_self->cright != __pyx_v_5skbio_8sequence_12intersection_EmptyNode);
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
-    ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_traverse(__pyx_v_self->cright, __pyx_v_func);
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_traverse(__pyx_v_self->cright, __pyx_v_func);
   }
 
-  /* "micronota/lib/intersection.pyx":264
+  /* "skbio/sequence/intersection.pyx":280
  *         self._traverse(func)
  * 
  *     cdef void _traverse(IntervalNode self, object func):             # <<<<<<<<<<<<<<
@@ -4084,12 +4436,12 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(stru
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_WriteUnraisable("micronota.lib.intersection.IntervalNode._traverse", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __Pyx_WriteUnraisable("skbio.sequence.intersection.IntervalNode._traverse", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "micronota/lib/intersection.pyx":68
+/* "skbio/sequence/intersection.pyx":68
  *     """
  *     cdef float priority
  *     cdef public object interval             # <<<<<<<<<<<<<<
@@ -4098,19 +4450,19 @@ static void __pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse(stru
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -4127,19 +4479,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interva
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__", 0);
@@ -4156,19 +4508,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_2__s
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_4__del__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_4__del__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_8interval_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -4184,7 +4536,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_4__d
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":69
+/* "skbio/sequence/intersection.pyx":69
  *     cdef float priority
  *     cdef public object interval
  *     cdef public int start, end             # <<<<<<<<<<<<<<
@@ -4193,19 +4545,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_8interval_4__d
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4223,7 +4575,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start__
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.start.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.start.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -4232,19 +4584,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start__
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_5start_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -4259,7 +4611,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start_2__set_
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.start.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.start.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -4267,19 +4619,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_5start_2__set_
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end___get__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end___get__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end___get__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4297,7 +4649,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end___g
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.end.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.end.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -4306,19 +4658,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end___g
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalNode_3end_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -4333,14 +4685,14 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end_2__set__(
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalNode.end.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalNode.end.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":290
+/* "skbio/sequence/intersection.pyx":306
  *     cdef public object value, chrom, strand
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):             # <<<<<<<<<<<<<<
@@ -4349,8 +4701,8 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalNode_3end_2__set__(
  */
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_value = 0;
@@ -4388,7 +4740,7 @@ static int __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__(PyObject 
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
@@ -4407,7 +4759,7 @@ static int __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__(PyObject 
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4420,28 +4772,28 @@ static int __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__(PyObject 
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_value = values[2];
     __pyx_v_chrom = values[3];
     __pyx_v_strand = values[4];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value, __pyx_v_chrom, __pyx_v_strand);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval___init__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value, __pyx_v_chrom, __pyx_v_strand);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value, PyObject *__pyx_v_chrom, PyObject *__pyx_v_strand) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval___init__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value, PyObject *__pyx_v_chrom, PyObject *__pyx_v_strand) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -4449,7 +4801,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "micronota/lib/intersection.pyx":291
+  /* "skbio/sequence/intersection.pyx":307
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):
  *         assert start <= end, "start must be less than end"             # <<<<<<<<<<<<<<
@@ -4460,12 +4812,12 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_start <= __pyx_v_end) != 0))) {
       PyErr_SetObject(PyExc_AssertionError, __pyx_kp_s_start_must_be_less_than_end);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 291; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 307; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "micronota/lib/intersection.pyx":292
+  /* "skbio/sequence/intersection.pyx":308
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):
  *         assert start <= end, "start must be less than end"
  *         self.start  = start             # <<<<<<<<<<<<<<
@@ -4474,7 +4826,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
  */
   __pyx_v_self->start = __pyx_v_start;
 
-  /* "micronota/lib/intersection.pyx":293
+  /* "skbio/sequence/intersection.pyx":309
  *         assert start <= end, "start must be less than end"
  *         self.start  = start
  *         self.end   = end             # <<<<<<<<<<<<<<
@@ -4483,7 +4835,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
  */
   __pyx_v_self->end = __pyx_v_end;
 
-  /* "micronota/lib/intersection.pyx":294
+  /* "skbio/sequence/intersection.pyx":310
  *         self.start  = start
  *         self.end   = end
  *         self.value = value             # <<<<<<<<<<<<<<
@@ -4496,7 +4848,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   __Pyx_DECREF(__pyx_v_self->value);
   __pyx_v_self->value = __pyx_v_value;
 
-  /* "micronota/lib/intersection.pyx":295
+  /* "skbio/sequence/intersection.pyx":311
  *         self.end   = end
  *         self.value = value
  *         self.chrom = chrom             # <<<<<<<<<<<<<<
@@ -4509,7 +4861,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   __Pyx_DECREF(__pyx_v_self->chrom);
   __pyx_v_self->chrom = __pyx_v_chrom;
 
-  /* "micronota/lib/intersection.pyx":296
+  /* "skbio/sequence/intersection.pyx":312
  *         self.value = value
  *         self.chrom = chrom
  *         self.strand = strand             # <<<<<<<<<<<<<<
@@ -4522,7 +4874,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   __Pyx_DECREF(__pyx_v_self->strand);
   __pyx_v_self->strand = __pyx_v_strand;
 
-  /* "micronota/lib/intersection.pyx":290
+  /* "skbio/sequence/intersection.pyx":306
  *     cdef public object value, chrom, strand
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):             # <<<<<<<<<<<<<<
@@ -4534,14 +4886,14 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":298
+/* "skbio/sequence/intersection.pyx":314
  *         self.strand = strand
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -4550,19 +4902,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval___init__(struct __p
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_3__repr__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_3__repr__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_3__repr__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_3__repr__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__repr__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_2__repr__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_2__repr__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_v_fstr = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -4576,18 +4928,18 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__repr__", 0);
 
-  /* "micronota/lib/intersection.pyx":299
+  /* "skbio/sequence/intersection.pyx":315
  * 
  *     def __repr__(self):
  *         fstr = "Interval(%d, %d" % (self.start, self.end)             # <<<<<<<<<<<<<<
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 299; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 299; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 299; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
@@ -4595,13 +4947,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
   __pyx_t_1 = 0;
   __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Interval_d_d, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 299; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_Interval_d_d, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_fstr = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "micronota/lib/intersection.pyx":300
+  /* "skbio/sequence/intersection.pyx":316
  *     def __repr__(self):
  *         fstr = "Interval(%d, %d" % (self.start, self.end)
  *         if not self.value is None:             # <<<<<<<<<<<<<<
@@ -4612,31 +4964,31 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   __pyx_t_5 = (__pyx_t_4 != 0);
   if (__pyx_t_5) {
 
-    /* "micronota/lib/intersection.pyx":301
+    /* "skbio/sequence/intersection.pyx":317
  *         fstr = "Interval(%d, %d" % (self.start, self.end)
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)             # <<<<<<<<<<<<<<
  *         fstr += ")"
  *         return fstr
  */
-    __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 301; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_v_self->value);
     __Pyx_GIVEREF(__pyx_v_self->value);
     PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_self->value);
-    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 301; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyNumber_Add(__pyx_kp_s_value_2, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 301; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyNumber_Add(__pyx_kp_s_value_2, __pyx_t_3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 301; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF_SET(__pyx_v_fstr, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "micronota/lib/intersection.pyx":300
+    /* "skbio/sequence/intersection.pyx":316
  *     def __repr__(self):
  *         fstr = "Interval(%d, %d" % (self.start, self.end)
  *         if not self.value is None:             # <<<<<<<<<<<<<<
@@ -4645,19 +4997,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
  */
   }
 
-  /* "micronota/lib/intersection.pyx":302
+  /* "skbio/sequence/intersection.pyx":318
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)
  *         fstr += ")"             # <<<<<<<<<<<<<<
  *         return fstr
  * 
  */
-  __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 302; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF_SET(__pyx_v_fstr, __pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "micronota/lib/intersection.pyx":303
+  /* "skbio/sequence/intersection.pyx":319
  *             fstr += ", value=" + str(self.value)
  *         fstr += ")"
  *         return fstr             # <<<<<<<<<<<<<<
@@ -4669,7 +5021,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   __pyx_r = __pyx_v_fstr;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":298
+  /* "skbio/sequence/intersection.pyx":314
  *         self.strand = strand
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -4682,7 +5034,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.__repr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.__repr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_fstr);
@@ -4691,7 +5043,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":305
+/* "skbio/sequence/intersection.pyx":321
  *         return fstr
  * 
  *     def __richcmp__(self, other, op):             # <<<<<<<<<<<<<<
@@ -4700,8 +5052,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_2__repr__(str
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, int __pyx_arg_op); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, int __pyx_arg_op) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, int __pyx_arg_op); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, int __pyx_arg_op) {
   PyObject *__pyx_v_op = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -4709,15 +5061,15 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5__richcmp__(
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__richcmp__ (wrapper)", 0);
-  __pyx_v_op = __Pyx_PyInt_From_int(__pyx_arg_op); if (unlikely(!__pyx_v_op)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 305; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_v_op = __Pyx_PyInt_From_int(__pyx_arg_op); if (unlikely(!__pyx_v_op)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 321; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __Pyx_GOTREF(__pyx_v_op);
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.__richcmp__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.__richcmp__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(((PyObject *)__pyx_v_self), ((PyObject *)__pyx_v_other), ((PyObject *)__pyx_v_op));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_4__richcmp__(((PyObject *)__pyx_v_self), ((PyObject *)__pyx_v_other), ((PyObject *)__pyx_v_op));
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_op);
@@ -4725,7 +5077,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5__richcmp__(
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, PyObject *__pyx_v_op) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_4__richcmp__(PyObject *__pyx_v_self, PyObject *__pyx_v_other, PyObject *__pyx_v_op) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4738,20 +5090,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__richcmp__", 0);
 
-  /* "micronota/lib/intersection.pyx":306
+  /* "skbio/sequence/intersection.pyx":322
  * 
  *     def __richcmp__(self, other, op):
  *         if op == 0:             # <<<<<<<<<<<<<<
  *             # <
  *             return self.start < other.start or self.end < other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 322; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 306; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 322; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":308
+    /* "skbio/sequence/intersection.pyx":324
  *         if op == 0:
  *             # <
  *             return self.start < other.start or self.end < other.end             # <<<<<<<<<<<<<<
@@ -4759,14 +5111,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  *             # <=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -4775,11 +5127,11 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 308; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 324; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -4790,7 +5142,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":306
+    /* "skbio/sequence/intersection.pyx":322
  * 
  *     def __richcmp__(self, other, op):
  *         if op == 0:             # <<<<<<<<<<<<<<
@@ -4799,20 +5151,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":309
+  /* "skbio/sequence/intersection.pyx":325
  *             # <
  *             return self.start < other.start or self.end < other.end
  *         elif op == 1:             # <<<<<<<<<<<<<<
  *             # <=
  *             return self == other or self < other
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 309; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 309; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":311
+    /* "skbio/sequence/intersection.pyx":327
  *         elif op == 1:
  *             # <=
  *             return self == other or self < other             # <<<<<<<<<<<<<<
@@ -4820,8 +5172,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  *             # ==
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 311; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 311; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 327; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 327; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     } else {
@@ -4830,7 +5182,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       goto __pyx_L6_bool_binop_done;
     }
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 311; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 327; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_INCREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4839,7 +5191,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":309
+    /* "skbio/sequence/intersection.pyx":325
  *             # <
  *             return self.start < other.start or self.end < other.end
  *         elif op == 1:             # <<<<<<<<<<<<<<
@@ -4848,20 +5200,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":312
+  /* "skbio/sequence/intersection.pyx":328
  *             # <=
  *             return self == other or self < other
  *         elif op == 2:             # <<<<<<<<<<<<<<
  *             # ==
  *             return self.start == other.start and self.end == other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 312; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 328; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 312; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 328; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":314
+    /* "skbio/sequence/intersection.pyx":330
  *         elif op == 2:
  *             # ==
  *             return self.start == other.start and self.end == other.end             # <<<<<<<<<<<<<<
@@ -4869,14 +5221,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  *             # !=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -4885,11 +5237,11 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L8_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 314; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 330; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -4900,7 +5252,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":312
+    /* "skbio/sequence/intersection.pyx":328
  *             # <=
  *             return self == other or self < other
  *         elif op == 2:             # <<<<<<<<<<<<<<
@@ -4909,20 +5261,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":315
+  /* "skbio/sequence/intersection.pyx":331
  *             # ==
  *             return self.start == other.start and self.end == other.end
  *         elif op == 3:             # <<<<<<<<<<<<<<
  *             # !=
  *             return self.start != other.start or self.end != other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_3, 3, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_3, 3, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 331; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 315; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 331; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":317
+    /* "skbio/sequence/intersection.pyx":333
  *         elif op == 3:
  *             # !=
  *             return self.start != other.start or self.end != other.end             # <<<<<<<<<<<<<<
@@ -4930,14 +5282,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  *             # >
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -4946,11 +5298,11 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L10_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 317; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 333; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -4961,7 +5313,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":315
+    /* "skbio/sequence/intersection.pyx":331
  *             # ==
  *             return self.start == other.start and self.end == other.end
  *         elif op == 3:             # <<<<<<<<<<<<<<
@@ -4970,20 +5322,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":318
+  /* "skbio/sequence/intersection.pyx":334
  *             # !=
  *             return self.start != other.start or self.end != other.end
  *         elif op == 4:             # <<<<<<<<<<<<<<
  *             # >
  *             return self.start > other.start or self.end > other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_4, 4, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_4, 4, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 334; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 318; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 334; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":320
+    /* "skbio/sequence/intersection.pyx":336
  *         elif op == 4:
  *             # >
  *             return self.start > other.start or self.end > other.end             # <<<<<<<<<<<<<<
@@ -4991,14 +5343,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  *             # >=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -5007,11 +5359,11 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L12_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 320; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 336; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -5022,7 +5374,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":318
+    /* "skbio/sequence/intersection.pyx":334
  *             # !=
  *             return self.start != other.start or self.end != other.end
  *         elif op == 4:             # <<<<<<<<<<<<<<
@@ -5031,20 +5383,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":321
+  /* "skbio/sequence/intersection.pyx":337
  *             # >
  *             return self.start > other.start or self.end > other.end
  *         elif op == 5:             # <<<<<<<<<<<<<<
  *             # >=
  *             return self == other or self > other
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_5, 5, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 321; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_5, 5, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 337; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 321; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 337; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":323
+    /* "skbio/sequence/intersection.pyx":339
  *         elif op == 5:
  *             # >=
  *             return self == other or self > other             # <<<<<<<<<<<<<<
@@ -5052,8 +5404,8 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  * cdef class IntervalTree:
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 323; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 323; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     } else {
@@ -5062,7 +5414,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       goto __pyx_L14_bool_binop_done;
     }
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 323; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 339; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_INCREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -5071,7 +5423,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":321
+    /* "skbio/sequence/intersection.pyx":337
  *             # >
  *             return self.start > other.start or self.end > other.end
  *         elif op == 5:             # <<<<<<<<<<<<<<
@@ -5080,7 +5432,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":305
+  /* "skbio/sequence/intersection.pyx":321
  *         return fstr
  * 
  *     def __richcmp__(self, other, op):             # <<<<<<<<<<<<<<
@@ -5096,7 +5448,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.__richcmp__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.__richcmp__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5104,7 +5456,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":287
+/* "skbio/sequence/intersection.pyx":303
  * 
  *     """
  *     cdef public int start, end             # <<<<<<<<<<<<<<
@@ -5113,19 +5465,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_4__richcmp__(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5start_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5start_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5start___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5start___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5134,7 +5486,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5143,7 +5495,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get_
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.start.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.start.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5152,19 +5504,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5start___get_
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5start_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5start_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5start_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5start_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5172,14 +5524,14 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5start_2__set__(str
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__set__", 0);
-  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_self->start = __pyx_t_1;
 
   /* function exit code */
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.start.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.start.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -5187,19 +5539,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5start_2__set__(str
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_3end_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_3end_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_3end___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_3end___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5208,7 +5560,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5217,7 +5569,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.end.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.end.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5226,19 +5578,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_3end___get__(
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_3end_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_3end_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_3end_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_3end_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5246,21 +5598,21 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_3end_2__set__(struc
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__set__", 0);
-  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_self->end = __pyx_t_1;
 
   /* function exit code */
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.Interval.end.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.Interval.end.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":288
+/* "skbio/sequence/intersection.pyx":304
  *     """
  *     cdef public int start, end
  *     cdef public object value, chrom, strand             # <<<<<<<<<<<<<<
@@ -5269,19 +5621,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_3end_2__set__(struc
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5value_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5value_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5value___get__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5value___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5value___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -5298,19 +5650,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5value___get_
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__", 0);
@@ -5327,19 +5679,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_2__set__(str
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_4__del__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_4__del__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5value_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -5356,19 +5708,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5value_4__del__(str
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom___get__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -5385,19 +5737,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom___get_
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__", 0);
@@ -5414,19 +5766,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_2__set__(str
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_4__del__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_4__del__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_5chrom_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -5443,19 +5795,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_5chrom_4__del__(str
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand___get__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand___get__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_6strand___get__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand___get__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -5472,19 +5824,19 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_8Interval_6strand___get
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_2__set__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_2__set__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_2__set__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_2__set__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__", 0);
@@ -5501,19 +5853,19 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_2__set__(st
 }
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_4__del__(((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_4__del__(((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_4__del__(struct __pyx_obj_9micronota_3lib_12intersection_Interval *__pyx_v_self) {
+static int __pyx_pf_5skbio_8sequence_12intersection_8Interval_6strand_4__del__(struct __pyx_obj_5skbio_8sequence_12intersection_Interval *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -5529,7 +5881,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_4__del__(st
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":383
+/* "skbio/sequence/intersection.pyx":399
  *     cdef IntervalNode root
  * 
  *     def __cinit__( self ):             # <<<<<<<<<<<<<<
@@ -5538,28 +5890,28 @@ static int __pyx_pf_9micronota_3lib_12intersection_8Interval_6strand_4__del__(st
  */
 
 /* Python wrapper */
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalTree_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_9micronota_3lib_12intersection_12IntervalTree_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
   if (unlikely(PyTuple_GET_SIZE(__pyx_args) > 0)) {
     __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 0, 0, PyTuple_GET_SIZE(__pyx_args)); return -1;}
   if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__cinit__", 0))) return -1;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree___cinit__(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(CYTHON_UNUSED struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self) {
+static int __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree___cinit__(CYTHON_UNUSED struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self) {
   CYTHON_UNUSED PyObject *__pyx_v_root = NULL;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "micronota/lib/intersection.pyx":384
+  /* "skbio/sequence/intersection.pyx":400
  * 
  *     def __cinit__( self ):
  *         root = None             # <<<<<<<<<<<<<<
@@ -5569,7 +5921,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(CYTH
   __Pyx_INCREF(Py_None);
   __pyx_v_root = Py_None;
 
-  /* "micronota/lib/intersection.pyx":383
+  /* "skbio/sequence/intersection.pyx":399
  *     cdef IntervalNode root
  * 
  *     def __cinit__( self ):             # <<<<<<<<<<<<<<
@@ -5584,7 +5936,7 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(CYTH
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":388
+/* "skbio/sequence/intersection.pyx":404
  *     # ---- Position based interfaces -----------------------------------------
  * 
  *     def insert( self, int start, int end, object value=None ):             # <<<<<<<<<<<<<<
@@ -5593,9 +5945,9 @@ static int __pyx_pf_9micronota_3lib_12intersection_12IntervalTree___cinit__(CYTH
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_2insert[] = "\n        Insert the interval [start,end) associated with value `value`.\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_2insert[] = "\n        Insert the interval [start,end) associated with value `value`.\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_value = 0;
@@ -5627,7 +5979,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert(
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 404; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
@@ -5636,7 +5988,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert(
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "insert") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "insert") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 404; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -5647,26 +5999,26 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert(
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 404; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 404; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_value = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 388; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 404; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_2insert(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_2insert(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5679,7 +6031,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("insert", 0);
 
-  /* "micronota/lib/intersection.pyx":392
+  /* "skbio/sequence/intersection.pyx":408
  *         Insert the interval [start,end) associated with value `value`.
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -5690,18 +6042,18 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":393
+    /* "skbio/sequence/intersection.pyx":409
  *         """
  *         if self.root is None:
  *             self.root = IntervalNode( start, end, value )             # <<<<<<<<<<<<<<
  *         else:
  *             self.root = self.root.insert( start, end, value )
  */
-    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_3);
     PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
@@ -5712,16 +6064,16 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
     PyTuple_SET_ITEM(__pyx_t_5, 2, __pyx_v_value);
     __pyx_t_3 = 0;
     __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 393; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GIVEREF(__pyx_t_4);
     __Pyx_GOTREF(__pyx_v_self->root);
     __Pyx_DECREF(((PyObject *)__pyx_v_self->root));
-    __pyx_v_self->root = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_4);
+    __pyx_v_self->root = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "micronota/lib/intersection.pyx":392
+    /* "skbio/sequence/intersection.pyx":408
  *         Insert the interval [start,end) associated with value `value`.
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -5731,7 +6083,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
     goto __pyx_L3;
   }
 
-  /* "micronota/lib/intersection.pyx":395
+  /* "skbio/sequence/intersection.pyx":411
  *             self.root = IntervalNode( start, end, value )
  *         else:
  *             self.root = self.root.insert( start, end, value )             # <<<<<<<<<<<<<<
@@ -5739,17 +6091,17 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
  *     add = insert
  */
   /*else*/ {
-    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->insert(__pyx_v_self->root, __pyx_v_start, __pyx_v_end, __pyx_v_value, 0)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 395; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->insert(__pyx_v_self->root, __pyx_v_start, __pyx_v_end, __pyx_v_value, 0)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 411; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     __Pyx_GOTREF(__pyx_v_self->root);
     __Pyx_DECREF(((PyObject *)__pyx_v_self->root));
-    __pyx_v_self->root = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_4);
+    __pyx_v_self->root = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_4);
     __pyx_t_4 = 0;
   }
   __pyx_L3:;
 
-  /* "micronota/lib/intersection.pyx":388
+  /* "skbio/sequence/intersection.pyx":404
  *     # ---- Position based interfaces -----------------------------------------
  * 
  *     def insert( self, int start, int end, object value=None ):             # <<<<<<<<<<<<<<
@@ -5764,7 +6116,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5772,7 +6124,158 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":400
+/* "skbio/sequence/intersection.pyx":416
+ * 
+ * 
+ *     def update( self, start, end, old_feature, new_feature):             # <<<<<<<<<<<<<<
+ *         """
+ *         Given an interval [start, end), replace all objects that
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_5update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_4update[] = "\n        Given an interval [start, end), replace all objects that\n        match the `old_feature` with `new_feature`.\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_5update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_start = 0;
+  PyObject *__pyx_v_end = 0;
+  PyObject *__pyx_v_old_feature = 0;
+  PyObject *__pyx_v_new_feature = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("update (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_start,&__pyx_n_s_end,&__pyx_n_s_old_feature,&__pyx_n_s_new_feature,0};
+    PyObject* values[4] = {0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_start)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+        case  2:
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_old_feature)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+        case  3:
+        if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_new_feature)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+    }
+    __pyx_v_start = values[0];
+    __pyx_v_end = values[1];
+    __pyx_v_old_feature = values[2];
+    __pyx_v_new_feature = values[3];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 416; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_4update(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_4update(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  int __pyx_t_3;
+  int __pyx_t_4;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("update", 0);
+
+  /* "skbio/sequence/intersection.pyx":421
+ *         match the `old_feature` with `new_feature`.
+ *         """
+ *         if self.root is not None:             # <<<<<<<<<<<<<<
+ *             self.root.update(start, end, old_feature, new_feature)
+ * 
+ */
+  __pyx_t_1 = (((PyObject *)__pyx_v_self->root) != Py_None);
+  __pyx_t_2 = (__pyx_t_1 != 0);
+  if (__pyx_t_2) {
+
+    /* "skbio/sequence/intersection.pyx":422
+ *         """
+ *         if self.root is not None:
+ *             self.root.update(start, end, old_feature, new_feature)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_v_start); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 422; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_end); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 422; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->update(__pyx_v_self->root, __pyx_t_3, __pyx_t_4, __pyx_v_old_feature, __pyx_v_new_feature, 0);
+
+    /* "skbio/sequence/intersection.pyx":421
+ *         match the `old_feature` with `new_feature`.
+ *         """
+ *         if self.root is not None:             # <<<<<<<<<<<<<<
+ *             self.root.update(start, end, old_feature, new_feature)
+ * 
+ */
+  }
+
+  /* "skbio/sequence/intersection.pyx":416
+ * 
+ * 
+ *     def update( self, start, end, old_feature, new_feature):             # <<<<<<<<<<<<<<
+ *         """
+ *         Given an interval [start, end), replace all objects that
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "skbio/sequence/intersection.pyx":425
  * 
  * 
  *     def find( self, start, end ):             # <<<<<<<<<<<<<<
@@ -5781,9 +6284,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_2insert(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_5find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_4find[] = "\n        Return a sorted list of all intervals overlapping [start,end).\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_5find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_7find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_6find[] = "\n        Return a sorted list of all intervals overlapping [start,end).\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_7find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_start = 0;
   PyObject *__pyx_v_end = 0;
   int __pyx_lineno = 0;
@@ -5812,11 +6315,11 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_5find(Py
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 425; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "find") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "find") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 425; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -5829,20 +6332,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_5find(Py
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 400; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 425; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.find", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.find", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_6find(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_6find(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5857,7 +6360,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("find", 0);
 
-  /* "micronota/lib/intersection.pyx":404
+  /* "skbio/sequence/intersection.pyx":429
  *         Return a sorted list of all intervals overlapping [start,end).
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -5868,7 +6371,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":405
+    /* "skbio/sequence/intersection.pyx":430
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -5876,13 +6379,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 405; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 430; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":404
+    /* "skbio/sequence/intersection.pyx":429
  *         Return a sorted list of all intervals overlapping [start,end).
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -5891,7 +6394,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
  */
   }
 
-  /* "micronota/lib/intersection.pyx":406
+  /* "skbio/sequence/intersection.pyx":431
  *         if self.root is None:
  *             return []
  *         return self.root.find( start, end )             # <<<<<<<<<<<<<<
@@ -5899,7 +6402,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
  *     def before( self, position, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_find); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 406; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_find); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 431; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   __pyx_t_6 = 0;
@@ -5913,7 +6416,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
       __pyx_t_6 = 1;
     }
   }
-  __pyx_t_7 = PyTuple_New(2+__pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 406; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = PyTuple_New(2+__pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 431; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
   if (__pyx_t_5) {
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -5924,7 +6427,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   __Pyx_INCREF(__pyx_v_end);
   __Pyx_GIVEREF(__pyx_v_end);
   PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_6, __pyx_v_end);
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 406; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 431; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -5932,7 +6435,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":400
+  /* "skbio/sequence/intersection.pyx":425
  * 
  * 
  *     def find( self, start, end ):             # <<<<<<<<<<<<<<
@@ -5946,7 +6449,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.find", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.find", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5954,7 +6457,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":408
+/* "skbio/sequence/intersection.pyx":433
  *         return self.root.find( start, end )
  * 
  *     def before( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -5963,9 +6466,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_4find(st
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_7before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_6before[] = "\n        Find `num_intervals` intervals that lie before `position` and are no\n        further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_7before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_9before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_8before[] = "\n        Find `num_intervals` intervals that lie before `position` and are no\n        further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_9before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6007,7 +6510,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_7before(
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6024,20 +6527,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_7before(
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("before", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("before", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.before", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.before", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_8before(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_8before(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6045,13 +6548,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
   PyObject *__pyx_t_3 = NULL;
   int __pyx_t_4;
   int __pyx_t_5;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left __pyx_t_6;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left __pyx_t_6;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("before", 0);
 
-  /* "micronota/lib/intersection.pyx":413
+  /* "skbio/sequence/intersection.pyx":438
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6062,7 +6565,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":414
+    /* "skbio/sequence/intersection.pyx":439
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6070,13 +6573,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 414; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 439; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":413
+    /* "skbio/sequence/intersection.pyx":438
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6085,7 +6588,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
  */
   }
 
-  /* "micronota/lib/intersection.pyx":415
+  /* "skbio/sequence/intersection.pyx":440
  *         if self.root is None:
  *             return []
  *         return self.root.left( position, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6093,18 +6596,18 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
  *     def after( self, position, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 415; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 415; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 440; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 440; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_6.__pyx_n = 2;
   __pyx_t_6.n = __pyx_t_4;
   __pyx_t_6.max_dist = __pyx_t_5;
-  __pyx_t_3 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 415; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 440; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":408
+  /* "skbio/sequence/intersection.pyx":433
  *         return self.root.find( start, end )
  * 
  *     def before( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6115,7 +6618,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.before", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.before", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6123,7 +6626,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":417
+/* "skbio/sequence/intersection.pyx":442
  *         return self.root.left( position, num_intervals, max_dist )
  * 
  *     def after( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6132,9 +6635,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_6before(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_9after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_8after[] = "\n        Find `num_intervals` intervals that lie after `position` and are no\n        further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_9after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_11after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_10after[] = "\n        Find `num_intervals` intervals that lie after `position` and are no\n        further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_11after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6176,7 +6679,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_9after(P
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 417; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 442; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6193,20 +6696,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_9after(P
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("after", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 417; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("after", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 442; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.after", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.after", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_10after(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_10after(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6214,13 +6717,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
   PyObject *__pyx_t_3 = NULL;
   int __pyx_t_4;
   int __pyx_t_5;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right __pyx_t_6;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right __pyx_t_6;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("after", 0);
 
-  /* "micronota/lib/intersection.pyx":422
+  /* "skbio/sequence/intersection.pyx":447
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6231,7 +6734,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":423
+    /* "skbio/sequence/intersection.pyx":448
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6239,13 +6742,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 423; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":422
+    /* "skbio/sequence/intersection.pyx":447
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6254,7 +6757,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
  */
   }
 
-  /* "micronota/lib/intersection.pyx":424
+  /* "skbio/sequence/intersection.pyx":449
  *         if self.root is None:
  *             return []
  *         return self.root.right( position, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6262,18 +6765,18 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
  *     # ---- Interval-like object based interfaces -----------------------------
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 424; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 424; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 449; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 449; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_6.__pyx_n = 2;
   __pyx_t_6.n = __pyx_t_4;
   __pyx_t_6.max_dist = __pyx_t_5;
-  __pyx_t_3 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 424; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 449; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":417
+  /* "skbio/sequence/intersection.pyx":442
  *         return self.root.left( position, num_intervals, max_dist )
  * 
  *     def after( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6284,7 +6787,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.after", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.after", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6292,7 +6795,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":428
+/* "skbio/sequence/intersection.pyx":453
  *     # ---- Interval-like object based interfaces -----------------------------
  * 
  *     def insert_interval( self, interval ):             # <<<<<<<<<<<<<<
@@ -6301,20 +6804,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_8after(s
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_11insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_10insert_interval[] = "\n        Insert an \"interval\" like object (one with at least start and end\n        attributes)\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_11insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_13insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_12insert_interval[] = "\n        Insert an \"interval\" like object (one with at least start and end\n        attributes)\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_13insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("insert_interval (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert_interval(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_interval));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_12insert_interval(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_interval));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_12insert_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -6329,18 +6832,18 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("insert_interval", 0);
 
-  /* "micronota/lib/intersection.pyx":433
+  /* "skbio/sequence/intersection.pyx":458
  *         attributes)
  *         """
  *         self.insert( interval.start, interval.end, interval )             # <<<<<<<<<<<<<<
  * 
  *     add_interval = insert_interval
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_insert); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_insert); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 458; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 458; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 458; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   __pyx_t_6 = 0;
@@ -6354,7 +6857,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
       __pyx_t_6 = 1;
     }
   }
-  __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 458; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
   if (__pyx_t_5) {
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -6368,13 +6871,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
   PyTuple_SET_ITEM(__pyx_t_7, 2+__pyx_t_6, __pyx_v_interval);
   __pyx_t_3 = 0;
   __pyx_t_4 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 433; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 458; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":428
+  /* "skbio/sequence/intersection.pyx":453
  *     # ---- Interval-like object based interfaces -----------------------------
  * 
  *     def insert_interval( self, interval ):             # <<<<<<<<<<<<<<
@@ -6392,7 +6895,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.insert_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.insert_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6400,7 +6903,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":437
+/* "skbio/sequence/intersection.pyx":462
  *     add_interval = insert_interval
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6409,9 +6912,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_10insert
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_13before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_12before_interval[] = "\n        Find `num_intervals` intervals that lie completely before `interval`\n        and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_13before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_15before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_14before_interval[] = "\n        Find `num_intervals` intervals that lie completely before `interval`\n        and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_15before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6453,7 +6956,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_13before
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 437; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6470,20 +6973,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_13before
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("before_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 437; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("before_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.before_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.before_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before_interval(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_14before_interval(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_14before_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6492,13 +6995,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
   int __pyx_t_4;
   int __pyx_t_5;
   PyObject *__pyx_t_6 = NULL;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left __pyx_t_7;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("before_interval", 0);
 
-  /* "micronota/lib/intersection.pyx":442
+  /* "skbio/sequence/intersection.pyx":467
  *         and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6509,7 +7012,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":443
+    /* "skbio/sequence/intersection.pyx":468
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6517,13 +7020,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 443; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 468; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":442
+    /* "skbio/sequence/intersection.pyx":467
  *         and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6532,7 +7035,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
  */
   }
 
-  /* "micronota/lib/intersection.pyx":444
+  /* "skbio/sequence/intersection.pyx":469
  *         if self.root is None:
  *             return []
  *         return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6540,21 +7043,21 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 444; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 469; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 444; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 444; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 469; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 469; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_7.__pyx_n = 2;
   __pyx_t_7.n = __pyx_t_4;
   __pyx_t_7.max_dist = __pyx_t_5;
-  __pyx_t_6 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 444; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 469; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":437
+  /* "skbio/sequence/intersection.pyx":462
  *     add_interval = insert_interval
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6566,7 +7069,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.before_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.before_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6574,7 +7077,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":446
+/* "skbio/sequence/intersection.pyx":471
  *         return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6583,9 +7086,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_12before
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_15after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_14after_interval[] = "\n        Find `num_intervals` intervals that lie completely after `interval` and\n        are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_15after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_17after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_16after_interval[] = "\n        Find `num_intervals` intervals that lie completely after `interval` and\n        are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_17after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6627,7 +7130,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_15after_
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 446; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 471; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6644,20 +7147,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_15after_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("after_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 446; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("after_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 471; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.after_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.after_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_interval(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_16after_interval(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_16after_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6666,13 +7169,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
   int __pyx_t_4;
   int __pyx_t_5;
   PyObject *__pyx_t_6 = NULL;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right __pyx_t_7;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("after_interval", 0);
 
-  /* "micronota/lib/intersection.pyx":451
+  /* "skbio/sequence/intersection.pyx":476
  *         are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6683,7 +7186,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":452
+    /* "skbio/sequence/intersection.pyx":477
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6691,13 +7194,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 452; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 477; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":451
+    /* "skbio/sequence/intersection.pyx":476
  *         are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6706,7 +7209,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
  */
   }
 
-  /* "micronota/lib/intersection.pyx":453
+  /* "skbio/sequence/intersection.pyx":478
  *         if self.root is None:
  *             return []
  *         return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6714,21 +7217,21 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 453; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 478; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 453; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 453; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 478; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 478; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_7.__pyx_n = 2;
   __pyx_t_7.n = __pyx_t_4;
   __pyx_t_7.max_dist = __pyx_t_5;
-  __pyx_t_6 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 453; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 478; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":446
+  /* "skbio/sequence/intersection.pyx":471
  *         return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6740,7 +7243,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.after_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.after_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6748,7 +7251,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":455
+/* "skbio/sequence/intersection.pyx":480
  *         return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6757,9 +7260,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_14after_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_17upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_16upstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely upstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_17upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_19upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_18upstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely upstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_19upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6801,7 +7304,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_17upstre
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "upstream_of_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "upstream_of_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 480; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6818,20 +7321,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_17upstre
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("upstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("upstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 480; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.upstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.upstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstream_of_interval(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_18upstream_of_interval(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstream_of_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_18upstream_of_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6840,14 +7343,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
   PyObject *__pyx_t_4 = NULL;
   int __pyx_t_5;
   int __pyx_t_6;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right __pyx_t_7;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left __pyx_t_8;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right __pyx_t_7;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left __pyx_t_8;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("upstream_of_interval", 0);
 
-  /* "micronota/lib/intersection.pyx":460
+  /* "skbio/sequence/intersection.pyx":485
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6858,7 +7361,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":461
+    /* "skbio/sequence/intersection.pyx":486
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6866,13 +7369,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  *             return self.root.right( interval.end, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 461; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 486; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":460
+    /* "skbio/sequence/intersection.pyx":485
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6881,34 +7384,34 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  */
   }
 
-  /* "micronota/lib/intersection.pyx":462
+  /* "skbio/sequence/intersection.pyx":487
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
  *             return self.root.right( interval.end, num_intervals, max_dist )
  *         else:
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 487; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 487; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 487; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (!__pyx_t_1) {
   } else {
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 487; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 462; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 487; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":463
+    /* "skbio/sequence/intersection.pyx":488
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":
  *             return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6916,21 +7419,21 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  *             return self.root.left( interval.start, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 463; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 488; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 463; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 463; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 488; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 488; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_7.__pyx_n = 2;
     __pyx_t_7.n = __pyx_t_5;
     __pyx_t_7.max_dist = __pyx_t_6;
-    __pyx_t_3 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 463; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 488; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":462
+    /* "skbio/sequence/intersection.pyx":487
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
@@ -6939,7 +7442,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  */
   }
 
-  /* "micronota/lib/intersection.pyx":465
+  /* "skbio/sequence/intersection.pyx":490
  *             return self.root.right( interval.end, num_intervals, max_dist )
  *         else:
  *             return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6948,14 +7451,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 465; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 490; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 465; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 465; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 490; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 490; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_8.__pyx_n = 2;
     __pyx_t_8.n = __pyx_t_6;
     __pyx_t_8.max_dist = __pyx_t_5;
-    __pyx_t_4 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 465; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 490; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_r = __pyx_t_4;
@@ -6963,7 +7466,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":455
+  /* "skbio/sequence/intersection.pyx":480
  *         return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6975,7 +7478,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.upstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.upstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6983,7 +7486,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":467
+/* "skbio/sequence/intersection.pyx":492
  *             return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def downstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6992,9 +7495,9 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_16upstre
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_19downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_18downstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely downstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_19downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_21downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_20downstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely downstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_21downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -7036,7 +7539,7 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_19downst
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "downstream_of_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 467; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "downstream_of_interval") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 492; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7053,20 +7556,20 @@ static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_19downst
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("downstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 467; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("downstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 492; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.downstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.downstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downstream_of_interval(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_20downstream_of_interval(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downstream_of_interval(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_20downstream_of_interval(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7075,14 +7578,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
   PyObject *__pyx_t_4 = NULL;
   int __pyx_t_5;
   int __pyx_t_6;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left __pyx_t_7;
-  struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right __pyx_t_8;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left __pyx_t_7;
+  struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right __pyx_t_8;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("downstream_of_interval", 0);
 
-  /* "micronota/lib/intersection.pyx":472
+  /* "skbio/sequence/intersection.pyx":497
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7093,7 +7596,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":473
+    /* "skbio/sequence/intersection.pyx":498
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -7101,13 +7604,13 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  *             return self.root.left( interval.start, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 473; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 498; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":472
+    /* "skbio/sequence/intersection.pyx":497
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7116,34 +7619,34 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  */
   }
 
-  /* "micronota/lib/intersection.pyx":474
+  /* "skbio/sequence/intersection.pyx":499
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
  *             return self.root.left( interval.start, num_intervals, max_dist )
  *         else:
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 474; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 499; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 474; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 499; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 474; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 499; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (!__pyx_t_1) {
   } else {
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 474; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 499; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 474; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 499; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":475
+    /* "skbio/sequence/intersection.pyx":500
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":
  *             return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7151,21 +7654,21 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  *             return self.root.right( interval.end, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 475; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 500; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 475; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 475; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 500; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 500; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_7.__pyx_n = 2;
     __pyx_t_7.n = __pyx_t_5;
     __pyx_t_7.max_dist = __pyx_t_6;
-    __pyx_t_3 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 475; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 500; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":474
+    /* "skbio/sequence/intersection.pyx":499
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
@@ -7174,7 +7677,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  */
   }
 
-  /* "micronota/lib/intersection.pyx":477
+  /* "skbio/sequence/intersection.pyx":502
  *             return self.root.left( interval.start, num_intervals, max_dist )
  *         else:
  *             return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7183,14 +7686,14 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 477; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 502; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 477; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 477; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 502; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 502; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_8.__pyx_n = 2;
     __pyx_t_8.n = __pyx_t_6;
     __pyx_t_8.max_dist = __pyx_t_5;
-    __pyx_t_4 = ((struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 477; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 502; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_r = __pyx_t_4;
@@ -7198,7 +7701,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
     goto __pyx_L0;
   }
 
-  /* "micronota/lib/intersection.pyx":467
+  /* "skbio/sequence/intersection.pyx":492
  *             return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def downstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7210,7 +7713,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.downstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.downstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -7218,7 +7721,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
   return __pyx_r;
 }
 
-/* "micronota/lib/intersection.pyx":479
+/* "skbio/sequence/intersection.pyx":504
  *             return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def traverse(self, fn):             # <<<<<<<<<<<<<<
@@ -7227,20 +7730,20 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_18downst
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_21traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn); /*proto*/
-static char __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_20traverse[] = "\n        call fn for each element in the tree\n        ";
-static PyObject *__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_21traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn) {
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_23traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn); /*proto*/
+static char __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_22traverse[] = "\n        call fn for each element in the tree\n        ";
+static PyObject *__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_23traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse (wrapper)", 0);
-  __pyx_r = __pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traverse(((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_fn));
+  __pyx_r = __pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_22traverse(((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_fn));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traverse(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn) {
+static PyObject *__pyx_pf_5skbio_8sequence_12intersection_12IntervalTree_22traverse(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7254,7 +7757,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("traverse", 0);
 
-  /* "micronota/lib/intersection.pyx":483
+  /* "skbio/sequence/intersection.pyx":508
  *         call fn for each element in the tree
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7265,7 +7768,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "micronota/lib/intersection.pyx":484
+    /* "skbio/sequence/intersection.pyx":509
  *         """
  *         if self.root is None:
  *             return None             # <<<<<<<<<<<<<<
@@ -7277,7 +7780,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
     __pyx_r = Py_None;
     goto __pyx_L0;
 
-    /* "micronota/lib/intersection.pyx":483
+    /* "skbio/sequence/intersection.pyx":508
  *         call fn for each element in the tree
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7286,7 +7789,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
  */
   }
 
-  /* "micronota/lib/intersection.pyx":485
+  /* "skbio/sequence/intersection.pyx":510
  *         if self.root is None:
  *             return None
  *         return self.root.traverse(fn)             # <<<<<<<<<<<<<<
@@ -7294,7 +7797,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
  * # For backward compatibility
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_traverse); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 485; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_traverse); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_4))) {
@@ -7307,16 +7810,16 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_fn); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 485; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_fn); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
   } else {
-    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 485; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
     __Pyx_INCREF(__pyx_v_fn);
     __Pyx_GIVEREF(__pyx_v_fn);
     PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_v_fn);
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 485; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 510; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
@@ -7325,7 +7828,7 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "micronota/lib/intersection.pyx":479
+  /* "skbio/sequence/intersection.pyx":504
  *             return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def traverse(self, fn):             # <<<<<<<<<<<<<<
@@ -7339,17 +7842,17 @@ static PyObject *__pyx_pf_9micronota_3lib_12intersection_12IntervalTree_20traver
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("micronota.lib.intersection.IntervalTree.traverse", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("skbio.sequence.intersection.IntervalTree.traverse", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
-static struct __pyx_vtabstruct_9micronota_3lib_12intersection_IntervalNode __pyx_vtable_9micronota_3lib_12intersection_IntervalNode;
+static struct __pyx_vtabstruct_5skbio_8sequence_12intersection_IntervalNode __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode;
 
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalNode(PyTypeObject *t, PyObject *a, PyObject *k) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *p;
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_IntervalNode(PyTypeObject *t, PyObject *a, PyObject *k) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -7357,20 +7860,20 @@ static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalNode(PyType
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)o);
-  p->__pyx_vtab = __pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode;
+  p = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)o);
+  p->__pyx_vtab = __pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode;
   p->interval = Py_None; Py_INCREF(Py_None);
-  p->cleft = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
-  p->cright = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
-  p->croot = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
-  if (unlikely(__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3__cinit__(o, a, k) < 0)) {
+  p->cleft = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->cright = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->croot = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  if (unlikely(__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3__cinit__(o, a, k) < 0)) {
     Py_DECREF(o); o = 0;
   }
   return o;
 }
 
-static void __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalNode(PyObject *o) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)o;
+static void __pyx_tp_dealloc_5skbio_8sequence_12intersection_IntervalNode(PyObject *o) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)o;
   #if PY_VERSION_HEX >= 0x030400a1
   if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -7384,9 +7887,9 @@ static void __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalNode(PyObjec
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_9micronota_3lib_12intersection_IntervalNode(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_5skbio_8sequence_12intersection_IntervalNode(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)o;
   if (p->interval) {
     e = (*v)(p->interval, a); if (e) return e;
   }
@@ -7402,70 +7905,56 @@ static int __pyx_tp_traverse_9micronota_3lib_12intersection_IntervalNode(PyObjec
   return 0;
 }
 
-static int __pyx_tp_clear_9micronota_3lib_12intersection_IntervalNode(PyObject *o) {
+static int __pyx_tp_clear_5skbio_8sequence_12intersection_IntervalNode(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)o;
   tmp = ((PyObject*)p->interval);
   p->interval = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->cleft);
-  p->cleft = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->cleft = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->cright);
-  p->cright = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->cright = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->croot);
-  p->croot = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->croot = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_left_node(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left_node_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_left_node(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9left_node_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_right_node(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_10right_node_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_right_node(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_10right_node_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_root_node(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9root_node_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_root_node(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9root_node_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_interval(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_interval(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_interval(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_interval(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_3__set__(o, v);
   }
   else {
-    return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_8interval_5__del__(o);
+    return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_8interval_5__del__(o);
   }
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_start(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_start(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_start(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_start(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5start_3__set__(o, v);
-  }
-  else {
-    PyErr_SetString(PyExc_NotImplementedError, "__del__");
-    return -1;
-  }
-}
-
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_end(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_1__get__(o);
-}
-
-static int __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_end(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
-  if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_3end_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5start_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -7473,31 +7962,46 @@ static int __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_end(PyObj
   }
 }
 
-static PyMethodDef __pyx_methods_9micronota_3lib_12intersection_IntervalNode[] = {
-  {"insert", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_5insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_4insert},
-  {"intersect", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_7intersect, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_6intersect},
-  {"left", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_9left, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_8left},
-  {"right", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_11right, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalNode_10right},
-  {"traverse", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalNode_13traverse, METH_O, 0},
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_end(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_1__get__(o);
+}
+
+static int __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_end(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_3end_3__set__(o, v);
+  }
+  else {
+    PyErr_SetString(PyExc_NotImplementedError, "__del__");
+    return -1;
+  }
+}
+
+static PyMethodDef __pyx_methods_5skbio_8sequence_12intersection_IntervalNode[] = {
+  {"insert", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_5insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_4insert},
+  {"intersect", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_7intersect, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_6intersect},
+  {"update", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_9update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_8update},
+  {"left", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_11left, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_10left},
+  {"right", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_13right, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalNode_12right},
+  {"traverse", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_15traverse, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static struct PyGetSetDef __pyx_getsets_9micronota_3lib_12intersection_IntervalNode[] = {
-  {(char *)"left_node", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_left_node, 0, 0, 0},
-  {(char *)"right_node", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_right_node, 0, 0, 0},
-  {(char *)"root_node", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_root_node, 0, 0, 0},
-  {(char *)"interval", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_interval, __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_interval, 0, 0},
-  {(char *)"start", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_start, __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_start, 0, 0},
-  {(char *)"end", __pyx_getprop_9micronota_3lib_12intersection_12IntervalNode_end, __pyx_setprop_9micronota_3lib_12intersection_12IntervalNode_end, 0, 0},
+static struct PyGetSetDef __pyx_getsets_5skbio_8sequence_12intersection_IntervalNode[] = {
+  {(char *)"left_node", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_left_node, 0, 0, 0},
+  {(char *)"right_node", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_right_node, 0, 0, 0},
+  {(char *)"root_node", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_root_node, 0, 0, 0},
+  {(char *)"interval", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_interval, __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_interval, 0, 0},
+  {(char *)"start", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_start, __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_start, 0, 0},
+  {(char *)"end", __pyx_getprop_5skbio_8sequence_12intersection_12IntervalNode_end, __pyx_setprop_5skbio_8sequence_12intersection_12IntervalNode_end, 0, 0},
   {0, 0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalNode = {
+static PyTypeObject __pyx_type_5skbio_8sequence_12intersection_IntervalNode = {
   PyVarObject_HEAD_INIT(0, 0)
-  "micronota.lib.intersection.IntervalNode", /*tp_name*/
-  sizeof(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode), /*tp_basicsize*/
+  "skbio.sequence.intersection.IntervalNode", /*tp_name*/
+  sizeof(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalNode, /*tp_dealloc*/
+  __pyx_tp_dealloc_5skbio_8sequence_12intersection_IntervalNode, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -7507,7 +8011,7 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalNode = {
   #if PY_MAJOR_VERSION >= 3
   0, /*tp_as_async*/
   #endif
-  __pyx_pw_9micronota_3lib_12intersection_12IntervalNode_1__repr__, /*tp_repr*/
+  __pyx_pw_5skbio_8sequence_12intersection_12IntervalNode_1__repr__, /*tp_repr*/
   0, /*tp_as_number*/
   0, /*tp_as_sequence*/
   0, /*tp_as_mapping*/
@@ -7518,16 +8022,16 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalNode = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  "\n    A single node of an `IntervalTree`.\n    \n    NOTE: Unless you really know what you are doing, you probably should us\n          `IntervalTree` rather than using this directly. \n    ", /*tp_doc*/
-  __pyx_tp_traverse_9micronota_3lib_12intersection_IntervalNode, /*tp_traverse*/
-  __pyx_tp_clear_9micronota_3lib_12intersection_IntervalNode, /*tp_clear*/
+  "\n    A single node of an `IntervalTree`.\n\n    NOTE: Unless you really know what you are doing, you probably should us\n          `IntervalTree` rather than using this directly.\n    ", /*tp_doc*/
+  __pyx_tp_traverse_5skbio_8sequence_12intersection_IntervalNode, /*tp_traverse*/
+  __pyx_tp_clear_5skbio_8sequence_12intersection_IntervalNode, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_9micronota_3lib_12intersection_IntervalNode, /*tp_methods*/
+  __pyx_methods_5skbio_8sequence_12intersection_IntervalNode, /*tp_methods*/
   0, /*tp_members*/
-  __pyx_getsets_9micronota_3lib_12intersection_IntervalNode, /*tp_getset*/
+  __pyx_getsets_5skbio_8sequence_12intersection_IntervalNode, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
@@ -7535,7 +8039,7 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalNode = {
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_9micronota_3lib_12intersection_IntervalNode, /*tp_new*/
+  __pyx_tp_new_5skbio_8sequence_12intersection_IntervalNode, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -7550,8 +8054,8 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalNode = {
   #endif
 };
 
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_Interval(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_9micronota_3lib_12intersection_Interval *p;
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_Interval(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_Interval *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -7559,15 +8063,15 @@ static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_Interval(PyTypeObje
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_9micronota_3lib_12intersection_Interval *)o);
+  p = ((struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)o);
   p->value = Py_None; Py_INCREF(Py_None);
   p->chrom = Py_None; Py_INCREF(Py_None);
   p->strand = Py_None; Py_INCREF(Py_None);
   return o;
 }
 
-static void __pyx_tp_dealloc_9micronota_3lib_12intersection_Interval(PyObject *o) {
-  struct __pyx_obj_9micronota_3lib_12intersection_Interval *p = (struct __pyx_obj_9micronota_3lib_12intersection_Interval *)o;
+static void __pyx_tp_dealloc_5skbio_8sequence_12intersection_Interval(PyObject *o) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_Interval *p = (struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)o;
   #if PY_VERSION_HEX >= 0x030400a1
   if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -7580,9 +8084,9 @@ static void __pyx_tp_dealloc_9micronota_3lib_12intersection_Interval(PyObject *o
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_9micronota_3lib_12intersection_Interval(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_5skbio_8sequence_12intersection_Interval(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_9micronota_3lib_12intersection_Interval *p = (struct __pyx_obj_9micronota_3lib_12intersection_Interval *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_Interval *p = (struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)o;
   if (p->value) {
     e = (*v)(p->value, a); if (e) return e;
   }
@@ -7595,9 +8099,9 @@ static int __pyx_tp_traverse_9micronota_3lib_12intersection_Interval(PyObject *o
   return 0;
 }
 
-static int __pyx_tp_clear_9micronota_3lib_12intersection_Interval(PyObject *o) {
+static int __pyx_tp_clear_5skbio_8sequence_12intersection_Interval(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_9micronota_3lib_12intersection_Interval *p = (struct __pyx_obj_9micronota_3lib_12intersection_Interval *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_Interval *p = (struct __pyx_obj_5skbio_8sequence_12intersection_Interval *)o;
   tmp = ((PyObject*)p->value);
   p->value = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
@@ -7610,13 +8114,13 @@ static int __pyx_tp_clear_9micronota_3lib_12intersection_Interval(PyObject *o) {
   return 0;
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_8Interval_start(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_8Interval_5start_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_8Interval_start(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_start(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_8Interval_start(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_5start_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5start_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -7624,13 +8128,13 @@ static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_start(PyObject
   }
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_8Interval_end(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_8Interval_3end_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_8Interval_end(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_end(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_8Interval_end(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_3end_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_3end_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -7638,64 +8142,64 @@ static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_end(PyObject *
   }
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_8Interval_value(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_8Interval_value(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_value(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_8Interval_value(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_3__set__(o, v);
   }
   else {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_5value_5__del__(o);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5value_5__del__(o);
   }
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_8Interval_chrom(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_8Interval_chrom(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_chrom(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_8Interval_chrom(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_3__set__(o, v);
   }
   else {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_5chrom_5__del__(o);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_5chrom_5__del__(o);
   }
 }
 
-static PyObject *__pyx_getprop_9micronota_3lib_12intersection_8Interval_strand(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_1__get__(o);
+static PyObject *__pyx_getprop_5skbio_8sequence_12intersection_8Interval_strand(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_1__get__(o);
 }
 
-static int __pyx_setprop_9micronota_3lib_12intersection_8Interval_strand(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_5skbio_8sequence_12intersection_8Interval_strand(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_3__set__(o, v);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_3__set__(o, v);
   }
   else {
-    return __pyx_pw_9micronota_3lib_12intersection_8Interval_6strand_5__del__(o);
+    return __pyx_pw_5skbio_8sequence_12intersection_8Interval_6strand_5__del__(o);
   }
 }
 
-static PyMethodDef __pyx_methods_9micronota_3lib_12intersection_Interval[] = {
+static PyMethodDef __pyx_methods_5skbio_8sequence_12intersection_Interval[] = {
   {0, 0, 0, 0}
 };
 
-static struct PyGetSetDef __pyx_getsets_9micronota_3lib_12intersection_Interval[] = {
-  {(char *)"start", __pyx_getprop_9micronota_3lib_12intersection_8Interval_start, __pyx_setprop_9micronota_3lib_12intersection_8Interval_start, 0, 0},
-  {(char *)"end", __pyx_getprop_9micronota_3lib_12intersection_8Interval_end, __pyx_setprop_9micronota_3lib_12intersection_8Interval_end, 0, 0},
-  {(char *)"value", __pyx_getprop_9micronota_3lib_12intersection_8Interval_value, __pyx_setprop_9micronota_3lib_12intersection_8Interval_value, 0, 0},
-  {(char *)"chrom", __pyx_getprop_9micronota_3lib_12intersection_8Interval_chrom, __pyx_setprop_9micronota_3lib_12intersection_8Interval_chrom, 0, 0},
-  {(char *)"strand", __pyx_getprop_9micronota_3lib_12intersection_8Interval_strand, __pyx_setprop_9micronota_3lib_12intersection_8Interval_strand, 0, 0},
+static struct PyGetSetDef __pyx_getsets_5skbio_8sequence_12intersection_Interval[] = {
+  {(char *)"start", __pyx_getprop_5skbio_8sequence_12intersection_8Interval_start, __pyx_setprop_5skbio_8sequence_12intersection_8Interval_start, 0, 0},
+  {(char *)"end", __pyx_getprop_5skbio_8sequence_12intersection_8Interval_end, __pyx_setprop_5skbio_8sequence_12intersection_8Interval_end, 0, 0},
+  {(char *)"value", __pyx_getprop_5skbio_8sequence_12intersection_8Interval_value, __pyx_setprop_5skbio_8sequence_12intersection_8Interval_value, 0, 0},
+  {(char *)"chrom", __pyx_getprop_5skbio_8sequence_12intersection_8Interval_chrom, __pyx_setprop_5skbio_8sequence_12intersection_8Interval_chrom, 0, 0},
+  {(char *)"strand", __pyx_getprop_5skbio_8sequence_12intersection_8Interval_strand, __pyx_setprop_5skbio_8sequence_12intersection_8Interval_strand, 0, 0},
   {0, 0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_9micronota_3lib_12intersection_Interval = {
+static PyTypeObject __pyx_type_5skbio_8sequence_12intersection_Interval = {
   PyVarObject_HEAD_INIT(0, 0)
-  "micronota.lib.intersection.Interval", /*tp_name*/
-  sizeof(struct __pyx_obj_9micronota_3lib_12intersection_Interval), /*tp_basicsize*/
+  "skbio.sequence.intersection.Interval", /*tp_name*/
+  sizeof(struct __pyx_obj_5skbio_8sequence_12intersection_Interval), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_9micronota_3lib_12intersection_Interval, /*tp_dealloc*/
+  __pyx_tp_dealloc_5skbio_8sequence_12intersection_Interval, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -7705,7 +8209,7 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_Interval = {
   #if PY_MAJOR_VERSION >= 3
   0, /*tp_as_async*/
   #endif
-  __pyx_pw_9micronota_3lib_12intersection_8Interval_3__repr__, /*tp_repr*/
+  __pyx_pw_5skbio_8sequence_12intersection_8Interval_3__repr__, /*tp_repr*/
   0, /*tp_as_number*/
   0, /*tp_as_sequence*/
   0, /*tp_as_mapping*/
@@ -7717,23 +8221,23 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_Interval = {
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   "\n    Basic feature, with required integer start and end properties.\n    Also accepts optional strand as +1 or -1 (used for up/downstream queries),\n    a name, and any arbitrary data is sent in on the info keyword argument\n\n    >>> from bx.intervals.intersection import Interval\n\n    >>> f1 = Interval(23, 36)\n    >>> f2 = Interval(34, 48, value={'chr':12, 'anno':'transposon'})\n    >>> f2\n    Interval(34, 48, value={'anno': 'transposon', 'chr': 12})\n\n    ", /*tp_doc*/
-  __pyx_tp_traverse_9micronota_3lib_12intersection_Interval, /*tp_traverse*/
-  __pyx_tp_clear_9micronota_3lib_12intersection_Interval, /*tp_clear*/
-  __pyx_pw_9micronota_3lib_12intersection_8Interval_5__richcmp__, /*tp_richcompare*/
+  __pyx_tp_traverse_5skbio_8sequence_12intersection_Interval, /*tp_traverse*/
+  __pyx_tp_clear_5skbio_8sequence_12intersection_Interval, /*tp_clear*/
+  __pyx_pw_5skbio_8sequence_12intersection_8Interval_5__richcmp__, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_9micronota_3lib_12intersection_Interval, /*tp_methods*/
+  __pyx_methods_5skbio_8sequence_12intersection_Interval, /*tp_methods*/
   0, /*tp_members*/
-  __pyx_getsets_9micronota_3lib_12intersection_Interval, /*tp_getset*/
+  __pyx_getsets_5skbio_8sequence_12intersection_Interval, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  __pyx_pw_9micronota_3lib_12intersection_8Interval_1__init__, /*tp_init*/
+  __pyx_pw_5skbio_8sequence_12intersection_8Interval_1__init__, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_9micronota_3lib_12intersection_Interval, /*tp_new*/
+  __pyx_tp_new_5skbio_8sequence_12intersection_Interval, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -7748,8 +8252,8 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_Interval = {
   #endif
 };
 
-static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalTree(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *p;
+static PyObject *__pyx_tp_new_5skbio_8sequence_12intersection_IntervalTree(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -7757,16 +8261,16 @@ static PyObject *__pyx_tp_new_9micronota_3lib_12intersection_IntervalTree(PyType
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)o);
-  p->root = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
-  if (unlikely(__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_1__cinit__(o, __pyx_empty_tuple, NULL) < 0)) {
+  p = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)o);
+  p->root = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  if (unlikely(__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_1__cinit__(o, __pyx_empty_tuple, NULL) < 0)) {
     Py_DECREF(o); o = 0;
   }
   return o;
 }
 
-static void __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalTree(PyObject *o) {
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)o;
+static void __pyx_tp_dealloc_5skbio_8sequence_12intersection_IntervalTree(PyObject *o) {
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)o;
   #if PY_VERSION_HEX >= 0x030400a1
   if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -7777,44 +8281,45 @@ static void __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalTree(PyObjec
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_9micronota_3lib_12intersection_IntervalTree(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_5skbio_8sequence_12intersection_IntervalTree(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)o;
   if (p->root) {
     e = (*v)(((PyObject*)p->root), a); if (e) return e;
   }
   return 0;
 }
 
-static int __pyx_tp_clear_9micronota_3lib_12intersection_IntervalTree(PyObject *o) {
+static int __pyx_tp_clear_5skbio_8sequence_12intersection_IntervalTree(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *p = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree *)o;
+  struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *p = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree *)o;
   tmp = ((PyObject*)p->root);
-  p->root = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  p->root = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
-static PyMethodDef __pyx_methods_9micronota_3lib_12intersection_IntervalTree[] = {
-  {"insert", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_3insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_2insert},
-  {"find", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_5find, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_4find},
-  {"before", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_7before, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_6before},
-  {"after", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_9after, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_8after},
-  {"insert_interval", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_11insert_interval, METH_O, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_10insert_interval},
-  {"before_interval", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_13before_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_12before_interval},
-  {"after_interval", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_15after_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_14after_interval},
-  {"upstream_of_interval", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_17upstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_16upstream_of_interval},
-  {"downstream_of_interval", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_19downstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_18downstream_of_interval},
-  {"traverse", (PyCFunction)__pyx_pw_9micronota_3lib_12intersection_12IntervalTree_21traverse, METH_O, __pyx_doc_9micronota_3lib_12intersection_12IntervalTree_20traverse},
+static PyMethodDef __pyx_methods_5skbio_8sequence_12intersection_IntervalTree[] = {
+  {"insert", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_3insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_2insert},
+  {"update", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_5update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_4update},
+  {"find", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_7find, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_6find},
+  {"before", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_9before, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_8before},
+  {"after", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_11after, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_10after},
+  {"insert_interval", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_13insert_interval, METH_O, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_12insert_interval},
+  {"before_interval", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_15before_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_14before_interval},
+  {"after_interval", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_17after_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_16after_interval},
+  {"upstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_19upstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_18upstream_of_interval},
+  {"downstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_21downstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_20downstream_of_interval},
+  {"traverse", (PyCFunction)__pyx_pw_5skbio_8sequence_12intersection_12IntervalTree_23traverse, METH_O, __pyx_doc_5skbio_8sequence_12intersection_12IntervalTree_22traverse},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalTree = {
+static PyTypeObject __pyx_type_5skbio_8sequence_12intersection_IntervalTree = {
   PyVarObject_HEAD_INIT(0, 0)
-  "micronota.lib.intersection.IntervalTree", /*tp_name*/
-  sizeof(struct __pyx_obj_9micronota_3lib_12intersection_IntervalTree), /*tp_basicsize*/
+  "skbio.sequence.intersection.IntervalTree", /*tp_name*/
+  sizeof(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalTree), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_9micronota_3lib_12intersection_IntervalTree, /*tp_dealloc*/
+  __pyx_tp_dealloc_5skbio_8sequence_12intersection_IntervalTree, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -7835,14 +8340,14 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalTree = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  "\n    Data structure for performing window intersect queries on a set of \n    of possibly overlapping 1d intervals.\n    \n    Usage\n    =====\n    \n    Create an empty IntervalTree\n    \n    >>> from bx.intervals.intersection import Interval, IntervalTree\n    >>> intersecter = IntervalTree()\n    \n    An interval is a start and end position and a value (possibly None).\n    You can add any object as an interval:\n    \n    >>> intersecter.insert( 0, 10, \"food\" )\n    >>> intersecter.insert( 3, 7, dict(foo='bar') )\n    \n    >>> intersecter.find( 2, 5 )\n    ['food', {'foo': 'bar'}]\n    \n    If the object has start and end attributes (like the Interval class) there\n    is are some shortcuts:\n    \n    >>> intersecter = IntervalTree()\n    >>> intersecter.insert_interval( Interval( 0, 10 ) )\n    >>> intersecter.insert_interval( Interval( 3, 7 ) )\n    >>> intersecter.insert_interval( Interval( 3, 40 ) )\n    >>> intersecter.insert_interval( Interval( 13, 50 ) )\n    \n    >>> intersecter.find( 30, 50 )\n    [Interval(3, 40), Interval(13, 50)]\n    >>> intersecter.find( 100, 200 )\n    []\n    \n    Before/after for intervals\n    \n    >>> intersecter.before_interval( Interval( 10, 20 ) )\n    [Interval(3, 7)]\n    >>> intersecter.before_interval( Interval( 5, 20 ) )\n    []\n    \n    Upstream/downstream\n    \n    >>> intersecter.upstream_of_interval(Interval(11, 12))\n    [Interval(0, 10)]\n    >>> intersecter.upstream_of_interval(Interval(11, 12, strand=\"-\"))\n    [Interval(13, 50)]\n\n    >>> intersecter.upstream_of_interval(Interval(1, 2, strand=\"-\"), num_intervals=3)\n    [Interval(3, 7), Interval(3, 40), Interval(13, 50)]\n\n    \n    ", /*tp_doc*/
-  __pyx_tp_traverse_9micronota_3lib_12intersection_IntervalTree, /*tp_traverse*/
-  __pyx_tp_clear_9micronota_3lib_12intersection_IntervalTree, /*tp_clear*/
+  "\n    Data structure for performing window intersect queries on a set of\n    of possibly overlapping 1d intervals.\n\n    Usage\n    =====\n\n    Create an empty IntervalTree\n\n    >>> from bx.intervals.intersection import Interval, IntervalTree\n    >>> intersecter = IntervalTree()\n\n    An interval is a start and end position and a value (possibly None).\n    You can add any object as an interval:\n\n    >>> intersecter.insert( 0, 10, \"food\" )\n    >>> intersecter.insert( 3, 7, dict(foo='bar') )\n\n    >>> intersecter.find( 2, 5 )\n    ['food', {'foo': 'bar'}]\n\n    If the object has start and end attributes (like the Interval class) there\n    is are some shortcuts:\n\n    >>> intersecter = IntervalTree()\n    >>> intersecter.insert_interval( Interval( 0, 10 ) )\n    >>> intersecter.insert_interval( Interval( 3, 7 ) )\n    >>> intersecter.insert_interval( Interval( 3, 40 ) )\n    >>> intersecter.insert_interval( Interval( 13, 50 ) )\n\n    >>> intersecter.find( 30, 50 )\n    [Interval(3, 40), Interval(13, 50)]\n    >>> intersecter.find( 100, 200 )\n    []\n\n    Before/after for intervals\n\n    >>> intersecter.before_interval( Interval( 10, 20 ) )\n    [Interval(3, 7)]\n    >>> intersecter.before_interval( Interval( 5, 20 ) )\n    []\n\n    Upstream/downstream\n\n    >>> intersecter.upstream_of_interval(Interval(11, 12))\n    [Interval(0, 10)]\n    >>> intersecter.upstream_of_interval(Interval(11, 12, strand=\"-\"))\n    [Interval(13, 50)]\n\n    >>> intersecter.upstream_of_interval(Interval(1, 2, strand=\"-\"), num_intervals=3)\n    [Interval(3, 7), Interval(3, 40), Interval(13, 50)]\n\n\n    ", /*tp_doc*/
+  __pyx_tp_traverse_5skbio_8sequence_12intersection_IntervalTree, /*tp_traverse*/
+  __pyx_tp_clear_5skbio_8sequence_12intersection_IntervalTree, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_9micronota_3lib_12intersection_IntervalTree, /*tp_methods*/
+  __pyx_methods_5skbio_8sequence_12intersection_IntervalTree, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -7852,7 +8357,7 @@ static PyTypeObject __pyx_type_9micronota_3lib_12intersection_IntervalTree = {
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_9micronota_3lib_12intersection_IntervalTree, /*tp_new*/
+  __pyx_tp_new_5skbio_8sequence_12intersection_IntervalTree, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -7911,7 +8416,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_max_dist, __pyx_k_max_dist, sizeof(__pyx_k_max_dist), 0, 0, 1, 1},
   {&__pyx_n_s_n, __pyx_k_n, sizeof(__pyx_k_n), 0, 0, 1, 1},
+  {&__pyx_n_s_new_feature, __pyx_k_new_feature, sizeof(__pyx_k_new_feature), 0, 0, 1, 1},
   {&__pyx_n_s_num_intervals, __pyx_k_num_intervals, sizeof(__pyx_k_num_intervals), 0, 0, 1, 1},
+  {&__pyx_n_s_old_feature, __pyx_k_old_feature, sizeof(__pyx_k_old_feature), 0, 0, 1, 1},
   {&__pyx_n_s_operator, __pyx_k_operator, sizeof(__pyx_k_operator), 0, 0, 1, 1},
   {&__pyx_n_s_position, __pyx_k_position, sizeof(__pyx_k_position), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
@@ -7923,6 +8430,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_strand, __pyx_k_strand, sizeof(__pyx_k_strand), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_traverse, __pyx_k_traverse, sizeof(__pyx_k_traverse), 0, 0, 1, 1},
+  {&__pyx_n_s_update, __pyx_k_update, sizeof(__pyx_k_update), 0, 0, 1, 1},
   {&__pyx_n_s_value, __pyx_k_value, sizeof(__pyx_k_value), 0, 0, 1, 1},
   {&__pyx_kp_s_value_2, __pyx_k_value_2, sizeof(__pyx_k_value_2), 0, 0, 1, 0},
   {0, 0, 0, 0, 0, 0, 0}
@@ -7935,36 +8443,36 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "micronota/lib/intersection.pyx":243
+  /* "skbio/sequence/intersection.pyx":259
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_n_s_end); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_n_s_end); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 259; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "micronota/lib/intersection.pyx":258
+  /* "skbio/sequence/intersection.pyx":274
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_n_s_start); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_n_s_start); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "micronota/lib/intersection.pyx":269
+  /* "skbio/sequence/intersection.pyx":285
  *         if self.cright is not EmptyNode: self.cright._traverse(func)
  * 
  * cdef IntervalNode EmptyNode = IntervalNode( 0, 0, Interval(0, 0))             # <<<<<<<<<<<<<<
  * 
  * ## ---- Wrappers that retain the old interface -------------------------------
  */
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 285; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
   __Pyx_RefNannyFinishContext();
@@ -8058,14 +8566,14 @@ PyMODINIT_FUNC PyInit_intersection(void)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
-  if (__pyx_module_is_main_micronota__lib__intersection) {
+  if (__pyx_module_is_main_skbio__sequence__intersection) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    if (!PyDict_GetItemString(modules, "micronota.lib.intersection")) {
-      if (unlikely(PyDict_SetItemString(modules, "micronota.lib.intersection", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (!PyDict_GetItemString(modules, "skbio.sequence.intersection")) {
+      if (unlikely(PyDict_SetItemString(modules, "skbio.sequence.intersection", __pyx_m) < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
@@ -8074,34 +8582,35 @@ PyMODINIT_FUNC PyInit_intersection(void)
   /*--- Constants init code ---*/
   if (__Pyx_InitCachedConstants() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   /*--- Global init code ---*/
-  __pyx_v_9micronota_3lib_12intersection_EmptyNode = ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
+  __pyx_v_5skbio_8sequence_12intersection_EmptyNode = ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)Py_None); Py_INCREF(Py_None);
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
   /*--- Type init code ---*/
-  __pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode = &__pyx_vtable_9micronota_3lib_12intersection_IntervalNode;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.insert = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, int, PyObject *, int __pyx_skip_dispatch))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_insert;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.rotate_right = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_right;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.rotate_left = (struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *(*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_rotate_left;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.set_ends = (void (*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_set_ends;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode._intersect = (void (*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, int, PyObject *))__pyx_f_9micronota_3lib_12intersection_12IntervalNode__intersect;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode._seek_left = (void (*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_left;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode._seek_right = (void (*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_9micronota_3lib_12intersection_12IntervalNode__seek_right;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.left = (PyObject *(*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_left *__pyx_optional_args))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_left;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode.right = (PyObject *(*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_9micronota_3lib_12intersection_12IntervalNode_right *__pyx_optional_args))__pyx_f_9micronota_3lib_12intersection_12IntervalNode_right;
-  __pyx_vtable_9micronota_3lib_12intersection_IntervalNode._traverse = (void (*)(struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *, PyObject *))__pyx_f_9micronota_3lib_12intersection_12IntervalNode__traverse;
-  if (PyType_Ready(&__pyx_type_9micronota_3lib_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_type_9micronota_3lib_12intersection_IntervalNode.tp_print = 0;
-  if (__Pyx_SetVtable(__pyx_type_9micronota_3lib_12intersection_IntervalNode.tp_dict, __pyx_vtabptr_9micronota_3lib_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (PyObject_SetAttrString(__pyx_m, "IntervalNode", (PyObject *)&__pyx_type_9micronota_3lib_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_ptype_9micronota_3lib_12intersection_IntervalNode = &__pyx_type_9micronota_3lib_12intersection_IntervalNode;
-  if (PyType_Ready(&__pyx_type_9micronota_3lib_12intersection_Interval) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 273; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_type_9micronota_3lib_12intersection_Interval.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "Interval", (PyObject *)&__pyx_type_9micronota_3lib_12intersection_Interval) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 273; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_ptype_9micronota_3lib_12intersection_Interval = &__pyx_type_9micronota_3lib_12intersection_Interval;
-  if (PyType_Ready(&__pyx_type_9micronota_3lib_12intersection_IntervalTree) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_type_9micronota_3lib_12intersection_IntervalTree.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "IntervalTree", (PyObject *)&__pyx_type_9micronota_3lib_12intersection_IntervalTree) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 325; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_ptype_9micronota_3lib_12intersection_IntervalTree = &__pyx_type_9micronota_3lib_12intersection_IntervalTree;
+  __pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode = &__pyx_vtable_5skbio_8sequence_12intersection_IntervalNode;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.insert = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *, int __pyx_skip_dispatch))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_insert;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.rotate_right = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_right;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.rotate_left = (struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *(*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_rotate_left;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.set_ends = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_set_ends;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode._intersect = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode__intersect;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.update = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, int, PyObject *, PyObject *, int __pyx_skip_dispatch))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_update;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode._seek_left = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_left;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode._seek_right = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode__seek_right;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.left = (PyObject *(*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_left *__pyx_optional_args))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_left;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode.right = (PyObject *(*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8sequence_12intersection_12IntervalNode_right *__pyx_optional_args))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode_right;
+  __pyx_vtable_5skbio_8sequence_12intersection_IntervalNode._traverse = (void (*)(struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *, PyObject *))__pyx_f_5skbio_8sequence_12intersection_12IntervalNode__traverse;
+  if (PyType_Ready(&__pyx_type_5skbio_8sequence_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_type_5skbio_8sequence_12intersection_IntervalNode.tp_print = 0;
+  if (__Pyx_SetVtable(__pyx_type_5skbio_8sequence_12intersection_IntervalNode.tp_dict, __pyx_vtabptr_5skbio_8sequence_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyObject_SetAttrString(__pyx_m, "IntervalNode", (PyObject *)&__pyx_type_5skbio_8sequence_12intersection_IntervalNode) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_5skbio_8sequence_12intersection_IntervalNode = &__pyx_type_5skbio_8sequence_12intersection_IntervalNode;
+  if (PyType_Ready(&__pyx_type_5skbio_8sequence_12intersection_Interval) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 289; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_type_5skbio_8sequence_12intersection_Interval.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "Interval", (PyObject *)&__pyx_type_5skbio_8sequence_12intersection_Interval) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 289; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_5skbio_8sequence_12intersection_Interval = &__pyx_type_5skbio_8sequence_12intersection_Interval;
+  if (PyType_Ready(&__pyx_type_5skbio_8sequence_12intersection_IntervalTree) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 341; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_type_5skbio_8sequence_12intersection_IntervalTree.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "IntervalTree", (PyObject *)&__pyx_type_5skbio_8sequence_12intersection_IntervalTree) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 341; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_5skbio_8sequence_12intersection_IntervalTree = &__pyx_type_5skbio_8sequence_12intersection_IntervalTree;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
   /*--- Function import code ---*/
@@ -8110,7 +8619,7 @@ PyMODINIT_FUNC PyInit_intersection(void)
   if (__Pyx_patch_abc() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
 
-  /* "micronota/lib/intersection.pyx":22
+  /* "skbio/sequence/intersection.pyx":22
  * #cython: cdivision=True
  * 
  * import operator             # <<<<<<<<<<<<<<
@@ -8122,7 +8631,7 @@ PyMODINIT_FUNC PyInit_intersection(void)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_operator, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 22; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":58
+  /* "skbio/sequence/intersection.pyx":58
  *     return a
  * 
  * cdef float nlog = -1.0 / log(0.5)             # <<<<<<<<<<<<<<
@@ -8134,31 +8643,31 @@ PyMODINIT_FUNC PyInit_intersection(void)
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     {__pyx_filename = __pyx_f[0]; __pyx_lineno = 58; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  __pyx_v_9micronota_3lib_12intersection_nlog = (-1.0 / __pyx_t_2);
+  __pyx_v_5skbio_8sequence_12intersection_nlog = (-1.0 / __pyx_t_2);
 
-  /* "micronota/lib/intersection.pyx":177
+  /* "skbio/sequence/intersection.pyx":176
  *         return results
  * 
  *     find = intersect             # <<<<<<<<<<<<<<
  * 
  *     cdef void _intersect( IntervalNode self, int start, int end, list results):
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode, __pyx_n_s_intersect); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 177; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode, __pyx_n_s_intersect); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 176; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode->tp_dict, __pyx_n_s_find, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 177; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode->tp_dict, __pyx_n_s_find, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 176; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  PyType_Modified(__pyx_ptype_9micronota_3lib_12intersection_IntervalNode);
+  PyType_Modified(__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode);
 
-  /* "micronota/lib/intersection.pyx":269
+  /* "skbio/sequence/intersection.pyx":285
  *         if self.cright is not EmptyNode: self.cright._traverse(func)
  * 
  * cdef IntervalNode EmptyNode = IntervalNode( 0, 0, Interval(0, 0))             # <<<<<<<<<<<<<<
  * 
  * ## ---- Wrappers that retain the old interface -------------------------------
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_Interval), __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_Interval), __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 285; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 285; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_int_0);
   __Pyx_GIVEREF(__pyx_int_0);
@@ -8169,48 +8678,48 @@ PyMODINIT_FUNC PyInit_intersection(void)
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalNode), __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalNode), __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 285; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_XGOTREF(((PyObject *)__pyx_v_9micronota_3lib_12intersection_EmptyNode));
-  __Pyx_DECREF_SET(__pyx_v_9micronota_3lib_12intersection_EmptyNode, ((struct __pyx_obj_9micronota_3lib_12intersection_IntervalNode *)__pyx_t_1));
+  __Pyx_XGOTREF(((PyObject *)__pyx_v_5skbio_8sequence_12intersection_EmptyNode));
+  __Pyx_DECREF_SET(__pyx_v_5skbio_8sequence_12intersection_EmptyNode, ((struct __pyx_obj_5skbio_8sequence_12intersection_IntervalNode *)__pyx_t_1));
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "micronota/lib/intersection.pyx":397
+  /* "skbio/sequence/intersection.pyx":413
  *             self.root = self.root.insert( start, end, value )
  * 
  *     add = insert             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalTree, __pyx_n_s_insert); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree, __pyx_n_s_insert); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 413; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalTree->tp_dict, __pyx_n_s_add, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 397; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree->tp_dict, __pyx_n_s_add, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 413; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  PyType_Modified(__pyx_ptype_9micronota_3lib_12intersection_IntervalTree);
+  PyType_Modified(__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree);
 
-  /* "micronota/lib/intersection.pyx":435
+  /* "skbio/sequence/intersection.pyx":460
  *         self.insert( interval.start, interval.end, interval )
  * 
  *     add_interval = insert_interval             # <<<<<<<<<<<<<<
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalTree, __pyx_n_s_insert_interval); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 435; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree, __pyx_n_s_insert_interval); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 460; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalTree->tp_dict, __pyx_n_s_add_interval, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 435; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree->tp_dict, __pyx_n_s_add_interval, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 460; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  PyType_Modified(__pyx_ptype_9micronota_3lib_12intersection_IntervalTree);
+  PyType_Modified(__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree);
 
-  /* "micronota/lib/intersection.pyx":488
+  /* "skbio/sequence/intersection.pyx":513
  * 
  * # For backward compatibility
  * Intersecter = IntervalTree             # <<<<<<<<<<<<<<
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Intersecter, ((PyObject *)__pyx_ptype_9micronota_3lib_12intersection_IntervalTree)) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 488; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Intersecter, ((PyObject *)__pyx_ptype_5skbio_8sequence_12intersection_IntervalTree)) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 513; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "micronota/lib/intersection.pyx":1
+  /* "skbio/sequence/intersection.pyx":1
  * """             # <<<<<<<<<<<<<<
  * Data structure for performing intersect queries on a set of intervals which
  * preserves all information about the intervals (unlike bitset projection methods).
@@ -8228,11 +8737,11 @@ PyMODINIT_FUNC PyInit_intersection(void)
   __Pyx_XDECREF(__pyx_t_3);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init micronota.lib.intersection", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init skbio.sequence.intersection", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init micronota.lib.intersection");
+    PyErr_SetString(PyExc_ImportError, "init skbio.sequence.intersection");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

@@ -30,6 +30,20 @@ class IntervalMetadata():
                     self.intervals.add(start, end, k)
             self.features = features
 
+    def update(self, old_feature, new_feature):
+        """ Replaces a feature in the IntervalMetadata object.
+
+        Finds the original feature and replaces with a new feature.
+
+        Parameters
+        ----------
+        old_feature : Feature
+            Original feature to search and replace in the IntervalMetadata
+        new_feature : Feature
+            The new feature to replace the original feature.
+        """
+        self.features[new_feature] = self.features.pop(old_feature)
+
     def add(self, feature, *intervals):
         """ Adds a feature to the metadata object.
 
@@ -37,13 +51,9 @@ class IntervalMetadata():
         ----------
         feature : skbio.sequence.feature
             The feature object being added.
-        intervals : iteerable of intervals
+        intervals : iterable of intervals
             A list of intervals associated with the feature
 
-        Note
-        ----
-        The intervals associated with a feature is assumed to be under
-        the `location` keyword by default.
         """
         if not isinstance(feature, Feature):
             raise ValueError('feature is not an instance of `Feature`')
@@ -64,7 +74,6 @@ class IntervalMetadata():
             self.features[feature] = []
 
         self.features[feature] = list(map(_polish_interval, intervals))
-
 
     def _query_interval(self, interval):
         start, end = _polish_interval(interval)
@@ -169,6 +178,7 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
     def has_interval_metadata(self):
         return self.interval_metadata is not None
+
 
 def _polish_interval(interval):
     if isinstance(interval, tuple):

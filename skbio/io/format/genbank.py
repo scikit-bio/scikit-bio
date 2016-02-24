@@ -269,8 +269,8 @@ from skbio.io import create_format, GenBankFormatError
 from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str, merge_dicts
-from skbio.sequence import Sequence, DNA, RNA, Protein, Feature
-
+from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.sequence import Feature
 
 genbank = create_format('genbank')
 
@@ -452,7 +452,7 @@ def _serialize_single_genbank(obj, fh):
         elif header == 'FEATURES':
             # This will need to change
             features = obj.interval_metadata.features.keys()
-            out = serializer(header, sorted(features))
+            out = serializer(header, sorted(features, key=lambda x: x['location']))
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
         else:
@@ -787,63 +787,6 @@ def _parse_interval(loc_str, length):
         intervals += index
 
     return res, intervals
-
-def _parse_loc_str(loc_str, length):
-    '''Parse location string.
-
-    Warning: This converts coordinates to 0-based from 1-based as
-    in GenBank format.
-
-    The location descriptor can be one of the following:
-    (a) a single base number. e.g. 467
-    (b) a site between two indicated adjoining bases. e.g. 123^124
-    (c) a single base chosen from within a specified range of bases (not
-        allowed for new entries). e.g. 102.110
-    (d) the base numbers delimiting a sequence span. e.g.340..565
-    (e) a remote entry identifier followed by a local location
-        descriptor (i.e., a-d). e.g. J00194.1:100..202
-
-    TODO:
-    handle (b), (c), (e) cases correctly
-    '''
-    pmd = np.zeros(length, dtype=bool)
-    res = {'rc_': False,
-           'left_partial_': False,
-           'right_partial_': False}
-    items = re.split('[(),]+', loc_str)
-    operators = ['join', 'complement', 'order']
-    if 'complement' in items:
-        res['rc_'] = True
-    for i in items:
-        i = i.strip()
-        if i in operators or not i:
-            continue
-        elif ':' in i:  # (e)
-            index = []
-        elif '..' in i:  # (d)
-            beg, end = i.split('..')
-            if beg.startswith('<'):
-                beg = beg[1:]
-                res['left_partial_'] = True
-            if end.startswith('>'):
-                end = end[1:]
-                res['right_partial_'] = True
-            beg = int(beg)
-            end = int(end)
-            index = range(beg-1, end)
-        elif '.' in i:  # (c)
-            index = []
-        elif i.isdigit():  # (a)
-            index = int(i) - 1
-        elif '^' in i:  # (b)
-            index = []
-        else:
-            raise GenBankFormatError(
-                'Could not parse location string: "%s"' %
-                loc_str)
-        pmd[index] = True
-
-    return res, pmd
 
 
 def _parse_origin(lines):

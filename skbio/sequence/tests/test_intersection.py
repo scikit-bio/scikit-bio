@@ -206,8 +206,14 @@ class IntervalTreeTest(unittest.TestCase):
 
     def test_public_interval(self):
 
-        fn = lambda ival: self.assert_(ival.interval)
+        fn = lambda ival: self.assertTrue(ival.interval)
         self.iv.traverse(fn)
+
+    def test_update(self):
+
+        i = 1
+        self.iv.update(i, i + 10, dict(value=i*i), dict(value=-1))
+        self.assertEqual([dict(value=-1)], self.iv.find(i, i+10))
 
 if __name__ == "__main__":
 

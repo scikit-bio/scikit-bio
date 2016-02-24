@@ -25,8 +25,8 @@ from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
-from ._feature import Feature
-from ._interval import IntervalMetadataMixin, _polish_interval
+from skbio.sequence._feature import Feature
+from skbio.sequence._interval import IntervalMetadataMixin, _polish_interval
 
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
@@ -1032,6 +1032,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
           an understood type whose representation is too long, just the type
           will be displayed
         * positional metadata: column names and column dtypes will be displayed
+          in the order they appear in the positional metadata ``pd.DataFrame``.
+          Column names (i.e., keys) follow the same display rules as metadata
+          keys
+        * interval metadata: column names and column dtypes will be displayed
           in the order they appear in the positional metadata ``pd.DataFrame``.
           Column names (i.e., keys) follow the same display rules as metadata
           keys

@@ -44,6 +44,17 @@ class TestFeature(unittest.TestCase):
             x3 = Feature(**i)
             self.assertNotEqual(hash(x1), hash(x3))
 
+    def test_update(self):
+        for i in self.exp:
+            x1 = Feature(**i)
+            x2 = Feature(**i)
+
+            i['k'] = 10
+            exp = Feature(**i)
+            x1 = x1.update(k=10)
+            self.assertEqual(hash(x1), hash(exp))
+
+
     ## TODO: Need tests for keys(), items(), values()
 
 if __name__ == '__main__':

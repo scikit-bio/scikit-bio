@@ -60,9 +60,9 @@ cdef float nlog = -1.0 / log(0.5)
 cdef class IntervalNode:
     """
     A single node of an `IntervalTree`.
-    
+
     NOTE: Unless you really know what you are doing, you probably should us
-          `IntervalTree` rather than using this directly. 
+          `IntervalTree` rather than using this directly.
     """
     cdef float priority
     cdef public object interval
@@ -79,7 +79,7 @@ cdef class IntervalNode:
     property root_node:
         def __get__(self):
             return self.croot if self.croot is not EmptyNode else None
-    
+
     def __repr__(self):
         return "IntervalNode(%i, %i)" % (self.start, self.end)
 
@@ -98,7 +98,7 @@ cdef class IntervalNode:
         self.cleft    = EmptyNode
         self.cright   = EmptyNode
         self.croot    = EmptyNode
-        
+
     cpdef IntervalNode insert(IntervalNode self, int start, int end, object interval):
         """
         Insert a new IntervalNode into the tree of which this node is
@@ -111,7 +111,7 @@ cdef class IntervalNode:
         cdef int decision_endpoint = start
         if start == self.start:
             decision_endpoint = end
-        
+
         if decision_endpoint > self.start:
             # insert to cright tree
             if self.cright is not EmptyNode:
@@ -130,7 +130,7 @@ cdef class IntervalNode:
             # rebalance tree
             if self.priority < self.cleft.priority:
                 croot = self.rotate_right()
-    
+
         croot.set_ends()
         self.cleft.croot  = croot
         self.cright.croot = croot
@@ -151,7 +151,7 @@ cdef class IntervalNode:
         return croot
 
     cdef inline void set_ends(IntervalNode self):
-        if self.cright is not EmptyNode and self.cleft is not EmptyNode: 
+        if self.cright is not EmptyNode and self.cleft is not EmptyNode:
             self.maxend = imax3(self.end, self.cright.maxend, self.cleft.maxend)
             self.minend = imin3(self.end, self.cright.minend, self.cleft.minend)
             self.minstart = imin3(self.start, self.cright.minstart, self.cleft.minstart)
@@ -163,7 +163,6 @@ cdef class IntervalNode:
             self.maxend = imax2(self.end, self.cleft.maxend)
             self.minend = imin2(self.end, self.cleft.minend)
             self.minstart = imin2(self.start, self.cleft.minstart)
-        
 
     def intersect( self, int start, int end, sort=True ):
         """
@@ -175,7 +174,7 @@ cdef class IntervalNode:
         return results
 
     find = intersect
-        
+
     cdef void _intersect( IntervalNode self, int start, int end, list results):
         # Left subtree
         if self.cleft is not EmptyNode and self.cleft.maxend > start:
@@ -186,7 +185,24 @@ cdef class IntervalNode:
         # Right subtree
         if self.cright is not EmptyNode and self.start < end:
             self.cright._intersect( start, end, results )
-    
+
+    cpdef void update(IntervalNode self, int start, int end,
+                      object old_feature, object new_feature):
+        """
+        given a start and end, replace all objects that
+        match the old_feature with new_feature.
+        """
+
+        # Left subtree
+        if self.cleft is not EmptyNode and self.cleft.maxend > start:
+            self.cleft.update( start, end, old_feature, new_feature )
+        # This interval
+        if ( self.end > start ) and ( self.start < end ):
+            if self.interval == old_feature:
+                self.interval = new_feature
+        # Right subtree
+        if self.cright is not EmptyNode and self.start < end:
+            self.cright.update( start, end, old_feature, new_feature )
 
     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
         # we know we can bail in these 2 cases.
@@ -208,7 +224,7 @@ cdef class IntervalNode:
                 self.cleft._seek_left(position, results, n, max_dist)
 
 
-    
+
     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):
         # we know we can bail in these 2 cases.
         if self.maxend < position: return
@@ -218,7 +234,7 @@ cdef class IntervalNode:
 
         # the ordering of these 3 blocks makes it so the results are
         # ordered nearest to farest from the query position
-        if self.cleft is not EmptyNode: 
+        if self.cleft is not EmptyNode:
                 self.cleft._seek_right(position, results, n, max_dist)
 
         if -1 < self.start - position < max_dist:
@@ -227,7 +243,7 @@ cdef class IntervalNode:
         if self.cright is not EmptyNode:
                 self.cright._seek_right(position, results, n, max_dist)
 
-    
+
     cpdef left(self, position, int n=1, int max_dist=2500):
         """
         find n features with a start > than `position`
@@ -324,49 +340,49 @@ cdef class Interval:
 
 cdef class IntervalTree:
     """
-    Data structure for performing window intersect queries on a set of 
+    Data structure for performing window intersect queries on a set of
     of possibly overlapping 1d intervals.
-    
+
     Usage
     =====
-    
+
     Create an empty IntervalTree
-    
+
     >>> from bx.intervals.intersection import Interval, IntervalTree
     >>> intersecter = IntervalTree()
-    
+
     An interval is a start and end position and a value (possibly None).
     You can add any object as an interval:
-    
+
     >>> intersecter.insert( 0, 10, "food" )
     >>> intersecter.insert( 3, 7, dict(foo='bar') )
-    
+
     >>> intersecter.find( 2, 5 )
     ['food', {'foo': 'bar'}]
-    
+
     If the object has start and end attributes (like the Interval class) there
     is are some shortcuts:
-    
+
     >>> intersecter = IntervalTree()
     >>> intersecter.insert_interval( Interval( 0, 10 ) )
     >>> intersecter.insert_interval( Interval( 3, 7 ) )
     >>> intersecter.insert_interval( Interval( 3, 40 ) )
     >>> intersecter.insert_interval( Interval( 13, 50 ) )
-    
+
     >>> intersecter.find( 30, 50 )
     [Interval(3, 40), Interval(13, 50)]
     >>> intersecter.find( 100, 200 )
     []
-    
+
     Before/after for intervals
-    
+
     >>> intersecter.before_interval( Interval( 10, 20 ) )
     [Interval(3, 7)]
     >>> intersecter.before_interval( Interval( 5, 20 ) )
     []
-    
+
     Upstream/downstream
-    
+
     >>> intersecter.upstream_of_interval(Interval(11, 12))
     [Interval(0, 10)]
     >>> intersecter.upstream_of_interval(Interval(11, 12, strand="-"))
@@ -375,16 +391,16 @@ cdef class IntervalTree:
     >>> intersecter.upstream_of_interval(Interval(1, 2, strand="-"), num_intervals=3)
     [Interval(3, 7), Interval(3, 40), Interval(13, 50)]
 
-    
+
     """
-    
+
     cdef IntervalNode root
-    
+
     def __cinit__( self ):
         root = None
-    
+
     # ---- Position based interfaces -----------------------------------------
-    
+
     def insert( self, int start, int end, object value=None ):
         """
         Insert the interval [start,end) associated with value `value`.
@@ -393,8 +409,17 @@ cdef class IntervalTree:
             self.root = IntervalNode( start, end, value )
         else:
             self.root = self.root.insert( start, end, value )
-        
+
     add = insert
+
+
+    def update( self, start, end, old_feature, new_feature):
+        """
+        Given an interval [start, end), replace all objects that
+        match the `old_feature` with `new_feature`.
+        """
+        if self.root is not None:
+            self.root.update(start, end, old_feature, new_feature)
 
 
     def find( self, start, end ):
@@ -404,7 +429,7 @@ cdef class IntervalTree:
         if self.root is None:
             return []
         return self.root.find( start, end )
-    
+
     def before( self, position, num_intervals=1, max_dist=2500 ):
         """
         Find `num_intervals` intervals that lie before `position` and are no
@@ -475,7 +500,7 @@ cdef class IntervalTree:
             return self.root.left( interval.start, num_intervals, max_dist )
         else:
             return self.root.right( interval.end, num_intervals, max_dist )
-    
+
     def traverse(self, fn):
         """
         call fn for each element in the tree

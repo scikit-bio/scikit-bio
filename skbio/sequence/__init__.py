@@ -308,7 +308,6 @@ from ._feature import Feature
 from ._interval import IntervalMetadataMixin, IntervalMetadata
 from .intersection import Interval, IntervalTree
 
-
 __all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
            'Feature', 'Interval', 'IntervalTree', "IntervalMetadata"]
 

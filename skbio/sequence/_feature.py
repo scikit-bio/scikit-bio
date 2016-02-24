@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import Mapping
 import numpy as np
-
+from skbio.util._misc import merge_dicts
 
 class Feature(Mapping):
     '''Store the metadata of a sequence feature.
@@ -50,20 +50,32 @@ class Feature(Mapping):
             self._hash = hash(frozenset(self.items()))
         return self._hash
 
-    def __lt__(self, other):
-        return self['location'] < other['location']
-
-    def __le__(self, other):
-        return self['location'] <= other['location']
-
-    def __gt__(self, other):
-        return self['location'] > other['location']
-
-    def __ge__(self, other):
-        return self['location'] >= other['location']
-
     def __eq__(self, other):
-        return self['location'] == other['location']
+        return hash(self) == hash(other)
 
     def __ne__(self, other):
-        return self['location'] != other['location']
+        return hash(self) != hash(other)
+
+    def update(self, *args, **kwargs):
+        """
+        Creates a new features object.
+
+        Updates the existing attributes of the current Feature object
+        and returns the modified Feature object.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional arguments that can be passed to ``dict``
+        kwargs : dict
+            Keyword arguments of feature name and feature value, which can
+            be passed to ``dict``.
+
+        Returns
+        -------
+        skbio.sequence.Feature
+        """
+        __d = dict(*args, **kwargs)
+        return Feature(**merge_dicts(self.__d, __d))
+
+
