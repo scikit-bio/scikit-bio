@@ -467,3 +467,53 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     @experimental(as_of="0.4.2")
     def has_interval_metadata(self):
         return len(self.interval_metadata.features) > 0
+
+        @abc.abstractmethod
+    def __eq__(self, other):
+        pass
+
+    def _eq_(self, other):
+        # We're not simply comparing self.positional_metadata to
+        # other.positional_metadata in order to avoid creating "empty"
+        # positional metadata representations on the objects if they don't have
+        # positional metadata.
+        if self.has_interval_metadata() and other.has_interval_metadata():
+            if not self.interval_metadata.equals(other.interval_metadata):
+                return False
+        elif not (self.has_interval_metadata() or
+                  other.has_interval_metadata()):
+            # Both don't have interval metadata.
+            pass
+        else:
+            # One has interval metadata while the other does not.
+            return False
+
+        return True
+
+    @abc.abstractmethod
+    def __ne__(self, other):
+        pass
+
+    def _ne_(self, other):
+        return not (self == other)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        pass
+
+    def _copy_(self):
+        if self.has_interval_metadata():
+            # deep=True makes a shallow copy of the underlying data buffer.
+            return self.interval_metadata.copy(deep=True)
+        else:
+            return None
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo):
+        pass
+
+    def _deepcopy_(self, memo):
+        if self.has_positional_metadata():
+            return copy.deepcopy(self.positional_metadata, memo)
+        else:
+            return None

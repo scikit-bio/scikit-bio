@@ -27,6 +27,7 @@ from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
 from skbio.metadata._feature import Feature
 from skbio.metadata._interval import _polish_interval
+from skbio.metadata import IntervalMetadata
 from skbio.metadata import MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
@@ -888,7 +889,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         seq = self._bytes[indexable]
         positional_metadata = self._slice_positional_metadata(indexable)
+
         # TODO: need a slice interval metadata method
+        interval_metadata = IntervalMetadata(features=None)
         return self._to(sequence=seq, positional_metadata=positional_metadata)
 
     def _slice_interval_metadata(self, indexable):

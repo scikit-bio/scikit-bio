@@ -75,6 +75,13 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         feats = interval_metadata.query(gene='sagB')
         self.assertEqual(feats, [Feature(gene='sagB', location=0)])
 
+    def test_complement(self):
+        interval_metadata = IntervalMetadata()
+        interval_metadata.add(Feature(gene='sagB', location=0), (3, 5))
+        iv = interval_metadata.complement(length=10)
+        feats = iv.query((5, 7))
+        self.assertEqual(feats, [Feature(gene='sagB', location=0)])
+
     def test_update(self):
         interval_metadata = IntervalMetadata()
         interval_metadata.add(Feature(gene='sagA', location=0), 1, (4, 7))

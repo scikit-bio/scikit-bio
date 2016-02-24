@@ -31,6 +31,26 @@ class IntervalMetadata():
                     self.intervals.add(start, end, k)
             self.features = features
 
+    def complement(self, length):
+        """ Reverse complements IntervalMetadata object.
+
+        Parameters
+        ----------
+        length : int
+            Largest end coordinate to perform reverse complement.
+            This typically corresponds to the length of sequence.
+
+        Returns
+        -------
+        IntervalMetadata
+        """
+        rvs_coord = lambda x: (length-x[1], length-x[0])
+        rvs_features = {}
+        for k, v in self.features.items():
+            xs = map(_polish_interval, v)
+            rvs_features[k] = list(map(rvs_coord, xs))
+        return IntervalMetadata(rvs_features)
+
     def update(self, old_feature, new_feature):
         """ Replaces a feature in the IntervalMetadata object.
 
