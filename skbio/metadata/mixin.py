@@ -433,12 +433,37 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     interval_metadata
     feature_metadata
 
+    >>> from skbio import DNA
+    >>> from skbio.metadata import Feature
+    >>> seq = DNA(
+    ...     'ACGT',
+    ...     positional_metadata={'quality': [3, 3, 20, 11],
+    ...                          'exons': [True, True, False, True]},
+    ...     interval_metadata={Feature(gene='hedgehog', location=0):[(0, 3)]})
+    >>> seq
+    DNA
+    -----------------------------
+    Positional metadata:
+        'exons': <dtype: bool>
+        'quality': <dtype: int64>
+    Interval metadata:
+        Number of features: 1
+        Number of intervals: 1
+    Stats:
+        length: 4
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        GC-content: 50.00%
+    -----------------------------
+    0 ACGT
     '''
     def __init__(self, features=None):
-        self._init_(features)
+        pass
 
     def _init_(self, features=None):
         self.interval_metadata = IntervalMetadata(features=features)
 
+    @experimental(as_of="0.4.2")
     def has_interval_metadata(self):
         return len(self.interval_metadata.features) > 0
