@@ -30,18 +30,18 @@ class TestIntervalMetadataMixin(unittest.TestCase):
 
     def test_polish_interval_tuple(self):
         st, end = _polish_interval((1, 2))
-        self.assertEquals(st, 1)
-        self.assertEquals(end, 2)
+        self.assertEqual(st, 1)
+        self.assertEqual(end, 2)
 
     def test_polish_interval_interval(self):
         st, end = _polish_interval(Interval(1, 2))
-        self.assertEquals(st, 1)
-        self.assertEquals(end, 2)
+        self.assertEqual(st, 1)
+        self.assertEqual(end, 2)
 
     def test_polish_interval_point(self):
         st, end = _polish_interval(1)
-        self.assertEquals(st, 1)
-        self.assertEquals(end, 2)
+        self.assertEqual(st, 1)
+        self.assertEqual(end, 2)
 
     def test_query(self):
         interval_metadata = IntervalMetadata(features={
@@ -95,8 +95,9 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         self.assertEqual(feats, [Feature(gene='sagB', location=1)])
 
         feats = interval_metadata.query((3, 5))
-        self.assertEqual(feats, [Feature(gene='sagA', location=0),
-                                 Feature(gene='sagB', location=1)])
+        self.assertEqual(feats, sorted([Feature(gene='sagA', location=0),
+                                        Feature(gene='sagB', location=1)],
+                                       key=lambda x: x['location']))
 
         feats = interval_metadata.query((10, 15))
         self.assertEqual(feats, [Feature(gene='sagB', location=1)])
