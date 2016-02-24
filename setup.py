@@ -43,11 +43,10 @@ classes = """
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python
-    Programming Language :: Python :: 2
-    Programming Language :: Python :: 2.7
     Programming Language :: Python :: 3
-    Programming Language :: Python :: 3.3
+    Programming Language :: Python :: 3 :: Only
     Programming Language :: Python :: 3.4
+    Programming Language :: Python :: 3.5
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
