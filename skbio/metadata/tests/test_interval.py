@@ -94,7 +94,8 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         feats = interval_metadata.query(gene='sagB')
         self.assertEqual(feats, [Feature(gene='sagB', location=1)])
 
-        feats = interval_metadata.query((3, 5))
+        feats = sorted(interval_metadata.query((3, 5)),
+                       key=lambda x: x['location'])
         self.assertEqual(feats, sorted([Feature(gene='sagA', location=0),
                                         Feature(gene='sagB', location=1)],
                                        key=lambda x: x['location']))

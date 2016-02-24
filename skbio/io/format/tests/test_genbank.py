@@ -19,7 +19,7 @@ from datetime import datetime
 
 from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
-from skbio.sequence import Feature
+from skbio.metadata import Feature
 from skbio.io import GenBankFormatError
 from skbio.io.format.genbank import (
     _genbank_sniffer,

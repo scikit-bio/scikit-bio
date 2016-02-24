@@ -20,8 +20,9 @@ from IPython.core.display import Image, SVG
 from nose.tools import assert_is_instance, assert_true
 
 from skbio import OrdinationResults
-from skbio._base import (SkbioObject, MetadataMixin, PositionalMetadataMixin,
-                         ElasticLines)
+from skbio.metadata import (MetadataMixin, PositionalMetadataMixin,
+                            IntervalMetadataMixin)
+from skbio._base import (SkbioObject, ElasticLines)
 from skbio.util._decorator import overrides
 from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
                                  PositionalMetadataMixinTests)
