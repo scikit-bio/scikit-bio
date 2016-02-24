@@ -76,7 +76,30 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         self.assertEqual(feats, [Feature(gene='sagB', location=0)])
 
     def test_update(self):
-        pass
+        interval_metadata = IntervalMetadata()
+        interval_metadata.add(Feature(gene='sagA', location=0), 1, (4, 7))
+        interval_metadata.add(Feature(gene='sagB', location=0), (3, 5))
+        interval_metadata.update(Feature(gene='sagB', location=0),
+                                 Feature(gene='sagB', location=1))
+        feats = interval_metadata.query(gene='sagB')
+        self.assertEqual(feats, [Feature(gene='sagB', location=1)])
+
+    def test_update_multiple(self):
+        # Tests to see if all corresponding intervals are updated
+        interval_metadata = IntervalMetadata()
+        interval_metadata.add(Feature(gene='sagA', location=0), 1, (4, 7))
+        interval_metadata.add(Feature(gene='sagB', location=0), (3, 5), (10, 15))
+        interval_metadata.update(Feature(gene='sagB', location=0),
+                                 Feature(gene='sagB', location=1))
+        feats = interval_metadata.query(gene='sagB')
+        self.assertEqual(feats, [Feature(gene='sagB', location=1)])
+
+        feats = interval_metadata.query((3, 5))
+        self.assertEqual(feats, [Feature(gene='sagA', location=0),
+                                 Feature(gene='sagB', location=1)])
+
+        feats = interval_metadata.query((10, 15))
+        self.assertEqual(feats, [Feature(gene='sagB', location=1)])
 
     def test_add(self):
         interval_metadata = IntervalMetadata()
@@ -111,11 +134,11 @@ class TestIntervalMetadataMixin(unittest.TestCase):
                    Feature(gene='sagD', location='13'): [(13, 15)]
                })
         catted_metadata = interval_metadata1.concat(interval_metadata2)
-        self.assertEquals(catted_metadata.features, {
-                           Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
-                           Feature(gene='sagB', location='3'): [(3, 5)],
-                           Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
-                           Feature(gene='sagD', location='13'): [(13, 15)]})
+        self.assertEqual(catted_metadata.features, {
+                         Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                         Feature(gene='sagB', location='3'): [(3, 5)],
+                         Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
+                         Feature(gene='sagD', location='13'): [(13, 15)]})
 
     def test_concat_inplace(self):
         interval_metadata1 = IntervalMetadata(features={

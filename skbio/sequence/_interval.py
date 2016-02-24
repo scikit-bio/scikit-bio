@@ -42,7 +42,11 @@ class IntervalMetadata():
         new_feature : Feature
             The new feature to replace the original feature.
         """
+        ivs = self.features[old_feature]
         self.features[new_feature] = self.features.pop(old_feature)
+        for iv in ivs:
+            start, end = _polish_interval(iv)
+            self.intervals.update(start, end, old_feature, new_feature)
 
     def add(self, feature, *intervals):
         """ Adds a feature to the metadata object.
