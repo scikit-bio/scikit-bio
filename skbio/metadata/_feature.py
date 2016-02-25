@@ -54,7 +54,7 @@ class Feature(Mapping):
         return hash(self) == hash(other)
 
     def __ne__(self, other):
-        return hash(self) != hash(other)
+        return not self.__eq__(other)
 
     def update(self, *args, **kwargs):
         """

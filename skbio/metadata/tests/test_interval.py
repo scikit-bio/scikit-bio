@@ -75,10 +75,10 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         feats = interval_metadata.query(gene='sagB')
         self.assertEqual(feats, [Feature(gene='sagB', location=0)])
 
-    def test_complement(self):
+    def test_reverse_complement(self):
         interval_metadata = IntervalMetadata()
         interval_metadata.add(Feature(gene='sagB', location=0), (3, 5))
-        iv = interval_metadata.complement(length=10)
+        iv = interval_metadata.reverse_complement(length=10)
         feats = iv.query((5, 7))
         self.assertEqual(feats, [Feature(gene='sagB', location=0)])
 
@@ -166,6 +166,17 @@ class TestIntervalMetadataMixin(unittest.TestCase):
                          Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
                          Feature(gene='sagD', location='13'): [(13, 15)]})
 
+    def test_eq(self):
+        interval_metadata1 = IntervalMetadata(features={
+                   Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                   Feature(gene='sagB', location='3'): [(3, 5)]
+               })
+
+        interval_metadata2 = IntervalMetadata(features={
+                   Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                   Feature(gene='sagB', location='3'): [(3, 5)]
+               })
+        self.assertTrue(interval_metadata1 == interval_metadata2)
 
 if __name__=='__main__':
     unittest.main()

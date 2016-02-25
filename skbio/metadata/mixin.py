@@ -468,15 +468,15 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
     def has_interval_metadata(self):
         return len(self.interval_metadata.features) > 0
 
-        @abc.abstractmethod
+    @abc.abstractmethod
     def __eq__(self, other):
         pass
 
     def _eq_(self, other):
-        # We're not simply comparing self.positional_metadata to
-        # other.positional_metadata in order to avoid creating "empty"
-        # positional metadata representations on the objects if they don't have
-        # positional metadata.
+        # We're not simply comparing self.interval_metadata to
+        # other.interval_metadata in order to avoid creating "empty"
+        # interval metadata representations on the objects if they don't have
+        # interval metadata.
         if self.has_interval_metadata() and other.has_interval_metadata():
             if not self.interval_metadata.equals(other.interval_metadata):
                 return False

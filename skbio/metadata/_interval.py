@@ -31,7 +31,7 @@ class IntervalMetadata():
                     self.intervals.add(start, end, k)
             self.features = features
 
-    def complement(self, length):
+    def reverse_complement(self, length):
         """ Reverse complements IntervalMetadata object.
 
         Parameters
@@ -173,6 +173,11 @@ class IntervalMetadata():
         else:
             return IntervalMetadata(features)
 
+    def __eq__(self, other):
+        # This doesn't look at the interval trees,
+        # since the interval trees are strictly built
+        # based on the features.
+        return self.features == other.features
 
 def _polish_interval(interval):
     if isinstance(interval, tuple):
