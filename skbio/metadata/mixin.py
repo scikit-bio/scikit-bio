@@ -478,7 +478,7 @@ class IntervalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         # interval metadata representations on the objects if they don't have
         # interval metadata.
         if self.has_interval_metadata() and other.has_interval_metadata():
-            if not self.interval_metadata.equals(other.interval_metadata):
+            if not self.interval_metadata == other.interval_metadata:
                 return False
         elif not (self.has_interval_metadata() or
                   other.has_interval_metadata()):

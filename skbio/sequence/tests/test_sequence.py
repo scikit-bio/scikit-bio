@@ -826,7 +826,8 @@ class TestSequence(TestCase, ReallyEqualMixin):
                        interval_metadata={x : ((0, 2), (4, 6))})
 
         eseq = Sequence("0145",
-                        metadata={'id': 'id11', 'description': 'dsc11'})
+                        metadata={'id': 'id11', 'description': 'dsc11'},
+                        interval_metadata={Feature(gene='sag'):[]})
 
         self.assertEqual(seq[x], eseq)
 

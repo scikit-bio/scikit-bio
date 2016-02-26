@@ -726,6 +726,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         if not PositionalMetadataMixin._eq_(self, other):
             return False
 
+        if not IntervalMetadataMixin._eq_(self, other):
+            return False
+
         return True
 
     @stable(as_of="0.4.0")
@@ -840,10 +843,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         """
         if isinstance(indexable, Feature):
             intervals = self.interval_metadata.features[indexable]
-            _indexable = list(map(lambda x: slice(x[0], x[1]), map(_polish_interval, intervals)))
+            _indexable = list(map(lambda x: slice(x[0], x[1]),
+                                  map(_polish_interval, intervals)))
             seq = np.concatenate(
                         list(_slices_from_iter(self._bytes, _indexable)))
-            return self._to(sequence=seq)
+            return self._to(sequence=seq, interval_metadata={indexable:[]})
         elif (not isinstance(indexable, np.ndarray) and
             ((not isinstance(indexable, six.string_types)) and
              hasattr(indexable, '__iter__'))):
@@ -867,7 +871,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                         pos_md_slices = list(_slices_from_iter(
                                              self.positional_metadata, index))
                         positional_metadata = pd.concat(pos_md_slices)
-
+                    # TODO: need a slice interval metadata method
                     return self._to(sequence=seq,
                                     positional_metadata=positional_metadata)
         elif (isinstance(indexable, six.string_types) or
@@ -891,7 +895,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         positional_metadata = self._slice_positional_metadata(indexable)
 
         # TODO: need a slice interval metadata method
-        interval_metadata = IntervalMetadata(features=None)
         return self._to(sequence=seq, positional_metadata=positional_metadata)
 
     def _slice_interval_metadata(self, indexable):
@@ -2074,7 +2077,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             if len(r) >= min_length:
                 yield r
 
-    def _to(self, sequence=None, metadata=None, positional_metadata=None):
+    def _to(self, sequence=None, metadata=None, positional_metadata=None,
+            interval_metadata=None):
         """Return a copy of this sequence.
 
         Returns a copy of this sequence, optionally with updated attributes
@@ -2118,8 +2122,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             metadata = self._metadata
         if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
+        if interval_metadata is None and self.has_interval_metadata():
+            interval_metadata = self.interval_metadata
         return self._constructor(sequence=sequence, metadata=metadata,
-                                 positional_metadata=positional_metadata)
+                                 positional_metadata=positional_metadata,
+                                 interval_metadata=interval_metadata)
 
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)

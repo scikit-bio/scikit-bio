@@ -172,6 +172,7 @@ Metadata:
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
+    'id': '3K1V_A'
 Interval metadata:
     Number of features: 1
     Number of intervals: 1
@@ -202,6 +203,7 @@ Metadata:
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
+    'id': '3K1V_A'
 Interval metadata:
     Number of features: 1
     Number of intervals: 1
