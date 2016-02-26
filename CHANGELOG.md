@@ -3,12 +3,15 @@
 ## Version 0.4.2-dev (changes since 0.4.2 go here)
 
 ### Features
+* Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
 
 ### Bug fixes
+* Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
+an empty generator.
 
 ### Miscellaneous
 

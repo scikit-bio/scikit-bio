@@ -16,7 +16,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import Sequence, DNA
-from skbio.sequence.distance import hamming
+from skbio.sequence.distance import hamming, kmer_distance
 
 
 class TestHamming(unittest.TestCase):
@@ -124,6 +124,118 @@ class TestHamming(unittest.TestCase):
         for seq1, seq2 in itertools.product(seqs1, seqs2):
             distance = hamming(seq1, seq2)
             self.assertEqual(distance, 0.75)
+
+
+class TestKmerDistance(unittest.TestCase):
+    def test_default_kwargs(self):
+        seq1 = Sequence('AACCTAGCAATGGAT')
+        seq2 = Sequence('CAGGCAGTTCTCACC')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 0.9130434782608695
+        self.assertAlmostEqual(obs, exp)
+
+    def test_nondefault_k(self):
+        seq1 = Sequence('GCTTATGGAGAGAGA')
+        seq2 = Sequence('CTCGAACTCCAGCCA')
+        obs = kmer_distance(seq1, seq2, 2)
+        exp = 0.7333333333333333
+        self.assertAlmostEqual(obs, exp)
+        seq1 = Sequence('EADDECAEECDEACD')
+        seq2 = Sequence('DCBCBADADABCCDA')
+        obs = kmer_distance(seq1, seq2, 1)
+        exp = 0.4
+        self.assertAlmostEqual(obs, exp)
+
+    def test_overlap_false(self):
+        seq1 = Sequence('CGTTATGTCTGTGAT')
+        seq2 = Sequence('CTGAATCGGTAGTGT')
+        obs = kmer_distance(seq1, seq2, 3, overlap=False)
+        exp = 0.8888888888888888
+        self.assertAlmostEqual(obs, exp)
+
+    def test_entirely_different_sequences(self):
+        seq1 = Sequence('CCGTGGTCGTATAAG')
+        seq2 = Sequence('CGCCTTCCACATCAG')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 1.0
+        self.assertEqual(obs, exp)
+
+    def test_same_sequence(self):
+        seq1 = Sequence('CTGCGACAGTTGGTA')
+        seq2 = Sequence('CTGCGACAGTTGGTA')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 0.0
+        self.assertEqual(obs, exp)
+
+    def test_differing_length_seqs(self):
+        seq1 = Sequence('AGAAATCTGAGCAAGGATCA')
+        seq2 = Sequence('TTAGTGCGTAATCCG')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 0.9285714285714286
+        self.assertAlmostEqual(obs, exp)
+
+    def test_with_sequence_subclass(self):
+        seq1 = DNA('GATGGTACTGTAGGT')
+        seq2 = DNA('AGGGTGAAGGTATCA')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 0.8421052631578947
+        self.assertAlmostEqual(obs, exp)
+
+    def test_with_metadata_sanity(self):
+        seq1 = Sequence('AACCTAGCAATGGAT',
+                        metadata={'Name': 'Kestrel Gorlick'},
+                        positional_metadata={'seq': list('ACTCAAGCTACGAAG')})
+        seq2 = Sequence('CAGGCAGTTCTCACC')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 0.9130434782608695
+        self.assertAlmostEqual(obs, exp)
+
+    def test_return_type(self):
+        seq1 = Sequence('ATCG')
+        seq2 = Sequence('ATCG')
+        obs = kmer_distance(seq1, seq2, 3)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(obs, 0.0)
+
+    def test_empty_sequences(self):
+        seq1 = Sequence('')
+        seq2 = Sequence('')
+        obs = kmer_distance(seq1, seq2, 3)
+        npt.assert_equal(obs, np.nan)
+
+    def test_one_empty_sequence(self):
+        seq1 = Sequence('')
+        seq2 = Sequence('CGGGCAGCTCCTACCTGCTA')
+        obs = kmer_distance(seq1, seq2, 3)
+        exp = 1.0
+        self.assertAlmostEqual(obs, exp)
+
+    def test_no_kmers_found(self):
+        seq1 = Sequence('ATCG')
+        seq2 = Sequence('ACGT')
+        obs = kmer_distance(seq1, seq2, 5)
+        npt.assert_equal(obs, np.nan)
+
+    def test_k_less_than_one_error(self):
+        seq1 = Sequence('ATCG')
+        seq2 = Sequence('ACTG')
+        with six.assertRaisesRegex(self, ValueError,
+                                   'k must be greater than 0.'):
+            kmer_distance(seq1, seq2, 0)
+
+    def test_type_mismatch_error(self):
+        seq1 = Sequence('ABC')
+        seq2 = DNA('ATC')
+        with six.assertRaisesRegex(self, TypeError,
+                                   "Type 'Sequence'.*type 'DNA'"):
+            kmer_distance(seq1, seq2, 3)
+
+    def test_non_sequence_error(self):
+        seq1 = Sequence('ATCG')
+        seq2 = 'ATCG'
+        with six.assertRaisesRegex(self, TypeError,
+                                   "not 'str'"):
+            kmer_distance(seq1, seq2, 3)
 
 
 if __name__ == "__main__":
