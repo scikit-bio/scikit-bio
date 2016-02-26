@@ -126,16 +126,16 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     Returns
     -------
     float
-    kmer distance between seq1 and seq2.
+        kmer distance between `seq1` and `seq2`.
 
     Raises
     ------
     ValueError
         If `k` is less than 1.
     TypeError
-    If `seq1` and `seq2` are not ``Sequence`` instances.
+        If `seq1` and `seq2` are not ``Sequence`` instances.
     TypeError
-    If `seq1` and `seq2` are not the same type.
+        If `seq1` and `seq2` are not the same type.
 
     Notes
     -----
@@ -149,8 +149,8 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     >>> from skbio import Sequence
     >>> seq1 = Sequence('ATCGGCGAT')
     >>> seq2 = Sequence('GCAGATGTG')
-    >>> kmer_distance(seq1, seq2, 3)
-    0.9230769230769231
+    >>> kmer_distance(seq1, seq2, 3) # doctest: +ELLIPSIS
+    0.9230769230...
 
     """
     _check_seqs(seq1, seq2)

@@ -139,7 +139,7 @@ class TestKmerDistance(unittest.TestCase):
         seq2 = Sequence('CTCGAACTCCAGCCA')
         obs = kmer_distance(seq1, seq2, 2)
         exp = 0.7333333333333333
-        self.assertEqual(obs, exp)
+        self.assertAlmostEqual(obs, exp)
         seq1 = Sequence('EADDECAEECDEACD')
         seq2 = Sequence('DCBCBADADABCCDA')
         obs = kmer_distance(seq1, seq2, 1)
@@ -172,14 +172,14 @@ class TestKmerDistance(unittest.TestCase):
         seq2 = Sequence('TTAGTGCGTAATCCG')
         obs = kmer_distance(seq1, seq2, 3)
         exp = 0.9285714285714286
-        self.assertEqual(obs, exp)
+        self.assertAlmostEqual(obs, exp)
 
     def test_with_sequence_subclass(self):
         seq1 = DNA('GATGGTACTGTAGGT')
         seq2 = DNA('AGGGTGAAGGTATCA')
         obs = kmer_distance(seq1, seq2, 3)
         exp = 0.8421052631578947
-        self.assertEqual(obs, exp)
+        self.assertAlmostEqual(obs, exp)
 
     def test_with_metadata_sanity(self):
         seq1 = Sequence('AACCTAGCAATGGAT',
