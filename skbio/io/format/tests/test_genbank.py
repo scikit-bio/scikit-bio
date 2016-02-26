@@ -89,7 +89,9 @@ class GenBankIOTests(TestCase):
                        'mol_type': None,
                        'shape': 'linear',
                        'size': 9,
-                       'unit': 'aa'}},
+                       'unit': 'aa'},
+             'id': 'AAB29917'
+             },
             None,
             Protein)
 
@@ -107,6 +109,7 @@ class GenBankIOTests(TestCase):
                        'shape': 'linear',
                        'size': 63,
                        'unit': 'bp'},
+             'id': 'ECOALKP',
              'SOURCE': {'ORGANISM': 'Escherichia coli',
                         'taxonomy': 'Bacteria; Proteobacteria; '
                         'Gammaproteobacteria; Enterobacteriales; '
@@ -150,6 +153,7 @@ class GenBankIOTests(TestCase):
               'DBSOURCE': 'accession AAB29917.1',
               'DEFINITION': 'L-carnitine amidase {N-terminal}',
               'KEYWORDS': '.',
+              'id': 'AAB29917',
               'LOCUS': {'date': '23-SEP-1994',
                         'division': 'BCT',
                         'locus_name': 'AAB29917',
@@ -190,6 +194,7 @@ class GenBankIOTests(TestCase):
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
               'KEYWORDS': 'ENV.',
+              'id': 'HQ018078',
               'LOCUS': {'date': '29-AUG-2010',
                         'division': 'ENV',
                         'locus_name': 'HQ018078',

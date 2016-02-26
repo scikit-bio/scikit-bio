@@ -434,6 +434,7 @@ def _parse_single_genbank(chunks):
             feature_metadata = merge_dicts(parsed, feature_metadata)
         else:
             metadata[header] = parsed
+    metadata["id"] = metadata['LOCUS']['locus_name']
     return sequence, metadata, None, feature_metadata
 
 
