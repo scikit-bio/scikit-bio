@@ -231,7 +231,7 @@ def safe_md5(open_file, block_size=2 ** 20):
 
 @deprecated(as_of="0.4.2-dev", until="0.4.4",
             reason="Deprecated in favor of solutions present in standard "
-                    "python library")
+            "python library")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -275,7 +275,7 @@ def remove_files(list_of_filepaths, error_on_missing=True):
 
 @deprecated(as_of="0.4.2-dev", until="0.4.4",
             reason="Deprecated in favor of solutions present in standard "
-                    "python library")
+            "python library")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 

@@ -143,6 +143,7 @@ class TestSniffer(unittest.TestCase):
         self.assertEqual(_fastq_sniffer(fp), (True, {'variant':
                                                      'illumina1.8'}))
 
+
 class TestReaders(unittest.TestCase):
     def setUp(self):
         self.valid_configurations = [
