@@ -138,6 +138,10 @@ class TestSniffer(unittest.TestCase):
         for fp in self.negatives:
             self.assertEqual(_fastq_sniffer(fp), (False, {}))
 
+    def test_illumina_sniffed(self):
+        fp = get_data_path('fastq_single_seq_illumina1.8')
+        self.assertEqual(_fastq_sniffer(fp), (True, {'variant':
+                                                     'illumina1.8'}))
 
 class TestReaders(unittest.TestCase):
     def setUp(self):
