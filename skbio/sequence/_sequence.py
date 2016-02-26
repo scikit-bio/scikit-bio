@@ -2123,7 +2123,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         if positional_metadata is None and self.has_positional_metadata():
             positional_metadata = self._positional_metadata
         if interval_metadata is None and self.has_interval_metadata():
-            interval_metadata = self.interval_metadata
+            interval_metadata = self.interval_metadata.features
         return self._constructor(sequence=sequence, metadata=metadata,
                                  positional_metadata=positional_metadata,
                                  interval_metadata=interval_metadata)

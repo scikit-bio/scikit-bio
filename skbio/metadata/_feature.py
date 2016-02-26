@@ -50,6 +50,12 @@ class Feature(Mapping):
             self._hash = hash(frozenset(self.items()))
         return self._hash
 
+    def __lt__(self, other):
+        return hash(self) < hash(other)
+
+    def __gt__(self, other):
+        return hash(self) > hash(other)
+
     def __eq__(self, other):
         return hash(self) == hash(other)
 

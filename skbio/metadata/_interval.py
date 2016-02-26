@@ -177,7 +177,14 @@ class IntervalMetadata():
         # This doesn't look at the interval trees,
         # since the interval trees are strictly built
         # based on the features.
-        return self.features == other.features
+        sivs = list(map(sorted, self.features.values()))
+        oivs = list(map(sorted, other.features.values()))
+
+        equalIntervals = sorted(sivs) == sorted(oivs)
+        equalFeatures = self.features.keys() ==\
+                        other.features.keys()
+
+        return equalIntervals and equalFeatures
 
 def _polish_interval(interval):
     if isinstance(interval, tuple):

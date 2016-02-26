@@ -123,7 +123,7 @@ class GenBankIOTests(TestCase):
                                  organism='"Escherichia coli"',
                                  rc_=False,
                                  right_partial_=False,
-                                 type_='source'):[(1, 63)],
+                                 type_='source'):[(0, 63)],
                 Feature(codon_start='1',
                                  db_xref=('"GI:145230"',
                                           '"taxon:562"',
@@ -136,7 +136,7 @@ class GenBankIOTests(TestCase):
                                  right_partial_=True,
                                  transl_table='11',
                                  translation='"MKQSTIALAVLPLLFTPVTKA"',
-                                 type_='CDS'):[(1, 63)]
+                                 type_='CDS'):[(0, 63)]
             },
             RNA)
 
@@ -214,13 +214,13 @@ class GenBankIOTests(TestCase):
                                       location='1..9',
                                       rc_=False,
                                       right_partial_=False,
-                                      type_='source'):[(1, 9)],
+                                      type_='source'):[(0, 9)],
                               Feature(left_partial_=True,
                                       location='complement(<2..>8)',
                                       product='"16S ribosomal RNA"',
                                       rc_=True,
                                       right_partial_=True,
-                                      type_='rRNA'):[(2, 8)]},
+                                      type_='rRNA'):[(1, 8)]},
              DNA))
 
 
@@ -356,13 +356,19 @@ REFERENCE   1  (bases 1 to 154478)
             obs = _genbank_to_sequence(self.multi_fp, seq_num=i+1)
             exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
                            interval_metadata=exp[2])
+            self.assertEqual(exp.interval_metadata,
+                             obs.interval_metadata)
             self.assertEqual(exp, obs)
 
     def test_genbank_to_rna(self):
+        self.maxDiff = None
         seq, md, pmd, constructor = self.single_rna
         obs = _genbank_to_rna(self.single_rna_fp)
         exp = constructor(seq, metadata=md,
                           lowercase=True, interval_metadata=pmd)
+        self.assertEqual(exp.interval_metadata,
+                         obs.interval_metadata)
+
         self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
