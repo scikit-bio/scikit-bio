@@ -867,6 +867,21 @@ def ancom(table, grouping,
         raise ValueError('`table` index and `grouping` '
                          'index must be consistent.')
 
+    # Compute DataFrame of mean/std abundances for all features on a
+    # per category basis.
+    # This code needs to be cleaned up a lot - just a proof-of-concept
+    # for now to illustrate what needs to be done. 
+    cat_values = cats.values
+    cs = np.unique(cat_values)
+    cat_dists = {k: mat[cat_values == k] for k in cs}
+    cat_means = {k: np.mean(v, axis=0) for k, v in cat_dists.items()}
+    cat_means = pd.DataFrame.from_dict(cat_means)
+    cat_means.columns = ['Mean: %s' % e for e in cat_means.columns]
+    cat_stds = {k: np.std(v, axis=0) for k, v in cat_dists.items()}
+    cat_stds = pd.DataFrame.from_dict(cat_stds)
+    cat_stds.columns = ['Std: %s' % e for e in cat_stds.columns]
+    cat_sum = pd.concat([cat_means, cat_stds], axis=1)
+
     n_feat = mat.shape[1]
 
     _logratio_mat = _log_compare(mat.values, cats.values, significance_test)
@@ -898,9 +913,9 @@ def ancom(table, grouping,
             nu = cutoff[4]
         reject = (W >= nu*n_feat)
     labs = mat.columns
-    return pd.DataFrame({'W': pd.Series(W, index=labs),
-                         'reject': pd.Series(reject, index=labs)})
-
+    ancom_df = pd.DataFrame({'W': pd.Series(W, index=labs),
+                           'reject': pd.Series(reject, index=labs)})
+    return pd.concat([ancom_df, cat_sum], axis=1)
 
 def _holm_bonferroni(p):
     """ Performs Holm-Bonferroni correction for pvalues
