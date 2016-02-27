@@ -805,7 +805,6 @@ def ancom(table, grouping,
     different between the treatment and the control.
 
     """
-
     if not isinstance(table, pd.DataFrame):
         raise TypeError('`table` must be a `pd.DataFrame`, '
                         'not %r.' % type(table).__name__)
@@ -839,6 +838,7 @@ def ancom(table, grouping,
     if (table.isnull()).any().any():
         raise ValueError('Cannot handle missing values in `table`.')
 
+    input_grouping = grouping.copy()
     groups, _grouping = np.unique(grouping, return_inverse=True)
     grouping = pd.Series(_grouping, index=grouping.index)
     num_groups = len(groups)
@@ -870,8 +870,8 @@ def ancom(table, grouping,
     # Compute DataFrame of mean/std abundances for all features on a
     # per category basis.
     # This code needs to be cleaned up a lot - just a proof-of-concept
-    # for now to illustrate what needs to be done. 
-    cat_values = cats.values
+    # for now to illustrate what needs to be done.
+    cat_values = input_grouping.values
     cs = np.unique(cat_values)
     cat_dists = {k: mat[cat_values == k] for k in cs}
     cat_means = {k: np.mean(v, axis=0) for k, v in cat_dists.items()}
