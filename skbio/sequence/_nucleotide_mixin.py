@@ -14,7 +14,7 @@ from skbio.util._decorator import classproperty, stable
 from ._grammared_sequence import _motifs as parent_motifs
 
 
-class NucleotideMixin(object, metaclass=ABCMeta):
+class NucleotideMixin(metaclass=ABCMeta):
     """Mixin for adding funtionality for working with sequences of nucleotides.
 
     This is an abstract base class (ABC) that cannot be instantiated.

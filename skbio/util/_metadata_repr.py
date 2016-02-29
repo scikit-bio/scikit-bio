@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractmethod
 from skbio._base import ElasticLines
 
 
-class _MetadataReprBuilder(object, metaclass=ABCMeta):
+class _MetadataReprBuilder(metaclass=ABCMeta):
     """Abstract base class for building  a repr for an object containing
     metadata and/or positional metadata.
 

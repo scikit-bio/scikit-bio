@@ -23,7 +23,7 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util._decorator import stable, experimental
 
 
-class SkbioObject(object, metaclass=abc.ABCMeta):
+class SkbioObject(metaclass=abc.ABCMeta):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
@@ -36,7 +36,7 @@ class SkbioObject(object, metaclass=abc.ABCMeta):
         pass
 
 
-class MetadataMixin(object, metaclass=abc.ABCMeta):
+class MetadataMixin(metaclass=abc.ABCMeta):
     @property
     @stable(as_of="0.4.0")
     def metadata(self):
@@ -199,7 +199,7 @@ class MetadataMixin(object, metaclass=abc.ABCMeta):
         return self._metadata is not None and bool(self.metadata)
 
 
-class PositionalMetadataMixin(object, metaclass=abc.ABCMeta):
+class PositionalMetadataMixin(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.
@@ -816,7 +816,7 @@ class OrdinationResults(SkbioObject):
         return '\t%s: %s' % (attr_label, formatted_attr)
 
 
-class ElasticLines(object):
+class ElasticLines:
     """Store blocks of content separated by dashed lines.
 
     Each dashed line (separator) is as long as the longest content

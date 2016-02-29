@@ -78,7 +78,7 @@ class WrappedBufferedRandom(io.BufferedRandom):
                     self.raw.close()
 
 
-class CompressedMixin(object):
+class CompressedMixin:
     """Act as a bridge between worlds"""
     def __init__(self, before_file, *args, **kwargs):
         self.streamable = kwargs.pop('streamable', True)

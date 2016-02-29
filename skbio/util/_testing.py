@@ -22,7 +22,7 @@ from skbio.util import SkbioWarning
 from ._decorator import experimental
 
 
-class ReallyEqualMixin(object):
+class ReallyEqualMixin:
     """Use this for testing __eq__/__ne__.
 
     Taken and modified from the following public domain code:
@@ -51,7 +51,7 @@ class ReallyEqualMixin(object):
         self.assertTrue(b != a)
 
 
-class MetadataMixinTests(object):
+class MetadataMixinTests:
     def test_constructor_invalid_type(self):
         for md in (0, 'a', ('f', 'o', 'o'), np.array([]), pd.DataFrame()):
             with self.assertRaisesRegex(TypeError, 'metadata must be a dict'):
@@ -299,7 +299,7 @@ class MetadataMixinTests(object):
                         metadata={'foo': 42}).has_metadata())
 
 
-class PositionalMetadataMixinTests(object):
+class PositionalMetadataMixinTests:
     def test_constructor_invalid_positional_metadata_type(self):
         with self.assertRaisesRegex(TypeError,
                                     'Invalid positional metadata. Must be '
@@ -886,7 +886,7 @@ class SuppressSkbioWarnings(nose.plugins.Plugin):
 
 
 @nose.tools.nottest
-class TestRunner(object):
+class TestRunner:
     """Simple wrapper class around nosetests functionality.
 
     Parameters

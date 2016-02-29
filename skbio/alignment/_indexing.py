@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 
-class _Indexing(object, metaclass=ABCMeta):
+class _Indexing(metaclass=ABCMeta):
     def __init__(self, instance, axis=None):
         self._obj = instance
         self._axis = axis

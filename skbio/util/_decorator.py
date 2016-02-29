@@ -15,7 +15,7 @@ from ._exception import OverrideError
 from ._warning import DeprecationWarning as SkbioDeprecationWarning
 
 
-class _state_decorator(object):
+class _state_decorator:
     """ Base class for decorators of all public functionality.
     """
 

@@ -48,7 +48,7 @@ class TestOpen(unittest.TestCase):
             skbio.io.open(io.BytesIO(), compression='foo')
 
 
-class ReadableBinarySourceTests(object):
+class ReadableBinarySourceTests:
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -298,7 +298,7 @@ class ReadableSourceTest(unittest.TestCase):
             f.close()
 
 
-class WritableBinarySourceTests(object):
+class WritableBinarySourceTests:
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)

@@ -66,7 +66,7 @@ class TestMiniRegistry(unittest.TestCase):
         self.assertIn("name", new)
 
     def test_everything(self):
-        class SomethingToInterpolate(object):
+        class SomethingToInterpolate:
             def interpolate_me():
                 """First line
 

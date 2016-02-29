@@ -46,7 +46,7 @@ def get_compression_handler(name):
     return compressors.get(name, False)
 
 
-class IOSource(object):
+class IOSource:
     closeable = True
 
     def __init__(self, file, options):

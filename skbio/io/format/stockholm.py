@@ -442,7 +442,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
 
 
 # For storing intermediate data used to construct a Sequence object.
-class _MSAData(object):
+class _MSAData:
     def __init__(self):
         self._seqs = {}
         self._seq_order = []
@@ -520,7 +520,7 @@ class _MSAData(object):
                           index=self._seq_order)
 
 
-class _SeqData(object):
+class _SeqData:
     def __init__(self, name):
         self.name = name
         self._seq = None

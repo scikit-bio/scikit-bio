@@ -19,7 +19,7 @@ from skbio.util._exception import OverrideError
 
 class TestClassOnlyMethod(unittest.TestCase):
     def test_works_on_class(self):
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls):
                 return cls
@@ -27,7 +27,7 @@ class TestClassOnlyMethod(unittest.TestCase):
         self.assertEqual(A.example(), A)
 
     def test_fails_on_instance(self):
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls):
                 pass
@@ -39,7 +39,7 @@ class TestClassOnlyMethod(unittest.TestCase):
         self.assertIn('instance', str(e.exception))
 
     def test_matches_classmethod(self):
-        class A(object):
+        class A:
             pass
 
         def example(cls, thing):
@@ -60,7 +60,7 @@ class TestClassOnlyMethod(unittest.TestCase):
     def test_passes_args_kwargs(self):
         self.ran_test = False
 
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls, arg1, arg2, kwarg1=None, kwarg2=None,
                         default=5):
@@ -77,7 +77,7 @@ class TestClassOnlyMethod(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def test_raises_when_missing(self):
-        class A(object):
+        class A:
             pass
 
         with self.assertRaises(OverrideError):
@@ -87,7 +87,7 @@ class TestOverrides(unittest.TestCase):
                     pass
 
     def test_doc_inherited(self):
-        class A(object):
+        class A:
             def test(self):
                 """Docstring"""
                 pass
@@ -100,7 +100,7 @@ class TestOverrides(unittest.TestCase):
         self.assertEqual(B.test.__doc__, "Docstring")
 
     def test_doc_not_inherited(self):
-        class A(object):
+        class A:
             def test(self):
                 """Docstring"""
                 pass
@@ -116,7 +116,7 @@ class TestOverrides(unittest.TestCase):
 
 class TestClassProperty(unittest.TestCase):
     def test_getter_only(self):
-        class Foo(object):
+        class Foo:
             _foo = 42
 
             @classproperty

@@ -27,7 +27,7 @@ def resolve_key(obj, key):
 
 
 def make_sentinel(name):
-    return type(name, (object, ), {
+    return type(name, tuple(), {
         '__repr__': lambda s: name,
         '__str__': lambda s: name,
         '__class__': None

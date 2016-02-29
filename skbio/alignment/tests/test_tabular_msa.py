@@ -893,7 +893,7 @@ class TestDeepCopy(unittest.TestCase):
         assert_index_equal(msa.index, pd.Index(['foo', 'bar']))
 
 
-class SharedIndexTests(object):
+class SharedIndexTests:
     def get(self, obj, indexable):
         raise NotImplementedError()
 
@@ -3455,7 +3455,7 @@ class TestRepr(unittest.TestCase):
 # variety of situations. they are more extensive than the unit tests above
 # (TestRepr.test_repr) but are only currently run in py3. thus, they cannot
 # be relied upon for coverage (the unit tests take care of this)
-class TabularMSAReprDoctests(object):
+class TabularMSAReprDoctests:
     r"""
     >>> from skbio import DNA, TabularMSA
 

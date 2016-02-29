@@ -51,7 +51,7 @@ def main():
     return return_code
 
 
-class RepoValidator(object):
+class RepoValidator:
     """Abstract base class representing a repository validator.
 
     Subclasses must override and implement ``_validate`` (see its docstring for

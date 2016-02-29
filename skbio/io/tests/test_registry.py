@@ -26,7 +26,7 @@ from skbio.util._exception import TestingUtilError
 from skbio import DNA, read, write
 
 
-class TestClass(object):
+class TestClass:
     def __init__(self, l):
         self.list = l
 
@@ -1681,13 +1681,13 @@ class TestMonkeyPatch(RegistryTest):
     def setUp(self):
         super(TestMonkeyPatch, self).setUp()
 
-        class UnassumingClass(object):
+        class UnassumingClass:
             pass
 
-        class ClassWithDefault(object):
+        class ClassWithDefault:
             default_write_format = 'favfmt'
 
-        class NoMonkeySee(object):
+        class NoMonkeySee:
             pass
 
         self.unassuming_class = UnassumingClass

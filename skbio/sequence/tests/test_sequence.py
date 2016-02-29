@@ -428,7 +428,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaisesRegex(TypeError, 'float64'):
             Sequence(np.float_(50))
         with self.assertRaisesRegex(TypeError, 'Foo'):
-            class Foo(object):
+            class Foo:
                 pass
             Sequence(Foo())
 
@@ -2464,7 +2464,7 @@ class TestDistance(TestSequenceBase):
 # variety of situations. they are more extensive than the unit tests above
 # (TestSequence.test_repr) but are only currently run in py3. thus, they cannot
 # be relied upon for coverage (the unit tests take care of this)
-class SequenceReprDoctests(object):
+class SequenceReprDoctests:
     r"""
     >>> import pandas as pd
     >>> from skbio import Sequence

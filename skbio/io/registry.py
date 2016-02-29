@@ -184,7 +184,7 @@ from skbio.util._decorator import stable, classonlymethod
 FileSentinel = make_sentinel("FileSentinel")
 
 
-class IORegistry(object):
+class IORegistry:
     """Create a registry of formats and implementations which map to classes.
 
     """
@@ -750,7 +750,7 @@ skbio.io.util.open
 """
 
 
-class Format(object):
+class Format:
     """Defines a format on which readers/writers/sniffer can be registered.
 
     Parameters
@@ -946,7 +946,7 @@ class Format(object):
         >>> registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
-        >>> class MyObject(object):
+        >>> class MyObject:
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -1032,7 +1032,7 @@ class Format(object):
         >>> registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
-        >>> class MyObject(object):
+        >>> class MyObject:
         ...     default_write_format = 'myformat'
         ...     def __init__(self, content):
         ...         self.content = content
