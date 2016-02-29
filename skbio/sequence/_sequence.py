@@ -937,8 +937,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """
         return len(self) > 0
 
-    __nonzero__ = __bool__
-
     @stable(as_of="0.4.0")
     def __iter__(self):
         """Iterate over positions in this sequence.

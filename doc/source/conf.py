@@ -58,7 +58,7 @@ class NewAuto(autosummary.Autosummary):
                 return specials[display_name], '', summary, real_name
             return display_name, sig, summary, real_name
 
-        skip = ['__nonzero__']
+        skip = []
 
         return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
                 if e[0] not in skip]

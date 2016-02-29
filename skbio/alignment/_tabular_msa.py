@@ -856,9 +856,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # It is impossible to have 0 sequences and >0 positions.
         return self.shape.position > 0
 
-    # Python 2 compatibility.
-    __nonzero__ = __bool__
-
     @experimental(as_of='0.4.1')
     def __contains__(self, label):
         """Determine if an index label is in this MSA.
