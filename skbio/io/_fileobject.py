@@ -18,14 +18,6 @@ def is_binary_file(file):
 # of the time. I am very sorry to the poor soul who has to read beyond.
 
 
-class StringIO(io.StringIO):
-    """Treat Bytes the same as Unicode by decoding ascii, for testing only."""
-    def __init__(self, string=None, **kwargs):
-        if isinstance(string, bytes):
-            string = string.decode()
-        super(StringIO, self).__init__(string, **kwargs)
-
-
 class SaneTextIOWrapper(io.TextIOWrapper):
     def __init__(self, *args, **kwargs):
         super(SaneTextIOWrapper, self).__init__(*args, **kwargs)

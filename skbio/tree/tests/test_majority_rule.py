@@ -6,11 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
 from unittest import TestCase, main
 
 import numpy as np
 
-from skbio.io._fileobject import StringIO
 from skbio import TreeNode
 from skbio.tree import majority_rule
 from skbio.tree._majority_rule import (_walk_clades, _filter_clades,
@@ -20,17 +20,26 @@ from skbio.tree._majority_rule import (_walk_clades, _filter_clades,
 class MajorityRuleTests(TestCase):
     def test_majority_rule(self):
         trees = [
-            TreeNode.read(StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
-            TreeNode.read(StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
-            TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
-            TreeNode.read(StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
+            TreeNode.read(
+                io.StringIO("(A,(B,(H,(D,(J,(((G,E),(F,I)),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(D,((J,H),(((G,E),(F,I)),C)))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(D,(H,(J,(((G,E),(F,I)),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,(G,((F,I),((J,(H,D)),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,(G,((F,I),(((J,H),D),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,((F,I),(G,((J,(H,D)),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,((F,I),(G,(((J,H),D),C))))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,((G,(F,I)),((J,(H,D)),C)))));")),
+            TreeNode.read(
+                io.StringIO("(A,(B,(E,((G,(F,I)),(((J,H),D),C)))));"))]
 
-        exp = TreeNode.read(StringIO("(((E,(G,(F,I),(C,(D,J,H)))),B),A);"))
+        exp = TreeNode.read(io.StringIO("(((E,(G,(F,I),(C,(D,J,H)))),B),A);"))
         obs = majority_rule(trees)
         self.assertEqual(exp.compare_subsets(obs[0]), 0.0)
         self.assertEqual(len(obs), 1)
@@ -53,10 +62,10 @@ class MajorityRuleTests(TestCase):
 
     def test_majority_rule_multiple_trees(self):
         trees = [
-            TreeNode.read(StringIO("((a,b),(c,d),(e,f));")),
-            TreeNode.read(StringIO("(a,(c,d),b,(e,f));")),
-            TreeNode.read(StringIO("((c,d),(e,f),b);")),
-            TreeNode.read(StringIO("(a,(c,d),(e,f));"))]
+            TreeNode.read(io.StringIO("((a,b),(c,d),(e,f));")),
+            TreeNode.read(io.StringIO("(a,(c,d),b,(e,f));")),
+            TreeNode.read(io.StringIO("((c,d),(e,f),b);")),
+            TreeNode.read(io.StringIO("(a,(c,d),(e,f));"))]
 
         trees = majority_rule(trees)
         self.assertEqual(len(trees), 4)
@@ -71,8 +80,8 @@ class MajorityRuleTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_walk_clades(self):
-        trees = [TreeNode.read(StringIO("((A,B),(D,E));")),
-                 TreeNode.read(StringIO("((A,B),(D,(E,X)));"))]
+        trees = [TreeNode.read(io.StringIO("((A,B),(D,E));")),
+                 TreeNode.read(io.StringIO("((A,B),(D,(E,X)));"))]
         exp_clades = [
             (frozenset(['A']), 2.0),
             (frozenset(['B']), 2.0),

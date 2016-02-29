@@ -6,12 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import io
+
 import numpy as np
 
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree import TreeNode
 from skbio.util._decorator import experimental
-from skbio.io._fileobject import StringIO
 
 
 @experimental(as_of="0.4.0")
@@ -110,7 +111,7 @@ def nj(dm, disallow_negative_branch_length=True, result_constructor=None):
 
     if result_constructor is None:
         def result_constructor(x):
-            return TreeNode.read(StringIO(x), format='newick')
+            return TreeNode.read(io.StringIO(x), format='newick')
 
     # initialize variables
     node_definition = None
