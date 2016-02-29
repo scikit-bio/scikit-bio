@@ -214,22 +214,19 @@ class TestKmerDistance(unittest.TestCase):
     def test_k_less_than_one_error(self):
         seq1 = Sequence('ATCG')
         seq2 = Sequence('ACTG')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'k must be greater than 0.'):
+        with self.assertRaisesRegex(ValueError, 'k must be greater than 0.'):
             kmer_distance(seq1, seq2, 0)
 
     def test_type_mismatch_error(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ATC')
-        with six.assertRaisesRegex(self, TypeError,
-                                   "Type 'Sequence'.*type 'DNA'"):
+        with self.assertRaisesRegex(TypeError, "Type 'Sequence'.*type 'DNA'"):
             kmer_distance(seq1, seq2, 3)
 
     def test_non_sequence_error(self):
         seq1 = Sequence('ATCG')
         seq2 = 'ATCG'
-        with six.assertRaisesRegex(self, TypeError,
-                                   "not 'str'"):
+        with self.assertRaisesRegex(TypeError, "not 'str'"):
             kmer_distance(seq1, seq2, 3)
 
 
