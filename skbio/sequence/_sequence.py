@@ -1430,64 +1430,41 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         Examples
         --------
+        Let's create and display a Sequence:
+
         >>> from skbio import Sequence
+        >>> sequence = Sequence('GGTACCAACG')
+        >>> str(sequence)
+        'GGTACCAACG'
 
-        Let's create one type of ``where`` data: a boolean vector
+        Let's call ``replace`` on the Sequence using a boolean vector for
+        ``where`` and assign it to a new variable:
 
-        >>> where_bool = [False, False, False, True, False, False, True, True,
-        ...               False, False]
+        >>> seq = sequence.replace([False, False, False, True, False, False,
+        ...                         True, True, False, False], '-')
 
-        Let's create another type of the same ``where`` data: a list of
-        ints
+        Let's take a look at the new Sequence:
 
-        >>> where_ints = [3, 6, 7]
+        >>> str(seq)
+        'GGT-CC--CG'
 
-        Let's create another type of the same ``where`` data: a list of
-        slices
+        Other types of input are accepted by the ``where`` parameter. Let's
+        pass in a list of indices and slices instead and compare it to ``seq``:
 
-        >>> where_slices = [slice(3,4), slice(6,8)]
+        >>> str(seq) == str(sequence.replace([3, slice(6, 8)], '-'))
+        True
 
-        Let's create another type of the same ``where`` data: a boolean vector
-        contained in the positional metadata of the sequence
+        ``where`` also accepts a boolean vector contained in
+        ``Sequence.positional_metadata``:
 
-        >>> positional_metadata = {'where': [False, False, False, True, False,
+        >>> sequence.positional_metadata = {'where':
+        ...                                 [False, False, False, True, False,
         ...                                  False, True, True, False, False]}
 
-        Let's create a Sequence object with positional metadata
+        Let's pass in the key ``'where'`` and compare to ``seq``:
 
-        >>> sequence = Sequence('GGTACCAACG',
-        ...                     positional_metadata=positional_metadata)
-
-        Let's pass in where_bool to replace
-
-        >>> seq = sequence.replace(where_bool, '-')
-
-        Let's pass in where_ints and compare
-
-        >>> seq == sequence.replace(where_ints, '-')
+        >>> str(seq) == str(sequence.replace('where', '-'))
         True
-
-        Let's pass in where_slices and compare
-
-        >>> seq == sequence.replace(where_slices, '-')
-        True
-
-        Let's pass in the positional metadata vector name and compare
-
-        >>> seq == sequence.replace('where', '-')
-        True
-
-        Let's look at our replaced sequence
-
-        >>> seq
-        Sequence
-        --------------------------
-        Positional metadata:
-            'where': <dtype: bool>
-        Stats:
-            length: 10
-        --------------------------
-        0 GGT-CC--CG
 
         """
         index = self._munge_to_index_array(where)
