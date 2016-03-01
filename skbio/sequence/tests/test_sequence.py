@@ -1244,7 +1244,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with six.assertRaisesRegex(self, UnicodeEncodeError,
                                    "can't encode character.*not in "
                                    "range\(128\)"):
-            seq.replace(index, '\uFFFF')
+            seq.replace(index, u'\uFFFF')
 
     def test_replace_non_single_character_error(self):
         seq = Sequence('CCGAACTGTC')
