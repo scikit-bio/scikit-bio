@@ -19,6 +19,10 @@ To install the latest release of scikit-bio::
 
     pip install scikit-bio
 
+When installing scikit-bio using pip/setup.py, make sure to install NumPy before proceeding to install scikit-bio.The install instruction for installing NumPy is::
+   
+   pip install numpy
+
 Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and its dependencies without having to compile them::
 
     conda install -c https://conda.anaconda.org/biocore scikit-bio
