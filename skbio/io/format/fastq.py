@@ -318,9 +318,10 @@ def _fastq_sniffer(fh):
     try:
         not_empty = False
         for _, seq in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
-            if len((seq.metadata['id'] +
-                    seq.metadata['description']).split(':')) == 10 and \
-               seq.metadata['description'].split(':')[1] in 'YN':
+            split_length = len((seq.metadata['id'] +
+                                seq.metadata['description']).split(':'))
+            description = seq.metadata['description'].split(':')
+            if split_length == 10 and description[1] in 'YN':
                 return True, {'variant': 'illumina1.8'}
             not_empty = True
         return not_empty, {}

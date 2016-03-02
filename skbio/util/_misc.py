@@ -153,7 +153,7 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
-@deprecated(as_of='0.4.2-dev', until='0.4.4',
+@deprecated(as_of='0.4.2-dev', until='0.5.1',
             reason='This functionality will be moved to the '
                    'fastq sniffer, where it will be more useful as it will '
                    'determine the variant of a fastq file.')
@@ -229,9 +229,9 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
-@deprecated(as_of="0.4.2-dev", until="0.4.4",
-            reason="Deprecated in favor of solutions present in standard "
-            "python library")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -273,9 +273,9 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 
-@deprecated(as_of="0.4.2-dev", until="0.4.4",
-            reason="Deprecated in favor of solutions present in standard "
-            "python library")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 
