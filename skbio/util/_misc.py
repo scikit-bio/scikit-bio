@@ -14,7 +14,7 @@ from os.path import exists, isdir
 from functools import partial
 from types import FunctionType
 import inspect
-from ._decorator import experimental
+from ._decorator import experimental, deprecated
 
 
 def resolve_key(obj, key):
@@ -153,7 +153,10 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of='0.4.2-dev', until='0.5.1',
+            reason='This functionality will be moved to the '
+                   'fastq sniffer, where it will be more useful as it will '
+                   'determine the variant of a fastq file.')
 def is_casava_v180_or_later(header_line):
     """Check if the header looks like it is Illumina software post-casava v1.8
 
@@ -226,7 +229,9 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -268,7 +273,9 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 

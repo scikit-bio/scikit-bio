@@ -13,6 +13,14 @@
 * Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
 an empty generator.
 
+### Deprecated functionality [experimental]
+* Deprecated function `skbio.util.create_dir`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
+functionality described [here](https://docs.python.org/2/library/os.html#os.makedirs). ([#833](https://github.com/biocore/scikit-bio/issues/833))
+* Deprecated function `skbio.util.remove_files`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
+functionality described [here](https://docs.python.org/2/library/os.html#os.remove). ([#833](https://github.com/biocore/scikit-bio/issues/833))
+* Deprecated function `skbio.util.is_casava_v180_or_later`. This function will be removed in 0.5.1. Functionality moved to FASTQ sniffer.
+([#833](https://github.com/biocore/scikit-bio/issues/833))
+
 ### Miscellaneous
 
 ## Version 0.4.2 (2016-02-17)
