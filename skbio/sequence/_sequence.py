@@ -1419,7 +1419,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             Can be a boolean vector, an iterable of indices/slices, or a
             string that is a key in `positional_metadata` pointing to a
             boolean vector.
-        character: str
+        character : str or bytes
             Character that will replace chosen items in this sequence.
 
         Returns
@@ -1449,7 +1449,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         'GGT-CC--CG'
 
         Other types of input are accepted by the ``where`` parameter. Let's
-        pass in a list of indices and slices instead and compare it to ``seq``:
+        pass in a list of indices and slices that is equivalent to the boolean
+        vector we used previously:
 
         >>> str(seq) == str(sequence.replace([3, slice(6, 8)], '-'))
         True
@@ -1467,14 +1468,17 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         True
 
         """
-        index = self._munge_to_index_array(where)
-        seq_bytes = self._bytes.copy()
         if type(character) is not bytes:
             character = character.encode('ascii')
-        seq_bytes[index] = ord(character)
-        return self.__class__(seq_bytes,
-                              metadata=self._metadata,
-                              positional_metadata=self._positional_metadata)
+        character = ord(character)
+        index = self._munge_to_index_array(where)
+        seq_bytes = self._bytes.copy()
+        seq_bytes[index] = character
+        metadata = self.metadata if self.has_metadata() else None
+        positional_metadata = self.positional_metadata if \
+            self.has_positional_metadata() else None
+        return self.__class__(seq_bytes, metadata=metadata,
+                              positional_metadata=positional_metadata)
 
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):

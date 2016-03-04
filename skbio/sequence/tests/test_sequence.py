@@ -1211,6 +1211,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertIsNone(obs._metadata)
         self.assertIsNone(obs._positional_metadata)
 
+    def test_replace_handles_empty_but_present_metadata_efficiently(self):
+        seq = Sequence('ACGT', metadata={},
+                       positional_metadata=pd.DataFrame(index=range(4)))
+        obs = seq.replace([True, False, False, True], 'Z')
+        self.assertIsNone(obs._metadata)
+        self.assertIsNone(obs._positional_metadata)
+
     def test_replace_with_metadata(self):
         seq = Sequence('GCACGGCAAGAAGCGCCCCA',
                        metadata={'NM': 'Kestrel Gorlick'},
