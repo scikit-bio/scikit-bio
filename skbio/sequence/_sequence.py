@@ -1408,6 +1408,78 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._string.count(
             self._munge_to_bytestring(subsequence, "count"), start, end)
 
+    @experimental(as_of="0.4.2-dev")
+    def replace(self, where, character):
+        """Replace values in this sequence with a different character.
+
+        Parameters
+        ----------
+        where : 1D array_like (bool) or iterable (slices or ints) or str
+            Indicates positions in the sequence to replace with `character`.
+            Can be a boolean vector, an iterable of indices/slices, or a
+            string that is a key in `positional_metadata` pointing to a
+            boolean vector.
+        character : str or bytes
+            Character that will replace chosen items in this sequence.
+
+        Returns
+        -------
+        Sequence
+            Copy of this sequence, with chosen items replaced with chosen
+            character. All metadata is retained.
+
+        Examples
+        --------
+        Let's create and display a Sequence:
+
+        >>> from skbio import Sequence
+        >>> sequence = Sequence('GGTACCAACG')
+        >>> str(sequence)
+        'GGTACCAACG'
+
+        Let's call ``replace`` on the Sequence using a boolean vector for
+        ``where`` and assign it to a new variable:
+
+        >>> seq = sequence.replace([False, False, False, True, False, False,
+        ...                         True, True, False, False], '-')
+
+        Let's take a look at the new Sequence:
+
+        >>> str(seq)
+        'GGT-CC--CG'
+
+        Other types of input are accepted by the ``where`` parameter. Let's
+        pass in a list of indices and slices that is equivalent to the boolean
+        vector we used previously:
+
+        >>> str(seq) == str(sequence.replace([3, slice(6, 8)], '-'))
+        True
+
+        ``where`` also accepts a boolean vector contained in
+        ``Sequence.positional_metadata``:
+
+        >>> sequence.positional_metadata = {'where':
+        ...                                 [False, False, False, True, False,
+        ...                                  False, True, True, False, False]}
+
+        Let's pass in the key ``'where'`` and compare to ``seq``:
+
+        >>> str(seq) == str(sequence.replace('where', '-'))
+        True
+
+        """
+        if type(character) is not bytes:
+            character = character.encode('ascii')
+        character = ord(character)
+        index = self._munge_to_index_array(where)
+        seq_bytes = self._bytes.copy()
+        seq_bytes[index] = character
+        metadata = self.metadata if self.has_metadata() else None
+        positional_metadata = self.positional_metadata if \
+            self.has_positional_metadata() else None
+        return self.__class__(seq_bytes, metadata=metadata,
+                              positional_metadata=positional_metadata)
+
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         """Find position where subsequence first occurs in the sequence.

@@ -1156,6 +1156,113 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
 
+    def test_replace_sanity(self):
+        seq = Sequence('AAGCATGCCCTTTACATTTG')
+        index = self._make_index('10011011001111110111')
+        obs = seq.replace(index, '_')
+        exp = Sequence('_AG__T__CC______T___')
+        self.assertEqual(obs, exp)
+
+    def test_replace_index_array(self):
+        seq = Sequence('TCGGGTGTTGTGCAACCACC')
+        for _type in list, tuple, np.array, pd.Series:
+            index = _type([0, 2, 5, 8, 9])
+            obs = seq.replace(index, '-')
+            exp = Sequence('-C-GG-GT--TGCAACCACC')
+            self.assertEqual(obs, exp)
+
+    def test_replace_iterable_slices(self):
+        seq = Sequence('CATTATGGACCCAGCGTGCC')
+        slices = (slice(0, 5), slice(8, 12), slice(15, 17))
+        mixed_slices = (0, 1, 2, 3, 4, slice(8, 12), 15, 16)
+        for _type in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                      lambda x: pd.Series(tuple(x))):
+            index = (_type(slices), _type(mixed_slices))
+            obs_slices = seq.replace(index[0], '-')
+            obs_mixed = seq.replace(index[1], '-')
+            exp = Sequence('-----TGG----AGC--GCC')
+            self.assertEqual(obs_slices, exp)
+            self.assertEqual(obs_mixed, exp)
+
+    def test_replace_index_in_positional_metadata(self):
+        positional_metadata = {'where': self._make_index('001110110'
+                                                         '10001110000')}
+        seq = Sequence('AAGATTGATACCACAGTTGT',
+                       positional_metadata=positional_metadata)
+        obs = seq.replace('where', '-')
+        exp = Sequence('AA---T--T-CCA---TTGT',
+                       positional_metadata=positional_metadata)
+        self.assertEqual(obs, exp)
+
+    def test_replace_does_not_mutate_original(self):
+        seq = Sequence('ATCG')
+        index = self._make_index('0011')
+        seq.replace(index, '-')
+        obs = seq
+        exp = Sequence('ATCG')
+        self.assertEqual(obs, exp)
+
+    def test_replace_handles_metadata_efficiently(self):
+        seq = Sequence('TGGTACAAGCTGCTCGCAGCACGGCGTGCC')
+        index = self._make_index('010101100001101011001100100010')
+        obs = seq.replace(index, '-')
+        self.assertIsNone(seq._metadata)
+        self.assertIsNone(seq._positional_metadata)
+        self.assertIsNone(obs._metadata)
+        self.assertIsNone(obs._positional_metadata)
+
+    def test_replace_handles_empty_but_present_metadata_efficiently(self):
+        seq = Sequence('ACGT', metadata={},
+                       positional_metadata=pd.DataFrame(index=range(4)))
+        obs = seq.replace([True, False, False, True], 'Z')
+        self.assertIsNone(obs._metadata)
+        self.assertIsNone(obs._positional_metadata)
+
+    def test_replace_with_metadata(self):
+        seq = Sequence('GCACGGCAAGAAGCGCCCCA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        index = self._make_index('01100001110010001100')
+        obs = seq.replace(index, '-')
+        exp = Sequence('G--CGGC---AA-CGC--CA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_subclass(self):
+        seq = DNA('CGACAACCGATGTGCTGTAA')
+        index = self._make_index('10101000111111110011')
+        obs = seq.replace(index, '-')
+        exp = DNA('-G-C-ACC--------GT--')
+        self.assertEqual(obs, exp)
+
+    def test_replace_invalid_char_for_type_error(self):
+        seq = DNA('TAAACGGAACGCTACGTCTG')
+        index = self._make_index('01000001101011001001')
+        with six.assertRaisesRegex(self, ValueError,
+                                   "Invalid character.*'F'"):
+            seq.replace(index, 'F')
+
+    def test_replace_invalid_char_error(self):
+        seq = Sequence('GGGAGCTAGA')
+        index = self._make_index('1000101110')
+        with six.assertRaisesRegex(self, UnicodeEncodeError,
+                                   "can't encode character.*not in "
+                                   "range\(128\)"):
+            seq.replace(index, u'\uFFFF')
+
+    def test_replace_non_single_character_error(self):
+        seq = Sequence('CCGAACTGTC')
+        index = self._make_index('1100110011')
+        with six.assertRaisesRegex(self, TypeError,
+                                   'string of length 2 found'):
+            seq.replace(index, 'AB')
+
+    def _make_index(self, bools):
+        return [bool(int(char)) for char in bools]
+
     def test_lowercase_mungeable_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
         # properly. If the internal implementation of the lowercase method

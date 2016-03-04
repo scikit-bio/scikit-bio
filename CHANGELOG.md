@@ -4,6 +4,7 @@
 
 ### Features
 * Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
+* Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
 
 ### Backward-incompatible changes [stable]
 
