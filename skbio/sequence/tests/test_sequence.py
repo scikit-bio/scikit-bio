@@ -1237,23 +1237,21 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_replace_invalid_char_for_type_error(self):
         seq = DNA('TAAACGGAACGCTACGTCTG')
         index = self._make_index('01000001101011001001')
-        with six.assertRaisesRegex(self, ValueError,
-                                   "Invalid character.*'F'"):
+        with self.assertRaisesRegex(ValueError, "Invalid character.*'F'"):
             seq.replace(index, 'F')
 
     def test_replace_invalid_char_error(self):
         seq = Sequence('GGGAGCTAGA')
         index = self._make_index('1000101110')
-        with six.assertRaisesRegex(self, UnicodeEncodeError,
-                                   "can't encode character.*not in "
-                                   "range\(128\)"):
+        with self.assertRaisesRegex(UnicodeEncodeError,
+                                    "can't encode character.*not in "
+                                    "range\(128\)"):
             seq.replace(index, u'\uFFFF')
 
     def test_replace_non_single_character_error(self):
         seq = Sequence('CCGAACTGTC')
         index = self._make_index('1100110011')
-        with six.assertRaisesRegex(self, TypeError,
-                                   'string of length 2 found'):
+        with self.assertRaisesRegex(TypeError, 'string of length 2 found'):
             seq.replace(index, 'AB')
 
     def _make_index(self, bools):
