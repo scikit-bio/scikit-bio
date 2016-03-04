@@ -1,5 +1,4 @@
 HTTPretty >= 0.8.14
-bz2file
 coveralls
 natsort
 lockfile

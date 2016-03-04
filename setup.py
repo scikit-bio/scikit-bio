@@ -106,7 +106,6 @@ setup(name='scikit-bio',
       cmdclass={'build_ext': build_ext},
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
-          'bz2file >= 0.98',
           'lockfile >= 0.10.2',
           'CacheControl >= 0.11.5',
           'decorator >= 3.4.2',

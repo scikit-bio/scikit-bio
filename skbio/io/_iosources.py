@@ -8,7 +8,7 @@
 
 import io
 import gzip
-import bz2file
+import bz2
 from tempfile import gettempdir
 import itertools
 
@@ -210,11 +210,11 @@ class BZ2Compressor(Compressor):
         return self.file.peek(3)[:3] == b'BZh'
 
     def get_reader(self):
-        return bz2file.BZ2File(self.file, mode='rb')
+        return bz2.BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        return bz2file.BZ2File(self.file, mode='wb',
-                               compresslevel=self.options['compresslevel'])
+        return bz2.BZ2File(self.file, mode='wb',
+                           compresslevel=self.options['compresslevel'])
 
 
 class AutoCompressor(Compressor):
