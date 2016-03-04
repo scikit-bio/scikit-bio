@@ -28,7 +28,7 @@ Functions
 # ----------------------------------------------------------------------------
 
 import io
-from contextlib2 import contextmanager, ExitStack
+from contextlib import contextmanager, ExitStack
 
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
