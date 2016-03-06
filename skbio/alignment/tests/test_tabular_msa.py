@@ -23,9 +23,9 @@ import scipy.stats
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
-from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
-                                 PositionalMetadataMixinTests,
-                                 assert_index_equal,
+from skbio.metadata._testing import (ReallyEqualMixin, MetadataMixinTests,
+                                     PositionalMetadataMixinTests)
+from skbio.util._testing import (assert_index_equal,
                                  assert_data_frame_almost_equal)
 
 
