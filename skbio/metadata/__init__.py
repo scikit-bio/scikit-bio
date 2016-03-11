@@ -1,5 +1,6 @@
-"""
+r"""
 Metadata (:mod:`skbio.metadata`)
+================================
 
 .. currentmodule:: skbio.metadata
 
@@ -15,3 +16,6 @@ This module provides classes for storing and working with metadata.
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
+
+from skbio.util import TestRunner
+test = TestRunner(__file__).test

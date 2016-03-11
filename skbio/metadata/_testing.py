@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from __future__ import absolute_import, division, print_function
-from future.utils import PY3
 
 import copy
 
@@ -18,49 +17,6 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.util._testing import assert_data_frame_almost_equal
-
-
-class ReallyEqualMixin(object):
-    """Use this for testing __eq__/__ne__.
-
-    Taken and modified from the following public domain code:
-      https://ludios.org/testing-your-eq-ne-cmp/
-
-    """
-
-    def assertReallyEqual(self, a, b):
-        # assertEqual first, because it will have a good message if the
-        # assertion fails.
-        self.assertEqual(a, b)
-        self.assertEqual(b, a)
-        self.assertTrue(a == b)
-        self.assertTrue(b == a)
-        self.assertFalse(a != b)
-        self.assertFalse(b != a)
-
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertEqual(0, cmp(a, b))  # noqa
-            self.assertEqual(0, cmp(b, a))  # noqa
-
-    def assertReallyNotEqual(self, a, b):
-        # assertNotEqual first, because it will have a good message if the
-        # assertion fails.
-        self.assertNotEqual(a, b)
-        self.assertNotEqual(b, a)
-        self.assertFalse(a == b)
-        self.assertFalse(b == a)
-        self.assertTrue(a != b)
-        self.assertTrue(b != a)
-
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertNotEqual(0, cmp(a, b))  # noqa
-            self.assertNotEqual(0, cmp(b, a))  # noqa
 
 
 class MetadataMixinTests(object):

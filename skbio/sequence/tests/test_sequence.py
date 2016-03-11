@@ -28,7 +28,8 @@ from skbio import Sequence, DNA
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
-from skbio.metadata._testing import (ReallyEqualMixin, MetadataMixinTests,
+from skbio.util._testing import ReallyEqualMixin
+from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests)
 
 
