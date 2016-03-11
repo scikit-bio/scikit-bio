@@ -3,7 +3,7 @@
    :target: http://scikit-bio.org
    :alt: scikit-bio logo
 
-|Build Status| |Coverage Status| |Gitter Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Download| |Install|
+|Build Status| |Coverage Status| |Gitter Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Downloads| |Install|
 
 scikit-bio is an open-source, BSD-licensed Python package providing data structures, algorithms and educational resources for bioinformatics.
 
