@@ -107,11 +107,11 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
    :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Anaconda Cloud Build| image:: https://anaconda.org/biocore/scikit-bio/badges/build.svg
    :target: https://anaconda.org/biocore/scikit-bio/builds
-.. |Anaconda Cloud| .. image:: https://anaconda.org/biocore/scikit-bio/badges/version.svg
+.. |Anaconda Cloud| image:: https://anaconda.org/biocore/scikit-bio/badges/version.svg
    :target: https://anaconda.org/biocore/scikit-bio
-.. |License| .. image:: https://anaconda.org/biocore/scikit-bio/badges/license.svg
+.. |License| image:: https://anaconda.org/biocore/scikit-bio/badges/license.svg
    :target: https://anaconda.org/biocore/scikit-bio
-.. |Downloads| .. image:: https://anaconda.org/biocore/scikit-bio/badges/downloads.svg
+.. |Downloads| image:: https://anaconda.org/biocore/scikit-bio/badges/downloads.svg
    :target: https://anaconda.org/biocore/scikit-bio   
-.. |Install| .. image:: https://anaconda.org/biocore/scikit-bio/badges/installer/conda.svg
+.. |Install| image:: https://anaconda.org/biocore/scikit-bio/badges/installer/conda.svg
    :target: https://conda.anaconda.org/biocore
