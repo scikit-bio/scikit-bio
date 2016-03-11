@@ -249,6 +249,15 @@ class IORegistry(object):
             self._text_formats[name] = format_object
 
     @stable(as_of="0.4.0")
+    def __format__(self, format_spec):
+        if not format_spec:
+            return str(self)
+        from skbio.io import _fileobject
+        handle = _fileobject.StringIO()
+        write(self, handle, format_spec)
+        return handle.getvalue()
+
+    @stable(as_of="0.4.0")
     def get_sniffer(self, format_name):
         """Locate the sniffer for a format.
 
