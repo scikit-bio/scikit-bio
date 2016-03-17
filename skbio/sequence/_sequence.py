@@ -20,7 +20,8 @@ import numpy as np
 import pandas as pd
 
 import skbio.sequence.distance
-from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio._base import SkbioObject
+from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)

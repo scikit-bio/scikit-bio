@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from skbio.util._metadata_repr import _MetadataReprBuilder
+from skbio.metadata._repr import _MetadataReprBuilder
 
 
 class _TabularMSAReprBuilder(_MetadataReprBuilder):

@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 import math
 
 from skbio.util._misc import chunk_str
-from skbio.util._metadata_repr import _MetadataReprBuilder
+from skbio.metadata._repr import _MetadataReprBuilder
 
 
 class _SequenceReprBuilder(_MetadataReprBuilder):

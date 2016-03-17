@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 
-from skbio._base import SkbioObject, MetadataMixin, PositionalMetadataMixin
+from skbio._base import SkbioObject
+from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
 from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
