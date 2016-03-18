@@ -6,7 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from skbio.util._metadata_repr import _MetadataReprBuilder
+
+from skbio.metadata._repr import _MetadataReprBuilder
 
 
 class _TabularMSAReprBuilder(_MetadataReprBuilder):
