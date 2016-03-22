@@ -66,20 +66,6 @@ def parse_partitioned_newick(treefile):
     generator
         A generator over tuples of (length, TreeNode)
 
-    Example
-    -------
-
-    >>> partnewick = [
-            '[10](A:2,(B:1,C:1):1);'
-            '[20](C:2,(A:1,B:1):1);'
-            '[10](A:2,(B:1,C:1):1);'
-        ]
-    >>> for length, tree in parse_partitioned_newick(partnewick):
-            A, B = map(tree.find, ['A', 'B'])
-            print(length, A.distance(B))
-    10 4.0
-    20 2.0
-    10 4.0
     """
 
     for line in treefile:

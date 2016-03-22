@@ -33,6 +33,7 @@ Utility Functions
    :toctree: generated/
 
     majority_rule
+    parse_partitioned_newick
 
 Exceptions
 ----------
@@ -171,6 +172,24 @@ pairwise tip-to-tip distances between trees:
 >>> print(tree1.compare_tip_distances(tree2))
 0.120492524415
 
+
+Finally, let's examine a helper function for parsing partioned newick files.
+Partioned newick is an informal format that associates each tree with a
+partition length. It is commonly encountered in phylogenetic simulations where
+it is used to indicate recombinations.
+
+>>> partnewick = [
+...     '[10](A:2,(B:1,C:1):1);',
+...     '[20](C:2,(A:1,B:1):1);',
+...     '[10](A:2,(B:1,C:1):1);',
+... ]
+>>> for length, tree in parse_partitioned_newick(partnewick):
+...     A, B = map(tree.find, ['A', 'B'])
+...     print(length, A.distance(B))
+10 4.0
+20 2.0
+10 4.0
+
 """
 
 # ----------------------------------------------------------------------------
@@ -185,13 +204,22 @@ from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 
-from ._tree import TreeNode
+from ._tree import TreeNode, parse_partitioned_newick
 from ._nj import nj
 from ._majority_rule import majority_rule
 from ._exception import (TreeError, NoLengthError, DuplicateNodeError,
                          MissingNodeError, NoParentError)
 
-__all__ = ['TreeNode', 'nj', 'majority_rule', 'TreeError', 'NoLengthError',
-           'DuplicateNodeError', 'MissingNodeError', 'NoParentError']
+__all__ = [
+    'DuplicateNodeError',
+    'MissingNodeError',
+    'NoLengthError',
+    'NoParentError',
+    'TreeError',
+    'TreeNode',
+    'majority_rule',
+    'nj',
+    'parse_partitioned_newick',
+]
 
 test = TestRunner(__file__).test
