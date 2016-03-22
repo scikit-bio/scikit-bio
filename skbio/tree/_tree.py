@@ -14,6 +14,7 @@ from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from collections import defaultdict
+import re
 
 import numpy as np
 from scipy.stats import pearsonr
@@ -45,6 +46,50 @@ def distance_from_r(m1, m2):
 
     """
     return (1-pearsonr(m1.data.flat, m2.data.flat)[0])/2
+
+def parse_partitioned_newick(treefile):
+    r"""Iterate over trees in a partitioned Newick tree file.
+
+    Iterates over lines that contain partitioned newick trees, yielding a tuple
+    of (length, tree). Partioned newick is an informal format that associates
+    each tree with a partition length. It is commonly encountered in
+    phylogenetic simulations.
+
+    Parameters
+    ----------
+
+    treefile : Iterable of lines
+
+    Returns
+    -------
+
+    generator
+        A generator over tuples of (length, TreeNode)
+
+    Example
+    -------
+
+    >>> partnewick = [
+            '[10](A:2,(B:1,C:1):1);'
+            '[20](C:2,(A:1,B:1):1);'
+            '[10](A:2,(B:1,C:1):1);'
+        ]
+    >>> for length, tree in parse_partitioned_newick(partnewick):
+            A, B = map(tree.find, ['A', 'B'])
+            print(length, A.distance(B))
+    10 4.0
+    20 2.0
+    10 4.0
+    """
+
+    for line in treefile:
+        match = re.match(r'\[(.*)\](\(.*;)', line)
+        if match:
+            length, treestr = match.groups()
+            # Partition lengths are strictly integral, however occasionally
+            # they will be in scientific notation. Therefore we parse them
+            # using int(float()).
+            yield int(float(length)), TreeNode.read([treestr])
 
 
 class TreeNode(SkbioObject):
