@@ -106,7 +106,7 @@ setup(name='scikit-bio',
       cmdclass={'build_ext': build_ext},
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
-          'lockfile >= 0.10.2',
+          'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
           'decorator >= 3.4.2',
           'IPython >= 3.2.0',
