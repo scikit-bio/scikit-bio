@@ -2,7 +2,7 @@ pip
 numpy
 scipy
 matplotlib
-pandas >= 0.17.0
+pandas>=0.17.0,<0.18.0
 nose
 pep8
 ipython
