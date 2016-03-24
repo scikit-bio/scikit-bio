@@ -525,9 +525,7 @@ class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
 class TestIterableReaderWriter(unittest.TestCase):
     def test_open(self):
         def gen():
-            yield 'a'
-            yield 'b'
-            yield 'c'
+            yield from ('a', 'b', 'c')
         list_ = list(gen())
 
         for input_ in gen(), list_:

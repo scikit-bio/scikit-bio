@@ -880,8 +880,7 @@ class TestRead(RegistryTest):
         @format1.reader(None)
         def reader(fh):
             self.assertIsInstance(fh, io.TextIOBase)
-            for value in [int(x) for x in fh.read().split('\n')]:
-                yield value
+            yield from [int(x) for x in fh.read().split('\n')]
 
         generator = self.registry.read(fh, format='format1')
         self.assertIsInstance(generator, types.GeneratorType)
@@ -906,8 +905,7 @@ class TestRead(RegistryTest):
         @format1.reader(None)
         def reader(fh):
             self._test_fh = fh
-            for value in [int(x) for x in fh.read().split('\n')]:
-                yield value
+            yield from [int(x) for x in fh.read().split('\n')]
 
         generator = self.registry.read(fp, format='format1')
         for a, b in itertools.zip_longest(generator, [1, 2, 3, 4]):

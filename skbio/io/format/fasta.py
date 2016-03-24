@@ -902,8 +902,7 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width,
                         lowercase=None):
     def seq_gen():
-        for seq in obj:
-            yield seq
+        yield from obj
 
     _generator_to_fasta(
         seq_gen(), fh, qual=qual,

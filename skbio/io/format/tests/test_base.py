@@ -303,9 +303,7 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_empty_sequence(self):
         def blank_seq_gen():
-            for seq in (DNA('A'), Sequence(''),
-                        RNA('GG')):
-                yield seq
+            yield from (DNA('A'), Sequence(''), RNA('GG'))
 
         with self.assertRaisesRegex(ValueError, '2nd.*empty'):
             list(_format_fasta_like_records(blank_seq_gen(), None, None,
@@ -313,10 +311,9 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
 
     def test_missing_quality_scores(self):
         def missing_qual_gen():
-            for seq in (RNA('A', positional_metadata={'quality': [42]}),
+            yield from (RNA('A', positional_metadata={'quality': [42]}),
                         Sequence('AG'),
-                        DNA('GG', positional_metadata={'quality': [41, 40]})):
-                yield seq
+                        DNA('GG', positional_metadata={'quality': [41, 40]}))
 
         with self.assertRaisesRegex(ValueError,
                                     '2nd sequence.*quality scores'):

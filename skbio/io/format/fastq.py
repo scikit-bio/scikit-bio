@@ -533,8 +533,7 @@ def _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=None):
     def seq_gen():
-        for seq in obj:
-            yield seq
+        yield from obj
 
     _generator_to_fastq(
         seq_gen(), fh, variant=variant, phred_offset=phred_offset,

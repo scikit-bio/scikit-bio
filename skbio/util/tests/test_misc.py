@@ -282,8 +282,7 @@ class CardinalToOrdinalTests(unittest.TestCase):
 class TestFindDuplicates(unittest.TestCase):
     def test_empty_input(self):
         def empty_gen():
-            return
-            yield
+            yield from ()
 
         for empty in [], (), '', set(), {}, empty_gen():
             self.assertEqual(find_duplicates(empty), set())
@@ -305,8 +304,7 @@ class TestFindDuplicates(unittest.TestCase):
 
     def test_mixed_types(self):
         def gen():
-            for e in 'a', 1, 'bc', 2, 'a', 2, 2, 3.0:
-                yield e
+            yield from ('a', 1, 'bc', 2, 'a', 2, 2, 3.0)
 
         self.assertEqual(find_duplicates(gen()), set(['a', 2]))
 

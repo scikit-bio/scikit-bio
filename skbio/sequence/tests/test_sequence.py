@@ -67,8 +67,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
 
         def empty_generator():
-            return
-            yield
+            yield from ()
 
         self.getitem_empty_indices = [
             [],

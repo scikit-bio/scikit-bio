@@ -708,8 +708,7 @@ class WriterTests(TestCase):
         self.msa = TabularMSA(seqs)
 
         def empty_gen():
-            return
-            yield
+            yield from ()
 
         def single_seq_gen():
             yield self.bio_seq1
@@ -735,19 +734,17 @@ class WriterTests(TestCase):
         # including exercising the different splitting algorithms used for
         # sequence data vs. quality scores
         def multi_seq_gen():
-            for seq in (self.bio_seq1, self.bio_seq2, self.bio_seq3,
-                        self.dna_seq, self.rna_seq, self.prot_seq):
-                yield seq
+            yield from (self.bio_seq1, self.bio_seq2, self.bio_seq3,
+                        self.dna_seq, self.rna_seq, self.prot_seq)
 
         # can be serialized if no qual file is provided, else it should raise
         # an error because one seq has qual scores and the other doesn't
         def mixed_qual_score_gen():
-            missing_qual_seq = DNA(
-                'AAAAT', metadata={'id': 'da,dadadada',
-                                   'description': '10 hours'},
-                lowercase='introns')
-            for seq in self.bio_seq1, missing_qual_seq:
-                yield seq
+            yield self.bio_seq1
+            yield DNA('AAAAT',
+                      metadata={'id': 'da,dadadada',
+                                'description': '10 hours'},
+                      lowercase='introns')
 
         self.mixed_qual_score_gen = mixed_qual_score_gen()
 
@@ -806,8 +803,7 @@ class WriterTests(TestCase):
         ]))
 
         def blank_seq_gen():
-            for seq in self.bio_seq1, Sequence(''):
-                yield seq
+            yield from (self.bio_seq1, Sequence(''))
 
         # generators or parameter combos that cannot be written in fasta
         # format, paired with kwargs (if any), error type, and expected error
