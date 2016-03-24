@@ -576,8 +576,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             self._set_bytes(sequence)
 
         else:
-            # Python 3 will not raise a UnicodeEncodeError so we force it by
-            # encoding it as ascii
+            # Encode as ascii to raise UnicodeEncodeError if necessary.
             if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)

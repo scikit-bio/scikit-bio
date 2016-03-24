@@ -3393,8 +3393,8 @@ class TestRepr(unittest.TestCase):
         # basic sanity checks -- more extensive testing of formatting and
         # special cases is performed in TabularMSAReprDoctests below. here we
         # only test that pieces of the repr are present. these tests also
-        # exercise coverage for py2/3 since the doctests in
-        # TabularMSAReprDoctests only currently run in py3.
+        # exercise coverage in case doctests stop counting towards coverage in
+        # the future
 
         # str calls repr
         self.assertEqual(repr(TabularMSA([])), str(TabularMSA([])))
@@ -3454,8 +3454,8 @@ class TestRepr(unittest.TestCase):
 #
 # these doctests exercise the correct formatting of TabularMSA's repr in a
 # variety of situations. they are more extensive than the unit tests above
-# (TestRepr.test_repr) but are only currently run in py3. thus, they cannot
-# be relied upon for coverage (the unit tests take care of this)
+# (TestRepr.test_repr) but cannot be relied upon for coverage (the unit tests
+# take care of this)
 class TabularMSAReprDoctests:
     r"""
     >>> from skbio import DNA, TabularMSA

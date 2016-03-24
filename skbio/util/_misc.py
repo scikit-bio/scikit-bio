@@ -35,22 +35,9 @@ def make_sentinel(name):
 
 
 def find_sentinels(function, sentinel):
-    keys = []
-    if hasattr(inspect, 'signature'):
-        params = inspect.signature(function).parameters
-        for name, param in params.items():
-            if param.default is sentinel:
-                keys.append(name)
-    else:  # Py2
-        function_spec = inspect.getargspec(function)
-        if function_spec.defaults is not None:
-            # Concept from http://stackoverflow.com/a/12627202/579416
-            keywords_start = -len(function_spec.defaults)
-            for key, default in zip(function_spec.args[keywords_start:],
-                                    function_spec.defaults):
-                if default is sentinel:
-                    keys.append(key)
-    return keys
+    params = inspect.signature(function).parameters
+    return [name for name, param in params.items()
+            if param.default is sentinel]
 
 
 class MiniRegistry(dict):
@@ -76,15 +63,10 @@ class MiniRegistry(dict):
 
     def interpolate(self, obj, name):
         """Inject the formatted listing in the second blank line of `name`."""
-        # Py2/3 compatible way of calling getattr(obj, name).__func__
-        f = getattr(obj, name).__get__(None, type(None))
+        f = getattr(obj, name)
+        f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                          argdefs=f.__defaults__, closure=f.__closure__)
 
-        if hasattr(f, 'func_code'):
-            f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
-                              argdefs=f.func_defaults, closure=f.func_closure)
-        else:
-            f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
-                              argdefs=f.__defaults__, closure=f.__closure__)
         # Conveniently the original docstring is on f2, not the new ones if
         # inheritence is happening. I have no idea why.
         t = f2.__doc__.split("\n\n")

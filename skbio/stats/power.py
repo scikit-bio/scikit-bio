@@ -1007,7 +1007,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     ctrl_groups = meta.groupby(control_cats).groups
     # Identifies the samples that satisfy the control pairs. Keys are iterated
     # in sorted order so that results don't change with different dictionary
-    # ordering (especially apparent in Python 3).
+    # ordering.
     for g in sorted(ctrl_groups, key=lambda k: str(k)):
         ids = ctrl_groups[g]
         # If strict_match, Skips over data that has nans

@@ -246,7 +246,7 @@ class TestWriters(unittest.TestCase):
                 _tabular_msa_to_phylip(invalid_obj, fh)
 
             # ensure nothing was written to the file before the error was
-            # thrown. TODO remove this check when #674 is resolved
+            # thrown
             obs = fh.getvalue()
             fh.close()
             self.assertEqual(obs, '')

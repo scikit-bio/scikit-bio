@@ -994,8 +994,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # basic sanity checks -- more extensive testing of formatting and
         # special cases is performed in SequenceReprDoctests below. here we
         # only test that pieces of the repr are present. these tests also
-        # exercise coverage for py2/3 since the doctests in
-        # SequenceReprDoctests only currently run in py3.
+        # exercise coverage in case doctests stop counting towards coverage in
+        # the future
 
         # minimal
         obs = repr(Sequence(''))
@@ -2460,8 +2460,8 @@ class TestDistance(TestSequenceBase):
 #
 # these doctests exercise the correct formatting of Sequence's repr in a
 # variety of situations. they are more extensive than the unit tests above
-# (TestSequence.test_repr) but are only currently run in py3. thus, they cannot
-# be relied upon for coverage (the unit tests take care of this)
+# (TestSequence.test_repr) but cannot be relied upon for coverage (the unit
+# tests take care of this)
 class SequenceReprDoctests:
     r"""
     >>> import pandas as pd
