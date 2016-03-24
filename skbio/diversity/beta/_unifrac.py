@@ -130,9 +130,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the unweighted UniFrac distance between the samples.
 
@@ -256,9 +256,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     Compute the weighted UniFrac distance between the samples.
 

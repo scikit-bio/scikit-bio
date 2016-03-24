@@ -578,7 +578,7 @@ class TestGrammaredSequence(TestCase):
         obs = repr(
             ExampleGrammaredSequence(
                 'ABCA',
-                metadata={'foo': 42, u'bar': 33.33, None: True, False: {},
+                metadata={'foo': 42, b'bar': 33.33, None: True, False: {},
                           (1, 2): 3, 'acb' * 100: "'"},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))

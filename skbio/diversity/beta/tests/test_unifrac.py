@@ -32,16 +32,16 @@ class UnifracTests(TestCase):
         self.sids1 = list('ABCDEF')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         self.t1_w_extra_tips = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                     u')root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                     ')root;'))
 
         self.t2 = TreeNode.read(
-            StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
-                     u'root;'))
+            StringIO('((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
+                     'root;'))
         self.oids2 = ['OTU%d' % i for i in range(1, 5)]
 
     def test_unweighted_otus_out_of_order(self):
@@ -100,7 +100,7 @@ class UnifracTests(TestCase):
 
     def test_unweighted_minimal_trees(self):
         # two tips
-        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
+        tree = TreeNode.read(StringIO('(OTU1:0.25, OTU2:0.25)root;'))
         actual = unweighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'],
                                     tree)
         expected = 1.0
@@ -108,7 +108,7 @@ class UnifracTests(TestCase):
 
     def test_weighted_minimal_trees(self):
         # two tips
-        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
+        tree = TreeNode.read(StringIO('(OTU1:0.25, OTU2:0.25)root;'))
         actual = weighted_unifrac([1, 0], [0, 0], ['OTU1', 'OTU2'], tree)
         expected = 0.25
         self.assertEqual(actual, expected)
@@ -192,8 +192,8 @@ class UnifracTests(TestCase):
 
         # tree has duplicated tip ids
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU2:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU2:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -203,8 +203,8 @@ class UnifracTests(TestCase):
                           v_counts, otu_ids, t)
 
         # unrooted tree as input
-        t = TreeNode.read(StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                   u'OTU4:0.7);'))
+        t = TreeNode.read(StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                   'OTU4:0.7);'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -215,8 +215,8 @@ class UnifracTests(TestCase):
 
         # otu_ids has duplicated ids
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
@@ -227,8 +227,8 @@ class UnifracTests(TestCase):
 
         # len of vectors not equal
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -253,8 +253,8 @@ class UnifracTests(TestCase):
 
         # negative counts
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, -3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -272,7 +272,7 @@ class UnifracTests(TestCase):
 
         # tree with no branch lengths
         t = TreeNode.read(
-            StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -283,8 +283,8 @@ class UnifracTests(TestCase):
 
         # tree missing some branch lengths
         t = TreeNode.read(
-            StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
@@ -295,8 +295,8 @@ class UnifracTests(TestCase):
 
         # otu_ids not present in tree
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         u_counts = [1, 2, 3]
         v_counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']

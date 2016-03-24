@@ -554,7 +554,7 @@ class TestSniff(RegistryTest):
             return
 
     def test_no_matches(self):
-        fh = StringIO(u"no matches here")
+        fh = StringIO("no matches here")
         with self.assertRaises(UnrecognizedFormatError) as cm:
             self.registry.sniff(fh)
         self.assertTrue(str(fh) in str(cm.exception))
@@ -562,11 +562,11 @@ class TestSniff(RegistryTest):
         fh.close()
 
     def test_one_match(self):
-        fh = StringIO(u"contains a 3")
+        fh = StringIO("contains a 3")
         self.assertEqual('format3', self.registry.sniff(fh)[0])
 
     def test_many_matches(self):
-        fh = StringIO(u"1234 will match all")
+        fh = StringIO("1234 will match all")
         with self.assertRaises(UnrecognizedFormatError) as cm:
             self.registry.sniff(fh)
         self.assertTrue("format1" in str(cm.exception))
@@ -650,7 +650,7 @@ class TestSniff(RegistryTest):
         def sniffer(fh):
             return True, {}
 
-        fh = StringIO(u'a\nb\nc\nd\n')
+        fh = StringIO('a\nb\nc\nd\n')
         fh.seek(2)
         self.registry.sniff(fh)
         self.assertEqual('b\n', fh.readline())
@@ -726,7 +726,7 @@ class TestSniff(RegistryTest):
         self.assertEqual(fmt, 'binf')
 
         with self.assertRaises(ValueError):
-            self.registry.sniff([u'some content\n'], encoding='binary')
+            self.registry.sniff(['some content\n'], encoding='binary')
 
         with self.assertRaises(ValueError):
             binf_sniffer(self.fp1, encoding=None)
@@ -758,7 +758,7 @@ class TestSniff(RegistryTest):
         self.assertTrue(self._check_textf)
 
     def test_sniff_gzip(self):
-        expected = u"This is some content\nIt occurs on more than one line\n"
+        expected = "This is some content\nIt occurs on more than one line\n"
 
         formata = self.registry.create_format('formata', encoding='binary')
         formatb = self.registry.create_format('formatb')
@@ -807,7 +807,7 @@ class TestSniff(RegistryTest):
         self._check_binf = False
         self._check_textf = False
 
-        fmt, _ = self.registry.sniff([u'text'])
+        fmt, _ = self.registry.sniff(['text'])
         self.assertEqual(fmt, 'textf')
 
         self.assertFalse(self._check_binf)
@@ -857,7 +857,7 @@ class TestRead(RegistryTest):
     def test_format_is_none(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -875,7 +875,7 @@ class TestRead(RegistryTest):
     def test_into_is_none(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.reader(None)
         def reader(fh):
@@ -931,7 +931,7 @@ class TestRead(RegistryTest):
     def test_reader_exists_with_verify_true(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -961,7 +961,7 @@ class TestRead(RegistryTest):
     def test_warning_raised(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -995,7 +995,7 @@ class TestRead(RegistryTest):
     def test_reader_exists_with_verify_false(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1061,16 +1061,16 @@ class TestRead(RegistryTest):
             self.assertEqual(kwargs['arg3'], [1])
             return
 
-        self.registry.read(StringIO(u'notempty'), into=TestClass, arg3=[1])
+        self.registry.read(StringIO('notempty'), into=TestClass, arg3=[1])
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             # Should raise no warning and thus no error.
-            self.registry.read(StringIO(u'notempty'), into=TestClass, arg3=[1],
+            self.registry.read(StringIO('notempty'), into=TestClass, arg3=[1],
                                override=30)
             # Should raise a warning and thus an error.
             with self.assertRaises(ArgumentOverrideWarning):
-                self.registry.read(StringIO(u'notempty'), into=TestClass,
+                self.registry.read(StringIO('notempty'), into=TestClass,
                                    arg3=[1], override=100)
 
     def test_that_encoding_is_used(self):
@@ -1080,7 +1080,7 @@ class TestRead(RegistryTest):
 
         @format1.sniffer()
         def sniffer(fh):
-            return u'\u4f60' in fh.readline(), {}
+            return '\u4f60' in fh.readline(), {}
 
         @format1.reader(TestClass)
         def reader(fh):
@@ -1094,11 +1094,11 @@ class TestRead(RegistryTest):
 
         self._expected_enc = 'big5'
         instance = self.registry.read(fp, into=TestClass, encoding='big5')
-        self.assertEqual(TestClass([u'\u4f60\u597d\n']), instance)
+        self.assertEqual(TestClass(['\u4f60\u597d\n']), instance)
 
         self._expected_enc = 'big5'
         gen = self.registry.read(fp, format='format1', encoding='big5')
-        self.assertEqual(TestClass([u'\u4f60\u597d\n']), next(gen))
+        self.assertEqual(TestClass(['\u4f60\u597d\n']), next(gen))
 
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
@@ -1121,10 +1121,10 @@ class TestRead(RegistryTest):
 
         self._expected_enc = 'big5'
         instance = self.registry.read(fp, into=TestClass)
-        self.assertEqual(TestClass([u'\u4f60\u597d\n']), instance)
+        self.assertEqual(TestClass(['\u4f60\u597d\n']), instance)
 
         gen = self.registry.read(fp, format='format1')
-        self.assertEqual(TestClass([u'\u4f60\u597d\n']), next(gen))
+        self.assertEqual(TestClass(['\u4f60\u597d\n']), next(gen))
         gen.close()
 
         self._expected_enc = 'utf8'
@@ -1186,7 +1186,7 @@ class TestRead(RegistryTest):
 
         extra = get_data_path('real_file')
         extra_2 = get_data_path('real_file_2')
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1207,7 +1207,7 @@ class TestRead(RegistryTest):
     def test_file_sentinel_converted_to_none(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1227,7 +1227,7 @@ class TestRead(RegistryTest):
     def test_file_sentinel_pass_none(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1250,7 +1250,7 @@ class TestRead(RegistryTest):
 
         extra = get_data_path('real_file')
         extra_2 = get_data_path('real_file_2')
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1271,7 +1271,7 @@ class TestRead(RegistryTest):
     def test_file_sentinel_converted_to_none_generator(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1291,7 +1291,7 @@ class TestRead(RegistryTest):
     def test_file_sentinel_pass_none_generator(self):
         format1 = self.registry.create_format('format1')
 
-        fh = StringIO(u'1\n2\n3\n4')
+        fh = StringIO('1\n2\n3\n4')
 
         @format1.sniffer()
         def sniffer(fh):
@@ -1351,23 +1351,23 @@ class TestRead(RegistryTest):
         gen.close()
 
         with self.assertRaises(ValueError):
-            self.registry.read([u'some content\n'], encoding='binary',
+            self.registry.read(['some content\n'], encoding='binary',
                                into=TestClass)
 
         with self.assertRaises(ValueError):
-            self.registry.read([u'some content\n'], format='textf',
+            self.registry.read(['some content\n'], format='textf',
                                encoding='binary', into=TestClass)
 
         with self.assertRaises(ValueError):
-            self.registry.read([u'some content\n'], format='textf',
+            self.registry.read(['some content\n'], format='textf',
                                encoding='binary', verify=False, into=TestClass)
 
         with self.assertRaises(ValueError):
-            self.registry.read([u'some content\n'], format='textf',
+            self.registry.read(['some content\n'], format='textf',
                                encoding='binary')
 
         with self.assertRaises(ValueError):
-            self.registry.read([u'some content\n'], format='textf',
+            self.registry.read(['some content\n'], format='textf',
                                encoding='binary', verify=False)
 
         with self.assertRaises(ValueError):
@@ -1451,7 +1451,7 @@ class TestWrite(RegistryTest):
         @format1.writer(TestClass)
         def writer(obj, fh):
             self.assertIsInstance(fh, io.TextIOBase)
-            fh.write(u'\n'.join(obj.list))
+            fh.write('\n'.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fh)
         fh.seek(0)
@@ -1467,12 +1467,12 @@ class TestWrite(RegistryTest):
         @format1.writer(TestClass)
         def writer(obj, fh):
             self.assertIsInstance(fh, io.TextIOBase)
-            fh.write(u'\n'.join(obj.list))
+            fh.write('\n'.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fp)
 
         with io.open(fp) as fh:
-            self.assertEqual(u"1\n2\n3\n4", fh.read())
+            self.assertEqual("1\n2\n3\n4", fh.read())
 
     def test_writer_passed_kwargs(self):
         format1 = self.registry.create_format('format1')
@@ -1492,12 +1492,12 @@ class TestWrite(RegistryTest):
     def test_that_encoding_is_used(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass([u'\u4f60\u597d\n'])  # Ni Hau
+        obj = TestClass(['\u4f60\u597d\n'])  # Ni Hau
         fp = self.fp1
 
         @format1.writer(TestClass)
         def writer(obj, fh):
-            fh.write(u''.join(obj.list))
+            fh.write(''.join(obj.list))
             self.assertEqual(self._expected_encoding, fh.encoding)
 
         self._expected_encoding = 'big5'
@@ -1510,12 +1510,12 @@ class TestWrite(RegistryTest):
     def test_non_default_encoding(self):
         format1 = self.registry.create_format('format1', encoding='big5')
 
-        obj = TestClass([u'\u4f60\u597d\n'])  # Ni Hau
+        obj = TestClass(['\u4f60\u597d\n'])  # Ni Hau
         fp = self.fp1
 
         @format1.writer(TestClass)
         def writer(obj, fh):
-            fh.write(u''.join(obj.list))
+            fh.write(''.join(obj.list))
             self.assertEqual(self._expected_encoding, fh.encoding)
 
         self._expected_encoding = 'big5'
@@ -1533,12 +1533,12 @@ class TestWrite(RegistryTest):
     def test_that_newline_is_used(self):
         format1 = self.registry.create_format('format1')
 
-        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        obj = TestClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
 
         @format1.writer(TestClass)
         def writer(obj, fh):
-            fh.write(u''.join(obj.list))
+            fh.write(''.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fp, newline='\r')
 
@@ -1548,12 +1548,12 @@ class TestWrite(RegistryTest):
     def test_non_default_newline(self):
         format1 = self.registry.create_format('format1', newline='\r')
 
-        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        obj = TestClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
 
         @format1.writer(TestClass)
         def writer(obj, fh):
-            fh.write(u''.join(obj.list))
+            fh.write(''.join(obj.list))
 
         self.registry.write(obj, format='format1', into=fp)
 
@@ -1572,8 +1572,8 @@ class TestWrite(RegistryTest):
 
         @format1.writer(TestClass)
         def writer(obj, fh, extra=FileSentinel, other=2, extra_2=FileSentinel):
-            extra.write(u'oh yeah...')
-            extra_2.write(u'oh no...')
+            extra.write('oh yeah...')
+            extra_2.write('oh no...')
 
         self.registry.write(TestClass([]), format='format1', into=fh,
                             extra=self.fp1, extra_2=self.fp2)
@@ -1653,7 +1653,7 @@ class TestWrite(RegistryTest):
     def test_io_kwargs_passed(self):
         format1 = self.registry.create_format('format1', encoding='ascii')
 
-        obj = TestClass([u'a\n', u'b\n', u'c\n'])
+        obj = TestClass(['a\n', 'b\n', 'c\n'])
         fp = self.fp1
         f = io.BytesIO()
 
@@ -1854,7 +1854,7 @@ class TestMonkeyPatch(RegistryTest):
             self.was_called = True
 
         self.registry.monkey_patch()
-        fh = StringIO(u'notempty')
+        fh = StringIO('notempty')
         self.class_with_default.read(fh, a='a', b=123)
 
         self.assertTrue(self.was_called)
@@ -1881,26 +1881,26 @@ class TestMonkeyPatch(RegistryTest):
 class TestModuleFunctions(unittest.TestCase):
 
     def test_sniff_matches(self):
-        exp = io_registry.sniff([u'(a, b);'])
-        result = sniff([u'(a, b);'])
+        exp = io_registry.sniff(['(a, b);'])
+        result = sniff(['(a, b);'])
         self.assertEqual(exp, result)
         self.assertEqual('newick', exp[0])
         self.assertEqual({}, exp[1])
 
     def test_read_matches(self):
-        input = [u'>\n', u'ACGT\n']
+        input = ['>\n', 'ACGT\n']
         exp = io_registry.read(input, into=DNA)
         result = read(input, into=DNA)
         self.assertEqual(exp, result)
-        self.assertEqual(exp, DNA('ACGT', metadata={u'id': u'',
-                                                    u'description': u''}))
+        self.assertEqual(exp, DNA('ACGT', metadata={'id': '',
+                                                    'description': ''}))
 
     def test_write_matches(self):
         input = DNA('ACGT')
         exp = io_registry.write(input, format='fasta', into=[])
         result = write(input, format='fasta', into=[])
         self.assertEqual(exp, result)
-        self.assertEqual(exp, [u'>\n', u'ACGT\n'])
+        self.assertEqual(exp, ['>\n', 'ACGT\n'])
 
     def test_create_format_matches(self):
         with self.assertRaises(DuplicateRegistrationError):

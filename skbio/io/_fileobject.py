@@ -66,7 +66,7 @@ class CompressedBufferedWriter(CompressedMixin, io.BufferedWriter):
 class IterableStringReaderIO(io.StringIO):
     def __init__(self, iterable, newline):
         self._iterable = iterable
-        super(IterableStringReaderIO, self).__init__(u''.join(iterable),
+        super(IterableStringReaderIO, self).__init__(''.join(iterable),
                                                      newline=newline)
 
 

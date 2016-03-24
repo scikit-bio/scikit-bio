@@ -27,12 +27,12 @@ class BaseTests(TestCase):
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(StringIO(
-            u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            u'0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
         self.t1_w_extra_tips = TreeNode.read(
-           StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                    u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                    u')root;'))
+           StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                    '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                    ')root;'))
 
     def test_berger_parker_d(self):
         self.assertEqual(berger_parker_d(np.array([5])), 1)

@@ -86,7 +86,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
             # character so that wrapped text will line up with that instead of
             # the string literal prefix character. for example:
             #
-            #     'foo': u'abc def ghi
+            #     'foo': b'abc def ghi
             #              jkl mno'
             value_repr = repr(value)
             extra_indent = 1

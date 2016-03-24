@@ -18,16 +18,16 @@ class TestEmptyFile(unittest.TestCase):
         self.assertTrue(res)
         self.assertEqual({}, kw)
 
-        res, kw = _empty_file_sniffer(io.StringIO(u"       \n   \t "))
+        res, kw = _empty_file_sniffer(io.StringIO("       \n   \t "))
         self.assertTrue(res)
         self.assertEqual({}, kw)
 
     def test_not_empty(self):
-        res, kw = _empty_file_sniffer(io.StringIO(u"a"))
+        res, kw = _empty_file_sniffer(io.StringIO("a"))
         self.assertFalse(res)
         self.assertEqual({}, kw)
 
-        res, kw = _empty_file_sniffer(io.StringIO(u"                  \n \ta"))
+        res, kw = _empty_file_sniffer(io.StringIO("                  \n \ta"))
         self.assertFalse(res)
         self.assertEqual({}, kw)
 

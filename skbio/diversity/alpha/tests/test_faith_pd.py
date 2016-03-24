@@ -30,12 +30,12 @@ class FaithPDTests(TestCase):
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.t1 = TreeNode.read(StringIO(
-            u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            u'0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
         self.t1_w_extra_tips = TreeNode.read(
-           StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                    u'0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
-                    u')root;'))
+           StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                    '0.75,(OTU5:0.25,(OTU6:0.5,OTU7:0.5):0.5):0.5):1.25):0.0'
+                    ')root;'))
 
     def test_faith_pd_none_observed(self):
         actual = faith_pd(np.array([], dtype=int),
@@ -92,7 +92,7 @@ class FaithPDTests(TestCase):
 
     def test_faith_pd_minimal(self):
         # two tips
-        tree = TreeNode.read(StringIO(u'(OTU1:0.25, OTU2:0.25)root;'))
+        tree = TreeNode.read(StringIO('(OTU1:0.25, OTU2:0.25)root;'))
         actual = faith_pd([1, 0], ['OTU1', 'OTU2'], tree)
         expected = 0.25
         self.assertEqual(actual, expected)
@@ -121,8 +121,8 @@ class FaithPDTests(TestCase):
     def test_faith_pd_root_not_observed(self):
         # expected values computed by hand
         tree = TreeNode.read(
-            StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
-                     u'root;'))
+            StringIO('((OTU1:0.1, OTU2:0.2):0.3, (OTU3:0.5, OTU4:0.7):1.1)'
+                     'root;'))
         otu_ids = ['OTU%d' % i for i in range(1, 5)]
         # root node not observed, but branch between (OTU1, OTU2) and root
         # is considered observed
@@ -139,32 +139,32 @@ class FaithPDTests(TestCase):
     def test_faith_pd_invalid_input(self):
         # tree has duplicated tip ids
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU2:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, faith_pd, counts, otu_ids,
                           t)
 
         # unrooted tree as input
-        t = TreeNode.read(StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                   u'OTU4:0.7);'))
+        t = TreeNode.read(StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                   'OTU4:0.7);'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # otu_ids has duplicated ids
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # len of vectors not equal
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
@@ -174,31 +174,31 @@ class FaithPDTests(TestCase):
 
         # negative counts
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, -3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # tree with no branch lengths
         t = TreeNode.read(
-            StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # tree missing some branch lengths
         t = TreeNode.read(
-            StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, faith_pd, counts, otu_ids, t)
 
         # otu_ids not present in tree
         t = TreeNode.read(
-            StringIO(u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                     u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            StringIO('(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                     '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, faith_pd, counts, otu_ids, t)

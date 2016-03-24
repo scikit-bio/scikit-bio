@@ -123,8 +123,8 @@ class ValidationTests(TestCase):
         # basic valid input
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
@@ -132,8 +132,8 @@ class ValidationTests(TestCase):
         # all tips observed
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 1, 1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
@@ -141,8 +141,8 @@ class ValidationTests(TestCase):
         # no tips observed
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = []
         otu_ids = []
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
@@ -150,8 +150,8 @@ class ValidationTests(TestCase):
         # all counts zero
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [0, 0, 0, 0, 0]
         otu_ids = ['OTU1', 'OTU2', 'OTU3', 'OTU4', 'OTU5']
         self.assertTrue(_validate_otu_ids_and_tree(counts, otu_ids, t) is None)
@@ -160,16 +160,16 @@ class ValidationTests(TestCase):
         # tree has duplicated tip ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 1, 1]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, _validate_otu_ids_and_tree,
                           counts, otu_ids, t)
 
         # unrooted tree as input
-        t = TreeNode.read(io.StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                      u'OTU4:0.7);'))
+        t = TreeNode.read(io.StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                      'OTU4:0.7);'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
@@ -178,8 +178,8 @@ class ValidationTests(TestCase):
         # otu_ids has duplicated ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
@@ -188,8 +188,8 @@ class ValidationTests(TestCase):
         # len of vectors not equal
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
@@ -201,7 +201,7 @@ class ValidationTests(TestCase):
 
         # tree with no branch lengths
         t = TreeNode.read(
-            io.StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
@@ -210,8 +210,8 @@ class ValidationTests(TestCase):
         # tree missing some branch lengths
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
@@ -220,22 +220,22 @@ class ValidationTests(TestCase):
         # otu_ids not present in tree
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.25,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.25,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU32']
         self.assertRaises(MissingNodeError, _validate_otu_ids_and_tree, counts,
                           otu_ids, t)
 
         # single node tree
-        t = TreeNode.read(io.StringIO(u'root;'))
+        t = TreeNode.read(io.StringIO('root;'))
         counts = []
         otu_ids = []
         self.assertRaises(ValueError, _validate_otu_ids_and_tree, counts,
                           otu_ids, t)
 
     def test_vectorize_counts_and_tree(self):
-        t = TreeNode.read(io.StringIO(u"((a:1, b:2)c:3)root;"))
+        t = TreeNode.read(io.StringIO("((a:1, b:2)c:3)root;"))
         counts = np.array([[0, 1], [1, 5], [10, 1]])
         count_array, indexed, branch_lengths = \
             _vectorize_counts_and_tree(counts, np.array(['a', 'b']), t)

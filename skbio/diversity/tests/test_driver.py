@@ -32,8 +32,8 @@ class AlphaDiversityTests(TestCase):
         self.sids1 = list('ABCD')
         self.oids1 = ['OTU%d' % i for i in range(1, 6)]
         self.tree1 = TreeNode.read(io.StringIO(
-            u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            u'0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
+            '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.75):1.25):0.0)root;'))
 
         self.table2 = np.array([[1, 3],
                                 [0, 2],
@@ -41,8 +41,8 @@ class AlphaDiversityTests(TestCase):
         self.sids2 = list('xyz')
         self.oids2 = ['OTU1', 'OTU5']
         self.tree2 = TreeNode.read(io.StringIO(
-            u'(((((OTU1:42.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
-            u'0.0,(OTU4:0.75,OTU5:0.0001):1.25):0.0)root;'))
+            '(((((OTU1:42.5,OTU2:0.5):0.5,OTU3:1.0):1.0):'
+            '0.0,(OTU4:0.75,OTU5:0.0001):1.25):0.0)root;'))
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
@@ -82,8 +82,8 @@ class AlphaDiversityTests(TestCase):
         # tree has duplicated tip ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, alpha_diversity, 'faith_pd',
@@ -91,7 +91,7 @@ class AlphaDiversityTests(TestCase):
 
         # unrooted tree as input
         t = TreeNode.read(io.StringIO(
-            u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,OTU4:0.7);'))
+            '((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,OTU4:0.7);'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
@@ -100,8 +100,8 @@ class AlphaDiversityTests(TestCase):
         # otu_ids has duplicated ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
@@ -110,16 +110,16 @@ class AlphaDiversityTests(TestCase):
         # count and OTU vectors are not equal length
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
                           counts, otu_ids=otu_ids, tree=t)
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
@@ -127,7 +127,7 @@ class AlphaDiversityTests(TestCase):
 
         # tree with no branch lengths
         t = TreeNode.read(
-            io.StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
@@ -135,8 +135,8 @@ class AlphaDiversityTests(TestCase):
 
         # tree missing some branch lengths
         t = TreeNode.read(
-            io.StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                        u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            io.StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                        '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
@@ -145,8 +145,8 @@ class AlphaDiversityTests(TestCase):
         # some otu_ids not present in tree
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
@@ -336,8 +336,8 @@ class BetaDiversityTests(TestCase):
         # tree has duplicated tip ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU2:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(DuplicateNodeError, beta_diversity,
@@ -347,8 +347,8 @@ class BetaDiversityTests(TestCase):
                           tree=t)
 
         # unrooted tree as input
-        t = TreeNode.read(io.StringIO(u'((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
-                                      u'OTU4:0.7);'))
+        t = TreeNode.read(io.StringIO('((OTU1:0.1, OTU2:0.2):0.3, OTU3:0.5,'
+                                      'OTU4:0.7);'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
@@ -360,8 +360,8 @@ class BetaDiversityTests(TestCase):
         # otu_ids has duplicated ids
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU2']
         self.assertRaises(ValueError, beta_diversity,
@@ -373,8 +373,8 @@ class BetaDiversityTests(TestCase):
         # count and OTU vectors are not equal length
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2']
         self.assertRaises(ValueError, beta_diversity,
@@ -384,8 +384,8 @@ class BetaDiversityTests(TestCase):
                           tree=t)
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU2:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU2:0.75):1.25):0.0)root;'))
         counts = [1, 2]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
@@ -396,7 +396,7 @@ class BetaDiversityTests(TestCase):
 
         # tree with no branch lengths
         t = TreeNode.read(
-            io.StringIO(u'((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
+            io.StringIO('((((OTU1,OTU2),OTU3)),(OTU4,OTU5));'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
@@ -407,8 +407,8 @@ class BetaDiversityTests(TestCase):
 
         # tree missing some branch lengths
         t = TreeNode.read(
-            io.StringIO(u'(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                        u'0.75,OTU5:0.75):1.25):0.0)root;'))
+            io.StringIO('(((((OTU1,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                        '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU3']
         self.assertRaises(ValueError, beta_diversity,
@@ -420,8 +420,8 @@ class BetaDiversityTests(TestCase):
         # some otu_ids not present in tree
         t = TreeNode.read(
             io.StringIO(
-                u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
-                u'0.75,OTU5:0.75):1.25):0.0)root;'))
+                '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,(OTU4:'
+                '0.75,OTU5:0.75):1.25):0.0)root;'))
         counts = [1, 2, 3]
         otu_ids = ['OTU1', 'OTU2', 'OTU42']
         self.assertRaises(MissingNodeError, beta_diversity,

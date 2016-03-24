@@ -34,14 +34,14 @@ class TestOpen(unittest.TestCase):
 
     def test_open_invalid_source_compression(self):
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], compression='gzip')
+            skbio.io.open(['foo'], compression='gzip')
 
     def test_open_invalid_source_encoding(self):
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], encoding='binary')
+            skbio.io.open(['foo'], encoding='binary')
 
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], encoding='binary', newline='\r')
+            skbio.io.open(['foo'], encoding='binary', newline='\r')
 
     def test_open_invalid_compression(self):
         with self.assertRaises(ValueError):
@@ -281,7 +281,7 @@ class ReadableSourceTest(unittest.TestCase):
 
         self.binary_contents = (b"This is some content\n"
                                 b"It occurs on more than one line\n")
-        self.decoded_contents = u'\u4f60\u597d\n'  # Ni Hau
+        self.decoded_contents = '\u4f60\u597d\n'  # Ni Hau
         self.compression = 'gzip'
         self.encoding = "big5"
 
@@ -525,18 +525,18 @@ class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
 class TestIterableReaderWriter(unittest.TestCase):
     def test_open(self):
         def gen():
-            yield u'a'
-            yield u'b'
-            yield u'c'
+            yield 'a'
+            yield 'b'
+            yield 'c'
         list_ = list(gen())
 
         for input_ in gen(), list_:
             with skbio.io.open(input_) as result:
                 self.assertIsInstance(result, io.TextIOBase)
-                self.assertEqual(result.read(), u'abc')
+                self.assertEqual(result.read(), 'abc')
 
     def test_open_with_newline(self):
-        l = [u'a\r', u'b\r', u'c\r']
+        l = ['a\r', 'b\r', 'c\r']
         with skbio.io.open(l, newline='\r') as result:
             self.assertIsInstance(result, io.TextIOBase)
             self.assertEqual(result.readlines(), l)
@@ -548,18 +548,18 @@ class TestIterableReaderWriter(unittest.TestCase):
     def test_open_empty_iterable(self):
         with skbio.io.open([]) as result:
             self.assertIsInstance(result, io.TextIOBase)
-            self.assertEqual(result.read(), u'')
+            self.assertEqual(result.read(), '')
 
     def test_open_write_mode(self):
         l = []
         with skbio.io.open(l, mode='w') as fh:
-            fh.write(u'abc')
-        self.assertEqual(l, [u'abc'])
+            fh.write('abc')
+        self.assertEqual(l, ['abc'])
 
         l = []
         with skbio.io.open(l, mode='w', newline='\r') as fh:
-            fh.write(u'ab\nc\n')
-        self.assertEqual(l, [u'ab\r', u'c\r'])
+            fh.write('ab\nc\n')
+        self.assertEqual(l, ['ab\r', 'c\r'])
 
         self.assertTrue(fh.closed)
         fh.close()

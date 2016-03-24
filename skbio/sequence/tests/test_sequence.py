@@ -236,7 +236,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
         for s in (b'',  # bytes
-                  u'',  # unicode
+                  '',  # unicode
                   np.array('', dtype='c'),  # char vector
                   np.fromstring('', dtype=np.uint8),  # byte vec
                   Sequence('')):  # another Sequence object
@@ -258,7 +258,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_init_single_character_sequence(self):
         for s in (b'A',
-                  u'A',
+                  'A',
                   np.array('A', dtype='c'),
                   np.fromstring('A', dtype=np.uint8),
                   Sequence('A')):
@@ -280,7 +280,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
-                  u'.ABC\t123  xyz-',
+                  '.ABC\t123  xyz-',
                   np.array('.ABC\t123  xyz-', dtype='c'),
                   np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
                   Sequence('.ABC\t123  xyz-')):
@@ -435,7 +435,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
-            Sequence(u'abc\u1F30')
+            Sequence('abc\u1F30')
 
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
@@ -1016,7 +1016,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = repr(
             Sequence(
                 'ACGT',
-                metadata={'foo': 'bar', u'bar': 33.33, None: True, False: {},
+                metadata={'foo': 'bar', b'bar': 33.33, None: True, False: {},
                           (1, 2): 3, 'acb' * 100: "'", 10: 11},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))
@@ -1247,7 +1247,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaisesRegex(UnicodeEncodeError,
                                     "can't encode character.*not in "
                                     "range\(128\)"):
-            seq.replace(index, u'\uFFFF')
+            seq.replace(index, '\uFFFF')
 
     def test_replace_non_single_character_error(self):
         seq = Sequence('CCGAACTGTC')
@@ -1500,10 +1500,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'z': 5/11})
 
-        chars = u'z'
-        self.assertEqual(seq.frequencies(chars=chars), {u'z': 5})
+        chars = 'z'
+        self.assertEqual(seq.frequencies(chars=chars), {'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'z': 5/11})
+                         {'z': 5/11})
 
         chars = np.fromstring('z', dtype='|S1')[0]
         self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
@@ -1516,10 +1516,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'x': 0.0, b'z': 5/11})
 
-        chars = {u'x', u'z'}
-        self.assertEqual(seq.frequencies(chars=chars), {u'x': 0, u'z': 5})
+        chars = {'x', 'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {'x': 0, 'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'x': 0.0, u'z': 5/11})
+                         {'x': 0.0, 'z': 5/11})
 
         chars = {
             np.fromstring('x', dtype='|S1')[0],
@@ -1572,10 +1572,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             seq.frequencies(chars={'a', None})
 
         with self.assertRaisesRegex(ValueError, 'outside the range'):
-            seq.frequencies(chars=u'\u1F30')
+            seq.frequencies(chars='\u1F30')
 
         with self.assertRaisesRegex(ValueError, 'outside the range'):
-            seq.frequencies(chars={'c', u'\u1F30'})
+            seq.frequencies(chars={'c', '\u1F30'})
 
         with self.assertRaisesRegex(TypeError, 'set.*int'):
             seq.frequencies(chars=42)
@@ -2292,7 +2292,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence('')
         m = 'dummy_method'
         str_inputs = ('', 'a', 'acgt')
-        unicode_inputs = (u'', u'a', u'acgt')
+        unicode_inputs = ('', 'a', 'acgt')
         byte_inputs = (b'', b'a', b'acgt')
         seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
         all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
@@ -2305,7 +2305,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
         seq = Sequence('')
-        all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
+        all_inputs = ('\x80', 'abc\x80', '\x80abc')
         for input_ in all_inputs:
             with self.assertRaisesRegex(UnicodeEncodeError,
                                         "'ascii' codec can't encode character"
