@@ -18,6 +18,10 @@ import tokenize
 
 import dateutil.parser
 
+if sys.version_info.major != 3:
+    sys.exit("scikit-bio can only be used with Python 3. You are currently "
+             "running Python %d." % sys.version_info.major)
+
 
 def main():
     """Go on a power trip by nitpicking the scikit-bio repo.

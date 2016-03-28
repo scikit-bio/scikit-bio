@@ -7,6 +7,10 @@ import os
 import types
 import re
 
+if sys.version_info.major != 3:
+    raise RuntimeError("scikit-bio can only be used with Python 3. You are "
+                       "currently running Python %d." % sys.version_info.major)
+
 # Force matplotlib to not use any Xwindows backend.
 import matplotlib
 matplotlib.use('Agg')
