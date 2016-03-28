@@ -6,13 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 import copy
 
-from future.builtins import range
-from future.utils import viewkeys, viewvalues
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -747,12 +743,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         True
 
         """
-        # Python 2 and 3 guarantee same order of iteration as long as no
+        # Python 3 guarantees same order of iteration as long as no
         # modifications are made to the dictionary between calls:
-        #     https://docs.python.org/2/library/stdtypes.html#dict.items
         #     https://docs.python.org/3/library/stdtypes.html#
         #         dictionary-view-objects
-        return cls(viewvalues(dictionary), index=viewkeys(dictionary))
+        return cls(dictionary.values(), index=dictionary.keys())
 
     @experimental(as_of='0.4.1')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
@@ -861,9 +856,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         # It is impossible to have 0 sequences and >0 positions.
         return self.shape.position > 0
-
-    # Python 2 compatibility.
-    __nonzero__ = __bool__
 
     @experimental(as_of='0.4.1')
     def __contains__(self, label):
@@ -1622,7 +1614,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             # guaranteed to always have two gap characters). See unit tests for
             # an example.
             freqs = seq.frequencies(chars=self.dtype.gap_chars)
-            gap_freqs.append(sum(viewvalues(freqs)))
+            gap_freqs.append(sum(freqs.values()))
 
         gap_freqs = np.asarray(gap_freqs, dtype=float if relative else int)
 

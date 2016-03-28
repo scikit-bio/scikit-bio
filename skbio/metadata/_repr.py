@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
-import six
 import itertools
 import numbers
 import textwrap
@@ -18,7 +14,7 @@ from abc import ABCMeta, abstractmethod
 from skbio._base import ElasticLines
 
 
-class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
+class _MetadataReprBuilder(metaclass=ABCMeta):
     """Abstract base class for building  a repr for an object containing
     metadata and/or positional metadata.
 
@@ -84,18 +80,20 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
         key_fmt = self._format_key(key)
 
         supported_type = True
-        if isinstance(value, (six.text_type, six.binary_type)):
-            # for stringy values, there may be u'' or b'' depending on the type
-            # of `value` and version of Python. find the starting quote
-            # character so that wrapped text will line up with that instead of
-            # the string literal prefix character. for example:
+        if isinstance(value, str):
+            # extra indent of 1 so that wrapped text lines up:
             #
-            #     'foo': u'abc def ghi
-            #              jkl mno'
+            #     'foo': 'abc def ghi
+            #             jkl mno'
             value_repr = repr(value)
             extra_indent = 1
-            if not (value_repr.startswith("'") or value_repr.startswith('"')):
-                extra_indent = 2
+        elif isinstance(value, bytes):
+            # extra indent of 2 so that wrapped text lines up:
+            #
+            #     'foo': b'abc def ghi
+            #              jkl mno'
+            value_repr = repr(value)
+            extra_indent = 2
         # handles any number, this includes bool
         elif value is None or isinstance(value, numbers.Number):
             value_repr = repr(value)
@@ -135,8 +133,7 @@ class _MetadataReprBuilder(with_metaclass(ABCMeta, object)):
 
         """
         key_fmt = self._indent + repr(key)
-        supported_types = (six.text_type, six.binary_type, numbers.Number,
-                           type(None))
+        supported_types = (str, bytes, numbers.Number, type(None))
         if len(key_fmt) > (self._width / 2) or not isinstance(key,
                                                               supported_types):
             key_fmt = self._indent + str(type(key))

@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
 import abc
 import copy
 
@@ -18,7 +15,7 @@ import pandas as pd
 from skbio.util._decorator import stable
 
 
-class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class MetadataMixin(metaclass=abc.ABCMeta):
     @property
     @stable(as_of="0.4.0")
     def metadata(self):
@@ -181,7 +178,7 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
         return self._metadata is not None and bool(self.metadata)
 
 
-class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class PositionalMetadataMixin(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.

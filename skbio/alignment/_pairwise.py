@@ -6,12 +6,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 from warnings import warn
 from itertools import product
 
 import numpy as np
-from future.builtins import range, zip
 
 from skbio.alignment import TabularMSA
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman

@@ -6,12 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import itertools
 import unittest
 
-import six
 import numpy as np
 import numpy.testing as npt
 
@@ -24,27 +21,25 @@ class TestHamming(unittest.TestCase):
         seq1 = Sequence('abc')
         seq2 = 'abc'
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
             hamming(seq1, seq2)
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, 'seq1.*seq2.*Sequence.*str'):
             hamming(seq2, seq1)
 
     def test_type_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ACG')
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Sequence.*does not match.*DNA'):
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*does not match.*DNA'):
             hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABCD')
 
-        with six.assertRaisesRegex(self, ValueError, 'equal length.*3 != 4'):
+        with self.assertRaisesRegex(ValueError, 'equal length.*3 != 4'):
             hamming(seq1, seq2)
 
     def test_return_type(self):
@@ -219,22 +214,19 @@ class TestKmerDistance(unittest.TestCase):
     def test_k_less_than_one_error(self):
         seq1 = Sequence('ATCG')
         seq2 = Sequence('ACTG')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'k must be greater than 0.'):
+        with self.assertRaisesRegex(ValueError, 'k must be greater than 0.'):
             kmer_distance(seq1, seq2, 0)
 
     def test_type_mismatch_error(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ATC')
-        with six.assertRaisesRegex(self, TypeError,
-                                   "Type 'Sequence'.*type 'DNA'"):
+        with self.assertRaisesRegex(TypeError, "Type 'Sequence'.*type 'DNA'"):
             kmer_distance(seq1, seq2, 3)
 
     def test_non_sequence_error(self):
         seq1 = Sequence('ATCG')
         seq2 = 'ATCG'
-        with six.assertRaisesRegex(self, TypeError,
-                                   "not 'str'"):
+        with self.assertRaisesRegex(TypeError, "not 'str'"):
             kmer_distance(seq1, seq2, 3)
 
 

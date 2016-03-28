@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-from six.moves import zip_longest
-
 import copy
 import functools
 import itertools
@@ -71,8 +67,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
 
         def empty_generator():
-            return
-            yield
+            yield from ()
 
         self.getitem_empty_indices = [
             [],
@@ -113,8 +108,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         result1 = Sequence.concat([seq1, seq2])
         result2 = Sequence.concat([seq1, seq2], how='strict')
         self.assertEqual(result1, result2)
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2, seqbad])
 
     def test_concat_strict_simple(self):
@@ -144,8 +139,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_concat_strict_fail(self):
         seq1 = Sequence("1", positional_metadata={'a': [1]})
         seq2 = Sequence("2", positional_metadata={'b': [2]})
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2], how='strict')
 
     def test_concat_outer_simple(self):
@@ -240,7 +235,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
         for s in (b'',  # bytes
-                  u'',  # unicode
+                  '',  # unicode
                   np.array('', dtype='c'),  # char vector
                   np.fromstring('', dtype=np.uint8),  # byte vec
                   Sequence('')):  # another Sequence object
@@ -262,7 +257,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_init_single_character_sequence(self):
         for s in (b'A',
-                  u'A',
+                  'A',
                   np.array('A', dtype='c'),
                   np.fromstring('A', dtype=np.uint8),
                   Sequence('A')):
@@ -284,7 +279,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
-                  u'.ABC\t123  xyz-',
+                  '.ABC\t123  xyz-',
                   np.array('.ABC\t123  xyz-', dtype='c'),
                   np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
                   Sequence('.ABC\t123  xyz-')):
@@ -416,30 +411,30 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with six.assertRaisesRegex(self, TypeError, 'tuple'):
+        with self.assertRaisesRegex(TypeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with six.assertRaisesRegex(self, TypeError, 'list'):
+        with self.assertRaisesRegex(TypeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with six.assertRaisesRegex(self, TypeError, 'set'):
+        with self.assertRaisesRegex(TypeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with six.assertRaisesRegex(self, TypeError, 'dict'):
+        with self.assertRaisesRegex(TypeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with six.assertRaisesRegex(self, TypeError, 'int'):
+        with self.assertRaisesRegex(TypeError, 'int'):
             Sequence(42)
-        with six.assertRaisesRegex(self, TypeError, 'float'):
+        with self.assertRaisesRegex(TypeError, 'float'):
             Sequence(4.2)
-        with six.assertRaisesRegex(self, TypeError, 'int64'):
+        with self.assertRaisesRegex(TypeError, 'int64'):
             Sequence(np.int_(50))
-        with six.assertRaisesRegex(self, TypeError, 'float64'):
+        with self.assertRaisesRegex(TypeError, 'float64'):
             Sequence(np.float_(50))
-        with six.assertRaisesRegex(self, TypeError, 'Foo'):
-            class Foo(object):
+        with self.assertRaisesRegex(TypeError, 'Foo'):
+            class Foo:
                 pass
             Sequence(Foo())
 
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
-            Sequence(u'abc\u1F30')
+            Sequence('abc\u1F30')
 
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
@@ -999,8 +994,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # basic sanity checks -- more extensive testing of formatting and
         # special cases is performed in SequenceReprDoctests below. here we
         # only test that pieces of the repr are present. these tests also
-        # exercise coverage for py2/3 since the doctests in
-        # SequenceReprDoctests only currently run in py3.
+        # exercise coverage in case doctests stop counting towards coverage in
+        # the future
 
         # minimal
         obs = repr(Sequence(''))
@@ -1020,7 +1015,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = repr(
             Sequence(
                 'ACGT',
-                metadata={'foo': 'bar', u'bar': 33.33, None: True, False: {},
+                metadata={'foo': 'bar', b'bar': 33.33, None: True, False: {},
                           (1, 2): 3, 'acb' * 100: "'", 10: 11},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))
@@ -1242,23 +1237,21 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_replace_invalid_char_for_type_error(self):
         seq = DNA('TAAACGGAACGCTACGTCTG')
         index = self._make_index('01000001101011001001')
-        with six.assertRaisesRegex(self, ValueError,
-                                   "Invalid character.*'F'"):
+        with self.assertRaisesRegex(ValueError, "Invalid character.*'F'"):
             seq.replace(index, 'F')
 
     def test_replace_invalid_char_error(self):
         seq = Sequence('GGGAGCTAGA')
         index = self._make_index('1000101110')
-        with six.assertRaisesRegex(self, UnicodeEncodeError,
-                                   "can't encode character.*not in "
-                                   "range\(128\)"):
-            seq.replace(index, u'\uFFFF')
+        with self.assertRaisesRegex(UnicodeEncodeError,
+                                    "can't encode character.*not in "
+                                    "range\(128\)"):
+            seq.replace(index, '\uFFFF')
 
     def test_replace_non_single_character_error(self):
         seq = Sequence('CCGAACTGTC')
         index = self._make_index('1100110011')
-        with six.assertRaisesRegex(self, TypeError,
-                                   'string of length 2 found'):
+        with self.assertRaisesRegex(TypeError, 'string of length 2 found'):
             seq.replace(index, 'AB')
 
     def _make_index(self, bools):
@@ -1506,10 +1499,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'z': 5/11})
 
-        chars = u'z'
-        self.assertEqual(seq.frequencies(chars=chars), {u'z': 5})
+        chars = 'z'
+        self.assertEqual(seq.frequencies(chars=chars), {'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'z': 5/11})
+                         {'z': 5/11})
 
         chars = np.fromstring('z', dtype='|S1')[0]
         self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
@@ -1522,10 +1515,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'x': 0.0, b'z': 5/11})
 
-        chars = {u'x', u'z'}
-        self.assertEqual(seq.frequencies(chars=chars), {u'x': 0, u'z': 5})
+        chars = {'x', 'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {'x': 0, 'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'x': 0.0, u'z': 5/11})
+                         {'x': 0.0, 'z': 5/11})
 
         chars = {
             np.fromstring('x', dtype='|S1')[0],
@@ -1562,32 +1555,33 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_frequencies_invalid_chars(self):
         seq = Sequence('abcabc')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars='')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars={''})
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars='ab')
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars={'b', 'ab'})
 
-        with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
+        with self.assertRaisesRegex(TypeError, 'string.*NoneType'):
             seq.frequencies(chars={'a', None})
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
-            seq.frequencies(chars=u'\u1F30')
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars='\u1F30')
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
-            seq.frequencies(chars={'c', u'\u1F30'})
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars={'c', '\u1F30'})
 
-        with six.assertRaisesRegex(self, TypeError, 'set.*int'):
+        with self.assertRaisesRegex(TypeError, 'set.*int'):
             seq.frequencies(chars=42)
 
     def _compare_kmers_results(self, observed, expected):
-        for obs, exp in zip_longest(observed, expected, fillvalue=None):
+        for obs, exp in itertools.zip_longest(observed, expected,
+                                              fillvalue=None):
             self.assertEqual(obs, exp)
 
     def test_iter_kmers(self):
@@ -2282,22 +2276,22 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence(seq_str,
                        positional_metadata={'quality': range(len(seq_str))})
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   "No positional metadata associated with "
-                                   "key 'introns'"):
+        with self.assertRaisesRegex(ValueError,
+                                    "No positional metadata associated with "
+                                    "key 'introns'"):
             seq._munge_to_index_array('introns')
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   "Column 'quality' in positional metadata "
-                                   "does not correspond to a boolean "
-                                   "vector"):
+        with self.assertRaisesRegex(TypeError,
+                                    "Column 'quality' in positional metadata "
+                                    "does not correspond to a boolean "
+                                    "vector"):
             seq._munge_to_index_array('quality')
 
     def test_munge_to_bytestring_return_bytes(self):
         seq = Sequence('')
         m = 'dummy_method'
         str_inputs = ('', 'a', 'acgt')
-        unicode_inputs = (u'', u'a', u'acgt')
+        unicode_inputs = ('', 'a', 'acgt')
         byte_inputs = (b'', b'a', b'acgt')
         seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
         all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
@@ -2310,12 +2304,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
         seq = Sequence('')
-        all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
+        all_inputs = ('\x80', 'abc\x80', '\x80abc')
         for input_ in all_inputs:
-            with six.assertRaisesRegex(self, UnicodeEncodeError,
-                                       "'ascii' codec can't encode character"
-                                       ".*in position.*: ordinal not in"
-                                       " range\(128\)"):
+            with self.assertRaisesRegex(UnicodeEncodeError,
+                                        "'ascii' codec can't encode character"
+                                        ".*in position.*: ordinal not in"
+                                        " range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
 
 
@@ -2356,16 +2350,16 @@ class TestDistance(TestSequenceBase):
         seq1 = SequenceSubclass("abcdef")
         seq2 = Sequence("12bcef")
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'SequenceSubclass.*Sequence.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'SequenceSubclass.*Sequence.*`distance`'):
             seq1.distance(seq2)
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Sequence.*SequenceSubclass.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*SequenceSubclass.*`distance`'):
             seq2.distance(seq1)
 
     def test_munging_invalid_characters_to_self_type(self):
-        with six.assertRaisesRegex(self, ValueError, 'Invalid characters.*X'):
+        with self.assertRaisesRegex(ValueError, 'Invalid characters.*X'):
             DNA("ACGT").distance("WXYZ")
 
     def test_munging_invalid_type_to_self_type(self):
@@ -2384,7 +2378,7 @@ class TestDistance(TestSequenceBase):
         def metric(a, b):
             return 'too far'
 
-        with six.assertRaisesRegex(self, ValueError, 'string.*float'):
+        with self.assertRaisesRegex(ValueError, 'string.*float'):
             Sequence('abc').distance('cba', metric=metric)
 
     def test_arbitrary_metric(self):
@@ -2466,9 +2460,9 @@ class TestDistance(TestSequenceBase):
 #
 # these doctests exercise the correct formatting of Sequence's repr in a
 # variety of situations. they are more extensive than the unit tests above
-# (TestSequence.test_repr) but are only currently run in py3. thus, they cannot
-# be relied upon for coverage (the unit tests take care of this)
-class SequenceReprDoctests(object):
+# (TestSequence.test_repr) but cannot be relied upon for coverage (the unit
+# tests take care of this)
+class SequenceReprDoctests:
     r"""
     >>> import pandas as pd
     >>> from skbio import Sequence

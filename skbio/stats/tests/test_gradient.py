@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import StringIO
-from future.builtins import zip
-
+import io
 from operator import attrgetter
 from unittest import TestCase, main
 
@@ -401,8 +398,8 @@ class GroupResultsTests(BaseTests):
         raw_paths = ['gr_wo_msg_raw', 'gr_w_msg_raw']
 
         for gr, out_fp, raw_fp in zip(self.groups, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             gr.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()
@@ -425,8 +422,8 @@ class CategoryResultsTests(BaseTests):
         raw_paths = ['cr_no_data_raw', 'cr_data_raw']
 
         for cat, out_fp, raw_fp in zip(self.categories, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             cat.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()
@@ -449,8 +446,8 @@ class GradientANOVAResultsTests(BaseTests):
         raw_paths = ['vr_raw']
 
         for vr, out_fp, raw_fp in zip(self.vec_results, out_paths, raw_paths):
-            obs_out_f = StringIO()
-            obs_raw_f = StringIO()
+            obs_out_f = io.StringIO()
+            obs_raw_f = io.StringIO()
             vr.to_files(obs_out_f, obs_raw_f)
             obs_out = obs_out_f.getvalue()
             obs_raw = obs_raw_f.getvalue()

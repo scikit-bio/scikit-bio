@@ -397,8 +397,6 @@ Faith PD            0.939336  1.000000
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from skbio.util import TestRunner
 
 from ._driver import (alpha_diversity, beta_diversity,

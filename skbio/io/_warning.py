@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 
 class FormatIdentificationWarning(Warning):
     """Warn when the sniffer of a format cannot confirm the format."""

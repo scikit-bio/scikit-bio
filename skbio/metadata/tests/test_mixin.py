@@ -6,11 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
-from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin)
+from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.util._decorator import overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
