@@ -80,18 +80,20 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         key_fmt = self._format_key(key)
 
         supported_type = True
-        if isinstance(value, (str, bytes)):
-            # for stringy values, there may be u'' or b'' depending on the type
-            # of `value` and version of Python. find the starting quote
-            # character so that wrapped text will line up with that instead of
-            # the string literal prefix character. for example:
+        if isinstance(value, str):
+            # extra indent of 1 so that wrapped text lines up:
+            #
+            #     'foo': 'abc def ghi
+            #             jkl mno'
+            value_repr = repr(value)
+            extra_indent = 1
+        elif isinstance(value, bytes):
+            # extra indent of 2 so that wrapped text lines up:
             #
             #     'foo': b'abc def ghi
             #              jkl mno'
             value_repr = repr(value)
-            extra_indent = 1
-            if not (value_repr.startswith("'") or value_repr.startswith('"')):
-                extra_indent = 2
+            extra_indent = 2
         # handles any number, this includes bool
         elif value is None or isinstance(value, numbers.Number):
             value_repr = repr(value)

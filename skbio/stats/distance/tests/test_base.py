@@ -319,9 +319,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
 
     def test_repr_svg(self):
         obs = self.dm_1x1._repr_svg_()
-        # print_figure(format='svg') can return str or bytes depending on the
-        # version of IPython
-        self.assertIsInstance(obs, (str, bytes))
+        self.assertIsInstance(obs, str)
         self.assertTrue(len(obs) > 0)
 
     def test_png(self):
