@@ -29,6 +29,12 @@ You can verify your installation by running the scikit-bio unit tests::
 
     python -m skbio.test
 
+For users of Debian, ``skbio`` is in the Debian software distribution and may
+be installed using::
+
+    sudo apt-get install python3-skbio python-skbio-doc
+
+
 Getting help
 ------------
 
