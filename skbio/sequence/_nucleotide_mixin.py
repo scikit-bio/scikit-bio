@@ -145,7 +145,11 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         """
         result = self._complement_lookup[self._bytes]
-        complement = self._to(sequence=result)
+        complement = self._constructor(
+            sequence=result,
+            metadata=self.metadata,
+            positional_metadata=self.positional_metadata)
+
         if reverse:
             complement = complement[::-1]
         return complement

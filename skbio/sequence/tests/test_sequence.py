@@ -119,7 +119,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
         result = Sequence.concat([seq1, seq2], how='strict')
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_strict_many(self):
         odd_key = frozenset()
@@ -134,7 +134,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                 Sequence("9", positional_metadata={'a': ['o'], odd_key: [5]})
             ], how='strict')
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_strict_fail(self):
         seq1 = Sequence("1", positional_metadata={'a': [1]})
@@ -148,7 +148,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence("5678")
         result = Sequence.concat([seq1, seq2], how='outer')
         self.assertEqual(result, Sequence("12345678"))
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_outer_missing(self):
         a = {}
@@ -169,14 +169,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                       np.nan, np.nan, np.nan, np.nan]
                             })
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_inner_simple(self):
         seq1 = Sequence("1234")
         seq2 = Sequence("5678", positional_metadata={'discarded': [1] * 4})
         result = Sequence.concat([seq1, seq2], how='inner')
         self.assertEqual(result, Sequence("12345678"))
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_inner_missing(self):
         seq1 = Sequence("12", positional_metadata={'a': ['1', '2'],
@@ -188,16 +188,15 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         expected = Sequence("123456", positional_metadata={'a': ['1', '2', 3,
                                                                  4, 5, 6]})
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
 
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
-        self.assertFalse(seq.has_metadata())
+        self.assertFalse(seq.metadata)
         self.assertEqual(seq.metadata, {})
-        self.assertFalse(seq.has_positional_metadata())
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame(index=np.arange(11)))
 
@@ -209,28 +208,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
 
-        self.assertTrue(seq.has_metadata())
+        self.assertTrue(seq.metadata)
         self.assertEqual(seq.metadata, {'id': 'foo', 'description': 'bar baz'})
 
-        self.assertTrue(seq.has_positional_metadata())
         assert_data_frame_almost_equal(
             seq.positional_metadata,
             pd.DataFrame({'quality': range(11)}, index=np.arange(11)))
-
-    def test_init_from_sequence_handles_missing_metadata_efficiently(self):
-        # initializing from an existing Sequence object should handle metadata
-        # attributes efficiently on both objects
-        seq = Sequence('ACGT')
-        new_seq = Sequence(seq)
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(new_seq._metadata)
-        self.assertIsNone(new_seq._positional_metadata)
-
-        self.assertFalse(seq.has_metadata())
-        self.assertFalse(seq.has_positional_metadata())
-        self.assertFalse(new_seq.has_metadata())
-        self.assertFalse(new_seq.has_positional_metadata())
 
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
@@ -248,10 +231,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), '')
             self.assertEqual(len(seq), 0)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=np.arange(0)))
 
@@ -270,10 +252,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), 'A')
             self.assertEqual(len(seq), 1)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=np.arange(1)))
 
@@ -293,10 +274,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), '.ABC\t123  xyz-')
             self.assertEqual(len(seq), 14)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=np.arange(14)))
 
@@ -871,32 +851,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaises(Exception):
             seq[100 * [True, False, True]]
 
-    def test_getitem_handles_missing_metadata_efficiently(self):
-        # there are two paths in __getitem__ we need to test for efficient
-        # handling of missing metadata
-
-        # path 1: mixed types
-        seq = Sequence('ACGT')
-        subseq = seq[1, 2:4]
-        self.assertEqual(subseq, Sequence('CGT'))
-
-        # metadata attributes should be None and not initialized to a "missing"
-        # representation
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(subseq._metadata)
-        self.assertIsNone(subseq._positional_metadata)
-
-        # path 2: uniform types
-        seq = Sequence('ACGT')
-        subseq = seq[1:3]
-        self.assertEqual(subseq, Sequence('CG'))
-
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(subseq._metadata)
-        self.assertIsNone(subseq._positional_metadata)
-
     def test_getitem_empty_positional_metadata(self):
         seq = Sequence('ACGT')
         seq.positional_metadata  # This will create empty positional_metadata
@@ -1046,80 +1000,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             "ABC")
         self.assertIs(type(str(Sequence("A"))), str)
 
-    def test_to_default_behavior(self):
-        # minimal sequence, sequence with all optional attributes present, and
-        # a subclass of Sequence
-        for seq in (Sequence('ACGT'),
-                    Sequence('ACGT', metadata={'id': 'foo', 'desc': 'bar'},
-                             positional_metadata={'quality': range(4)}),
-                    SequenceSubclass('ACGU', metadata={'id': 'rna seq'})):
-            to = seq._to()
-            self.assertEqual(seq, to)
-            self.assertIsNot(seq, to)
-
-    def test_to_update_single_attribute(self):
-        seq = Sequence('HE..--..LLO',
-                       metadata={'id': 'hello', 'description': 'gapped hello'},
-                       positional_metadata={'quality': range(11)})
-
-        to = seq._to(metadata={'id': 'new id'})
-        self.assertIsNot(seq, to)
-        self.assertNotEqual(seq, to)
-        self.assertEqual(
-            to,
-            Sequence('HE..--..LLO', metadata={'id': 'new id'},
-                     positional_metadata={'quality': range(11)}))
-
-        # metadata shouldn't have changed on the original sequence
-        self.assertEqual(seq.metadata,
-                         {'id': 'hello', 'description': 'gapped hello'})
-
-    def test_to_update_multiple_attributes(self):
-        seq = Sequence('HE..--..LLO',
-                       metadata={'id': 'hello', 'description': 'gapped hello'},
-                       positional_metadata={'quality': range(11)})
-
-        to = seq._to(metadata={'id': 'new id', 'description': 'new desc'},
-                     positional_metadata={'quality': range(20, 25)},
-                     sequence='ACGTA')
-        self.assertIsNot(seq, to)
-        self.assertNotEqual(seq, to)
-
-        # attributes should be what we specified in the _to call...
-        self.assertEqual(to.metadata['id'], 'new id')
-        npt.assert_array_equal(to.positional_metadata['quality'],
-                               np.array([20, 21, 22, 23, 24]))
-        npt.assert_array_equal(to.values, np.array('ACGTA', dtype='c'))
-        self.assertEqual(to.metadata['description'], 'new desc')
-
-        # ...and shouldn't have changed on the original sequence
-        self.assertEqual(seq.metadata['id'], 'hello')
-        npt.assert_array_equal(seq.positional_metadata['quality'], range(11))
-        npt.assert_array_equal(seq.values, np.array('HE..--..LLO',
-                                                    dtype='c'))
-        self.assertEqual(seq.metadata['description'], 'gapped hello')
-
-    def test_to_invalid_kwargs(self):
-        seq = Sequence('ACCGGTACC', metadata={'id': "test-seq",
-                       'desc': "A test sequence"})
-
-        with self.assertRaises(TypeError):
-            seq._to(metadata={'id': 'bar'}, unrecognized_kwarg='baz')
-
-    def test_to_no_positional_metadata(self):
-        seq = Sequence('ACGT')
-        seq.positional_metadata  # This will create empty positional metadata
-        result = seq._to(sequence='TGA')
-        self.assertIsNone(result._positional_metadata)
-        self.assertEqual(result, Sequence('TGA'))
-
-    def test_to_no_metadata(self):
-        seq = Sequence('ACGT')
-        seq.metadata  # This will create empty metadata
-        result = seq._to(sequence='TGA')
-        self.assertIsNone(result._metadata)
-        self.assertEqual(result, Sequence('TGA'))
-
     def test_count(self):
         def construct_char_array(s):
             return np.fromstring(s, dtype='|S1')
@@ -1197,22 +1077,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = seq
         exp = Sequence('ATCG')
         self.assertEqual(obs, exp)
-
-    def test_replace_handles_metadata_efficiently(self):
-        seq = Sequence('TGGTACAAGCTGCTCGCAGCACGGCGTGCC')
-        index = self._make_index('010101100001101011001100100010')
-        obs = seq.replace(index, '-')
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(obs._metadata)
-        self.assertIsNone(obs._positional_metadata)
-
-    def test_replace_handles_empty_but_present_metadata_efficiently(self):
-        seq = Sequence('ACGT', metadata={},
-                       positional_metadata=pd.DataFrame(index=range(4)))
-        obs = seq.replace([True, False, False, True], 'Z')
-        self.assertIsNone(obs._metadata)
-        self.assertIsNone(obs._positional_metadata)
 
     def test_replace_with_metadata(self):
         seq = Sequence('GCACGGCAAGAAGCGCCCCA',
@@ -2036,13 +1900,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(seq_copy, seq)
             self.assertIsNot(seq_copy, seq)
             self.assertIsNot(seq_copy._bytes, seq._bytes)
-
-            # metadata attributes should be None and not initialized to a
-            # "missing" representation
-            self.assertIsNone(seq._metadata)
-            self.assertIsNone(seq._positional_metadata)
-            self.assertIsNone(seq_copy._metadata)
-            self.assertIsNone(seq_copy._positional_metadata)
 
     def test_copy_with_metadata_shallow(self):
         # copy.copy and Sequence.copy should behave identically
