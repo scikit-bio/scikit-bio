@@ -611,9 +611,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             else:
                 expansions.append(degen_chars[char])
 
-        result = product(*expansions)
-        return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
-                result)
+        for nondegen_seq in product(*expansions):
+            yield self._constructor(
+                sequence=''.join(nondegen_seq),
+                metadata=self.metadata,
+                positional_metadata=self.positional_metadata)
 
     @stable(as_of='0.4.1')
     def to_regex(self):

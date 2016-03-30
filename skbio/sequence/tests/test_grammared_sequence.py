@@ -10,9 +10,11 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
+from skbio.util._testing import assert_data_frame_almost_equal
 
 
 class ExampleGrammaredSequence(GrammaredSequence):
@@ -141,8 +143,9 @@ class TestGrammaredSequence(TestCase):
         seq = ExampleGrammaredSequence('.-ABCXYZ')
 
         npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
-        self.assertFalse(seq.has_metadata())
-        self.assertFalse(seq.has_positional_metadata())
+        self.assertEqual(seq.metadata, {})
+        assert_data_frame_almost_equal(seq.positional_metadata,
+                                       pd.DataFrame(index=range(8)))
 
     def test_init_nondefault_parameters(self):
         seq = ExampleGrammaredSequence(
@@ -151,11 +154,9 @@ class TestGrammaredSequence(TestCase):
             positional_metadata={'quality': range(8)})
 
         npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
-        self.assertTrue(seq.has_metadata())
-        self.assertEqual(seq.metadata['id'], 'foo')
-        self.assertTrue(seq.has_positional_metadata())
-        npt.assert_equal(seq.positional_metadata['quality'], np.array(range(8),
-                         dtype='int'))
+        self.assertEqual(seq.metadata, {'id': 'foo'})
+        assert_data_frame_almost_equal(seq.positional_metadata,
+                                       pd.DataFrame({'quality': range(8)}))
 
     def test_init_valid_empty_sequence(self):
         # just make sure we can instantiate an empty sequence regardless of

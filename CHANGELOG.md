@@ -15,6 +15,11 @@
 ### Bug fixes
 * Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
 an empty generator.
+* Fixed minor bug where adding sequences to an empty `TabularMSA` with MSA-wide `positional_metadata` would result in a `TabularMSA` object in an inconsistent state. This could happen using `TabularMSA.append` or `TabularMSA.extend`. This bug only affects a `TabularMSA` object *without* sequences that has MSA-wide `positional_metadata` (for example, `TabularMSA([], positional_metadata={'column': []})`).
+
+### Deprecated functionality [stable]
+* Deprecated `Sequence.has_metadata` and `TabularMSA.has_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `bool(obj.metadata)` to determine if the metadata dict is empty.
+* Deprecated `Sequence.has_positional_metadata` and `TabularMSA.has_positional_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `len(obj.positional_metadata.columns)` to determine if positional metadata columns are present, or `obj.positional_metadata.empty` to determine if the positional metadata DataFrame is empty (empty index OR empty columns).
 
 ### Deprecated functionality [experimental]
 * Deprecated function `skbio.util.create_dir`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
