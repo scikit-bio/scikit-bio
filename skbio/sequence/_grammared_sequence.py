@@ -6,15 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from abc import ABCMeta, abstractproperty
 from itertools import product
 import re
 
 import numpy as np
-from six import add_metaclass
-
 
 from skbio.util._decorator import (classproperty, overrides, stable,
                                    deprecated, experimental)
@@ -97,8 +93,7 @@ class DisableSubclassingMeta(GrammaredSequenceMeta):
                                                           dict(dct))
 
 
-@add_metaclass(GrammaredSequenceMeta)
-class GrammaredSequence(Sequence):
+class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     """Store sequence data conforming to a character set.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -631,9 +626,11 @@ class GrammaredSequence(Sequence):
             else:
                 expansions.append(degen_chars[char])
 
-        result = product(*expansions)
-        return (self._to(sequence=''.join(nondegen_seq)) for nondegen_seq in
-                result)
+        for nondegen_seq in product(*expansions):
+            yield self._constructor(
+                sequence=''.join(nondegen_seq),
+                metadata=self.metadata,
+                positional_metadata=self.positional_metadata)
 
     @stable(as_of='0.4.1')
     def to_regex(self):

@@ -70,9 +70,6 @@ or writing to a file.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 import csv
 
 import numpy as np

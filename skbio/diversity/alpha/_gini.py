@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
 from skbio.diversity._util import _validate_counts_vector

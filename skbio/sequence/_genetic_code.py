@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
-from future.builtins import range
 
 from skbio.util._decorator import classproperty, stable, classonlymethod
 from skbio._base import SkbioObject
@@ -585,12 +582,8 @@ class GeneticCode(SkbioObject):
             elif stop == 'require':
                 self._raise_require_error('stop', reading_frame)
 
-        metadata = None
-        if sequence.has_metadata():
-            metadata = sequence.metadata
-
         # turn off validation because `translated` is guaranteed to be valid
-        return Protein(translated, metadata=metadata, validate=False)
+        return Protein(translated, metadata=sequence.metadata, validate=False)
 
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):

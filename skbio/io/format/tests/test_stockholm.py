@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-import six
-
 import pandas as pd
 
 import io
@@ -272,133 +268,121 @@ class TestStockholmReader(unittest.TestCase):
 
     def test_stockholm_duplicate_tree_id_error(self):
         fp = get_data_path('stockholm_duplicate_tree_ids')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Tree.*tree1.*in file.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Tree.*tree1.*in file.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_nonexistent_gr_error(self):
         fp = get_data_path('stockholm_invalid_nonexistent_gr')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'GS or GR.*nonexistent sequence.*RL1355.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'GS or GR.*nonexistent sequence.*RL1355.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_nonexistent_gs_error(self):
         fp = get_data_path('stockholm_invalid_nonexistent_gs')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'GS or GR.*nonexistent sequence.*AC14.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'GS or GR.*nonexistent sequence.*AC14.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_duplicate_sequence_names_error(self):
         fp = get_data_path('stockholm_duplicate_sequence_names')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'duplicate sequence name.*ASR132.*supported'
-                                   ' by the reader.'):
+        with self.assertRaisesRegex(
+                StockholmFormatError,
+                'duplicate sequence name.*ASR132.*supported by the reader.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_duplicate_gr_error(self):
         fp = get_data_path('stockholm_duplicate_gr')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Found duplicate GR.*OS.*LFDR3.*supported '
-                                   'by the reader.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Found duplicate GR.*OS.*LFDR3.*supported '
+                                    'by the reader.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_duplicate_gc_error(self):
         fp = get_data_path('stockholm_duplicate_gc')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Found duplicate GC.*SS_cons.*supported '
-                                   'by the reader.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Found duplicate GC.*SS_cons.*supported '
+                                    'by the reader.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_empty_file_error(self):
         fp = get_data_path('empty')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'File is empty.'):
+        with self.assertRaisesRegex(StockholmFormatError, 'File is empty.'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_missing_header_error(self):
         fp = get_data_path('stockholm_missing_header')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'File missing.*header'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'File missing.*header'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_missing_footer_error(self):
         fp = get_data_path('stockholm_missing_footer')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Final line.*only "//".'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Final line.*only "//".'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_data_type_error(self):
         fp = get_data_path('stockholm_invalid_data_type')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   "Unrecognized.*'#=GZ"):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Unrecognized.*'#=GZ"):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gf_line_error(self):
         fp = get_data_path('stockholm_malformed_gf_line')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line contains 2.*must contain.*3.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Line contains 2.*must contain.*3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gs_line_error(self):
         fp = get_data_path('stockholm_malformed_gs_line')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line contains 3.*must contain.*4.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Line contains 3.*must contain.*4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gr_line_error(self):
         fp = get_data_path('stockholm_malformed_gr_line')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line contains 2.*must contain.*4.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Line contains 2.*must contain.*4.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_gc_line_error(self):
         fp = get_data_path('stockholm_malformed_gc_line')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line contains 2.*must contain.*3.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Line contains 2.*must contain.*3.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_malformed_data_line_error(self):
         fp = get_data_path('stockholm_malformed_data_line')
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Line contains 1.*must contain.*2.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Line contains 1.*must contain.*2.'):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_differing_sequence_lengths_error(self):
         fp = get_data_path('stockholm_differing_seq_lengths')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'Each sequence.*11 != 10'):
+        with self.assertRaisesRegex(ValueError, 'Each sequence.*11 != 10'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_differing_data_lengths_gr_error(self):
         fp = get_data_path('stockholm_differing_gr_data_length')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'Number.*7.*(8).'):
+        with self.assertRaisesRegex(ValueError, 'Number.*7.*(8).'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_differing_data_lengths_gc_error(self):
         fp = get_data_path('stockholm_differing_gc_data_length')
-        with six.assertRaisesRegex(self, ValueError,
-                                   'Number.*12.*(10).'):
+        with self.assertRaisesRegex(ValueError, 'Number.*12.*(10).'):
             _stockholm_to_tabular_msa(fp, constructor=RNA)
 
     def test_no_constructor_error(self):
         fp = get_data_path('empty')
-        with six.assertRaisesRegex(self, ValueError, 'Must.*parameter.'):
+        with self.assertRaisesRegex(ValueError, 'Must.*parameter.'):
             _stockholm_to_tabular_msa(fp)
 
     def test_unsupported_constructor_error(self):
         fp = get_data_path('empty')
-        with six.assertRaisesRegex(self, TypeError,
-                                   '`constructor`.*`GrammaredSequence`'):
+        with self.assertRaisesRegex(TypeError,
+                                    '`constructor`.*`GrammaredSequence`'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
-
-    def test_handles_missing_metadata_efficiently(self):
-        msa = _stockholm_to_tabular_msa(get_data_path('stockholm_minimal'),
-                                        constructor=DNA)
-        self.assertIsNone(msa._metadata)
-        self.assertIsNone(msa._positional_metadata)
-        self.assertIsNone(msa[0]._metadata)
-        self.assertIsNone(msa[0]._positional_metadata)
 
 
 class TestStockholmWriter(unittest.TestCase):
@@ -606,20 +590,11 @@ class TestStockholmWriter(unittest.TestCase):
             exp = fh.read()
         self.assertEqual(obs, exp)
 
-    def test_handles_missing_metadata_efficiently(self):
-        msa = TabularMSA([DNA('ACTG'), DNA('GTCA')], index=['seq1', 'seq2'])
-        fh = io.StringIO()
-        _tabular_msa_to_stockholm(msa, fh)
-        self.assertIsNone(msa._metadata)
-        self.assertIsNone(msa._positional_metadata)
-        self.assertIsNone(msa[0]._metadata)
-        self.assertIsNone(msa[0]._positional_metadata)
-
     def test_unoriginal_index_error(self):
         msa = TabularMSA([DNA('ATCGCCAGCT'), DNA('TTGTGCTGGC')],
                          index=['seq1', 'seq1'])
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'index labels must be unique.'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'index labels must be unique.'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -639,9 +614,9 @@ class TestStockholmWriter(unittest.TestCase):
         msa = TabularMSA([DNA('CGTCAATCTCGAACT',
                           positional_metadata=pos_metadata_dataframe)],
                          index=['seq1'])
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Sequence-specific positional metadata.*'
-                                   'must be unique. Found 1 duplicate'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Sequence-specific positional metadata.*'
+                                    'must be unique. Found 1 duplicate'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -660,10 +635,10 @@ class TestStockholmWriter(unittest.TestCase):
                                                                 'TG'))])
         msa = TabularMSA([DNA('CCCCTGCTTTCGTAG')],
                          positional_metadata=pos_metadata_dataframe)
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Multiple sequence alignment positional '
-                                   'metadata.*must be unique. Found 2 '
-                                   'duplicate'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Multiple sequence alignment positional '
+                                    'metadata.*must be unique. Found 2 '
+                                    'duplicate'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -675,10 +650,10 @@ class TestStockholmWriter(unittest.TestCase):
                                                'AS': list('TCAGCTCTGCAGCGTT')})
         msa = TabularMSA([DNA('TCCTTGAACTACCCGA',
                               positional_metadata=pos_metadata_dataframe)])
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Sequence-specific positional metadata.*'
-                                   'must contain a single character.*Found '
-                                   'value\(s\) in column AC'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Sequence-specific positional metadata.*'
+                                    'must contain a single character.*Found '
+                                    'value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
@@ -690,10 +665,10 @@ class TestStockholmWriter(unittest.TestCase):
                                                'AS': list('TCAGCTCTGCAGCGTT')})
         msa = TabularMSA([DNA('TCCTTGAACTACCCGA')],
                          positional_metadata=pos_metadata_dataframe)
-        with six.assertRaisesRegex(self, StockholmFormatError,
-                                   'Multiple sequence alignment positional '
-                                   'metadata.*must contain a single character'
-                                   '.*Found value\(s\) in column AC'):
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    'Multiple sequence alignment positional '
+                                    'metadata.*must contain a single character'
+                                    '.*Found value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 

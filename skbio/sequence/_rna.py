@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import add_metaclass
-
 import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
@@ -16,8 +13,8 @@ from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 
-@add_metaclass(DisableSubclassingMeta)
-class RNA(GrammaredSequence, NucleotideMixin):
+class RNA(GrammaredSequence, NucleotideMixin,
+          metaclass=DisableSubclassingMeta):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
@@ -207,17 +204,9 @@ class RNA(GrammaredSequence, NucleotideMixin):
         """
         seq = self._string.replace(b'U', b'T')
 
-        metadata = None
-        if self.has_metadata():
-            metadata = self.metadata
-
-        positional_metadata = None
-        if self.has_positional_metadata():
-            positional_metadata = self.positional_metadata
-
         # turn off validation because `seq` is guaranteed to be valid
-        return skbio.DNA(seq, metadata=metadata,
-                         positional_metadata=positional_metadata,
+        return skbio.DNA(seq, metadata=self.metadata,
+                         positional_metadata=self.positional_metadata,
                          validate=False)
 
     @stable(as_of="0.4.0")

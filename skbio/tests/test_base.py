@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-from six import binary_type, text_type
-
 import unittest
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -157,7 +153,7 @@ class TestOrdinationResults(unittest.TestCase):
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
     def test_plot_with_invalid_axis_labels(self):
-        with six.assertRaisesRegex(self, ValueError, 'axis_labels.*4'):
+        with self.assertRaisesRegex(ValueError, 'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
                                       axis_labels=('a', 'b', 'c', 'd'))
 
@@ -169,27 +165,27 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
-        with six.assertRaisesRegex(self, ValueError, '2 dimension\(s\)'):
+        with self.assertRaisesRegex(ValueError, '2 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
                 np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.samples.values.T
 
         # wrong number of axes
-        with six.assertRaisesRegex(self, ValueError, 'exactly three.*found 0'):
+        with self.assertRaisesRegex(ValueError, 'exactly three.*found 0'):
             self.min_ord_results._validate_plot_axes(coord_matrix, [])
-        with six.assertRaisesRegex(self, ValueError, 'exactly three.*found 4'):
+        with self.assertRaisesRegex(ValueError, 'exactly three.*found 4'):
             self.min_ord_results._validate_plot_axes(coord_matrix,
                                                      (0, 1, 2, 3))
 
         # duplicate axes
-        with six.assertRaisesRegex(self, ValueError, 'must be unique'):
+        with self.assertRaisesRegex(ValueError, 'must be unique'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 1, 0))
 
         # out of range axes
-        with six.assertRaisesRegex(self, ValueError, 'axes\[1\].*3'):
+        with self.assertRaisesRegex(ValueError, 'axes\[1\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1, 2))
-        with six.assertRaisesRegex(self, ValueError, 'axes\[2\].*3'):
+        with self.assertRaisesRegex(ValueError, 'axes\[2\].*3'):
             self.min_ord_results._validate_plot_axes(coord_matrix, (0, 2, 3))
 
     def test_get_plot_point_colors_invalid_input(self):
@@ -204,17 +200,17 @@ class TestOrdinationResults(unittest.TestCase):
                                                         ['B', 'C'], 'jet')
 
         # column not in df
-        with six.assertRaisesRegex(self, ValueError, 'missingcol'):
+        with self.assertRaisesRegex(ValueError, 'missingcol'):
             self.min_ord_results._get_plot_point_colors(self.df, 'missingcol',
                                                         ['B', 'C'], 'jet')
 
         # id not in df
-        with six.assertRaisesRegex(self, ValueError, 'numeric'):
+        with self.assertRaisesRegex(ValueError, 'numeric'):
             self.min_ord_results._get_plot_point_colors(
                 self.df, 'numeric', ['B', 'C', 'missingid', 'A'], 'jet')
 
         # missing data in df
-        with six.assertRaisesRegex(self, ValueError, 'nancolumn'):
+        with self.assertRaisesRegex(ValueError, 'nancolumn'):
             self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
                                                         ['B', 'C', 'A'], 'jet')
 
@@ -284,14 +280,12 @@ class TestOrdinationResults(unittest.TestCase):
 
     def test_repr_png(self):
         obs = self.min_ord_results._repr_png_()
-        assert_is_instance(obs, binary_type)
+        assert_is_instance(obs, bytes)
         assert_true(len(obs) > 0)
 
     def test_repr_svg(self):
         obs = self.min_ord_results._repr_svg_()
-        # print_figure(format='svg') can return text or bytes depending on the
-        # version of IPython
-        assert_true(isinstance(obs, text_type) or isinstance(obs, binary_type))
+        assert_is_instance(obs, str)
         assert_true(len(obs) > 0)
 
     def test_png(self):

@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
 from abc import ABCMeta, abstractproperty
 
 import numpy as np
@@ -17,7 +14,7 @@ from skbio.util._decorator import classproperty, stable
 from ._grammared_sequence import _motifs as parent_motifs
 
 
-class NucleotideMixin(with_metaclass(ABCMeta, object)):
+class NucleotideMixin(metaclass=ABCMeta):
     """Mixin for adding funtionality for working with sequences of nucleotides.
 
     This is an abstract base class (ABC) that cannot be instantiated.
@@ -148,7 +145,11 @@ class NucleotideMixin(with_metaclass(ABCMeta, object)):
 
         """
         result = self._complement_lookup[self._bytes]
-        complement = self._to(sequence=result)
+        complement = self._constructor(
+            sequence=result,
+            metadata=self.metadata,
+            positional_metadata=self.positional_metadata)
+
         if reverse:
             complement = complement[::-1]
         return complement

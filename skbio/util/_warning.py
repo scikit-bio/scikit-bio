@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 
 class SkbioWarning(Warning):
     """Used to filter our warnings from warnings given by 3rd parties"""

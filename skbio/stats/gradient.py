@@ -93,8 +93,6 @@ Control
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
@@ -201,7 +199,7 @@ def _ANOVA_trajectories(category, res_by_group):
     return CategoryResults(category, p_val, res_by_group, None)
 
 
-class GroupResults(object):
+class GroupResults:
     """Store the trajectory results of a group of a metadata category
 
     Attributes
@@ -258,7 +256,7 @@ class GroupResults(object):
                     % ", ".join(map(str, self.trajectory)))
 
 
-class CategoryResults(object):
+class CategoryResults:
     """Store the trajectory results of a metadata category
 
     Attributes
@@ -308,7 +306,7 @@ class CategoryResults(object):
                 group.to_files(out_f, raw_f)
 
 
-class GradientANOVAResults(object):
+class GradientANOVAResults:
     """Store the trajectory results
 
     Attributes
@@ -359,7 +357,7 @@ class GradientANOVAResults(object):
             raw_f.write('\n')
 
 
-class GradientANOVA(object):
+class GradientANOVA:
     r"""Base class for the Trajectory algorithms
 
     Parameters

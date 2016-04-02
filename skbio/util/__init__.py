@@ -56,8 +56,6 @@ Warnings
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from ._warning import EfficiencyWarning, RepresentationWarning, SkbioWarning
 from ._misc import (cardinal_to_ordinal, create_dir, find_duplicates,
                     is_casava_v180_or_later, remove_files, safe_md5)

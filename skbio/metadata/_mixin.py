@@ -6,19 +6,16 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
 import abc
 import copy
 
 import numpy as np
 import pandas as pd
 
-from skbio.util._decorator import stable
+from skbio.util._decorator import stable, deprecated
 
 
-class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class MetadataMixin(metaclass=abc.ABCMeta):
     @property
     @stable(as_of="0.4.0")
     def metadata(self):
@@ -64,18 +61,11 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
         Delete metadata:
 
-        >>> seq.has_metadata()
-        True
         >>> del seq.metadata
         >>> seq.metadata
         {}
-        >>> seq.has_metadata()
-        False
 
         """
-        if self._metadata is None:
-            # Not using setter to avoid copy.
-            self._metadata = {}
         return self._metadata
 
     @metadata.setter
@@ -87,7 +77,8 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
     @metadata.deleter
     def metadata(self):
-        self._metadata = None
+        # Not using setter to avoid copy.
+        self._metadata = {}
 
     @abc.abstractmethod
     def __init__(self, metadata=None):
@@ -95,7 +86,7 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
     def _init_(self, metadata=None):
         if metadata is None:
-            self._metadata = None
+            del self.metadata
         else:
             self.metadata = metadata
 
@@ -104,20 +95,7 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
         pass
 
     def _eq_(self, other):
-        # We're not simply comparing self.metadata to other.metadata in order
-        # to avoid creating "empty" metadata representations on the objects if
-        # they don't have metadata.
-        if self.has_metadata() and other.has_metadata():
-            if self.metadata != other.metadata:
-                return False
-        elif not (self.has_metadata() or other.has_metadata()):
-            # Both don't have metadata.
-            pass
-        else:
-            # One has metadata while the other does not.
-            return False
-
-        return True
+        return self.metadata == other.metadata
 
     @abc.abstractmethod
     def __ne__(self, other):
@@ -131,22 +109,18 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
         pass
 
     def _copy_(self):
-        if self.has_metadata():
-            return self.metadata.copy()
-        else:
-            return None
+        return self.metadata.copy()
 
     @abc.abstractmethod
     def __deepcopy__(self, memo):
         pass
 
     def _deepcopy_(self, memo):
-        if self.has_metadata():
-            return copy.deepcopy(self.metadata, memo)
-        else:
-            return None
+        return copy.deepcopy(self.metadata, memo)
 
-    @stable(as_of="0.4.0")
+    @deprecated(as_of="0.4.2-dev", until="0.5.2",
+                reason="Use `bool(obj.metadata)` to determine if the metadata "
+                       "dict is empty.")
     def has_metadata(self):
         """Determine if the object has metadata.
 
@@ -178,10 +152,10 @@ class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
         True
 
         """
-        return self._metadata is not None and bool(self.metadata)
+        return bool(self.metadata)
 
 
-class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
+class PositionalMetadataMixin(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.
@@ -202,7 +176,8 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         Notes
         -----
         This property can be set and deleted. When setting new positional
-        metadata a shallow copy is made.
+        metadata, a shallow copy is made and the index is set to the pandas
+        default integer index.
 
         Examples
         --------
@@ -265,21 +240,13 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
         Delete positional metadata:
 
-        >>> seq.has_positional_metadata()
-        True
         >>> del seq.positional_metadata
         >>> seq.positional_metadata
         Empty DataFrame
         Columns: []
         Index: [0, 1, 2, 3]
-        >>> seq.has_positional_metadata()
-        False
 
         """
-        if self._positional_metadata is None:
-            # Not using setter to avoid copy.
-            self._positional_metadata = pd.DataFrame(
-                index=np.arange(self._positional_metadata_axis_len_()))
         return self._positional_metadata
 
     @positional_metadata.setter
@@ -306,7 +273,9 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
     @positional_metadata.deleter
     def positional_metadata(self):
-        self._positional_metadata = None
+        # Not using setter to avoid copy.
+        self._positional_metadata = pd.DataFrame(
+            index=np.arange(self._positional_metadata_axis_len_()))
 
     @abc.abstractmethod
     def __init__(self, positional_metadata=None):
@@ -314,7 +283,7 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
 
     def _init_(self, positional_metadata=None):
         if positional_metadata is None:
-            self._positional_metadata = None
+            del self.positional_metadata
         else:
             self.positional_metadata = positional_metadata
 
@@ -323,22 +292,7 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         pass
 
     def _eq_(self, other):
-        # We're not simply comparing self.positional_metadata to
-        # other.positional_metadata in order to avoid creating "empty"
-        # positional metadata representations on the objects if they don't have
-        # positional metadata.
-        if self.has_positional_metadata() and other.has_positional_metadata():
-            if not self.positional_metadata.equals(other.positional_metadata):
-                return False
-        elif not (self.has_positional_metadata() or
-                  other.has_positional_metadata()):
-            # Both don't have positional metadata.
-            pass
-        else:
-            # One has positional metadata while the other does not.
-            return False
-
-        return True
+        return self.positional_metadata.equals(other.positional_metadata)
 
     @abc.abstractmethod
     def __ne__(self, other):
@@ -352,23 +306,22 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         pass
 
     def _copy_(self):
-        if self.has_positional_metadata():
-            # deep=True makes a shallow copy of the underlying data buffer.
-            return self.positional_metadata.copy(deep=True)
-        else:
-            return None
+        # deep=True makes a shallow copy of the underlying data buffer.
+        return self.positional_metadata.copy(deep=True)
 
     @abc.abstractmethod
     def __deepcopy__(self, memo):
         pass
 
     def _deepcopy_(self, memo):
-        if self.has_positional_metadata():
-            return copy.deepcopy(self.positional_metadata, memo)
-        else:
-            return None
+        return copy.deepcopy(self.positional_metadata, memo)
 
-    @stable(as_of="0.4.0")
+    @deprecated(as_of="0.4.2-dev", until="0.5.2",
+                reason="Use `len(obj.positional_metadata.columns)` to "
+                       "determine if positional metadata columns are present, "
+                       "or `obj.positional_metadata.empty` to determine if "
+                       "the positional metadata DataFrame is empty (empty "
+                       "index OR empty columns).")
     def has_positional_metadata(self):
         """Determine if the object has positional metadata.
 
@@ -401,5 +354,4 @@ class PositionalMetadataMixin(with_metaclass(abc.ABCMeta, object)):
         True
 
         """
-        return (self._positional_metadata is not None and
-                len(self.positional_metadata.columns) > 0)
+        return len(self.positional_metadata.columns) > 0

@@ -6,11 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import range, zip
-from future.utils import viewitems
-import six
-
 import re
 import collections
 import numbers
@@ -510,13 +505,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         if how == 'strict':
             how = 'inner'
-            cols = []
+            cols = set()
             for s in seqs:
-                if s.has_positional_metadata():
-                    cols.append(frozenset(s.positional_metadata))
-                else:
-                    cols.append(frozenset())
-            if len(set(cols)) > 1:
+                cols.add(frozenset(s.positional_metadata))
+            if len(cols) > 1:
                 raise ValueError("The positional metadata of the sequences do"
                                  " not have matching columns. Consider setting"
                                  " how='inner' or how='outer'")
@@ -525,8 +517,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         for seq in seqs:
             seq_data.append(seq._bytes)
             pm_data.append(seq.positional_metadata)
-            if not seq.has_positional_metadata():
-                del seq.positional_metadata
 
         pm = pd.concat(pm_data, join=how, ignore_index=True)
         bytes_ = np.concatenate(seq_data)
@@ -565,25 +555,18 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             # Sequence casting is acceptable between direct
             # decendants/ancestors
             sequence._assert_can_cast_to(type(self))
-            # we're not simply accessing sequence.metadata in order to avoid
-            # creating "empty" metadata representations on both sequence
-            # objects if they don't have metadata. same strategy is used below
-            # for positional metadata
-            if metadata is None and sequence.has_metadata():
+
+            if metadata is None:
                 metadata = sequence.metadata
-            if (positional_metadata is None and
-                    sequence.has_positional_metadata()):
+            if positional_metadata is None:
                 positional_metadata = sequence.positional_metadata
+
             sequence = sequence._bytes
-
             self._owns_bytes = False
-
             self._set_bytes(sequence)
-
         else:
-            # Python 3 will not raise a UnicodeEncodeError so we force it by
-            # encoding it as ascii
-            if isinstance(sequence, six.text_type):
+            # Encode as ascii to raise UnicodeEncodeError if necessary.
+            if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)
 
@@ -606,7 +589,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         if lowercase is False:
             pass
-        elif lowercase is True or isinstance(lowercase, six.string_types):
+        elif lowercase is True or isinstance(lowercase, str):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
             self._convert_to_uppercase(lowercase_mask)
 
@@ -847,7 +830,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         """
         if (not isinstance(indexable, np.ndarray) and
-            ((not isinstance(indexable, six.string_types)) and
+            ((not isinstance(indexable, str)) and
              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
@@ -864,15 +847,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                         list(_slices_from_iter(self._bytes, indexable)))
                     index = _as_slice_if_single_index(indexable)
 
-                    positional_metadata = None
-                    if self.has_positional_metadata():
-                        pos_md_slices = list(_slices_from_iter(
-                                             self.positional_metadata, index))
-                        positional_metadata = pd.concat(pos_md_slices)
+                    pos_md_slices = list(_slices_from_iter(
+                                         self.positional_metadata, index))
+                    positional_metadata = pd.concat(pos_md_slices)
 
-                    return self._to(sequence=seq,
-                                    positional_metadata=positional_metadata)
-        elif (isinstance(indexable, six.string_types) or
+                    return self._constructor(
+                        sequence=seq,
+                        metadata=self.metadata,
+                        positional_metadata=positional_metadata)
+        elif (isinstance(indexable, str) or
                 isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
@@ -892,17 +875,17 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         seq = self._bytes[indexable]
         positional_metadata = self._slice_positional_metadata(indexable)
 
-        return self._to(sequence=seq, positional_metadata=positional_metadata)
+        return self._constructor(
+            sequence=seq,
+            metadata=self.metadata,
+            positional_metadata=positional_metadata)
 
     def _slice_positional_metadata(self, indexable):
-        if self.has_positional_metadata():
-            if _is_single_index(indexable):
-                index = _single_index_to_slice(indexable)
-            else:
-                index = indexable
-            return self.positional_metadata.iloc[index]
+        if _is_single_index(indexable):
+            index = _single_index_to_slice(indexable)
         else:
-            return None
+            index = indexable
+        return self.positional_metadata.iloc[index]
 
     @stable(as_of="0.4.0")
     def __len__(self):
@@ -942,8 +925,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         """
         return len(self) > 0
-
-    __nonzero__ = __bool__
 
     @stable(as_of="0.4.0")
     def __iter__(self):
@@ -1475,11 +1456,12 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         index = self._munge_to_index_array(where)
         seq_bytes = self._bytes.copy()
         seq_bytes[index] = character
-        metadata = self.metadata if self.has_metadata() else None
-        positional_metadata = self.positional_metadata if \
-            self.has_positional_metadata() else None
-        return self.__class__(seq_bytes, metadata=metadata,
-                              positional_metadata=positional_metadata)
+
+        # Use __class__ instead of _constructor so that validations are
+        # performed for subclasses (the user could have introduced invalid
+        # characters).
+        return self.__class__(seq_bytes, metadata=self.metadata,
+                              positional_metadata=self.positional_metadata)
 
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
@@ -1866,8 +1848,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
     def _chars_to_indices(self, chars):
         """Helper for Sequence.frequencies."""
-        if isinstance(chars, six.string_types) or \
-                isinstance(chars, six.binary_type):
+        if isinstance(chars, (str, bytes)):
             chars = set([chars])
         elif not isinstance(chars, set):
             raise TypeError(
@@ -1878,8 +1859,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         chars = list(chars)
         indices = []
         for char in chars:
-            if not (isinstance(char, six.string_types) or
-                    isinstance(char, six.binary_type)):
+            if not isinstance(char, (str, bytes)):
                 raise TypeError(
                     "Each element of `chars` must be string-like, not %r" %
                     type(char).__name__)
@@ -1947,15 +1927,20 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             step = k
             count = len(self) // k
 
-        if len(self) == 0 or self.has_positional_metadata():
+        if len(self) == 0 or len(self.positional_metadata.columns):
+            # Slower path when sequence is empty or positional metadata needs
+            # to be sliced.
             for i in range(0, len(self) - k + 1, step):
                 yield self[i:i+k]
-        # Optimized path when no positional metadata
         else:
+            # Optimized path when positional metadata doesn't need slicing.
             kmers = np.lib.stride_tricks.as_strided(
                 self._bytes, shape=(k, count), strides=(1, step)).T
             for s in kmers:
-                yield self._to(sequence=s)
+                yield self._constructor(
+                    sequence=s,
+                    metadata=self.metadata,
+                    positional_metadata=None)
 
     @stable(as_of="0.4.0")
     def kmer_frequencies(self, k, overlap=True, relative=False):
@@ -2004,7 +1989,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                 num_kmers = len(self) // k
 
             relative_freqs = {}
-            for kmer, count in viewitems(freqs):
+            for kmer, count in freqs.items():
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs
 
@@ -2041,7 +2026,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         'TATAA'
 
         """
-        if isinstance(regex, six.string_types):
+        if isinstance(regex, str):
             regex = re.compile(regex)
 
         lookup = np.arange(len(self))
@@ -2128,53 +2113,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             if len(r) >= min_length:
                 yield r
 
-    def _to(self, sequence=None, metadata=None, positional_metadata=None):
-        """Return a copy of this sequence.
-
-        Returns a copy of this sequence, optionally with updated attributes
-        specified as keyword arguments.
-
-        Arguments are the same as those passed to the ``Sequence`` constructor.
-        The returned copy will have its attributes updated based on the
-        arguments. If an attribute is missing, the copy will keep the same
-        attribute as this sequence. Valid attribute names are `'sequence'`,
-        `'metadata'`, and `'positional_metadata'`. Default behavior is to
-        return a copy of this sequence without changing any attributes.
-
-        Parameters
-        ----------
-        sequence : optional
-        metadata : optional
-        positional_metadata : optional
-
-        Returns
-        -------
-        Sequence
-            Copy of this sequence, optionally with updated attributes based on
-            arguments. Will be the same type as this sequence (`self`).
-
-        Notes
-        -----
-        By default, `metadata` and `positional_metadata` are shallow-copied and
-        the reference to `sequence` is used (without copying) for efficiency
-        since `sequence` is immutable. This differs from the behavior of
-        `Sequence.copy`, which will actually copy `sequence`.
-
-        This method is the preferred way of creating new instances from an
-        existing sequence, instead of calling ``self.__class__(...)``, as the
-        latter can be error-prone (e.g., it's easy to forget to propagate
-        attributes to the new instance).
-
-        """
-        if sequence is None:
-            sequence = self._bytes
-        if metadata is None and self.has_metadata():
-            metadata = self._metadata
-        if positional_metadata is None and self.has_positional_metadata():
-            positional_metadata = self._positional_metadata
-        return self._constructor(sequence=sequence, metadata=metadata,
-                                 positional_metadata=positional_metadata)
-
     def _constructor(self, **kwargs):
         return self.__class__(**kwargs)
 
@@ -2182,7 +2120,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         """Return an index array from something isomorphic to a boolean vector.
 
         """
-        if isinstance(sliceable, six.string_types):
+        if isinstance(sliceable, str):
             if sliceable in self.positional_metadata:
                 if self.positional_metadata[sliceable].dtype == np.bool:
                     sliceable = self.positional_metadata[sliceable]
@@ -2259,7 +2197,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     def _munge_to_bytestring(self, other, method):
         if type(other) is bytes:
             return other
-        elif isinstance(other, six.string_types):
+        elif isinstance(other, str):
             return other.encode('ascii')
         else:
             return self._munge_to_sequence(other, method)._string

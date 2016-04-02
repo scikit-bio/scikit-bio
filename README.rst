@@ -5,10 +5,12 @@
 
 |Build Status| |Coverage Status| |Gitter Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Downloads| |Install|
 
-scikit-bio is an open-source, BSD-licensed Python package providing data structures, algorithms and educational resources for bioinformatics.
+scikit-bio is an open-source, BSD-licensed Python 3 package providing data structures, algorithms and educational resources for bioinformatics.
 
 To view scikit-bio's documentation, visit `scikit-bio.org
 <http://scikit-bio.org>`__.
+
+**Note:** scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
 scikit-bio is currently in beta. We are very actively developing it, and **backward-incompatible interface changes can and will arise**. To avoid these types of changes being a surprise to our users, our public APIs are decorated to make it clear to users when an API can be relied upon (stable) and when it may be subject to change (experimental). See the `API stability docs <https://github.com/biocore/scikit-bio/blob/master/doc/source/user/api_stability.rst>`_ for more details, including what we mean by *stable* and *experimental* in this context.
 
@@ -23,11 +25,15 @@ Equivalently, you can use the ``conda`` package manager available in `Anaconda <
 
     conda install -c https://conda.anaconda.org/biocore scikit-bio
 
-Finally, most of scikit-bio's dependencies (in particular, the ones that are trickier to build) are also available, albeit only for Python 2, in `Canopy Express <https://www.enthought.com/canopy-express/>`_.
-
 You can verify your installation by running the scikit-bio unit tests::
 
     python -m skbio.test
+
+For users of Debian, ``skbio`` is in the Debian software distribution and may
+be installed using::
+
+    sudo apt-get install python3-skbio python-skbio-doc
+
 
 Getting help
 ------------
@@ -112,6 +118,6 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
 .. |License| image:: https://anaconda.org/biocore/scikit-bio/badges/license.svg
    :target: https://anaconda.org/biocore/scikit-bio
 .. |Downloads| image:: https://anaconda.org/biocore/scikit-bio/badges/downloads.svg
-   :target: https://anaconda.org/biocore/scikit-bio   
+   :target: https://anaconda.org/biocore/scikit-bio
 .. |Install| image:: https://anaconda.org/biocore/scikit-bio/badges/installer/conda.svg
    :target: https://conda.anaconda.org/biocore

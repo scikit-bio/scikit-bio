@@ -6,12 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
+import io
 from unittest import TestCase, main
 
-from skbio.io._fileobject import StringIO
 from skbio import DistanceMatrix
 from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
@@ -22,12 +19,12 @@ from skbio.stats.distance import DissimilarityMatrix, DistanceMatrixError
 
 class LSMatTestData(TestCase):
     def setUp(self):
-        self.lsmat_1x1_fh = StringIO(LSMat_1x1)
-        self.lsmat_2x2_fh = StringIO(LSMat_2x2)
-        self.lsmat_2x2_asym_fh = StringIO(LSMat_2x2_ASYM)
-        self.lsmat_3x3_fh = StringIO(LSMat_3x3)
-        self.lsmat_3x3_whitespace_fh = StringIO(LSMat_3x3_WHITESPACE)
-        self.lsmat_3x3_csv_fh = StringIO(LSMat_3x3_CSV)
+        self.lsmat_1x1_fh = io.StringIO(LSMat_1x1)
+        self.lsmat_2x2_fh = io.StringIO(LSMat_2x2)
+        self.lsmat_2x2_asym_fh = io.StringIO(LSMat_2x2_ASYM)
+        self.lsmat_3x3_fh = io.StringIO(LSMat_3x3)
+        self.lsmat_3x3_whitespace_fh = io.StringIO(LSMat_3x3_WHITESPACE)
+        self.lsmat_3x3_csv_fh = io.StringIO(LSMat_3x3_CSV)
 
         self.valid_fhs = [
             self.lsmat_1x1_fh,
@@ -37,13 +34,13 @@ class LSMatTestData(TestCase):
             self.lsmat_3x3_whitespace_fh
         ]
 
-        self.empty_fh = StringIO()
-        self.invalid_1_fh = StringIO(INVALID_1)
-        self.invalid_2_fh = StringIO(INVALID_2)
-        self.invalid_3_fh = StringIO(INVALID_3)
-        self.invalid_4_fh = StringIO(INVALID_4)
-        self.invalid_5_fh = StringIO(INVALID_5)
-        self.invalid_6_fh = StringIO(INVALID_6)
+        self.empty_fh = io.StringIO()
+        self.invalid_1_fh = io.StringIO(INVALID_1)
+        self.invalid_2_fh = io.StringIO(INVALID_2)
+        self.invalid_3_fh = io.StringIO(INVALID_3)
+        self.invalid_4_fh = io.StringIO(INVALID_4)
+        self.invalid_5_fh = io.StringIO(INVALID_5)
+        self.invalid_6_fh = io.StringIO(INVALID_6)
 
         self.invalid_fhs = [
             (self.empty_fh, 'empty'),
@@ -121,8 +118,8 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
     def test_read_invalid_files(self):
         for fn in _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
-                with six.assertRaisesRegex(self, LSMatFormatError,
-                                           error_msg_regexp):
+                with self.assertRaisesRegex(LSMatFormatError,
+                                            error_msg_regexp):
                     invalid_fh.seek(0)
                     fn(invalid_fh)
 
@@ -136,7 +133,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
                                (_distance_matrix_to_lsmat, self.dist_objs,
                                 self.dist_strs)):
             for obj, str_ in zip(objs, strs):
-                fh = StringIO()
+                fh = io.StringIO()
                 fn(obj, fh)
                 obs = fh.getvalue()
                 fh.close()
@@ -146,7 +143,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
         for fn, cls in ((_dissimilarity_matrix_to_lsmat, DissimilarityMatrix),
                         (_distance_matrix_to_lsmat, DistanceMatrix)):
             obj = cls(self.lsmat_3x3_data, ['a', 'b', 'c'])
-            fh = StringIO()
+            fh = io.StringIO()
             fn(obj, fh, delimiter=',')
             obs = fh.getvalue()
             fh.close()
@@ -165,7 +162,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
                 lsmat1 = reader_fn(fh)
 
                 # Write.
-                out_fh = StringIO()
+                out_fh = io.StringIO()
                 writer_fn(lsmat1, out_fh)
                 out_fh.seek(0)
 

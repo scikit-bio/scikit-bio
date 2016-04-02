@@ -6,11 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import range
-import six
-from six import BytesIO
-
+import io
 import unittest
 from tempfile import NamedTemporaryFile, mkdtemp
 from os.path import exists, join
@@ -70,7 +66,7 @@ class TestMiniRegistry(unittest.TestCase):
         self.assertIn("name", new)
 
     def test_everything(self):
-        class SomethingToInterpolate(object):
+        class SomethingToInterpolate:
             def interpolate_me():
                 """First line
 
@@ -178,10 +174,10 @@ class ChunkStrTests(unittest.TestCase):
         self.assertEqual(chunk_str('abcdefg', 3, ' - '), 'abc - def - g')
 
     def test_invalid_n(self):
-        with six.assertRaisesRegex(self, ValueError, 'n=0'):
+        with self.assertRaisesRegex(ValueError, 'n=0'):
             chunk_str('abcdef', 0, ' ')
 
-        with six.assertRaisesRegex(self, ValueError, 'n=-42'):
+        with self.assertRaisesRegex(ValueError, 'n=-42'):
             chunk_str('abcdef', -42, ' ')
 
 
@@ -204,7 +200,7 @@ class MiscTests(unittest.TestCase):
     def test_safe_md5(self):
         exp = 'ab07acbb1e496801937adfa772424bf7'
 
-        fd = BytesIO(b'foo bar baz')
+        fd = io.BytesIO(b'foo bar baz')
         obs = safe_md5(fd)
         self.assertEqual(obs.hexdigest(), exp)
 
@@ -279,15 +275,14 @@ class CardinalToOrdinalTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_invalid_n(self):
-        with six.assertRaisesRegex(self, ValueError, '-1'):
+        with self.assertRaisesRegex(ValueError, '-1'):
             cardinal_to_ordinal(-1)
 
 
 class TestFindDuplicates(unittest.TestCase):
     def test_empty_input(self):
         def empty_gen():
-            return
-            yield
+            yield from ()
 
         for empty in [], (), '', set(), {}, empty_gen():
             self.assertEqual(find_duplicates(empty), set())
@@ -309,8 +304,7 @@ class TestFindDuplicates(unittest.TestCase):
 
     def test_mixed_types(self):
         def gen():
-            for e in 'a', 1, 'bc', 2, 'a', 2, 2, 3.0:
-                yield e
+            yield from ('a', 1, 'bc', 2, 'a', 2, 2, 3.0)
 
         self.assertEqual(find_duplicates(gen()), set(['a', 2]))
 

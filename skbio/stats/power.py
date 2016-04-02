@@ -140,16 +140,11 @@ we need to be confident that we have not committed a type II error increases.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import viewitems
-from future.builtins import range
-
 import collections
 import copy
 
 import numpy as np
 import scipy.stats
-import six
 
 from skbio.util._decorator import experimental
 
@@ -728,7 +723,7 @@ def _get_min_size(meta, cat, control_cats, order, strict_match):
 def _check_nans(x, switch=False):
     r"""Returns False if x is a nan and True is x is a string or number
     """
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return True
     elif isinstance(x, (float, int)):
         return not np.isnan(x)
@@ -1012,7 +1007,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     ctrl_groups = meta.groupby(control_cats).groups
     # Identifies the samples that satisfy the control pairs. Keys are iterated
     # in sorted order so that results don't change with different dictionary
-    # ordering (especially apparent in Python 3).
+    # ordering.
     for g in sorted(ctrl_groups, key=lambda k: str(k)):
         ids = ctrl_groups[g]
         # If strict_match, Skips over data that has nans
@@ -1078,7 +1073,7 @@ def _draw_paired_samples(meta_pairs, index, num_samps):
     subs = []
 
     # Draws the other groups
-    for set_, num_ in viewitems(collections.Counter(set_pos)):
+    for set_, num_ in collections.Counter(set_pos).items():
         r2 = [np.random.choice(col, num_, replace=False) for col in
               meta_pairs[set_]]
         subs.append(r2)

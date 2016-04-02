@@ -6,16 +6,15 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
+from skbio.util._testing import assert_data_frame_almost_equal
 
 
 class ExampleGrammaredSequence(GrammaredSequence):
@@ -48,8 +47,8 @@ class ExampleMotifsTester(ExampleGrammaredSequence):
 
 class TestGrammaredSequence(TestCase):
     def test_default_gap_must_be_in_gap_chars(self):
-        with six.assertRaisesRegex(
-                self, TypeError,
+        with self.assertRaisesRegex(
+                TypeError,
                 "default_gap_char must be in gap_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
@@ -59,8 +58,8 @@ class TestGrammaredSequence(TestCase):
                     return '*'
 
     def test_degenerates_must_expand_to_valid_nondegenerates(self):
-        with six.assertRaisesRegex(
-                self, TypeError,
+        with self.assertRaisesRegex(
+                TypeError,
                 "degenerate_map must expand only to characters included in "
                 "definite_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
@@ -75,8 +74,8 @@ class TestGrammaredSequence(TestCase):
                     return set("A")
 
     def test_gap_chars_and_degenerates_share(self):
-        with six.assertRaisesRegex(
-                self, TypeError,
+        with self.assertRaisesRegex(
+                TypeError,
                 "gap_chars and degenerate_chars must not share any characters "
                 "for class GrammaredSequenceGapInDegenerateMap"):
 
@@ -95,8 +94,8 @@ class TestGrammaredSequence(TestCase):
                     return set(".-X")
 
     def test_gap_chars_and_nondegenerates_share(self):
-        with six.assertRaisesRegex(
-            self, TypeError,
+        with self.assertRaisesRegex(
+            TypeError,
             ("gap_chars and definite_chars must not share any characters "
              "for class GrammaredSequenceGapInNondegenerateMap")):
 
@@ -115,8 +114,8 @@ class TestGrammaredSequence(TestCase):
                     return set(".-A")
 
     def test_degenerates_and_nondegenerates_share(self):
-        with six.assertRaisesRegex(
-            self, TypeError,
+        with self.assertRaisesRegex(
+            TypeError,
             ("degenerate_chars and definite_chars must not share any "
              "characters for class GrammaredSequenceInvalid")):
 
@@ -144,8 +143,9 @@ class TestGrammaredSequence(TestCase):
         seq = ExampleGrammaredSequence('.-ABCXYZ')
 
         npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
-        self.assertFalse(seq.has_metadata())
-        self.assertFalse(seq.has_positional_metadata())
+        self.assertEqual(seq.metadata, {})
+        assert_data_frame_almost_equal(seq.positional_metadata,
+                                       pd.DataFrame(index=range(8)))
 
     def test_init_nondefault_parameters(self):
         seq = ExampleGrammaredSequence(
@@ -154,11 +154,9 @@ class TestGrammaredSequence(TestCase):
             positional_metadata={'quality': range(8)})
 
         npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
-        self.assertTrue(seq.has_metadata())
-        self.assertEqual(seq.metadata['id'], 'foo')
-        self.assertTrue(seq.has_positional_metadata())
-        npt.assert_equal(seq.positional_metadata['quality'], np.array(range(8),
-                         dtype='int'))
+        self.assertEqual(seq.metadata, {'id': 'foo'})
+        assert_data_frame_almost_equal(seq.positional_metadata,
+                                       pd.DataFrame({'quality': range(8)}))
 
     def test_init_valid_empty_sequence(self):
         # just make sure we can instantiate an empty sequence regardless of
@@ -187,7 +185,7 @@ class TestGrammaredSequence(TestCase):
     def test_init_validate_parameter_single_character(self):
         seq = 'w'
 
-        with six.assertRaisesRegex(self, ValueError, "character.*'w'"):
+        with self.assertRaisesRegex(ValueError, "character.*'w'"):
             ExampleGrammaredSequence(seq)
 
         # test that we can instantiate an invalid sequence. we don't guarantee
@@ -199,7 +197,7 @@ class TestGrammaredSequence(TestCase):
         # alphabet characters
         seq = 'CBCBBbawCbbwBXYZ-.x'
 
-        with six.assertRaisesRegex(self, ValueError, "\['a', 'b', 'w', 'x'\]"):
+        with self.assertRaisesRegex(ValueError, "\['a', 'b', 'w', 'x'\]"):
             ExampleGrammaredSequence(seq)
 
         ExampleGrammaredSequence(seq, validate=False)
@@ -207,8 +205,8 @@ class TestGrammaredSequence(TestCase):
     def test_init_lowercase_all_lowercase(self):
         s = 'cbcbbbazcbbzbxyz-.x'
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
+        with self.assertRaisesRegex(ValueError,
+                                    "\['a', 'b', 'c', 'x', 'y', 'z'\]"):
             ExampleGrammaredSequence(s)
 
         seq = ExampleGrammaredSequence(s, lowercase=True)
@@ -217,7 +215,7 @@ class TestGrammaredSequence(TestCase):
     def test_init_lowercase_mixed_case(self):
         s = 'CBCBBbazCbbzBXYZ-.x'
 
-        with six.assertRaisesRegex(self, ValueError, "\['a', 'b', 'x', 'z'\]"):
+        with self.assertRaisesRegex(ValueError, "\['a', 'b', 'x', 'z'\]"):
             ExampleGrammaredSequence(s)
 
         seq = ExampleGrammaredSequence(s, lowercase=True)
@@ -226,10 +224,10 @@ class TestGrammaredSequence(TestCase):
     def test_init_lowercase_no_validation(self):
         s = 'car'
 
-        with six.assertRaisesRegex(self, ValueError, "\['a', 'c', 'r'\]"):
+        with self.assertRaisesRegex(ValueError, "\['a', 'c', 'r'\]"):
             ExampleGrammaredSequence(s)
 
-        with six.assertRaisesRegex(self, ValueError, "character.*'R'"):
+        with self.assertRaisesRegex(ValueError, "character.*'R'"):
             ExampleGrammaredSequence(s, lowercase=True)
 
         ExampleGrammaredSequence(s, lowercase=True, validate=False)
@@ -237,7 +235,7 @@ class TestGrammaredSequence(TestCase):
     def test_init_lowercase_byte_ownership(self):
         bytes = np.array([97, 98, 97], dtype=np.uint8)
 
-        with six.assertRaisesRegex(self, ValueError, "\['a', 'b'\]"):
+        with self.assertRaisesRegex(ValueError, "\['a', 'b'\]"):
             ExampleGrammaredSequence(bytes)
 
         seq = ExampleGrammaredSequence(bytes, lowercase=True)
@@ -253,10 +251,10 @@ class TestGrammaredSequence(TestCase):
     def test_init_lowercase_invalid_keys(self):
         for invalid_key in ((), [], 2):
             invalid_type = type(invalid_key)
-            with six.assertRaisesRegex(self, TypeError,
-                                       "lowercase keyword argument expected "
-                                       "a bool or string, but got %s" %
-                                       invalid_type):
+            with self.assertRaisesRegex(TypeError,
+                                        "lowercase keyword argument expected "
+                                        "a bool or string, but got %s" %
+                                        invalid_type):
                 ExampleGrammaredSequence('ACGTacgt', lowercase=invalid_key)
 
     def test_degenerate_chars(self):
@@ -598,7 +596,7 @@ class TestGrammaredSequence(TestCase):
         obs = repr(
             ExampleGrammaredSequence(
                 'ABCA',
-                metadata={'foo': 42, u'bar': 33.33, None: True, False: {},
+                metadata={'foo': 42, b'bar': 33.33, None: True, False: {},
                           (1, 2): 3, 'acb' * 100: "'"},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))

@@ -12,9 +12,15 @@ import os
 import platform
 import re
 import ast
+import sys
+
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+
+if sys.version_info.major != 3:
+    sys.exit("scikit-bio can only be used with Python 3. You are currently "
+             "running Python %d." % sys.version_info.major)
 
 
 # Bootstrap setup.py with numpy
@@ -42,12 +48,10 @@ classes = """
     Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
-    Programming Language :: Python
-    Programming Language :: Python :: 2
-    Programming Language :: Python :: 2.7
     Programming Language :: Python :: 3
-    Programming Language :: Python :: 3.3
+    Programming Language :: Python :: 3 :: Only
     Programming Language :: Python :: 3.4
+    Programming Language :: Python :: 3.5
     Operating System :: Unix
     Operating System :: POSIX
     Operating System :: MacOS :: MacOS X
@@ -107,19 +111,15 @@ setup(name='scikit-bio',
       cmdclass={'build_ext': build_ext},
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
-          'bz2file >= 0.98',
-          'lockfile >= 0.10.2',
+          'lockfile >= 0.10.2',  # req'd for our usage of CacheControl
           'CacheControl >= 0.11.5',
-          'contextlib2 >= 0.4.0',
           'decorator >= 3.4.2',
-          'future >= 0.14.3',
           'IPython >= 3.2.0',
           'matplotlib >= 1.4.3',
           'natsort >= 4.0.3',
           'numpy >= 1.9.2',
           'pandas >= 0.17.0',
           'scipy >= 0.15.1',
-          'six >= 1.9.0',
           'nose >= 1.3.7'
       ],
       classifiers=classifiers,

@@ -22,8 +22,6 @@ like this::
   # The full license is in the file COPYING.txt, distributed with this software.
   # ----------------------------------------------------------------------------
 
-  from __future__ import absolute_import, division, print_function
-
   from skbio.util import TestRunner
   test = TestRunner(__file__).test
 
@@ -44,8 +42,6 @@ necessary so that all tests can be run after installation)::
   #
   # The full license is in the file COPYING.txt, distributed with this software.
   # ----------------------------------------------------------------------------
-
-  from __future__ import absolute_import, division, print_function
 
 Finally, remember to also follow the `documentation guidelines
 <https://github.com/biocore/scikit-bio/blob/master/doc/README.md#documenting-a-module-in-scikit-bio>`_.

@@ -6,15 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import PY3
-
 import os
 import inspect
 import warnings
 
 import nose
-
 import numpy as np
 import numpy.testing as npt
 import pandas.util.testing as pdt
@@ -23,7 +19,7 @@ from skbio.util import SkbioWarning
 from ._decorator import experimental
 
 
-class ReallyEqualMixin(object):
+class ReallyEqualMixin:
     """Use this for testing __eq__/__ne__.
 
     Taken and modified from the following public domain code:
@@ -41,13 +37,6 @@ class ReallyEqualMixin(object):
         self.assertFalse(a != b)
         self.assertFalse(b != a)
 
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertEqual(0, cmp(a, b))  # noqa
-            self.assertEqual(0, cmp(b, a))  # noqa
-
     def assertReallyNotEqual(self, a, b):
         # assertNotEqual first, because it will have a good message if the
         # assertion fails.
@@ -57,13 +46,6 @@ class ReallyEqualMixin(object):
         self.assertFalse(b == a)
         self.assertTrue(a != b)
         self.assertTrue(b != a)
-
-        # We do not support cmp/__cmp__ because they do not exist in Python 3.
-        # However, we still test this to catch potential bugs where the
-        # object's parent class defines a __cmp__.
-        if not PY3:
-            self.assertNotEqual(0, cmp(a, b))  # noqa
-            self.assertNotEqual(0, cmp(b, a))  # noqa
 
 
 @nose.tools.nottest
@@ -80,7 +62,7 @@ class SuppressSkbioWarnings(nose.plugins.Plugin):
 
 
 @nose.tools.nottest
-class TestRunner(object):
+class TestRunner:
     """Simple wrapper class around nosetests functionality.
 
     Parameters
@@ -119,9 +101,8 @@ class TestRunner(object):
         """
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
-        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING']
-        if PY3:
-            argv.extend(['--with-doctest', '--doctest-tests'])
+        argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
+                '--doctest-tests']
         if verbose:
             argv.append('-v')
         return nose.core.run(argv=argv, defaultTest=self._test_dir,

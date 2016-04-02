@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-import six
-
 import io
 import string
 import unittest
@@ -327,11 +323,11 @@ class TestReaders(unittest.TestCase):
         # phred offsets
         for fp, error_type, error_msg_regex in self.invalid_files:
             for variant in 'sanger', 'illumina1.3', 'illumina1.8':
-                with six.assertRaisesRegex(self, error_type, error_msg_regex):
+                with self.assertRaisesRegex(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, variant=variant))
 
             for offset in 33, 64, 40, 77:
-                with six.assertRaisesRegex(self, error_type, error_msg_regex):
+                with self.assertRaisesRegex(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
     def test_fastq_to_generator_invalid_files_illumina(self):
@@ -341,17 +337,15 @@ class TestReaders(unittest.TestCase):
                'solexa_full_range_original_solexa.fastq']]
 
         for fp in fps:
-            with six.assertRaisesRegex(self, ValueError,
-                                       'out of range \[0, 62\]'):
+            with self.assertRaisesRegex(ValueError, 'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.3'))
-            with six.assertRaisesRegex(self, ValueError,
-                                       'out of range \[0, 62\]'):
+            with self.assertRaisesRegex(ValueError, 'out of range \[0, 62\]'):
                 list(_fastq_to_generator(fp, variant='illumina1.8'))
 
     def test_fastq_to_generator_solexa(self):
         # solexa support isn't implemented yet. should raise error even with
         # valid solexa file
-        with six.assertRaisesRegex(self, ValueError, 'Solexa'):
+        with self.assertRaisesRegex(ValueError, 'Solexa'):
             list(_fastq_to_generator(
                 get_data_path('solexa_full_range_original_solexa.fastq'),
                 variant='solexa'))
@@ -443,7 +437,7 @@ class TestReaders(unittest.TestCase):
                     self.assertEqual(observed, expected)
 
     def test_fastq_to_tabular_msa_no_constructor(self):
-        with six.assertRaisesRegex(self, ValueError, '`constructor`'):
+        with self.assertRaisesRegex(ValueError, '`constructor`'):
             _fastq_to_tabular_msa(get_data_path('fastq_multi_seq_sanger'))
 
 
@@ -551,7 +545,7 @@ class TestWriters(unittest.TestCase):
                            positional_metadata={'quality': range(4)})
             yield Sequence('ACG', metadata={'id': 'foo', 'description': 'bar'})
 
-        with six.assertRaisesRegex(self, ValueError, '2nd.*quality scores'):
+        with self.assertRaisesRegex(ValueError, '2nd.*quality scores'):
             _generator_to_fastq(gen(), io.StringIO(), variant='illumina1.8')
 
 
