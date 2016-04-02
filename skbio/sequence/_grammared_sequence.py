@@ -17,7 +17,7 @@ from six import add_metaclass
 
 
 from skbio.util._decorator import (classproperty, overrides, stable,
-                                   experimental)
+                                   deprecated, experimental)
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -30,8 +30,8 @@ class GrammaredSequenceMeta(ABCMeta, type):
             type(cls.gap_chars) is not abstractproperty
         concrete_degenerate_map = \
             type(cls.degenerate_map) is not abstractproperty
-        concrete_nondegenerate_chars = \
-            type(cls.nondegenerate_chars) is not abstractproperty
+        concrete_definite_chars = \
+            type(cls.definite_chars) is not abstractproperty
         concrete_default_gap_char = \
             type(cls.default_gap_char) is not abstractproperty
         # degenerate_chars is not abstract but it depends on degenerate_map
@@ -44,7 +44,7 @@ class GrammaredSequenceMeta(ABCMeta, type):
         # probably check all the attributes on the class and make sure none of
         # them are abstract.
         if (concrete_gap_chars and concrete_degenerate_map and
-                concrete_nondegenerate_chars and concrete_default_gap_char and
+                concrete_definite_chars and concrete_default_gap_char and
                 concrete_degenerate_chars):
 
             if cls.default_gap_char not in cls.gap_chars:
@@ -59,20 +59,20 @@ class GrammaredSequenceMeta(ABCMeta, type):
 
             for key in cls.degenerate_map.keys():
                 for nondegenerate in cls.degenerate_map[key]:
-                    if nondegenerate not in cls.nondegenerate_chars:
+                    if nondegenerate not in cls.definite_chars:
                         raise TypeError(
                             "degenerate_map must expand only to "
-                            "characters included in nondegenerate_chars "
+                            "characters included in definite_chars "
                             "for class %s" % name)
 
-            if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
+            if len(cls.degenerate_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "degenerate_chars and nondegenerate_chars must not "
+                    "degenerate_chars and definite_chars must not "
                     "share any characters for class %s" % name)
 
-            if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+            if len(cls.gap_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "gap_chars and nondegenerate_chars must not share any "
+                    "gap_chars and definite_chars must not share any "
                     "characters for class %s" % name)
 
         return cls
@@ -114,7 +114,7 @@ class GrammaredSequence(Sequence):
     alphabet
     gap_chars
     default_gap_char
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
 
@@ -150,8 +150,9 @@ class GrammaredSequence(Sequence):
     ...         return {"X": set("AB")}
     ...
     ...     @classproperty
-    ...     def nondegenerate_chars(cls):
+    ...     def definite_chars(cls):
     ...         return set("ABC")
+    ...
     ...
     ...     @classproperty
     ...     def default_gap_char(cls):
@@ -211,7 +212,7 @@ class GrammaredSequence(Sequence):
     @classproperty
     def _nondegenerate_codes(cls):
         if cls.__nondegenerate_codes is None:
-            nondegens = cls.nondegenerate_chars
+            nondegens = cls.definite_chars
             cls.__nondegenerate_codes = np.asarray([ord(d) for d in nondegens])
         return cls.__nondegenerate_codes
 
@@ -235,7 +236,7 @@ class GrammaredSequence(Sequence):
             Valid characters.
 
         """
-        return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
+        return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
 
     @abstractproperty
     @classproperty
@@ -282,9 +283,9 @@ class GrammaredSequence(Sequence):
         """
         return set(cls.degenerate_map)
 
-    @abstractproperty
     @classproperty
-    @stable(as_of='0.4.0')
+    @deprecated(as_of='0.5.0', until='0.5.2',
+                reason='Renamed to definite_chars')
     def nondegenerate_chars(cls):
         """Return non-degenerate characters.
 
@@ -292,6 +293,20 @@ class GrammaredSequence(Sequence):
         -------
         set
             Non-degenerate characters.
+
+        """
+        return cls.definite_chars
+
+    @abstractproperty
+    @classproperty
+    @stable(as_of='0.4.0')
+    def definite_chars(cls):
+        """Return definite characters.
+
+        Returns
+        -------
+        set
+            Definite characters.
 
         """
         pass  # pragma: no cover
@@ -606,7 +621,7 @@ class GrammaredSequence(Sequence):
 
         """
         degen_chars = self.degenerate_map
-        nonexpansion_chars = self.nondegenerate_chars.union(self.gap_chars)
+        nonexpansion_chars = self.definite_chars.union(self.gap_chars)
 
         expansions = []
         for char in self:

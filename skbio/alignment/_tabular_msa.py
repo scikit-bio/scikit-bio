@@ -1396,7 +1396,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                      positional_metadata=positional_metadata)
 
     def _build_inverse_shannon_uncertainty_f(self, include_gaps):
-        base = len(self.dtype.nondegenerate_chars)
+        base = len(self.dtype.definite_chars)
         if include_gaps:
             # Increment the base by one to reflect the possible inclusion of
             # the default gap character.

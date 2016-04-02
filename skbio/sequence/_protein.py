@@ -60,7 +60,7 @@ class Protein(GrammaredSequence):
     gap_chars
     default_gap_char
     stop_chars
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
 
@@ -128,7 +128,7 @@ class Protein(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty

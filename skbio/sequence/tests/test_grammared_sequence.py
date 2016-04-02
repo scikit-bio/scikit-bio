@@ -24,7 +24,7 @@ class ExampleGrammaredSequence(GrammaredSequence):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
 
     @classproperty
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ABC")
 
     @classproperty
@@ -62,7 +62,7 @@ class TestGrammaredSequence(TestCase):
         with six.assertRaisesRegex(
                 self, TypeError,
                 "degenerate_map must expand only to characters included in "
-                "nondegenerate_chars for class "
+                "definite_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
@@ -71,7 +71,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("B")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("A")
 
     def test_gap_chars_and_degenerates_share(self):
@@ -87,7 +87,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABC")
 
                 @classproperty
@@ -97,7 +97,7 @@ class TestGrammaredSequence(TestCase):
     def test_gap_chars_and_nondegenerates_share(self):
         with six.assertRaisesRegex(
             self, TypeError,
-            ("gap_chars and nondegenerate_chars must not share any characters "
+            ("gap_chars and definite_chars must not share any characters "
              "for class GrammaredSequenceGapInNondegenerateMap")):
 
             class GrammaredSequenceGapInNondegenerateMap(
@@ -107,7 +107,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABC")
 
                 @classproperty
@@ -117,7 +117,7 @@ class TestGrammaredSequence(TestCase):
     def test_degenerates_and_nondegenerates_share(self):
         with six.assertRaisesRegex(
             self, TypeError,
-            ("degenerate_chars and nondegenerate_chars must not share any "
+            ("degenerate_chars and definite_chars must not share any "
              "characters for class GrammaredSequenceInvalid")):
 
             class GrammaredSequenceInvalid(ExampleGrammaredSequence):
@@ -126,7 +126,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABCX")
 
     def test_instantiation_with_no_implementation(self):
@@ -137,7 +137,7 @@ class TestGrammaredSequence(TestCase):
             GrammaredSequenceSubclassNoImplementation()
 
         self.assertIn("abstract class", str(cm.exception))
-        self.assertIn("nondegenerate_chars", str(cm.exception))
+        self.assertIn("definite_chars", str(cm.exception))
         self.assertIn("degenerate_map", str(cm.exception))
 
     def test_init_default_parameters(self):
@@ -273,6 +273,8 @@ class TestGrammaredSequence(TestCase):
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').degenerate_chars = set("BAR")
 
+    # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
+    # is removed
     def test_nondegenerate_chars(self):
         expected = set("ABC")
         self.assertEqual(ExampleGrammaredSequence.nondegenerate_chars,
@@ -287,6 +289,21 @@ class TestGrammaredSequence(TestCase):
 
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
+
+    def test_definite_chars(self):
+        expected = set("ABC")
+        self.assertEqual(ExampleGrammaredSequence.definite_chars,
+                         expected)
+
+        ExampleGrammaredSequence.degenerate_chars.add("D")
+        self.assertEqual(ExampleGrammaredSequence.definite_chars,
+                         expected)
+
+        self.assertEqual(ExampleGrammaredSequence('').definite_chars,
+                         expected)
+
+        with self.assertRaises(AttributeError):
+            ExampleGrammaredSequence('').definite_chars = set("BAR")
 
     def test_gap_chars(self):
         expected = set(".-")

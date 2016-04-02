@@ -68,6 +68,7 @@ class TestNucelotideSequence(unittest.TestCase):
         self.assertIn("abstract class", str(cm.exception))
         self.assertIn("complement_map", str(cm.exception))
 
+    # TODO: remove when nondegenerate_chars is removed
     def test_nondegenerate_chars(self):
         dna = (DNA, "ACGT")
         rna = (RNA, "ACGU")
@@ -75,6 +76,14 @@ class TestNucelotideSequence(unittest.TestCase):
             exp = set(nondegenerate)
             self.assertEqual(constructor('').nondegenerate_chars, exp)
             self.assertEqual(constructor.nondegenerate_chars, exp)
+
+    def test_definite_chars(self):
+        dna = (DNA, "ACGT")
+        rna = (RNA, "ACGU")
+        for constructor, nondegenerate in (dna, rna):
+            exp = set(nondegenerate)
+            self.assertEqual(constructor('').definite_chars, exp)
+            self.assertEqual(constructor.definite_chars, exp)
 
     def test_degenerate_map(self):
         dna_exp = (DNA, {
@@ -416,7 +425,7 @@ class TestNucelotideSequence(unittest.TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABC")
 
                 @classproperty

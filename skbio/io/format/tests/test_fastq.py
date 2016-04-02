@@ -410,7 +410,7 @@ class TestReaders(unittest.TestCase):
 
             @classproperty
             @overrides(GrammaredSequence)
-            def nondegenerate_chars(cls):
+            def definite_chars(cls):
                 return set(string.ascii_letters)
 
             @classproperty

@@ -58,7 +58,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
     alphabet
     gap_chars
     default_gap_char
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
     complement_map
@@ -127,7 +127,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACGT")
 
     @classproperty
