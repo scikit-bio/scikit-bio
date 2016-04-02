@@ -83,28 +83,28 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     >>> from skbio import Protein
     >>> Protein('PAW')
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     Convert lowercase characters to uppercase:
 
     >>> Protein('paW', lowercase=True)
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     """

@@ -109,7 +109,7 @@ class NucleotideMixin(metaclass=ABCMeta):
             length: 6
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 16.67%
         -----------------------------
         0 TTCATT
@@ -122,7 +122,7 @@ class NucleotideMixin(metaclass=ABCMeta):
             length: 6
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 16.67%
         -----------------------------
         0 AAGTAA
@@ -136,7 +136,7 @@ class NucleotideMixin(metaclass=ABCMeta):
             length: 6
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 16.67%
         -----------------------------
         0 AATGAA
@@ -189,7 +189,7 @@ class NucleotideMixin(metaclass=ABCMeta):
             length: 6
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 16.67%
         -----------------------------
         0 AATGAA

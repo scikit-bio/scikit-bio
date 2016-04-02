@@ -470,7 +470,7 @@ Stats:
     length: 42
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 50.00%
 ------------------------------------------------
 0 AAACCCTTGC CGGTACGCTT AAACCATTGC CGGTACGCTT AA

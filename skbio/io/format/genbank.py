@@ -179,7 +179,7 @@ Stats:
     length: 34
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 35.29%
 -----------------------------------------------------------------
 0 AGAGGTTCTA GCACATCCCT CTATAAAAAA CTAA
@@ -209,7 +209,7 @@ Stats:
     length: 34
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 35.29%
 -----------------------------------------------------------------
 0 AGAGGUUCUA GCACAUCCCU CUAUAAAAAA CUAA

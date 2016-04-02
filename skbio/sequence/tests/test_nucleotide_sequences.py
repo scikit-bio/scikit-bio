@@ -77,8 +77,8 @@ class TestNucelotideSequence(unittest.TestCase):
     def test_definite_chars(self):
         dna = (DNA, "ACGT")
         rna = (RNA, "ACGU")
-        for constructor, nondegenerate in (dna, rna):
-            exp = set(nondegenerate)
+        for constructor, definite_char in (dna, rna):
+            exp = set(definite_char)
             self.assertEqual(constructor('').definite_chars, exp)
             self.assertEqual(constructor.definite_chars, exp)
 

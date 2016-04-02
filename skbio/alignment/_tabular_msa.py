@@ -333,14 +333,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.loc['b']
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: True
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 33.33%
-        -----------------------------
+        --------------------------
         0 A-GT
 
         Similarly when we slice the second axis by a scalar we get a column of
@@ -363,14 +363,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.loc['a', 0]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 1
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 0.00%
-        -----------------------------
+        --------------------------
         0 A
 
         In other words, it exactly matches slicing the resulting sequence
@@ -378,14 +378,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.loc['a'][0]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 1
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 0.00%
-        -----------------------------
+        --------------------------
         0 A
 
         When our slice is non-scalar we get back an MSA of the same `dtype`:
@@ -473,14 +473,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.loc(axis='sequence')['a', 0]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 50.00%
-        -----------------------------
+        --------------------------
         0 ACGT
 
         This selected the first sequence because the complete label was
@@ -592,14 +592,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.iloc[1]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: True
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 33.33%
-        -----------------------------
+        --------------------------
         0 A-GT
 
         Similarly when we slice the second axis by a scalar we get a column of
@@ -622,14 +622,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.iloc[0, 0]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 1
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 0.00%
-        -----------------------------
+        --------------------------
         0 A
 
         In other words, it exactly matches slicing the resulting sequence
@@ -637,14 +637,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.iloc[0][0]
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 1
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 0.00%
-        -----------------------------
+        --------------------------
         0 A
 
         When our slice is non-scalar we get back an MSA of the same `dtype`:
@@ -1339,16 +1339,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ...                  positional_metadata={'prob': [2, 1, 2, 3, 5]})
         >>> msa.consensus()
         DNA
-        -----------------------------
+        --------------------------
         Positional metadata:
             'prob': <dtype: int64>
         Stats:
             length: 5
             has gaps: True
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 33.33%
-        -----------------------------
+        --------------------------
         0 AT-C-
 
         Note that the last position in the MSA has more than one type of gap
