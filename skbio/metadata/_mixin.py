@@ -388,9 +388,6 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     Positional metadata:
         'exons': <dtype: bool>
         'quality': <dtype: int64>
-    Interval metadata:
-        Number of features: 1
-        Number of intervals: 1
     Stats:
         length: 4
         has gaps: False

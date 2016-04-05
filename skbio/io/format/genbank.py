@@ -173,9 +173,6 @@ Metadata:
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
     'id': '3K1V_A'
-Interval metadata:
-    Number of features: 1
-    Number of intervals: 1
 Stats:
     length: 34
     has gaps: False
@@ -204,9 +201,6 @@ Metadata:
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
     'id': '3K1V_A'
-Interval metadata:
-    Number of features: 1
-    Number of intervals: 1
 Stats:
     length: 34
     has gaps: False
