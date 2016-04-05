@@ -6,12 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase, main
 import warnings
 
-import six
 import numpy as np
 
 from skbio import Sequence, Protein, DNA, RNA, TabularMSA
@@ -24,28 +21,28 @@ from skbio.alignment._pairwise import (
     _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
     _compute_substitution_score)
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 
 
-class CustomSequence(IUPACSequence):
+class CustomSequence(GrammaredSequence):
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
         return set('^$')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def default_gap_char(cls):
         return '^'
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set('WXYZ')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {}
 
@@ -133,18 +130,19 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(custom_start_end, [(1, 16), (2, 14)])
 
     def test_global_pairwise_align_invalid_type(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "IUPACSequence.*TabularMSA.*'Sequence'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "GrammaredSequence.*"
+                                    "TabularMSA.*'Sequence'"):
             global_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_global_pairwise_align_dtype_mismatch(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "same dtype: 'DNA' != 'RNA'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "same dtype: 'DNA' != 'RNA'"):
             global_pairwise_align(DNA('ACGT'), TabularMSA([RNA('ACGU')]),
                                   1.0, 1.0, {})
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   "same dtype: 'DNA' != 'RNA'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "same dtype: 'DNA' != 'RNA'"):
             global_pairwise_align(TabularMSA([DNA('ACGT')]),
                                   TabularMSA([RNA('ACGU')]),
                                   1.0, 1.0, {})
@@ -212,9 +210,9 @@ class PairwiseAlignmentTests(TestCase):
                           Protein("HEAGAWGHEE"), 42)
 
     def test_global_pairwise_align_protein_invalid_dtype(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "TabularMSA with Protein dtype.*dtype "
-                                   "'DNA'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "TabularMSA with Protein dtype.*dtype "
+                                    "'DNA'"):
             global_pairwise_align_protein(TabularMSA([Protein('PAW')]),
                                           TabularMSA([DNA('ACGT')]))
 
@@ -362,9 +360,9 @@ class PairwiseAlignmentTests(TestCase):
                           DNA("ACGT"), 42)
 
     def test_global_pairwise_align_nucleotide_invalid_dtype(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "TabularMSA with DNA or RNA dtype.*dtype "
-                                   "'Protein'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "TabularMSA with DNA or RNA dtype.*dtype "
+                                    "'Protein'"):
             global_pairwise_align_nucleotide(TabularMSA([DNA('ACGT')]),
                                              TabularMSA([Protein('PAW')]))
 
@@ -460,12 +458,13 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(start_end_no_sub, start_end_alt_sub)
 
     def test_local_pairwise_align_invalid_type(self):
-        with six.assertRaisesRegex(self, TypeError, 'IUPACSequence.*Sequence'):
+        with self.assertRaisesRegex(TypeError,
+                                    'GrammaredSequence.*Sequence'):
             local_pairwise_align(DNA('ACGT'), Sequence('ACGT'), 1.0, 1.0, {})
 
     def test_local_pairwise_align_type_mismatch(self):
-        with six.assertRaisesRegex(self, TypeError,
-                                   "same type: 'DNA' != 'RNA'"):
+        with self.assertRaisesRegex(TypeError,
+                                    "same type: 'DNA' != 'RNA'"):
             local_pairwise_align(DNA('ACGT'), RNA('ACGU'), 1.0, 1.0, {})
 
     def test_init_matrices_sw(self):

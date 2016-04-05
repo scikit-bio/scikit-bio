@@ -2,12 +2,10 @@ pip
 numpy
 scipy
 matplotlib
-pandas
+pandas>=0.17.0,<0.18.0
 nose
 pep8
 ipython
-future
-six
 pyflakes
 flake8
 python-dateutil

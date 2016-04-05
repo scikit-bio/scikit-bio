@@ -36,12 +36,12 @@ Format Support
 --------------
 **Has Sniffer: Yes**
 
-**State: Experimental as of 0.4.1-dev.**
+**State: Experimental as of 0.4.2.**
 
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |No    |:mod:`skbio.alignment.TabularMSA`                              |
+|Yes   |Yes   |:mod:`skbio.alignment.TabularMSA`                              |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -65,11 +65,16 @@ the aligned sequence. For example::
     seq1 ACG-T-GGT
     seq2 ACCGTTCG-
 
+Sequence names (``seq1``, ``seq2``) are stored in the ``TabularMSA``
+``index``.
+
 .. note:: scikit-bio currently supports reading Stockholm files where each
    sequence is contained on a single line. Interleaved/wrap-around Stockholm
-   files are not supported.
+   files are not supported. When writing, each sequence will be placed on its
+   own line.
 
-.. warning:: Sequence names must be unique.
+.. warning:: Sequence names must be unique in the Stockholm file. Likewise,
+   when writing from a ``TabularMSA``, ``index`` must be unique.
 
 Metadata
 ^^^^^^^^
@@ -83,7 +88,16 @@ alignment.
    list of common features output by Pfam/Rfam. scikit-bio does not
    require that these features are present. These features are processed in the
    same way as any arbitrary feature would be, as a simple key-value pair of
-   strings.
+   strings. When writing, feature names, feature data, and sequence names are
+   converted to type ``str``.
+
+.. note:: When writing a Stockholm file, scikit-bio will place the metadata in
+   the format's recommended order:
+
+   - GF: Above the alignment
+   - GS: Above the alignment (after GF)
+   - GR: Below corresponding sequence
+   - GC: Below the alignment
 
 GF metadata
 +++++++++++
@@ -102,8 +116,9 @@ Where ``DE`` is the feature name and ``CBS Domain`` is the feature data.
 
 GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
-.. note:: Duplicate GF feature names will have their values concatenated in the
-   order they appear in the file.
+.. note:: When reading, duplicate GF feature names will have their values
+   concatenated in the order they appear in the file. When writing, each GF
+   feature will be placed on its own line, regardless of length.
 
 .. note:: Trees labelled with ``NH``/``TN`` are handled differently than other
    GF features. When reading a Stockholm file with these features, the reader
@@ -150,8 +165,9 @@ Where ``O83071/259-312`` is the sequence name, ``AC`` is the feature name, and
 
 GS metadata is stored in the sequence-specific ``metadata`` dictionary.
 
-.. note:: Duplicate GS feature names will have their values concatenated in the
-   order they appear in the file.
+.. note:: When reading, duplicate GS feature names will have their values
+   concatenated in the order they appear in the file. When writing, each GS
+   feature will be placed on its own line, regardless of length.
 
 GR metadata
 +++++++++++
@@ -208,10 +224,10 @@ Format Parameters
 -----------------
 The only supported format parameter is ``constructor``, which specifies the
 type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is
-a required format parameter. For example, if you know that the Stockholm file
-you're reading contains DNA sequences, you would pass ``constructor=DNA`` to
-the reader call.
+be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
+and is a required format parameter. For example, if you know that the Stockholm
+file you're reading contains DNA sequences, you would pass ``constructor=DNA``
+to the reader call.
 
 Examples
 --------
@@ -259,11 +275,18 @@ MIEADKVAHVQVGNNLEH..ALLVLTKT....GYTAI
 EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 
+The sequence names are stored in the ``index``:
+
+>>> msa.index
+Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
+       'O31699/88-139'],
+      dtype='object')
+
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
 >>> msa.metadata
-{'CC': 'CBS domains are small intracellular modules mostly found in 2 or four \
-copies within a protein.'}
+OrderedDict([('CC', 'CBS domains are small intracellular modules mostly found \
+in 2 or four copies within a protein.')])
 
 GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 
@@ -284,7 +307,7 @@ GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 GS metadata is stored in the sequence-specific ``metadata`` dictionary:
 
 >>> msa[0].metadata
-{'AC': 'O83071'}
+OrderedDict([('AC', 'O83071')])
 
 GR metadata is stored in sequence-specific ``positional_metadata``:
 
@@ -302,6 +325,29 @@ GR metadata is stored in sequence-specific ``positional_metadata``:
 9   _  _
 ...
 
+Let's write this ``TabularMSA`` in Stockholm format:
+
+>>> fh = StringIO()
+>>> _ = msa.write(fh, format='stockholm')
+>>> print(fh.getvalue())
+# STOCKHOLM 1.0
+#=GF CC CBS domains are small intracellular modules mostly found in 2 or four \
+copies within a protein.
+#=GS O83071/192-246 AC O83071
+#=GS O31698/88-139 OS Bacillus subtilis
+O83071/192-246         MTCRAQLIAVPRASSLAE..AIACAQKM....RVSRV
+#=GR O83071/192-246 SA 999887756453524252..55152525....36463
+O83071/259-312         MQHVSAPVFVFECTRLAY..VQHKLRAH....SRAVA
+O31698/18-71           MIEADKVAHVQVGNNLEH..ALLVLTKT....GYTAI
+O31698/88-139          EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
+O31699/88-139          EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
+#=GR O31699/88-139 AS  ________________*____________________
+#=GR O31699/88-139 IN  ____________1______________2_________
+#=GC SS_cons           CCCCCHHHHHHHHHHHHH..EEEEEEEE....EEEEE
+//
+<BLANKLINE>
+>>> fh.close()
+
 References
 ==========
 .. [1] https://en.wikipedia.org/wiki/Stockholm_format
@@ -317,13 +363,10 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 from collections import OrderedDict
 
 from skbio.alignment import TabularMSA
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
@@ -351,8 +394,9 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
     if constructor is None:
         raise ValueError("Must provide `constructor` parameter.")
     # Checks that contructor parameter is supported
-    elif not issubclass(constructor, IUPACSequence):
-        raise TypeError("`constructor` must be a subclass of `IUPACSequence`.")
+    elif not issubclass(constructor, GrammaredSequence):
+        raise TypeError("`constructor` must be a subclass of "
+                        "`GrammaredSequence`.")
 
     # Checks that the file isn't empty
     try:
@@ -363,7 +407,6 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
     if not _is_header(line):
         raise StockholmFormatError("File missing required Stockholm header "
                                    "line.")
-
     msa_data = _MSAData()
     for line in fh:
         if line.isspace():
@@ -399,12 +442,12 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
 
 
 # For storing intermediate data used to construct a Sequence object.
-class _MSAData(object):
+class _MSAData:
     def __init__(self):
         self._seqs = {}
         self._seq_order = []
-        self._metadata = {}
-        self._positional_metadata = {}
+        self._metadata = OrderedDict()
+        self._positional_metadata = OrderedDict()
 
     def add_sequence(self, seq_name, seq_data):
         if seq_name not in self._seqs:
@@ -477,7 +520,7 @@ class _MSAData(object):
                           index=self._seq_order)
 
 
-class _SeqData(object):
+class _SeqData:
     def __init__(self, name):
         self.name = name
         self._seq = None
@@ -498,7 +541,7 @@ class _SeqData(object):
 
     def add_metadata_feature(self, feature_name, feature_data):
         if self.metadata is None:
-            self.metadata = {}
+            self.metadata = OrderedDict()
         if feature_name in self.metadata:
             self.metadata[feature_name] += feature_data
         else:
@@ -506,7 +549,7 @@ class _SeqData(object):
 
     def add_positional_metadata_feature(self, feature_name, feature_data):
         if self.positional_metadata is None:
-            self.positional_metadata = {}
+            self.positional_metadata = OrderedDict()
         if feature_name in self.positional_metadata:
             _raise_duplicate_error("Found duplicate GR label %r associated "
                                    "with sequence name %r"
@@ -577,3 +620,86 @@ def _check_for_malformed_line(line, expected_len):
         raise StockholmFormatError('Line contains %d item(s). It must '
                                    'contain exactly %d item(s).'
                                    % (len(line), expected_len))
+
+
+@stockholm.writer(TabularMSA)
+def _tabular_msa_to_stockholm(obj, fh):
+    if not obj.index.is_unique:
+        raise StockholmFormatError("The TabularMSA's index labels must be"
+                                   " unique.")
+    # Writes header
+    fh.write("# STOCKHOLM 1.0\n")
+
+    # Writes GF data to file
+    if obj.has_metadata():
+        for gf_feature, gf_feature_data in obj.metadata.items():
+            if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
+                for tree_id, tree in obj.metadata[gf_feature].items():
+                    fh.write("#=GF TN %s\n" % tree_id)
+                    fh.write("#=GF NH %s\n" % tree)
+            else:
+                fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
+
+    unpadded_data = []
+    # Writes GS data to file, retrieves GR data, and retrieves sequence data
+    for seq, seq_name in zip(obj, obj.index):
+        seq_name = str(seq_name)
+        if seq.has_metadata():
+            for gs_feature, gs_feature_data in seq.metadata.items():
+                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
+                                              gs_feature_data))
+        unpadded_data.append((seq_name, str(seq)))
+        if seq.has_positional_metadata():
+            df = _format_positional_metadata(seq.positional_metadata,
+                                             'Sequence-specific positional '
+                                             'metadata (GR)')
+            for gr_feature in df.columns:
+                gr_feature_data = ''.join(df[gr_feature])
+                gr_string = "#=GR %s %s" % (seq_name, gr_feature)
+                unpadded_data.append((gr_string, gr_feature_data))
+
+    # Retrieves GC data
+    if obj.has_positional_metadata():
+        df = _format_positional_metadata(obj.positional_metadata,
+                                         'Multiple sequence alignment '
+                                         'positional metadata (GC)')
+        for gc_feature in df.columns:
+            gc_feature_data = ''.join(df[gc_feature])
+            gc_string = "#=GC %s" % gc_feature
+            unpadded_data.append((gc_string, gc_feature_data))
+
+    # Writes GR, GC, and raw data to file with padding
+    _write_padded_data(unpadded_data, fh)
+
+    # Writes footer
+    fh.write("//\n")
+
+
+def _write_padded_data(data, fh):
+    max_data_len = 0
+    for label, _ in data:
+        if len(label) > max_data_len:
+            max_data_len = len(label)
+    fmt = '{0:%d} {1}\n' % max_data_len
+    for label, value in data:
+        fh.write(fmt.format(label, value))
+
+
+def _format_positional_metadata(df, data_type):
+    # Asserts positional metadata feature names are unique
+    if not df.columns.is_unique:
+        num_repeated_columns = len(df.columns) - len(set(df.columns))
+        raise StockholmFormatError('%s feature names must be unique. '
+                                   'Found %d duplicate names.'
+                                   % (data_type, num_repeated_columns))
+
+    str_df = df.astype(str)
+
+    # Asserts positional metadata dataframe items are one character long
+    for column in str_df.columns:
+        if (str_df[column].str.len() != 1).any():
+            raise StockholmFormatError("%s must contain a single character for"
+                                       " each position's value. Found value(s)"
+                                       " in column %s of incorrect length."
+                                       % (data_type, column))
+    return str_df

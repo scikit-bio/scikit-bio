@@ -6,16 +6,17 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
 import unittest
 import tempfile
 import shutil
 import io
 import os.path
 
-import httpretty
+try:
+    import httpretty
+    has_httpretty = True
+except ImportError:
+    has_httpretty = False
 
 import skbio.io
 from skbio.io.registry import open_file
@@ -33,21 +34,21 @@ class TestOpen(unittest.TestCase):
 
     def test_open_invalid_source_compression(self):
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], compression='gzip')
+            skbio.io.open(['foo'], compression='gzip')
 
     def test_open_invalid_source_encoding(self):
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], encoding='binary')
+            skbio.io.open(['foo'], encoding='binary')
 
         with self.assertRaises(ValueError):
-            skbio.io.open([u'foo'], encoding='binary', newline='\r')
+            skbio.io.open(['foo'], encoding='binary', newline='\r')
 
     def test_open_invalid_compression(self):
         with self.assertRaises(ValueError):
             skbio.io.open(io.BytesIO(), compression='foo')
 
 
-class ReadableBinarySourceTests(object):
+class ReadableBinarySourceTests:
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -280,7 +281,7 @@ class ReadableSourceTest(unittest.TestCase):
 
         self.binary_contents = (b"This is some content\n"
                                 b"It occurs on more than one line\n")
-        self.decoded_contents = u'\u4f60\u597d\n'  # Ni Hau
+        self.decoded_contents = '\u4f60\u597d\n'  # Ni Hau
         self.compression = 'gzip'
         self.encoding = "big5"
 
@@ -297,7 +298,7 @@ class ReadableSourceTest(unittest.TestCase):
             f.close()
 
 
-class WritableBinarySourceTests(object):
+class WritableBinarySourceTests:
     def check_closed(self, file, expected):
         if hasattr(file, 'closed'):
             self.assertEqual(file.closed, expected)
@@ -320,6 +321,13 @@ class WritableBinarySourceTests(object):
             self.assertTrue(result.closed)
             self.check_closed(file, True)
 
+    def compare_gzip_file_contents(self, a, b):
+        # The first 10 bytes of a gzip header include a timestamp. The header
+        # can be followed by other "volatile" metadata, so only compare gzip
+        # footers (last 8 bytes) which contain a CRC-32 checksum and the length
+        # of the uncompressed data.
+        self.assertEqual(a[-8:], b[-8:])
+
     def test_open_binary(self):
         self.check_open_state_contents(self.binary_file, self.binary_contents,
                                        True, encoding='binary',
@@ -332,9 +340,8 @@ class WritableBinarySourceTests(object):
         self.check_open_state_contents(self.gzip_file, self.text_contents,
                                        False, compression='gzip')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_file)[10:],
-                         self.gzip_contents[10:])
+        self.compare_gzip_file_contents(self.get_contents(self.gzip_file),
+                                        self.gzip_contents)
 
     def test_open_bz2(self):
         self.check_open_state_contents(self.bz2_file, self.text_contents,
@@ -355,9 +362,9 @@ class WritableBinarySourceTests(object):
                                        self.decoded_contents, False,
                                        compression='gzip', encoding='big5')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
-                         self.gzip_encoded_contents[10:])
+        self.compare_gzip_file_contents(
+            self.get_contents(self.gzip_encoded_file),
+            self.gzip_encoded_contents)
 
     def test_open_bz2_encoding(self):
         self.check_open_state_contents(self.bz2_encoded_file,
@@ -434,6 +441,7 @@ class TestWriteFilepath(WritableBinarySourceTests, WritableSourceTest):
             return f.read()
 
 
+@unittest.skipIf(not has_httpretty, "HTTPretty not available to mock tests.")
 class TestReadURL(ReadableBinarySourceTests, ReadableSourceTest):
     expected_close = True
 
@@ -482,18 +490,17 @@ class TestWriteBytesIO(WritableBinarySourceTests, WritableSourceTest):
         self.check_open_state_contents(self.gzip_file, self.text_contents,
                                        False, compression='gzip')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_file)[10:],
-                         self.gzip_contents[23:])
+        self.compare_gzip_file_contents(self.get_contents(self.gzip_file),
+                                        self.gzip_contents)
 
     def test_open_gzip_encoding(self):
         self.check_open_state_contents(self.gzip_encoded_file,
                                        self.decoded_contents, False,
                                        compression='gzip', encoding='big5')
 
-        # The first 10 bytes of a gzip header include a timestamp, so skip.
-        self.assertEqual(self.get_contents(self.gzip_encoded_file)[10:],
-                         self.gzip_encoded_contents[20:])
+        self.compare_gzip_file_contents(
+            self.get_contents(self.gzip_encoded_file),
+            self.gzip_encoded_contents)
 
 
 class TestReadBufferedReader(ReadableBinarySourceTests, ReadableSourceTest):
@@ -518,31 +525,19 @@ class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
 class TestIterableReaderWriter(unittest.TestCase):
     def test_open(self):
         def gen():
-            yield u'a'
-            yield u'b'
-            yield u'c'
+            yield from ('a', 'b', 'c')
         list_ = list(gen())
 
         for input_ in gen(), list_:
             with skbio.io.open(input_) as result:
                 self.assertIsInstance(result, io.TextIOBase)
-                self.assertEqual(result.read(), u'abc')
+                self.assertEqual(result.read(), 'abc')
 
     def test_open_with_newline(self):
-        l = [u'a\r', u'b\r', u'c\r']
+        l = ['a\r', 'b\r', 'c\r']
         with skbio.io.open(l, newline='\r') as result:
             self.assertIsInstance(result, io.TextIOBase)
             self.assertEqual(result.readlines(), l)
-
-    def test_open_invalid_iterable_missing_u(self):
-        is_py2 = six.PY2
-        six.PY2 = True
-        try:
-            with six.assertRaisesRegex(self, skbio.io.IOSourceError,
-                                       ".*Prepend.*`u`.*"):
-                skbio.io.open([b'abc'])
-        finally:
-            six.PY2 = is_py2
 
     def test_open_invalid_iterable(self):
         with self.assertRaises(skbio.io.IOSourceError):
@@ -551,18 +546,18 @@ class TestIterableReaderWriter(unittest.TestCase):
     def test_open_empty_iterable(self):
         with skbio.io.open([]) as result:
             self.assertIsInstance(result, io.TextIOBase)
-            self.assertEqual(result.read(), u'')
+            self.assertEqual(result.read(), '')
 
     def test_open_write_mode(self):
         l = []
         with skbio.io.open(l, mode='w') as fh:
-            fh.write(u'abc')
-        self.assertEqual(l, [u'abc'])
+            fh.write('abc')
+        self.assertEqual(l, ['abc'])
 
         l = []
         with skbio.io.open(l, mode='w', newline='\r') as fh:
-            fh.write(u'ab\nc\n')
-        self.assertEqual(l, [u'ab\r', u'c\r'])
+            fh.write('ab\nc\n')
+        self.assertEqual(l, ['ab\r', 'c\r'])
 
         self.assertTrue(fh.closed)
         fh.close()

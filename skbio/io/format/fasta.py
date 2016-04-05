@@ -203,8 +203,8 @@ When reading into a ``Sequence`` generator, ``constructor`` defaults to
 ``Sequence`` and must be a subclass of ``Sequence`` if supplied.
 
 When reading into a ``TabularMSA``, ``constructor`` is a required format
-parameter and must be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``,
-``Protein``).
+parameter and must be a subclass of ``GrammaredSequence`` (e.g., ``DNA``,
+``RNA``, ``Protein``).
 
 .. note:: The FASTA sniffer will not attempt to guess the ``constructor``
    parameter.
@@ -607,11 +607,7 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import range, zip
-from six.moves import zip_longest
-
+import itertools
 import textwrap
 
 import numpy as np
@@ -685,8 +681,8 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
         qual_gen = _parse_fasta_raw(qual, _parse_quality_scores,
                                     QUALFormatError)
 
-        for fasta_rec, qual_rec in zip_longest(fasta_gen, qual_gen,
-                                               fillvalue=None):
+        for fasta_rec, qual_rec in itertools.zip_longest(fasta_gen, qual_gen,
+                                                         fillvalue=None):
             if fasta_rec is None:
                 raise FASTAFormatError(
                     "QUAL file has more records than FASTA file.")
@@ -906,8 +902,7 @@ def _sequences_to_fasta(obj, fh, qual, id_whitespace_replacement,
                         description_newline_replacement, max_width,
                         lowercase=None):
     def seq_gen():
-        for seq in obj:
-            yield seq
+        yield from obj
 
     _generator_to_fasta(
         seq_gen(), fh, qual=qual,

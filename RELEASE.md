@@ -2,9 +2,7 @@
 
 ## Introduction
 
-Releasing a piece of software can simultaneously be an invigorating, intimidating, horrifying, and cathartic experience. This guide aims to make the release process as smooth as possible.
-
-To illustrate examples of commands you might run, let's assume that the current version is 1.2.3-dev and we want to release version 1.2.4. Our versioning system is based on Semantic Versioning, which you can read about at http://semver.org.
+This guide explains how to release a new version of scikit-bio. To illustrate examples of commands you might run, let's assume that the current version is 1.2.3-dev and we want to release version 1.2.4. Our versioning system is based on Semantic Versioning, which you can read about at http://semver.org.
 
 **Note:** The following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted. They also assume that you have [virtualenv](http://virtualenv.readthedocs.org/en/latest/#)/[virtualenvwrapper](http://virtualenvwrapper.readthedocs.org/en/latest/) installed.
 
@@ -30,7 +28,7 @@ In the meantime, you can build the documentation and update the website.
 
 1. Build the documentation locally:
 
-        make -C doc clean && make -C doc html
+        make -C doc clean html
 
 2. Switch to the ``gh-pages`` branch of the repository.
 
@@ -60,7 +58,7 @@ If the tests passed on Travis (see step 4 of **Prep the release (part 1)** above
 
 ## Tag the release
 
-From the [scikit-bio GitHub page](https://github.com/biocore/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (1.2.4) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release. This is (at least experimentally) taking the place of the release blog posts that we do for other projects (e.g., [QIIME](http://qiime.org/)).
+From the [scikit-bio GitHub page](https://github.com/biocore/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (1.2.4) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
 
 Once the release is created on GitHub, it's a good idea to test out the release tarball before publishing to PyPI:
 
@@ -79,8 +77,6 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 ## Test the source distribution
 
 Assuming the GitHub release tarball correctly installs and passes its tests, you're now ready to test the creation of the source distribution (``sdist``) that will be published to PyPI. It is important to test the source distribution because it is created in an entirely different way than the release tarball on GitHub. Thus, there is the danger of having two different release tarballs: the one created on GitHub and the one uploaded to PyPI.
-
-**Important:** Check ``MANIFEST.in`` to ensure that the files and directories it references still exist. Some may have been removed, renamed, or there may be new files/dirs that need to be included in the ``sdist`` release. This step in the release process has caused the most hangups; don't neglect ``MANIFEST.in``!
 
 1. Download the release tarball from GitHub, extract it, and ``cd`` into the top-level directory.
 
@@ -117,10 +113,10 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
     Due to its C extensions, releasing scikit-bio packages for different platforms will require you to perform the following steps on each of those platforms. For example, an ``osx-64`` package will need to be built on OS X, and a ``linux-64`` package will need to be built on 64-bit Linux. These steps will be the same on all platforms, so you should repeat them for every platform you want to release for.
 
         conda skeleton pypi scikit-bio
-        conda build scikit-bio --python 2.7
+        conda build scikit-bio --python 3.4
         conda build scikit-bio --python 3.5
 
-    At this stage you have built Python 2.7 and 3.5 packages. The absolute path to the packages will be provided as output from each ``conda build`` commands. You should now create conda environments for each, and run the tests as described above. You can install these local packages as follows:
+    At this stage you have built Python 3.4 and 3.5 packages. The absolute path to the packages will be provided as output from each ``conda build`` commands. You should now create conda environments for each, and run the tests as described above. You can install these local packages as follows:
 
         conda install --use-local scikit-bio
 
@@ -128,7 +124,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
         anaconda upload -u biocore <package-filepath>
 
-    ``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 2.7 and 3.5 packages).
+    ``<package-filepath>`` should be replaced with the path to the package that was was created above. Repeat this for each package you created (here, the Python 3.4 and 3.5 packages).
 
     After uploading, you should create new environments for every package you uploaded, install scikit-bio from each package, and re-run the tests. You can install the packages you uploaded as follows:
 

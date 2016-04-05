@@ -6,16 +6,15 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
-from ._iupac_sequence import IUPACSequence
+from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 
-class DNA(IUPACSequence, NucleotideMixin):
+class DNA(GrammaredSequence, NucleotideMixin,
+          metaclass=DisableSubclassingMeta):
     """Store DNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC DNA character set [1]_ are supported.
@@ -68,6 +67,14 @@ class DNA(IUPACSequence, NucleotideMixin):
     See Also
     --------
     RNA
+    GrammaredSequence
+
+    Notes
+    -----
+    Subclassing is disabled for DNA, because subclassing makes
+    it possible to change the alphabet, and certain methods rely on the
+    IUPAC alphabet. If a custom sequence alphabet is needed, inherit directly
+    from ``GrammaredSequence``.
 
     References
     ----------
@@ -108,7 +115,6 @@ class DNA(IUPACSequence, NucleotideMixin):
     """
 
     @classproperty
-    @stable(as_of="0.4.0")
     @overrides(NucleotideMixin)
     def complement_map(cls):
         comp_map = {
@@ -121,20 +127,28 @@ class DNA(IUPACSequence, NucleotideMixin):
         return comp_map
 
     @classproperty
-    @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set("ACGT")
 
     @classproperty
-    @stable(as_of="0.4.0")
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {
             "R": set("AG"), "Y": set("CT"), "M": set("AC"), "K": set("TG"),
             "W": set("AT"), "S": set("GC"), "B": set("CGT"), "D": set("AGT"),
             "H": set("ACT"), "V": set("ACG"), "N": set("ACGT")
         }
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def default_gap_char(cls):
+        return '-'
+
+    @classproperty
+    @overrides(GrammaredSequence)
+    def gap_chars(cls):
+        return set('-.')
 
     @property
     def _motifs(self):
@@ -405,7 +419,7 @@ class DNA(IUPACSequence, NucleotideMixin):
         """
         return self.transcribe().translate_six_frames(*args, **kwargs)
 
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def _repr_stats(self):
         """Define custom statistics to display in the sequence's repr."""
         stats = super(DNA, self)._repr_stats()

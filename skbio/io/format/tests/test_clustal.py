@@ -6,16 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import string
 from io import StringIO
 from unittest import TestCase, main
 
-import six
-
 from skbio import TabularMSA
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classproperty, overrides
 from skbio.io.format.clustal import (
     _clustal_to_tabular_msa, _tabular_msa_to_clustal, _clustal_sniffer,
@@ -25,30 +21,35 @@ from skbio.io.format.clustal import (
 from skbio.io import ClustalFormatError
 
 
-class CustomSequence(IUPACSequence):
+class CustomSequence(GrammaredSequence):
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def gap_chars(cls):
         return set('-.')
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
+    def default_gap_char(cls):
+        return '-'
+
+    @classproperty
+    @overrides(GrammaredSequence)
     def nondegenerate_chars(cls):
         return set(string.ascii_letters)
 
     @classproperty
-    @overrides(IUPACSequence)
+    @overrides(GrammaredSequence)
     def degenerate_map(cls):
         return {}
 
 
 class ClustalHelperTests(TestCase):
     def test_label_line_parser(self):
-        self.assertEqual(_label_line_parser(StringIO(u'abc\tucag')),
+        self.assertEqual(_label_line_parser(StringIO('abc\tucag')),
                          ({"abc": ["ucag"]}, ['abc']))
 
         with self.assertRaises(ClustalFormatError):
-            _label_line_parser(StringIO(u'abctucag'))
+            _label_line_parser(StringIO('abctucag'))
 
     def test_is_clustal_seq_line(self):
         ic = _is_clustal_seq_line
@@ -101,12 +102,12 @@ class ClustalIOTests(TestCase):
 
     def setUp(self):
         self.valid_clustal_out = [
-            StringIO(u'CLUSTAL\n\nabc\tucag'),
-            StringIO(u'CLUSTAL\n\nabc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nab'
+            StringIO('CLUSTAL\n\nabc\tucag'),
+            StringIO('CLUSTAL\n\nabc\tuuu\ndef\tccc\n\n    ***\n\ndef ggg\nab'
                      'c\taaa\n'),
-            StringIO(u'\n'.join(['CLUSTAL\n', 'abc uca', 'def ggg ccc'])),
-            StringIO(u'\n'.join(['CLUSTAL\n', 'abc uca ggg', 'def ggg ccc'])),
-            StringIO(u"""CLUSTAL
+            StringIO('\n'.join(['CLUSTAL\n', 'abc uca', 'def ggg ccc'])),
+            StringIO('\n'.join(['CLUSTAL\n', 'abc uca ggg', 'def ggg ccc'])),
+            StringIO("""CLUSTAL
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -115,7 +116,7 @@ xyz             ------------------------------------------------------------
 
 
 """),
-            StringIO(u"""CLUSTAL
+            StringIO("""CLUSTAL
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -127,7 +128,7 @@ abc             GUCGAUACGUACGUCAGUCAGUACGUCAGCAUGCAUACGUACGUCGUACGUACGU-CGAC
 def             -----------------------------------------CGCGAUGCAUGCAU-CGAU
 xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
 """),
-            StringIO(u"""CLUSTAL W (1.82) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.82) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -143,7 +144,7 @@ xyz             -------------------------------------CAUGCAUCGUACGUACGCAUGAC
 abc             UGACUAGUCAGCUAGCAUCGAUCAGU
 def             CGAUCAGUCAGUCGAU----------
 xyz             UGCUGCAUCA----------------"""),
-            StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+            StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 abc             GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA 60
@@ -161,27 +162,27 @@ def             CGAUCAGUCAGUCGAU---------- 34
 xyz             UGCUGCAUCA---------------- 33
                 *     ***""")
             ]
-        self.invalid_clustal_out = [StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                         'hfsdjksdfhjsdf'])),
-                                    StringIO(u'\n'.join(['hfsdjksdfhjsdf'])),
-                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                         'dshfjsdfhdfsj',
-                                                         'hfsdjksdfhjsdf'])),
-                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                         '\t',
-                                                         'hfsdjksdfhjsdf'])),
-                                    StringIO(u'\n'.join(['dshfj\tdfhdfsj',
-                                                         'hfsdjksdfhjsdf'])),
-                                    StringIO(u'\n'.join(['dshfjsdfhdfsj',
-                                                         'hfsdjk\tdfhjsdf'])),
-                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+        self.invalid_clustal_out = [StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'dshfjsdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        '\t',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfj\tdfhdfsj',
+                                                        'hfsdjksdfhjsdf'])),
+                                    StringIO('\n'.join(['dshfjsdfhdfsj',
+                                                        'hfsdjk\tdfhjsdf'])),
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 ------------------------------------------------------------
 adk -----GGGGGGG------------------------------------------------
 """),
-                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -191,7 +192,7 @@ adk -----GGGGGGG------------------------------------------------
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG---------------------------------------------
 """),
-                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -202,7 +203,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCA
 adk -----GGGGGGG---------------------------------------------
 """),
 
-                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -210,7 +211,7 @@ adj GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
 adk -----GGGGGGG------------------------------------------------
 """),
 
-                                    StringIO(u"""CLUSTAL W (1.74) multiple sequence alignment
+                                    StringIO("""CLUSTAL W (1.74) multiple sequence alignment
 
 
 GCAUGCAUGCAUGAUCGUACGUCAGCAUGCUAGACUGCAUACGUACGUACGCAUGCAUCA
@@ -234,7 +235,7 @@ UGCUGCAUCA---------------- 33
         self.assertEqual(dict(result), {})
 
     def test_tabular_msa_to_clustal_with_bad_input(self):
-        BAD = StringIO(u'\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
+        BAD = StringIO('\n'.join(['dshfjsdfhdfsj', 'hfsdjksdfhjsdf']))
 
         with self.assertRaises(ClustalFormatError):
             dict(_clustal_to_tabular_msa(BAD, constructor=CustomSequence))
@@ -268,25 +269,25 @@ UGCUGCAUCA---------------- 33
         self.assertEqual(_clustal_sniffer(StringIO()), (False, {}))
 
     def test_no_constructor(self):
-        with six.assertRaisesRegex(self, ValueError, "`constructor`"):
+        with self.assertRaisesRegex(ValueError, "`constructor`"):
             _clustal_to_tabular_msa(self.valid_clustal_out[0])
 
     def test_duplicate_labels(self):
         msa = TabularMSA([CustomSequence('foo'),
                           CustomSequence('bar')], index=['a', 'a'])
 
-        with six.assertRaisesRegex(self, ClustalFormatError, "index.*unique"):
+        with self.assertRaisesRegex(ClustalFormatError, "index.*unique"):
             with StringIO() as fh:
                 _tabular_msa_to_clustal(msa, fh)
 
     def test_invalid_lengths(self):
         fh = StringIO(
-            u"CLUSTAL\n"
+            "CLUSTAL\n"
             "\n\n"
             "abc             GCAU\n"
             "def             -----\n")
 
-        with six.assertRaisesRegex(self, ClustalFormatError, "not aligned"):
+        with self.assertRaisesRegex(ClustalFormatError, "not aligned"):
             _clustal_to_tabular_msa(fh, constructor=CustomSequence)
 
 

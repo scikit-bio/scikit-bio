@@ -28,10 +28,19 @@ Classes
    :toctree: generated/
 
    Sequence
+   GrammaredSequence
    DNA
    RNA
    Protein
    GeneticCode
+
+Subpackages
+-----------
+
+.. autosummary::
+   :toctree: generated/
+
+   distance
 
 Examples
 --------
@@ -295,8 +304,6 @@ Class-level methods contain information about the molecule types.
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from skbio.util import TestRunner
 
 from ._sequence import Sequence
@@ -304,7 +311,9 @@ from ._protein import Protein
 from ._dna import DNA
 from ._rna import RNA
 from ._genetic_code import GeneticCode
+from ._grammared_sequence import GrammaredSequence
 
-__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode']
+__all__ = ['Sequence', 'Protein', 'DNA', 'RNA', 'GeneticCode',
+           'GrammaredSequence']
 
 test = TestRunner(__file__).test

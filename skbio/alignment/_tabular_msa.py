@@ -6,21 +6,18 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 import copy
 
-from future.builtins import range
-from future.utils import viewkeys, viewvalues
 import numpy as np
 import pandas as pd
 import scipy.stats
 
 from skbio._base import SkbioObject
-from skbio.metadata import MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin
+from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin,
+                                   IntervalMetadataMixin)
 from skbio.sequence import Sequence
-from skbio.sequence._iupac_sequence import IUPACSequence
+from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
@@ -31,12 +28,13 @@ from skbio.alignment._repr import _TabularMSAReprBuilder
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
 
-class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, SkbioObject):
+class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
+                 SkbioObject):
     """Store a multiple sequence alignment in tabular (row/column) form.
 
     Parameters
     ----------
-    sequences : iterable of IUPACSequence, TabularMSA
+    sequences : iterable of GrammaredSequence, TabularMSA
         Aligned sequences in the MSA. Sequences must all be the same type and
         length. For example, `sequences` could be an iterable of ``DNA``,
         ``RNA``, or ``Protein`` sequences. If `sequences` is a ``TabularMSA``,
@@ -289,12 +287,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Returns
         -------
-        TabularMSA, IUPACSequence, Sequence
+        TabularMSA, GrammaredSequence, Sequence
             A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
-            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
-            when `seq_idx` is a scalar (this object will match the dtype of the
-            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
-            `pos_idx` is scalar.
+            non-scalars. A ``GrammaredSequence`` of type ``msa.dtype`` is
+            returned when `seq_idx` is a scalar (this object will match the
+            dtype of the MSA). A ``Sequence`` is returned when `seq_idx` is
+            non-scalar and `pos_idx` is scalar.
 
         See Also
         --------
@@ -555,12 +553,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Returns
         -------
-        TabularMSA, IUPACSequence, Sequence
+        TabularMSA, GrammaredSequence, Sequence
             A ``TabularMSA`` is returned when `seq_idx` and `pos_idx` are
-            non-scalars. A ``IUPACSequence`` of type ``msa.dtype`` is returned
-            when `seq_idx` is a scalar (this object will match the dtype of the
-            MSA). A ``Sequence`` is returned when `seq_idx` is non-scalar and
-            `pos_idx` is scalar.
+            non-scalars. A ``GrammaredSequence`` of type ``msa.dtype`` is
+            returned when `seq_idx` is a scalar (this object will match the
+            dtype of the MSA). A ``Sequence`` is returned when `seq_idx` is
+            non-scalar and `pos_idx` is scalar.
 
         See Also
         --------
@@ -714,8 +712,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
         Parameters
         ----------
         dictionary : dict
-            Dictionary mapping keys to ``IUPACSequence`` sequence objects. The
-            ``TabularMSA`` object will have its index labels set
+            Dictionary mapping keys to ``GrammaredSequence`` sequence objects.
+            The ``TabularMSA`` object will have its index labels set
             to the keys in the dictionary.
 
         Returns
@@ -747,12 +745,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
         True
 
         """
-        # Python 2 and 3 guarantee same order of iteration as long as no
+        # Python 3 guarantees same order of iteration as long as no
         # modifications are made to the dictionary between calls:
-        #     https://docs.python.org/2/library/stdtypes.html#dict.items
         #     https://docs.python.org/3/library/stdtypes.html#
         #         dictionary-view-objects
-        return cls(viewvalues(dictionary), index=viewkeys(dictionary))
+        return cls(dictionary.values(), index=dictionary.keys())
 
     @experimental(as_of='0.4.1')
     def __init__(self, sequences, metadata=None, positional_metadata=None,
@@ -864,9 +861,6 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
         # It is impossible to have 0 sequences and >0 positions.
         return self.shape.position > 0
 
-    # Python 2 compatibility.
-    __nonzero__ = __bool__
-
     @experimental(as_of='0.4.1')
     def __contains__(self, label):
         """Determine if an index label is in this MSA.
@@ -927,7 +921,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Each sequence in the order they are stored in the MSA.
 
         Examples
@@ -948,7 +942,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Yields
         ------
-        IUPACSequence
+        GrammaredSequence
             Each sequence in reverse order from how they are stored in the MSA.
 
         Examples
@@ -1624,7 +1618,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
             # guaranteed to always have two gap characters). See unit tests for
             # an example.
             freqs = seq.frequencies(chars=self.dtype.gap_chars)
-            gap_freqs.append(sum(viewvalues(freqs)))
+            gap_freqs.append(sum(freqs.values()))
 
         gap_freqs = np.asarray(gap_freqs, dtype=float if relative else int)
 
@@ -1713,7 +1707,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Parameters
         ----------
-        sequence : IUPACSequence
+        sequence : GrammaredSequence
             Sequence to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -1733,7 +1727,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
             If neither `minter` nor `index` are provided and the MSA has a
             non-default index.
         TypeError
-            If the sequence object isn't an ``IUPACSequence``.
+            If the sequence object isn't a ``GrammaredSequence``.
         TypeError
             If the type of the sequence does not match the dtype of the MSA.
         ValueError
@@ -1795,7 +1789,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
 
         Parameters
         ----------
-        sequences : iterable of IUPACSequence
+        sequences : iterable of GrammaredSequence
             Sequences to be appended. Must match the dtype of the MSA and the
             number of positions in the MSA.
         minter : callable or metadata key, optional
@@ -1819,7 +1813,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
         ValueError
             If `index` is not the same length as `sequences`.
         TypeError
-            If `sequences` contains an object that isn't an ``IUPACSequence``.
+            If `sequences` contains an object that isn't a
+            ``GrammaredSequence``.
         TypeError
             If `sequence` contains a type that does not match the dtype of the
             MSA.
@@ -1913,10 +1908,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin, 
         else:
             sequence = sequences[0]
             expected_dtype = type(sequence)
-            if not issubclass(expected_dtype, IUPACSequence):
+            if not issubclass(expected_dtype, GrammaredSequence):
                 raise TypeError(
                     "Each sequence must be of type %r, not type %r"
-                    % (IUPACSequence.__name__, expected_dtype.__name__))
+                    % (GrammaredSequence.__name__, expected_dtype.__name__))
             expected_length = len(sequence)
 
         for sequence in sequences:

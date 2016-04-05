@@ -6,15 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
-import six
 import numpy as np
 
 from skbio import DNA, RNA, Protein, GeneticCode
 from skbio.sequence._nucleotide_mixin import NucleotideMixin
+from skbio.sequence import GrammaredSequence
+from skbio.util import classproperty
 
 
 # This file contains tests for functionality of sequence types which implement
@@ -165,7 +164,7 @@ class TestNucelotideSequence(unittest.TestCase):
 
     def test_translate_invalid_id(self):
         for seq in RNA('AUG'), DNA('ATG'):
-            with six.assertRaisesRegex(self, ValueError, 'table_id.*42'):
+            with self.assertRaisesRegex(ValueError, 'table_id.*42'):
                 seq.translate(42)
 
     def test_translate_six_frames_ncbi_table_id(self):
@@ -220,7 +219,7 @@ class TestNucelotideSequence(unittest.TestCase):
 
     def test_translate_six_frames_invalid_id(self):
         for seq in RNA('AUG'), DNA('ATG'):
-            with six.assertRaisesRegex(self, ValueError, 'table_id.*42'):
+            with self.assertRaisesRegex(ValueError, 'table_id.*42'):
                 seq.translate_six_frames(42)
 
     def test_repr(self):
@@ -408,12 +407,29 @@ class TestNucelotideSequence(unittest.TestCase):
 
     def test_is_reverse_complement_type_mismatch(self):
         for Class in (DNA, RNA):
-            class Subclass(Class):
-                pass
-            seq1 = Class('ABC')
-            seq2 = Subclass('ABC')
+            class DifferentSequenceClass(GrammaredSequence):
+                @classproperty
+                def degenerate_map(cls):
+                    return {"X": set("AB")}
 
-            with self.assertRaises(TypeError):
+                @classproperty
+                def nondegenerate_chars(cls):
+                    return set("ABC")
+
+                @classproperty
+                def default_gap_char(cls):
+                    return '-'
+
+                @classproperty
+                def gap_chars(cls):
+                    return set('-.')
+
+            seq1 = Class('ABC')
+            seq2 = DifferentSequenceClass('ABC')
+
+            with self.assertRaisesRegex(TypeError,
+                                        "Cannot use.*and "
+                                        "DifferentSequenceClass together"):
                 seq1.is_reverse_complement(seq2)
 
     def test_motif_purine_run(self):

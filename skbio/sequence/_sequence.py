@@ -6,22 +6,17 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import range, zip
-from future.utils import viewitems
-import six
-
 import re
 import collections
 import numbers
 from contextlib import contextmanager
 
 import numpy as np
-from scipy.spatial.distance import hamming
-
 import pandas as pd
 
+import skbio.sequence.distance
 from skbio._base import SkbioObject
+from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
@@ -29,6 +24,7 @@ from skbio.metadata._feature import Feature
 from skbio.metadata._interval import _polish_interval
 from skbio.metadata import IntervalMetadata
 from skbio.metadata import MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin
+
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                collections.Sequence, SkbioObject):
@@ -356,6 +352,29 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         return self._bytes.view('|S1')
 
     @property
+    def __array_interface__(self):
+        """Array interface for compatibility with numpy.
+
+        This property allows a ``Sequence`` object to share its underlying data
+        buffer (``Sequence.values``) with numpy. See [1]_ for more details.
+
+        References
+        ----------
+        .. [1] http://docs.scipy.org/doc/numpy/reference/arrays.interface.html
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio import Sequence
+        >>> seq = Sequence('ABC123')
+        >>> np.asarray(seq) # doctest: +NORMALIZE_WHITESPACE
+        array([b'A', b'B', b'C', b'1', b'2', b'3'],
+              dtype='|S1')
+
+        """
+        return self.values.__array_interface__
+
+    @property
     @experimental(as_of="0.4.1")
     def observed_chars(self):
         """Set of observed characters in the sequence.
@@ -565,9 +584,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             self._set_bytes(sequence)
 
         else:
-            # Python 3 will not raise a UnicodeEncodeError so we force it by
-            # encoding it as ascii
-            if isinstance(sequence, six.text_type):
+            # Encode as ascii to raise UnicodeEncodeError if necessary.
+            if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
             s = np.fromstring(sequence, dtype=np.uint8)
 
@@ -591,7 +609,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         if lowercase is False:
             pass
-        elif lowercase is True or isinstance(lowercase, six.string_types):
+        elif lowercase is True or isinstance(lowercase, str):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
             self._convert_to_uppercase(lowercase_mask)
 
@@ -849,8 +867,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                         list(_slices_from_iter(self._bytes, _indexable)))
             return self._to(sequence=seq, interval_metadata={indexable:[]})
         elif (not isinstance(indexable, np.ndarray) and
-            ((not isinstance(indexable, six.string_types)) and
-             hasattr(indexable, '__iter__'))):
+             ((not isinstance(indexable, str)) and
+              hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
 
@@ -874,7 +892,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                     # TODO: need a slice interval metadata method
                     return self._to(sequence=seq,
                                     positional_metadata=positional_metadata)
-        elif (isinstance(indexable, six.string_types) or
+        elif (isinstance(indexable, str) or
                 isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
                              (type(indexable).__name__, indexable))
@@ -949,8 +967,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         """
         return len(self) > 0
-
-    __nonzero__ = __bool__
 
     @stable(as_of="0.4.0")
     def __iter__(self):
@@ -1421,6 +1437,78 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         return self._string.count(
             self._munge_to_bytestring(subsequence, "count"), start, end)
 
+    @experimental(as_of="0.4.2-dev")
+    def replace(self, where, character):
+        """Replace values in this sequence with a different character.
+
+        Parameters
+        ----------
+        where : 1D array_like (bool) or iterable (slices or ints) or str
+            Indicates positions in the sequence to replace with `character`.
+            Can be a boolean vector, an iterable of indices/slices, or a
+            string that is a key in `positional_metadata` pointing to a
+            boolean vector.
+        character : str or bytes
+            Character that will replace chosen items in this sequence.
+
+        Returns
+        -------
+        Sequence
+            Copy of this sequence, with chosen items replaced with chosen
+            character. All metadata is retained.
+
+        Examples
+        --------
+        Let's create and display a Sequence:
+
+        >>> from skbio import Sequence
+        >>> sequence = Sequence('GGTACCAACG')
+        >>> str(sequence)
+        'GGTACCAACG'
+
+        Let's call ``replace`` on the Sequence using a boolean vector for
+        ``where`` and assign it to a new variable:
+
+        >>> seq = sequence.replace([False, False, False, True, False, False,
+        ...                         True, True, False, False], '-')
+
+        Let's take a look at the new Sequence:
+
+        >>> str(seq)
+        'GGT-CC--CG'
+
+        Other types of input are accepted by the ``where`` parameter. Let's
+        pass in a list of indices and slices that is equivalent to the boolean
+        vector we used previously:
+
+        >>> str(seq) == str(sequence.replace([3, slice(6, 8)], '-'))
+        True
+
+        ``where`` also accepts a boolean vector contained in
+        ``Sequence.positional_metadata``:
+
+        >>> sequence.positional_metadata = {'where':
+        ...                                 [False, False, False, True, False,
+        ...                                  False, True, True, False, False]}
+
+        Let's pass in the key ``'where'`` and compare to ``seq``:
+
+        >>> str(seq) == str(sequence.replace('where', '-'))
+        True
+
+        """
+        if type(character) is not bytes:
+            character = character.encode('ascii')
+        character = ord(character)
+        index = self._munge_to_index_array(where)
+        seq_bytes = self._bytes.copy()
+        seq_bytes[index] = character
+        metadata = self.metadata if self.has_metadata() else None
+        positional_metadata = self.positional_metadata if \
+            self.has_positional_metadata() else None
+        return self.__class__(seq_bytes, metadata=metadata,
+                              positional_metadata=positional_metadata)
+
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
         """Find position where subsequence first occurs in the sequence.
@@ -1469,69 +1557,60 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         Parameters
         ----------
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Sequence to compute the distance to.
+            Sequence to compute the distance to. If `other` is a ``Sequence``
+            object, it must be the same type as this sequence. Other input
+            types will be converted into a ``Sequence`` object of the same type
+            as this sequence.
         metric : function, optional
             Function used to compute the distance between this sequence and
-            `other`. If ``None`` (the default),
-            ``scipy.spatial.distance.hamming`` will be used. This function
-            should take two ``skbio.Sequence`` objects and return a ``float``.
+            `other`. If ``None`` (the default), Hamming distance will be used
+            (:func:`skbio.sequence.distance.hamming`). `metric` should take two
+            ``skbio.Sequence`` objects and return a ``float``. The sequence
+            objects passed to `metric` will be the same type as this sequence.
+            See :mod:`skbio.sequence.distance` for other predefined metrics
+            that can be supplied via `metric`.
 
         Returns
         -------
         float
-            Distance between this sequence and `other`.
+            Distance between this sequence and `other` as defined by `metric`.
 
         Raises
         ------
-        ValueError
-            If the sequences are not the same length when `metric` is ``None``
-            (i.e., `metric` is ``scipy.spatial.distance.hamming``). This is
-            only checked when using this metric, as equal length is not a
-            requirement of all sequence distance metrics. In general, the
-            metric itself should test and give an informative error message,
-            but the message from ``scipy.spatial.distance.hamming`` is somewhat
-            cryptic (as of this writing), and it's the default metric, so we
-            explicitly do this check here. This metric-specific check will be
-            removed from this method when the ``skbio.sequence.stats`` module
-            is created (track progress on issue #913).
         TypeError
             If `other` is a ``Sequence`` object with a different type than this
             sequence.
 
         See Also
         --------
+        skbio.sequence.distance
         fraction_diff
         fraction_same
-        scipy.spatial.distance.hamming
 
         Examples
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
+
+        Compute Hamming distance (the default metric):
+
         >>> s.distance(t)
         0.25
-        >>> def custom_dist(s1, s2): return 0.42
-        >>> s.distance(t, custom_dist)
+
+        Use a custom metric:
+
+        >>> def custom_metric(s1, s2): return 0.42
+        >>> s.distance(t, custom_metric)
         0.42
 
         """
         # TODO refactor this method to accept a name (string) of the distance
         # metric to apply and accept **kwargs
-        other = self._munge_to_sequence(other, 'distance')
+        other = self._munge_to_self_type(other, 'distance')
         if metric is None:
-            return self._hamming(other)
+            metric = skbio.sequence.distance.hamming
         return float(metric(self, other))
-
-    def _hamming(self, other):
-        # Hamming requires equal length sequences. We are checking this
-        # here because the error you would get otherwise is cryptic.
-        if len(self) != len(other):
-            raise ValueError(
-                "Sequences do not have equal length. "
-                "Hamming distances can only be computed between "
-                "sequences of equal length.")
-        return float(hamming(self.values, other.values))
 
     @stable(as_of="0.4.0")
     def matches(self, other):
@@ -1815,8 +1894,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     def _chars_to_indices(self, chars):
         """Helper for Sequence.frequencies."""
-        if isinstance(chars, six.string_types) or \
-                isinstance(chars, six.binary_type):
+        if isinstance(chars, (str, bytes)):
             chars = set([chars])
         elif not isinstance(chars, set):
             raise TypeError(
@@ -1827,8 +1905,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         chars = list(chars)
         indices = []
         for char in chars:
-            if not (isinstance(char, six.string_types) or
-                    isinstance(char, six.binary_type)):
+            if not isinstance(char, (str, bytes)):
                 raise TypeError(
                     "Each element of `chars` must be string-like, not %r" %
                     type(char).__name__)
@@ -1896,7 +1973,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             step = k
             count = len(self) // k
 
-        if self.has_positional_metadata():
+        if len(self) == 0 or self.has_positional_metadata():
             for i in range(0, len(self) - k + 1, step):
                 yield self[i:i+k]
         # Optimized path when no positional metadata
@@ -1953,7 +2030,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                 num_kmers = len(self) // k
 
             relative_freqs = {}
-            for kmer, count in viewitems(freqs):
+            for kmer, count in freqs.items():
                 relative_freqs[kmer] = count / num_kmers
             freqs = relative_freqs
 
@@ -1990,7 +2067,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         'TATAA'
 
         """
-        if isinstance(regex, six.string_types):
+        if isinstance(regex, str):
             regex = re.compile(regex)
 
         lookup = np.arange(len(self))
@@ -2135,7 +2212,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         """Return an index array from something isomorphic to a boolean vector.
 
         """
-        if isinstance(sliceable, six.string_types):
+        if isinstance(sliceable, str):
             if sliceable in self.positional_metadata:
                 if self.positional_metadata[sliceable].dtype == np.bool:
                     sliceable = self.positional_metadata[sliceable]
@@ -2184,6 +2261,17 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         return normalized
 
+    def _munge_to_self_type(self, other, method):
+        if isinstance(other, Sequence):
+            if type(other) != type(self):
+                raise TypeError("Cannot use %s and %s together with `%s`" %
+                                (self.__class__.__name__,
+                                 other.__class__.__name__, method))
+            else:
+                return other
+
+        return self.__class__(other)
+
     def _munge_to_sequence(self, other, method):
         if isinstance(other, Sequence):
             if type(other) != type(self):
@@ -2201,7 +2289,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
     def _munge_to_bytestring(self, other, method):
         if type(other) is bytes:
             return other
-        elif isinstance(other, six.string_types):
+        elif isinstance(other, str):
             return other.encode('ascii')
         else:
             return self._munge_to_sequence(other, method)._string

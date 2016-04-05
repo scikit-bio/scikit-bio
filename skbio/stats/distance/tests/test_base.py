@@ -6,19 +6,18 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-from six import StringIO, binary_type, text_type
-
+import io
 from unittest import TestCase, main
 
 import matplotlib as mpl
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import scipy.spatial.distance
 from IPython.core.display import Image, SVG
 
-from skbio import DistanceMatrix
+import skbio.sequence.distance
+from skbio import DistanceMatrix, Sequence
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
     DissimilarityMatrix, randdm)
@@ -315,15 +314,12 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_repr_png(self):
         dm = self.dm_1x1
         obs = dm._repr_png_()
-        self.assertIsInstance(obs, binary_type)
+        self.assertIsInstance(obs, bytes)
         self.assertTrue(len(obs) > 0)
 
     def test_repr_svg(self):
         obs = self.dm_1x1._repr_svg_()
-        # print_figure(format='svg') can return text or bytes depending on the
-        # version of IPython
-        self.assertTrue(isinstance(obs, text_type) or
-                        isinstance(obs, binary_type))
+        self.assertIsInstance(obs, str)
         self.assertTrue(len(obs) > 0)
 
     def test_png(self):
@@ -489,6 +485,10 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             DistanceMatrix([[1, 2, 3]], ['a'])
 
+    def test_init_nans(self):
+        with self.assertRaisesRegex(DistanceMatrixError, 'NaNs'):
+            DistanceMatrix([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
+
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
 
@@ -535,6 +535,50 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(ValueError):
             DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a),
                                          key=str, keys=['1', '2', '3', '4'])
+
+    def test_from_iterable_scipy_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DistanceMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DistanceMatrix.from_iterable(
+            seqs,
+            metric=scipy.spatial.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
+
+    def test_from_iterable_skbio_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DistanceMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DistanceMatrix.from_iterable(
+            seqs,
+            metric=skbio.sequence.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
 
     def test_condensed_form(self):
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):
@@ -668,10 +712,10 @@ class CategoricalStatsHelperFunctionTests(TestCase):
         self.grouping = [1, 2, 1]
         # Ordering of IDs shouldn't matter, nor should extra IDs.
         self.df = pd.read_csv(
-            StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
+            io.StringIO('ID,Group\nb,Group2\na,Group1\nc,Group1\nd,Group3'),
             index_col=0)
         self.df_missing_id = pd.read_csv(
-            StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
+            io.StringIO('ID,Group\nb,Group2\nc,Group1'), index_col=0)
 
     def test_preprocess_input_with_valid_input(self):
         # Should obtain same result using grouping vector or data frame.

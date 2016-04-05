@@ -188,6 +188,7 @@ The structure of your module should be similar to the example below. scikit-bio 
        Numbers
 
     """
+
     # ----------------------------------------------------------------------------
     # Copyright (c) 2013--, scikit-bio development team.
     #
@@ -196,16 +197,18 @@ The structure of your module should be similar to the example below. scikit-bio 
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
-    from __future__ import absolute_import, division, print_function
+    from random import choice, random
 
     import numpy as np
-    from random import choice, random
     from utils import indices
 
+
     class Numbers(list):
-        pass    # much code deleted
+        pass
+
+
     class FrequencyDistribution(dict):
-        pass    # much code deleted
+        pass
 
 
 How should I write comments?
@@ -309,8 +312,6 @@ Example of a ``nose`` test module structure
     # The full license is in the file COPYING.txt, distributed with this software.
     # ----------------------------------------------------------------------------
 
-    from __future__ import absolute_import, division, print_function
-
     import numpy as np
     from nose.tools import assert_almost_equal, assert_raises
 
@@ -367,8 +368,8 @@ After doing this you should see your name and e-mail when you run the following 
     $ git config --global user.email
     yoshiki89@gmail.com
 
-Writting a commit message
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Writing a commit message
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 In general the writing of a commit message should adhere to `NumPy's guidelines`_ which if followed correctly will help you structure your changes better i. e. bug fixes will be in a commit followed by a commit updating the test suite and with one last commit that update the documentation as needed.
 

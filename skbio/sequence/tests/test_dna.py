@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
 from skbio import DNA, RNA
@@ -39,6 +37,11 @@ class TestDNA(unittest.TestCase):
         seq = DNA('ATAT')
         self.assertEqual(seq.transcribe(), RNA('AUAU'))
         self.assertEqual(seq, DNA('ATAT'))
+
+    def test_cannot_subclass(self):
+        with self.assertRaisesRegex(TypeError, "Subclassing disabled"):
+            class CustomSequence(DNA):
+                pass
 
 
 if __name__ == '__main__':

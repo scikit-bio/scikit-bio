@@ -27,10 +27,8 @@ Functions
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import io
-from contextlib2 import contextmanager, ExitStack
+from contextlib import contextmanager, ExitStack
 
 from skbio.io import IOSourceError
 from skbio.io._iosources import get_io_sources, get_compression_handler
@@ -84,7 +82,7 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
     +----------------------------+----------+-----------+-------------+
     | URL                        | True     | False     | Binary      |
     +----------------------------+----------+-----------+-------------+
-    | ``[u"lines list\n"]``      | True     | True      | Text        |
+    | ``["lines list\n"]``       | True     | True      | Text        |
     +----------------------------+----------+-----------+-------------+
     | :class:`io.StringIO`       | True     | True      | Text        |
     +----------------------------+----------+-----------+-------------+
@@ -99,14 +97,10 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
     | :class:`io.BufferedRandom` | True     | True      | Binary      |
     +----------------------------+----------+-----------+-------------+
 
-    .. note:: Filehandles opened with ``open`` in Python 2 are **not**
-       supported. Use ``io.open`` if you need to pass a filehandle.
-
     .. note:: When reading a list of unicode (str) lines, the input for
        `newline` is used to determine the number of lines in the resulting file
        handle, not the number of elements in the list. This is to allow
        composition with ``file.readlines()``.
-
 
     Parameters
     ----------

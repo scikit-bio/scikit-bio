@@ -55,8 +55,6 @@ Submitting code to scikit-bio
 
 scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pull Request](https://help.github.com/articles/using-pull-requests) mechanism for reviewing and accepting submissions. You should work through the following steps to submit code to scikit-bio.
 
-**Note:** We recommend developing scikit-bio in a Python 3 environment because doctests must be written (and pass) in Python 3. See [Setting up a development environment](#setting-up-a-development-environment).
-
 1. Begin by [creating an issue](https://github.com/biocore/scikit-bio/issues) describing your proposed change (see [Types of contributions](#types-of-contributions) for details).
 
 2. [Fork](https://help.github.com/articles/fork-a-repo) the scikit-bio repository on the GitHub website.
@@ -109,11 +107,13 @@ scikit-bio is hosted on [GitHub](http://www.github.com), and we use GitHub's [Pu
 Setting up a development environment
 ------------------------------------
 
+**Note:** scikit-bio must be developed in a Python 3.4 or later environment.
+
 The recommended way to set up a development environment for contributing to scikit-bio is using [Anaconda](https://store.continuum.io/cshop/anaconda/) by Continuum Analytics, with its associated command line utility `conda`. The primary benefit of `conda` over `pip` is that on some operating systems (ie Linux), `pip` installs packages from source. This can take a very long time to install Numpy, scipy, matplotlib, etc. `conda` installs these packages using pre-built binaries, so the installation is much faster. Another benefit of `conda` is that it provides both package and environment management, which removes the necessity of using `virtualenv` separately. Not all packages are available using `conda`, therefore our strategy is to install as many packages as possible using `conda`, then install any remaining packages using `pip`.
 
 1. Install Anaconda
 
- See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions. [Miniconda](http://conda.pydata.org/docs/install/quick.html) provides a great fast way to get conda up and running.
+ See [Continuum's site](https://store.continuum.io/cshop/anaconda/) for instructions. [Miniconda](http://conda.pydata.org/docs/install/quick.html) provides a fast way to get conda up and running.
 
 2. Create a new conda environment
  ```
@@ -169,14 +169,13 @@ Testing guidelines
 
 All code that is added to scikit-bio must be unit tested, and the unit test code must be submitted in the same pull request as the library code that you are submitting. We will only merge code that is unit tested and that passes the [continuous integration build](https://github.com/biocore/scikit-bio/blob/master/.travis.yml). This build includes, but is not limited to, the following checks:
 
-- Full unit test suite executes without errors in Python 2 and 3.
-- Doctests execute correctly in Python 3.
+- Full unit test suite and doctests execute without errors in supported versions of Python 3.
 - C code can be correctly compiled.
 - Cython code is correctly generated.
 - All tests import functionality from the appropriate minimally deep API.
 - Documentation can be built.
 - Current code coverage is maintained or improved.
-- Code passes ``pep8``/``flake8`` checks.
+- Code passes ``flake8`` checks.
 
 Running ``make test`` locally during development will include a subset of the full checks performed by Travis-CI.
 

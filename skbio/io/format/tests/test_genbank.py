@@ -6,14 +6,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import map, zip
-
 import io
 import numpy as np
 import pandas as pd
 import numpy.testing as npt
-import six
 from unittest import TestCase, main
 from datetime import datetime
 
@@ -258,8 +254,8 @@ REFERENCE   1  (bases 1 to 154478)
             ['LOCUS       NP_001832                360 aa'
              '            linear   PRI 2001-12-18']]
         for line in lines:
-            with six.assertRaisesRegex(self, GenBankFormatError,
-                                       'Could not parse the LOCUS line:.*'):
+            with self.assertRaisesRegex(GenBankFormatError,
+                                        'Could not parse the LOCUS line:.*'):
                 _parse_locus(line)
 
     def test_parse_section_default(self):
@@ -334,6 +330,10 @@ REFERENCE   1  (bases 1 to 154478)
                                        'Could not parse location string: '
                                        '"%s"' % example):
                 _parse_interval(example, length)
+            with self.assertRaisesRegex(GenBankFormatError,
+                                        'Could not parse location string: '
+                                        '"%s"' % example):
+                _parse_loc_str(example, length)
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence

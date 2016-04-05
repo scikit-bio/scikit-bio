@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
 import numpy as np
@@ -118,6 +116,11 @@ class TestProtein(unittest.TestCase):
         obs = repr(Protein('*****'))
         self.assertIn('has gaps: False', obs)
         self.assertIn('has stops: True', obs)
+
+    def test_cannot_subclass(self):
+        with self.assertRaisesRegex(TypeError, "Subclassing disabled"):
+            class CustomSequence(Protein):
+                pass
 
 
 if __name__ == "__main__":

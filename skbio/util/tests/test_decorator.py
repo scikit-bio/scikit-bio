@@ -6,12 +6,12 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import inspect
 import warnings
 
-from skbio.util._decorator import classproperty, overrides, classonlymethod
+from skbio.util import classproperty
+from skbio.util._decorator import overrides, classonlymethod
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    _state_decorator)
 from skbio.util._exception import OverrideError
@@ -19,7 +19,7 @@ from skbio.util._exception import OverrideError
 
 class TestClassOnlyMethod(unittest.TestCase):
     def test_works_on_class(self):
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls):
                 return cls
@@ -27,7 +27,7 @@ class TestClassOnlyMethod(unittest.TestCase):
         self.assertEqual(A.example(), A)
 
     def test_fails_on_instance(self):
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls):
                 pass
@@ -39,7 +39,7 @@ class TestClassOnlyMethod(unittest.TestCase):
         self.assertIn('instance', str(e.exception))
 
     def test_matches_classmethod(self):
-        class A(object):
+        class A:
             pass
 
         def example(cls, thing):
@@ -60,7 +60,7 @@ class TestClassOnlyMethod(unittest.TestCase):
     def test_passes_args_kwargs(self):
         self.ran_test = False
 
-        class A(object):
+        class A:
             @classonlymethod
             def example(cls, arg1, arg2, kwarg1=None, kwarg2=None,
                         default=5):
@@ -77,7 +77,7 @@ class TestClassOnlyMethod(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def test_raises_when_missing(self):
-        class A(object):
+        class A:
             pass
 
         with self.assertRaises(OverrideError):
@@ -87,7 +87,7 @@ class TestOverrides(unittest.TestCase):
                     pass
 
     def test_doc_inherited(self):
-        class A(object):
+        class A:
             def test(self):
                 """Docstring"""
                 pass
@@ -100,7 +100,7 @@ class TestOverrides(unittest.TestCase):
         self.assertEqual(B.test.__doc__, "Docstring")
 
     def test_doc_not_inherited(self):
-        class A(object):
+        class A:
             def test(self):
                 """Docstring"""
                 pass
@@ -116,7 +116,7 @@ class TestOverrides(unittest.TestCase):
 
 class TestClassProperty(unittest.TestCase):
     def test_getter_only(self):
-        class Foo(object):
+        class Foo:
             _foo = 42
 
             @classproperty
@@ -224,11 +224,15 @@ class TestStable(TestStabilityState):
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
-        # Py2: update this to use inspect.signature when we drop Python 2
-        # inspect.getargspec is deprecated and won't exist in 3.6
-        expected = inspect.ArgSpec(
-            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
-        self.assertEqual(inspect.getargspec(f), expected)
+
+        parameters = [
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter('y', inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                              default=42)
+        ]
+        expected = inspect.Signature(parameters)
+
+        self.assertEqual(inspect.signature(f), expected)
         self.assertEqual(f.__name__, 'f')
 
     def test_missing_kwarg(self):
@@ -263,11 +267,15 @@ class TestExperimental(TestStabilityState):
 
     def test_function_signature(self):
         f = self._get_f('0.1.0')
-        # Py2: update this to use inspect.signature when we drop Python 2
-        # inspect.getargspec is deprecated and won't exist in 3.6
-        expected = inspect.ArgSpec(
-            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
-        self.assertEqual(inspect.getargspec(f), expected)
+
+        parameters = [
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter('y', inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                              default=42)
+        ]
+        expected = inspect.Signature(parameters)
+
+        self.assertEqual(inspect.signature(f), expected)
         self.assertEqual(f.__name__, 'f')
 
     def test_missing_kwarg(self):
@@ -322,11 +330,15 @@ class TestDeprecated(TestStabilityState):
     def test_function_signature(self):
         f = self._get_f('0.1.0', until='0.1.4',
                         reason='You should now use skbio.g().')
-        # Py2: update this to use inspect.signature when we drop Python 2
-        # inspect.getargspec is deprecated and won't exist in 3.6
-        expected = inspect.ArgSpec(
-            args=['x', 'y'], varargs=None, keywords=None, defaults=(42,))
-        self.assertEqual(inspect.getargspec(f), expected)
+
+        parameters = [
+            inspect.Parameter('x', inspect.Parameter.POSITIONAL_OR_KEYWORD),
+            inspect.Parameter('y', inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                              default=42)
+        ]
+        expected = inspect.Signature(parameters)
+
+        self.assertEqual(inspect.signature(f), expected)
         self.assertEqual(f.__name__, 'f')
 
     def test_missing_kwarg(self):

@@ -6,16 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-from future.builtins import zip
 
 import abc
-import copy
 import functools
 
 import numpy as np
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
@@ -23,10 +18,10 @@ from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
 from skbio.stats._misc import _pprint_strs
-from skbio.util._decorator import stable, experimental
+from skbio.util._decorator import experimental
 
 
-class SkbioObject(with_metaclass(abc.ABCMeta, object)):
+class SkbioObject(metaclass=abc.ABCMeta):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
@@ -432,7 +427,7 @@ class OrdinationResults(SkbioObject):
         return '\t%s: %s' % (attr_label, formatted_attr)
 
 
-class ElasticLines(object):
+class ElasticLines:
     """Store blocks of content separated by dashed lines.
 
     Each dashed line (separator) is as long as the longest content

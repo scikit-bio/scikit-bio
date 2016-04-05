@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
-from future.builtins import range
 
 from skbio.util._decorator import classproperty, stable, classonlymethod
 from skbio._base import SkbioObject

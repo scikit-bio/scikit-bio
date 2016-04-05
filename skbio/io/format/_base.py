@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import range
-
 import re
 import warnings
 
@@ -85,7 +81,7 @@ def _get_phred_offset_and_range(variant, phred_offset, errors):
         elif variant == 'solexa':
             phred_offset = 64
             phred_range = (-5, 62)
-            raise NotImplementedError(errors[1])
+            raise ValueError(errors[1])
         else:
             raise ValueError("Unrecognized variant %r." % variant)
     else:

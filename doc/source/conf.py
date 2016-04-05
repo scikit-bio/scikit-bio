@@ -7,6 +7,14 @@ import os
 import types
 import re
 
+if sys.version_info.major != 3:
+    raise RuntimeError("scikit-bio can only be used with Python 3. You are "
+                       "currently running Python %d." % sys.version_info.major)
+
+# Force matplotlib to not use any Xwindows backend.
+import matplotlib
+matplotlib.use('Agg')
+
 import sphinx
 import sphinx.ext.autosummary as autosummary
 
@@ -54,7 +62,7 @@ class NewAuto(autosummary.Autosummary):
                 return specials[display_name], '', summary, real_name
             return display_name, sig, summary, real_name
 
-        skip = ['__nonzero__']
+        skip = []
 
         return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
                 if e[0] not in skip]
@@ -128,6 +136,7 @@ extensions = [
 
 # Determine if the matplotlib has a recent enough version of the
 # plot_directive.
+
 try:
     from matplotlib.sphinxext import plot_directive
 except ImportError:
@@ -409,7 +418,7 @@ import scipy as sp
 np.random.seed(123)
 """
 plot_include_source = True
-#plot_formats = [('png', 96), 'pdf']
+plot_formats = [('png', 96), ]
 #plot_html_show_formats = False
 
 import math

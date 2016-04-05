@@ -12,6 +12,7 @@ from collections import Mapping
 import numpy as np
 from skbio.util._misc import merge_dicts
 
+
 class Feature(Mapping):
     '''Store the metadata of a sequence feature.
 

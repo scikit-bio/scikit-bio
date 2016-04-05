@@ -1,6 +1,4 @@
-HTTPretty <= 0.8.10
-bz2file
-contextlib2 >= 0.4.0, < 0.5
+HTTPretty >= 0.8.14
 coveralls
 natsort
 lockfile

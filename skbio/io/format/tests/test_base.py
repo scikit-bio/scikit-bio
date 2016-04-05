@@ -6,11 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
-import six
-from future.builtins import range, zip
-
 import unittest
 
 import numpy.testing as npt
@@ -39,7 +34,7 @@ class PhredDecoderTests(unittest.TestCase):
         self.assertIn('`phred_offset`', str(cm.exception))
 
     def test_solexa_variant(self):
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(ValueError) as cm:
             _decode_qual_to_phred('abcd', variant='solexa')
         self.assertIn('719', str(cm.exception))
 
@@ -124,7 +119,7 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('`phred_offset`', str(cm.exception))
 
     def test_solexa_variant(self):
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(ValueError) as cm:
             _encode_phred_to_qual([1, 2, 3], variant='solexa')
         self.assertIn('719', str(cm.exception))
 
@@ -299,32 +294,29 @@ class TestFormatFASTALikeRecords(unittest.TestCase):
             npt.assert_equal(o, e)
 
     def test_newline_character_in_id_whitespace_replacement(self):
-        with six.assertRaisesRegex(self, ValueError, 'Newline character'):
+        with self.assertRaisesRegex(ValueError, 'Newline character'):
             list(_format_fasta_like_records(self.gen, '-\n--', ' ', False))
 
     def test_newline_character_in_description_newline_replacement(self):
-        with six.assertRaisesRegex(self, ValueError, 'Newline character'):
+        with self.assertRaisesRegex(ValueError, 'Newline character'):
             list(_format_fasta_like_records(self.gen, None, 'a\nb', False))
 
     def test_empty_sequence(self):
         def blank_seq_gen():
-            for seq in (DNA('A'), Sequence(''),
-                        RNA('GG')):
-                yield seq
+            yield from (DNA('A'), Sequence(''), RNA('GG'))
 
-        with six.assertRaisesRegex(self, ValueError, '2nd.*empty'):
+        with self.assertRaisesRegex(ValueError, '2nd.*empty'):
             list(_format_fasta_like_records(blank_seq_gen(), None, None,
                                             False))
 
     def test_missing_quality_scores(self):
         def missing_qual_gen():
-            for seq in (RNA('A', positional_metadata={'quality': [42]}),
+            yield from (RNA('A', positional_metadata={'quality': [42]}),
                         Sequence('AG'),
-                        DNA('GG', positional_metadata={'quality': [41, 40]})):
-                yield seq
+                        DNA('GG', positional_metadata={'quality': [41, 40]}))
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   '2nd sequence.*quality scores'):
+        with self.assertRaisesRegex(ValueError,
+                                    '2nd sequence.*quality scores'):
             list(_format_fasta_like_records(missing_qual_gen(), '-', '-',
                                             True))
 

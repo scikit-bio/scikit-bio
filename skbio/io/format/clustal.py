@@ -49,14 +49,16 @@ Format Parameters
 -----------------
 The only supported format parameter is ``constructor``, which specifies the
 type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``IUPACSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is
-a required format parameter. For example, if you know that the clustal file
-you're reading contains DNA sequences, you would pass ``constructor=DNA`` to
-the reader call.
+be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
+and is a required format parameter. For example, if you know that the clustal
+file you're reading contains DNA sequences, you would pass ``constructor=DNA``
+to the reader call.
 
 Examples
 --------
-Assume we have a clustal-formatted file of RNA sequences::
+Assume we have a clustal-formatted file of RNA sequences:
+
+.. code-block:: none
 
     CLUSTAL W (1.82) multiple sequence alignment
 
@@ -141,9 +143,6 @@ References
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
 from skbio.io import create_format, ClustalFormatError
 from skbio.alignment import TabularMSA

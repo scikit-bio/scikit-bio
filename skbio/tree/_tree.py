@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import warnings
 from operator import or_, itemgetter
 from copy import deepcopy
@@ -17,8 +15,6 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.stats import pearsonr
-from future.builtins import zip
-import six
 
 from skbio._base import SkbioObject
 from skbio.stats.distance import DistanceMatrix
@@ -795,7 +791,7 @@ class TreeNode(SkbioObject):
         <BLANKLINE>
 
         """
-        if isinstance(node, six.string_types):
+        if isinstance(node, str):
             node = self.find(node)
 
         if not node.children:
@@ -2715,6 +2711,71 @@ class TreeNode(SkbioObject):
         other_matrix = other.tip_tip_distances(endpoints=other_nodes)
 
         return dist_f(self_matrix, other_matrix)
+
+    @experimental(as_of="0.4.2")
+    def bifurcate(self, insert_length=None):
+        r"""Reorders the tree into a bifurcating tree.
+
+        All nodes that have more than 2 children will
+        have additional intermediate nodes inserted to ensure that
+        every node has only 2 children.
+
+        Parameters
+        ----------
+        insert_length : int, optional
+            The branch length assigned to all inserted nodes.
+
+        See Also
+        --------
+        prune
+
+        Notes
+        -----
+        Any nodes that have a single child can be collapsed using the
+        prune method to create strictly bifurcating trees.
+
+        Examples
+        --------
+        >>> from skbio import TreeNode
+        >>> tree = TreeNode.read(["((a,b,g,h)c,(d,e)f)root;"])
+        >>> print(tree.ascii_art())
+                            /-a
+                           |
+                           |--b
+                  /c-------|
+                 |         |--g
+                 |         |
+        -root----|          \-h
+                 |
+                 |          /-d
+                  \f-------|
+                            \-e
+        >>> tree.bifurcate()
+        >>> print(tree.ascii_art())
+                            /-h
+                  /c-------|
+                 |         |          /-g
+                 |          \--------|
+                 |                   |          /-a
+        -root----|                    \--------|
+                 |                              \-b
+                 |
+                 |          /-d
+                  \f-------|
+                            \-e
+        """
+        for n in self.traverse(include_self=True):
+            if len(n.children) > 2:
+                stack = n.children
+                while len(stack) > 2:
+                    ind = stack.pop()
+                    intermediate = TreeNode()
+                    intermediate.length = insert_length
+                    intermediate.extend(stack)
+                    n.append(intermediate)
+                    for k in stack:
+                        n.remove(k)
+                    n.extend([ind, intermediate])
 
     @experimental(as_of="0.4.0")
     def index_tree(self):

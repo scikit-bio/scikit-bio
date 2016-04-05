@@ -6,15 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
+import io
 import unittest
 
 from skbio import TreeNode
 from skbio.io import NewickFormatError
 from skbio.io.format.newick import (
     _newick_to_tree_node, _tree_node_to_newick, _newick_sniffer)
-from skbio.io._fileobject import StringIO
 
 
 class TestNewick(unittest.TestCase):
@@ -302,7 +300,7 @@ class TestNewick(unittest.TestCase):
     def test_newick_to_tree_node_valid_files(self):
         for tree, newicks in self.trees_newick_lists:
             for newick in newicks:
-                fh = StringIO(newick)
+                fh = io.StringIO(newick)
                 read_tree = _newick_to_tree_node(fh)
 
                 self._assert_equal(tree, read_tree)
@@ -311,7 +309,7 @@ class TestNewick(unittest.TestCase):
 
     def test_newick_to_tree_node_invalid_files(self):
         for invalid, error_fragments in self.invalid_newicks:
-            fh = StringIO(invalid)
+            fh = io.StringIO(invalid)
             with self.assertRaises(NewickFormatError) as cm:
                 _newick_to_tree_node(fh)
             for frag in error_fragments:
@@ -321,7 +319,7 @@ class TestNewick(unittest.TestCase):
     def test_tree_node_to_newick(self):
         for tree, newicks in self.trees_newick_lists:
             newick = newicks[0]
-            fh = StringIO()
+            fh = io.StringIO()
             _tree_node_to_newick(tree, fh)
 
             self.assertEqual(newick, fh.getvalue())
@@ -331,9 +329,9 @@ class TestNewick(unittest.TestCase):
     def test_roundtrip(self):
         for tree, newicks in self.trees_newick_lists:
             newick = newicks[0]
-            fh = StringIO(newick)
+            fh = io.StringIO(newick)
             tree = _newick_to_tree_node(fh)
-            fh2 = StringIO()
+            fh2 = io.StringIO()
             _tree_node_to_newick(tree, fh2)
             fh2.seek(0)
             tree2 = _newick_to_tree_node(fh2)
@@ -345,9 +343,9 @@ class TestNewick(unittest.TestCase):
             fh2.close()
 
     def test_newick_to_tree_node_convert_underscores(self):
-        fh = StringIO('(_:0.1, _a, _b)__;')
+        fh = io.StringIO('(_:0.1, _a, _b)__;')
         tree = _newick_to_tree_node(fh, convert_underscores=False)
-        fh2 = StringIO()
+        fh2 = io.StringIO()
         _tree_node_to_newick(tree, fh2)
         self.assertEqual(fh2.getvalue(), "('_':0.1,'_a','_b')'__';\n")
         fh2.close()
@@ -356,13 +354,13 @@ class TestNewick(unittest.TestCase):
     def test_newick_sniffer_valid_files(self):
         for _, newicks in self.trees_newick_lists:
             for newick in newicks:
-                fh = StringIO(newick)
+                fh = io.StringIO(newick)
                 self.assertEqual(_newick_sniffer(fh), (True, {}))
                 fh.close()
 
     def test_newick_sniffer_invalid_files(self):
         for invalid, _ in self.invalid_newicks:
-            fh = StringIO(invalid)
+            fh = io.StringIO(invalid)
             self.assertEqual(_newick_sniffer(fh), (False, {}))
             fh.close()
 
