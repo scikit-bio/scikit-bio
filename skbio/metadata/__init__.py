@@ -20,7 +20,7 @@ from skbio.util import TestRunner
 from ._feature import Feature
 from ._interval import IntervalMetadata
 from .intersection import Interval
-from .mixin import (IntervalMetadataMixin, PositionalMetadataMixin,
+from ._mixin import (IntervalMetadataMixin, PositionalMetadataMixin,
                     MetadataMixin)
 
 __all__ = ['Feature', 'Interval', 'IntervalMetadata',
