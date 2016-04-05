@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from collections import Mapping
-import numpy as np
 from skbio.util._misc import merge_dicts
 
 
@@ -41,7 +40,7 @@ class Feature(Mapping):
         return self.__d[key]
 
     def __iter__(self):
-         return iter(self.__d)
+        return iter(self.__d)
 
     def __repr__(self):
         return ';'.join('{0}:{1}'.format(k, self[k]) for k in self)
@@ -84,5 +83,3 @@ class Feature(Mapping):
         """
         __d = dict(*args, **kwargs)
         return Feature(**merge_dicts(self.__d, __d))
-
-

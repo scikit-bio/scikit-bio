@@ -6,14 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 from __future__ import absolute_import, division, print_function
-from future.utils import with_metaclass
-
-import abc
 
 from ._feature import Feature
 from .intersection import Interval, IntervalTree
-import itertools
-from collections import defaultdict
 from skbio.util._misc import merge_dicts
 
 
@@ -44,11 +39,11 @@ class IntervalMetadata():
         -------
         IntervalMetadata
         """
-        rvs_coord = lambda x: (length-x[1], length-x[0])
         rvs_features = {}
         for k, v in self.features.items():
             xs = map(_polish_interval, v)
-            rvs_features[k] = list(map(rvs_coord, xs))
+            rvs_features[k] = list(map(lambda x: (length-x[1], length-x[0]),
+                                       xs))
         return IntervalMetadata(rvs_features)
 
     def update(self, old_feature, new_feature):
@@ -109,7 +104,7 @@ class IntervalMetadata():
         queries = []
         for feature in self.features.keys():
             if feature[key] == value:
-                 queries.append(feature)
+                queries.append(feature)
         return queries
 
     def query(self, *args, **kwargs):
@@ -121,9 +116,9 @@ class IntervalMetadata():
             Iterable of tuples or Intervals
         kwargs : dict
             Keyword arguments of feature name and feature value, which can
-            be passed to ``dict``.  This is used to specify the search parameters.
-            If the `location` keyword is passed, then an interval lookup will be
-            performed.
+            be passed to ``dict``.  This is used to specify the search
+            parameters. If the `location` keyword is passed, then an interval
+            lookup will be performed.
 
         Note
         ----
@@ -181,10 +176,10 @@ class IntervalMetadata():
         oivs = list(map(sorted, other.features.values()))
 
         equalIntervals = sorted(sivs) == sorted(oivs)
-        equalFeatures = self.features.keys() ==\
-                        other.features.keys()
+        equalFeatures = self.features.keys() == other.features.keys()
 
         return equalIntervals and equalFeatures
+
 
 def _polish_interval(interval):
     if isinstance(interval, tuple):

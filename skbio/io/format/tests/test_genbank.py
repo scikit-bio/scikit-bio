@@ -7,11 +7,8 @@
 # ----------------------------------------------------------------------------
 
 import io
-import numpy as np
-import pandas as pd
 import numpy.testing as npt
 from unittest import TestCase, main
-from datetime import datetime
 
 from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
@@ -113,26 +110,26 @@ class GenBankIOTests(TestCase):
              'VERSION': 'M14399.1  GI:145229'},
             {
                 Feature(db_xref='"taxon:562"',
-                                 left_partial_=False,
-                                 location='1..63',
-                                 mol_type='"mRNA"',
-                                 organism='"Escherichia coli"',
-                                 rc_=False,
-                                 right_partial_=False,
-                                 type_='source'):[(0, 63)],
+                        left_partial_=False,
+                        location='1..63',
+                        mol_type='"mRNA"',
+                        organism='"Escherichia coli"',
+                        rc_=False,
+                        right_partial_=False,
+                        type_='source'): [(0, 63)],
                 Feature(codon_start='1',
-                                 db_xref=('"GI:145230"',
-                                          '"taxon:562"',
-                                          '"taxon:561"'),
-                                 left_partial_=False,
-                                 location='1..>63',
-                                 note='"alkaline phosphatase signal peptide"',
-                                 protein_id='"AAA23431.1"',
-                                 rc_=False,
-                                 right_partial_=True,
-                                 transl_table='11',
-                                 translation='"MKQSTIALAVLPLLFTPVTKA"',
-                                 type_='CDS'):[(0, 63)]
+                        db_xref=('"GI:145230"',
+                                 '"taxon:562"',
+                                 '"taxon:561"'),
+                        left_partial_=False,
+                        location='1..>63',
+                        note='"alkaline phosphatase signal peptide"',
+                        protein_id='"AAA23431.1"',
+                        rc_=False,
+                        right_partial_=True,
+                        transl_table='11',
+                        translation='"MKQSTIALAVLPLLFTPVTKA"',
+                        type_='CDS'): [(0, 63)]
             },
             RNA)
 
@@ -177,13 +174,13 @@ class GenBankIOTests(TestCase):
                                       organism='"Bacteria"',
                                       rc_=False,
                                       right_partial_=False,
-                                      type_='source'):[(0, 9)],
+                                      type_='source'): [(0, 9)],
                               Feature(left_partial_=False,
                                       location='1..>9',
                                       product='"L-carnitine amidase"',
                                       rc_=False,
                                       right_partial_=True,
-                                      type_='Protein') : [(0, 9)]
+                                      type_='Protein'): [(0, 9)]
              },
              Protein),
             ('catgcaggc',
@@ -210,13 +207,13 @@ class GenBankIOTests(TestCase):
                                       location='1..9',
                                       rc_=False,
                                       right_partial_=False,
-                                      type_='source'):[(0, 9)],
+                                      type_='source'): [(0, 9)],
                               Feature(left_partial_=True,
                                       location='complement(<2..>8)',
                                       product='"16S ribosomal RNA"',
                                       rc_=True,
                                       right_partial_=True,
-                                      type_='rRNA'):[(1, 8)]},
+                                      type_='rRNA'): [(1, 8)]},
              DNA))
 
 
@@ -407,7 +404,6 @@ class WriterTests(GenBankIOTests):
         fh = io.StringIO()
         for i, (seq, md, pmd, constructor) in enumerate(self.multi_invs):
             obj = Sequence(seq, md, interval_metadata=pmd, lowercase=True)
-            features = obj.interval_metadata.features.keys()
 
             _sequence_to_genbank(obj, fh)
         obs = fh.getvalue()

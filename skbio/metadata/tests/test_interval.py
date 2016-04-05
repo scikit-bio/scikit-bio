@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-from skbio.metadata import IntervalMetadataMixin, IntervalMetadata, Interval, Feature
+from skbio.metadata import IntervalMetadata, Interval, Feature
 from skbio.metadata._interval import _polish_interval
 
 
@@ -94,8 +94,10 @@ class TestIntervalMetadataMixin(unittest.TestCase):
     def test_update_multiple(self):
         # Tests to see if all corresponding intervals are updated
         interval_metadata = IntervalMetadata()
-        interval_metadata.add(Feature(gene='sagA', location=0), 1, (4, 7))
-        interval_metadata.add(Feature(gene='sagB', location=0), (3, 5), (10, 15))
+        interval_metadata.add(Feature(gene='sagA', location=0),
+                              1, (4, 7))
+        interval_metadata.add(Feature(gene='sagB', location=0),
+                              (3, 5), (10, 15))
         interval_metadata.update(Feature(gene='sagB', location=0),
                                  Feature(gene='sagB', location=1))
         feats = interval_metadata.query(gene='sagB')
@@ -134,9 +136,9 @@ class TestIntervalMetadataMixin(unittest.TestCase):
 
     def test_concat(self):
         interval_metadata1 = IntervalMetadata(features={
-                           Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
-                           Feature(gene='sagB', location='3'): [(3, 5)]
-                       })
+            Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+            Feature(gene='sagB', location='3'): [(3, 5)]
+        })
 
         interval_metadata2 = IntervalMetadata(features={
                    Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
@@ -146,7 +148,8 @@ class TestIntervalMetadataMixin(unittest.TestCase):
         self.assertEqual(catted_metadata.features, {
                          Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
                          Feature(gene='sagB', location='3'): [(3, 5)],
-                         Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
+                         Feature(gene='sagC', location='10'): [(10, 12),
+                                                               (24, 27)],
                          Feature(gene='sagD', location='13'): [(13, 15)]})
 
     def test_concat_inplace(self):
@@ -161,9 +164,11 @@ class TestIntervalMetadataMixin(unittest.TestCase):
                })
         interval_metadata1.concat(interval_metadata2, inplace=True)
         self.assertEqual(interval_metadata1.features, {
-                         Feature(gene='sagA', location='0'): [(0, 2), (4, 7)],
+                         Feature(gene='sagA', location='0'): [(0, 2),
+                                                              (4, 7)],
                          Feature(gene='sagB', location='3'): [(3, 5)],
-                         Feature(gene='sagC', location='10'): [(10, 12), (24, 27)],
+                         Feature(gene='sagC', location='10'): [(10, 12),
+                                                               (24, 27)],
                          Feature(gene='sagD', location='13'): [(13, 15)]})
 
     def test_eq(self):
@@ -178,5 +183,6 @@ class TestIntervalMetadataMixin(unittest.TestCase):
                })
         self.assertTrue(interval_metadata1 == interval_metadata2)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     unittest.main()

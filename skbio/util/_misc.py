@@ -390,6 +390,7 @@ def _handle_error_codes(dir_name, suppress_errors=False,
     else:
         raise OSError(error_strings[error_code])
 
+
 @experimental(as_of="0.4.2")
 def merge_dicts(*dict_args):
     '''

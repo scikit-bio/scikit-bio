@@ -261,8 +261,6 @@ References
 # ----------------------------------------------------------------------------
 
 import re
-import numpy as np
-import pandas as pd
 from functools import partial
 
 from skbio.io import create_format, GenBankFormatError
@@ -411,8 +409,8 @@ def _parse_single_genbank(chunks):
             header, _parse_section_default)
 
         if header == 'FEATURES':
-            # This requires 'LOCUS' line parsed before 'FEATURE_METADATA', which should
-            # be true and is implicitly checked by the sniffer.
+            # This requires 'LOCUS' line parsed before 'FEATURE_METADATA',
+            # which should be true and is implicitly checked by the sniffer.
             parser = partial(
                 parser, length=metadata['LOCUS']['size'])
 
@@ -452,7 +450,8 @@ def _serialize_single_genbank(obj, fh):
         elif header == 'FEATURES':
             # This will need to change
             features = obj.interval_metadata.features.keys()
-            out = serializer(header, sorted(features, key=lambda x: x['location']))
+            out = serializer(header, sorted(features,
+                                            key=lambda x: x['location']))
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
         else:
@@ -730,6 +729,7 @@ def _serialize_qualifier(key, value):
 
     return '/{k}={v}'.format(k=key, v=value)
 
+
 def _parse_interval(loc_str, length):
     '''Parse location string and stores results in intervals.
 
@@ -748,7 +748,6 @@ def _parse_interval(loc_str, length):
     TODO:
     handle (b), (c), (e) cases correctly
     '''
-    pmd = np.zeros(length, dtype=bool)
     intervals = []
     res = {'rc_': False,
            'left_partial_': False,

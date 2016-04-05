@@ -8,23 +8,17 @@
 
 from __future__ import absolute_import, division, print_function
 from future.utils import with_metaclass
-from future.builtins import zip
 
 import abc
 import copy
-import functools
 
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
-from IPython.core.pylabtools import print_figure
-from IPython.core.display import Image, SVG
 
-from skbio.stats._misc import _pprint_strs
 from skbio.util._decorator import stable, experimental
 from skbio.metadata._interval import IntervalMetadata
+
 
 class MetadataMixin(with_metaclass(abc.ABCMeta, object)):
     @property

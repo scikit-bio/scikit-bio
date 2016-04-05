@@ -22,8 +22,7 @@ from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
 from skbio.metadata._feature import Feature
 from skbio.metadata._interval import _polish_interval
-from skbio.metadata import IntervalMetadata
-from skbio.metadata import MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin
+from skbio.metadata import IntervalMetadataMixin
 
 
 class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
@@ -786,11 +785,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         Parameters
         ----------
         indexable : int, slice, iterable (int and slice), 1D array_like (bool)
-            skbio.sequence.Feature. The position(s) to return from this sequence.
+        skbio.sequence.Feature. The position(s) to return from this sequence.
             If `indexable` is an iterable of integers, these are assumed to be
-            indices in the sequence to keep. If `indexable` is a 1D ``array_like``
-            of booleans, these are assumed to be the positions in the sequence to
-            keep.
+            indices in the sequence to keep. If `indexable` is a 1D
+            ``array_like`` of booleans, these are assumed to be the positions
+            in the sequence to keep.
 
         Returns
         -------
@@ -857,11 +856,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             return self._constructor(
                 sequence=seq,
                 metadata=self.metadata,
-                interval_metadata={indexable:[]})
+                interval_metadata={indexable: []})
 
         elif (not isinstance(indexable, np.ndarray) and
-             ((not isinstance(indexable, str)) and
-              hasattr(indexable, '__iter__'))):
+              ((not isinstance(indexable, str)) and
+               hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
 
@@ -2280,4 +2279,3 @@ def _slices_from_iter(array, indexables):
             raise IndexError("Cannot slice sequence from iterable "
                              "containing %r." % i)
         yield array[i]
-

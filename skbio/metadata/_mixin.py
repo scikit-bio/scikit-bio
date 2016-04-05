@@ -14,7 +14,7 @@ import pandas as pd
 
 from skbio.util._decorator import stable, experimental
 from skbio.metadata._interval import IntervalMetadata
-from skbio.util._decorator import stable, deprecated
+from skbio.util._decorator import deprecated
 
 
 class MetadataMixin(metaclass=abc.ABCMeta):
@@ -357,6 +357,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
         """
         return len(self.positional_metadata.columns) > 0
+
 
 class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     ''' Store metadata corresponding to Features and Intervals.
