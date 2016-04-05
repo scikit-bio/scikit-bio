@@ -647,8 +647,7 @@ def _parse_single_feature(lines, length):
 
     Returns
     -------
-    a pandas.Series of `positional_metadata` for the feature with its name
-    a frozen dict of `metadata`.
+    a Feature object with a list of tuples representing Intervals
 
     '''
     feature_md = {}
