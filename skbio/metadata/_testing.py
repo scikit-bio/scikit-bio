@@ -25,7 +25,6 @@ class MetadataMixinTests:
         for md in None, {}:
             obj = self._metadata_constructor_(metadata=md)
 
-            self.assertFalse(obj.has_metadata())
             self.assertEqual(obj.metadata, {})
 
     def test_constructor_with_metadata(self):
@@ -35,10 +34,6 @@ class MetadataMixinTests:
         obj = self._metadata_constructor_(
                 metadata={'': '', 123: {'a': 'b', 'c': 'd'}})
         self.assertEqual(obj.metadata, {'': '', 123: {'a': 'b', 'c': 'd'}})
-
-    def test_constructor_handles_missing_metadata_efficiently(self):
-        self.assertIsNone(self._metadata_constructor_()._metadata)
-        self.assertIsNone(self._metadata_constructor_(metadata=None)._metadata)
 
     def test_constructor_makes_shallow_copy_of_metadata(self):
         md = {'foo': 'bar', 42: []}
@@ -70,14 +65,6 @@ class MetadataMixinTests:
         self.assertReallyEqual(self._metadata_constructor_(metadata={}),
                                self._metadata_constructor_(metadata={}))
 
-    def test_eq_handles_missing_metadata_efficiently(self):
-        obj1 = self._metadata_constructor_()
-        obj2 = self._metadata_constructor_()
-        self.assertReallyEqual(obj1, obj2)
-
-        self.assertIsNone(obj1._metadata)
-        self.assertIsNone(obj2._metadata)
-
     def test_ne(self):
         # Both have metadata.
         obj1 = self._metadata_constructor_(metadata={'id': 'foo'})
@@ -96,8 +83,9 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNone(obj._metadata)
-        self.assertIsNone(obj_copy._metadata)
+        self.assertEqual(obj.metadata, {})
+        self.assertEqual(obj_copy.metadata, {})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
 
     def test_copy_metadata_empty(self):
         obj = self._metadata_constructor_(metadata={})
@@ -106,8 +94,9 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertEqual(obj._metadata, {})
-        self.assertIsNone(obj_copy._metadata)
+        self.assertEqual(obj.metadata, {})
+        self.assertEqual(obj_copy.metadata, {})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
 
     def test_copy_with_metadata(self):
         obj = self._metadata_constructor_(metadata={'foo': [1]})
@@ -116,8 +105,10 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNot(obj._metadata, obj_copy._metadata)
-        self.assertIs(obj._metadata['foo'], obj_copy._metadata['foo'])
+        self.assertEqual(obj.metadata, {'foo': [1]})
+        self.assertEqual(obj_copy.metadata, {'foo': [1]})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
+        self.assertIs(obj.metadata['foo'], obj_copy.metadata['foo'])
 
         obj_copy.metadata['foo'].append(2)
         obj_copy.metadata['foo2'] = 42
@@ -132,8 +123,9 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNone(obj._metadata)
-        self.assertIsNone(obj_copy._metadata)
+        self.assertEqual(obj.metadata, {})
+        self.assertEqual(obj_copy.metadata, {})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
 
     def test_deepcopy_metadata_empty(self):
         obj = self._metadata_constructor_(metadata={})
@@ -142,8 +134,9 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertEqual(obj._metadata, {})
-        self.assertIsNone(obj_copy._metadata)
+        self.assertEqual(obj.metadata, {})
+        self.assertEqual(obj_copy.metadata, {})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
 
     def test_deepcopy_with_metadata(self):
         obj = self._metadata_constructor_(metadata={'foo': [1]})
@@ -152,8 +145,10 @@ class MetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNot(obj._metadata, obj_copy._metadata)
-        self.assertIsNot(obj._metadata['foo'], obj_copy._metadata['foo'])
+        self.assertEqual(obj.metadata, {'foo': [1]})
+        self.assertEqual(obj_copy.metadata, {'foo': [1]})
+        self.assertIsNot(obj.metadata, obj_copy.metadata)
+        self.assertIsNot(obj.metadata['foo'], obj_copy.metadata['foo'])
 
         obj_copy.metadata['foo'].append(2)
         obj_copy.metadata['foo2'] = 42
@@ -182,22 +177,17 @@ class MetadataMixinTests:
     def test_metadata_getter_no_metadata(self):
         obj = self._metadata_constructor_()
 
-        self.assertIsNone(obj._metadata)
         self.assertIsInstance(obj.metadata, dict)
         self.assertEqual(obj.metadata, {})
-        self.assertIsNotNone(obj._metadata)
 
     def test_metadata_setter(self):
         obj = self._metadata_constructor_()
-
-        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
 
         obj.metadata = {'hello': 'world'}
-        self.assertTrue(obj.has_metadata())
         self.assertEqual(obj.metadata, {'hello': 'world'})
 
         obj.metadata = {}
-        self.assertFalse(obj.has_metadata())
         self.assertEqual(obj.metadata, {})
 
     def test_metadata_setter_makes_shallow_copy(self):
@@ -230,28 +220,22 @@ class MetadataMixinTests:
         self.assertEqual(obj.metadata, {'foo': 'bar'})
 
         del obj.metadata
-        self.assertIsNone(obj._metadata)
-        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
 
         # Delete again.
         del obj.metadata
-        self.assertIsNone(obj._metadata)
-        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
 
         obj = self._metadata_constructor_()
 
-        self.assertIsNone(obj._metadata)
-        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
         del obj.metadata
-        self.assertIsNone(obj._metadata)
-        self.assertFalse(obj.has_metadata())
+        self.assertEqual(obj.metadata, {})
 
     def test_has_metadata(self):
         obj = self._metadata_constructor_()
 
         self.assertFalse(obj.has_metadata())
-        # Handles metadata efficiently.
-        self.assertIsNone(obj._metadata)
 
         self.assertFalse(
                 self._metadata_constructor_(metadata={}).has_metadata())
@@ -306,13 +290,17 @@ class PositionalMetadataMixinTests:
             self._positional_metadata_constructor_(
                 4, positional_metadata=pd.DataFrame({'quality': range(5)}))
 
+        # Empty DataFrame wrong size.
+        with self.assertRaisesRegex(ValueError, '\(2\).*\(3\)'):
+            self._positional_metadata_constructor_(
+                3, positional_metadata=pd.DataFrame(index=range(2)))
+
     def test_constructor_no_positional_metadata(self):
         # Length zero with missing/empty positional metadata.
         for empty in None, {}, pd.DataFrame():
             obj = self._positional_metadata_constructor_(
                 0, positional_metadata=empty)
 
-            self.assertFalse(obj.has_positional_metadata())
             assert_data_frame_almost_equal(obj.positional_metadata,
                                            pd.DataFrame(index=np.arange(0)))
 
@@ -320,7 +308,6 @@ class PositionalMetadataMixinTests:
         obj = self._positional_metadata_constructor_(
             3, positional_metadata=None)
 
-        self.assertFalse(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=np.arange(3)))
 
@@ -329,7 +316,6 @@ class PositionalMetadataMixinTests:
             obj = self._positional_metadata_constructor_(
                 0, positional_metadata={'foo': data})
 
-            self.assertTrue(obj.has_positional_metadata())
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
                 pd.DataFrame({'foo': data}, index=np.arange(0)))
@@ -339,7 +325,6 @@ class PositionalMetadataMixinTests:
             obj = self._positional_metadata_constructor_(
                 1, positional_metadata={'foo': data})
 
-            self.assertTrue(obj.has_positional_metadata())
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
                 pd.DataFrame({'foo': data}, index=np.arange(1)))
@@ -351,7 +336,6 @@ class PositionalMetadataMixinTests:
             obj = self._positional_metadata_constructor_(
                 9, positional_metadata={'foo': data})
 
-            self.assertTrue(obj.has_positional_metadata())
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
                 pd.DataFrame({'foo': data}, index=np.arange(9)))
@@ -361,7 +345,6 @@ class PositionalMetadataMixinTests:
             5, positional_metadata={'foo': np.arange(5),
                                     'bar': np.arange(5)[::-1]})
 
-        self.assertTrue(obj.has_positional_metadata())
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': np.arange(5),
@@ -373,19 +356,10 @@ class PositionalMetadataMixinTests:
         obj = self._positional_metadata_constructor_(
             5, positional_metadata=df)
 
-        self.assertTrue(obj.has_positional_metadata())
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': np.arange(5),
                           'bar': np.arange(5)[::-1]}, index=np.arange(5)))
-
-    def test_constructor_handles_missing_positional_metadata_efficiently(self):
-        obj = self._positional_metadata_constructor_(4)
-        self.assertIsNone(obj._positional_metadata)
-
-        obj = self._positional_metadata_constructor_(
-            4, positional_metadata=None)
-        self.assertIsNone(obj._positional_metadata)
 
     def test_constructor_makes_shallow_copy_of_positional_metadata(self):
         df = pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
@@ -465,14 +439,6 @@ class PositionalMetadataMixinTests:
                 self._positional_metadata_constructor_(
                     2, positional_metadata=empty))
 
-    def test_eq_handles_missing_positional_metadata_efficiently(self):
-        obj1 = self._positional_metadata_constructor_(1)
-        obj2 = self._positional_metadata_constructor_(1)
-        self.assertReallyEqual(obj1, obj2)
-
-        self.assertIsNone(obj1._positional_metadata)
-        self.assertIsNone(obj2._positional_metadata)
-
     def test_ne_len_zero(self):
         # Both have positional metadata.
         obj1 = self._positional_metadata_constructor_(
@@ -501,6 +467,13 @@ class PositionalMetadataMixinTests:
         obj2 = self._positional_metadata_constructor_(3)
         self.assertReallyNotEqual(obj1, obj2)
 
+    def test_ne_len_mismatch(self):
+        obj1 = self._positional_metadata_constructor_(
+            3, positional_metadata=pd.DataFrame(index=range(3)))
+        obj2 = self._positional_metadata_constructor_(
+            2, positional_metadata=pd.DataFrame(index=range(2)))
+        self.assertReallyNotEqual(obj1, obj2)
+
     def test_copy_positional_metadata_none(self):
         obj = self._positional_metadata_constructor_(3)
         obj_copy = copy.copy(obj)
@@ -508,8 +481,11 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNone(obj._positional_metadata)
-        self.assertIsNone(obj_copy._positional_metadata)
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        assert_data_frame_almost_equal(obj_copy.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNot(obj.positional_metadata, obj_copy.positional_metadata)
 
     def test_copy_positional_metadata_empty(self):
         obj = self._positional_metadata_constructor_(
@@ -519,9 +495,11 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        assert_data_frame_almost_equal(obj._positional_metadata,
+        assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
-        self.assertIsNone(obj_copy._positional_metadata)
+        assert_data_frame_almost_equal(obj_copy.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNot(obj.positional_metadata, obj_copy.positional_metadata)
 
     def test_copy_with_positional_metadata(self):
         obj = self._positional_metadata_constructor_(
@@ -532,12 +510,21 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNot(obj._positional_metadata,
-                         obj_copy._positional_metadata)
-        self.assertIsNot(obj._positional_metadata.values,
-                         obj_copy._positional_metadata.values)
-        self.assertIs(obj._positional_metadata.loc[0, 'bar'],
-                      obj_copy._positional_metadata.loc[0, 'bar'])
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}, index=range(4)))
+        assert_data_frame_almost_equal(
+            obj_copy.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}, index=range(4)))
+
+        self.assertIsNot(obj.positional_metadata,
+                         obj_copy.positional_metadata)
+        self.assertIsNot(obj.positional_metadata.values,
+                         obj_copy.positional_metadata.values)
+        self.assertIs(obj.positional_metadata.loc[0, 'bar'],
+                      obj_copy.positional_metadata.loc[0, 'bar'])
 
         obj_copy.positional_metadata.loc[0, 'bar'].append(1)
         obj_copy.positional_metadata.loc[0, 'baz'] = 43
@@ -558,8 +545,11 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNone(obj._positional_metadata)
-        self.assertIsNone(obj_copy._positional_metadata)
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        assert_data_frame_almost_equal(obj_copy.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNot(obj.positional_metadata, obj_copy.positional_metadata)
 
     def test_deepcopy_positional_metadata_empty(self):
         obj = self._positional_metadata_constructor_(
@@ -569,9 +559,11 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        assert_data_frame_almost_equal(obj._positional_metadata,
+        assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
-        self.assertIsNone(obj_copy._positional_metadata)
+        assert_data_frame_almost_equal(obj_copy.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
+        self.assertIsNot(obj.positional_metadata, obj_copy.positional_metadata)
 
     def test_deepcopy_with_positional_metadata(self):
         obj = self._positional_metadata_constructor_(
@@ -582,12 +574,20 @@ class PositionalMetadataMixinTests:
         self.assertEqual(obj, obj_copy)
         self.assertIsNot(obj, obj_copy)
 
-        self.assertIsNot(obj._positional_metadata,
-                         obj_copy._positional_metadata)
-        self.assertIsNot(obj._positional_metadata.values,
-                         obj_copy._positional_metadata.values)
-        self.assertIsNot(obj._positional_metadata.loc[0, 'bar'],
-                         obj_copy._positional_metadata.loc[0, 'bar'])
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}, index=range(4)))
+        assert_data_frame_almost_equal(
+            obj_copy.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}, index=range(4)))
+
+        self.assertIsNot(obj.positional_metadata, obj_copy.positional_metadata)
+        self.assertIsNot(obj.positional_metadata.values,
+                         obj_copy.positional_metadata.values)
+        self.assertIsNot(obj.positional_metadata.loc[0, 'bar'],
+                         obj_copy.positional_metadata.loc[0, 'bar'])
 
         obj_copy.positional_metadata.loc[0, 'bar'].append(1)
         obj_copy.positional_metadata.loc[0, 'baz'] = 43
@@ -633,12 +633,10 @@ class PositionalMetadataMixinTests:
     def test_positional_metadata_getter_no_positional_metadata(self):
         obj = self._positional_metadata_constructor_(4)
 
-        self.assertIsNone(obj._positional_metadata)
         self.assertIsInstance(obj.positional_metadata, pd.DataFrame)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame(index=np.arange(4)))
-        self.assertIsNotNone(obj._positional_metadata)
 
     def test_positional_metadata_getter_set_column_series(self):
         length = 8
@@ -671,31 +669,29 @@ class PositionalMetadataMixinTests:
     def test_positional_metadata_setter_pandas_consumable(self):
         obj = self._positional_metadata_constructor_(3)
 
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
 
         obj.positional_metadata = {'foo': [3, 2, 1]}
-        self.assertTrue(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [3, 2, 1]}))
 
         obj.positional_metadata = pd.DataFrame(index=np.arange(3))
-        self.assertFalse(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=np.arange(3)))
 
     def test_positional_metadata_setter_data_frame(self):
         obj = self._positional_metadata_constructor_(3)
 
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
 
         obj.positional_metadata = pd.DataFrame({'foo': [3, 2, 1]},
                                                index=['a', 'b', 'c'])
-        self.assertTrue(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [3, 2, 1]}))
 
         obj.positional_metadata = pd.DataFrame(index=np.arange(3))
-        self.assertFalse(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=np.arange(3)))
 
@@ -703,14 +699,12 @@ class PositionalMetadataMixinTests:
         obj = self._positional_metadata_constructor_(
             0, positional_metadata={'foo': []})
 
-        self.assertTrue(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': []}))
 
         # `None` behavior differs from constructor.
         obj.positional_metadata = None
 
-        self.assertFalse(obj.has_positional_metadata())
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=np.arange(0)))
 
@@ -791,26 +785,25 @@ class PositionalMetadataMixinTests:
                                        pd.DataFrame({'foo': [1, 2, 3]}))
 
         del obj.positional_metadata
-        self.assertIsNone(obj._positional_metadata)
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
 
         # Delete again.
         del obj.positional_metadata
-        self.assertIsNone(obj._positional_metadata)
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
 
         obj = self._positional_metadata_constructor_(3)
 
-        self.assertIsNone(obj._positional_metadata)
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
         del obj.positional_metadata
-        self.assertIsNone(obj._positional_metadata)
-        self.assertFalse(obj.has_positional_metadata())
+        assert_data_frame_almost_equal(obj.positional_metadata,
+                                       pd.DataFrame(index=range(3)))
 
     def test_has_positional_metadata(self):
         obj = self._positional_metadata_constructor_(4)
         self.assertFalse(obj.has_positional_metadata())
-        self.assertIsNone(obj._positional_metadata)
 
         obj = self._positional_metadata_constructor_(0, positional_metadata={})
         self.assertFalse(obj.has_positional_metadata())

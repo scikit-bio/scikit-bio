@@ -384,14 +384,6 @@ class TestStockholmReader(unittest.TestCase):
                                     '`constructor`.*`GrammaredSequence`'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
 
-    def test_handles_missing_metadata_efficiently(self):
-        msa = _stockholm_to_tabular_msa(get_data_path('stockholm_minimal'),
-                                        constructor=DNA)
-        self.assertIsNone(msa._metadata)
-        self.assertIsNone(msa._positional_metadata)
-        self.assertIsNone(msa[0]._metadata)
-        self.assertIsNone(msa[0]._positional_metadata)
-
 
 class TestStockholmWriter(unittest.TestCase):
     def test_msa_to_stockholm_extensive(self):
@@ -597,15 +589,6 @@ class TestStockholmWriter(unittest.TestCase):
         with io.open(fp) as fh:
             exp = fh.read()
         self.assertEqual(obs, exp)
-
-    def test_handles_missing_metadata_efficiently(self):
-        msa = TabularMSA([DNA('ACTG'), DNA('GTCA')], index=['seq1', 'seq2'])
-        fh = io.StringIO()
-        _tabular_msa_to_stockholm(msa, fh)
-        self.assertIsNone(msa._metadata)
-        self.assertIsNone(msa._positional_metadata)
-        self.assertIsNone(msa[0]._metadata)
-        self.assertIsNone(msa[0]._positional_metadata)
 
     def test_unoriginal_index_error(self):
         msa = TabularMSA([DNA('ATCGCCAGCT'), DNA('TTGTGCTGGC')],

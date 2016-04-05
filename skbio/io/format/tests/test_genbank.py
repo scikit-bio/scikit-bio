@@ -326,14 +326,10 @@ REFERENCE   1  (bases 1 to 154478)
             'abc',
             '3-8']
         for example in examples:
-            with six.assertRaisesRegex(self, GenBankFormatError,
-                                       'Could not parse location string: '
-                                       '"%s"' % example):
-                _parse_interval(example, length)
             with self.assertRaisesRegex(GenBankFormatError,
                                         'Could not parse location string: '
                                         '"%s"' % example):
-                _parse_loc_str(example, length)
+                _parse_interval(example, length)
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence

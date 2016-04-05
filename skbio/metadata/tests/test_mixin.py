@@ -74,3 +74,7 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                 return copy
 
         self._positional_metadata_constructor_ = ExamplePositionalMetadataMixin
+
+
+if __name__ == '__main__':
+    unittest.main()
