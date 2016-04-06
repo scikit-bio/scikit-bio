@@ -21,7 +21,7 @@ from ._feature import Feature
 from ._interval import IntervalMetadata
 from ._intersection import Interval
 from ._mixin import (IntervalMetadataMixin, PositionalMetadataMixin,
-                    MetadataMixin)
+                     MetadataMixin)
 
 __all__ = ['Feature', 'Interval', 'IntervalMetadata',
            'MetadataMixin', 'PositionalMetadataMixin',
