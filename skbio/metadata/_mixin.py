@@ -361,6 +361,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
 class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     ''' Store metadata corresponding to Features and Intervals.
+
     Parameters
     ----------
     features : dict of list

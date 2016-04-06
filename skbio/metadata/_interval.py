@@ -8,7 +8,7 @@
 from __future__ import absolute_import, division, print_function
 
 from ._feature import Feature
-from .intersection import Interval, IntervalTree
+from ._intersection import Interval, IntervalTree
 from skbio.util._misc import merge_dicts
 
 
@@ -135,7 +135,7 @@ class IntervalMetadata():
 
         # Find queries by interval
         for value in args:
-            feats += self._query_interval(value)
+            feats.update(self._query_interval(value))
 
         # Find queries by feature attribute
         for (key, value) in kwargs.items():

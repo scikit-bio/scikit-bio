@@ -1,9 +1,9 @@
 import sys
 import unittest
 
-from skbio.metadata.intersection import Interval
-from skbio.metadata.intersection import IntervalNode
-from skbio.metadata.intersection import IntervalTree
+from skbio.metadata._intersection import Interval
+from skbio.metadata._intersection import IntervalNode
+from skbio.metadata._intersection import IntervalTree
 
 
 class NeighborTestCase(unittest.TestCase):
