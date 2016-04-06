@@ -7,20 +7,20 @@
 # ----------------------------------------------------------------------------
 
 import io
+import numpy as np
+import pandas as pd
 import numpy.testing as npt
 from unittest import TestCase, main
 
 from skbio import Protein, DNA, RNA, Sequence
 from skbio.util import get_data_path
-from skbio.metadata import Feature
 from skbio.io import GenBankFormatError
 from skbio.io.format.genbank import (
     _genbank_sniffer,
     _genbank_to_generator, _genbank_to_sequence,
     _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
-    _parse_interval,
-    _parse_section_default,
+    _parse_loc_str, _parse_section_default,
     _generator_to_genbank, _sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
     _serialize_locus)
@@ -82,9 +82,7 @@ class GenBankIOTests(TestCase):
                        'mol_type': None,
                        'shape': 'linear',
                        'size': 9,
-                       'unit': 'aa'},
-             'id': 'AAB29917'
-             },
+                       'unit': 'aa'}},
             None,
             Protein)
 
@@ -94,6 +92,28 @@ class GenBankIOTests(TestCase):
             {'ACCESSION': 'M14399',
              'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
              'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
+             'FEATURES': [{'db_xref': '"taxon:562"',
+                           'index_': 0,
+                           'left_partial_': False,
+                           'location': '1..63',
+                           'mol_type': '"mRNA"',
+                           'organism': '"Escherichia coli"',
+                           'rc_': False,
+                           'right_partial_': False,
+                           'type_': 'source'},
+                          {'codon_start': '1',
+                           'db_xref': [
+                               '"GI:145230"', '"taxon:562"', '"taxon:561"'],
+                           'index_': 1,
+                           'left_partial_': False,
+                           'location': '1..>63',
+                           'note': '"alkaline phosphatase signal peptide"',
+                           'protein_id': '"AAA23431.1"',
+                           'rc_': False,
+                           'right_partial_': True,
+                           'transl_table': '11',
+                           'translation': '"MKQSTIALAVLPLLFTPVTKA"',
+                           'type_': 'CDS'}],
              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
              'LOCUS': {'date': '26-APR-1993',
                        'division': 'BCT',
@@ -102,35 +122,13 @@ class GenBankIOTests(TestCase):
                        'shape': 'linear',
                        'size': 63,
                        'unit': 'bp'},
-             'id': 'ECOALKP',
              'SOURCE': {'ORGANISM': 'Escherichia coli',
                         'taxonomy': 'Bacteria; Proteobacteria; '
                         'Gammaproteobacteria; Enterobacteriales; '
                         'Enterobacteriaceae; Escherichia.'},
              'VERSION': 'M14399.1  GI:145229'},
-            {
-                Feature(db_xref='"taxon:562"',
-                        left_partial_=False,
-                        location='1..63',
-                        mol_type='"mRNA"',
-                        organism='"Escherichia coli"',
-                        rc_=False,
-                        right_partial_=False,
-                        type_='source'): [(0, 63)],
-                Feature(codon_start='1',
-                        db_xref=('"GI:145230"',
-                                 '"taxon:562"',
-                                 '"taxon:561"'),
-                        left_partial_=False,
-                        location='1..>63',
-                        note='"alkaline phosphatase signal peptide"',
-                        protein_id='"AAA23431.1"',
-                        rc_=False,
-                        right_partial_=True,
-                        transl_table='11',
-                        translation='"MKQSTIALAVLPLLFTPVTKA"',
-                        type_='CDS'): [(0, 63)]
-            },
+            pd.DataFrame({0: np.ones(63, dtype=bool),
+                          1: np.ones(63, dtype=bool)}),
             RNA)
 
         # test:
@@ -139,14 +137,27 @@ class GenBankIOTests(TestCase):
         # 3. DNA, RNA, Protein type
         # 4. variation of formats
         self.multi_fp = get_data_path('genbank_multi_records')
-        self.multi_invs = (
+        self.multi = (
             ('gsreildfk',
              {'ACCESSION': 'AAB29917',
               'COMMENT': 'Method: direct peptide sequencing.',
               'DBSOURCE': 'accession AAB29917.1',
               'DEFINITION': 'L-carnitine amidase {N-terminal}',
+              'FEATURES': [{'index_': 0,
+                            'left_partial_': False,
+                            'location': '1..9',
+                            'organism': '"Bacteria"',
+                            'rc_': False,
+                            'right_partial_': False,
+                            'type_': 'source'},
+                           {'index_': 1,
+                            'left_partial_': False,
+                            'location': '1..>9',
+                            'product': '"L-carnitine amidase"',
+                            'rc_': False,
+                            'right_partial_': True,
+                            'type_': 'Protein'}],
               'KEYWORDS': '.',
-              'id': 'AAB29917',
               'LOCUS': {'date': '23-SEP-1994',
                         'division': 'BCT',
                         'locus_name': 'AAB29917',
@@ -168,26 +179,29 @@ class GenBankIOTests(TestCase):
               'SOURCE': {'ORGANISM': 'Bacteria',
                          'taxonomy': 'Unclassified.'},
               'VERSION': 'AAB29917.1  GI:545426'},
-             {
-                              Feature(left_partial_=False,
-                                      location='1..9',
-                                      organism='"Bacteria"',
-                                      rc_=False,
-                                      right_partial_=False,
-                                      type_='source'): [(0, 9)],
-                              Feature(left_partial_=False,
-                                      location='1..>9',
-                                      product='"L-carnitine amidase"',
-                                      rc_=False,
-                                      right_partial_=True,
-                                      type_='Protein'): [(0, 9)]
-             },
+             pd.DataFrame({0: np.ones(9, dtype=bool),
+                           1: np.ones(9, dtype=bool)}),
              Protein),
+
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
+              'FEATURES': [{'country': '"Brazil: Parana, Paranavai"',
+                            'environmental_sample': '',
+                            'index_': 0,
+                            'left_partial_': False,
+                            'location': '1..9',
+                            'rc_': False,
+                            'right_partial_': False,
+                            'type_': 'source'},
+                           {'index_': 1,
+                            'left_partial_': True,
+                            'location': 'complement(<2..>8)',
+                            'product': '"16S ribosomal RNA"',
+                            'rc_': True,
+                            'right_partial_': True,
+                            'type_': 'rRNA'}],
               'KEYWORDS': 'ENV.',
-              'id': 'HQ018078',
               'LOCUS': {'date': '29-AUG-2010',
                         'division': 'ENV',
                         'locus_name': 'HQ018078',
@@ -200,20 +214,8 @@ class GenBankIOTests(TestCase):
                          'Micrococcales; Promicromonosporaceae; '
                          'Xylanimonas; environmental samples.'},
               'VERSION': 'HQ018078.1  GI:304421728'},
-             {
-                              Feature(country='"Brazil: Parana, Paranavai"',
-                                      environmental_sample='',
-                                      left_partial_=False,
-                                      location='1..9',
-                                      rc_=False,
-                                      right_partial_=False,
-                                      type_='source'): [(0, 9)],
-                              Feature(left_partial_=True,
-                                      location='complement(<2..>8)',
-                                      product='"16S ribosomal RNA"',
-                                      rc_=True,
-                                      right_partial_=True,
-                                      type_='rRNA'): [(1, 8)]},
+             pd.DataFrame({0: [True] * 9,
+                           1: [False] + [True] * 7 + [False]}),
              DNA))
 
 
@@ -273,7 +275,7 @@ REFERENCE   1  (bases 1 to 154478)
         for i, j, k in zip(lines, kwargs, expects):
             self.assertEqual(k, _parse_section_default(i, **j))
 
-    def test_parse_interval(self):
+    def test_parse_loc_str(self):
         length = 12
 
         examples = [
@@ -291,33 +293,33 @@ REFERENCE   1  (bases 1 to 154478)
 
         expects = [
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             []),
+             np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             [8]),
+             np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             [(2, 8)]),
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': True, 'rc_': False},
-             [(2, 8)]),
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': True, 'left_partial_': False, 'rc_': False},
-             [(0, 8)]),
+             np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
-             [(2, 8)]),
+             np.array([0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': True},
-             [(2, 5), (6, 9)]),
+             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             [(2, 5), (6, 9)]),
+             np.array([0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0], dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             []),
+             np.zeros(length, dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             []),
+             np.zeros(length, dtype=bool)),
             ({'right_partial_': False, 'left_partial_': False, 'rc_': False},
-             [])]
+             np.zeros(length, dtype=bool))]
         for example, expect in zip(examples, expects):
-            parsed = _parse_interval(example, length)
+            parsed = _parse_loc_str(example, length)
             self.assertDictEqual(parsed[0], expect[0])
             npt.assert_equal(parsed[1], expect[1])
 
-    def test_parse_interval_invalid(self):
+    def test_parse_loc_str_invalid(self):
         length = 12
         examples = [
             'abc',
@@ -326,7 +328,7 @@ REFERENCE   1  (bases 1 to 154478)
             with self.assertRaisesRegex(GenBankFormatError,
                                         'Could not parse location string: '
                                         '"%s"' % example):
-                _parse_interval(example, length)
+                _parse_loc_str(example, length)
 
     def test_genbank_to_generator_single(self):
         # test single record and uppercase sequence
@@ -339,45 +341,39 @@ REFERENCE   1  (bases 1 to 154478)
 
     def test_genbank_to_generator(self):
         for i, obs in enumerate(_genbank_to_generator(self.multi_fp)):
-            seq, md, pmd, constructor = self.multi_invs[i]
+            seq, md, pmd, constructor = self.multi[i]
             exp = constructor(seq, metadata=md, lowercase=True,
-                              interval_metadata=pmd)
+                              positional_metadata=pmd)
             self.assertEqual(exp, obs)
 
     def test_genbank_to_sequence(self):
-        for i, exp in enumerate(self.multi_invs):
+        for i, exp in enumerate(self.multi):
             obs = _genbank_to_sequence(self.multi_fp, seq_num=i+1)
             exp = Sequence(exp[0], metadata=exp[1], lowercase=True,
-                           interval_metadata=exp[2])
-            self.assertEqual(exp.interval_metadata,
-                             obs.interval_metadata)
+                           positional_metadata=exp[2])
             self.assertEqual(exp, obs)
 
     def test_genbank_to_rna(self):
-        self.maxDiff = None
         seq, md, pmd, constructor = self.single_rna
         obs = _genbank_to_rna(self.single_rna_fp)
         exp = constructor(seq, metadata=md,
-                          lowercase=True, interval_metadata=pmd)
-        self.assertEqual(exp.interval_metadata,
-                         obs.interval_metadata)
-
+                          lowercase=True, positional_metadata=pmd)
         self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
         i = 1
-        exp = self.multi_invs[i]
+        exp = self.multi[i]
         obs = _genbank_to_dna(self.multi_fp, seq_num=i+1)
         exp = DNA(exp[0], metadata=exp[1], lowercase=True,
-                  interval_metadata=exp[2])
+                  positional_metadata=exp[2])
         self.assertEqual(exp, obs)
 
     def test_genbank_to_protein(self):
         i = 0
-        exp = self.multi_invs[i]
+        exp = self.multi[i]
         obs = _genbank_to_protein(self.multi_fp, seq_num=i+1)
         exp = Protein(exp[0], metadata=exp[1],
-                      lowercase=True, interval_metadata=exp[2])
+                      lowercase=True, positional_metadata=exp[2])
         self.assertEqual(exp, obs)
 
 
@@ -402,23 +398,22 @@ class WriterTests(GenBankIOTests):
 
     def test_sequence_to_genbank(self):
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi_invs):
-            obj = Sequence(seq, md, interval_metadata=pmd, lowercase=True)
-
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
+            obj = Sequence(seq, md, pmd, lowercase=True)
             _sequence_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
+
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
-
         self.assertEqual(obs, exp)
 
     def test_dna_protein_to_genbank(self):
         writers = [_protein_to_genbank,
                    _dna_to_genbank]
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi_invs):
-            obj = constructor(seq, md, interval_metadata=pmd, lowercase=True)
+        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
+            obj = constructor(seq, md, pmd, lowercase=True)
             writers[i](obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -431,7 +426,7 @@ class WriterTests(GenBankIOTests):
     def test_rna_to_genbank(self):
         fh = io.StringIO()
         seq, md, pmd, constructor = self.single_rna
-        obj = constructor(seq, md, interval_metadata=pmd, lowercase=True)
+        obj = constructor(seq, md, pmd, lowercase=True)
         _rna_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -451,6 +446,7 @@ class RoundtripTests(GenBankIOTests):
 
         with io.open(self.multi_fp) as fh:
             exp = fh.read()
+
         self.assertEqual(obs, exp)
 
     def test_roundtrip_rna(self):
