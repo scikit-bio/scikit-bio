@@ -131,7 +131,7 @@ class IntervalMetadata():
         list, Feature
             A list of features satisfying the search criteria.
         """
-        feats = []
+        feats = set()
 
         # Find queries by interval
         for value in args:
@@ -139,9 +139,9 @@ class IntervalMetadata():
 
         # Find queries by feature attribute
         for (key, value) in kwargs.items():
-            feats += self._query_feature(key, value)
+            feats.update(self._query_feature(key, value))
 
-        return list(set(feats))
+        return list(feats)
 
     def concat(self, other, inplace=False):
         """ Concatenates two interval metadata objects
