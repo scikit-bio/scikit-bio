@@ -18,6 +18,7 @@ an empty generator.
 * Fixed minor bug where adding sequences to an empty `TabularMSA` with MSA-wide `positional_metadata` would result in a `TabularMSA` object in an inconsistent state. This could happen using `TabularMSA.append` or `TabularMSA.extend`. This bug only affects a `TabularMSA` object *without* sequences that has MSA-wide `positional_metadata` (for example, `TabularMSA([], positional_metadata={'column': []})`).
 
 ### Deprecated functionality [stable]
+* Deprecated use of the term "non-degenerate", in favor of "definite". `GrammaredSequence.nondegenerate_chars`, `GrammaredSequence.nondegenerates`, and `GrammaredSequence.has_nondegenerates` have been renamed to `GrammaredSequence.definite_chars`, `GrammaredSequence.definites`, and `GrammaredSequence.has_definites`, respectively. The old names will be removed in scikit-bio 0.5.2. Relevant affected public classes include `GrammaredSequence`, `DNA`, `RNA`, and `Protein`.
 * Deprecated `Sequence.has_metadata` and `TabularMSA.has_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `bool(obj.metadata)` to determine if the metadata dict is empty.
 * Deprecated `Sequence.has_positional_metadata` and `TabularMSA.has_positional_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `len(obj.positional_metadata.columns)` to determine if positional metadata columns are present, or `obj.positional_metadata.empty` to determine if the positional metadata DataFrame is empty (empty index OR empty columns).
 
