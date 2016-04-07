@@ -236,7 +236,7 @@ Stats:
     length: 35
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 14.29%
 ----------------------------------------
 0 TATGTATATA TAACATATAC ATATATACAT ACATA

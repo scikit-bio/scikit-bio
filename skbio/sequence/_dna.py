@@ -55,7 +55,7 @@ class DNA(GrammaredSequence, NucleotideMixin,
     alphabet
     gap_chars
     default_gap_char
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
     complement_map
@@ -84,28 +84,28 @@ class DNA(GrammaredSequence, NucleotideMixin,
     >>> from skbio import DNA
     >>> DNA('ACCGAAT')
     DNA
-    -----------------------------
+    --------------------------
     Stats:
         length: 7
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         GC-content: 42.86%
-    -----------------------------
+    --------------------------
     0 ACCGAAT
 
     Convert lowercase characters to uppercase:
 
     >>> DNA('AcCGaaT', lowercase=True)
     DNA
-    -----------------------------
+    --------------------------
     Stats:
         length: 7
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         GC-content: 42.86%
-    -----------------------------
+    --------------------------
     0 ACCGAAT
 
     """
@@ -124,7 +124,7 @@ class DNA(GrammaredSequence, NucleotideMixin,
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACGT")
 
     @classproperty
@@ -180,25 +180,25 @@ class DNA(GrammaredSequence, NucleotideMixin,
         >>> dna = DNA('TAACGTTA')
         >>> dna
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 25.00%
-        -----------------------------
+        --------------------------
         0 TAACGTTA
         >>> dna.transcribe()
         RNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 25.00%
-        -----------------------------
+        --------------------------
         0 UAACGUUA
 
         """
@@ -249,14 +249,14 @@ class DNA(GrammaredSequence, NucleotideMixin,
         >>> dna = DNA('ATGCCACTTTAA')
         >>> dna.translate()
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*
 
         Translate the same DNA sequence using a different NCBI genetic code
@@ -265,14 +265,14 @@ class DNA(GrammaredSequence, NucleotideMixin,
 
         >>> dna.translate(3, stop='require')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 MPT
 
         """
@@ -336,69 +336,69 @@ class DNA(GrammaredSequence, NucleotideMixin,
         ...     protein
         ...     print('')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 CHF
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 ATL
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 LKWH
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 *SG
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 KVA
         <BLANKLINE>
 

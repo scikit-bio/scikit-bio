@@ -13,7 +13,7 @@ import re
 import numpy as np
 
 from skbio.util._decorator import (classproperty, overrides, stable,
-                                   experimental)
+                                   deprecated, experimental)
 from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
@@ -26,8 +26,8 @@ class GrammaredSequenceMeta(ABCMeta, type):
             type(cls.gap_chars) is not abstractproperty
         concrete_degenerate_map = \
             type(cls.degenerate_map) is not abstractproperty
-        concrete_nondegenerate_chars = \
-            type(cls.nondegenerate_chars) is not abstractproperty
+        concrete_definite_chars = \
+            type(cls.definite_chars) is not abstractproperty
         concrete_default_gap_char = \
             type(cls.default_gap_char) is not abstractproperty
         # degenerate_chars is not abstract but it depends on degenerate_map
@@ -40,7 +40,7 @@ class GrammaredSequenceMeta(ABCMeta, type):
         # probably check all the attributes on the class and make sure none of
         # them are abstract.
         if (concrete_gap_chars and concrete_degenerate_map and
-                concrete_nondegenerate_chars and concrete_default_gap_char and
+                concrete_definite_chars and concrete_default_gap_char and
                 concrete_degenerate_chars):
 
             if cls.default_gap_char not in cls.gap_chars:
@@ -54,21 +54,21 @@ class GrammaredSequenceMeta(ABCMeta, type):
                     "characters for class %s" % name)
 
             for key in cls.degenerate_map.keys():
-                for nondegenerate in cls.degenerate_map[key]:
-                    if nondegenerate not in cls.nondegenerate_chars:
+                for definite_char in cls.degenerate_map[key]:
+                    if definite_char not in cls.definite_chars:
                         raise TypeError(
                             "degenerate_map must expand only to "
-                            "characters included in nondegenerate_chars "
+                            "characters included in definite_chars "
                             "for class %s" % name)
 
-            if len(cls.degenerate_chars & cls.nondegenerate_chars) > 0:
+            if len(cls.degenerate_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "degenerate_chars and nondegenerate_chars must not "
+                    "degenerate_chars and definite_chars must not "
                     "share any characters for class %s" % name)
 
-            if len(cls.gap_chars & cls.nondegenerate_chars) > 0:
+            if len(cls.gap_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "gap_chars and nondegenerate_chars must not share any "
+                    "gap_chars and definite_chars must not share any "
                     "characters for class %s" % name)
 
         return cls
@@ -109,7 +109,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     alphabet
     gap_chars
     default_gap_char
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
 
@@ -145,8 +145,9 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     ...         return {"X": set("AB")}
     ...
     ...     @classproperty
-    ...     def nondegenerate_chars(cls):
+    ...     def definite_chars(cls):
     ...         return set("ABC")
+    ...
     ...
     ...     @classproperty
     ...     def default_gap_char(cls):
@@ -159,31 +160,31 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     >>> seq = CustomSequence('ABABACAC')
     >>> seq
     CustomSequence
-    -----------------------------
+    --------------------------
     Stats:
         length: 8
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
-    -----------------------------
+        has definites: True
+    --------------------------
     0 ABABACAC
 
     >>> seq = CustomSequence('XXXXXX')
     >>> seq
     CustomSequence
-    ------------------------------
+    -------------------------
     Stats:
         length: 6
         has gaps: False
         has degenerates: True
-        has non-degenerates: False
-    ------------------------------
+        has definites: False
+    -------------------------
     0 XXXXXX
 
     """
     __validation_mask = None
     __degenerate_codes = None
-    __nondegenerate_codes = None
+    __definite_char_codes = None
     __gap_codes = None
 
     @classproperty
@@ -204,11 +205,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__degenerate_codes
 
     @classproperty
-    def _nondegenerate_codes(cls):
-        if cls.__nondegenerate_codes is None:
-            nondegens = cls.nondegenerate_chars
-            cls.__nondegenerate_codes = np.asarray([ord(d) for d in nondegens])
-        return cls.__nondegenerate_codes
+    def _definite_char_codes(cls):
+        if cls.__definite_char_codes is None:
+            definite_chars = cls.definite_chars
+            cls.__definite_char_codes = np.asarray(
+                [ord(d) for d in definite_chars])
+        return cls.__definite_char_codes
 
     @classproperty
     def _gap_codes(cls):
@@ -222,7 +224,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     def alphabet(cls):
         """Return valid characters.
 
-        This includes gap, non-degenerate, and degenerate characters.
+        This includes gap, definite, and degenerate characters.
 
         Returns
         -------
@@ -230,7 +232,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Valid characters.
 
         """
-        return cls.degenerate_chars | cls.nondegenerate_chars | cls.gap_chars
+        return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
 
     @abstractproperty
     @classproperty
@@ -277,9 +279,9 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return set(cls.degenerate_map)
 
-    @abstractproperty
     @classproperty
-    @stable(as_of='0.4.0')
+    @deprecated(as_of='0.4.2-dev', until='0.5.2',
+                reason='Renamed to definite_chars')
     def nondegenerate_chars(cls):
         """Return non-degenerate characters.
 
@@ -289,19 +291,33 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Non-degenerate characters.
 
         """
+        return cls.definite_chars
+
+    @abstractproperty
+    @classproperty
+    @stable(as_of='0.4.2-dev')
+    def definite_chars(cls):
+        """Return definite characters.
+
+        Returns
+        -------
+        set
+            Definite characters.
+
+        """
         pass  # pragma: no cover
 
     @abstractproperty
     @classproperty
     @stable(as_of='0.4.0')
     def degenerate_map(cls):
-        """Return mapping of degenerate to non-degenerate characters.
+        """Return mapping of degenerate to definite characters.
 
         Returns
         -------
         dict (set)
             Mapping of each degenerate character to the set of
-            non-degenerate characters it represents.
+            definite characters it represents.
 
         """
         pass  # pragma: no cover
@@ -405,8 +421,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         See Also
         --------
         has_degenerates
-        nondegenerates
-        has_nondegenerates
+        definites
+        has_definites
 
         Examples
         --------
@@ -431,8 +447,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         See Also
         --------
         degenerates
-        nondegenerates
-        has_nondegenerates
+        definites
+        has_definites
 
         Examples
         --------
@@ -449,7 +465,33 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # TODO: cache results
         return bool(self.degenerates().any())
 
-    @stable(as_of='0.4.0')
+    @stable(as_of='0.4.2-dev')
+    def definites(self):
+        """Find positions containing definite characters in the sequence.
+
+        Returns
+        -------
+        1D np.ndarray (bool)
+            Boolean vector where ``True`` indicates a definite character
+            is present at that position in the biological sequence.
+
+        See Also
+        --------
+        has_definites
+        degenerates
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('ACWGN')
+        >>> s.definites()
+        array([ True,  True, False,  True, False], dtype=bool)
+
+        """
+        return np.in1d(self._bytes, self._definite_char_codes)
+
+    @deprecated(as_of='0.4.2-dev', until='0.5.2',
+                reason='Renamed to definites')
     def nondegenerates(self):
         """Find positions containing non-degenerate characters in the sequence.
 
@@ -461,9 +503,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         See Also
         --------
-        has_nondegenerates
+        has_definites
         degenerates
-        has_nondegenerates
 
         Examples
         --------
@@ -473,9 +514,40 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         array([ True,  True, False,  True, False], dtype=bool)
 
         """
-        return np.in1d(self._bytes, self._nondegenerate_codes)
+        return self.definites()
 
-    @stable(as_of='0.4.0')
+    @stable(as_of='0.4.2-dev')
+    def has_definites(self):
+        """Determine if sequence contains one or more definite characters
+
+        Returns
+        -------
+        bool
+            Indicates whether there are one or more occurrences of
+            definite characters in the biological sequence.
+
+        See Also
+        --------
+        definites
+        degenerates
+        has_degenerates
+
+        Examples
+        --------
+        >>> from skbio import DNA
+        >>> s = DNA('NWNNNNNN')
+        >>> s.has_definites()
+        False
+        >>> t = DNA('ANCACWWGACGTT')
+        >>> t.has_definites()
+        True
+
+        """
+        # TODO: cache results
+        return bool(self.definites().any())
+
+    @deprecated(as_of='0.4.2-dev', until='0.5.2',
+                reason='Renamed to has_definites')
     def has_nondegenerates(self):
         """Determine if sequence contains one or more non-degenerate characters
 
@@ -487,7 +559,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         See Also
         --------
-        nondegenerates
+        definites
         degenerates
         has_degenerates
 
@@ -503,7 +575,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         """
         # TODO: cache results
-        return bool(self.nondegenerates().any())
+        return self.has_definites()
 
     @stable(as_of='0.4.0')
     def degap(self):
@@ -539,7 +611,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             length: 9
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 55.56%
         -----------------------------
         0 GGTCCATTC
@@ -549,12 +621,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @stable(as_of='0.4.0')
     def expand_degenerates(self):
-        """Yield all possible non-degenerate versions of the sequence.
+        """Yield all possible definite versions of the sequence.
 
         Yields
         ------
         GrammaredSequence
-            Non-degenerate version of the sequence.
+            Definite version of the sequence.
 
         See Also
         --------
@@ -562,11 +634,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        There is no guaranteed ordering to the non-degenerate sequences that
-        are yielded.
+        There is no guaranteed ordering to the definite sequences that are
+        yielded.
 
-        Each non-degenerate sequence will have the same type, metadata,
-        and positional metadata as the biological sequence.
+        Each definite sequence will have the same type, metadata, and
+        positional metadata as the biological sequence.
 
         Examples
         --------
@@ -577,31 +649,31 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         ...     s
         ...     print('')
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 33.33%
-        -----------------------------
+        --------------------------
         0 TAG
         <BLANKLINE>
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 66.67%
-        -----------------------------
+        --------------------------
         0 TGG
         <BLANKLINE>
 
         """
         degen_chars = self.degenerate_map
-        nonexpansion_chars = self.nondegenerate_chars.union(self.gap_chars)
+        nonexpansion_chars = self.definite_chars.union(self.gap_chars)
 
         expansions = []
         for char in self:
@@ -611,9 +683,9 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             else:
                 expansions.append(degen_chars[char])
 
-        for nondegen_seq in product(*expansions):
+        for definite_seq in product(*expansions):
             yield self._constructor(
-                sequence=''.join(nondegen_seq),
+                sequence=''.join(definite_seq),
                 metadata=self.metadata,
                 positional_metadata=self.positional_metadata)
 
@@ -625,8 +697,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         -------
         regex
             Pre-compiled regular expression object (as from ``re.compile``)
-            that matches all non-degenerate versions of this sequence, and
-            nothing else.
+            that matches all definite versions of this sequence, and nothing
+            else.
 
         Examples
         --------
@@ -719,7 +791,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         stats = super(GrammaredSequence, self)._repr_stats()
         stats.append(('has gaps', '%r' % self.has_gaps()))
         stats.append(('has degenerates', '%r' % self.has_degenerates()))
-        stats.append(('has non-degenerates', '%r' % self.has_nondegenerates()))
+        stats.append(('has definites', '%r' % self.has_definites()))
         return stats
 
 

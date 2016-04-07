@@ -38,7 +38,7 @@ class CustomSequence(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set('WXYZ')
 
     @classproperty
@@ -86,7 +86,9 @@ class PairwiseAlignmentTests(TestCase):
                     'U': {'A': -4, 'C': -4, 'G': -4, 'T': -4, 'U':  5}}
         self.assertEqual(make_identity_substitution_matrix(5, -4), expected)
 
-    def test_global_pairwise_align_custom_alphabet(self):
+    # TODO: duplicate of test_global_pairwise_align_custom_alphabet, remove
+    # when nondegenerate_chars is removed
+    def test_global_pairwise_align_custom_alphabet_nondegenerate_chars(self):
         custom_substitution_matrix = make_identity_substitution_matrix(
             1, -1, alphabet=CustomSequence.nondegenerate_chars)
 
@@ -106,9 +108,54 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(custom_score, 2.0)
         self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
 
-    def test_local_pairwise_align_custom_alphabet(self):
+    def test_global_pairwise_align_custom_alphabet(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            1, -1, alphabet=CustomSequence.definite_chars)
+
+        custom_msa, custom_score, custom_start_end = global_pairwise_align(
+            CustomSequence("WXYZ"), CustomSequence("WXYYZZ"),
+            10.0, 5.0, custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(custom_msa, TabularMSA([CustomSequence('WXYZ^^'),
+                                                 CustomSequence('WXYYZZ')]))
+        self.assertEqual(custom_score, 2.0)
+        self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
+
+    # TODO: duplicate of test_local_pairwise_align_custom_alphabet, remove
+    # when nondegenerate_chars is removed.
+    def test_local_pairwise_align_custom_alphabet_nondegenerate_chars(self):
         custom_substitution_matrix = make_identity_substitution_matrix(
             5, -4, alphabet=CustomSequence.nondegenerate_chars)
+
+        custom_msa, custom_score, custom_start_end = local_pairwise_align(
+            CustomSequence("YWXXZZYWXXWYYZWXX"),
+            CustomSequence("YWWXZZZYWXYZWWX"), 5.0, 0.5,
+            custom_substitution_matrix)
+
+        # Expected values computed by running an equivalent alignment using the
+        # DNA alphabet with the following mapping:
+        #
+        #     W X Y Z
+        #     | | | |
+        #     A C G T
+        #
+        self.assertEqual(
+            custom_msa,
+            TabularMSA([CustomSequence('WXXZZYWXXWYYZWXX'),
+                        CustomSequence('WXZZZYWX^^^YZWWX')]))
+        self.assertEqual(custom_score, 41.0)
+        self.assertEqual(custom_start_end, [(1, 16), (2, 14)])
+
+    def test_local_pairwise_align_custom_alphabet(self):
+        custom_substitution_matrix = make_identity_substitution_matrix(
+            5, -4, alphabet=CustomSequence.definite_chars)
 
         custom_msa, custom_score, custom_start_end = local_pairwise_align(
             CustomSequence("YWXXZZYWXXWYYZWXX"),
