@@ -487,10 +487,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         1   True  NaN
         2   True  NaN
         3  False  NaN
-        4  False    1
-        5  False    2
-        6   True    3
-        7  False    4
+        4  False  1.0
+        5  False  2.0
+        6   True  3.0
+        7  False  4.0
 
         """
         if how not in {'strict', 'inner', 'outer'}:
