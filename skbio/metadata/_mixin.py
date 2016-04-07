@@ -397,6 +397,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         GC-content: 50.00%
     -----------------------------
     0 ACGT
+
     '''
     def __init__(self, features=None):
         pass
