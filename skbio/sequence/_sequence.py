@@ -448,14 +448,14 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         >>> s2 = DNA("GGAA")
         >>> DNA.concat([s1, s2])
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 50.00%
-        -----------------------------
+        --------------------------
         0 ACGTGGAA
 
         Concatenate DNA sequences into a Sequence object (type coercion):
@@ -476,7 +476,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         >>> result = DNA.concat([s1, s2], how='outer')
         >>> result
         DNA
-        -----------------------------
+        ---------------------------
         Positional metadata:
             'one': <dtype: bool>
             'two': <dtype: float64>
@@ -484,9 +484,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 50.00%
-        -----------------------------
+        ---------------------------
         0 ACGTGGAA
         >>> result.positional_metadata
              one  two

@@ -56,7 +56,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     gap_chars
     default_gap_char
     stop_chars
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
 
@@ -83,28 +83,28 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     >>> from skbio import Protein
     >>> Protein('PAW')
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     Convert lowercase characters to uppercase:
 
     >>> Protein('paW', lowercase=True)
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     """
@@ -124,7 +124,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty

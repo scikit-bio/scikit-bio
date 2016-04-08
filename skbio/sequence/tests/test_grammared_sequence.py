@@ -23,7 +23,7 @@ class ExampleGrammaredSequence(GrammaredSequence):
         return {"X": set("AB"), "Y": set("BC"), "Z": set("AC")}
 
     @classproperty
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ABC")
 
     @classproperty
@@ -57,11 +57,11 @@ class TestGrammaredSequence(TestCase):
                 def default_gap_char(cls):
                     return '*'
 
-    def test_degenerates_must_expand_to_valid_nondegenerates(self):
+    def test_degenerates_must_expand_to_valid_definites(self):
         with self.assertRaisesRegex(
                 TypeError,
                 "degenerate_map must expand only to characters included in "
-                "nondegenerate_chars for class "
+                "definite_chars for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
@@ -70,7 +70,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("B")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("A")
 
     def test_gap_chars_and_degenerates_share(self):
@@ -86,37 +86,37 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABC")
 
                 @classproperty
                 def gap_chars(cls):
                     return set(".-X")
 
-    def test_gap_chars_and_nondegenerates_share(self):
+    def test_gap_chars_and_definites_share(self):
         with self.assertRaisesRegex(
             TypeError,
-            ("gap_chars and nondegenerate_chars must not share any characters "
-             "for class GrammaredSequenceGapInNondegenerateMap")):
+            ("gap_chars and definite_chars must not share any characters "
+             "for class GrammaredSequenceGapInDefiniteMap")):
 
-            class GrammaredSequenceGapInNondegenerateMap(
+            class GrammaredSequenceGapInDefiniteMap(
                     ExampleGrammaredSequence):
                 @classproperty
                 def degenerate_map(cls):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABC")
 
                 @classproperty
                 def gap_chars(cls):
                     return set(".-A")
 
-    def test_degenerates_and_nondegenerates_share(self):
+    def test_degenerates_and_definites_share(self):
         with self.assertRaisesRegex(
             TypeError,
-            ("degenerate_chars and nondegenerate_chars must not share any "
+            ("degenerate_chars and definite_chars must not share any "
              "characters for class GrammaredSequenceInvalid")):
 
             class GrammaredSequenceInvalid(ExampleGrammaredSequence):
@@ -125,7 +125,7 @@ class TestGrammaredSequence(TestCase):
                     return {"X": set("AB")}
 
                 @classproperty
-                def nondegenerate_chars(cls):
+                def definite_chars(cls):
                     return set("ABCX")
 
     def test_instantiation_with_no_implementation(self):
@@ -136,7 +136,7 @@ class TestGrammaredSequence(TestCase):
             GrammaredSequenceSubclassNoImplementation()
 
         self.assertIn("abstract class", str(cm.exception))
-        self.assertIn("nondegenerate_chars", str(cm.exception))
+        self.assertIn("definite_chars", str(cm.exception))
         self.assertIn("degenerate_map", str(cm.exception))
 
     def test_init_default_parameters(self):
@@ -271,6 +271,8 @@ class TestGrammaredSequence(TestCase):
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').degenerate_chars = set("BAR")
 
+    # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
+    # is removed
     def test_nondegenerate_chars(self):
         expected = set("ABC")
         self.assertEqual(ExampleGrammaredSequence.nondegenerate_chars,
@@ -285,6 +287,21 @@ class TestGrammaredSequence(TestCase):
 
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
+
+    def test_definite_chars(self):
+        expected = set("ABC")
+        self.assertEqual(ExampleGrammaredSequence.definite_chars,
+                         expected)
+
+        ExampleGrammaredSequence.degenerate_chars.add("D")
+        self.assertEqual(ExampleGrammaredSequence.definite_chars,
+                         expected)
+
+        self.assertEqual(ExampleGrammaredSequence('').definite_chars,
+                         expected)
+
+        with self.assertRaises(AttributeError):
+            ExampleGrammaredSequence('').definite_chars = set("BAR")
 
     def test_gap_chars(self):
         expected = set(".-")
@@ -395,6 +412,7 @@ class TestGrammaredSequence(TestCase):
         self.assertTrue(ExampleGrammaredSequence("Z").has_degenerates())
         self.assertTrue(ExampleGrammaredSequence("ABC.XYZ-").has_degenerates())
 
+    # TODO: duplicate of test_definites; remove when nondegenerates is removed
     def test_nondegenerates(self):
         self.assertIs(type(ExampleGrammaredSequence("").nondegenerates()),
                       np.ndarray)
@@ -419,6 +437,32 @@ class TestGrammaredSequence(TestCase):
         npt.assert_equal(ExampleGrammaredSequence("YB.-AC").nondegenerates(),
                          np.array([0, 1, 0, 0, 1, 1], dtype=bool))
 
+    def test_definites(self):
+        self.assertIs(type(ExampleGrammaredSequence("").definites()),
+                      np.ndarray)
+        self.assertIs(ExampleGrammaredSequence("").definites().dtype,
+                      np.dtype('bool'))
+
+        npt.assert_equal(
+            ExampleGrammaredSequence("XYZYZ-.XY.").definites(),
+            np.zeros(10).astype(bool))
+
+        npt.assert_equal(ExampleGrammaredSequence("ABABA").definites(),
+                         np.ones(5).astype(bool))
+
+        npt.assert_equal(
+            ExampleGrammaredSequence("XA.B-AZCXA").definites(),
+            np.array([0, 1] * 5, dtype=bool))
+
+        npt.assert_equal(
+            ExampleGrammaredSequence("XXAZZB.-C").definites(),
+            np.array([0, 0, 1] * 3, dtype=bool))
+
+        npt.assert_equal(ExampleGrammaredSequence("YB.-AC").definites(),
+                         np.array([0, 1, 0, 0, 1, 1], dtype=bool))
+
+    # TODO: duplicate of test_has_definites; remove when has_nondegenerates is
+    # removed.
     def test_has_nondegenerates(self):
         self.assertIs(type(ExampleGrammaredSequence("").has_nondegenerates()),
                       bool)
@@ -432,6 +476,20 @@ class TestGrammaredSequence(TestCase):
         self.assertTrue(ExampleGrammaredSequence("C").has_nondegenerates())
         self.assertTrue(
             ExampleGrammaredSequence(".XYZ-ABC").has_nondegenerates())
+
+    def test_has_definites(self):
+        self.assertIs(type(ExampleGrammaredSequence("").has_definites()),
+                      bool)
+        self.assertIs(type(ExampleGrammaredSequence("A").has_definites()),
+                      bool)
+
+        self.assertFalse(ExampleGrammaredSequence("").has_definites())
+        self.assertFalse(
+            ExampleGrammaredSequence("X-.YZ").has_definites())
+
+        self.assertTrue(ExampleGrammaredSequence("C").has_definites())
+        self.assertTrue(
+            ExampleGrammaredSequence(".XYZ-ABC").has_definites())
 
     def test_degap(self):
         kw = {
@@ -562,17 +620,17 @@ class TestGrammaredSequence(TestCase):
         self.assertIn('length: 0', obs)
         self.assertIn('has gaps: False', obs)
         self.assertIn('has degenerates: False', obs)
-        self.assertIn('has non-degenerates: False', obs)
+        self.assertIn('has definites: False', obs)
         self.assertTrue(obs.endswith('-'))
 
-        # no metadata, mix of gaps, degenerates, and non-degenerates
+        # no metadata, mix of gaps, degenerates, and definites
         obs = repr(ExampleGrammaredSequence('AY-B'))
         self.assertEqual(obs.count('\n'), 8)
         self.assertTrue(obs.startswith('ExampleGrammaredSequence'))
         self.assertIn('length: 4', obs)
         self.assertIn('has gaps: True', obs)
         self.assertIn('has degenerates: True', obs)
-        self.assertIn('has non-degenerates: True', obs)
+        self.assertIn('has definites: True', obs)
         self.assertTrue(obs.endswith('0 AY-B'))
 
         # metadata and positional metadata of mixed types
@@ -592,7 +650,7 @@ class TestGrammaredSequence(TestCase):
         self.assertIn('length: 4', obs)
         self.assertIn('has gaps: False', obs)
         self.assertIn('has degenerates: False', obs)
-        self.assertIn('has non-degenerates: True', obs)
+        self.assertIn('has definites: True', obs)
         self.assertTrue(obs.endswith('0 ABCA'))
 
         # sequence spanning > 5 lines
@@ -602,7 +660,7 @@ class TestGrammaredSequence(TestCase):
         self.assertIn('length: 301', obs)
         self.assertIn('has gaps: False', obs)
         self.assertIn('has degenerates: False', obs)
-        self.assertIn('has non-degenerates: True', obs)
+        self.assertIn('has definites: True', obs)
         self.assertIn('...', obs)
         self.assertTrue(obs.endswith('300 A'))
 
