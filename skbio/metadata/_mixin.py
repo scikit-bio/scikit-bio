@@ -393,11 +393,10 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         length: 4
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         GC-content: 50.00%
     -----------------------------
     0 ACGT
-
     '''
     def __init__(self, features=None):
         pass
