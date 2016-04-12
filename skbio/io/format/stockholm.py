@@ -392,7 +392,10 @@ def _stockholm_sniffer(fh):
 def _stockholm_to_tabular_msa(fh, constructor=None):
     # Checks that user has passed required constructor parameter
     if constructor is None:
-        raise ValueError("Must provide `constructor` parameter.")
+        raise ValueError("Must provide `constructor` parameter indicating the "
+                         "type of sequences in the alignment. `constructor` "
+                         "must be a subclass of `GrammaredSequence` "
+                         "(e.g., `DNA`, `RNA`, `Protein`).")
     # Checks that contructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
         raise TypeError("`constructor` must be a subclass of "

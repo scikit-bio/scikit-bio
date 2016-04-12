@@ -375,13 +375,13 @@ class TestStockholmReader(unittest.TestCase):
 
     def test_no_constructor_error(self):
         fp = get_data_path('empty')
-        with self.assertRaisesRegex(ValueError, 'Must.*parameter.'):
+        with self.assertRaisesRegex(ValueError, 'Must provide.*parameter.'):
             _stockholm_to_tabular_msa(fp)
 
     def test_unsupported_constructor_error(self):
         fp = get_data_path('empty')
         with self.assertRaisesRegex(TypeError,
-                                    '`constructor`.*`GrammaredSequence`'):
+                                    '`constructor`.*`GrammaredSequence`.'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
 
 
