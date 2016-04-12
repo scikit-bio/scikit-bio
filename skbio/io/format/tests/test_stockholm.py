@@ -188,7 +188,7 @@ class TestStockholmReader(unittest.TestCase):
         fp = get_data_path('stockholm_runon_gs')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         exp = TabularMSA([DNA('ATCGTTCAGTG',
-                              metadata={'AL': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'})],
+                              metadata={'LN': 'This is a runon GS line.'})],
                          index=['seq1'])
         self.assertEqual(msa, exp)
 

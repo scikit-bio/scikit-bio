@@ -240,7 +240,7 @@ Suppose we have a Stockholm file containing an MSA of protein sequences
 >>> fs = '\\n'.join([
 ...         '# STOCKHOLM 1.0',
 ...         '#=GF CC CBS domains are small intracellular modules mostly'
-...         ' found ',
+...         ' found',
 ...         '#=GF CC in 2 or four copies within a protein.',
 ...         '#=GS O83071/192-246 AC O83071',
 ...         '#=GS O31698/88-139 OS Bacillus subtilis',
@@ -474,7 +474,7 @@ class _MSAData:
                                                      feature_data)
         elif feature_name in self._metadata:
             self._metadata[feature_name] = (self._metadata[feature_name] +
-                                            feature_data)
+                                            ' ' + feature_data)
         else:
             self._metadata[feature_name] = feature_data
 
@@ -543,7 +543,7 @@ class _SeqData:
         if self.metadata is None:
             self.metadata = OrderedDict()
         if feature_name in self.metadata:
-            self.metadata[feature_name] += feature_data
+            self.metadata[feature_name] += ' ' + feature_data
         else:
             self.metadata[feature_name] = feature_data
 

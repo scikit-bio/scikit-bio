@@ -1,5 +1,5 @@
 # STOCKHOLM 1.0
-#=GS seq1 AL ABCDEFGHIJKLMNOP
-#=GS seq1 AL QRSTUVWXYZ
+#=GS seq1 LN This is a runon
+#=GS seq1 LN GS line.
 seq1 ATCGTTCAGTG
 //

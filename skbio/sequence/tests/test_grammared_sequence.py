@@ -14,7 +14,7 @@ import pandas as pd
 
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
-from skbio.util._testing import assert_data_frame_almost_equal
+from skbio.util import assert_data_frame_almost_equal
 
 
 class ExampleGrammaredSequence(GrammaredSequence):
