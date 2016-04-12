@@ -476,8 +476,9 @@ class _MSAData:
             self._metadata[feature_name][tree_id] = (trees[tree_id] +
                                                      feature_data)
         elif feature_name in self._metadata:
+            padding = '' if self._metadata[feature_name].endswith(' ') else ' '
             self._metadata[feature_name] = (self._metadata[feature_name] +
-                                            ' ' + feature_data)
+                                            padding + feature_data)
         else:
             self._metadata[feature_name] = feature_data
 
@@ -546,7 +547,8 @@ class _SeqData:
         if self.metadata is None:
             self.metadata = OrderedDict()
         if feature_name in self.metadata:
-            self.metadata[feature_name] += ' ' + feature_data
+            padding = '' if self.metadata[feature_name].endswith(' ') else ' '
+            self.metadata[feature_name] += padding + feature_data
         else:
             self.metadata[feature_name] = feature_data
 
