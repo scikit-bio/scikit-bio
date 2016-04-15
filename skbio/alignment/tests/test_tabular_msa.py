@@ -2069,6 +2069,14 @@ class TestAppend(unittest.TestCase):
                          TabularMSA([DNA('ACGT'), DNA('CCCC'), DNA('ACGT')]))
         assert_index_equal(msa.index, pd.RangeIndex(3))
 
+    def test_reset_index_bool_cast(self):
+        msa = TabularMSA([RNA('AC'), RNA('UU')], index=[42, 43])
+
+        msa.append(RNA('..'), reset_index='abc')
+
+        self.assertEqual(msa, TabularMSA([RNA('AC'), RNA('UU'), RNA('..')]))
+        assert_index_equal(msa.index, pd.RangeIndex(3))
+
     # Valid cases (misc)
     def test_index_type_change(self):
         msa = TabularMSA([DNA('A'), DNA('.')])
@@ -2383,6 +2391,14 @@ class TestExtend(unittest.TestCase):
             TabularMSA([DNA('AC'), DNA('TG'), DNA('GG'), DNA('CC'),
                         DNA('AA')]))
         assert_index_equal(msa.index, pd.RangeIndex(5))
+
+    def test_reset_index_bool_cast(self):
+        msa = TabularMSA([RNA('AC'), RNA('UU')], index=[42, 43])
+
+        msa.extend([RNA('..')], reset_index='abc')
+
+        self.assertEqual(msa, TabularMSA([RNA('AC'), RNA('UU'), RNA('..')]))
+        assert_index_equal(msa.index, pd.RangeIndex(3))
 
     # Valid cases (misc)
     def test_index_type_change(self):

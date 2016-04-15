@@ -1918,7 +1918,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         RangeIndex(start=0, stop=6, step=1)
 
         """
-        if sum([minter is not None, index is not None, reset_index]) != 1:
+        if sum([minter is not None,
+                index is not None,
+                bool(reset_index)]) != 1:
             raise ValueError(
                 "Must provide exactly one of the following parameters: "
                 "`minter`, `index`, `reset_index`")
