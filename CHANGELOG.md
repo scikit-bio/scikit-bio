@@ -5,7 +5,6 @@
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
 ### Features
-* Added trailing whitespace when reading runon GF/GS lines with `skbio.io.format.stockholm` reader. ([#1328](https://github.com/biocore/scikit-bio/issues/1328))
 * Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/biocore/scikit-bio/issues/1327))
 * Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
 * Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
@@ -15,6 +14,7 @@
 ### Backward-incompatible changes [experimental]
 
 ### Bug fixes
+* Fixed bug when reading Stockholm files with GF or GS features split over multiple lines. Previously, the feature text was simply concatenated because it was assumed to have trailing whitespace. There are examples of Stockholm files with and without trailing whitespace for multi-line features, so the `skbio.io.format.stockholm` reader now adds a single space when concatenating feature text without trailing whitespace to avoid joining words together. Multi-line trees stored as GF metadata are concatenated as they appear in the file; a space is not added when concatenating.
 * Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
 an empty generator.
 * Fixed minor bug where adding sequences to an empty `TabularMSA` with MSA-wide `positional_metadata` would result in a `TabularMSA` object in an inconsistent state. This could happen using `TabularMSA.append` or `TabularMSA.extend`. This bug only affects a `TabularMSA` object *without* sequences that has MSA-wide `positional_metadata` (for example, `TabularMSA([], positional_metadata={'column': []})`).

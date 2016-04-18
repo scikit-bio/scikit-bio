@@ -117,8 +117,10 @@ Where ``DE`` is the feature name and ``CBS Domain`` is the feature data.
 GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
 .. note:: When reading, duplicate GF feature names will have their values
-   concatenated in the order they appear in the file. When writing, each GF
-   feature will be placed on its own line, regardless of length.
+   concatenated in the order they appear in the file. Concatenation will
+   also add a space between lines if one isn't already there in order to avoid
+   joining words together. When writing, each GF feature will be placed on its
+   own line, regardless of length.
 
 .. note:: Trees labelled with ``NH``/``TN`` are handled differently than other
    GF features. When reading a Stockholm file with these features, the reader
@@ -476,7 +478,7 @@ class _MSAData:
             self._metadata[feature_name][tree_id] = (trees[tree_id] +
                                                      feature_data)
         elif feature_name in self._metadata:
-            padding = '' if self._metadata[feature_name].endswith(' ') else ' '
+            padding = '' if self._metadata[feature_name][-1].isspace() else ' '
             self._metadata[feature_name] = (self._metadata[feature_name] +
                                             padding + feature_data)
         else:
@@ -547,7 +549,7 @@ class _SeqData:
         if self.metadata is None:
             self.metadata = OrderedDict()
         if feature_name in self.metadata:
-            padding = '' if self.metadata[feature_name].endswith(' ') else ' '
+            padding = '' if self.metadata[feature_name][-1].isspace() else ' '
             self.metadata[feature_name] += padding + feature_data
         else:
             self.metadata[feature_name] = feature_data
