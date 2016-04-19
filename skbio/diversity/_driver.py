@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+import itertools
 
 import numpy as np
 import scipy.spatial.distance
@@ -212,18 +213,22 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
         If ``ids`` are not specified.
         If ``id_pairs`` are not a subset of ``ids``.
         If ``metric`` is not a callable.
+        If duplicates are observed in ``id_pairs``.
     """
     if ids is None:
         raise ValueError("`ids` must be specified if `id_pairs` is specified")
 
-    # flattening list benchmark here
-    # http://stackoverflow.com/a/952952
-    all_ids_in_pairs = {id_ for pair in id_pairs for id_ in pair}
+    all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
     if not all_ids_in_pairs.issubset(ids):
         raise ValueError("`id_pairs` are not a subset of `ids`")
 
+    hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
+    if len(hashes) != len(id_pairs) * 2:
+        raise ValueError("Duplicate ID pairs observed.")
+
     if isinstance(metric, str):
         # The mechanism for going from str to callable in scipy's pdist is
+        # not exposed
         raise ValueError("`metric` must be callable")
 
     dm = np.zeros((len(ids), len(ids)), dtype=float)

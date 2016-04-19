@@ -583,6 +583,22 @@ class BetaDiversityTests(TestCase):
                 if id1 != id2:
                     self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
 
+    def test_partial_pw_duplicate_pairs(self):
+        # confirm that partial pairwise execution fails if duplicate pairs are
+        # observed
+        error_msg = ("Duplicate ID pairs observed.")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', self.table1, ids=self.sids1,
+                           id_pairs=[('A', 'B'), ('A', 'B')])
+
+    def test_partial_pw_duplicate_transpose_pairs(self):
+        # confirm that partial pairwise execution fails if a transpose
+        # duplicate is observed
+        error_msg = ("Duplicate ID pairs observed.")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', self.table1, ids=self.sids1,
+                           id_pairs=[('A', 'B'), ('B', 'A')])
+
     def test_partial_pw_no_ids(self):
         # confirm that partial pairwise execution errors when ids are not
         # specified
