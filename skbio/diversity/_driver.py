@@ -238,7 +238,7 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
     for u, v in id_pairs_indexed:
         dm[u, v] = metric(counts[u], counts[v], **kwargs)
 
-    return scipy.spatial.distance.squareform(dm + dm.T)
+    return dm + dm.T
 
 
 @experimental(as_of="0.4.0")
