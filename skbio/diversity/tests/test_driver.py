@@ -608,7 +608,10 @@ class BetaDiversityTests(TestCase):
 
     def test_partial_pw_matches_pw(self):
         # confirm that pw execution through partial is identical
-        actual_dm = beta_diversity('euclidean', self.table2, self.sids2,
+        def euclidean(u, v, **kwargs):
+            return np.sqrt(((u - v)**2).sum())
+
+        actual_dm = beta_diversity(euclidean, self.table2, self.sids2,
                                    id_pairs=[('A', 'B'),
                                              ('B', 'F'),
                                              ('D', 'E')])

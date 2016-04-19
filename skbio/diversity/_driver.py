@@ -8,6 +8,7 @@
 
 import functools
 
+import numpy as np
 import scipy.spatial.distance
 import pandas as pd
 
@@ -180,6 +181,31 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
+def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
+    """Compute distances only between specified ID pairs"""
+    if ids is None:
+        raise ValueError("`ids` must be specified if `id_pairs` is specified")
+
+    # flattening list benchmark here
+    # http://stackoverflow.com/a/952952
+    all_ids_in_pairs = {id_ for pair in id_pairs for id_ in pair}
+    if not all_ids_in_pairs.issubset(ids):
+        raise ValueError("`id_pairs` are not a subset of `ids`")
+
+    if isinstance(metric, str):
+        # The mechanism for going from str to callable in scipy's pdist is
+        raise ValueError("`metric` must be callable")
+
+    dm = np.zeros((len(ids), len(ids)), dtype=float)
+    id_index = {id_: idx for idx, id_ in enumerate(ids)}
+    id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
+
+    for u, v in id_pairs_indexed:
+        dm[u, v] = metric(counts[u], counts[v], **kwargs)
+
+    return scipy.spatial.distance.squareform(dm + dm.T)
+
+
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                    id_pairs=None, **kwargs):
@@ -243,23 +269,6 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
-    if id_pairs is not None:
-        if ids is None:
-            raise ValueError("`ids` must be specified if `id_pairs` is "
-                             "specified")
-        if pairwise_func is not None:
-            raise ValueError("`pairwise_func` is not compatible with "
-                             "`id_pairs`")
-
-        # flattening list benchmark here
-        # http://stackoverflow.com/a/952952
-        all_ids_in_pairs = {id_ for pair in id_pairs for id_ in pair}
-        if not all_ids_in_pairs.issubset(ids):
-            raise ValueError("`id_pairs` are not a subset of `ids`")
-
-    if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
-
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
@@ -284,6 +293,16 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         # metric is a string that scikit-bio doesn't know about, for
         # example one of the SciPy metrics
         pass
+
+    if id_pairs is not None:
+        if pairwise_func is not None:
+            raise ValueError("`pairwise_func` is not compatible with "
+                             "`id_pairs`")
+
+        pairwise_func = functools.partial(_partial_pw, ids, id_pairs)
+
+    if pairwise_func is None:
+        pairwise_func = scipy.spatial.distance.pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
