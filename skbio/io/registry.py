@@ -787,7 +787,7 @@ class Format:
     @property
     @stable(as_of="0.4.0")
     def readers(self):
-        """Dictionary that maps classes to their writers for this format."""
+        """Dictionary that maps classes to their readers for this format."""
         return self._readers
 
     @property
