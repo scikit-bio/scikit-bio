@@ -205,7 +205,7 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
     Returns
     -------
     np.array
-        A condensed form of the distance matrix.
+        A square, hollow, matrix of distances between ID pairs.
 
     Raises
     ------
