@@ -26,7 +26,8 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_extensive',
             'stockholm_minimal',
             'stockholm_rna',
-            'stockholm_runon_gf',
+            'stockholm_runon_gf_with_whitespace',
+            'stockholm_runon_gf_no_whitespace',
             'stockholm_duplicate_sequence_names',
             'stockholm_duplicate_gr',
             'stockholm_duplicate_gc',
@@ -49,7 +50,8 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_metadata_only',
             'stockholm_multiple_msa',
             'stockholm_multiple_trees',
-            'stockholm_runon_gs',
+            'stockholm_runon_gs_with_whitespace',
+            'stockholm_runon_gs_no_whitespace',
             'stockholm_single_tree_with_id',
             'stockholm_single_tree_without_id',
             'stockholm_whitespace_only_lines',
@@ -175,7 +177,7 @@ class TestStockholmReader(unittest.TestCase):
         self.assertEqual(msa, exp)
 
     def test_stockholm_runon_gf(self):
-        fp = get_data_path('stockholm_runon_gf')
+        fp = get_data_path('stockholm_runon_gf_no_whitespace')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         exp = TabularMSA([DNA('ACTGGTTCAATG')],
                          metadata={'CC': 'CBS domains are small intracellular'
@@ -183,13 +185,19 @@ class TestStockholmReader(unittest.TestCase):
                                          'copies within a protein.'},
                          index=['GG1344'])
         self.assertEqual(msa, exp)
+        fp = get_data_path('stockholm_runon_gf_with_whitespace')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        self.assertEqual(msa, exp)
 
     def test_stockholm_runon_gs(self):
-        fp = get_data_path('stockholm_runon_gs')
+        fp = get_data_path('stockholm_runon_gs_no_whitespace')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         exp = TabularMSA([DNA('ATCGTTCAGTG',
-                              metadata={'AL': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'})],
+                              metadata={'LN': 'This is a runon GS line.'})],
                          index=['seq1'])
+        self.assertEqual(msa, exp)
+        fp = get_data_path('stockholm_runon_gs_with_whitespace')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         self.assertEqual(msa, exp)
 
     def test_stockholm_metadata_only(self):
