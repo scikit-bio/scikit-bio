@@ -182,7 +182,37 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 
 def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
-    """Compute distances only between specified ID pairs"""
+    """Compute distances only between specified ID pairs
+
+    Parameters
+    ----------
+    metric : callable
+        The pairwise distance function to apply.
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of OTUs in a given sample.
+    ids : iterable of strs
+        Identifiers for each sample in ``counts``.
+    id_pairs : iterable of tuple, optional An iterable of tuples of IDs to
+        compare (e.g., ``[('a', 'b'), ('a', 'c'), ...])``. If specified, the
+        set of IDs described must be a subset of ``ids``. ``id_pairs`` is a
+        mutually exclusive argument with ``pairwise_func``. ``metric`` must be
+        resolvable by scikit-bio (e.g., UniFrac methods), or must be callable.
+    kwargs : kwargs, optional
+        Metric-specific parameters.
+
+    Returns
+    -------
+    np.array
+        A condensed form of the distance matrix.
+
+    Raises
+    ------
+    ValueError
+        If ``ids`` are not specified.
+        If ``id_pairs`` are not a subset of ``ids``.
+        If ``metric`` is not a callable.
+    """
     if ids is None:
         raise ValueError("`ids` must be specified if `id_pairs` is specified")
 
@@ -240,6 +270,11 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
         ``scipy.spatial.distance.pdist`` will be used.
+    id_pairs : iterable of tuple, optional An iterable of tuples of IDs to
+        compare (e.g., ``[('a', 'b'), ('a', 'c'), ...])``. If specified, the
+        set of IDs described must be a subset of ``ids``. ``id_pairs`` is a
+        mutually exclusive argument with ``pairwise_func``. ``metric`` must be
+        resolvable by scikit-bio (e.g., UniFrac methods), or must be callable.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
