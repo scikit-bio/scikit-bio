@@ -124,7 +124,9 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
 .. note:: Trees labelled with ``NH``/``TN`` are handled differently than other
    GF features. When reading a Stockholm file with these features, the reader
-   follows the rules described in [2]_.
+   follows the rules described in [2]_. Trees split over multiple lines will
+   have their values concatenated. Unlike other GF features, trees will never
+   have a space added when they are concatenated.
 
    A single tree without an identifier will be stored as::
 
@@ -168,8 +170,10 @@ Where ``O83071/259-312`` is the sequence name, ``AC`` is the feature name, and
 GS metadata is stored in the sequence-specific ``metadata`` dictionary.
 
 .. note:: When reading, duplicate GS feature names will have their values
-   concatenated in the order they appear in the file. When writing, each GS
-   feature will be placed on its own line, regardless of length.
+   concatenated in the order they appear in the file. Concatenation will
+   also add a space between lines if one isn't already there in order to avoid
+   joining words together. When writing, each GS feature will be placed on its
+   own line, regardless of length.
 
 GR metadata
 +++++++++++
