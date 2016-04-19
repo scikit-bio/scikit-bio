@@ -583,6 +583,49 @@ class BetaDiversityTests(TestCase):
                 if id1 != id2:
                     self.assertNotEqual(dm1[id1, id2], dm2[id1, id2])
 
+    def test_partial_pw_no_ids(self):
+        # confirm that partial pairwise execution errors when ids are not
+        # specified
+        error_msg = ("`ids` must be specified")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', self.table1, ids=None,
+                           id_pairs=[('a', 'b'), ])
+
+    def test_partial_pw_alt_func(self):
+        # confirm that partial pairwise execution errors when a pairwise_func
+        # is specified
+        error_msg = ("`pairwise_func` is not compatible with `id_pairs`")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', self.table1, ids=['a', 'b', 'c'],
+                           id_pairs=[('a', 'b'), ], pairwise_func=lambda x: x)
+
+    def test_partial_pw_pairs_not_subset(self):
+        # confirm raise when pairs are not a subset of IDs
+        error_msg = ("`id_pairs` are not a subset of `ids`")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            beta_diversity('euclidean', self.table1, ids=['a', 'b', 'c'],
+                           id_pairs=[('x', 'b'), ])
+
+    def test_partial_pw_matches_pw(self):
+        # confirm that pw execution through partial is identical
+        actual_dm = beta_diversity('euclidean', self.table2, self.sids2,
+                                   id_pairs=[('A', 'B'),
+                                             ('B', 'F'),
+                                             ('D', 'E')])
+        expected_data = [
+            [0., 80.8455317, 0., 0., 0., 0.],
+            [80.8455317, 0., 0., 0., 0., 14.422205],
+            [0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 78.7908624, 0.],
+            [0., 0., 0., 78.7908624, 0., 0.],
+            [0., 14.422205, 0., 0., 0., 0.]]
+
+        expected_dm = DistanceMatrix(expected_data, self.sids2)
+        for id1 in self.sids2:
+            for id2 in self.sids2:
+                npt.assert_almost_equal(actual_dm[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
     def test_alt_pairwise_func(self):
         # confirm that pairwise_func is actually being used
         def not_a_real_pdist(counts, metric):
