@@ -182,7 +182,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
-                   **kwargs):
+                   id_pairs=None, **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -242,6 +242,20 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
+
+    if id_pairs is not None:
+        if ids is None:
+            raise ValueError("`ids` must be specified if `id_pairs` is "
+                             "specified")
+        if pairwise_func is not None:
+            raise ValueError("`pairwise_func` is not compatible with "
+                             "`id_pairs`")
+
+        # flattening list benchmark here
+        # http://stackoverflow.com/a/952952
+        all_ids_in_pairs = {id_ for pair in id_pairs for id_ in pair}
+        if not all_ids_in_pairs.issubset(ids):
+            raise ValueError("`id_pairs` are not a subset of `ids`")
 
     if pairwise_func is None:
         pairwise_func = scipy.spatial.distance.pdist
