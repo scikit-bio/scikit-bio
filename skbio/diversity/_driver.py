@@ -194,11 +194,12 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
         of OTUs in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
-    id_pairs : iterable of tuple, optional An iterable of tuples of IDs to
-        compare (e.g., ``[('a', 'b'), ('a', 'c'), ...])``. If specified, the
-        set of IDs described must be a subset of ``ids``. ``id_pairs`` is a
-        mutually exclusive argument with ``pairwise_func``. ``metric`` must be
-        resolvable by scikit-bio (e.g., UniFrac methods), or must be callable.
+    id_pairs : iterable of tuple, optional
+        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
+        'c'), ...])``. If specified, the set of IDs described must be a subset
+        of ``ids``. ``id_pairs`` is a mutually exclusive argument with
+        ``pairwise_func``. ``metric`` must be resolvable by scikit-bio (e.g.,
+        UniFrac methods), or must be callable.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -214,6 +215,11 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
         If ``id_pairs`` are not a subset of ``ids``.
         If ``metric`` is not a callable.
         If duplicates are observed in ``id_pairs``.
+
+    See Also
+    --------
+    skbio.diversity.get_beta_diversity_metrics
+
     """
     if ids is None:
         raise ValueError("`ids` must be specified if `id_pairs` is specified")
@@ -275,11 +281,12 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
         ``scipy.spatial.distance.pdist`` will be used.
-    id_pairs : iterable of tuple, optional An iterable of tuples of IDs to
-        compare (e.g., ``[('a', 'b'), ('a', 'c'), ...])``. If specified, the
-        set of IDs described must be a subset of ``ids``. ``id_pairs`` is a
-        mutually exclusive argument with ``pairwise_func``. ``metric`` must be
-        resolvable by scikit-bio (e.g., UniFrac methods), or must be callable.
+    id_pairs : iterable of tuple, optional
+        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
+        'c'), ...])``. If specified, the set of IDs described must be a subset
+        of ``ids``. ``id_pairs`` is a mutually exclusive argument with
+        ``pairwise_func``. ``metric`` must be resolvable by scikit-bio (e.g.,
+        UniFrac methods), or must be callable.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
