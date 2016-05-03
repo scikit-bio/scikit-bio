@@ -601,6 +601,16 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         # original state is maintained
         assert_index_equal(msa.index, pd.Index(['ACGT', 'TGCA']))
 
+    def test_reassign_index_mapping_invalid_type(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('TGCA')], minter=str)
+
+        with self.assertRaisesRegex(TypeError,
+                                    'mapping.*dict.*callable.*list'):
+            msa.reassign_index(mapping=['abc', 'def'])
+
+        # original state is maintained
+        assert_index_equal(msa.index, pd.Index(['ACGT', 'TGCA']))
+
     def test_reassign_index_with_mapping_dict_empty(self):
         seqs = [DNA("A"), DNA("C"), DNA("G")]
         msa = TabularMSA(seqs, index=[0.5, 1.5, 2.5])
@@ -630,9 +640,13 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         seqs = [DNA("A"), DNA("C"), DNA("G")]
 
         msa = TabularMSA(seqs, index=[0, 1, 2])
-        msa.reassign_index(mapping=lambda e: str(e))
+        msa.reassign_index(mapping=str)
 
         self.assertEqual(msa, TabularMSA(seqs, index=['0', '1', '2']))
+
+        msa.reassign_index(mapping=lambda e: int(e) + 42)
+
+        self.assertEqual(msa, TabularMSA(seqs, index=[42, 43, 44]))
 
     def test_reassign_index_non_unique_existing_index(self):
         seqs = [DNA("A"), DNA("C"), DNA("G")]

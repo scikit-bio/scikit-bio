@@ -1642,7 +1642,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        mapping : dict-like or callable, optional
+        mapping : dict or callable, optional
             Dictionary or callable that maps existing labels to new labels. Any
             label without a mapping will remain the same.
         minter : callable or metadata key, optional
@@ -1701,7 +1701,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 "Cannot use both `mapping` and `minter` at the same time.")
 
         if mapping is not None:
-            self._seqs.rename(mapping, inplace=True)
+            if isinstance(mapping, dict):
+                self.index = [mapping[label] if label in mapping else label
+                              for label in self.index]
+            elif callable(mapping):
+                self.index = [mapping(label) for label in self.index]
+            else:
+                raise TypeError(
+                    "`mapping` must be a dict or callable, not type %r"
+                    % type(mapping).__name__)
         elif minter is not None:
             self.index = [resolve_key(seq, minter) for seq in self._seqs]
         else:
