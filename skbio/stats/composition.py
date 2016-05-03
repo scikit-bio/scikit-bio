@@ -721,14 +721,11 @@ def ancom(table, grouping,
     The developers of this method recommend the following significance tests
     ([2]_, Supplementary File 1, top of page 11): the standard parametric
     t-test (``scipy.stats.ttest_ind``) or one-way ANOVA
-    (``scipy.stats.f_oneway``) if the number of groups is greater
-    than 2, or non-parametric variants such as Wilcoxon rank sum
-    (``scipy.stats.wilcoxon``) or Kruskal-Wallis (``scipy.stats.kruskal``)
-    if the number of groups is greater than 2.  Because one-way ANOVA is
-    equivalent to the standard t-test when the number of groups is two,
-    we default to ``scipy.stats.f_oneway`` here, which can be used when
-    there are two or more groups.  Users should refer to the documentation
-    of these tests in SciPy to understand the assumptions made by each test.
+    (``scipy.stats.f_oneway``), or non-parametric variants such as Wilcoxon
+    rank sum (``scipy.stats.wilcoxon``) or Kruskal-Wallis
+    (``scipy.stats.kruskal``).  The default test used here is `
+    `scipy.stats.f_oneway``.  Users should refer to the documentation of these
+    tests in SciPy to understand the assumptions made by each test.
 
     This method cannot handle any zero counts as input, since the logarithm
     of zero cannot be computed.  While this is an unsolved problem, many
