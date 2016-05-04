@@ -198,7 +198,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertFalse(seq.metadata)
         self.assertEqual(seq.metadata, {})
         assert_data_frame_almost_equal(seq.positional_metadata,
-                                       pd.DataFrame(index=np.arange(11)))
+                                       pd.DataFrame(index=range(11)))
 
     def test_init_nondefault_parameters(self):
         seq = Sequence('.ABC123xyz-',
@@ -213,7 +213,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         assert_data_frame_almost_equal(
             seq.positional_metadata,
-            pd.DataFrame({'quality': range(11)}, index=np.arange(11)))
+            pd.DataFrame({'quality': range(11)}, index=range(11)))
 
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
@@ -235,7 +235,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(seq.metadata, {})
 
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(0)))
+                                           pd.DataFrame(index=range(0)))
 
     def test_init_single_character_sequence(self):
         for s in (b'A',
@@ -256,7 +256,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(seq.metadata, {})
 
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(1)))
+                                           pd.DataFrame(index=range(1)))
 
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
@@ -278,7 +278,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(seq.metadata, {})
 
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(14)))
+                                           pd.DataFrame(index=range(14)))
 
     def test_init_from_sequence_object(self):
         # We're testing this in its simplest form in other tests. This test

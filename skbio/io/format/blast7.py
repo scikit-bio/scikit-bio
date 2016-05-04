@@ -206,11 +206,11 @@ Read the file into a ``pd.DataFrame``:
 
 >>> df = skbio.io.read(fh, into=pd.DataFrame)
 >>> df # doctest: +NORMALIZE_WHITESPACE
-       qacc      sacc        evalue  qstart   qend  sstart   send
-0  AE000111  AE000111  0.000000e+00       1  10596       1  10596
-1  AE000111  AE000174  8.000000e-30    5565   5671    6928   6821
-2  AE000111  AE000171  3.000000e-24    5587   5671    2214   2130
-3  AE000111  AE000425  6.000000e-26    5587   5671    8552   8468
+       qacc      sacc        evalue  qstart     qend  sstart     send
+0  AE000111  AE000111  0.000000e+00     1.0  10596.0     1.0  10596.0
+1  AE000111  AE000174  8.000000e-30  5565.0   5671.0  6928.0   6821.0
+2  AE000111  AE000171  3.000000e-24  5587.0   5671.0  2214.0   2130.0
+3  AE000111  AE000425  6.000000e-26  5587.0   5671.0  8552.0   8468.0
 
 Suppose we have a legacy BLAST 9 file:
 
@@ -238,14 +238,14 @@ Read the file into a ``pd.DataFrame``:
 >>> df = skbio.io.read(fh, into=pd.DataFrame)
 >>> df # doctest: +NORMALIZE_WHITESPACE
      qseqid          sseqid  pident  length  mismatch  gapopen  qstart  qend \\
-0  AF178033  EMORG:AF178033  100.00     811         0        0       1   811
-1  AF178033  EMORG:AF178032   94.57     811        44        0       1   811
-2  AF178033  EMORG:AF178031   94.82     811        42        0       1   811
+0  AF178033  EMORG:AF178033  100.00   811.0       0.0      0.0     1.0  811.0
+1  AF178033  EMORG:AF178032   94.57   811.0      44.0      0.0     1.0  811.0
+2  AF178033  EMORG:AF178031   94.82   811.0      42.0      0.0     1.0  811.0
 <BLANKLINE>
-   sstart  send  evalue  bitscore
-0       1   811       0    1566.6
-1       1   811       0    1217.7
-2       1   811       0    1233.5
+   sstart   send  evalue  bitscore
+0     1.0  811.0     0.0    1566.6
+1     1.0  811.0     0.0    1217.7
+2     1.0  811.0     0.0    1233.5
 
 References
 ==========

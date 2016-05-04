@@ -193,12 +193,12 @@ be used:
 ...                    default_columns=True)
 >>> df # doctest: +NORMALIZE_WHITESPACE
   qseqid                           sseqid  pident  length  mismatch  gapopen \\
-0   moaC     gi|15800534|ref|NP_286546.1|  100.00     161         0        0
-1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38     161         1        0
+0   moaC     gi|15800534|ref|NP_286546.1|  100.00   161.0       0.0      0.0
+1   moaC  gi|170768970|ref|ZP_02903423.1|   99.38   161.0       1.0      0.0
 <BLANKLINE>
-   qstart  qend  sstart  send         evalue  bitscore
-0       1   161       1   161  3.000000e-114       330
-1       1   161       1   161  9.000000e-114       329
+   qstart   qend  sstart   send         evalue  bitscore
+0     1.0  161.0     1.0  161.0  3.000000e-114     330.0
+1     1.0  161.0     1.0  161.0  9.000000e-114     329.0
 
 Suppose we have a ``blast+6`` file with user-supplied (non-default) columns:
 
@@ -218,9 +218,9 @@ in the file:
 ...                    columns=['qseqid', 'pident', 'mismatch', 'length',
 ...                             'gapopen', 'qend', 'bitscore', 'sstart'])
 >>> df # doctest: +NORMALIZE_WHITESPACE
-  qseqid  pident  mismatch  length  gapopen  qend  bitscore  sstart
-0   moaC  100.00         0     161        0   161       330       1
-1   moaC   99.38         1     161        0   161       329       1
+  qseqid  pident  mismatch  length  gapopen   qend  bitscore  sstart
+0   moaC  100.00       0.0   161.0      0.0  161.0     330.0     1.0
+1   moaC   99.38       1.0   161.0      0.0  161.0     329.0     1.0
 
 References
 ----------

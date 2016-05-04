@@ -8,10 +8,13 @@
 * Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/biocore/scikit-bio/issues/1327))
 * Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
 * Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
+* Added support for `pandas.RangeIndex`, lowering the memory footprint of default integer index objects. `Sequence.positional_metadata` and `TabularMSA.positional_metadata` now use `pd.RangeIndex` as the positional metadata index. `TabularMSA` now uses `pd.RangeIndex` as the default index. Usage of `pd.RangeIndex` over the previous `pd.Int64Index` [should be transparent](http://pandas.pydata.org/pandas-docs/version/0.18.0/whatsnew.html#range-index), so these changes should be non-breaking to users. scikit-bio now depends on pandas >= 0.18.0 ([#1308](https://github.com/biocore/scikit-bio/issues/1308))
+* Added `reset_index=False` parameter to `TabularMSA.append` and `TabularMSA.extend` for resetting the MSA's index to the default index after appending/extending.
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
+* `TabularMSA.append` and `TabularMSA.extend` now require one of `minter`, `index`, or `reset_index` to be provided when incorporating new sequences into an MSA. Previous behavior was to auto-increment the index labels if `minter` and `index` weren't provided and the MSA had a default integer index, otherwise error. Use `reset_index=True` to obtain the previous behavior in a more explicit way.
 
 ### Bug fixes
 * Fixed bug when reading Stockholm files with GF or GS features split over multiple lines. Previously, the feature text was simply concatenated because it was assumed to have trailing whitespace. There are examples of Stockholm files with and without trailing whitespace for multi-line features, so the `skbio.io.format.stockholm` reader now adds a single space when concatenating feature text without trailing whitespace to avoid joining words together. Multi-line trees stored as GF metadata are concatenated as they appear in the file; a space is not added when concatenating. ([#1328](https://github.com/biocore/scikit-bio/issues/1328))

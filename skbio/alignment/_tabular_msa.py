@@ -50,11 +50,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     minter : callable or metadata key, optional
         If provided, defines an index label for each sequence in `sequences`.
         Can either be a callable accepting a single argument (each sequence) or
-        a key into each sequence's ``metadata`` attribute.
+        a key into each sequence's ``metadata`` attribute. Note that `minter`
+        cannot be combined with `index`.
     index : pd.Index consumable, optional
         Index containing labels for `sequences`. Must be the same length as
         `sequences`. Must be able to be passed directly to ``pd.Index``
-        constructor.
+        constructor. Note that `index` cannot be combined with `minter`.
 
     Raises
     ------
@@ -62,6 +63,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         If `minter` and `index` are both provided.
     ValueError
         If `index` is not the same length as `sequences`.
+    TypeError
+        If `sequences` contains an object that isn't a ``GrammaredSequence``.
+    TypeError
+        If `sequences` does not contain exactly the same type of
+        ``GrammaredSequence`` objects.
+    ValueError
+        If `sequences` does not contain ``GrammaredSequence`` objects of the
+        same length.
 
     See Also
     --------
@@ -70,11 +79,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     skbio.sequence.Protein
     pandas.DataFrame
     pandas.Index
+    reassign_index
 
     Notes
     -----
-    If `minter` or `index` are not provided, default pandas labels will be
-    used: integer labels ``0..(N-1)``, where ``N`` is the number of sequences.
+    If neither `minter` nor `index` are provided, default index labels will be
+    used: ``pd.RangeIndex(start=0, stop=len(sequences), step=1)``.
 
     Examples
     --------
@@ -98,10 +108,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     AG-T
     -C-T
 
-    The MSA has default index labels:
+    Since `minter` or `index` wasn't provided, the MSA has default index
+    labels:
 
     >>> msa.index
-    Int64Index([0, 1, 2], dtype='int64')
+    RangeIndex(start=0, stop=3, step=1)
 
     Create an MSA with metadata, positional metadata, and non-default index
     labels:
@@ -218,25 +229,27 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
-        ...         DNA('AC-', metadata={'id': 'b'})]
+        ...         DNA('AC-', metadata={'id': 'b'}),
+        ...         DNA('AC-', metadata={'id': 'c'})]
         >>> msa = TabularMSA(seqs, minter='id')
 
         Retrieve index:
 
         >>> msa.index
-        Index(['a', 'b'], dtype='object')
+        Index(['a', 'b', 'c'], dtype='object')
 
         Set index:
 
-        >>> msa.index = ['seq1', 'seq2']
+        >>> msa.index = ['seq1', 'seq2', 'seq3']
         >>> msa.index
-        Index(['seq1', 'seq2'], dtype='object')
+        Index(['seq1', 'seq2', 'seq3'], dtype='object')
 
-        Delete index:
+        Deleting the index resets it to the ``TabularMSA`` constructor's
+        default:
 
         >>> del msa.index
         >>> msa.index
-        Int64Index([0, 1], dtype='int64')
+        RangeIndex(start=0, stop=3, step=1)
 
         """
         return self._seqs.index
@@ -246,13 +259,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         # Cast to Index to identify tuples as a MultiIndex to match
         # pandas constructor. Just setting would make an index of tuples.
         if not isinstance(index, pd.Index):
-            self._seqs.index = pd.Index(index)
-        else:
-            self._seqs.index = index
+            index = pd.Index(index)
+        self._seqs.index = index
 
     @index.deleter
     def index(self):
-        self.reassign_index()
+        # Create a memory-efficient integer index as the default MSA index.
+        self._seqs.index = pd.RangeIndex(start=0, stop=len(self), step=1)
 
     @property
     @experimental(as_of="0.4.1")
@@ -760,8 +773,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             if minter is None and index is None:
                 index = sequences.index
 
+        # Give a better error message than the one raised by `extend` (it
+        # references `reset_index`, which isn't a constructor parameter).
+        if minter is not None and index is not None:
+            raise ValueError(
+                "Cannot use both `minter` and `index` at the same time.")
         self._seqs = pd.Series([])
-        self.extend(sequences, minter=minter, index=index)
+        self.extend(sequences, minter=minter, index=index,
+                    reset_index=minter is None and index is None)
 
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
@@ -848,6 +867,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         # It is impossible to have 0 sequences and >0 positions.
+        # TODO: change for #1198
         return self.shape.position > 0
 
     @experimental(as_of='0.4.1')
@@ -1622,7 +1642,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Parameters
         ----------
-        mapping : dict-like or callable, optional
+        mapping : dict or callable, optional
             Dictionary or callable that maps existing labels to new labels. Any
             label without a mapping will remain the same.
         minter : callable or metadata key, optional
@@ -1641,9 +1661,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        If neither `mapping` nor `minter` are provided, default pandas labels
-        will be used: integer labels ``0..(N-1)``, where ``N`` is the number of
-        sequences.
+        If neither `mapping` nor `minter` are provided, index labels will be
+        reset to the ``TabularMSA`` constructor's default.
 
         Examples
         --------
@@ -1651,47 +1670,53 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> from skbio import DNA, TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
-        ...         DNA('AC-', metadata={'id': 'b'})]
+        ...         DNA('AC-', metadata={'id': 'b'}),
+        ...         DNA('CCG', metadata={'id': 'c'})]
         >>> msa = TabularMSA(seqs)
         >>> msa.index
-        Int64Index([0, 1], dtype='int64')
+        RangeIndex(start=0, stop=3, step=1)
 
         Assign new index to the MSA using each sequence's ID as a label:
 
         >>> msa.reassign_index(minter='id')
         >>> msa.index
-        Index(['a', 'b'], dtype='object')
+        Index(['a', 'b', 'c'], dtype='object')
 
         Assign default index:
 
         >>> msa.reassign_index()
         >>> msa.index
-        Int64Index([0, 1], dtype='int64')
+        RangeIndex(start=0, stop=3, step=1)
 
         Alternatively, a mapping of existing labels to new labels may be passed
         via `mapping`:
 
         >>> msa.reassign_index(mapping={0: 'seq1', 1: 'seq2'})
         >>> msa.index
-        Index(['seq1', 'seq2'], dtype='object')
+        Index(['seq1', 'seq2', 2], dtype='object')
 
         """
         if mapping is not None and minter is not None:
             raise ValueError(
                 "Cannot use both `mapping` and `minter` at the same time.")
-        if mapping is not None:
-            self._seqs.rename(mapping, inplace=True)
-        elif minter is not None:
-            index = [resolve_key(seq, minter) for seq in self._seqs]
 
-            # Cast to Index to identify tuples as a MultiIndex to match
-            # pandas constructor. Just setting would make an index of tuples.
-            self.index = pd.Index(index)
+        if mapping is not None:
+            if isinstance(mapping, dict):
+                self.index = [mapping[label] if label in mapping else label
+                              for label in self.index]
+            elif callable(mapping):
+                self.index = [mapping(label) for label in self.index]
+            else:
+                raise TypeError(
+                    "`mapping` must be a dict or callable, not type %r"
+                    % type(mapping).__name__)
+        elif minter is not None:
+            self.index = [resolve_key(seq, minter) for seq in self._seqs]
         else:
-            self._seqs.reset_index(drop=True, inplace=True)
+            del self.index
 
     @experimental(as_of='0.4.1')
-    def append(self, sequence, minter=None, index=None):
+    def append(self, sequence, minter=None, index=None, reset_index=False):
         """Append a sequence to the MSA without recomputing alignment.
 
         Parameters
@@ -1703,18 +1728,20 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             Used to create an index label for the sequence being appended. If
             callable, it generates a label directly. Otherwise it's treated as
             a key into the sequence metadata. Note that `minter` cannot be
-            combined with `index`.
+            combined with `index` nor `reset_index`.
         index : object, optional
             Index label to use for the appended sequence. Note that `index`
-            cannot be combined with `minter`.
+            cannot be combined with `minter` nor `reset_index`.
+        reset_index : bool, optional
+            If ``True``, this MSA's index is reset to the ``TabularMSA``
+            constructor's default after appending. Note that `reset_index`
+            cannot be combined with `minter` nor `index`.
 
         Raises
         ------
         ValueError
-            If both `minter` and `index` are provided.
-        ValueError
-            If neither `minter` nor `index` are provided and the MSA has a
-            non-default index.
+            If exactly one choice of `minter`, `index`, or `reset_index` is not
+            provided.
         TypeError
             If the sequence object isn't a ``GrammaredSequence``.
         TypeError
@@ -1730,16 +1757,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        If neither `minter` nor `index` are provided and this MSA has default
-        index labels, the new index label will be auto-incremented.
-
         The MSA is not automatically re-aligned when a sequence is appended.
         Therefore, this operation is not necessarily meaningful on its own.
 
         Examples
         --------
+        Create an MSA with a single sequence labeled ``'seq1'``:
+
         >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa = TabularMSA([DNA('ACGT')], index=['seq1'])
         >>> msa
         TabularMSA[DNA]
         ---------------------
@@ -1748,7 +1774,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             position count: 4
         ---------------------
         ACGT
-        >>> msa.append(DNA('AG-T'))
+        >>> msa.index
+        Index(['seq1'], dtype='object')
+
+        Append a new sequence to the MSA, providing its index label via
+        `index`:
+
+        >>> msa.append(DNA('AG-T'), index='seq2')
         >>> msa
         TabularMSA[DNA]
         ---------------------
@@ -1758,22 +1790,36 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ---------------------
         ACGT
         AG-T
-
-        Auto-incrementing index labels:
-
         >>> msa.index
-        Int64Index([0, 1], dtype='int64')
-        >>> msa.append(DNA('ACGA'))
+        Index(['seq1', 'seq2'], dtype='object')
+
+        Append another sequence, this time resetting the MSA's index labels to
+        the default with `reset_index`. Note that since the MSA's index is
+        reset, we do not need to provide an index label for the new sequence
+        via `index` or `minter`:
+
+        >>> msa.append(DNA('ACGA'), reset_index=True)
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
+        ACGA
         >>> msa.index
-        Int64Index([0, 1, 2], dtype='int64')
+        RangeIndex(start=0, stop=3, step=1)
 
         """
         if index is not None:
             index = [index]
-        self.extend([sequence], minter=minter, index=index)
+        self.extend([sequence], minter=minter, index=index,
+                    reset_index=reset_index)
 
     @experimental(as_of='0.4.1')
-    def extend(self, sequences, minter=None, index=None):
+    def extend(self, sequences, minter=None, index=None, reset_index=False):
         """Extend this MSA with sequences without recomputing alignment.
 
         Parameters
@@ -1785,27 +1831,29 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             Used to create index labels for the sequences being appended. If
             callable, it generates a label directly. Otherwise it's treated as
             a key into the sequence metadata. Note that `minter` cannot be
-            combined with `index`.
+            combined with `index` nor `reset_index`.
         index : pd.Index consumable, optional
             Index labels to use for the appended sequences. Must be the same
             length as `sequences`. Must be able to be passed directly to
             ``pd.Index`` constructor. Note that `index` cannot be combined
-            with `minter`.
+            with `minter` nor `reset_index`.
+        reset_index : bool, optional
+            If ``True``, this MSA's index is reset to the ``TabularMSA``
+            constructor's default after extending. Note that `reset_index`
+            cannot be combined with `minter` nor `index`.
 
         Raises
         ------
         ValueError
-            If both `minter` and `index` are both provided.
-        ValueError
-            If neither `minter` nor `index` are provided and the MSA has a
-            non-default index.
+            If exactly one choice of `minter`, `index`, or `reset_index` is not
+            provided.
         ValueError
             If `index` is not the same length as `sequences`.
         TypeError
             If `sequences` contains an object that isn't a
             ``GrammaredSequence``.
         TypeError
-            If `sequence` contains a type that does not match the dtype of the
+            If `sequences` contains a type that does not match the dtype of the
             MSA.
         ValueError
             If the length of a sequence does not match the number of positions
@@ -1818,16 +1866,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Notes
         -----
-        If neither `minter` nor `index` are provided and this MSA has default
-        index labels, the new index labels will be auto-incremented.
-
         The MSA is not automatically re-aligned when appending sequences.
         Therefore, this operation is not necessarily meaningful on its own.
 
         Examples
         --------
+        Create an MSA with a single sequence labeled ``'seq1'``:
+
         >>> from skbio import DNA, TabularMSA
-        >>> msa = TabularMSA([DNA('ACGT')])
+        >>> msa = TabularMSA([DNA('ACGT')], index=['seq1'])
         >>> msa
         TabularMSA[DNA]
         ---------------------
@@ -1836,7 +1883,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             position count: 4
         ---------------------
         ACGT
-        >>> msa.extend([DNA('AG-T'), DNA('-G-T')])
+        >>> msa.index
+        Index(['seq1'], dtype='object')
+
+        Extend the MSA with sequences, providing their index labels via
+        `index`:
+
+        >>> msa.extend([DNA('AG-T'), DNA('-G-T')], index=['seq2', 'seq3'])
         >>> msa
         TabularMSA[DNA]
         ---------------------
@@ -1847,59 +1900,91 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACGT
         AG-T
         -G-T
-
-        Auto-incrementing index labels:
-
         >>> msa.index
-        Int64Index([0, 1, 2], dtype='int64')
-        >>> msa.extend([DNA('ACGA'), DNA('AC-T'), DNA('----')])
+        Index(['seq1', 'seq2', 'seq3'], dtype='object')
+
+        Extend with more sequences, this time resetting the MSA's index labels
+        to the default with `reset_index`. Note that since the MSA's index is
+        reset, we do not need to provide index labels for the new sequences via
+        `index` or `minter`:
+
+        >>> msa.extend([DNA('ACGA'), DNA('AC-T'), DNA('----')],
+        ...            reset_index=True)
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 6
+            position count: 4
+        ---------------------
+        ACGT
+        AG-T
+        ...
+        AC-T
+        ----
         >>> msa.index
-        Int64Index([0, 1, 2, 3, 4, 5], dtype='int64')
+        RangeIndex(start=0, stop=6, step=1)
 
         """
-        if minter is not None and index is not None:
+        if sum([minter is not None,
+                index is not None,
+                bool(reset_index)]) != 1:
             raise ValueError(
-                "Cannot use both `minter` and `index` at the same time.")
+                "Must provide exactly one of the following parameters: "
+                "`minter`, `index`, `reset_index`")
 
+        # Verify `sequences` first because `minter` could interact with each
+        # sequence's `metadata`.
         sequences = list(sequences)
-
-        if minter is None and index is None:
-            if self.index.equals(pd.Index(np.arange(len(self)))):
-                index = range(len(self), len(self) + len(sequences))
-            else:
-                raise ValueError(
-                    "MSA does not have default index labels, must provide "
-                    "a `minter` or `index` for sequence(s).")
-        elif minter is not None:
-            index = [resolve_key(seq, minter) for seq in sequences]
-
-        # Cast to Index to identify tuples as a MultiIndex to match
-        # pandas constructor. Just setting would make an index of tuples.
-        if not isinstance(index, pd.Index):
-            index = pd.Index(index)
-
         self._assert_valid_sequences(sequences)
 
-        # pandas doesn't give a user-friendly error message if we pass through.
-        if len(sequences) != len(index):
-            raise ValueError(
-                "Number of sequences (%d) must match index length (%d)" %
-                (len(sequences), len(index)))
+        if minter is not None:
+            # Convert to Index to identify tuples as a MultiIndex instead of an
+            # index of tuples.
+            index = pd.Index([resolve_key(seq, minter) for seq in sequences])
+        elif index is not None:
+            # Convert to Index to identify tuples as a MultiIndex instead of an
+            # index of tuples.
+            if not isinstance(index, pd.Index):
+                index = pd.Index(index)
 
-        # When extending a TabularMSA without sequences, the number of
-        # positions in the TabularMSA may change from zero to non-zero. If this
-        # happens, the TabularMSA's positional_metadata must be reset to its
-        # default "empty" representation for the new number of positions,
-        # otherwise the number of positions in the TabularMSA and
-        # positional_metadata will differ.
-        #
-        # TODO: change for #1198
-        prev_num_positions = self.shape.position
-        self._seqs = self._seqs.append(pd.Series(sequences, index=index))
-        curr_num_positions = self.shape.position
-        if curr_num_positions != prev_num_positions:
-            assert prev_num_positions == 0
-            del self.positional_metadata
+            # pandas doesn't give a user-friendly error message if we pass
+            # through.
+            if len(sequences) != len(index):
+                raise ValueError(
+                    "Number of sequences (%d) must match index length (%d)" %
+                    (len(sequences), len(index)))
+        else:
+            # Case for `reset_index=True`. We could simply set `index=None`
+            # since it will be reset after appending below, but we can avoid a
+            # memory spike if Series.append creates a new RangeIndex from
+            # adjacent RangeIndexes in the future (pandas 0.18.0 creates an
+            # Int64Index).
+            index = pd.RangeIndex(start=len(self),
+                                  stop=len(self) + len(sequences),
+                                  step=1)
+
+        if len(self):
+            self._seqs = self._seqs.append(pd.Series(sequences, index=index))
+        else:
+            # Not using Series.append to avoid turning a RangeIndex supplied
+            # via `index` parameter into an Int64Index (this happens in pandas
+            # 0.18.0).
+            self._seqs = pd.Series(sequences, index=index)
+
+            # When extending a TabularMSA without sequences, the number of
+            # positions in the TabularMSA may change from zero to non-zero. If
+            # this happens, the TabularMSA's positional_metadata must be reset
+            # to its default "empty" representation for the new number of
+            # positions, otherwise the number of positions in the TabularMSA
+            # and positional_metadata will differ.
+            #
+            # TODO: change for #1198
+            if self.shape.position > 0:
+                del self.positional_metadata
+
+        if reset_index:
+            self.reassign_index()
 
     def _assert_valid_sequences(self, sequences):
         if not sequences:
@@ -2117,8 +2202,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Index(['a', 'b', 'c', 'z'], dtype='object')
         >>> joined.positional_metadata
            col1  col2 col3
-        0    42     1  NaN
-        1    43     2  NaN
+        0  42.0     1  NaN
+        1  43.0     2  NaN
         2   NaN     3    f
         3   NaN     4    o
         4   NaN     5    o

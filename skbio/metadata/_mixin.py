@@ -9,7 +9,6 @@
 import abc
 import copy
 
-import numpy as np
 import pandas as pd
 
 from skbio.util._decorator import stable, deprecated
@@ -176,8 +175,8 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         Notes
         -----
         This property can be set and deleted. When setting new positional
-        metadata, a shallow copy is made and the index is set to the pandas
-        default integer index.
+        metadata, a shallow copy is made and the ``pd.DataFrame`` index is set
+        to ``pd.RangeIndex(start=0, stop=axis_len, step=1)``.
 
         Examples
         --------
@@ -268,14 +267,20 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
                 "positional metadata axis length (%d)."
                 % (num_rows, axis_len))
 
-        positional_metadata.reset_index(drop=True, inplace=True)
+        positional_metadata.index = self._get_positional_metadata_index()
         self._positional_metadata = positional_metadata
 
     @positional_metadata.deleter
     def positional_metadata(self):
         # Not using setter to avoid copy.
         self._positional_metadata = pd.DataFrame(
-            index=np.arange(self._positional_metadata_axis_len_()))
+                index=self._get_positional_metadata_index())
+
+    def _get_positional_metadata_index(self):
+        """Create a memory-efficient integer index for positional metadata."""
+        return pd.RangeIndex(start=0,
+                             stop=self._positional_metadata_axis_len_(),
+                             step=1)
 
     @abc.abstractmethod
     def __init__(self, positional_metadata=None):
