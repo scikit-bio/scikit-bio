@@ -301,15 +301,17 @@ class PositionalMetadataMixinTests:
             obj = self._positional_metadata_constructor_(
                 0, positional_metadata=empty)
 
+            self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
             assert_data_frame_almost_equal(obj.positional_metadata,
-                                           pd.DataFrame(index=np.arange(0)))
+                                           pd.DataFrame(index=range(0)))
 
         # Nonzero length with missing positional metadata.
         obj = self._positional_metadata_constructor_(
             3, positional_metadata=None)
 
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
-                                       pd.DataFrame(index=np.arange(3)))
+                                       pd.DataFrame(index=range(3)))
 
     def test_constructor_with_positional_metadata_len_zero(self):
         for data in [], (), np.array([]):
@@ -318,7 +320,7 @@ class PositionalMetadataMixinTests:
 
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
-                pd.DataFrame({'foo': data}, index=np.arange(0)))
+                pd.DataFrame({'foo': data}, index=range(0)))
 
     def test_constructor_with_positional_metadata_len_one(self):
         for data in [2], (2, ), np.array([2]):
@@ -327,7 +329,7 @@ class PositionalMetadataMixinTests:
 
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
-                pd.DataFrame({'foo': data}, index=np.arange(1)))
+                pd.DataFrame({'foo': data}, index=range(1)))
 
     def test_constructor_with_positional_metadata_len_greater_than_one(self):
         for data in ([0, 42, 42, 1, 0, 8, 100, 0, 0],
@@ -338,7 +340,7 @@ class PositionalMetadataMixinTests:
 
             assert_data_frame_almost_equal(
                 obj.positional_metadata,
-                pd.DataFrame({'foo': data}, index=np.arange(9)))
+                pd.DataFrame({'foo': data}, index=range(9)))
 
     def test_constructor_with_positional_metadata_multiple_columns(self):
         obj = self._positional_metadata_constructor_(
@@ -348,7 +350,7 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': np.arange(5),
-                          'bar': np.arange(5)[::-1]}, index=np.arange(5)))
+                          'bar': np.arange(5)[::-1]}, index=range(5)))
 
     def test_constructor_with_positional_metadata_custom_index(self):
         df = pd.DataFrame({'foo': np.arange(5), 'bar': np.arange(5)[::-1]},
@@ -359,7 +361,23 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': np.arange(5),
-                          'bar': np.arange(5)[::-1]}, index=np.arange(5)))
+                          'bar': np.arange(5)[::-1]}, index=range(5)))
+
+    def test_constructor_with_positional_metadata_int64_index(self):
+        # Test that memory-inefficient index is converted to memory-efficient
+        # index.
+        df = pd.DataFrame({'foo': np.arange(5), 'bar': np.arange(5)[::-1]},
+                          index=np.arange(5))
+        self.assertIsInstance(df.index, pd.Int64Index)
+
+        obj = self._positional_metadata_constructor_(
+            5, positional_metadata=df)
+
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'foo': np.arange(5),
+                          'bar': np.arange(5)[::-1]}, index=range(5)))
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
 
     def test_constructor_makes_shallow_copy_of_positional_metadata(self):
         df = pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
@@ -370,7 +388,7 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
         self.assertIsNot(obj.positional_metadata, df)
 
         # Original df is not mutated.
@@ -383,21 +401,21 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
         # Change single value of underlying data.
         df.values[0][0] = 10
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
         # Mutate list (not a deep copy).
         df['bar'][0].append(42)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[42], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
     def test_eq_basic(self):
         obj1 = self._positional_metadata_constructor_(
@@ -538,6 +556,16 @@ class PositionalMetadataMixinTests:
             pd.DataFrame({'bar': [[1], [], [], []],
                           'baz': [42, 42, 42, 42]}))
 
+    def test_copy_preserves_range_index(self):
+        for pm in None, {'foo': ['a', 'b', 'c']}:
+            obj = self._positional_metadata_constructor_(
+                3, positional_metadata=pm)
+            obj_copy = copy.copy(obj)
+
+            self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
+            self.assertIsInstance(obj_copy.positional_metadata.index,
+                                  pd.RangeIndex)
+
     def test_deepcopy_positional_metadata_none(self):
         obj = self._positional_metadata_constructor_(3)
         obj_copy = copy.deepcopy(obj)
@@ -601,6 +629,16 @@ class PositionalMetadataMixinTests:
             pd.DataFrame({'bar': [[], [], [], []],
                           'baz': [42, 42, 42, 42]}))
 
+    def test_deepcopy_preserves_range_index(self):
+        for pm in None, {'foo': ['a', 'b', 'c']}:
+            obj = self._positional_metadata_constructor_(
+                3, positional_metadata=pm)
+            obj_copy = copy.deepcopy(obj)
+
+            self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
+            self.assertIsInstance(obj_copy.positional_metadata.index,
+                                  pd.RangeIndex)
+
     def test_deepcopy_memo_is_respected(self):
         # Basic test to ensure deepcopy's memo is passed through to recursive
         # deepcopy calls.
@@ -615,6 +653,7 @@ class PositionalMetadataMixinTests:
             3, positional_metadata={'foo': [22, 22, 0]})
 
         self.assertIsInstance(obj.positional_metadata, pd.DataFrame)
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [22, 22, 0]}))
 
@@ -634,9 +673,10 @@ class PositionalMetadataMixinTests:
         obj = self._positional_metadata_constructor_(4)
 
         self.assertIsInstance(obj.positional_metadata, pd.DataFrame)
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
-            pd.DataFrame(index=np.arange(4)))
+            pd.DataFrame(index=range(4)))
 
     def test_positional_metadata_getter_set_column_series(self):
         length = 8
@@ -678,7 +718,7 @@ class PositionalMetadataMixinTests:
 
         obj.positional_metadata = pd.DataFrame(index=np.arange(3))
         assert_data_frame_almost_equal(obj.positional_metadata,
-                                       pd.DataFrame(index=np.arange(3)))
+                                       pd.DataFrame(index=range(3)))
 
     def test_positional_metadata_setter_data_frame(self):
         obj = self._positional_metadata_constructor_(3)
@@ -688,12 +728,13 @@ class PositionalMetadataMixinTests:
 
         obj.positional_metadata = pd.DataFrame({'foo': [3, 2, 1]},
                                                index=['a', 'b', 'c'])
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [3, 2, 1]}))
 
         obj.positional_metadata = pd.DataFrame(index=np.arange(3))
         assert_data_frame_almost_equal(obj.positional_metadata,
-                                       pd.DataFrame(index=np.arange(3)))
+                                       pd.DataFrame(index=range(3)))
 
     def test_positional_metadata_setter_none(self):
         obj = self._positional_metadata_constructor_(
@@ -706,7 +747,24 @@ class PositionalMetadataMixinTests:
         obj.positional_metadata = None
 
         assert_data_frame_almost_equal(obj.positional_metadata,
-                                       pd.DataFrame(index=np.arange(0)))
+                                       pd.DataFrame(index=range(0)))
+
+    def test_positional_metadata_setter_int64_index(self):
+        # Test that memory-inefficient index is converted to memory-efficient
+        # index.
+        obj = self._positional_metadata_constructor_(5)
+
+        df = pd.DataFrame({'foo': np.arange(5), 'bar': np.arange(5)[::-1]},
+                          index=np.arange(5))
+        self.assertIsInstance(df.index, pd.Int64Index)
+
+        obj.positional_metadata = df
+
+        assert_data_frame_almost_equal(
+            obj.positional_metadata,
+            pd.DataFrame({'foo': np.arange(5),
+                          'bar': np.arange(5)[::-1]}, index=range(5)))
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
 
     def test_positional_metadata_setter_makes_shallow_copy(self):
         obj = self._positional_metadata_constructor_(3)
@@ -718,7 +776,7 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
         self.assertIsNot(obj.positional_metadata, df)
 
         # Original df is not mutated.
@@ -731,21 +789,21 @@ class PositionalMetadataMixinTests:
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
         # Change single value of underlying data.
         df.values[0][0] = 10
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
         # Mutate list (not a deep copy).
         df['bar'][0].append(42)
         assert_data_frame_almost_equal(
             obj.positional_metadata,
             pd.DataFrame({'foo': [22, 22, 0], 'bar': [[42], [], []]},
-                         index=np.arange(3)))
+                         index=range(3)))
 
     def test_positional_metadata_setter_invalid_type(self):
         obj = self._positional_metadata_constructor_(
@@ -781,23 +839,28 @@ class PositionalMetadataMixinTests:
         obj = self._positional_metadata_constructor_(
             3, positional_metadata={'foo': [1, 2, 3]})
 
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame({'foo': [1, 2, 3]}))
 
         del obj.positional_metadata
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
 
         # Delete again.
         del obj.positional_metadata
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
 
         obj = self._positional_metadata_constructor_(3)
 
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
         del obj.positional_metadata
+        self.assertIsInstance(obj.positional_metadata.index, pd.RangeIndex)
         assert_data_frame_almost_equal(obj.positional_metadata,
                                        pd.DataFrame(index=range(3)))
 
