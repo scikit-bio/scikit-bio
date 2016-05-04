@@ -720,9 +720,11 @@ def ancom(table, grouping,
     -----
     The developers of this method recommend the following significance tests
     ([2]_, Supplementary File 1, top of page 11): if there are 2 groups, use
-    the standard parametric t-test or non-parametric Wilcoxon rank sum test.
-    If there are more than 2 groups, use parametric one-way ANOVA or
-    nonparametric Kruskal-Wallis. Because one-way ANOVA is equivalent
+    the standard parametric t-test (``scipy.stats.ttest_ind``) or
+    non-parametric Wilcoxon rank sum test (``scipy.stats.wilcoxon``).
+    If there are more than 2 groups, use parametric one-way ANOVA
+    (``scipy.stats.f_oneway``) or nonparametric Kruskal-Wallis
+    (``scipy.stats.kruskal``). Because one-way ANOVA is equivalent
     to the standard t-test when the number of groups is two, we default to
     ``scipy.stats.f_oneway`` here, which can be used when there are two or
     more groups.  Users should refer to the documentation of these tests in
