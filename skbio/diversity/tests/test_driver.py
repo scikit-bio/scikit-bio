@@ -20,7 +20,8 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
                              get_beta_diversity_metrics)
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
-from skbio.diversity._driver import _partial_pw
+from skbio.diversity._driver import (_partial_pw, _block_party,
+                                     _generate_id_blocks)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -756,6 +757,69 @@ class PartialPairwise(TestCase):
             for id2 in self.sids2:
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
+
+
+class ParallelBetaDiversity(TestCase):
+    def setUp(self):
+        self.table1 = [[1, 5],
+                       [2, 3],
+                       [0, 1]]
+        self.sids1 = list('ABC')
+        self.tree1 = TreeNode.read(io.StringIO(
+            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'))
+        self.oids1 = ['O1', 'O2']
+
+    def test_generate_id_blocks(self):
+        ids = [1, 2, 3, 4, 5]
+        exp = [(np.array((0, 1)), np.array((0, 1))),
+               (np.array((0, 1)), np.array((2, 3))),
+               (np.array((0, 1)), np.array((4,))),
+               (np.array((2, 3)), np.array((2, 3))),
+               (np.array((2, 3)), np.array((4,))),
+               (np.array((4,)),   np.array((4,)))]
+
+        obs = list(_generate_id_blocks(ids, 2))
+        npt.assert_equal(obs, exp)
+
+    def test_block_party_nokw(self):
+        counts = np.arange(15).reshape(5, 3)
+        exp = [(np.array([[0, 1, 2], [3, 4, 5]]), {}),
+               (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]), {}),
+               (np.array([[0, 1, 2], [3, 4, 5], [12, 13, 14]]), {}),
+               (np.array([[6, 7, 8], [9, 10, 11]]), {}),
+               (np.array([[6, 7, 8], [9, 10, 11], [12, 13, 14]]), {}),
+               (np.array([[12, 13, 14]]), {})]
+        obs = [_block_party(counts, rids, cids) for rids, cids in
+               _generate_id_blocks(list(range(5)), 2)]
+        npt.assert_equal(obs, exp)
+
+    def test_block_party_tree(self):
+        counts = np.array([[1, 1, 1],
+                           [1, 0, 1],
+                           [1, 0, 1],
+                           [0, 0, 1],
+                           [0, 1, 1]])
+        tree = TreeNode.read(io.StringIO('(a:1,b:2,c:3);'))
+        otu_ids = ['a', 'b', 'c']
+
+        kw = {'tree': tree, 'otu_ids': otu_ids}
+        kw_no_a = {'tree': tree.shear(['b', 'c']), 'otu_ids': ['b', 'c']}
+        kw_no_b = {'tree': tree.shear(['a', 'c']), 'otu_ids': ['a', 'c']}
+
+        exp = [(np.array([[1, 1, 1], [1, 0, 1]]), kw),
+               (np.array([[1, 1, 1], [1, 0, 1], [1, 0, 1], [0, 0, 1]]), kw),
+               (np.array([[1, 1, 1], [1, 0, 1], [0, 1, 1]]), kw),
+               (np.array([[1, 1], [0, 1]]), kw_no_b),
+               (np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1]]), kw),
+               (np.array([[1, 1]]), kw_no_a)]
+
+        obs = [_block_party(counts, rids, cids, **kw) for rids, cids in
+               _generate_id_blocks(list(range(5)), 2)]
+
+        for (oa, okw), (ea, ekw) in zip(obs, exp):
+            npt.assert_equal(oa, ea)
+            npt.assert_equal(okw['otu_ids'], ekw['otu_ids'])
+            self.assertEqual(str(okw['tree']), str(ekw['tree']))
 
 
 if __name__ == "__main__":
