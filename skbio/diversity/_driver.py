@@ -247,6 +247,99 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
     return dm + dm.T
 
 
+def _generate_id_blocks(ids, k=4):
+    """Generate blocks of IDs that map into a DistanceMatrix
+
+    Parameters
+    ----------
+    ids : Iterable
+        An iterable of IDs of whatever type.
+    k : int
+        The size of a block to generate IDs for
+
+    Notes
+    -----
+
+    This method is intended to facilitate partial beta diversity calculations.
+    Blocks of IDs are generated from the upper triangle of the subsequent
+    distance matrix. For instance, given the following distance matrix with
+    IDs {A, B, C, D, E}:
+
+      A B C D E
+    A 0 # # # #
+    B # 0 # # #
+    C # # 0 # #
+    D # # # 0 #
+    E # # # # 0
+
+    The goal of this method is to generate tuples of IDs of size k over the
+    upper triangle which correspond to blocks of the matrix to compute. Given
+    a k=3, the following ID tuples would be generated:
+
+    ((A, B, C), (A, B, C))
+    ((A, B, C), (D, E))
+    ((D, E), (D, E))
+
+    This method is not responsible for describing which specific pairs of IDs
+    are to be computed, only the subset of the matrix of interest.
+
+    Returns
+    -------
+    tuple of 1D np.array
+        Index 0 contans the row IDs, and index 1 contains the column IDs
+    """
+    n = len(ids)
+    ids_idx = np.arange(n)
+    for row_start in range(0, n, k):
+        for col_start in range(row_start, n, k):
+            row_ids = ids_idx[row_start:row_start + k]
+            col_ids = ids_idx[col_start:col_start + k]
+
+            yield (row_ids, col_ids)
+
+
+def _block_party(counts, row_ids, col_ids, **kwargs):
+    """Subset counts to relevant rows and columns
+
+    Parameters
+    ----------
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of OTUs in a given sample.
+    row_ids : 1D np.ndarray of int
+        Block row IDs to keep in the counts matrix.
+    col_ids : 1D np.ndarray of int
+        Block column IDs to keep in the counts matrix. Note, these correspond
+        to rows in the counts matrix, but columns in a subsequent distance
+        matrix.
+
+    Returns
+    -------
+    2D np.ndarray
+        The subset counts block containing only the rows which exist in row_ids
+        and col_ids, and does not contain any zero'd columns.
+    dict
+        kwargs with any relevant filtering (e.g., filtering a phylogenetic tree
+        to only reflect the OTUs present in the counts matrix).
+    """
+    ids_to_keep = np.unique(np.hstack([row_ids, col_ids]))
+
+    # create a view of the relevant samples
+    counts_block = counts[ids_to_keep]
+
+    # remove from the block any empty observations
+    # NOTE: this will perform an implicit copy
+    nonzero_cols = (counts_block != 0).any(axis=0)
+    counts_block = counts_block[:, nonzero_cols]
+
+    block_kwargs = kwargs
+    if 'tree' in kwargs and 'otu_ids' in kwargs:
+        block_kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
+        block_kwargs['tree'] = kwargs['tree'].shear(block_kwargs['otu_ids'])
+
+    return counts_block, block_kwargs
+
+
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                    id_pairs=None, **kwargs):
