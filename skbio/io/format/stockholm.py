@@ -478,8 +478,8 @@ class _MSAData:
         # Handles extra line(s) of an already created tree
         elif feature_name == 'NH' and feature_name in self._metadata:
             trees = self._metadata[feature_name]
-            if isinstance(trees, dict):
-                tree_id = list(trees.keys())[-1]
+            if isinstance(trees, OrderedDict):
+                tree_id = next(reversed(trees))
                 self._metadata[feature_name][tree_id] = (trees[tree_id] +
                                                          feature_data)
             else:
