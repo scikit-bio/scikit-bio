@@ -191,7 +191,7 @@ default integer index labels:
 
 >>> msa.reassign_index()
 >>> msa.index
-Int64Index([0, 1, 2], dtype='int64')
+RangeIndex(start=0, stop=3, step=1)
 
 We can now write the ``TabularMSA`` in PHYLIP format:
 

@@ -428,10 +428,10 @@ class DissimilarityMatrix(SkbioObject):
         ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
         >>> df = dm.to_data_frame()
         >>> df
-           a  b  c
-        a  0  1  2
-        b  1  0  3
-        c  2  3  0
+             a    b    c
+        a  0.0  1.0  2.0
+        b  1.0  0.0  3.0
+        c  2.0  3.0  0.0
 
         """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
