@@ -376,6 +376,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
+reference_tags = ['RM', 'RT', 'RA', 'RL', 'RC']
 
 
 @stockholm.sniffer()
@@ -481,6 +482,20 @@ class _MSAData:
             tree_id = list(trees.keys())[-1]
             self._metadata[feature_name][tree_id] = (trees[tree_id] +
                                                      feature_data)
+        elif feature_name == 'RN':
+            if feature_name not in self._metadata:
+                self._metadata[feature_name] = [{}]
+            else:
+                self._metadata[feature_name].append({})
+        elif feature_name in reference_tags:
+            if feature_name not in self._metadata['RN'][-1]:
+                self._metadata['RN'][-1][feature_name] = feature_data
+            else:
+                padding = _add_padding(self._metadata['RN'][-1][feature_name])
+                self._metadata['RN'][-1][feature_name] += (padding +
+                                                           feature_data)
+        # elif feature_name in self._metadata['RN'][-1]:
+        #     self._metadata['RN'][-1][feature_name] += feature_data
         elif feature_name in self._metadata:
             padding = '' if self._metadata[feature_name][-1].isspace() else ' '
             self._metadata[feature_name] = (self._metadata[feature_name] +
@@ -647,6 +662,13 @@ def _tabular_msa_to_stockholm(obj, fh):
             for tree_id, tree in obj.metadata[gf_feature].items():
                 fh.write("#=GF TN %s\n" % tree_id)
                 fh.write("#=GF NH %s\n" % tree)
+        elif gf_feature == 'RN' and isinstance(gf_feature_data, list):
+            for index, dictionary in enumerate(gf_feature_data):
+                fh.write("#=GF RN [%s]\n" % str(index+1))
+                for feature in reference_tags:
+                    if feature in dictionary:
+                        fh.write("#=GF %s %s\n" % (feature,
+                                                   dictionary[feature]))
         else:
             fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
@@ -710,3 +732,7 @@ def _format_positional_metadata(df, data_type):
                                        " in column %s of incorrect length."
                                        % (data_type, column))
     return str_df
+
+
+def _add_padding(item):
+    return '' if item[-1].isspace() else ' '
