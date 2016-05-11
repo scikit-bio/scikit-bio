@@ -21,7 +21,7 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.diversity._driver import (_partial_pw, _block_party,
-                                     _generate_id_blocks)
+                                     _generate_id_blocks, _pairs_to_compute)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -783,12 +783,17 @@ class ParallelBetaDiversity(TestCase):
 
     def test_block_party_nokw(self):
         counts = np.arange(15).reshape(5, 3)
-        exp = [(np.array([[0, 1, 2], [3, 4, 5]]), {}),
-               (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]), {}),
-               (np.array([[0, 1, 2], [3, 4, 5], [12, 13, 14]]), {}),
-               (np.array([[6, 7, 8], [9, 10, 11]]), {}),
-               (np.array([[6, 7, 8], [9, 10, 11], [12, 13, 14]]), {}),
-               (np.array([[12, 13, 14]]), {})]
+        exp = [(np.array([[0, 1, 2], [3, 4, 5]]),
+                {'ids': np.array([0, 1])}),
+               (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]),
+                {'ids': np.array([0, 1, 2, 3])}),
+               (np.array([[0, 1, 2], [3, 4, 5], [12, 13, 14]]),
+                {'ids': np.array([0, 1, 4])}),
+               (np.array([[6, 7, 8], [9, 10, 11]]),
+                {'ids': np.array([2, 3])}),
+               (np.array([[6, 7, 8], [9, 10, 11], [12, 13, 14]]),
+                {'ids': np.array([2, 3, 4])}),
+               (np.array([[12, 13, 14]]), {'ids': np.array([4])})]
         obs = [_block_party(counts, rids, cids) for rids, cids in
                _generate_id_blocks(list(range(5)), 2)]
         npt.assert_equal(obs, exp)
@@ -820,6 +825,25 @@ class ParallelBetaDiversity(TestCase):
             npt.assert_equal(oa, ea)
             npt.assert_equal(okw['otu_ids'], ekw['otu_ids'])
             self.assertEqual(str(okw['tree']), str(ekw['tree']))
+
+    def test_pairs_to_compute_rids_are_cids(self):
+        rids = np.array([0, 1, 2, 10])
+        cids = rids
+        exp = [(0, 1), (0, 2), (0, 10), (1, 2), (1, 10), (2, 10)]
+        self.assertEqual(_pairs_to_compute(rids, cids), exp)
+
+    def test_pairs_to_compute_rids_are_not_cids(self):
+        rids = np.array([0, 1, 2])
+        cids = np.array([3, 4, 5])
+        exp = [(0, 3), (0, 4), (0, 5), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4),
+               (2, 5)]
+        self.assertEqual(_pairs_to_compute(rids, cids), exp)
+
+    def test_pairs_to_compute_rids_overlap_cids(self):
+        rids = np.array([0, 1, 2])
+        cids = np.array([0, 10, 20])
+        with self.assertRaises(ValueError):
+            _pairs_to_compute(rids, cids)
 
 
 if __name__ == "__main__":
