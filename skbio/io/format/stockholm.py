@@ -151,6 +151,39 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
            }
        }
 
+.. note:: References labelled with ``RN``/``RM``/``RT``/``RA``/``RL``/``RC``
+   are handled differently than other GF features. When reading a Stockholm
+   file with these features, the reader populates adds a dictionary to a list
+   of reference dictionaries, and populates it with the information on that
+   specific reference. If the reference does not include all the expected
+   information (title, author, etc.), the dictionary will only be populated
+   with the information provided.
+
+   A single reference will be stored as::
+
+        metadata = {
+            'RN': [{
+                'RM': 'reference medline'
+                'RT': 'reference title'
+                'RA': 'reference author'
+                'RL': 'reference location'
+                'RC': 'reference comment'
+            }]
+        }
+
+    Multiple references will be stored as::
+
+        metadata = {
+            'RN': [{
+                'RM': 'reference medline'
+                ...
+            },
+                {
+                'RM': 'reference medline'
+                ...
+            }]
+        }
+
 GS metadata
 +++++++++++
 Data relating to a specific sequence in the multiple sequence alignment.
