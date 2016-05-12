@@ -9,7 +9,6 @@
 import functools
 import itertools
 
-import numpy as np
 import scipy.spatial.distance
 import pandas as pd
 
@@ -19,7 +18,7 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac, _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default)
 from skbio.util._decorator import experimental
-from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix, PairwiseDistances
 from skbio.diversity._util import (_validate_counts_matrix,
                                    _get_phylogenetic_kwargs)
 
@@ -182,82 +181,17 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
-    """Compute distances only between specified ID pairs
-
-    Parameters
-    ----------
-    metric : callable
-        The pairwise distance function to apply.
-    counts : 2D array_like of ints or floats
-        Matrix containing count/abundance data where each row contains counts
-        of OTUs in a given sample.
-    ids : iterable of strs
-        Identifiers for each sample in ``counts``.
-    id_pairs : iterable of tuple, optional
-        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
-        'c'), ...])``. If specified, the set of IDs described must be a subset
-        of ``ids``. ``id_pairs`` is a mutually exclusive argument with
-        ``pairwise_func``. ``metric`` must be resolvable by scikit-bio (e.g.,
-        UniFrac methods), or must be callable.
-    kwargs : kwargs, optional
-        Metric-specific parameters.
-
-    Returns
-    -------
-    np.array
-        A square, hollow, matrix of distances between ID pairs.
-
-    Raises
-    ------
-    ValueError
-        If ``ids`` are not specified.
-        If ``id_pairs`` are not a subset of ``ids``.
-        If ``metric`` is not a callable.
-        If duplicates are observed in ``id_pairs``.
-
-    See Also
-    --------
-    skbio.diversity.get_beta_diversity_metrics
-
-    """
-    if ids is None:
-        raise ValueError("`ids` must be specified if `id_pairs` is specified")
-
-    all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
-    if not all_ids_in_pairs.issubset(ids):
-        raise ValueError("`id_pairs` are not a subset of `ids`")
-
-    hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
-    if len(hashes) != len(id_pairs) * 2:
-        raise ValueError("Duplicate ID pairs observed.")
-
-    if isinstance(metric, str):
-        # The mechanism for going from str to callable in scipy's pdist is
-        # not exposed
-        raise ValueError("`metric` must be callable")
-
-    dm = np.zeros((len(ids), len(ids)), dtype=float)
-    id_index = {id_: idx for idx, id_ in enumerate(ids)}
-    id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
-
-    for u, v in id_pairs_indexed:
-        dm[u, v] = metric(counts[u], counts[v], **kwargs)
-
-    return dm + dm.T
-
-
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                    id_pairs=None, **kwargs):
-    """Compute distances between all pairs of samples
+    """Compute distances between pairs of samples.
 
     Parameters
     ----------
     metric : str, callable
         The pairwise distance function to apply. See the scipy ``pdist`` docs
         and the scikit-bio functions linked under *See Also* for available
-        metrics. Passing metrics as a strings is preferable as this often
+        metrics. Passing metrics as a string is preferable as this often
         results in an optimized version of the metric being used.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
@@ -265,7 +199,8 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     ids : iterable of strs, optional
         Identifiers for each sample in ``counts``. By default, samples will be
         assigned integer identifiers in the order that they were provided
-        (where the type of the identifiers will be ``str``).
+        (where the type of the identifiers will be ``str``). `ids` must be
+        provided when supplying `id_pairs`.
     validate : bool, optional
         If `False`, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
@@ -280,21 +215,26 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
-        ``scipy.spatial.distance.pdist`` will be used.
+        ``scipy.spatial.distance.pdist`` will be used. `pairwise_func` cannot
+        be used with `id_pairs`.
     id_pairs : iterable of tuple, optional
         An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
         'c'), ...])``. If specified, the set of IDs described must be a subset
-        of ``ids``. ``id_pairs`` is a mutually exclusive argument with
-        ``pairwise_func``. ``metric`` must be resolvable by scikit-bio (e.g.,
-        UniFrac methods), or must be callable.
+        of `ids`, and `ids` must be provided. `id_pairs` cannot be used with
+        `pairwise_func`. `metric` must be resolvable by scikit-bio (e.g.,
+        UniFrac methods) or must be callable.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
     Returns
     -------
-    skbio.DistanceMatrix
-        Distances between all pairs of samples (i.e., rows). The number of
-        rows and columns will be equal to the number of rows in ``counts``.
+    skbio.DistanceMatrix or skbio.stats.distance.PairwiseDistances
+        If `id_pairs` is not provided (the default), returns a
+        ``DistanceMatrix`` containing distances between all pairs of samples
+        (i.e., rows) in `counts`. The number of rows and columns will be equal
+        to the number of rows in ``counts``. If `id_pairs` is provided, returns
+        a ``PairwiseDistances`` object containing only the pairwise distances
+        defined by `id_pairs`.
 
     Raises
     ------
@@ -311,8 +251,51 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     skbio.diversity.alpha_diversity
     scipy.spatial.distance.pdist
     sklearn.metrics.pairwise_distances
+    skbio.stats.distance.PairwiseDistances
+    skbio.stats.distance.DistanceMatrix.from_pairwise_distances
+
+    Notes
+    -----
+    ``DistanceMatrix.from_pairwise_distances`` can be used to construct a
+    complete ``DistanceMatrix`` from multiple ``PairwiseDistances`` objects.
 
     """
+    if ids is not None:
+        # `ids` may be an iterable and we need to take multiple passes through
+        # it below.
+        ids = list(ids)
+        if len(ids) != len(set(ids)):
+            raise ValueError("`ids` contains duplicate IDs.")
+        for id_ in ids:
+            if not isinstance(id_, str):
+                raise TypeError(
+                    "`ids` must contain IDs of type str, not type %r" %
+                    type(id_).__name__)
+
+    if id_pairs is not None:
+        if pairwise_func is not None:
+            raise ValueError(
+                "Cannot provide both `pairwise_func` and `id_pairs`.")
+
+        if ids is None:
+            raise ValueError(
+                "`ids` must be provided if `id_pairs` is provided.")
+
+        # `id_pairs` may be an iterable and we need to take multiple passes
+        # through it below.
+        id_pairs = list(id_pairs)
+
+        all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
+        if not all_ids_in_pairs.issubset(ids):
+            raise ValueError("`id_pairs` are not a subset of `ids`.")
+
+        hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
+        if len(hashes) != len(id_pairs) * 2:
+            raise ValueError(
+                "`id_pairs` contains duplicate ID pairs or an ID pair "
+                "comparing an ID to itself. This function assumes that "
+                "\"within\" distances are always 0.0.")
+
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
@@ -339,17 +322,30 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     else:
         # metric is a string that scikit-bio doesn't know about, for
         # example one of the SciPy metrics
-        pass
+        if id_pairs is not None and isinstance(metric, str):
+            # The mechanism for going from str to callable in scipy's pdist is
+            # not exposed.
+            raise TypeError(
+                "`metric` must be resolvable by scikit-bio or callable when "
+                "providing `id_pairs`.")
 
-    if id_pairs is not None:
-        if pairwise_func is not None:
-            raise ValueError("`pairwise_func` is not compatible with "
-                             "`id_pairs`")
+    if id_pairs is None:
+        if pairwise_func is None:
+            pairwise_func = scipy.spatial.distance.pdist
 
-        pairwise_func = functools.partial(_partial_pw, ids, id_pairs)
+        distances = pairwise_func(counts, metric=metric, **kwargs)
+        return DistanceMatrix(distances, ids)
+    else:
+        return _partial_pw(ids, id_pairs, counts, metric, **kwargs)
 
-    if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
 
-    distances = pairwise_func(counts, metric=metric, **kwargs)
-    return DistanceMatrix(distances, ids)
+def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
+    id_index = {id_: idx for idx, id_ in enumerate(ids)}
+
+    distances = {}
+    for id1, id2 in id_pairs:
+        id1_idx = id_index[id1]
+        id2_idx = id_index[id2]
+        distance = metric(counts[id1_idx], counts[id2_idx], **kwargs)
+        distances[(id1, id2)] = distance
+    return PairwiseDistances(distances)

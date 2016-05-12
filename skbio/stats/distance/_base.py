@@ -20,6 +20,8 @@ from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates
 from skbio.util._decorator import experimental, classonlymethod
 from skbio.util._misc import resolve_key
+from ._pairwise_distances import PairwiseDistances
+from ._util import is_id_pair
 
 
 class DissimilarityMatrixError(Exception):
@@ -453,6 +455,11 @@ class DissimilarityMatrix(SkbioObject):
             self.shape[0], self.shape[1], self._matrix_element_name,
             _pprint_strs(self.ids)) + str(self.data)
 
+    @experimental(as_of="0.4.2-dev")
+    def __repr__(self):
+        """String summary of this dissimilarity matrix."""
+        return str(self)
+
     @experimental(as_of="0.4.0")
     def __eq__(self, other):
         """Compare this dissimilarity matrix to another for equality.
@@ -587,7 +594,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         if isinstance(index, str):
             return self.data[self.index(index)]
-        elif self._is_id_pair(index):
+        elif is_id_pair(index):
             return self.data[self.index(index[0]), self.index(index[1])]
         else:
             return self.data.__getitem__(index)
@@ -640,11 +647,6 @@ class DissimilarityMatrix(SkbioObject):
 
     def _index_list(self, list_):
         return {id_: idx for idx, id_ in enumerate(list_)}
-
-    def _is_id_pair(self, index):
-        return (isinstance(index, tuple) and
-                len(index) == 2 and
-                all(map(lambda e: isinstance(e, str), index)))
 
 
 class DistanceMatrix(DissimilarityMatrix):
@@ -737,6 +739,118 @@ class DistanceMatrix(DissimilarityMatrix):
                 dm[i, j] = dm[j, i] = metric(a, b)
 
         return cls(dm, keys_)
+
+    @classonlymethod
+    @experimental(as_of="0.4.2-dev")
+    def from_pairwise_distances(cls, pairwise_distances):
+        """Create ``DistanceMatrix`` from an iterable of ``PairwiseDistances``.
+
+        Constructs a ``DistanceMatrix`` from the complete set of IDs defined by
+        `pairwise_distances`. All "between" pairwise distances must be defined.
+
+        Parameters
+        ----------
+        pairwise_distances : iterable of PairwiseDistances
+            Pairwise distances to merge into a single ``DistanceMatrix``.
+
+        Returns
+        -------
+        DistanceMatrix
+            Distance matrix representing all pairwise distances between the
+            complete set of IDs present in `pairwise_distances`. The IDs in the
+            distance matrix will be in sorted order as there is no ordering
+            defined by `pairwise_distances`.
+
+        Raises
+        ------
+        TypeError
+            If `pairwise_distances` does not contain ``PairwiseDistances``
+            objects.
+        ValueError
+            If there are conflicting distances between a pair of IDs (e.g., two
+            ``PairwiseDistances`` objects define a different distance between
+            the same pair of IDs).
+        ValueError
+            If there is not at least one ID defined across
+            `pairwise_distances`.
+        ValueError
+            If any "between" distances are missing.
+
+        See Also
+        --------
+        skbio.stats.distance.PairwiseDistances
+        skbio.diversity.beta_diversity
+
+        Examples
+        --------
+        Construct a ``DistanceMatrix`` from two ``PairwiseDistances`` objects
+        collectively defining three IDs, `'A'`, `'B'`, and `'C'`:
+
+        >>> from skbio.stats.distance import DistanceMatrix, PairwiseDistances
+        >>> pwdists = [
+        ...     PairwiseDistances({('A', 'B'): 0.3, ('A', 'C'): 0.1}),
+        ...     PairwiseDistances({('B', 'C'): 0.2})
+        ... ]
+        >>> dm = DistanceMatrix.from_pairwise_distances(pwdists)
+        >>> dm
+        3x3 distance matrix
+        IDs:
+        'A', 'B', 'C'
+        Data:
+        [[ 0.   0.3  0.1]
+         [ 0.3  0.   0.2]
+         [ 0.1  0.2  0. ]]
+
+        Note that the IDs are in sorted order.
+
+        """
+        distances = {}
+        for pwdist in pairwise_distances:
+            if not isinstance(pwdist, PairwiseDistances):
+                raise TypeError(
+                    "Each element of `pairwise_distances` must be a "
+                    "PairwiseDistances object, not type %r"
+                    % type(pwdist).__name__)
+
+            for id1, id2 in pwdist:
+                # Some of this logic could be put into a
+                # PairwiseDistances.__setitem__ method if having a mutable
+                # PairwiseDistances class is useful in the future.
+                if (id1, id2) in distances:
+                    index = (id1, id2)
+                elif (id2, id1) in distances:
+                    index = (id2, id1)
+                else:
+                    index = None
+
+                distance = pwdist[(id1, id2)]
+                if index is None:
+                    distances[(id1, id2)] = distance
+                else:
+                    current_distance = distances[index]
+                    if current_distance != distance:
+                        raise ValueError(
+                            "Conflicting distance between IDs %r and %r: "
+                            "%r != %r" % (id1, id2, current_distance,
+                                          distance))
+
+        pairwise_distances = PairwiseDistances(distances)
+        ids = sorted(pairwise_distances.ids)
+        if not ids:
+            raise ValueError(
+                "There are no pairwise distances, cannot construct %s" %
+                cls.__name__)
+
+        condensed_dm = []
+        for idx, id1 in enumerate(ids):
+            for id2 in ids[idx+1:]:
+                id_pair = (id1, id2)
+                if id_pair in pairwise_distances:
+                    condensed_dm.append(pairwise_distances[id_pair])
+                else:
+                    raise ValueError(
+                        "Missing distance between IDs %r and %r" % (id1, id2))
+        return cls(condensed_dm, ids=ids)
 
     @experimental(as_of="0.4.0")
     def condensed_form(self):

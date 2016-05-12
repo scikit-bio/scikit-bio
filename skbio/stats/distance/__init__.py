@@ -44,6 +44,7 @@ Classes
 
    DissimilarityMatrix
    DistanceMatrix
+   PairwiseDistances
 
 Functions
 ^^^^^^^^^
@@ -192,13 +193,14 @@ from skbio.util import TestRunner
 from ._base import (DissimilarityMatrixError, DistanceMatrixError,
                     MissingIDError, DissimilarityMatrix, DistanceMatrix,
                     randdm)
+from ._pairwise_distances import PairwiseDistances
 from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel']
+           'DissimilarityMatrix', 'DistanceMatrix', 'PairwiseDistances',
+           'randdm', 'anosim', 'permanova', 'bioenv', 'mantel', 'pwmantel']
 
 test = TestRunner(__file__).test

@@ -14,6 +14,12 @@ from abc import ABCMeta, abstractmethod
 from skbio._base import ElasticLines
 
 
+# TODO: this class name is a misnomer now that `.metadata` and
+# `.positional_metadata` attributes are optional on the repr-d object. Consider
+# refactoring to have a class that builds the metadata portion of the repr, and
+# another class that builds a "scikit-bio-like" repr with class name, headings,
+# stats, and data section (e.g., see repr for Sequence, TabularMSA, and
+# PairwiseDistances).
 class _MetadataReprBuilder(metaclass=ABCMeta):
     """Abstract base class for building  a repr for an object containing
     metadata and/or positional metadata.
@@ -54,7 +60,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._lines.to_str()
 
     def _process_metadata(self):
-        if self._obj.metadata:
+        if hasattr(self._obj, 'metadata') and self._obj.metadata:
             self._lines.add_line('Metadata:')
             # Python 3 doesn't allow sorting of mixed types so we can't just
             # use sorted() on the metadata keys. Sort first by type then sort
@@ -112,7 +118,8 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
 
     def _process_positional_metadata(self):
-        if len(self._obj.positional_metadata.columns):
+        if hasattr(self._obj, 'positional_metadata') and \
+                len(self._obj.positional_metadata.columns):
             self._lines.add_line('Positional metadata:')
             for key in self._obj.positional_metadata.columns.values.tolist():
                 dtype = self._obj.positional_metadata[key].dtype
