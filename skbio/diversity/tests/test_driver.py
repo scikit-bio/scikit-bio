@@ -21,6 +21,7 @@ from skbio.diversity import (alpha_diversity, beta_diversity,
 from skbio.diversity.alpha import faith_pd, observed_otus
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.stats.distance import PairwiseDistances
 
 
 class AlphaDiversityTests(TestCase):
@@ -284,7 +285,7 @@ class BetaDiversityTests(TestCase):
         # number of ids doesn't match the number of samples
         error_msg = ("Number of rows")
         with self.assertRaisesRegex(ValueError, error_msg):
-            beta_diversity(self.table1, list('AB'), 'euclidean')
+            beta_diversity('euclidean', self.table1, ids=iter('AB'))
 
         # unknown metric provided
         error_msg = "not-a-metric"
@@ -610,6 +611,116 @@ class BetaDiversityTests(TestCase):
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
+    def test_duplicate_ids(self):
+        with self.assertRaisesRegex(ValueError, '`ids`.*duplicate IDs'):
+            beta_diversity('unweighted_unifrac', self.table1,
+                           ids=['a', 'b', 'a'], otu_ids=self.oids1,
+                           tree=self.tree1)
+
+    def test_non_str_ids(self):
+        with self.assertRaisesRegex(TypeError, '`ids`.*type str.*int'):
+            beta_diversity('unweighted_unifrac', self.table1,
+                           ids=['a', 'b', 42], otu_ids=self.oids1,
+                           tree=self.tree1)
+
+    def test_pairwise_func_and_id_pairs(self):
+        with self.assertRaisesRegex(ValueError, '`pairwise_func`.*`id_pairs`'):
+            beta_diversity('unweighted_unifrac', self.table1,
+                           ids=['a', 'b', 'c'], id_pairs=[('a', 'b')],
+                           pairwise_func=lambda x: x)
+
+    def test_id_pairs_no_ids(self):
+        with self.assertRaisesRegex(ValueError, '`ids`.*provided.*`id_pairs`'):
+            beta_diversity('unweighted_unifrac', self.table1,
+                           id_pairs=[('a', 'b')])
+
+    def test_id_pairs_not_subset_of_ids(self):
+        with self.assertRaisesRegex(ValueError, '`id_pairs`.*subset.*`ids`'):
+            beta_diversity('unweighted_unifrac', self.table1, self.sids1,
+                           otu_ids=self.oids1, tree=self.tree1,
+                           id_pairs=iter([('B', 'X')]))
+
+    def test_duplicate_id_pairs(self):
+        with self.assertRaisesRegex(ValueError,
+                                    '`id_pairs`.*duplicate ID pairs'):
+            beta_diversity('unweighted_unifrac', self.table1, self.sids1,
+                           otu_ids=self.oids1, tree=self.tree1,
+                           id_pairs=iter([('A', 'B'), ('A', 'C'), ('A', 'B')]))
+
+    def test_duplicate_transpose_id_pairs(self):
+        with self.assertRaisesRegex(ValueError,
+                                    '`id_pairs`.*duplicate ID pairs'):
+            beta_diversity('unweighted_unifrac', self.table1, self.sids1,
+                           otu_ids=self.oids1, tree=self.tree1,
+                           id_pairs=iter([('A', 'B'), ('A', 'C'), ('B', 'A')]))
+
+    def test_within_id_pairs(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "`id_pairs`.*comparing.*ID.*itself.*0.0"):
+            beta_diversity('unweighted_unifrac', self.table1, self.sids1,
+                           otu_ids=self.oids1, tree=self.tree1,
+                           id_pairs=iter([('A', 'B'), ('A', 'C'), ('A', 'A')]))
+
+    def test_id_pairs_unresolvable_metric(self):
+        with self.assertRaisesRegex(TypeError, "`metric`.*resolvable.*callable"
+                                               ".*`id_pairs`"):
+            beta_diversity('euclidean', self.table1, self.sids1,
+                           id_pairs=iter([('A', 'B'), ('A', 'C')]))
+
+    def test_id_pairs_unweighted_unifrac_partial(self):
+        # expected values calculated by hand
+        pwdist = beta_diversity('unweighted_unifrac', self.table1,
+                                ids=iter(self.sids1),
+                                otu_ids=self.oids1, tree=self.tree1,
+                                id_pairs=iter([('B', 'C')]))
+
+        exp_pwdist = PairwiseDistances({('B', 'C'): 0.25})
+        self._assert_pairwise_distances_almost_equal(pwdist, exp_pwdist)
+
+    def test_id_pairs_weighted_unifrac_partial_full(self):
+        # expected values calculated by hand
+        pwdist = beta_diversity(
+            'weighted_unifrac', self.table1, ids=iter(self.sids1),
+            otu_ids=self.oids1, tree=self.tree1,
+            id_pairs=iter([('A', 'B'), ('A', 'C'), ('B', 'C')]))
+
+        exp_pwdist = PairwiseDistances({('A', 'B'): 0.175,
+                                        ('A', 'C'): 0.12499999,
+                                        ('B', 'C'): 0.3})
+
+        self._assert_pairwise_distances_almost_equal(pwdist, exp_pwdist)
+
+        # confirm that pw execution through partial is identical
+        dm_from_pwdist = DistanceMatrix.from_pairwise_distances([pwdist])
+        dm = beta_diversity('weighted_unifrac', self.table1,
+                            ids=iter(self.sids1), otu_ids=self.oids1,
+                            tree=self.tree1)
+        self.assertEqual(dm_from_pwdist, dm)
+
+    def test_id_pairs_callable_metric(self):
+        def euclidean(u, v, **kwargs):
+            return np.sqrt(((u - v)**2).sum())
+
+        pwdist = beta_diversity(
+            euclidean, self.table2, ids=iter(self.sids2),
+            id_pairs=iter([('A', 'B'), ('B', 'F'), ('D', 'E')]))
+
+        exp_pwdist = PairwiseDistances({('A', 'B'): 80.8455317,
+                                        ('B', 'F'): 14.422205,
+                                        ('D', 'E'): 78.7908624})
+        self._assert_pairwise_distances_almost_equal(pwdist, exp_pwdist)
+
+    def _assert_pairwise_distances_almost_equal(self, pwdist1, pwdist2):
+        self.assertIsInstance(pwdist1, PairwiseDistances)
+        self.assertIsInstance(pwdist2, PairwiseDistances)
+
+        self.assertEqual(len(pwdist1), len(pwdist2))
+
+        for id_pair in pwdist1:
+            self.assertIn(id_pair, pwdist2)
+            self.assertAlmostEqual(pwdist1[id_pair], pwdist2[id_pair],
+                                   places=6)
+
 
 class MetricGetters(TestCase):
 
@@ -634,6 +745,7 @@ class MetricGetters(TestCase):
         m = get_beta_diversity_metrics()
         n = sorted(list(m))
         self.assertEqual(m, n)
+
 
 if __name__ == "__main__":
     main()

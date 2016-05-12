@@ -20,7 +20,7 @@ import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
 from skbio.stats.distance import (
     DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
-    DissimilarityMatrix, randdm)
+    DissimilarityMatrix, PairwiseDistances, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from skbio.util import assert_data_frame_almost_equal
@@ -94,8 +94,9 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             DissimilarityMatrix(np.empty((0, 0)), [])
 
         # Invalid number of dimensions.
-        with self.assertRaises(DissimilarityMatrixError):
-            DissimilarityMatrix([1, 2, 3], ['a'])
+        with self.assertRaisesRegex(DissimilarityMatrixError,
+                                    "exactly two dimensions"):
+            DissimilarityMatrix([[[1]], [[2]], [[3]]])
 
         # Dimensions don't match.
         with self.assertRaises(DissimilarityMatrixError):
@@ -358,6 +359,14 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
             # formatting.
             self.assertTrue(obs)
 
+    def test_repr(self):
+        for dm in self.dms:
+            obs = repr(dm)
+            # Do some very light testing here to make sure we're getting a
+            # non-empty string back. We don't want to test the exact
+            # formatting.
+            self.assertTrue(obs)
+
     def test_eq(self):
         for dm in self.dms:
             copy = dm.copy()
@@ -579,6 +588,186 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
             keys=['a', 'b', 'c', 'd'])
 
         self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_invalid_type(self):
+        with self.assertRaisesRegex(TypeError, "PairwiseDistances.*dict"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'b'): 42.0}),
+                {('a', 'a'): 0.0}
+            ])
+
+    def test_from_pairwise_distances_conflicting_distance(self):
+        with self.assertRaises(ValueError) as cm:
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'b'): 42.0}),
+                PairwiseDistances({('a', 'c'): 1.0}),
+                PairwiseDistances({('b', 'c'): 99.0, ('c', 'a'): 1.01})
+            ])
+
+        # Not using assertRaisesRegex because order of IDs isn't guaranteed.
+        error = str(cm.exception)
+        self.assertIn("Conflicting distance", error)
+        self.assertIn("'a'", error)
+        self.assertIn("'c'", error)
+        self.assertIn("1.0 != 1.01", error)
+
+    def test_from_pairwise_distances_missing_distance_single_pwdist(self):
+        with self.assertRaisesRegex(ValueError, "Missing distance.*'b'.*'c'"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'b'): 42.0, ('a', 'c'): 1.0})
+            ])
+
+    def test_from_pairwise_distances_missing_distance_multiple_pwdists(self):
+        with self.assertRaisesRegex(ValueError, "Missing distance.*'b'.*'c'"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'b'): 42.0}),
+                PairwiseDistances({('a', 'c'): 1.0})
+            ])
+
+    def test_from_pairwise_distances_missing_all_distances_for_id(self):
+        with self.assertRaisesRegex(ValueError, "Missing distance.*'a'.*'d'"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'b'): 42.0}),
+                PairwiseDistances({('a', 'c'): 1.0}),
+                PairwiseDistances({('b', 'c'): 2.0}),
+                PairwiseDistances({('d', 'd'): 0.0})
+            ])
+
+    def test_from_pairwise_distances_missing_all_between_distances(self):
+        with self.assertRaisesRegex(ValueError, "Missing distance.*'a'.*'b'"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({('a', 'a'): 0.0}),
+                PairwiseDistances({('b', 'b'): 0.0}),
+                PairwiseDistances({('c', 'c'): 0.0}),
+                PairwiseDistances({('d', 'd'): 0.0})
+            ])
+
+    def test_from_pairwise_distances_empty_iterable(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "no pairwise distances.*DistanceMatrix"):
+            DistanceMatrix.from_pairwise_distances(iter([]))
+
+    def test_from_pairwise_distances_empty_pairwise_distances(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "no pairwise distances.*DistanceMatrix"):
+            DistanceMatrix.from_pairwise_distances([
+                PairwiseDistances({}),
+                PairwiseDistances({}),
+                PairwiseDistances({})
+            ])
+
+    def test_from_pairwise_distances_iterable_type(self):
+        iterable = iter([
+            PairwiseDistances({('a', 'b'): 0.5}),
+            PairwiseDistances({('c', 'a'): 0.4}),
+            PairwiseDistances({('c', 'b'): 0.3})
+        ])
+
+        dm = DistanceMatrix.from_pairwise_distances(iterable)
+
+        exp = DistanceMatrix([
+            [0.0, 0.5, 0.4],
+            [0.5, 0.0, 0.3],
+            [0.4, 0.3, 0.0]
+        ], ids=['a', 'b', 'c'])
+        self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_minimal(self):
+        dm = DistanceMatrix.from_pairwise_distances([
+            PairwiseDistances({('a', 'a'): 0.0})
+        ])
+
+        exp = DistanceMatrix([[0.0]], ['a'])
+        self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_two_ids(self):
+        dm = DistanceMatrix.from_pairwise_distances([
+            PairwiseDistances({('b', 'a'): 0.42})
+        ])
+
+        exp = DistanceMatrix([
+            [0.0, 0.42],
+            [0.42, 0.0]
+        ], ids=['a', 'b'])
+        self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_three_ids(self):
+        dm = DistanceMatrix.from_pairwise_distances([
+            PairwiseDistances({('a', 'b'): 0.5}),
+            PairwiseDistances({('c', 'a'): 0.4, ('c', 'b'): 0.3})
+        ])
+
+        exp = DistanceMatrix([
+            [0.0, 0.5, 0.4],
+            [0.5, 0.0, 0.3],
+            [0.4, 0.3, 0.0]
+        ], ids=['a', 'b', 'c'])
+        self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_redundant_distances(self):
+        dm = DistanceMatrix.from_pairwise_distances([
+            PairwiseDistances({}),
+            PairwiseDistances({('a', 'a'): 0.0}),
+            PairwiseDistances({('a', 'a'): 0.0, ('a', 'b'): 0.5}),
+            PairwiseDistances({('a', 'a'): 0.0, ('a', 'b'): 0.5}),
+            PairwiseDistances({('b', 'b'): 0.0, ('b', 'a'): 0.5}),
+            PairwiseDistances({('c', 'a'): 0.4, ('c', 'b'): 0.3}),
+            PairwiseDistances({('a', 'c'): 0.4, ('a', 'b'): 0.5}),
+            PairwiseDistances({}),
+            PairwiseDistances({}),
+            PairwiseDistances({}),
+            PairwiseDistances({('b', 'c'): 0.3})
+        ])
+
+        exp = DistanceMatrix([
+            [0.0, 0.5, 0.4],
+            [0.5, 0.0, 0.3],
+            [0.4, 0.3, 0.0]
+        ], ids=['a', 'b', 'c'])
+        self.assertEqual(dm, exp)
+
+    def test_from_pairwise_distances_isomorphic_inputs(self):
+        inputs = (
+            [PairwiseDistances({('x', 'y'): 0.1,
+                                ('x', 'z'): 0.0,
+                                ('y', 'z'): 1.9})],
+            [PairwiseDistances({('z', 'y'): 1.9,
+                                ('z', 'x'): 0.0,
+                                ('x', 'y'): 0.1})],
+            [PairwiseDistances({('y', 'z'): 1.9,
+                                ('y', 'x'): 0.1,
+                                ('z', 'x'): 0.0})],
+
+            [PairwiseDistances({('x', 'y'): 0.1, ('x', 'z'): 0.0}),
+             PairwiseDistances({('y', 'z'): 1.9})],
+
+            [PairwiseDistances({('x', 'y'): 0.1}),
+             PairwiseDistances({('y', 'z'): 1.9}),
+             PairwiseDistances({('z', 'x'): 0.0})],
+
+            [PairwiseDistances({('y', 'x'): 0.1}),
+             PairwiseDistances({('z', 'y'): 1.9}),
+             PairwiseDistances({('x', 'z'): 0.0})],
+
+            [PairwiseDistances({('y', 'x'): 0.1}),
+             PairwiseDistances({('z', 'y'): 1.9,
+                                ('z', 'z'): 0.0,
+                                ('z', 'x'): 0.0}),
+             PairwiseDistances({}),
+             PairwiseDistances({('x', 'z'): 0.0}),
+             PairwiseDistances({('y', 'y'): 0.0}),
+             PairwiseDistances({})]
+        )
+
+        exp = DistanceMatrix([
+            [0.0, 0.1, 0.0],
+            [0.1, 0.0, 1.9],
+            [0.0, 1.9, 0.0]
+        ], ids=['x', 'y', 'z'])
+
+        for input_ in inputs:
+            dm = DistanceMatrix.from_pairwise_distances(input_)
+            self.assertEqual(dm, exp)
 
     def test_condensed_form(self):
         for dm, condensed in zip(self.dms, self.dm_condensed_forms):
