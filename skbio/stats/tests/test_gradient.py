@@ -254,10 +254,14 @@ class GradientTests(BaseTests):
         w_vector = pd.Series(np.array([1, 2, 3, 4, 5, 6, 7, 8]),
                              ['s1', 's2', 's3', 's4',
                               's5', 's6', 's7', 's8']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s1': np.array([1]), 's2': np.array([2]),
-                                      's3': np.array([3]), 's4': np.array([4]),
-                                      's5': np.array([5]), 's6': np.array([6]),
-                                      's7': np.array([7]), 's8': np.array([8])
+        exp = pd.DataFrame.from_dict({'s1': np.array([1.0]),
+                                      's2': np.array([2.0]),
+                                      's3': np.array([3.0]),
+                                      's4': np.array([4.0]),
+                                      's5': np.array([5.0]),
+                                      's6': np.array([6.0]),
+                                      's7': np.array([7.0]),
+                                      's8': np.array([8.0])
                                       },
                                      orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
@@ -272,9 +276,11 @@ class GradientTests(BaseTests):
         trajectory.sort_values(by=0, inplace=True)
         w_vector = pd.Series(np.array([25, 30, 35, 40, 45]),
                              ['s2', 's3', 's4', 's5', 's6']).astype(np.float64)
-        exp = pd.DataFrame.from_dict({'s2': np.array([2]), 's3': np.array([3]),
-                                      's4': np.array([4]), 's5': np.array([5]),
-                                      's6': np.array([6])}, orient='index')
+        exp = pd.DataFrame.from_dict({'s2': np.array([2.0]),
+                                      's3': np.array([3.0]),
+                                      's4': np.array([4.0]),
+                                      's5': np.array([5.0]),
+                                      's6': np.array([6.0])}, orient='index')
         obs = _weight_by_vector(trajectory, w_vector)
         assert_data_frame_almost_equal(obs.sort_index(), exp.sort_index())
 
