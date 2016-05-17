@@ -9,7 +9,7 @@
 import sys
 import unittest
 
-from skbio.metadata import Interval
+from skbio.metadata._intersection import IntervalObj
 from skbio.metadata._intersection import IntervalNode
 from skbio.metadata._intersection import IntervalTree
 
@@ -17,18 +17,18 @@ from skbio.metadata._intersection import IntervalTree
 class NeighborTestCase(unittest.TestCase):
 
     def setUp(self):
-        iv = IntervalNode(50, 59, Interval(50, 59))
+        iv = IntervalNode(50, 59, IntervalObj(50, 59))
         for i in range(0, 110, 10):
             if i == 50:
                 continue
-            f = Interval(i, i + 9)
+            f = IntervalObj(i, i + 9)
             iv = iv.insert(f.start, f.end, f)
         self.intervals = iv
 
     def test_left(self):
         iv = self.intervals
         self.assertEqual(str(iv.left(60, n=2)),
-                         str([Interval(50, 59), Interval(40, 49)]))
+                         str([IntervalObj(50, 59), IntervalObj(40, 49)]))
 
         for i in range(10, 100, 10):
             r = iv.left(i, max_dist=10, n=1)
@@ -41,7 +41,7 @@ class NeighborTestCase(unittest.TestCase):
     def test_right(self):
         iv = self.intervals
         self.assertEqual(str(iv.left(60, n=2)),
-                         str([Interval(50, 59), Interval(40, 49)]))
+                         str([IntervalObj(50, 59), IntervalObj(40, 49)]))
 
         def get_right_start(b10):
             r = iv.right(b10+1, n=1)
@@ -60,39 +60,39 @@ class UpDownStreamTestCase(unittest.TestCase):
 
     def setUp(self):
         iv = IntervalTree()
-        iv.add_interval(Interval(50, 59))
+        iv.add_interval(IntervalObj(50, 59))
         for i in range(0, 110, 10):
             if i == 50:
                 continue
-            f = Interval(i, i + 9)
+            f = IntervalObj(i, i + 9)
             iv.add_interval(f)
         self.intervals = iv
 
     def test_upstream(self):
         iv = self.intervals
-        upstreams = iv.upstream_of_interval(Interval(59, 60),
+        upstreams = iv.upstream_of_interval(IntervalObj(59, 60),
                                             num_intervals=200)
         for u in upstreams:
             self.assertTrue(u.end < 59)
 
-        upstreams = iv.upstream_of_interval(Interval(60, 70, strand=-1),
+        upstreams = iv.upstream_of_interval(IntervalObj(60, 70, strand=-1),
                                             num_intervals=200)
         for u in upstreams:
             self.assertTrue(u.start > 70)
 
-        upstreams = iv.upstream_of_interval(Interval(58, 58, strand=-1),
+        upstreams = iv.upstream_of_interval(IntervalObj(58, 58, strand=-1),
                                             num_intervals=200)
         for u in upstreams:
             self.assertTrue(u.start > 59)
 
     def test_downstream(self):
         iv = self.intervals
-        downstreams = iv.downstream_of_interval(Interval(59, 60),
+        downstreams = iv.downstream_of_interval(IntervalObj(59, 60),
                                                 num_intervals=200)
         for d in downstreams:
             self.assertTrue(d.start > 60)
 
-        downstreams = iv.downstream_of_interval(Interval(59, 60, strand=-1),
+        downstreams = iv.downstream_of_interval(IntervalObj(59, 60, strand=-1),
                                                 num_intervals=200)
         for d in downstreams:
             self.assertTrue(d.start < 59)
@@ -104,7 +104,8 @@ class UpDownStreamTestCase(unittest.TestCase):
             self.assertEqual(r[0].start, i + 10)
             self.assertEqual(r[1].start, i + 20)
 
-            r = iv.after_interval(Interval(i, i), max_dist=20, num_intervals=2)
+            r = iv.after_interval(IntervalObj(i, i),
+                                  max_dist=20, num_intervals=2)
             self.assertEqual(r[0].start, i + 10)
             self.assertEqual(r[1].start, i + 20)
 
@@ -112,14 +113,14 @@ class UpDownStreamTestCase(unittest.TestCase):
 class LotsaTestCase(unittest.TestCase):
     """ put lotsa data in the tree and make sure it works"""
     def setUp(self):
-        iv = IntervalNode(1, 2, Interval(1, 2))
+        iv = IntervalNode(1, 2, IntervalObj(1, 2))
         self.max = 1000000
         for i in range(0, self.max, 10):
-            f = Interval(i, i)
+            f = IntervalObj(i, i)
             iv = iv.insert(f.start, f.end, f)
 
         for i in range(600):
-            iv = iv.insert(0, 1, Interval(0, 1))
+            iv = iv.insert(0, 1, IntervalObj(0, 1))
         self.intervals = iv
 
     def test_count(self):
@@ -174,10 +175,10 @@ class IntervalTreeTest(unittest.TestCase):
             iv.add(i + 20, i + 30, dict(astr=str(i*i)))
 
             # or insert/add an interval object with start, end attrs.
-            iv.insert_interval(Interval(i + 40, i + 50,
+            iv.insert_interval(IntervalObj(i + 40, i + 50,
+                                           value=dict(astr=str(i*i))))
+            iv.add_interval(IntervalObj(i + 60, i + 70,
                                         value=dict(astr=str(i*i))))
-            iv.add_interval(Interval(i + 60, i + 70,
-                                     value=dict(astr=str(i*i))))
 
             n += 4
         self.intervals = self.iv = iv

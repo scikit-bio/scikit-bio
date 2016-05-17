@@ -330,8 +330,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     def __init__(self, sequence, metadata=None, positional_metadata=None,
                  lowercase=False, validate=True):
         super(GrammaredSequence, self).__init__(
-            sequence, metadata, positional_metadata,
-            lowercase=lowercase)
+            sequence, metadata, positional_metadata, lowercase)
 
         if validate:
             self._validate()

@@ -458,5 +458,4 @@ class ElasticLines:
         separator = '-' * self._max_line_len
         for idx in self._separator_idxs:
             self._lines[idx] = separator
-
         return '\n'.join(self._lines)

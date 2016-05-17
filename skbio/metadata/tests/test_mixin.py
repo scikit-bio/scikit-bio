@@ -8,7 +8,7 @@
 
 import unittest
 
-from skbio.metadata import MetadataMixin, PositionalMetadataMixin
+from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.util._decorator import overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,

@@ -91,7 +91,7 @@ class GenBankIOTests(TestCase):
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'ACCESSION': 'M14399',
              'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
-             'DEFINITION': u"alkaline phosphatase signal mRNA, 5' end.",
+             'DEFINITION': "alkaline phosphatase signal mRNA, 5' end.",
              'FEATURES': [{'db_xref': '"taxon:562"',
                            'index_': 0,
                            'left_partial_': False,

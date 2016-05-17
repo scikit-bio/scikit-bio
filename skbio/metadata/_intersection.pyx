@@ -282,11 +282,11 @@ cdef class IntervalNode:
         func(self)
         if self.cright is not EmptyNode: self.cright._traverse(func)
 
-cdef IntervalNode EmptyNode = IntervalNode( 0, 0, Interval(0, 0))
+cdef IntervalNode EmptyNode = IntervalNode( 0, 0, IntervalObj(0, 0))
 
 ## ---- Wrappers that retain the old interface -------------------------------
 
-cdef class Interval:
+cdef class IntervalObj:
     """
     Basic feature, with required integer start and end properties.
     Also accepts optional strand as +1 or -1 (used for up/downstream queries),
@@ -294,10 +294,10 @@ cdef class Interval:
 
     >>> from bx.intervals.intersection import Interval
 
-    >>> f1 = Interval(23, 36)
-    >>> f2 = Interval(34, 48, value={'chr':12, 'anno':'transposon'})
+    >>> f1 = IntervalObj(23, 36)
+    >>> f2 = IntervalObj(34, 48, value={'chr':12, 'anno':'transposon'})
     >>> f2
-    Interval(34, 48, value={'anno': 'transposon', 'chr': 12})
+    IntervalObj(34, 48, value={'anno': 'transposon', 'chr': 12})
 
     """
     cdef public int start, end
@@ -312,7 +312,7 @@ cdef class Interval:
         self.strand = strand
 
     def __repr__(self):
-        fstr = "Interval(%d, %d" % (self.start, self.end)
+        fstr = "IntervalObj(%d, %d" % (self.start, self.end)
         if not self.value is None:
             fstr += ", value=" + str(self.value)
         fstr += ")"
@@ -364,32 +364,32 @@ cdef class IntervalTree:
     is are some shortcuts:
 
     >>> intersecter = IntervalTree()
-    >>> intersecter.insert_interval( Interval( 0, 10 ) )
-    >>> intersecter.insert_interval( Interval( 3, 7 ) )
-    >>> intersecter.insert_interval( Interval( 3, 40 ) )
-    >>> intersecter.insert_interval( Interval( 13, 50 ) )
+    >>> intersecter.insert_interval( IntervalObj( 0, 10 ) )
+    >>> intersecter.insert_interval( IntervalObj( 3, 7 ) )
+    >>> intersecter.insert_interval( IntervalObj( 3, 40 ) )
+    >>> intersecter.insert_interval( IntervalObj( 13, 50 ) )
 
     >>> intersecter.find( 30, 50 )
-    [Interval(3, 40), Interval(13, 50)]
+    [IntervalObj(3, 40), IntervalObj(13, 50)]
     >>> intersecter.find( 100, 200 )
     []
 
     Before/after for intervals
 
-    >>> intersecter.before_interval( Interval( 10, 20 ) )
-    [Interval(3, 7)]
-    >>> intersecter.before_interval( Interval( 5, 20 ) )
+    >>> intersecter.before_interval( IntervalObj( 10, 20 ) )
+    [IntervalObj(3, 7)]
+    >>> intersecter.before_interval( IntervalObj( 5, 20 ) )
     []
 
     Upstream/downstream
 
-    >>> intersecter.upstream_of_interval(Interval(11, 12))
-    [Interval(0, 10)]
-    >>> intersecter.upstream_of_interval(Interval(11, 12, strand="-"))
-    [Interval(13, 50)]
+    >>> intersecter.upstream_of_interval(IntervalObj(11, 12))
+    [IntervalObj(0, 10)]
+    >>> intersecter.upstream_of_interval(IntervalObj(11, 12, strand="-"))
+    [IntervalObj(13, 50)]
 
-    >>> intersecter.upstream_of_interval(Interval(1, 2, strand="-"), num_intervals=3)
-    [Interval(3, 7), Interval(3, 40), Interval(13, 50)]
+    >>> intersecter.upstream_of_interval(IntervalObj(1, 2, strand="-"), num_intervals=3)
+    [IntervalObj(3, 7), IntervalObj(3, 40), IntervalObj(13, 50)]
 
 
     """

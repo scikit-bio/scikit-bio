@@ -29,10 +29,6 @@ class DNA(GrammaredSequence, NucleotideMixin,
         Arbitrary per-character metadata. For example, quality data from
         sequencing reads. Must be able to be passed directly to the Pandas
         DataFrame constructor.
-    interval_metadata : dict of tuples
-        Arbitrary metadata which applies to intervals within a sequence.  Each
-        key is a hashable skbio.Feature object and each value is an iterable of
-        tuples, which correspond to intervals where the Feature is present.
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters in order to be valid IUPAC DNA characters. If
@@ -211,7 +207,6 @@ class DNA(GrammaredSequence, NucleotideMixin,
         # turn off validation because `seq` is guaranteed to be valid
         return skbio.RNA(seq, metadata=self.metadata,
                          positional_metadata=self.positional_metadata,
-                         interval_metadata=self.interval_metadata.features,
                          validate=False)
 
     @stable(as_of="0.4.0")

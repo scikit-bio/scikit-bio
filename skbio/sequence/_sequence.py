@@ -20,13 +20,10 @@ from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
-from skbio.metadata._feature import Feature
-from skbio.metadata._interval import _polish_interval
-# from skbio.metadata import IntervalMetadataMixin
 
 
-class Sequence(MetadataMixin, PositionalMetadataMixin,
-               collections.Sequence, SkbioObject):
+class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
+               SkbioObject):
     """Store generic sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
@@ -54,10 +51,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         constructor. Each column of metadata must be the same length as
         `sequence`. A shallow copy of the positional metadata will be made if
         necessary (see Examples section below for details).
-    interval_metadata : dict of tuples
-        Arbitrary metadata which applies to intervals within a sequence.  Each
-        key is a hashable skbio.Feature object and each value is an iterable of
-        tuples, which correspond to intervals where the Feature is present.
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters. If ``False``, no characters will be converted.
@@ -593,7 +586,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
-        #IntervalMetadataMixin._init_(self, features=interval_metadata)
 
         if lowercase is False:
             pass
@@ -732,9 +724,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         if not PositionalMetadataMixin._eq_(self, other):
             return False
 
-        if not IntervalMetadataMixin._eq_(self, other):
-            return False
-
         return True
 
     @stable(as_of="0.4.0")
@@ -771,13 +760,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         """
         return not (self == other)
 
-    @experimental(as_of="0.4.1")
-    def __setitem__(self, feat):
-        """ Set the metadata
-
-        """
-        pass
-
     @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         """Slice this sequence.
@@ -785,11 +767,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         Parameters
         ----------
         indexable : int, slice, iterable (int and slice), 1D array_like (bool)
-        skbio.sequence.Feature. The position(s) to return from this sequence.
-            If `indexable` is an iterable of integers, these are assumed to be
-            indices in the sequence to keep. If `indexable` is a 1D
-            ``array_like`` of booleans, these are assumed to be the positions
-            in the sequence to keep.
+            The position(s) to return from this sequence. If `indexable` is an
+            iterable of integers, these are assumed to be indices in the
+            sequence to keep. If `indexable` is a 1D ``array_like`` of
+            booleans, these are assumed to be the positions in the sequence to
+            keep.
 
         Returns
         -------
@@ -847,10 +829,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         0 GUC
 
         """
-
         if (not isinstance(indexable, np.ndarray) and
-              ((not isinstance(indexable, str)) and
-               hasattr(indexable, '__iter__'))):
+            ((not isinstance(indexable, str)) and
+             hasattr(indexable, '__iter__'))):
             indexable_ = indexable
             indexable = np.asarray(indexable)
 
@@ -874,7 +855,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
                         sequence=seq,
                         metadata=self.metadata,
                         positional_metadata=positional_metadata)
-
         elif (isinstance(indexable, str) or
                 isinstance(indexable, bool)):
             raise IndexError("Cannot index with %s type: %r" %
@@ -899,10 +879,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
             sequence=seq,
             metadata=self.metadata,
             positional_metadata=positional_metadata)
-
-    #def _slice_interval_metadata(self, indexable):
-        # Slices both intervals and features
-    #    pass
 
     def _slice_positional_metadata(self, indexable):
         if _is_single_index(indexable):
@@ -1023,7 +999,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
         """
         return str(self._string.decode("ascii"))
 
-    # FIXME: Update this to include interval metadata
     @stable(as_of="0.4.0")
     def __repr__(self):
         r"""Return a string representation of this sequence object.
@@ -1036,10 +1011,6 @@ class Sequence(MetadataMixin, PositionalMetadataMixin,
           an understood type whose representation is too long, just the type
           will be displayed
         * positional metadata: column names and column dtypes will be displayed
-          in the order they appear in the positional metadata ``pd.DataFrame``.
-          Column names (i.e., keys) follow the same display rules as metadata
-          keys
-        * interval metadata: column names and column dtypes will be displayed
           in the order they appear in the positional metadata ``pd.DataFrame``.
           Column names (i.e., keys) follow the same display rules as metadata
           keys
@@ -2268,4 +2239,5 @@ def _slices_from_iter(array, indexables):
         else:
             raise IndexError("Cannot slice sequence from iterable "
                              "containing %r." % i)
+
         yield array[i]
