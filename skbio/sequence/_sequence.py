@@ -22,10 +22,10 @@ from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
 from skbio.metadata._feature import Feature
 from skbio.metadata._interval import _polish_interval
-from skbio.metadata import IntervalMetadataMixin
+# from skbio.metadata import IntervalMetadataMixin
 
 
-class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
+class Sequence(MetadataMixin, PositionalMetadataMixin,
                collections.Sequence, SkbioObject):
     """Store generic sequence data and optional associated metadata.
 
@@ -542,7 +542,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 interval_metadata=None, lowercase=False):
+                 lowercase=False):
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -593,7 +593,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
-        IntervalMetadataMixin._init_(self, features=interval_metadata)
+        #IntervalMetadataMixin._init_(self, features=interval_metadata)
 
         if lowercase is False:
             pass
@@ -847,18 +847,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         0 GUC
 
         """
-        if isinstance(indexable, Feature):
-            intervals = self.interval_metadata.features[indexable]
-            _indexable = list(map(lambda x: slice(x[0], x[1]),
-                                  map(_polish_interval, intervals)))
-            seq = np.concatenate(
-                        list(_slices_from_iter(self._bytes, _indexable)))
-            return self._constructor(
-                sequence=seq,
-                metadata=self.metadata,
-                interval_metadata={indexable: []})
 
-        elif (not isinstance(indexable, np.ndarray) and
+        if (not isinstance(indexable, np.ndarray) and
               ((not isinstance(indexable, str)) and
                hasattr(indexable, '__iter__'))):
             indexable_ = indexable
@@ -910,9 +900,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
             metadata=self.metadata,
             positional_metadata=positional_metadata)
 
-    def _slice_interval_metadata(self, indexable):
+    #def _slice_interval_metadata(self, indexable):
         # Slices both intervals and features
-        pass
+    #    pass
 
     def _slice_positional_metadata(self, indexable):
         if _is_single_index(indexable):

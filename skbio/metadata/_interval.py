@@ -7,23 +7,93 @@
 # ----------------------------------------------------------------------------
 
 from ._feature import Feature
-from ._intersection import Interval, IntervalTree
+from ._intersection import IntervalTree
 from skbio.util._misc import merge_dicts
 
 
+class Interval():
+    '''Store the metadata of a sequence interval.
+
+    It is implemented as frozendict and can be used similarly
+    as built-in ``dict``.
+
+    Parameters
+    ----------
+    intervals : list of tuple of ints
+        List of tuples representing start and end coordinates.
+    boundaries : list of tuple of bool
+        List of tuples, representing the openness of each interval.
+    metadata : dict
+        Dictionary of attributes storing information of the feature
+        such as `strand`, `gene_name` or `product`.
+    _interval_metadata : object
+        A reference to the `IntervalMetadata` object that this
+        interval is associated to.
+    '''
+    def __init__(self, intervals=None, boundaries=None,
+                 metadata=None, _interval_metadata=None):
+        self.intervals = intervals
+        self.boundaries = boundaries
+        self.metadata = metadata
+        self._interval_metadata = _interval_metadata
+
+    def __len__(self):
+        return len(self.__d)
+
+    def __getitem__(self, key):
+        return self.__d[key]
+
+    def __iter__(self):
+        return iter(self.__d)
+
+    def __repr__(self):
+        return ';'.join('{0}:{1}'.format(k, self[k]) for k in self)
+
+    def __hash__(self):
+        if self._hash is None:
+            self._hash = hash(frozenset(self.items()))
+        return self._hash
+
+    def __lt__(self, other):
+        return hash(self) < hash(other)
+
+    def __gt__(self, other):
+        return hash(self) > hash(other)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def update(self, *args, **kwargs):
+        """
+        Creates a new features object.
+
+        Updates the existing attributes of the current Feature object
+        and returns the modified Feature object.
+
+        Parameters
+        ----------
+        args : tuple
+            Positional arguments that can be passed to ``dict``
+        kwargs : dict
+            Keyword arguments of feature name and feature value, which can
+            be passed to ``dict``.
+
+        Returns
+        -------
+        skbio.sequence.Feature
+        """
+        __d = dict(*args, **kwargs)
+        return Feature(**merge_dicts(self.__d, __d))
+
+
 class IntervalMetadata():
-    def __init__(self, features=None):
+    def __init__(self):
         # maps features attributes to intervals
-        if features is None:
-            self.features = {}
-            self.intervals = IntervalTree()
-        else:
-            self.intervals = IntervalTree()
-            for k, invs in features.items():
-                for inv in invs:
-                    start, end = _polish_interval(inv)
-                    self.intervals.add(start, end, k)
-            self.features = features
+        self.features = {}
+        self.intervals = IntervalTree()
 
     def reverse_complement(self, length):
         """ Reverse complements IntervalMetadata object.
@@ -44,24 +114,6 @@ class IntervalMetadata():
             rvs_features[k] = list(map(lambda x: (length-x[1], length-x[0]),
                                        xs))
         return IntervalMetadata(rvs_features)
-
-    def update(self, old_feature, new_feature):
-        """ Replaces a feature in the IntervalMetadata object.
-
-        Finds the original feature and replaces with a new feature.
-
-        Parameters
-        ----------
-        old_feature : Feature
-            Original feature to search and replace in the IntervalMetadata
-        new_feature : Feature
-            The new feature to replace the original feature.
-        """
-        ivs = self.features[old_feature]
-        self.features[new_feature] = self.features.pop(old_feature)
-        for iv in ivs:
-            start, end = _polish_interval(iv)
-            self.intervals.update(start, end, old_feature, new_feature)
 
     def add(self, feature, *intervals):
         """ Adds a feature to the metadata object.

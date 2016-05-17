@@ -14,8 +14,7 @@ import pandas as pd
 import scipy.stats
 
 from skbio._base import SkbioObject
-from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin,
-                                   IntervalMetadataMixin)
+from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin)
 from skbio.sequence import Sequence
 from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import experimental, classonlymethod, overrides
@@ -28,7 +27,7 @@ from skbio.alignment._repr import _TabularMSAReprBuilder
 _Shape = collections.namedtuple('Shape', ['sequence', 'position'])
 
 
-class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
+class TabularMSA(MetadataMixin, PositionalMetadataMixin,
                  SkbioObject):
     """Store a multiple sequence alignment in tabular (row/column) form.
 
@@ -788,7 +787,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
         # Adding to inherit the has_interval_metadata property
-        IntervalMetadataMixin._init_(self, features=None)
+        # IntervalMetadataMixin._init_(self, features=None)
 
         # Set up our indexers
         self._loc = TabularMSALoc(self)

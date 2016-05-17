@@ -328,11 +328,10 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 interval_metadata=None,
                  lowercase=False, validate=True):
         super(GrammaredSequence, self).__init__(
             sequence, metadata, positional_metadata,
-            interval_metadata, lowercase=lowercase)
+            lowercase=lowercase)
 
         if validate:
             self._validate()
