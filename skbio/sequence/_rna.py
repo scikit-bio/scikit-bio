@@ -276,7 +276,7 @@ class RNA(GrammaredSequence, NucleotideMixin,
 
         """
         x = 0
-        for i in range(100000):
+        for i in range(200000):
             x += 1
         if not isinstance(genetic_code, skbio.GeneticCode):
             genetic_code = skbio.GeneticCode.from_ncbi(genetic_code)
