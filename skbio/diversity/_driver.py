@@ -289,7 +289,7 @@ def partial_beta_diversity(metric, counts, ids=None, validate=None,
 
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
-                   id_pairs=None, **kwargs):
+                   **kwargs):
     """Compute distances between all pairs of samples
 
     Parameters
@@ -321,12 +321,6 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         that can be provided are ``scipy.spatial.distance.pdist`` and
         ``sklearn.metrics.pairwise_distances``. By default,
         ``scipy.spatial.distance.pdist`` will be used.
-    id_pairs : iterable of tuple, optional
-        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
-        'c'), ...])``. If specified, the set of IDs described must be a subset
-        of ``ids``. ``id_pairs`` is a mutually exclusive argument with
-        ``pairwise_func``. ``metric`` must be resolvable by scikit-bio (e.g.,
-        UniFrac methods), or must be callable.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
