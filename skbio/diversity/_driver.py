@@ -248,7 +248,7 @@ def _partial_pw(ids, id_pairs, counts, metric, **kwargs):
     return dm + dm.T
 
 
-def _generate_id_blocks(ids, k=4):
+def _generate_id_blocks(**kwargs):
     """Generate blocks of IDs that map into a DistanceMatrix
 
     Parameters
@@ -289,8 +289,10 @@ def _generate_id_blocks(ids, k=4):
     tuple of 1D np.array
         Index 0 contans the row IDs, and index 1 contains the column IDs
     """
-    n = len(ids)
+    n = len(kwargs.get('ids'))
+    k = kwargs.get('k')
     ids_idx = np.arange(n)
+
     for row_start in range(0, n, k):
         for col_start in range(row_start, n, k):
             row_ids = ids_idx[row_start:row_start + k]
@@ -339,6 +341,7 @@ def _block_party(counts, row_ids=None, col_ids=None, **kwargs):
         block_kwargs['tree'] = kwargs['tree'].shear(block_kwargs['otu_ids'])
 
     block_kwargs['ids'] = ids_to_keep
+    block_kwargs.pop('k')
 
     return counts_block, block_kwargs
 
@@ -364,7 +367,7 @@ def _pairs_to_compute(rids, cids):
     list of tuple
         The ID pairs to compute distances between.
     """
-    if (rids == cids).all():
+    if len(rids) == len(cids) and (rids == cids).all():
         return [(i, j) for idx, i in enumerate(rids) for j in rids[idx+1:]]
     else:
         if set(rids).intersection(set(cids)):
@@ -372,14 +375,14 @@ def _pairs_to_compute(rids, cids):
         return [(i, j) for i in rids for j in cids if i != j]
 
 
-def _block_and_id_pairs(ids, k):
+def _block_and_id_pairs(**kwargs):
     """Generate pairs of IDs to compute distances between"""
-    for row_ids, col_ids in _generate_id_blocks(ids, k):
+    for row_ids, col_ids in _generate_id_blocks(**kwargs):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         yield row_ids, col_ids, id_pairs
 
 
-def _block_compute(metric, counts, **kwargs):
+def _block_compute(metric=None, counts=None, **kwargs):
     """Compute a block within the resulting distance matrix
 
     Parameters
@@ -402,33 +405,32 @@ def _block_compute(metric, counts, **kwargs):
     return beta_diversity(metric, block_counts, **block_kw)
 
 
-def _block_computable(*args, **kwargs):
-    """Construct a function to compute a block in the resulting matrix
+def _block_kwargs(**kwargs):
+    """Construct arguments describing a block to compute
 
     Returns
     -------
     function
         An executable function which returns a `PartialDistanceMatrix`.
     """
-    ids = kwargs.get('ids')
-    blocksize = kwargs.get('blocksize')
-    for row_ids, col_ids, id_pairs in _block_and_id_pairs(ids, blocksize):
+    for row_ids, col_ids, id_pairs in _block_and_id_pairs(**kwargs):
         kw = kwargs.copy()
         kw['id_pairs'] = id_pairs
         kw['row_ids'] = row_ids
         kw['col_ids'] = col_ids
 
-        yield functools.partial(_block_compute(*args, **kw))
+        yield kw
 
 
-def _map_block_decomposition(iterable):
-    for func in iterable:
-        yield func()
+def _map_block_decomposition(func, arg_gen, kw_gen):
+    for args, kwargs in zip(arg_gen, kw_gen):
+        yield func(*args, **kwargs)
 
 
 def _reduce_block_decomposition(iterable):
-    return functools.reduce(operator.add, list(iterable))
-
+    #return functools.reduce(operator.add, list(iterable))
+    for i in iterable:
+        print(i)
 
 def block_beta_diversity(*args, **kwargs):
     """Perform a block-decomposition beta diversity calculation
@@ -445,10 +447,22 @@ def block_beta_diversity(*args, **kwargs):
         A method that accepts a `_computable`. The expected signature is:
         `PartialDistanceMatrix <- f(Iterable of _computable)`
     """
-    reduce_f = kwargs.get('reduce_f', _reduce_block_decomposition)
-    map_f = kwargs.get('map_f', _map_block_decomposition)
+    if 'reduce_f' in kwargs:
+        reduce_f = kwargs.pop('reduce_f')
+    else:
+        reduce_f = _reduce_block_decomposition
 
-    return reduce_f(map_f(_block_computable(*args, **kwargs)))
+    if 'map_f' in kwargs:
+        map_f = kwargs.pop('map_f')
+    else:
+        map_f = _map_block_decomposition
+
+    n_iters = len([_pairs_to_compute(ri, ci)
+                   for ri, ci in _generate_id_blocks(**kwargs)])
+
+    return reduce_f(map_f(_block_compute,
+                          itertools.repeat(args, n_iters),
+                          _block_kwargs(**kwargs)))
 
 
 @experimental(as_of="0.4.0")
