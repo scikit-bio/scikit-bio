@@ -227,7 +227,6 @@ def partial_beta_diversity(metric, counts, ids=None, validate=None,
         If ``id_pairs`` are not a subset of ``ids``.
         If ``metric`` is not a callable.
         If duplicates are observed in ``id_pairs``.
-        If a metric is passed in that is a non-optimized UniFrac metric.
 
     See Also
     --------
@@ -239,6 +238,8 @@ def partial_beta_diversity(metric, counts, ids=None, validate=None,
         raise ValueError("`ids` must be specified")
 
     if id_pairs is None:
+        # determine all pairs of the upper triangle.
+        # alternatively, could just call beta_diversity?
         id_pairs = []
         for row, i in enumerate(ids):
             for j in ids[row+1:]:
