@@ -399,10 +399,10 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
 
 from skbio.util import TestRunner
 
-from ._driver import (alpha_diversity, beta_diversity,
+from ._driver import (alpha_diversity, beta_diversity, partial_beta_diversity,
                       get_alpha_diversity_metrics, get_beta_diversity_metrics)
 
 __all__ = ["alpha_diversity", "beta_diversity", "get_alpha_diversity_metrics",
-           "get_beta_diversity_metrics"]
+           "get_beta_diversity_metrics", "partial_beta_diversity"]
 
 test = TestRunner(__file__).test
