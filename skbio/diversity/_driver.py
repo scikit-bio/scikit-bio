@@ -288,7 +288,7 @@ def partial_beta_diversity(metric, counts, ids=None, validate=None,
     return DistanceMatrix(dm + dm.T, ids)
 
 
-def _generate_id_blocks(**kwargs):
+def _generate_id_blocks(ids=None, k=None, **kwargs):
     """Generate blocks of IDs that map into a DistanceMatrix
 
     Parameters
@@ -313,13 +313,14 @@ def _generate_id_blocks(**kwargs):
     D # # # 0 #
     E # # # # 0
 
-    The goal of this method is to generate tuples of IDs of size k over the
-    upper triangle which correspond to blocks of the matrix to compute. Given
-    a k=3, the following ID tuples would be generated:
+    The goal of this method is to generate tuples of IDs of at most size k over
+    the upper triangle which correspond to blocks of the matrix to compute. IDs
+    are remapped as well into integers to facilitate downstream indexing.
+    Given k=3, the following ID tuples would be generated:
 
-    ((A, B, C), (A, B, C))
-    ((A, B, C), (D, E))
-    ((D, E), (D, E))
+    ((0, 1, 2), (0, 1, 2))
+    ((0, 1, 2), (3, 4))
+    ((3, 4), (3, 4))
 
     This method is not responsible for describing which specific pairs of IDs
     are to be computed, only the subset of the matrix of interest.
@@ -327,10 +328,9 @@ def _generate_id_blocks(**kwargs):
     Returns
     -------
     tuple of 1D np.array
-        Index 0 contans the row IDs, and index 1 contains the column IDs
+        Index 0 contains the row IDs, and index 1 contains the column IDs
     """
-    n = len(kwargs.get('ids'))
-    k = kwargs.get('k')
+    n = len(ids)
     ids_idx = np.arange(n)
 
     for row_start in range(0, n, k):
@@ -341,7 +341,7 @@ def _generate_id_blocks(**kwargs):
             yield (row_ids, col_ids)
 
 
-def _block_party(counts, row_ids=None, col_ids=None, **kwargs):
+def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     """Subset counts to relevant rows and columns
 
     Parameters
@@ -358,13 +358,13 @@ def _block_party(counts, row_ids=None, col_ids=None, **kwargs):
 
     Returns
     -------
-    2D np.ndarray
-        The subset counts block containing only the rows which exist in row_ids
-        and col_ids, and does not contain any zero'd columns.
     dict
-        kwargs with any relevant filtering (e.g., filtering a phylogenetic tree
-        to only reflect the OTUs present in the counts matrix).
+        kwargs that describe the block to compute. A filtered ``counts`` matrix
+        is stored in kwargs. If applicable, a filtered ``tree`` and ``otu_ids``
+        are also stored.
     """
+    block_kwargs = kwargs.copy()
+
     ids_to_keep = np.unique(np.hstack([row_ids, col_ids]))
 
     # create a view of the relevant samples
@@ -375,15 +375,15 @@ def _block_party(counts, row_ids=None, col_ids=None, **kwargs):
     nonzero_cols = (counts_block != 0).any(axis=0)
     counts_block = counts_block[:, nonzero_cols]
 
-    block_kwargs = kwargs.copy()
+    block_kwargs['counts'] = counts_block
+    block_kwargs['ids'] = ids_to_keep
+    block_kwargs.pop('k')
+
     if 'tree' in kwargs and 'otu_ids' in kwargs:
         block_kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
         block_kwargs['tree'] = kwargs['tree'].shear(block_kwargs['otu_ids'])
 
-    block_kwargs['ids'] = ids_to_keep
-    block_kwargs.pop('k')
-
-    return counts_block, block_kwargs
+    return block_kwargs
 
 
 def _pairs_to_compute(rids, cids):
@@ -397,52 +397,53 @@ def _pairs_to_compute(rids, cids):
     cids : Iterable
         The column IDs in the partial pairwise computation.
 
-    Notes
-    -----
-    The diagonal and any pairs in the lower triangle of the distance matrix
-    are ignored.
+    Raises
+    ------
+    ValueError
+        When determining ID pairs for blocks that fall outside of the diagonal
+        of the resulting distance matrix, if a pair corresponds to the lower
+        triangle, complain loudly.
 
     Returns
     -------
     list of tuple
         The ID pairs to compute distances between.
     """
+    # if identical, gather the upper triangle
     if len(rids) == len(cids) and (rids == cids).all():
         return [(i, j) for idx, i in enumerate(rids) for j in rids[idx+1:]]
+
+    # otherwise, grab pairwise combinations disregarding the diagonal
     else:
         if set(rids).intersection(set(cids)):
             raise ValueError("Attempting to compute a lower triangle")
         return [(i, j) for i in rids for j in cids if i != j]
 
 
-def _block_and_id_pairs(**kwargs):
-    """Generate pairs of IDs to compute distances between"""
+def _block_ids_and_id_pairs(**kwargs):
+    """Generate pairs of IDs to compute distances between
+
+    Returns
+    -------
+        generator of (list, list, list of tuple)
+        The first item is are the row IDs. The second are the column IDs. The
+        third are the pairs of IDs within the rows and columns to compute.
+    """
     for row_ids, col_ids in _generate_id_blocks(**kwargs):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         yield row_ids, col_ids, id_pairs
 
 
-def _block_compute(metric=None, counts=None, **kwargs):
+def _block_compute(**kwargs):
     """Compute a block within the resulting distance matrix
-
-    Parameters
-    ----------
-    metric : function or string
-        The distance metric to use
-
-    counts : np.ndarray
-        The counts array to compute over
 
     Returns
     -------
-    PartialDistanceMatrix
-        TODO: Unsure how this works. `beta_diversity` will return an
-        incomplete distance matrix corresponding to just the partial distances
-        with in the block to compute
+    DistanceMatrix
     """
-    block_counts, block_kw = _block_party(counts, **kwargs)
+    block_kw = _block_party(**kwargs)
 
-    return beta_diversity(metric, block_counts, **block_kw)
+    return partial_beta_diversity(**block_kw)
 
 
 def _block_kwargs(**kwargs):
@@ -450,10 +451,10 @@ def _block_kwargs(**kwargs):
 
     Returns
     -------
-    function
-        An executable function which returns a `PartialDistanceMatrix`.
+    dict
+        The parameters for the block of the distance matrix to compute.
     """
-    for row_ids, col_ids, id_pairs in _block_and_id_pairs(**kwargs):
+    for row_ids, col_ids, id_pairs in _block_ids_and_id_pairs(**kwargs):
         kw = kwargs.copy()
         kw['id_pairs'] = id_pairs
         kw['row_ids'] = row_ids
@@ -463,14 +464,41 @@ def _block_kwargs(**kwargs):
 
 
 def _map_block_decomposition(func, arg_gen, kw_gen):
+    """Map a function over arguments
+
+    Note
+    ----
+    builtin map does not allow for mapping with kwargs.
+
+    """
     for args, kwargs in zip(arg_gen, kw_gen):
         yield func(*args, **kwargs)
 
 
-def _reduce_block_decomposition(iterable):
-    #return functools.reduce(operator.add, list(iterable))
-    for i in iterable:
-        print(i)
+def _reduce_block_decomposition(blocks):
+    """Reduce an iterable of partial distance matrices into a full matrix"""
+    all_blocks = list(blocks)
+    n_ids = max(map(lambda x: max(x.ids), all_blocks)) + 1
+
+    mat = np.zeros((n_ids, n_ids), dtype=float)
+
+    # TODO: something smarter.
+    for block in all_blocks:
+        n_ids = len(block.ids)
+
+        # get the corresponding coordinates in the master matrix
+        master_idx = [(i, j) for row, i in enumerate(block.ids)
+                      for j in block.ids[row+1:]]
+
+        # get the corresponding coordinates within the current block
+        block_idx = [(i, j) for row, i in enumerate(range(n_ids))
+                     for j in range(row+1, n_ids)]
+
+        for (m_i, m_j), (b_i, b_j) in zip(master_idx, block_idx):
+            mat[m_i, m_j] += block.data[b_i, b_j]
+
+    return DistanceMatrix(mat + mat.T)
+
 
 def block_beta_diversity(*args, **kwargs):
     """Perform a block-decomposition beta diversity calculation
@@ -485,7 +513,9 @@ def block_beta_diversity(*args, **kwargs):
 
     map_f: function, optional
         A method that accepts a `_computable`. The expected signature is:
-        `PartialDistanceMatrix <- f(Iterable of _computable)`
+        `PartialDistanceMatrix <- f(Iterable of _computable)`. NOTE:
+        ipyparallel's `map_async` will not work here as we need to be able to
+        pass around `**kwargs``.
     """
     if 'reduce_f' in kwargs:
         reduce_f = kwargs.pop('reduce_f')
@@ -497,12 +527,22 @@ def block_beta_diversity(*args, **kwargs):
     else:
         map_f = _map_block_decomposition
 
-    n_iters = len([_pairs_to_compute(ri, ci)
-                   for ri, ci in _generate_id_blocks(**kwargs)])
+    # The block method uses numeric IDs to take advantage of fancy indexing
+    # with numpy.
+    tmp_ids = np.arange(len(kwargs['counts']))
+    original_ids = kwargs.get('ids', tmp_ids)
+    kwargs['ids'] = tmp_ids
 
-    return reduce_f(map_f(_block_compute,
-                          itertools.repeat(args, n_iters),
-                          _block_kwargs(**kwargs)))
+    # determine the number of blocks that will be computed
+    n_blocks = len([_pairs_to_compute(ri, ci)
+                    for ri, ci in _generate_id_blocks(**kwargs)])
+
+    block_args = itertools.repeat(args, n_blocks)
+
+    dm = reduce_f(map_f(_block_compute, block_args, _block_kwargs(**kwargs)))
+    dm.ids = original_ids
+
+    return dm
 
 
 @experimental(as_of="0.4.0")
