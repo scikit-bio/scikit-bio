@@ -224,7 +224,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
         If ``ids`` are not specified.
         If ``id_pairs`` are not a subset of ``ids``.
         If ``metric`` is not a callable or is unresolvable string by
-            scikit-bio.
+        scikit-bio.
         If duplicates are observed in ``id_pairs``.
 
     See Also
