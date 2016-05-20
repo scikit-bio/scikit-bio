@@ -182,20 +182,21 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-@deprecated(as_of='0.4.2-dev', until='0.5.0',
+@deprecated(as_of='0.4.2-dev', until='0.5.1',
             reason=('The return type is unstable. Developer caution is '
-                    'advised. The resulting DistanceMatrix object may include '
-                    'zeros when distance has not been calculated, and '
+                    'advised. The resulting DistanceMatrix object will '
+                    'include zeros when distance has not been calculated, and '
                     'therefore can be misleading.'))
-def partial_beta_diversity(metric, counts, ids=None, validate=None,
-                           id_pairs=None, **kwargs):
+def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
+                           **kwargs):
     """Compute distances only between specified ID pairs
 
     Parameters
     ----------
-    metric : callable
-        The pairwise distance function to apply. ``metric`` must be resolvable
-        by scikit-bio (e.g., UniFrac methods), or must be callable.
+    metric : str or callable
+        The pairwise distance function to apply. If ``metric`` is a string, it
+        must be resolvable by scikit-bio (e.g., UniFrac methods), or must be
+        callable.
     counts : 2D array_like of ints or floats
         Matrix containing count/abundance data where each row contains counts
         of OTUs in a given sample.
@@ -205,53 +206,47 @@ def partial_beta_diversity(metric, counts, ids=None, validate=None,
         An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
         'c'), ...])``. If specified, the set of IDs described must be a subset
         of ``ids``.
-    validate : ignored
-        This kwarg is preserved to maintain consistency with the beta_diversity
-        signature.
+    validate : bool, optional
+        See ``skbio.diversity.beta_diversity`` for details.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
     Returns
     -------
     skbio.DistanceMatrix
-        Distances between all pairs of samples (i.e., rows). The number of
-        rows and columns will be equal to the number of rows in ``counts``.
-
-        Warning: zeros in this matrix may represent a zero distance, or may
-        represent a pairwise distance that was not calculated.
+        Distances between pairs of samples indicated by id_pairs. Pairwise
+        distances not defined by id_pairs will be 0.0. Use this resulting
+        DistanceMatrix with caution as 0.0 is a valid distance.
 
     Raises
     ------
     ValueError
         If ``ids`` are not specified.
         If ``id_pairs`` are not a subset of ``ids``.
-        If ``metric`` is not a callable.
+        If ``metric`` is not a callable or is unresolvable string by
+            scikit-bio.
         If duplicates are observed in ``id_pairs``.
 
     See Also
     --------
-    skbio.beta_diversity
+    skbio.diversity.beta_diversity
     skbio.diversity.get_beta_diversity_metrics
 
     """
+    if validate:
+        counts = _validate_counts_matrix(counts, ids=ids)
+
     if ids is None:
         raise ValueError("`ids` must be specified")
 
-    if id_pairs is None:
-        # determine all pairs of the upper triangle.
-        # alternatively, could just call beta_diversity?
-        id_pairs = []
-        for row, i in enumerate(ids):
-            for j in ids[row+1:]:
-                id_pairs.append((i, j))
-
+    id_pairs = list(id_pairs)
     all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
     if not all_ids_in_pairs.issubset(ids):
         raise ValueError("`id_pairs` are not a subset of `ids`")
 
     hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
     if len(hashes) != len(id_pairs) * 2:
-        raise ValueError("Duplicate ID pairs observed.")
+        raise ValueError("A duplicate or a self-self pair was observed.")
 
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
