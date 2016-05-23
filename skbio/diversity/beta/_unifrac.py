@@ -67,8 +67,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     Notes
     -----
     Unweighted UniFrac was originally described in [1]_. A discussion of
-    unweighted (qualitative) versus weighted (quantitiative) diversity metrics
-    is presented in [2]_. Deeper mathemtical discussions of this metric is
+    unweighted (qualitative) versus weighted (quantitative) diversity metrics
+    is presented in [2]_. Deeper mathematical discussions of this metric is
     presented in [3]_.
 
     If computing unweighted UniFrac for multiple pairs of samples, using
@@ -329,7 +329,7 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-        Vectors indicating presense (value greater than zero) and absense
+        Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
     branch_lengths : np.array
@@ -363,7 +363,7 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-        Vectors indicating presense (value greater than zero) and absense
+        Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
     u_total_count, v_total_counts : int
@@ -410,7 +410,7 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-         Vectors indicating presense (value greater than zero) and absense
+         Vectors indicating presence (value greater than zero) and absence
          (value equal to zero) of nodes in two samples, `u` and `v`. Order is
          assumed to be the same as in `branch_lengths`.
     u_total_count, v_total_counts : int
