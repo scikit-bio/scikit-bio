@@ -93,7 +93,7 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     # explicit copies are not necessary as implicit copies or overwwrites are
     # performed below.
     valid_block_keys = {'counts', 'ids', 'tree', 'otu_ids', 'metric',
-                        'id_pairs'}
+                        'id_pairs', 'validate'}
     block_kwargs = {k: v for k, v in kwargs.items() if k in valid_block_keys}
 
     ids_to_keep = np.unique(np.hstack([row_ids, col_ids]))
