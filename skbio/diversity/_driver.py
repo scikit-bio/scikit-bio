@@ -7,7 +7,9 @@
 # ----------------------------------------------------------------------------
 
 import functools
+import itertools
 
+import numpy as np
 import scipy.spatial.distance
 import pandas as pd
 
@@ -16,7 +18,7 @@ from skbio.diversity.alpha._faith_pd import _faith_pd, _setup_faith_pd
 from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac, _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default)
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, deprecated
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (_validate_counts_matrix,
                                    _get_phylogenetic_kwargs)
@@ -180,6 +182,103 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
+@deprecated(as_of='0.4.2-dev', until='0.5.1',
+            reason=('The return type is unstable. Developer caution is '
+                    'advised. The resulting DistanceMatrix object will '
+                    'include zeros when distance has not been calculated, and '
+                    'therefore can be misleading.'))
+def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
+                           **kwargs):
+    """Compute distances only between specified ID pairs
+
+    Parameters
+    ----------
+    metric : str or callable
+        The pairwise distance function to apply. If ``metric`` is a string, it
+        must be resolvable by scikit-bio (e.g., UniFrac methods), or must be
+        callable.
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of OTUs in a given sample.
+    ids : iterable of strs
+        Identifiers for each sample in ``counts``.
+    id_pairs : iterable of tuple
+        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
+        'c'), ...])``. If specified, the set of IDs described must be a subset
+        of ``ids``.
+    validate : bool, optional
+        See ``skbio.diversity.beta_diversity`` for details.
+    kwargs : kwargs, optional
+        Metric-specific parameters.
+
+    Returns
+    -------
+    skbio.DistanceMatrix
+        Distances between pairs of samples indicated by id_pairs. Pairwise
+        distances not defined by id_pairs will be 0.0. Use this resulting
+        DistanceMatrix with caution as 0.0 is a valid distance.
+
+    Raises
+    ------
+    ValueError
+        If ``ids`` are not specified.
+        If ``id_pairs`` are not a subset of ``ids``.
+        If ``metric`` is not a callable or is unresolvable string by
+        scikit-bio.
+        If duplicates are observed in ``id_pairs``.
+
+    See Also
+    --------
+    skbio.diversity.beta_diversity
+    skbio.diversity.get_beta_diversity_metrics
+
+    """
+    if validate:
+        counts = _validate_counts_matrix(counts, ids=ids)
+
+    id_pairs = list(id_pairs)
+    all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))
+    if not all_ids_in_pairs.issubset(ids):
+        raise ValueError("`id_pairs` are not a subset of `ids`")
+
+    hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
+    if len(hashes) != len(id_pairs) * 2:
+        raise ValueError("A duplicate or a self-self pair was observed.")
+
+    if metric == 'unweighted_unifrac':
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        metric, counts_by_node = _setup_multiple_unweighted_unifrac(
+                counts, otu_ids=otu_ids, tree=tree, validate=validate)
+        counts = counts_by_node
+    elif metric == 'weighted_unifrac':
+        # get the value for normalized. if it was not provided, it will fall
+        # back to the default value inside of _weighted_unifrac_pdist_f
+        normalized = kwargs.pop('normalized',
+                                _normalize_weighted_unifrac_by_default)
+        otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
+        metric, counts_by_node = _setup_multiple_weighted_unifrac(
+                counts, otu_ids=otu_ids, tree=tree, normalized=normalized,
+                validate=validate)
+        counts = counts_by_node
+    elif callable(metric):
+        metric = functools.partial(metric, **kwargs)
+        # remove all values from kwargs, since they have already been provided
+        # through the partial
+        kwargs = {}
+    else:
+        raise ValueError("partial_beta_diversity is only compatible with "
+                         "optimized unifrac methods and callable functions.")
+
+    dm = np.zeros((len(ids), len(ids)), dtype=float)
+    id_index = {id_: idx for idx, id_ in enumerate(ids)}
+    id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
+
+    for u, v in id_pairs_indexed:
+        dm[u, v] = metric(counts[u], counts[v], **kwargs)
+
+    return DistanceMatrix(dm + dm.T, ids)
+
+
 @experimental(as_of="0.4.0")
 def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
                    **kwargs):
@@ -243,9 +342,6 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
 
-    if pairwise_func is None:
-        pairwise_func = scipy.spatial.distance.pdist
-
     if metric == 'unweighted_unifrac':
         otu_ids, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
         metric, counts_by_node = _setup_multiple_unweighted_unifrac(
@@ -270,6 +366,9 @@ def beta_diversity(metric, counts, ids=None, validate=True, pairwise_func=None,
         # metric is a string that scikit-bio doesn't know about, for
         # example one of the SciPy metrics
         pass
+
+    if pairwise_func is None:
+        pairwise_func = scipy.spatial.distance.pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)

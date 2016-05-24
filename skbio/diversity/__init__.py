@@ -162,6 +162,7 @@ Functions
 
     alpha_diversity
     beta_diversity
+    partial_beta_diversity
     get_alpha_diversity_metrics
     get_beta_diversity_metrics
 
@@ -377,10 +378,10 @@ Create a matrix containing 6 samples (rows) and 7 OTUs (columns):
    >>> plt.close('all') # not necessary for normal use
    >>> fig = sample_md.boxplot(column='Faith PD', by='body_site')
 
-We can also compute Spearman correlations between all pairs of columns in this
-``DataFrame``. Since our alpha diversity metrics are the only two numeric
-columns (and thus the only columns for which Spearman correlation is relevant),
-this will give us a symmetric 2x2 correlation matrix.
+We can also compute Spearman correlations between all pairs of columns in
+this ``DataFrame``. Since our alpha diversity metrics are the only two
+numeric columns (and thus the only columns for which Spearman correlation
+is relevant), this will give us a symmetric 2x2 correlation matrix.
 
 >>> sample_md.corr(method="spearman")
                Observed OTUs  Faith PD
@@ -399,10 +400,10 @@ Faith PD            0.939336  1.000000
 
 from skbio.util import TestRunner
 
-from ._driver import (alpha_diversity, beta_diversity,
+from ._driver import (alpha_diversity, beta_diversity, partial_beta_diversity,
                       get_alpha_diversity_metrics, get_beta_diversity_metrics)
 
 __all__ = ["alpha_diversity", "beta_diversity", "get_alpha_diversity_metrics",
-           "get_beta_diversity_metrics"]
+           "get_beta_diversity_metrics", "partial_beta_diversity"]
 
 test = TestRunner(__file__).test

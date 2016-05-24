@@ -10,6 +10,7 @@
 * Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
 * Added support for `pandas.RangeIndex`, lowering the memory footprint of default integer index objects. `Sequence.positional_metadata` and `TabularMSA.positional_metadata` now use `pd.RangeIndex` as the positional metadata index. `TabularMSA` now uses `pd.RangeIndex` as the default index. Usage of `pd.RangeIndex` over the previous `pd.Int64Index` [should be transparent](http://pandas.pydata.org/pandas-docs/version/0.18.0/whatsnew.html#range-index), so these changes should be non-breaking to users. scikit-bio now depends on pandas >= 0.18.0 ([#1308](https://github.com/biocore/scikit-bio/issues/1308))
 * Added `reset_index=False` parameter to `TabularMSA.append` and `TabularMSA.extend` for resetting the MSA's index to the default index after appending/extending.
+* Added support for partial pairwise calculations via `skbio.diversity.partial_beta_diversity`. ([#1221](https://github.com/biocore/scikit-bio/issues/1221), [#1337](https://github.com/biocore/scikit-bio/pull/1337)). This function is immediately deprecated as its return type will change in the future and should be used with caution in its present form (see the function's documentation for details).
 
 ### Backward-incompatible changes [stable]
 
