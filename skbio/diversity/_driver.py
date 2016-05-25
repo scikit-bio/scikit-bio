@@ -202,7 +202,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
         of OTUs in a given sample.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
-    id_pairs : iterable of tuple, optional
+    id_pairs : iterable of tuple
         An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
         'c'), ...])``. If specified, the set of IDs described must be a subset
         of ``ids``.
@@ -235,9 +235,6 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True,
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
-
-    if ids is None:
-        raise ValueError("`ids` must be specified")
 
     id_pairs = list(id_pairs)
     all_ids_in_pairs = set(itertools.chain.from_iterable(id_pairs))

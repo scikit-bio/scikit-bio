@@ -653,7 +653,6 @@ class TestPartialBetaDiversity(TestCase):
                        [44, 35, 9, 0, 1, 0, 0],
                        [0, 2, 8, 0, 35, 45, 1],
                        [0, 0, 25, 35, 0, 19, 0]]
-        self.table2 = np.array(self.table2)
         self.sids2 = list('ABCDEF')
 
     def test_id_pairs_as_iterable(self):
@@ -739,14 +738,6 @@ class TestPartialBetaDiversity(TestCase):
                                    self.sids1, id_pairs=[('A', 'B'),
                                                          ('A', 'B')])
 
-    def test_no_ids(self):
-        # confirm that partial pairwise execution errors when ids are not
-        # specified
-        error_msg = ("`ids` must be specified")
-        with self.assertRaisesRegex(ValueError, error_msg):
-            partial_beta_diversity((lambda x, y: x + y), self.table1,
-                                   None, id_pairs=[('A', 'B'), ('A', 'B')])
-
     def test_pairs_not_subset(self):
         # confirm raise when pairs are not a subset of IDs
         error_msg = ("`id_pairs` are not a subset of `ids`")
@@ -777,6 +768,13 @@ class TestPartialBetaDiversity(TestCase):
             for id2 in self.sids2:
                 npt.assert_almost_equal(actual_dm[id1, id2],
                                         expected_dm[id1, id2], 6)
+
+    def test_unusable_metric(self):
+        id_pairs = [('A', 'B'), ('B', 'F'), ('D', 'E')]
+        error_msg = "partial_beta_diversity is only compatible"
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity('hamming', self.table2, self.sids2,
+                                   id_pairs=id_pairs)
 
 
 if __name__ == "__main__":
