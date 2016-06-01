@@ -11,7 +11,9 @@ import copy
 
 import pandas as pd
 
-from skbio.util._decorator import stable, deprecated
+from skbio.util._decorator import stable, experimental
+from skbio.metadata._interval import IntervalMetadata
+from skbio.util._decorator import deprecated
 
 
 class MetadataMixin(metaclass=abc.ABCMeta):
@@ -360,3 +362,103 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
         """
         return len(self.positional_metadata.columns) > 0
+
+
+class IntervalMetadataMixin(metaclass=abc.ABCMeta):
+    ''' Store metadata corresponding to Features and Intervals.
+
+    Parameters
+    ----------
+    features : dict of list
+        The dictionary of features and intervals where
+        the keys are hashble Feature objects and the values
+        are a list of intervals associated with each feature.
+    There are two underlying data structures namely
+    1. An IntervalTree (interval_metadata).
+    2. A hash table indexed by a Feature, where each entry contains a
+       list of Intervals(feature_metadata).
+    Attributes
+    ----------
+    interval_metadata
+    feature_metadata
+    >>> from skbio import DNA
+    >>> from skbio.metadata import Feature
+    >>> seq = DNA(
+    ...     'ACGT',
+    ...     positional_metadata={'quality': [3, 3, 20, 11],
+    ...                          'exons': [True, True, False, True]},
+    ...     interval_metadata={Feature(gene='hedgehog', location=0):[(0, 3)]})
+    >>> seq
+    DNA
+    -----------------------------
+    Positional metadata:
+        'exons': <dtype: bool>
+        'quality': <dtype: int64>
+    Stats:
+        length: 4
+        has gaps: False
+        has degenerates: False
+        has non-degenerates: True
+        GC-content: 50.00%
+    -----------------------------
+    0 ACGT
+    '''
+    def __init__(self, features=None):
+        pass
+
+    def _init_(self, features=None):
+        self.interval_metadata = IntervalMetadata(features=features)
+
+    @experimental(as_of="0.4.2")
+    def has_interval_metadata(self):
+        return len(self.interval_metadata.features) > 0
+
+    @abc.abstractmethod
+    def __eq__(self, other):
+        pass
+
+    def _eq_(self, other):
+        # We're not simply comparing self.interval_metadata to
+        # other.interval_metadata in order to avoid creating "empty"
+        # interval metadata representations on the objects if they don't have
+        # interval metadata.
+        if self.has_interval_metadata() and other.has_interval_metadata():
+            if not self.interval_metadata == other.interval_metadata:
+                return False
+        elif not (self.has_interval_metadata() or
+                  other.has_interval_metadata()):
+            # Both don't have interval metadata.
+            pass
+        else:
+            # One has interval metadata while the other does not.
+            return False
+
+        return True
+
+    @abc.abstractmethod
+    def __ne__(self, other):
+        pass
+
+    def _ne_(self, other):
+        return not (self == other)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        pass
+
+    def _copy_(self):
+        if self.has_interval_metadata():
+            # deep=True makes a shallow copy of the underlying data buffer.
+            return self.interval_metadata.copy(deep=True)
+        else:
+            return None
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo):
+        pass
+
+    def _deepcopy_(self, memo):
+        if self.has_positional_metadata():
+            return copy.deepcopy(self.positional_metadata, memo)
+        else:
+            return None
