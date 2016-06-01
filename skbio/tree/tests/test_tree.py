@@ -20,6 +20,10 @@ from skbio.tree import (DuplicateNodeError, NoLengthError,
 from skbio.util import RepresentationWarning
 
 
+class TreeNodeSubclass(TreeNode):
+    pass
+
+
 class TreeTests(TestCase):
 
     def setUp(self):
@@ -33,7 +37,6 @@ class TreeTests(TestCase):
         nodes['c'].append(nodes['f'])
         nodes['f'].append(nodes['g'])
         nodes['a'].append(nodes['h'])
-        self.TreeNode = nodes
         self.TreeRoot = nodes['a']
 
         def rev_f(items):
@@ -839,6 +842,18 @@ class TreeTests(TestCase):
         self.assertEqual(str(t2), '((c,(a,b)));\n')
         self.assertEqual(str(t3), '((c,(a,b):0));\n')
 
+    def test_bifurcate_with_subclass(self):
+        tree = TreeNodeSubclass()
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+
+        tree.bifurcate()
+
+        for node in tree.traverse():
+            self.assertIs(type(node), TreeNodeSubclass)
+
     def test_index_tree_single_node(self):
         """index_tree handles single node tree"""
         t1 = TreeNode.read(io.StringIO('root;'))
@@ -1137,7 +1152,13 @@ class TreeTests(TestCase):
 
         root = TreeNode.from_taxonomy(input_lineages.items())
 
+        self.assertIs(type(root), TreeNode)
+
         self.assertEqual(root.compare_subsets(exp), 0.0)
+
+        root = TreeNodeSubclass.from_taxonomy(input_lineages.items())
+
+        self.assertIs(type(root), TreeNodeSubclass)
 
     def test_to_taxonomy(self):
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
@@ -1179,9 +1200,16 @@ class TreeTests(TestCase):
                               [4.0, 11.0, 34.0,  7.0]])
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
+
+        self.assertIs(type(tree), TreeNode)
+
         self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
                          "F:0.5):5.75):2.0):6.25):2.5);\n",
                          str(tree))
+
+        tree = TreeNodeSubclass.from_linkage_matrix(linkage, id_list)
+
+        self.assertIs(type(tree), TreeNodeSubclass)
 
     def test_shuffle_invalid_iter(self):
         shuffler = self.simple_t.shuffle(n=-1)

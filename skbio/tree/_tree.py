@@ -1892,7 +1892,7 @@ class TreeNode(SkbioObject):
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
                 else:
-                    new_node = TreeNode(name=name)
+                    new_node = cls(name=name)
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
                     cur_node.append(new_node)
@@ -1951,7 +1951,7 @@ class TreeNode(SkbioObject):
         tip_width = len(id_list)
         cluster_count = len(linkage_matrix)
         lookup_len = cluster_count + tip_width
-        node_lookup = np.empty(lookup_len, dtype=TreeNode)
+        node_lookup = np.empty(lookup_len, dtype=cls)
 
         for i, name in enumerate(id_list):
             node_lookup[i] = cls(name=name)
@@ -2790,7 +2790,7 @@ class TreeNode(SkbioObject):
                 stack = n.children
                 while len(stack) > 2:
                     ind = stack.pop()
-                    intermediate = TreeNode()
+                    intermediate = self.__class__()
                     intermediate.length = insert_length
                     intermediate.extend(stack)
                     n.append(intermediate)

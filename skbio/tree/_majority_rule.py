@@ -113,8 +113,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     return accepted_clades
 
 
-def _build_trees(clade_counts, edge_lengths, support_attr,
-                 tree_node_class=TreeNode):
+def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     """Construct the trees with support
 
     Parameters
@@ -125,13 +124,14 @@ def _build_trees(clade_counts, edge_lengths, support_attr,
         Keyed by the frozenset of the clade and valued by the weighted length
     support_attr : str
         The name of the attribute to hold the support value
-    tree_node_class: Python class
-        Either TreeNode (the default) or a class that implements the same
-        interface (most usefully, a subclass of TreeNode).
+    tree_node_class : Python class
+        Specifies class of consensus trees that are returned. Either
+        ``TreeNode`` or a class that implements the same interface (most
+        usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
-    list of TreeNode
+    list of tree_node_class instances
         A list of the constructed trees
     """
     nodes = {}
@@ -192,22 +192,24 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
         If provided, the list must be in index order with `trees`. Each tree
         will receive the corresponding weight. If omitted, all trees will be
         equally weighted.
-    cutoff : float, 0.0 <= cutoff <= 1.0
+    cutoff : float, 0.0 <= cutoff <= 1.0, optional
         Any clade that has <= cutoff support will be dropped. If cutoff is
         < 0.5, then it is possible that ties will result. If so, ties are
         broken arbitrarily depending on list sort order.
-    support_attr : str
+    support_attr : str, optional
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
-    tree_node_class: Python class
-        Either TreeNode (the default) or a class that implements the same
-        interface (most usefully, a subclass of TreeNode).
+    tree_node_class : Python class, optional
+        Specifies class of consensus trees that are returned. Either
+        ``TreeNode`` (the default) or a class that implements the same
+        interface (most usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
     list of tree_node_class instances
-        Multiple trees can be returned in the case of two or more disjoint sets
-        of tips represented on input.
+        Each tree will be of type `tree_node_class`. Multiple trees can be
+        returned in the case of two or more disjoint sets of tips represented
+        on input.
 
     Notes
     -----
