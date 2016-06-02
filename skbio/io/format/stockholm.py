@@ -153,33 +153,33 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
 .. note:: References labelled with ``RN``/``RM``/``RT``/``RA``/``RL``/``RC``
    are handled differently than other GF features. When reading a Stockholm
-   file with these features, the reader populates adds a dictionary to a list
-   of reference dictionaries, and populates it with the information on that
-   specific reference. If the reference does not include all the expected
-   information (title, author, etc.), the dictionary will only be populated
-   with the information provided.
+   file with these features, the reader populates a list of dictionaries,
+   where each dictionary represents a single reference. The list contains
+   references in the order they appear in the file, regardless of the value
+   provided for RN. If a reference does not include all possible reference
+   tags (e.g. RC is missing), the dictionary will only contain the reference
+   tags present for that reference. When writing, the writer adds a reference
+   number (``RN``) line before writing each reference, for example:
 
-   A single reference will be stored as::
+   .. code-block:: none
+
+        #=GF RN [1]
+        #=GF RA Kestrel Gorlick
+        ...
+        #=GF RN [2]
+        ...
+
+    References will be stored as::
 
         metadata = {
             'RN': [{
-                'RM': 'reference medline'
-                'RT': 'reference title'
-                'RA': 'reference author'
-                'RL': 'reference location'
+                'RM': 'reference medline',
+                'RT': 'reference title',
+                'RA': 'reference author',
+                'RL': 'reference location',
                 'RC': 'reference comment'
-            }]
-        }
-
-    Multiple references will be stored as::
-
-        metadata = {
-            'RN': [{
-                'RM': 'reference medline'
-                ...
-            },
-                {
-                'RM': 'reference medline'
+            }, {
+                'RM': 'reference medline',
                 ...
             }]
         }
@@ -409,7 +409,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
-reference_tags = ['RM', 'RT', 'RA', 'RL', 'RC']
+_Reference_Tags = frozenset({'RM', 'RT', 'RA', 'RL', 'RC'})
 
 
 @stockholm.sniffer()
@@ -517,20 +517,21 @@ class _MSAData:
                                                      feature_data)
         elif feature_name == 'RN':
             if feature_name not in self._metadata:
-                self._metadata[feature_name] = [{}]
+                self._metadata[feature_name] = [OrderedDict()]
             else:
-                self._metadata[feature_name].append({})
-        elif feature_name in reference_tags:
-            if feature_name not in self._metadata['RN'][-1]:
-                self._metadata['RN'][-1][feature_name] = feature_data
+                self._metadata[feature_name].append(OrderedDict())
+        elif feature_name in _Reference_Tags:
+            if 'RN' not in self._metadata:
+                raise StockholmFormatError("Expected 'RN' tag to precede "
+                                           "'%s' tag." % feature_name)
+            reference_dict = self._metadata['RN'][-1]
+            if feature_name not in reference_dict:
+                reference_dict[feature_name] = feature_data
             else:
-                padding = _add_padding(self._metadata['RN'][-1][feature_name])
-                self._metadata['RN'][-1][feature_name] += (padding +
-                                                           feature_data)
-        # elif feature_name in self._metadata['RN'][-1]:
-        #     self._metadata['RN'][-1][feature_name] += feature_data
+                padding = _get_padding(reference_dict[feature_name])
+                reference_dict[feature_name] += padding + feature_data
         elif feature_name in self._metadata:
-            padding = '' if self._metadata[feature_name][-1].isspace() else ' '
+            padding = _get_padding(self._metadata[feature_name][-1])
             self._metadata[feature_name] = (self._metadata[feature_name] +
                                             padding + feature_data)
         else:
@@ -601,7 +602,7 @@ class _SeqData:
         if self.metadata is None:
             self.metadata = OrderedDict()
         if feature_name in self.metadata:
-            padding = '' if self.metadata[feature_name][-1].isspace() else ' '
+            padding = _get_padding(self.metadata[feature_name][-1])
             self.metadata[feature_name] += padding + feature_data
         else:
             self.metadata[feature_name] = feature_data
@@ -695,13 +696,21 @@ def _tabular_msa_to_stockholm(obj, fh):
             for tree_id, tree in obj.metadata[gf_feature].items():
                 fh.write("#=GF TN %s\n" % tree_id)
                 fh.write("#=GF NH %s\n" % tree)
-        elif gf_feature == 'RN' and isinstance(gf_feature_data, list):
-            for index, dictionary in enumerate(gf_feature_data):
-                fh.write("#=GF RN [%s]\n" % str(index+1))
-                for feature in reference_tags:
-                    if feature in dictionary:
-                        fh.write("#=GF %s %s\n" % (feature,
-                                                   dictionary[feature]))
+        elif gf_feature == 'RN':
+            if not isinstance(gf_feature_data, list):
+                raise StockholmFormatError("Expected 'RN' to contain a list "
+                                           "of dictionaries, got %s."
+                                           % gf_feature_data)
+            for ref_num, dictionary in enumerate(gf_feature_data, start=1):
+                fh.write("#=GF RN [%d]\n" % ref_num)
+                for feature in dictionary:
+                    if feature not in _Reference_Tags:
+                        raise StockholmFormatError("Invalid reference tag %s "
+                                                   "found in reference dictio"
+                                                   "nary %s." % (feature,
+                                                                 ref_num))
+                    fh.write("#=GF %s %s\n" % (feature,
+                                               dictionary[feature]))
         else:
             fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
@@ -767,5 +776,5 @@ def _format_positional_metadata(df, data_type):
     return str_df
 
 
-def _add_padding(item):
+def _get_padding(item):
     return '' if item[-1].isspace() else ' '

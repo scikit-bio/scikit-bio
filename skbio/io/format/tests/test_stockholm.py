@@ -253,58 +253,80 @@ class TestStockholmReader(unittest.TestCase):
     def test_stockhom_single_reference(self):
         fp = get_data_path('stockholm_single_reference')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([], metadata={'RN': [{'RM': '123456789',
-                                               'RT': 'A Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'Comment'}]})
+        exp = TabularMSA([], metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                                           ('RT', 'A Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location'),
+                                                           ('RC',
+                                                            'Comment')])]})
         self.assertEqual(msa, exp)
 
     def test_stockholm_multiple_references(self):
         fp = get_data_path('stockholm_multiple_references')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([], metadata={'RN': [{'RM': '123456789',
-                                               'RT': 'A Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'Comment'},
-                                              {'RM': '987654321',
-                                               'RT': 'A Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'Comment'},
-                                              {'RM': '132465879',
-                                               'RT': 'A Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'Comment'}]})
+        exp = TabularMSA([], metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                                           ('RT', 'A Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location'),
+                                                           ('RC',
+                                                            'Comment')]),
+                                              OrderedDict([('RM', '987654321'),
+                                                           ('RT', 'A Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location'),
+                                                           ('RC',
+                                                            'Comment')]),
+                                              OrderedDict([('RM', '132465879'),
+                                                           ('RT', 'A Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location'),
+                                                           ('RC',
+                                                            'Comment')])]})
         self.assertEqual(msa, exp)
 
     def test_stockholm_runon_references(self):
         fp = get_data_path('stockholm_runon_references')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([], metadata={'RN': [{'RM': '123456789',
-                                               'RT': 'A Runon Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'A Runon Comment'}]})
+        exp = TabularMSA([], metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                                           ('RT',
+                                                            'A Runon Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location'),
+                                                           ('RC',
+                                                            'A Runon '
+                                                            'Comment')])]})
         self.assertEqual(msa, exp)
 
     def test_stockholm_mixed_runon_references(self):
         fp = get_data_path('stockholm_runon_references_mixed')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([], metadata={'RN': [{'RM': '123456789',
-                                               'RT': 'A Runon Title',
-                                               'RA': 'The Author',
-                                               'RL': 'A Location',
-                                               'RC': 'A Runon Comment'}]})
+        exp = TabularMSA([], metadata={'RN': [OrderedDict([('RC',
+                                                            'A Runon Comment'),
+                                                           ('RM', '123456789'),
+                                                           ('RT',
+                                                            'A Runon Title'),
+                                                           ('RA',
+                                                            'The Author'),
+                                                           ('RL',
+                                                            'A Location')])]})
         self.assertEqual(msa, exp)
 
     def test_stockholm_handles_missing_reference_items(self):
         fp = get_data_path('stockholm_missing_reference_items')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([], metadata={'RN': [{'RT': 'A Title',
-                                               'RA': 'The Author'}]})
+        exp = TabularMSA([], metadata={'RN': [OrderedDict([('RT', 'A Title'),
+                                                           ('RA',
+                                                           'The Author')])]})
         self.assertEqual(msa, exp)
 
     def test_multiple_msa_file(self):
@@ -340,6 +362,12 @@ class TestStockholmReader(unittest.TestCase):
         fp = get_data_path('stockholm_duplicate_tree_ids')
         with self.assertRaisesRegex(StockholmFormatError,
                                     'Tree.*tree1.*in file.'):
+            _stockholm_to_tabular_msa(fp, constructor=DNA)
+
+    def test_stockholm_missing_reference_number_error(self):
+        fp = get_data_path('stockholm_missing_rn_tag')
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Expected 'RN'.*'RL' tag."):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_nonexistent_gr_error(self):
@@ -827,5 +855,20 @@ class TestStockholmWriter(unittest.TestCase):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
+    def test_rn_not_list_of_dicts_error(self):
+        msa = TabularMSA([], metadata={'RN': '1'})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Expected 'RN'.*list of dictionaries"
+                                    ".*got 1"):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_invalid_reference_tag_error(self):
+        msa = TabularMSA([], metadata={'RN': [OrderedDict([('RL', 'Flagstaff'),
+                                                           ('foo', 'bar')])]})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Invalid reference.*foo found in.*1"):
+                fh = io.StringIO()
+                _tabular_msa_to_stockholm(msa, fh)
 if __name__ == '__main__':
     unittest.main()
