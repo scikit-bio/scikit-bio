@@ -253,7 +253,6 @@ class TestStockholmReader(unittest.TestCase):
                                               'tree3': 'IJKL'}})
         self.assertEqual(msa, exp)
 
-<<<<<<< HEAD
     def test_stockhom_single_reference(self):
         fp = get_data_path('stockholm_single_reference')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
