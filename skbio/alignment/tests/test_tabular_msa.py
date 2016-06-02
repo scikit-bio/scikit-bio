@@ -6,6 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import collections
 import copy
 import unittest
 import functools
@@ -3620,6 +3621,15 @@ class TestIsSequenceAxis(unittest.TestCase):
 
     def test_negative_int(self):
         self.assertFalse(self.msa._is_sequence_axis(1))
+
+
+class TestHashable(unittest.TestCase):
+    def test_unhashable_type(self):
+        self.assertNotIsInstance(TabularMSA([]), collections.Hashable)
+
+    def test_unhashable_object(self):
+        with self.assertRaisesRegex(TypeError, 'unhashable'):
+            hash(TabularMSA([]))
 
 
 class TestRepr(unittest.TestCase):

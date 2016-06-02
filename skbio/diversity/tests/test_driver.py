@@ -16,6 +16,7 @@ import numpy.testing as npt
 from skbio import DistanceMatrix, TreeNode
 from skbio.util._testing import assert_series_almost_equal
 from skbio.diversity import (alpha_diversity, beta_diversity,
+                             partial_beta_diversity,
                              get_alpha_diversity_metrics,
                              get_beta_diversity_metrics)
 from skbio.diversity.alpha import faith_pd, observed_otus
@@ -634,6 +635,147 @@ class MetricGetters(TestCase):
         m = get_beta_diversity_metrics()
         n = sorted(list(m))
         self.assertEqual(m, n)
+
+
+class TestPartialBetaDiversity(TestCase):
+    def setUp(self):
+        self.table1 = [[1, 5],
+                       [2, 3],
+                       [0, 1]]
+        self.sids1 = list('ABC')
+        self.tree1 = TreeNode.read(io.StringIO(
+            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'))
+        self.oids1 = ['O1', 'O2']
+
+        self.table2 = [[23, 64, 14, 0, 0, 3, 1],
+                       [0, 3, 35, 42, 0, 12, 1],
+                       [0, 5, 5, 0, 40, 40, 0],
+                       [44, 35, 9, 0, 1, 0, 0],
+                       [0, 2, 8, 0, 35, 45, 1],
+                       [0, 0, 25, 35, 0, 19, 0]]
+        self.sids2 = list('ABCDEF')
+
+    def test_id_pairs_as_iterable(self):
+        id_pairs = iter([('B', 'C'), ])
+        dm = partial_beta_diversity('unweighted_unifrac', self.table1,
+                                    self.sids1, otu_ids=self.oids1,
+                                    tree=self.tree1, id_pairs=id_pairs)
+        self.assertEqual(dm.shape, (3, 3))
+        expected_data = [[0.0, 0.0, 0.0],
+                         [0.0, 0.0, 0.25],
+                         [0.0, 0.25, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.sids1)
+        for id1 in self.sids1:
+            for id2 in self.sids1:
+                npt.assert_almost_equal(dm[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+        # pass in iter(foo)
+
+    def test_unweighted_unifrac_partial(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
+        # expected values calculated by hand
+        dm = partial_beta_diversity('unweighted_unifrac', self.table1,
+                                    self.sids1, otu_ids=self.oids1,
+                                    tree=self.tree1, id_pairs=[('B', 'C'), ])
+        self.assertEqual(dm.shape, (3, 3))
+        expected_data = [[0.0, 0.0, 0.0],
+                         [0.0, 0.0, 0.25],
+                         [0.0, 0.25, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.sids1)
+        for id1 in self.sids1:
+            for id2 in self.sids1:
+                npt.assert_almost_equal(dm[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_weighted_unifrac_partial_full(self):
+        # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
+        # near-equality testing when that support is available
+        # expected values calculated by hand
+        dm1 = partial_beta_diversity('weighted_unifrac', self.table1,
+                                     self.sids1, otu_ids=self.oids1,
+                                     tree=self.tree1, id_pairs=[('A', 'B'),
+                                                                ('A', 'C'),
+                                                                ('B', 'C')])
+        dm2 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
+                             otu_ids=self.oids1, tree=self.tree1)
+
+        self.assertEqual(dm1.shape, (3, 3))
+        self.assertEqual(dm1, dm2)
+        expected_data = [
+            [0.0, 0.1750000, 0.12499999],
+            [0.1750000, 0.0, 0.3000000],
+            [0.12499999, 0.3000000, 0.0]]
+        expected_dm = DistanceMatrix(expected_data, ids=self.sids1)
+        for id1 in self.sids1:
+            for id2 in self.sids1:
+                npt.assert_almost_equal(dm1[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_self_self_pair(self):
+        error_msg = ("A duplicate or a self-self pair was observed.")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity((lambda x, y: x + y), self.table1,
+                                   self.sids1, id_pairs=[('A', 'B'),
+                                                         ('A', 'A')])
+
+    def test_duplicate_pairs(self):
+        # confirm that partial pairwise execution fails if duplicate pairs are
+        # observed
+        error_msg = ("A duplicate or a self-self pair was observed.")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity((lambda x, y: x + y), self.table1,
+                                   self.sids1, id_pairs=[('A', 'B'),
+                                                         ('A', 'B')])
+
+    def test_duplicate_transpose_pairs(self):
+        # confirm that partial pairwise execution fails if a transpose
+        # duplicate is observed
+        error_msg = ("A duplicate or a self-self pair was observed.")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity((lambda x, y: x + y), self.table1,
+                                   self.sids1, id_pairs=[('A', 'B'),
+                                                         ('A', 'B')])
+
+    def test_pairs_not_subset(self):
+        # confirm raise when pairs are not a subset of IDs
+        error_msg = ("`id_pairs` are not a subset of `ids`")
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity((lambda x, y: x + y), self.table1,
+                                   self.sids1, id_pairs=[('x', 'b'), ])
+
+    def test_euclidean(self):
+        # confirm that pw execution through partial is identical
+        def euclidean(u, v, **kwargs):
+            return np.sqrt(((u - v)**2).sum())
+
+        id_pairs = [('A', 'B'), ('B', 'F'), ('D', 'E')]
+        actual_dm = partial_beta_diversity(euclidean, self.table2, self.sids2,
+                                           id_pairs=id_pairs)
+        actual_dm = DistanceMatrix(actual_dm, self.sids2)
+
+        expected_data = [
+            [0., 80.8455317, 0., 0., 0., 0.],
+            [80.8455317, 0., 0., 0., 0., 14.422205],
+            [0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 78.7908624, 0.],
+            [0., 0., 0., 78.7908624, 0., 0.],
+            [0., 14.422205, 0., 0., 0., 0.]]
+
+        expected_dm = DistanceMatrix(expected_data, self.sids2)
+        for id1 in self.sids2:
+            for id2 in self.sids2:
+                npt.assert_almost_equal(actual_dm[id1, id2],
+                                        expected_dm[id1, id2], 6)
+
+    def test_unusable_metric(self):
+        id_pairs = [('A', 'B'), ('B', 'F'), ('D', 'E')]
+        error_msg = "partial_beta_diversity is only compatible"
+        with self.assertRaisesRegex(ValueError, error_msg):
+            partial_beta_diversity('hamming', self.table2, self.sids2,
+                                   id_pairs=id_pairs)
+
 
 if __name__ == "__main__":
     main()

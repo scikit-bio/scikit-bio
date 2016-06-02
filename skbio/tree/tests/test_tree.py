@@ -300,6 +300,12 @@ class TreeTests(TestCase):
         self.assertEqual(len(n.children), 2)
         self.assertNotIn(n, self.simple_t.children)
 
+    def test_prune_root_single_desc(self):
+        t = TreeNode.read(["((a,b)c)extra;"])
+        exp = "(a,b)c;\n"
+        t.prune()
+        self.assertEqual(str(t), exp)
+
     def test_prune(self):
         """Collapse single descendent nodes"""
         # check the identity case
@@ -552,6 +558,12 @@ class TreeTests(TestCase):
 
         with self.assertRaises(NoParentError):
             a.accumulate_to_ancestor(b)
+
+    def test_distance_nontip(self):
+        # example derived from issue #807, credit @wwood
+        tstr = "((A:1.0,B:2.0)'g__genus1':3.0)root;"
+        tree = TreeNode.read(io.StringIO(tstr))
+        self.assertEqual(tree.find('A').distance(tree.find('g__genus1')), 1.0)
 
     def test_distance(self):
         """Get the distance between two nodes"""

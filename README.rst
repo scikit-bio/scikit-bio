@@ -3,7 +3,7 @@
    :target: http://scikit-bio.org
    :alt: scikit-bio logo
 
-|Build Status| |Coverage Status| |Gitter Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Downloads| |Install|
+|Build Status| |Coverage Status| |ASV Benchmarks| |Gitter Badge| |Depsy Badge| |Anaconda Cloud Build| |Anaconda Cloud| |License| |Downloads| |Install|
 
 scikit-bio is an open-source, BSD-licensed Python 3 package providing data structures, algorithms and educational resources for bioinformatics.
 
@@ -108,9 +108,13 @@ scikit-bio's logo was created by `Alina Prassas <http://cargocollective.com/alin
    :target: https://travis-ci.org/biocore/scikit-bio
 .. |Coverage Status| image:: https://coveralls.io/repos/biocore/scikit-bio/badge.png
    :target: https://coveralls.io/r/biocore/scikit-bio
+.. |ASV Benchmarks| image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
+   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/master/index.html
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/biocore/scikit-bio
    :target: https://gitter.im/biocore/scikit-bio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Depsy Badge| image:: http://depsy.org/api/package/pypi/scikit-bio/badge.svg
+   :target: http://depsy.org/package/python/scikit-bio
 .. |Anaconda Cloud Build| image:: https://anaconda.org/biocore/scikit-bio/badges/build.svg
    :target: https://anaconda.org/biocore/scikit-bio/builds
 .. |Anaconda Cloud| image:: https://anaconda.org/biocore/scikit-bio/badges/version.svg

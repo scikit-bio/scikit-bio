@@ -139,6 +139,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     """
     default_write_format = 'fasta'
+    __hash__ = None
 
     @property
     @experimental(as_of='0.4.1')
