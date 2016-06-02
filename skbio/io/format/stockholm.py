@@ -478,9 +478,13 @@ class _MSAData:
         # Handles extra line(s) of an already created tree
         elif feature_name == 'NH' and feature_name in self._metadata:
             trees = self._metadata[feature_name]
-            tree_id = list(trees.keys())[-1]
-            self._metadata[feature_name][tree_id] = (trees[tree_id] +
-                                                     feature_data)
+            if isinstance(trees, OrderedDict):
+                tree_id = next(reversed(trees))
+                self._metadata[feature_name][tree_id] = (trees[tree_id] +
+                                                         feature_data)
+            else:
+                self._metadata[feature_name] = (self._metadata[feature_name] +
+                                                feature_data)
         elif feature_name in self._metadata:
             padding = '' if self._metadata[feature_name][-1].isspace() else ' '
             self._metadata[feature_name] = (self._metadata[feature_name] +

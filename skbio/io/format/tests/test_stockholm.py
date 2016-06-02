@@ -58,7 +58,10 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_all_data_types',
             'stockholm_two_of_each_metadata',
             'stockholm_data_only',
-            'stockholm_nonstring_labels'
+            'stockholm_nonstring_labels',
+            'stockholm_multi_line_tree_no_id',
+            'stockholm_multi_line_tree_with_id',
+            'stockholm_multiple_multi_line_trees'
             ]]
 
         self.negatives = [get_data_path(e) for e in [
@@ -243,6 +246,25 @@ class TestStockholmReader(unittest.TestCase):
         exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCD',
                                               'tree2': 'EFGH',
                                               'tree3': 'IJKL'}})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_no_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_no_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': 'ABCDEFGH'})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multiple_multi_line_trees(self):
+        fp = get_data_path('stockholm_multiple_multi_line_trees')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH',
+                                              'tree2': 'IJKLMNOP'}})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_with_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_with_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH'}})
         self.assertEqual(msa, exp)
 
     def test_multiple_msa_file(self):
