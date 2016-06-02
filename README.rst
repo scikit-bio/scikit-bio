@@ -17,13 +17,16 @@ scikit-bio is currently in beta. We are very actively developing it, and **backw
 Installing
 ----------
 
+The recommended way to install scikit-bio is via the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_.
+
 To install the latest release of scikit-bio::
 
-    pip install scikit-bio
-
-Equivalently, you can use the ``conda`` package manager available in `Anaconda <http://continuum.io/downloads>`_ or `miniconda <http://conda.pydata.org/miniconda.html>`_ to install scikit-bio and its dependencies without having to compile them::
-
     conda install -c https://conda.anaconda.org/biocore scikit-bio
+
+Alternatively, you can install scikit-bio using ``pip``::
+
+    pip install numpy
+    pip install scikit-bio
 
 You can verify your installation by running the scikit-bio unit tests::
 

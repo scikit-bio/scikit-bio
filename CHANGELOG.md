@@ -37,6 +37,7 @@ functionality described [here](https://docs.python.org/2/library/os.html#os.remo
 ([#833](https://github.com/biocore/scikit-bio/issues/833))
 
 ### Miscellaneous
+* When installing scikit-bio via `pip`, numpy must now be installed first ([#1296](https://github.com/biocore/scikit-bio/issues/1296))
 
 ## Version 0.4.2 (2016-02-17)
 
