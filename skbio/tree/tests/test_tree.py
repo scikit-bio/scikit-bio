@@ -303,8 +303,8 @@ class TreeTests(TestCase):
     def test_prune_root_single_desc(self):
         t = TreeNode.read(["((a,b)c)extra;"])
         exp = "(a,b)c;\n"
-        obs = t.prune()
-        self.assertEqual(str(obs), exp)
+        t.prune()
+        self.assertEqual(str(t), exp)
 
     def test_prune(self):
         """Collapse single descendent nodes"""
@@ -563,8 +563,7 @@ class TreeTests(TestCase):
         # example derived from issue #807, credit @wwood
         tstr = "((A:1.0,B:2.0)'g__genus1':3.0)root;"
         tree = TreeNode.read(io.StringIO(tstr))
-        with self.assertRaises(TreeError):
-            tree.find('A').distance(tree.find('g__genus1'))
+        self.assertEqual(tree.find('A').distance(tree.find('g__genus1')), 1.0)
 
     def test_distance(self):
         """Get the distance between two nodes"""
@@ -589,13 +588,6 @@ class TreeTests(TestCase):
         self.assertEqual(tips[2].distance(tips[2]), 0.0)
         with self.assertRaises(NoLengthError):
             tips[2].distance(tips[3])
-
-    def test_lowest_common_ancestor_nontip(self):
-        # example derived from issue #807, credit @wwood
-        tstr = "((A:1.0,B:2.0)'g__genus1':3.0)root;"
-        tree = TreeNode.read(io.StringIO(tstr))
-        with self.assertRaises(TreeError):
-            tree.lca(['A', 'g__genus1'])
 
     def test_lowest_common_ancestor(self):
         """TreeNode lowestCommonAncestor should return LCA for set of tips"""
