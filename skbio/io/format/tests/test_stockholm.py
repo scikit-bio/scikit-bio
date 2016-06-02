@@ -59,17 +59,14 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_two_of_each_metadata',
             'stockholm_data_only',
             'stockholm_nonstring_labels',
-<<<<<<< HEAD
             'stockholm_missing_reference_items',
             'stockholm_multiple_references',
             'stockholm_runon_references',
             'stockholm_runon_references_mixed',
             'stockholm_single_reference'
-=======
             'stockholm_multi_line_tree_no_id',
             'stockholm_multi_line_tree_with_id',
             'stockholm_multiple_multi_line_trees'
->>>>>>> master
             ]]
 
         self.negatives = [get_data_path(e) for e in [
