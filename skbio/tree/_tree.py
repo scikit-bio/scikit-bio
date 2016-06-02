@@ -383,6 +383,18 @@ class TreeNode(SkbioObject):
             if len(node.children) == 1:
                 nodes_to_remove.append(node)
 
+        # if a single descendent from the root, the root adopts the childs
+        # properties. we can't "delete" the root as that would be deleting
+        # self.
+        if len(self.children) == 1:
+            node_to_copy = self.children[0]
+            efc = self._exclude_from_copy
+            for key in node_to_copy.__dict__:
+                if key not in efc:
+                    self.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
+            self.remove(node_to_copy)
+            self.children.extend(node_to_copy.children)
+
         # clean up the single children nodes
         for node in nodes_to_remove:
             child = node.children[0]
@@ -1762,7 +1774,8 @@ class TreeNode(SkbioObject):
         Raises
         ------
         ValueError
-            If no tips could be found in the tree
+            If no tips could be found in the tree, or if not all tips were
+            found.
 
         Examples
         --------
@@ -2301,12 +2314,20 @@ class TreeNode(SkbioObject):
         if self is other:
             return 0.0
 
-        root = self.root()
-        lca = root.lowest_common_ancestor([self, other])
-        accum = self.accumulate_to_ancestor(lca)
-        accum += other.accumulate_to_ancestor(lca)
+        self_ancestors = [self] + list(self.ancestors())
+        other_ancestors = [other] + list(other.ancestors())
 
-        return accum
+        if self in other_ancestors:
+            return other.accumulate_to_ancestor(self)
+        elif other in self_ancestors:
+            return self.accumulate_to_ancestor(other)
+        else:
+            root = self.root()
+            lca = root.lowest_common_ancestor([self, other])
+            accum = self.accumulate_to_ancestor(lca)
+            accum += other.accumulate_to_ancestor(lca)
+
+            return accum
 
     def _set_max_distance(self):
         """Propagate tip distance information up the tree
