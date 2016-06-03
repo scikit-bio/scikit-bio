@@ -172,7 +172,7 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
    References will be stored as::
 
        metadata = {
-           'RN': [{    
+           'RN': [{
                'RM': 'reference medline',
                'RT': 'reference title',
                'RA': 'reference author',
