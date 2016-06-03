@@ -63,7 +63,10 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_multiple_references',
             'stockholm_runon_references',
             'stockholm_runon_references_mixed',
-            'stockholm_single_reference'
+            'stockholm_single_reference',
+            'stockholm_multi_line_tree_no_id',
+            'stockholm_multi_line_tree_with_id',
+            'stockholm_multiple_multi_line_trees'
             ]]
 
         self.negatives = [get_data_path(e) for e in [
@@ -327,6 +330,25 @@ class TestStockholmReader(unittest.TestCase):
         exp = TabularMSA([], metadata={'RN': [OrderedDict([('RT', 'A Title'),
                                                            ('RA',
                                                            'The Author')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_no_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_no_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': 'ABCDEFGH'})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multiple_multi_line_trees(self):
+        fp = get_data_path('stockholm_multiple_multi_line_trees')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH',
+                                              'tree2': 'IJKLMNOP'}})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_with_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_with_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH'}})
         self.assertEqual(msa, exp)
 
     def test_multiple_msa_file(self):
