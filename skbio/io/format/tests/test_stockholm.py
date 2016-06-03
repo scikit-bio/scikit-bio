@@ -64,6 +64,7 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_runon_references',
             'stockholm_runon_references_mixed',
             'stockholm_single_reference',
+            'stockholm_single_reference',
             'stockholm_multi_line_tree_no_id',
             'stockholm_multi_line_tree_with_id',
             'stockholm_multiple_multi_line_trees'
