@@ -163,26 +163,26 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
    .. code-block:: none
 
-        #=GF RN [1]
-        #=GF RA Kestrel Gorlick
-        ...
-        #=GF RN [2]
-        ...
+      #=GF RN [1]
+      #=GF RA Kestrel Gorlick
+      ...
+      #=GF RN [2]
+      ...
 
-    References will be stored as::
+   References will be stored as::
 
-        metadata = {
-            'RN': [{
-                'RM': 'reference medline',
-                'RT': 'reference title',
-                'RA': 'reference author',
-                'RL': 'reference location',
-                'RC': 'reference comment'
-            }, {
-                'RM': 'reference medline',
-                ...
-            }]
-        }
+       metadata = {
+           'RN': [{    
+               'RM': 'reference medline',
+               'RT': 'reference title',
+               'RA': 'reference author',
+               'RL': 'reference location',
+               'RC': 'reference comment'
+           }, {
+               'RM': 'reference medline',
+               ...
+           }]
+       }
 
 GS metadata
 +++++++++++
