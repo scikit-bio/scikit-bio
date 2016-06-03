@@ -118,7 +118,6 @@ class TestCCAResults1(TestCase):
             eigvals=eigvals)
 
         assert_ordination_results_equal(scores, exp,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
     def test_scaling2(self):
@@ -169,7 +168,6 @@ class TestCCAResults1(TestCase):
             eigvals=eigvals)
 
         assert_ordination_results_equal(scores, exp,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
 

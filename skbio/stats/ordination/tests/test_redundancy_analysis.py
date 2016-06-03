@@ -103,7 +103,6 @@ class TestRDAResults(TestCase):
 
         assert_ordination_results_equal(scores, exp,
                                         ignore_directionality=True,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
     def test_scaling2(self):
@@ -137,9 +136,12 @@ class TestRDAResults(TestCase):
             index=self.sample_ids,
             columns=self.pc_ids)
 
-        biplot_scores = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example2_biplot_scaling2')))
+        mat = np.loadtxt(get_data_path(
+            'example2_biplot_scaling2'))
+        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pc_ids)
 
         # These are wrong. See issue #1002
         proportion_explained = pd.Series([0.44275783, 0.25614586,
@@ -163,7 +165,6 @@ class TestRDAResults(TestCase):
 
         assert_ordination_results_equal(scores, exp,
                                         ignore_directionality=True,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
 
