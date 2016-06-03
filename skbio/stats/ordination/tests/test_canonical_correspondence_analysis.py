@@ -59,7 +59,7 @@ class TestCCAResults1(TestCase):
                            'Sample4', 'Sample5', 'Sample6', 'Sample7',
                            'Sample8', 'Sample9']
         self.env_ids = ['Constraint0', 'Constraint1',
-                        'Constraint2', 'Constraint3']
+                        'Constraint2']
         self.pc_ids = ['CCA1', 'CCA2', 'CCA3', 'CCA4', 'CCA5', 'CCA6', 'CCA7',
                        'CCA8', 'CCA9']
         self.Y = pd.DataFrame(
@@ -67,10 +67,10 @@ class TestCCAResults1(TestCase):
             columns=self.feature_ids,
             index=self.sample_ids)
         self.X = pd.DataFrame(
-            np.loadtxt(get_data_path('example3_X')),
+            np.loadtxt(get_data_path('example3_X'))[:, :-1],
             columns=self.env_ids,
             index=self.sample_ids
-            ).ix[:, :-1]
+            )
 
     def test_scaling1(self):
         scores = cca(self.Y, self.X, scaling=1)
@@ -93,10 +93,12 @@ class TestCCAResults1(TestCase):
                 'example3_sample_constraints_scaling1')),
             index=self.sample_ids,
             columns=self.pc_ids)
-
-        biplot_scores = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_biplot_scaling1')))
+        mat = np.loadtxt(get_data_path(
+            'example3_biplot_scaling1'))
+        cropped_pcs = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pcs)
 
         proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
                                           0.104937, 0.044805, 0.029747,
@@ -141,9 +143,13 @@ class TestCCAResults1(TestCase):
             index=self.sample_ids,
             columns=self.pc_ids)
 
-        biplot_scores = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example3_biplot_scaling2')))
+        mat = np.loadtxt(get_data_path(
+            'example3_biplot_scaling2'))
+
+        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pc_ids)
 
         proportion_explained = pd.Series([0.466911, 0.238327, 0.100548,
                                           0.104937, 0.044805, 0.029747,

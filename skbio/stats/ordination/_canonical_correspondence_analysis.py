@@ -221,7 +221,10 @@ def cca(y, x, scaling=1):
                            columns=pc_ids, index=sample_ids)
     features = pd.DataFrame(features_scores,
                             columns=pc_ids, index=feature_ids)
-    biplot_scores = pd.DataFrame(biplot_scores)
+
+    biplot_scores = pd.DataFrame(biplot_scores,
+                                 index=x.columns,
+                                 columns=pc_ids[:biplot_scores.shape[1]])
     sample_constraints = pd.DataFrame(sample_constraints,
                                       index=sample_ids, columns=pc_ids)
 
