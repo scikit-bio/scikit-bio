@@ -156,10 +156,10 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
    file with these features, the reader populates a list of dictionaries,
    where each dictionary represents a single reference. The list contains
    references in the order they appear in the file, regardless of the value
-   provided for RN. If a reference does not include all possible reference
-   tags (e.g. RC is missing), the dictionary will only contain the reference
-   tags present for that reference. When writing, the writer adds a reference
-   number (``RN``) line before writing each reference, for example:
+   provided for ``RN``. If a reference does not include all possible reference
+   tags (e.g. ``RC`` is missing), the dictionary will only contain the
+   reference tags present for that reference. When writing, the writer adds a
+   reference number (``RN``) line before writing each reference, for example:
 
    .. code-block:: none
 
@@ -409,7 +409,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
-_Reference_Tags = frozenset({'RM', 'RT', 'RA', 'RL', 'RC'})
+_REFERENCE_TAGS = frozenset({'RM', 'RT', 'RA', 'RL', 'RC'})
 
 
 @stockholm.sniffer()
@@ -524,7 +524,7 @@ class _MSAData:
                 self._metadata[feature_name] = [OrderedDict()]
             else:
                 self._metadata[feature_name].append(OrderedDict())
-        elif feature_name in _Reference_Tags:
+        elif feature_name in _REFERENCE_TAGS:
             if 'RN' not in self._metadata:
                 raise StockholmFormatError("Expected 'RN' tag to precede "
                                            "'%s' tag." % feature_name)
@@ -703,16 +703,27 @@ def _tabular_msa_to_stockholm(obj, fh):
         elif gf_feature == 'RN':
             if not isinstance(gf_feature_data, list):
                 raise StockholmFormatError("Expected 'RN' to contain a list "
-                                           "of dictionaries, got %s."
+                                           "of reference dictionaries, got %r."
                                            % gf_feature_data)
             for ref_num, dictionary in enumerate(gf_feature_data, start=1):
+                if not isinstance(dictionary, dict):
+                    raise StockholmFormatError("Expected reference information"
+                                               " to be stored as a dictionary,"
+                                               " found reference %d stored as "
+                                               "%r."
+                                               % (ref_num,
+                                                  type(dictionary).__name__))
                 fh.write("#=GF RN [%d]\n" % ref_num)
                 for feature in dictionary:
-                    if feature not in _Reference_Tags:
-                        raise StockholmFormatError("Invalid reference tag %s "
+                    if feature not in _REFERENCE_TAGS:
+                        raise StockholmFormatError("Invalid reference tag %r "
                                                    "found in reference dictio"
-                                                   "nary %s." % (feature,
-                                                                 ref_num))
+                                                   "nary %d. Valid reference "
+                                                   "tags are: %s."
+                                                   % (feature, ref_num,
+                                                      ', '.join([
+                                                            tag for tag in
+                                                            _REFERENCE_TAGS])))
                     fh.write("#=GF %s %s\n" % (feature,
                                                dictionary[feature]))
         else:
