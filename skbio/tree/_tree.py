@@ -1892,13 +1892,13 @@ class TreeNode(SkbioObject):
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
                 else:
-                    new_node = TreeNode(name=name)
+                    new_node = cls(name=name)
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
                     cur_node.append(new_node)
                     cur_node = new_node
 
-            cur_node.append(TreeNode(name=id_))
+            cur_node.append(cls(name=id_))
 
         # scrub the lookups
         for node in root.non_tips(include_self=True):
@@ -1951,13 +1951,13 @@ class TreeNode(SkbioObject):
         tip_width = len(id_list)
         cluster_count = len(linkage_matrix)
         lookup_len = cluster_count + tip_width
-        node_lookup = np.empty(lookup_len, dtype=TreeNode)
+        node_lookup = np.empty(lookup_len, dtype=cls)
 
         for i, name in enumerate(id_list):
-            node_lookup[i] = TreeNode(name=name)
+            node_lookup[i] = cls(name=name)
 
         for i in range(tip_width, lookup_len):
-            node_lookup[i] = TreeNode()
+            node_lookup[i] = cls()
 
         newest_cluster_index = cluster_count + 1
         for link in linkage_matrix:
@@ -2790,7 +2790,7 @@ class TreeNode(SkbioObject):
                 stack = n.children
                 while len(stack) > 2:
                     ind = stack.pop()
-                    intermediate = TreeNode()
+                    intermediate = self.__class__()
                     intermediate.length = insert_length
                     intermediate.extend(stack)
                     n.append(intermediate)
