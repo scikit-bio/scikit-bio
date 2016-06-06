@@ -502,7 +502,13 @@ class IORegistry:
             # on the first call from __iter__
             # eta-reduction is possible, but we want to the type to be
             # GeneratorType
-            return (x for x in itertools.chain([next(gen)], gen))
+            try:
+                return (x for x in itertools.chain([next(gen)], gen))
+            except StopIteration:
+                # If the error was a StopIteration, then we want to return an
+                # empty generator as `next(gen)` failed.
+                # See #1313 for more info.
+                return (x for x in [])
         else:
             return self._read_ret(file, format, into, verify, kwargs)
 
