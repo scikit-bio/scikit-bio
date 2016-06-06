@@ -124,9 +124,9 @@ def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
         Keyed by the frozenset of the clade and valued by the weighted length
     support_attr : str
         The name of the attribute to hold the support value
-    tree_node_class : Python class
-        Specifies class of consensus trees that are returned. Either
-        ``TreeNode`` or a class that implements the same interface (most
+    tree_node_class : type
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` or a type that implements the same interface (most
         usefully, a subclass of ``TreeNode``).
 
     Returns
@@ -199,10 +199,10 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
     support_attr : str, optional
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
-    tree_node_class : Python class, optional
-        Specifies class of consensus trees that are returned. Either
-        ``TreeNode`` (the default) or a class that implements the same
-        interface (most usefully, a subclass of ``TreeNode``).
+    tree_node_class : type, optional
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` (the default) or a type that implements the same interface
+        (most usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
