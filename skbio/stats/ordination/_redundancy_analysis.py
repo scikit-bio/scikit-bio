@@ -201,7 +201,10 @@ def rda(y, x, scale_Y=False, scaling=1):
     # can see that there's an arrow for each of the 4
     # environmental variables (depth, coral, sand, other) even if
     # other = not(coral or sand)
-    biplot_scores = pd.DataFrame(corr(X, u))
+    biplot_scores = corr(X, u)
+    biplot_scores = pd.DataFrame(biplot_scores,
+                                 index=x.columns,
+                                 columns=pc_ids[:biplot_scores.shape[1]])
     # The "Correlations of environmental variables with sample
     # scores" from table 11.4 are quite similar to vegan's biplot
     # scores, but they're computed like this:
