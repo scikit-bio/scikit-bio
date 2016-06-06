@@ -82,13 +82,12 @@ class TestRDAResults(TestCase):
             np.loadtxt(get_data_path(
                 'example2_biplot_scaling1')))
 
-        # These are wrong. See issue #1002
         proportion_explained = pd.Series([0.44275783, 0.25614586,
                                           0.15280354, 0.10497021,
                                           0.02873375, 0.00987052,
                                           0.00471828],
                                          index=self.pc_ids)
-        # These are wrong. See issue #1002
+
         eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
                              1.680705, 0.577350, 0.275984],
                             index=self.pc_ids)
@@ -140,13 +139,12 @@ class TestRDAResults(TestCase):
             np.loadtxt(get_data_path(
                 'example2_biplot_scaling2')))
 
-        # These are wrong. See issue #1002
         proportion_explained = pd.Series([0.44275783, 0.25614586,
                                           0.15280354, 0.10497021,
                                           0.02873375, 0.00987052,
                                           0.00471828],
                                          index=self.pc_ids)
-        # These are wrong. See issue #1002
+
         eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
                              1.680705, 0.577350, 0.275984],
                             index=self.pc_ids)

@@ -72,6 +72,10 @@ def rda(y, x, scale_Y=False, scaling=1):
     -----
     The algorithm is based on [1]_, \S 11.1, and is expected to
     give the same results as ``rda(y, x)`` in R's package vegan.
+    The eigenvalues reported in vegan are re-normalized to
+    :math:`\sqrt{\frac{s}{n-1}}` `n` is the number of samples,
+    and `s` is the original eigenvalues. Here we will only return
+    the original eigenvalues, as recommended in [1]_.
 
     See Also
     --------
