@@ -1429,6 +1429,23 @@ class TestRead(RegistryTest):
         self.assertEqual(next(gen), TestClass(['woo']))
         gen.close()
 
+    def test_read_empty_file_gen_with_format(self):
+        format1 = self.registry.create_format('format1')
+
+        @format1.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @format1.reader(None)
+        def reader1(fh):
+            return
+            yield
+
+        with io.StringIO("") as fh:
+            gen = self.registry.read(fh, format='format1')
+
+        self.assertEqual(list(gen), [])
+
 
 class TestWrite(RegistryTest):
     def test_writer_does_not_exist(self):
