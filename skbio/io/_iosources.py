@@ -6,13 +6,10 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
 import io
 import gzip
-import bz2file
-from tempfile import gettempdir
+import bz2
+import tempfile
 import itertools
 
 import requests
@@ -24,6 +21,14 @@ from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
                           WrappedBufferedRandom)
 
 
+# NamedTemporaryFile isn't an actual file class, it is a function which
+# returns _TemporaryFileWrapper around a normal file object. Instead of
+# relying on this implementation, we take whatever the class of the result of
+# NamedTemporaryFile is.
+with tempfile.NamedTemporaryFile() as fh:
+    _WrappedTemporaryFile = type(fh)
+
+
 def get_io_sources():
     return (
         # The order of these source is significant as they will short-circuit
@@ -32,6 +37,7 @@ def get_io_sources():
         BytesIOSource,
         BufferedIOSource,
         TextIOSource,
+        WrappedTemporaryFileSource,
         IterableSource
     )
 
@@ -49,7 +55,7 @@ def get_compression_handler(name):
     return compressors.get(name, False)
 
 
-class IOSource(object):
+class IOSource:
     closeable = True
 
     def __init__(self, file, options):
@@ -79,7 +85,7 @@ class Compressor(IOSource):
 
 class FilePathSource(IOSource):
     def can_read(self):
-        return isinstance(self.file, six.string_types)
+        return isinstance(self.file, str)
 
     def can_write(self):
         return self.can_read()
@@ -94,12 +100,12 @@ class FilePathSource(IOSource):
 class HTTPSource(IOSource):
     def can_read(self):
         return (
-            isinstance(self.file, six.string_types) and
+            isinstance(self.file, str) and
             requests.compat.urlparse(self.file).scheme in {'http', 'https'})
 
     def get_reader(self):
         sess = CacheControl(requests.Session(),
-                            cache=FileCache(gettempdir()))
+                            cache=FileCache(tempfile.gettempdir()))
         req = sess.get(self.file)
 
         # if the response is not 200, an exception will be raised
@@ -160,6 +166,25 @@ class TextIOSource(IOSource):
         return self.file
 
 
+class WrappedTemporaryFileSource(IOSource):
+    closeable = False
+
+    def can_read(self):
+        return (isinstance(self.file, _WrappedTemporaryFile) and
+                self.file.readable())
+
+    def can_write(self):
+        return (isinstance(self.file, _WrappedTemporaryFile) and
+                self.file.writable())
+
+    def get_reader(self):
+        # _TemporaryFileWrapper has a file attribute which is an actual fileobj
+        return self.file.file
+
+    def get_writer(self):
+        return self.file.file
+
+
 class IterableSource(IOSource):
     def can_read(self):
         if hasattr(self.file, '__iter__'):
@@ -168,17 +193,11 @@ class IterableSource(IOSource):
             if head is None:
                 self.repaired = []
                 return True
-            if isinstance(head, six.text_type):
+            if isinstance(head, str):
                 self.repaired = itertools.chain([head], iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort
-                if six.PY2 and isinstance(head, bytes):
-                    raise IOSourceError(
-                        "Could not open source: %r (mode: %r).\n Prepend a "
-                        r"`u` to the strings (e.g. [u'line1\n', u'line2\n'])" %
-                        (self.file, self.options['mode']))
-
                 raise IOSourceError(
                     "Could not open source: %r (mode: %r)" %
                     (self.file, self.options['mode']))
@@ -219,11 +238,11 @@ class BZ2Compressor(Compressor):
         return self.file.peek(3)[:3] == b'BZh'
 
     def get_reader(self):
-        return bz2file.BZ2File(self.file, mode='rb')
+        return bz2.BZ2File(self.file, mode='rb')
 
     def get_writer(self):
-        return bz2file.BZ2File(self.file, mode='wb',
-                               compresslevel=self.options['compresslevel'])
+        return bz2.BZ2File(self.file, mode='wb',
+                           compresslevel=self.options['compresslevel'])
 
 
 class AutoCompressor(Compressor):

@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
 import unittest
 
 import numpy as np
@@ -30,10 +27,17 @@ class TestProtein(unittest.TestCase):
         with self.assertRaises(AttributeError):
             Protein('').alphabet = set("ABCD")
 
+    # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
+    # is removed
     def test_nondegenerate_chars(self):
         exp = set("ACDEFGHIKLMNPQRSTVWY")
         self.assertEqual(Protein("").nondegenerate_chars, exp)
         self.assertEqual(Protein.nondegenerate_chars, exp)
+
+    def test_definite_chars(self):
+        exp = set("ACDEFGHIKLMNPQRSTVWY")
+        self.assertEqual(Protein("").definite_chars, exp)
+        self.assertEqual(Protein.definite_chars, exp)
 
     def test_degenerate_map(self):
         exp = {
@@ -121,7 +125,7 @@ class TestProtein(unittest.TestCase):
         self.assertIn('has stops: True', obs)
 
     def test_cannot_subclass(self):
-        with six.assertRaisesRegex(self, TypeError, "Subclassing disabled"):
+        with self.assertRaisesRegex(TypeError, "Subclassing disabled"):
             class CustomSequence(Protein):
                 pass
 

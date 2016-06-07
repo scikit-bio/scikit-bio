@@ -167,16 +167,12 @@ The following are not yet used but should be avoided as well:
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from warnings import warn
 import types
 import traceback
 import itertools
 import inspect
 from functools import wraps
-
-from future.builtins import zip
 
 from ._exception import DuplicateRegistrationError, InvalidRegistrationError
 from . import (UnrecognizedFormatError, ArgumentOverrideWarning,
@@ -188,7 +184,7 @@ from skbio.util._decorator import stable, classonlymethod
 FileSentinel = make_sentinel("FileSentinel")
 
 
-class IORegistry(object):
+class IORegistry:
     """Create a registry of formats and implementations which map to classes.
 
     """
@@ -506,7 +502,13 @@ class IORegistry(object):
             # on the first call from __iter__
             # eta-reduction is possible, but we want to the type to be
             # GeneratorType
-            return (x for x in itertools.chain([next(gen)], gen))
+            try:
+                return (x for x in itertools.chain([next(gen)], gen))
+            except StopIteration:
+                # If the error was a StopIteration, then we want to return an
+                # empty generator as `next(gen)` failed.
+                # See #1313 for more info.
+                return (x for x in [])
         else:
             return self._read_ret(file, format, into, verify, kwargs)
 
@@ -526,8 +528,7 @@ class IORegistry(object):
         with _resolve_file(file, **io_kwargs) as (file, _, _):
             reader, kwargs = self._init_reader(file, fmt, into, verify, kwargs,
                                                io_kwargs)
-            for item in reader(file, **kwargs):
-                yield item
+            yield from reader(file, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
@@ -754,7 +755,7 @@ skbio.io.util.open
 """
 
 
-class Format(object):
+class Format:
     """Defines a format on which readers/writers/sniffer can be registered.
 
     Parameters
@@ -792,7 +793,7 @@ class Format(object):
     @property
     @stable(as_of="0.4.0")
     def readers(self):
-        """Dictionary that maps classes to their writers for this format."""
+        """Dictionary that maps classes to their readers for this format."""
         return self._readers
 
     @property
@@ -950,7 +951,7 @@ class Format(object):
         >>> registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
-        >>> class MyObject(object):
+        >>> class MyObject:
         ...     def __init__(self, content):
         ...         self.content = content
         ...
@@ -990,8 +991,7 @@ class Format(object):
                         file_params, file, encoding, newline, kwargs)
                     with open_files(files, mode='r', **io_kwargs) as fhs:
                         kwargs.update(zip(file_keys, fhs[:-1]))
-                        for item in reader_function(fhs[-1], **kwargs):
-                            yield item
+                        yield from reader_function(fhs[-1], **kwargs)
 
             self._add_reader(cls, wrapped_reader, monkey_patch, override)
             return wrapped_reader
@@ -1036,7 +1036,7 @@ class Format(object):
         >>> registry.add_format(myformat)
         >>> # If developing a new format for skbio, use the create_format()
         >>> # factory instead of the above.
-        >>> class MyObject(object):
+        >>> class MyObject:
         ...     default_write_format = 'myformat'
         ...     def __init__(self, content):
         ...         self.content = content

@@ -7,6 +7,10 @@ import os
 import types
 import re
 
+if sys.version_info.major != 3:
+    raise RuntimeError("scikit-bio can only be used with Python 3. You are "
+                       "currently running Python %d." % sys.version_info.major)
+
 # Force matplotlib to not use any Xwindows backend.
 import matplotlib
 matplotlib.use('Agg')
@@ -58,7 +62,7 @@ class NewAuto(autosummary.Autosummary):
                 return specials[display_name], '', summary, real_name
             return display_name, sig, summary, real_name
 
-        skip = ['__nonzero__']
+        skip = []
 
         return [fix_item(*e) for e in super(NewAuto, self).get_items(names)
                 if e[0] not in skip]

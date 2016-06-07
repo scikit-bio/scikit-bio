@@ -179,7 +179,7 @@ Stats:
     length: 34
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 35.29%
 -----------------------------------------------------------------
 0 AGAGGTTCTA GCACATCCCT CTATAAAAAA CTAA
@@ -209,7 +209,7 @@ Stats:
     length: 34
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 35.29%
 -----------------------------------------------------------------
 0 AGAGGUUCUA GCACAUCCCU CUAUAAAAAA CUAA
@@ -257,10 +257,6 @@ References
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import range, zip
 
 import re
 import numpy as np

@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 import pandas as pd
 from scipy.linalg import svd, lstsq
@@ -223,7 +221,10 @@ def cca(y, x, scaling=1):
                            columns=pc_ids, index=sample_ids)
     features = pd.DataFrame(features_scores,
                             columns=pc_ids, index=feature_ids)
-    biplot_scores = pd.DataFrame(biplot_scores)
+
+    biplot_scores = pd.DataFrame(biplot_scores,
+                                 index=x.columns,
+                                 columns=pc_ids[:biplot_scores.shape[1]])
     sample_constraints = pd.DataFrame(sample_constraints,
                                       index=sample_ids, columns=pc_ids)
 

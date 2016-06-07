@@ -6,12 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from future.builtins import zip
-
 from itertools import combinations
 
-import six
 import numpy as np
 import pandas as pd
 import scipy.misc
@@ -410,9 +406,9 @@ def pwmantel(dms, labels=None, method='pearson', permutations=999,
 
     for i, pair in enumerate(combinations(zip(labels, dms), 2)):
         (xlabel, x), (ylabel, y) = pair
-        if isinstance(x, six.string_types):
+        if isinstance(x, str):
             x = DistanceMatrix.read(x)
-        if isinstance(y, six.string_types):
+        if isinstance(y, str):
             y = DistanceMatrix.read(y)
 
         stat, p_val, n = mantel(x, y, method=method, permutations=permutations,

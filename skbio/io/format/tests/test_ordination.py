@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-
 import io
 from unittest import TestCase, main
 
@@ -197,12 +194,12 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
                 obs = _ordination_to_ordination_results(fp)
                 assert_ordination_results_equal(
                     obs, obj, ignore_method_names=True,
-                    ignore_axis_labels=True, ignore_biplot_scores_labels=True)
+                    ignore_axis_labels=True)
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:
-            with six.assertRaisesRegex(self, OrdinationFormatError,
-                                       error_msg_regexp):
+            with self.assertRaisesRegex(OrdinationFormatError,
+                                        error_msg_regexp):
                 _ordination_to_ordination_results(invalid_fp)
 
     def test_write(self):

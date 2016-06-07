@@ -6,15 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import hashlib
 from os import remove, makedirs
 from os.path import exists, isdir
 from functools import partial
 from types import FunctionType
 import inspect
-from ._decorator import experimental
+from ._decorator import experimental, deprecated
 
 
 def resolve_key(obj, key):
@@ -29,7 +27,7 @@ def resolve_key(obj, key):
 
 
 def make_sentinel(name):
-    return type(name, (object, ), {
+    return type(name, (), {
         '__repr__': lambda s: name,
         '__str__': lambda s: name,
         '__class__': None
@@ -37,22 +35,9 @@ def make_sentinel(name):
 
 
 def find_sentinels(function, sentinel):
-    keys = []
-    if hasattr(inspect, 'signature'):
-        params = inspect.signature(function).parameters
-        for name, param in params.items():
-            if param.default is sentinel:
-                keys.append(name)
-    else:  # Py2
-        function_spec = inspect.getargspec(function)
-        if function_spec.defaults is not None:
-            # Concept from http://stackoverflow.com/a/12627202/579416
-            keywords_start = -len(function_spec.defaults)
-            for key, default in zip(function_spec.args[keywords_start:],
-                                    function_spec.defaults):
-                if default is sentinel:
-                    keys.append(key)
-    return keys
+    params = inspect.signature(function).parameters
+    return [name for name, param in params.items()
+            if param.default is sentinel]
 
 
 class MiniRegistry(dict):
@@ -78,15 +63,10 @@ class MiniRegistry(dict):
 
     def interpolate(self, obj, name):
         """Inject the formatted listing in the second blank line of `name`."""
-        # Py2/3 compatible way of calling getattr(obj, name).__func__
-        f = getattr(obj, name).__get__(None, type(None))
+        f = getattr(obj, name)
+        f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                          argdefs=f.__defaults__, closure=f.__closure__)
 
-        if hasattr(f, 'func_code'):
-            f2 = FunctionType(f.func_code, f.func_globals, name=f.func_name,
-                              argdefs=f.func_defaults, closure=f.func_closure)
-        else:
-            f2 = FunctionType(f.__code__, f.__globals__, name=f.__name__,
-                              argdefs=f.__defaults__, closure=f.__closure__)
         # Conveniently the original docstring is on f2, not the new ones if
         # inheritence is happening. I have no idea why.
         t = f2.__doc__.split("\n\n")
@@ -153,7 +133,10 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of='0.4.2-dev', until='0.5.1',
+            reason='This functionality will be moved to the '
+                   'fastq sniffer, where it will be more useful as it will '
+                   'determine the variant of a fastq file.')
 def is_casava_v180_or_later(header_line):
     """Check if the header looks like it is Illumina software post-casava v1.8
 
@@ -226,7 +209,9 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def remove_files(list_of_filepaths, error_on_missing=True):
     """Remove list of filepaths, optionally raising an error if any are missing
 
@@ -268,7 +253,9 @@ def remove_files(list_of_filepaths, error_on_missing=True):
                       '\t'.join(missing))
 
 
-@experimental(as_of="0.4.0")
+@deprecated(as_of="0.4.2-dev", until="0.5.1",
+            reason="Deprecated in favor of solutions present in Python "
+                   "standard library.")
 def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
     """Create a directory safely and fail meaningfully
 

@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
-from six import add_metaclass
 
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
@@ -17,8 +14,7 @@ from ._grammared_sequence import (GrammaredSequence, DisableSubclassingMeta,
                                   _motifs as parent_motifs)
 
 
-@add_metaclass(DisableSubclassingMeta)
-class Protein(GrammaredSequence):
+class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     """Store protein sequence data and optional associated metadata.
 
     Only characters in the IUPAC protein character set [1]_ are supported.
@@ -60,7 +56,7 @@ class Protein(GrammaredSequence):
     gap_chars
     default_gap_char
     stop_chars
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
 
@@ -87,28 +83,28 @@ class Protein(GrammaredSequence):
     >>> from skbio import Protein
     >>> Protein('PAW')
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     Convert lowercase characters to uppercase:
 
     >>> Protein('paW', lowercase=True)
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 3
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: False
-    -----------------------------
+    --------------------------
     0 PAW
 
     """
@@ -128,7 +124,7 @@ class Protein(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACDEFGHIKLMNPQRSTVWY")
 
     @classproperty

@@ -2,18 +2,51 @@
 
 ## Version 0.4.2-dev (changes since 0.4.2 go here)
 
+**IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
+
 ### Features
+* Added support for reference tags to `skbio.io.format.stockholm` reader and writer. ([#1348](https://github.com/biocore/scikit-bio/issues/1348))
+* Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/biocore/scikit-bio/issues/1327))
 * Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
+* Added `skbio.sequence.Sequence.replace` for assigning a character to positions in a `Sequence`. ([#1222](https://github.com/biocore/scikit-bio/issues/1222))
+* Added support for `pandas.RangeIndex`, lowering the memory footprint of default integer index objects. `Sequence.positional_metadata` and `TabularMSA.positional_metadata` now use `pd.RangeIndex` as the positional metadata index. `TabularMSA` now uses `pd.RangeIndex` as the default index. Usage of `pd.RangeIndex` over the previous `pd.Int64Index` [should be transparent](http://pandas.pydata.org/pandas-docs/version/0.18.0/whatsnew.html#range-index), so these changes should be non-breaking to users. scikit-bio now depends on pandas >= 0.18.0 ([#1308](https://github.com/biocore/scikit-bio/issues/1308))
+* Added `reset_index=False` parameter to `TabularMSA.append` and `TabularMSA.extend` for resetting the MSA's index to the default index after appending/extending.
+* Added support for partial pairwise calculations via `skbio.diversity.partial_beta_diversity`. ([#1221](https://github.com/biocore/scikit-bio/issues/1221), [#1337](https://github.com/biocore/scikit-bio/pull/1337)). This function is immediately deprecated as its return type will change in the future and should be used with caution in its present form (see the function's documentation for details).
+* `TemporaryFile` and `NamedTemporaryFile` are now supported IO sources for `skbio.io` and related functionality.  ([#1291](https://github.com/biocore/scikit-bio/issues/1291))
+* Added `tree_node_class=TreeNode` parameter to `skbio.tree.majority_rule` to support returning consensus trees of type `TreeNode` (the default) or a type that has the same interface as `TreeNode` (e.g. `TreeNode` subclasses) ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
+* `TreeNode.from_linkage_matrix` and `TreeNode.from_taxonomy` now support constructing `TreeNode` subclasses. `TreeNode.bifurcate` now supports `TreeNode` subclasses ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
+* `TabularMSA.append` and `TabularMSA.extend` now require one of `minter`, `index`, or `reset_index` to be provided when incorporating new sequences into an MSA. Previous behavior was to auto-increment the index labels if `minter` and `index` weren't provided and the MSA had a default integer index, otherwise error. Use `reset_index=True` to obtain the previous behavior in a more explicit way.
 
 ### Bug fixes
+* Fixed row and column names to `biplot_scores` in the `OrdinationResults` object from `skbio.stats.ordination`. This fix affect the `cca` and `rda` methods. ([#1322](https://github.com/biocore/scikit-bio/issues/1322))
+* Fixed bug when using `skbio.io.format.stockholm` reader on file with multi-line tree with no id. Previously this raised an `AttributeError`, now it correctly handles this type of tree. ([#1334](https://github.com/biocore/scikit-bio/issues/1334))
+* Fixed bug when reading Stockholm files with GF or GS features split over multiple lines. Previously, the feature text was simply concatenated because it was assumed to have trailing whitespace. There are examples of Stockholm files with and without trailing whitespace for multi-line features, so the `skbio.io.format.stockholm` reader now adds a single space when concatenating feature text without trailing whitespace to avoid joining words together. Multi-line trees stored as GF metadata are concatenated as they appear in the file; a space is not added when concatenating. ([#1328](https://github.com/biocore/scikit-bio/issues/1328))
 * Fixed bug when using `Sequence.iter_kmers` on empty `Sequence` object. Previously this raised a `ValueError`, now it returns
 an empty generator.
+* Fixed minor bug where adding sequences to an empty `TabularMSA` with MSA-wide `positional_metadata` would result in a `TabularMSA` object in an inconsistent state. This could happen using `TabularMSA.append` or `TabularMSA.extend`. This bug only affects a `TabularMSA` object *without* sequences that has MSA-wide `positional_metadata` (for example, `TabularMSA([], positional_metadata={'column': []})`).
+* `TreeNode.distance` now handles the situation in which `self` or `other` are ancestors. Previosly, a node further up the tree was used resulting in inflated distances. ([#807](https://github.com/biocore/scikit-bio/issues/807))
+* `TreeNode.prune` can now handle a root with a single descendent. Previously, the root was ignored from possibly having a single descendent. ([#1247](https://github.com/biocore/scikit-bio/issues/1247))
+* Providing the `format` keyword to `skbio.io.read` when creating a generator with an empty file will now return an empty generator instead of raising `StopIteration`. ([#1313](https://github.com/biocore/scikit-bio/issues/1313))
+
+### Deprecated functionality [stable]
+* Deprecated use of the term "non-degenerate", in favor of "definite". `GrammaredSequence.nondegenerate_chars`, `GrammaredSequence.nondegenerates`, and `GrammaredSequence.has_nondegenerates` have been renamed to `GrammaredSequence.definite_chars`, `GrammaredSequence.definites`, and `GrammaredSequence.has_definites`, respectively. The old names will be removed in scikit-bio 0.5.2. Relevant affected public classes include `GrammaredSequence`, `DNA`, `RNA`, and `Protein`.
+* Deprecated `Sequence.has_metadata` and `TabularMSA.has_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `bool(obj.metadata)` to determine if the metadata dict is empty.
+* Deprecated `Sequence.has_positional_metadata` and `TabularMSA.has_positional_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `len(obj.positional_metadata.columns)` to determine if positional metadata columns are present, or `obj.positional_metadata.empty` to determine if the positional metadata DataFrame is empty (empty index OR empty columns).
+
+### Deprecated functionality [experimental]
+* Deprecated function `skbio.util.create_dir`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
+functionality described [here](https://docs.python.org/2/library/os.html#os.makedirs). ([#833](https://github.com/biocore/scikit-bio/issues/833))
+* Deprecated function `skbio.util.remove_files`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library
+functionality described [here](https://docs.python.org/2/library/os.html#os.remove). ([#833](https://github.com/biocore/scikit-bio/issues/833))
+* Deprecated function `skbio.util.is_casava_v180_or_later`. This function will be removed in 0.5.1. Functionality moved to FASTQ sniffer.
+([#833](https://github.com/biocore/scikit-bio/issues/833))
 
 ### Miscellaneous
+* When installing scikit-bio via `pip`, numpy must now be installed first ([#1296](https://github.com/biocore/scikit-bio/issues/1296))
 
 ## Version 0.4.2 (2016-02-17)
 

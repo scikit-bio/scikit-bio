@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 
 import numpy as np
@@ -35,7 +33,7 @@ def _validate_counts_vector(counts, suppress_cast=False):
     return counts
 
 
-def _validate_counts_matrix(counts, ids=None, **kwargs):
+def _validate_counts_matrix(counts, ids=None, suppress_cast=False):
     results = []
 
     # handle case of where counts is a single vector by making it a matrix.
@@ -54,11 +52,6 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
             "Number of rows in ``counts`` must be equal to number of provided "
             "``ids``.")
 
-    # py2-compatible mechanism for specifying a keyword argument when also
-    # passing *args derived from SO answer:
-    # http://stackoverflow.com/a/15302038/3424666
-    suppress_cast = kwargs.pop('suppress_cast', False)
-
     lens = []
     for v in counts:
         results.append(_validate_counts_vector(v, suppress_cast))
@@ -70,7 +63,6 @@ def _validate_counts_matrix(counts, ids=None, **kwargs):
 
 
 def _validate_otu_ids_and_tree(counts, otu_ids, tree):
-
     len_otu_ids = len(otu_ids)
     set_otu_ids = set(otu_ids)
     if len_otu_ids != len(set_otu_ids):

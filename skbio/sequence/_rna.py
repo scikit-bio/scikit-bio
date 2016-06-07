@@ -6,9 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-from six import add_metaclass
-
 import skbio
 from skbio.util._decorator import classproperty, overrides
 from skbio.util._decorator import stable
@@ -16,8 +13,8 @@ from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence, DisableSubclassingMeta
 
 
-@add_metaclass(DisableSubclassingMeta)
-class RNA(GrammaredSequence, NucleotideMixin):
+class RNA(GrammaredSequence, NucleotideMixin,
+          metaclass=DisableSubclassingMeta):
     """Store RNA sequence data and optional associated metadata.
 
     Only characters in the IUPAC RNA character set [1]_ are supported.
@@ -58,7 +55,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
     alphabet
     gap_chars
     default_gap_char
-    nondegenerate_chars
+    definite_chars
     degenerate_chars
     degenerate_map
     complement_map
@@ -87,28 +84,28 @@ class RNA(GrammaredSequence, NucleotideMixin):
     >>> from skbio import RNA
     >>> RNA('ACCGAAU')
     RNA
-    -----------------------------
+    --------------------------
     Stats:
         length: 7
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         GC-content: 42.86%
-    -----------------------------
+    --------------------------
     0 ACCGAAU
 
     Convert lowercase characters to uppercase:
 
     >>> RNA('AcCGaaU', lowercase=True)
     RNA
-    -----------------------------
+    --------------------------
     Stats:
         length: 7
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         GC-content: 42.86%
-    -----------------------------
+    --------------------------
     0 ACCGAAU
 
     """
@@ -127,7 +124,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def nondegenerate_chars(cls):
+    def definite_chars(cls):
         return set("ACGU")
 
     @classproperty
@@ -184,40 +181,32 @@ class RNA(GrammaredSequence, NucleotideMixin):
         >>> rna = RNA('UAACGUUA')
         >>> rna
         RNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 25.00%
-        -----------------------------
+        --------------------------
         0 UAACGUUA
         >>> rna.reverse_transcribe()
         DNA
-        -----------------------------
+        --------------------------
         Stats:
             length: 8
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             GC-content: 25.00%
-        -----------------------------
+        --------------------------
         0 TAACGTTA
         """
         seq = self._string.replace(b'U', b'T')
 
-        metadata = None
-        if self.has_metadata():
-            metadata = self.metadata
-
-        positional_metadata = None
-        if self.has_positional_metadata():
-            positional_metadata = self.positional_metadata
-
         # turn off validation because `seq` is guaranteed to be valid
-        return skbio.DNA(seq, metadata=metadata,
-                         positional_metadata=positional_metadata,
+        return skbio.DNA(seq, metadata=self.metadata,
+                         positional_metadata=self.positional_metadata,
                          validate=False)
 
     @stable(as_of="0.4.0")
@@ -259,14 +248,14 @@ class RNA(GrammaredSequence, NucleotideMixin):
         >>> rna = RNA('AUGCCACUUUAA')
         >>> rna.translate()
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*
 
         Translate the same RNA sequence using a different NCBI genetic code
@@ -275,14 +264,14 @@ class RNA(GrammaredSequence, NucleotideMixin):
 
         >>> rna.translate(3, stop='require')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 MPT
 
         """
@@ -350,69 +339,69 @@ class RNA(GrammaredSequence, NucleotideMixin):
         ...     protein
         ...     print('')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 CHF
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 ATL
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 LKWH
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 *SG
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 KVA
         <BLANKLINE>
 

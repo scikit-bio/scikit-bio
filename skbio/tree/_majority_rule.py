@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from collections import defaultdict
-from future.builtins import zip
 
 import numpy as np
 
@@ -116,7 +113,7 @@ def _filter_clades(clade_counts, cutoff_threshold):
     return accepted_clades
 
 
-def _build_trees(clade_counts, edge_lengths, support_attr):
+def _build_trees(clade_counts, edge_lengths, support_attr, tree_node_class):
     """Construct the trees with support
 
     Parameters
@@ -127,10 +124,14 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         Keyed by the frozenset of the clade and valued by the weighted length
     support_attr : str
         The name of the attribute to hold the support value
+    tree_node_class : type
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` or a type that implements the same interface (most
+        usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
-    list of TreeNode
+    list of tree_node_class instances
         A list of the constructed trees
     """
     nodes = {}
@@ -169,7 +170,7 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
         children = [nodes.pop(c) for c in clade if c in nodes]
         length = edge_lengths[clade]
 
-        node = TreeNode(children=children, length=length, name=name)
+        node = tree_node_class(children=children, length=length, name=name)
         setattr(node, support_attr, clade_counts[clade])
         nodes[clade] = node
 
@@ -179,7 +180,8 @@ def _build_trees(clade_counts, edge_lengths, support_attr):
 
 
 @experimental(as_of="0.4.0")
-def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
+def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support',
+                  tree_node_class=TreeNode):
     r"""Determines consensus trees from a list of rooted trees
 
     Parameters
@@ -190,19 +192,24 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
         If provided, the list must be in index order with `trees`. Each tree
         will receive the corresponding weight. If omitted, all trees will be
         equally weighted.
-    cutoff : float, 0.0 <= cutoff <= 1.0
+    cutoff : float, 0.0 <= cutoff <= 1.0, optional
         Any clade that has <= cutoff support will be dropped. If cutoff is
         < 0.5, then it is possible that ties will result. If so, ties are
         broken arbitrarily depending on list sort order.
-    support_attr : str
+    support_attr : str, optional
         The attribute to be decorated onto the resulting trees that contain the
         consensus support.
+    tree_node_class : type, optional
+        Specifies type of consensus trees that are returned. Either
+        ``TreeNode`` (the default) or a type that implements the same interface
+        (most usefully, a subclass of ``TreeNode``).
 
     Returns
     -------
-    list of TreeNode
-        Multiple trees can be returned in the case of two or more disjoint sets
-        of tips represented on input.
+    list of tree_node_class instances
+        Each tree will be of type `tree_node_class`. Multiple trees can be
+        returned in the case of two or more disjoint sets of tips represented
+        on input.
 
     Notes
     -----
@@ -278,6 +285,7 @@ def majority_rule(trees, weights=None, cutoff=0.5, support_attr='support'):
 
     clade_counts, edge_lengths = _walk_clades(trees, weights)
     clade_counts = _filter_clades(clade_counts, cutoff_threshold)
-    trees = _build_trees(clade_counts, edge_lengths, support_attr)
+    trees = _build_trees(clade_counts, edge_lengths, support_attr,
+                         tree_node_class)
 
     return trees

@@ -200,10 +200,6 @@ allow you to indicate ``anything`` as an option value, anything that is
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
-from future.utils import viewitems
-
 import sys
 from copy import deepcopy
 from time import time
@@ -211,12 +207,10 @@ from functools import update_wrapper
 from collections import Iterable
 from types import MethodType
 
-import six
-
 from skbio.util._decorator import experimental
 
 
-class NotExecuted(object):
+class NotExecuted:
     """Helper object to track if a method was executed"""
     @experimental(as_of="0.4.0")
     def __init__(self):
@@ -229,7 +223,7 @@ class NotExecuted(object):
 _not_executed = NotExecuted()
 
 
-class Exists(object):
+class Exists:
     """Stub object to assist with ``requires`` when a value exists"""
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
@@ -237,7 +231,7 @@ class Exists(object):
 anything = Exists()  # external, for when a value can be anything
 
 
-class NotNone(object):
+class NotNone:
     @experimental(as_of="0.4.0")
     def __contains__(self, item):
         if item is None:
@@ -247,7 +241,7 @@ class NotNone(object):
 not_none = NotNone()
 
 
-class Workflow(object):
+class Workflow:
     """Arbitrary workflow support structure
 
     Methods that are considered to be directly part of the workflow must
@@ -295,7 +289,7 @@ class Workflow(object):
         self.state = state
         self.iter_ = None
 
-        for k, v in viewitems(kwargs):
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 raise AttributeError("'%s' already exists in self." % k)
             setattr(self, k, v)
@@ -449,7 +443,7 @@ class Workflow(object):
         return update_wrapper(wrapped, func)
 
 
-class method(object):
+class method:
     """Decorate a function to indicate it is a workflow method
 
     Parameters
@@ -471,7 +465,7 @@ class method(object):
         return func
 
 
-class requires(object):
+class requires:
     """Decorator that executes a function if requirements are met
 
     Parameters
@@ -507,7 +501,7 @@ class requires(object):
         elif isinstance(values, set):
             self.values = values
         else:
-            if isinstance(values, six.string_types):
+            if isinstance(values, str):
                 self.values = values
             elif isinstance(values, Iterable):
                 self.values = set(values)

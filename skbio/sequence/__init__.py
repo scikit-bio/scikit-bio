@@ -63,7 +63,7 @@ Stats:
     length: 8
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 62.50%
 -----------------------------
 0 ACCGGGTA
@@ -75,30 +75,30 @@ reverse complement or degapped (i.e., unaligned) version.
 >>> d2 = d1.degap()
 >>> d2
 DNA
------------------------------
+--------------------------
 Metadata:
     'id': 'my-sequence'
 Stats:
     length: 8
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 62.50%
------------------------------
+--------------------------
 0 ACCGGGTA
 >>> d3 = d2.reverse_complement()
 >>> d3
 DNA
------------------------------
+--------------------------
 Metadata:
     'id': 'my-sequence'
 Stats:
     length: 8
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 62.50%
------------------------------
+--------------------------
 0 TACCCGGT
 
 It's also straightforward to compute distances between sequences (optionally
@@ -137,36 +137,36 @@ Those slices can be used to extract the relevant subsequences.
 ...     r5[motif]
 ...     print('')
 RNA
------------------------------
+--------------------------
 Stats:
     length: 3
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 66.67%
------------------------------
+--------------------------
 0 AGG
 <BLANKLINE>
 RNA
------------------------------
+--------------------------
 Stats:
     length: 3
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 66.67%
------------------------------
+--------------------------
 0 GGA
 <BLANKLINE>
 RNA
------------------------------
+--------------------------
 Stats:
     length: 3
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 33.33%
------------------------------
+--------------------------
 0 GAA
 <BLANKLINE>
 
@@ -177,25 +177,25 @@ otherwise meaningful motifs.
 ...     r5[motif]
 ...     print('')
 RNA
------------------------------
+--------------------------
 Stats:
     length: 7
     has gaps: True
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 66.67%
------------------------------
+--------------------------
 0 AGG-GGA
 <BLANKLINE>
 RNA
------------------------------
+--------------------------
 Stats:
     length: 3
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 33.33%
------------------------------
+--------------------------
 0 GAA
 <BLANKLINE>
 
@@ -207,25 +207,25 @@ the input.
 ...     r5[motif].degap()
 ...     print('')
 RNA
------------------------------
+--------------------------
 Stats:
     length: 6
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 66.67%
------------------------------
+--------------------------
 0 AGGGGA
 <BLANKLINE>
 RNA
------------------------------
+--------------------------
 Stats:
     length: 3
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 33.33%
------------------------------
+--------------------------
 0 GAA
 <BLANKLINE>
 
@@ -242,14 +242,14 @@ DNA can be transcribed to RNA:
 >>> rna = dna.transcribe()
 >>> rna
 RNA
------------------------------
+--------------------------
 Stats:
     length: 12
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 25.00%
------------------------------
+--------------------------
 0 AUGUGUAUUU GA
 
 Both DNA and RNA can be translated into a protein sequence. For example, let's
@@ -259,26 +259,26 @@ ID 1, the default genetic code in scikit-bio):
 >>> protein_from_dna = dna.translate()
 >>> protein_from_dna
 Protein
------------------------------
+--------------------------
 Stats:
     length: 4
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     has stops: True
------------------------------
+--------------------------
 0 MCI*
 >>> protein_from_rna = rna.translate()
 >>> protein_from_rna
 Protein
------------------------------
+--------------------------
 Stats:
     length: 4
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     has stops: True
------------------------------
+--------------------------
 0 MCI*
 
 The two translations are equivalent:
@@ -303,8 +303,6 @@ Class-level methods contain information about the molecule types.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from __future__ import absolute_import, division, print_function
 
 from skbio.util import TestRunner
 

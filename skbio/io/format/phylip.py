@@ -191,7 +191,7 @@ default integer index labels:
 
 >>> msa.reassign_index()
 >>> msa.index
-Int64Index([0, 1, 2], dtype='int64')
+RangeIndex(start=0, stop=3, step=1)
 
 We can now write the ``TabularMSA`` in PHYLIP format:
 
@@ -222,9 +222,6 @@ References
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
 from skbio.alignment import TabularMSA
 from skbio.io import create_format, PhylipFormatError

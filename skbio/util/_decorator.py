@@ -6,7 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 import warnings
 import textwrap
 
@@ -16,7 +15,7 @@ from ._exception import OverrideError
 from ._warning import DeprecationWarning as SkbioDeprecationWarning
 
 
-class _state_decorator(object):
+class _state_decorator:
     """ Base class for decorators of all public functionality.
     """
 

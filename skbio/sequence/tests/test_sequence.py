@@ -6,10 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-import six
-from six.moves import zip_longest
-
 import copy
 import functools
 import itertools
@@ -28,8 +24,9 @@ from skbio import Sequence, DNA
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
-from skbio.util._testing import (ReallyEqualMixin, MetadataMixinTests,
-                                 PositionalMetadataMixinTests)
+from skbio.util._testing import ReallyEqualMixin
+from skbio.metadata._testing import (MetadataMixinTests,
+                                     PositionalMetadataMixinTests)
 
 
 class SequenceSubclass(Sequence):
@@ -70,8 +67,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.lowercase_seq = Sequence('AAAAaaaa', lowercase='key')
 
         def empty_generator():
-            return
-            yield
+            yield from ()
 
         self.getitem_empty_indices = [
             [],
@@ -112,8 +108,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         result1 = Sequence.concat([seq1, seq2])
         result2 = Sequence.concat([seq1, seq2], how='strict')
         self.assertEqual(result1, result2)
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2, seqbad])
 
     def test_concat_strict_simple(self):
@@ -123,7 +119,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
         result = Sequence.concat([seq1, seq2], how='strict')
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_strict_many(self):
         odd_key = frozenset()
@@ -138,13 +134,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                 Sequence("9", positional_metadata={'a': ['o'], odd_key: [5]})
             ], how='strict')
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_strict_fail(self):
         seq1 = Sequence("1", positional_metadata={'a': [1]})
         seq2 = Sequence("2", positional_metadata={'b': [2]})
-        with six.assertRaisesRegex(self, ValueError,
-                                   '.*positional.*metadata.*inner.*outer.*'):
+        with self.assertRaisesRegex(ValueError,
+                                    '.*positional.*metadata.*inner.*outer.*'):
             Sequence.concat([seq1, seq2], how='strict')
 
     def test_concat_outer_simple(self):
@@ -152,7 +148,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence("5678")
         result = Sequence.concat([seq1, seq2], how='outer')
         self.assertEqual(result, Sequence("12345678"))
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_outer_missing(self):
         a = {}
@@ -173,14 +169,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                       np.nan, np.nan, np.nan, np.nan]
                             })
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_inner_simple(self):
         seq1 = Sequence("1234")
         seq2 = Sequence("5678", positional_metadata={'discarded': [1] * 4})
         result = Sequence.concat([seq1, seq2], how='inner')
         self.assertEqual(result, Sequence("12345678"))
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_concat_inner_missing(self):
         seq1 = Sequence("12", positional_metadata={'a': ['1', '2'],
@@ -192,18 +188,17 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         expected = Sequence("123456", positional_metadata={'a': ['1', '2', 3,
                                                                  4, 5, 6]})
         self.assertEqual(result, expected)
-        self.assertFalse(result.has_metadata())
+        self.assertFalse(result.metadata)
 
     def test_init_default_parameters(self):
         seq = Sequence('.ABC123xyz-')
 
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
-        self.assertFalse(seq.has_metadata())
+        self.assertFalse(seq.metadata)
         self.assertEqual(seq.metadata, {})
-        self.assertFalse(seq.has_positional_metadata())
         assert_data_frame_almost_equal(seq.positional_metadata,
-                                       pd.DataFrame(index=np.arange(11)))
+                                       pd.DataFrame(index=range(11)))
 
     def test_init_nondefault_parameters(self):
         seq = Sequence('.ABC123xyz-',
@@ -213,33 +208,17 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
         self.assertEqual('.ABC123xyz-', str(seq))
 
-        self.assertTrue(seq.has_metadata())
+        self.assertTrue(seq.metadata)
         self.assertEqual(seq.metadata, {'id': 'foo', 'description': 'bar baz'})
 
-        self.assertTrue(seq.has_positional_metadata())
         assert_data_frame_almost_equal(
             seq.positional_metadata,
-            pd.DataFrame({'quality': range(11)}, index=np.arange(11)))
-
-    def test_init_from_sequence_handles_missing_metadata_efficiently(self):
-        # initializing from an existing Sequence object should handle metadata
-        # attributes efficiently on both objects
-        seq = Sequence('ACGT')
-        new_seq = Sequence(seq)
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(new_seq._metadata)
-        self.assertIsNone(new_seq._positional_metadata)
-
-        self.assertFalse(seq.has_metadata())
-        self.assertFalse(seq.has_positional_metadata())
-        self.assertFalse(new_seq.has_metadata())
-        self.assertFalse(new_seq.has_positional_metadata())
+            pd.DataFrame({'quality': range(11)}, index=range(11)))
 
     def test_init_empty_sequence(self):
         # Test constructing an empty sequence using each supported input type.
         for s in (b'',  # bytes
-                  u'',  # unicode
+                  '',  # unicode
                   np.array('', dtype='c'),  # char vector
                   np.fromstring('', dtype=np.uint8),  # byte vec
                   Sequence('')):  # another Sequence object
@@ -252,16 +231,15 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), '')
             self.assertEqual(len(seq), 0)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(0)))
+                                           pd.DataFrame(index=range(0)))
 
     def test_init_single_character_sequence(self):
         for s in (b'A',
-                  u'A',
+                  'A',
                   np.array('A', dtype='c'),
                   np.fromstring('A', dtype=np.uint8),
                   Sequence('A')):
@@ -274,16 +252,15 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), 'A')
             self.assertEqual(len(seq), 1)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(1)))
+                                           pd.DataFrame(index=range(1)))
 
     def test_init_multiple_character_sequence(self):
         for s in (b'.ABC\t123  xyz-',
-                  u'.ABC\t123  xyz-',
+                  '.ABC\t123  xyz-',
                   np.array('.ABC\t123  xyz-', dtype='c'),
                   np.fromstring('.ABC\t123  xyz-', dtype=np.uint8),
                   Sequence('.ABC\t123  xyz-')):
@@ -297,12 +274,11 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(str(seq), '.ABC\t123  xyz-')
             self.assertEqual(len(seq), 14)
 
-            self.assertFalse(seq.has_metadata())
+            self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
-            self.assertFalse(seq.has_positional_metadata())
             assert_data_frame_almost_equal(seq.positional_metadata,
-                                           pd.DataFrame(index=np.arange(14)))
+                                           pd.DataFrame(index=range(14)))
 
     def test_init_from_sequence_object(self):
         # We're testing this in its simplest form in other tests. This test
@@ -415,30 +391,30 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             Sequence(np.array([1, {}, ()]))
 
         # invalid input type (non-numpy.ndarray input)
-        with six.assertRaisesRegex(self, TypeError, 'tuple'):
+        with self.assertRaisesRegex(TypeError, 'tuple'):
             Sequence(('a', 'b', 'c'))
-        with six.assertRaisesRegex(self, TypeError, 'list'):
+        with self.assertRaisesRegex(TypeError, 'list'):
             Sequence(['a', 'b', 'c'])
-        with six.assertRaisesRegex(self, TypeError, 'set'):
+        with self.assertRaisesRegex(TypeError, 'set'):
             Sequence({'a', 'b', 'c'})
-        with six.assertRaisesRegex(self, TypeError, 'dict'):
+        with self.assertRaisesRegex(TypeError, 'dict'):
             Sequence({'a': 42, 'b': 43, 'c': 44})
-        with six.assertRaisesRegex(self, TypeError, 'int'):
+        with self.assertRaisesRegex(TypeError, 'int'):
             Sequence(42)
-        with six.assertRaisesRegex(self, TypeError, 'float'):
+        with self.assertRaisesRegex(TypeError, 'float'):
             Sequence(4.2)
-        with six.assertRaisesRegex(self, TypeError, 'int64'):
+        with self.assertRaisesRegex(TypeError, 'int64'):
             Sequence(np.int_(50))
-        with six.assertRaisesRegex(self, TypeError, 'float64'):
+        with self.assertRaisesRegex(TypeError, 'float64'):
             Sequence(np.float_(50))
-        with six.assertRaisesRegex(self, TypeError, 'Foo'):
-            class Foo(object):
+        with self.assertRaisesRegex(TypeError, 'Foo'):
+            class Foo:
                 pass
             Sequence(Foo())
 
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
-            Sequence(u'abc\u1F30')
+            Sequence('abc\u1F30')
 
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
@@ -875,32 +851,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaises(Exception):
             seq[100 * [True, False, True]]
 
-    def test_getitem_handles_missing_metadata_efficiently(self):
-        # there are two paths in __getitem__ we need to test for efficient
-        # handling of missing metadata
-
-        # path 1: mixed types
-        seq = Sequence('ACGT')
-        subseq = seq[1, 2:4]
-        self.assertEqual(subseq, Sequence('CGT'))
-
-        # metadata attributes should be None and not initialized to a "missing"
-        # representation
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(subseq._metadata)
-        self.assertIsNone(subseq._positional_metadata)
-
-        # path 2: uniform types
-        seq = Sequence('ACGT')
-        subseq = seq[1:3]
-        self.assertEqual(subseq, Sequence('CG'))
-
-        self.assertIsNone(seq._metadata)
-        self.assertIsNone(seq._positional_metadata)
-        self.assertIsNone(subseq._metadata)
-        self.assertIsNone(subseq._positional_metadata)
-
     def test_getitem_empty_positional_metadata(self):
         seq = Sequence('ACGT')
         seq.positional_metadata  # This will create empty positional_metadata
@@ -998,8 +948,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # basic sanity checks -- more extensive testing of formatting and
         # special cases is performed in SequenceReprDoctests below. here we
         # only test that pieces of the repr are present. these tests also
-        # exercise coverage for py2/3 since the doctests in
-        # SequenceReprDoctests only currently run in py3.
+        # exercise coverage in case doctests stop counting towards coverage in
+        # the future
 
         # minimal
         obs = repr(Sequence(''))
@@ -1019,7 +969,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = repr(
             Sequence(
                 'ACGT',
-                metadata={'foo': 'bar', u'bar': 33.33, None: True, False: {},
+                metadata={'foo': 'bar', b'bar': 33.33, None: True, False: {},
                           (1, 2): 3, 'acb' * 100: "'", 10: 11},
                 positional_metadata={'foo': range(4),
                                      42: ['a', 'b', [], 'c']}))
@@ -1049,80 +999,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                          positional_metadata={'quality': [1, 2, 3]})),
             "ABC")
         self.assertIs(type(str(Sequence("A"))), str)
-
-    def test_to_default_behavior(self):
-        # minimal sequence, sequence with all optional attributes present, and
-        # a subclass of Sequence
-        for seq in (Sequence('ACGT'),
-                    Sequence('ACGT', metadata={'id': 'foo', 'desc': 'bar'},
-                             positional_metadata={'quality': range(4)}),
-                    SequenceSubclass('ACGU', metadata={'id': 'rna seq'})):
-            to = seq._to()
-            self.assertEqual(seq, to)
-            self.assertIsNot(seq, to)
-
-    def test_to_update_single_attribute(self):
-        seq = Sequence('HE..--..LLO',
-                       metadata={'id': 'hello', 'description': 'gapped hello'},
-                       positional_metadata={'quality': range(11)})
-
-        to = seq._to(metadata={'id': 'new id'})
-        self.assertIsNot(seq, to)
-        self.assertNotEqual(seq, to)
-        self.assertEqual(
-            to,
-            Sequence('HE..--..LLO', metadata={'id': 'new id'},
-                     positional_metadata={'quality': range(11)}))
-
-        # metadata shouldn't have changed on the original sequence
-        self.assertEqual(seq.metadata,
-                         {'id': 'hello', 'description': 'gapped hello'})
-
-    def test_to_update_multiple_attributes(self):
-        seq = Sequence('HE..--..LLO',
-                       metadata={'id': 'hello', 'description': 'gapped hello'},
-                       positional_metadata={'quality': range(11)})
-
-        to = seq._to(metadata={'id': 'new id', 'description': 'new desc'},
-                     positional_metadata={'quality': range(20, 25)},
-                     sequence='ACGTA')
-        self.assertIsNot(seq, to)
-        self.assertNotEqual(seq, to)
-
-        # attributes should be what we specified in the _to call...
-        self.assertEqual(to.metadata['id'], 'new id')
-        npt.assert_array_equal(to.positional_metadata['quality'],
-                               np.array([20, 21, 22, 23, 24]))
-        npt.assert_array_equal(to.values, np.array('ACGTA', dtype='c'))
-        self.assertEqual(to.metadata['description'], 'new desc')
-
-        # ...and shouldn't have changed on the original sequence
-        self.assertEqual(seq.metadata['id'], 'hello')
-        npt.assert_array_equal(seq.positional_metadata['quality'], range(11))
-        npt.assert_array_equal(seq.values, np.array('HE..--..LLO',
-                                                    dtype='c'))
-        self.assertEqual(seq.metadata['description'], 'gapped hello')
-
-    def test_to_invalid_kwargs(self):
-        seq = Sequence('ACCGGTACC', metadata={'id': "test-seq",
-                       'desc': "A test sequence"})
-
-        with self.assertRaises(TypeError):
-            seq._to(metadata={'id': 'bar'}, unrecognized_kwarg='baz')
-
-    def test_to_no_positional_metadata(self):
-        seq = Sequence('ACGT')
-        seq.positional_metadata  # This will create empty positional metadata
-        result = seq._to(sequence='TGA')
-        self.assertIsNone(result._positional_metadata)
-        self.assertEqual(result, Sequence('TGA'))
-
-    def test_to_no_metadata(self):
-        seq = Sequence('ACGT')
-        seq.metadata  # This will create empty metadata
-        result = seq._to(sequence='TGA')
-        self.assertIsNone(result._metadata)
-        self.assertEqual(result, Sequence('TGA'))
 
     def test_count(self):
         def construct_char_array(s):
@@ -1155,6 +1031,95 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         self.assertIn("Sequence", str(cm.exception))
         self.assertIn("SequenceSubclass", str(cm.exception))
+
+    def test_replace_sanity(self):
+        seq = Sequence('AAGCATGCCCTTTACATTTG')
+        index = self._make_index('10011011001111110111')
+        obs = seq.replace(index, '_')
+        exp = Sequence('_AG__T__CC______T___')
+        self.assertEqual(obs, exp)
+
+    def test_replace_index_array(self):
+        seq = Sequence('TCGGGTGTTGTGCAACCACC')
+        for _type in list, tuple, np.array, pd.Series:
+            index = _type([0, 2, 5, 8, 9])
+            obs = seq.replace(index, '-')
+            exp = Sequence('-C-GG-GT--TGCAACCACC')
+            self.assertEqual(obs, exp)
+
+    def test_replace_iterable_slices(self):
+        seq = Sequence('CATTATGGACCCAGCGTGCC')
+        slices = (slice(0, 5), slice(8, 12), slice(15, 17))
+        mixed_slices = (0, 1, 2, 3, 4, slice(8, 12), 15, 16)
+        for _type in (lambda x: x, list, tuple, lambda x: np.array(tuple(x)),
+                      lambda x: pd.Series(tuple(x))):
+            index = (_type(slices), _type(mixed_slices))
+            obs_slices = seq.replace(index[0], '-')
+            obs_mixed = seq.replace(index[1], '-')
+            exp = Sequence('-----TGG----AGC--GCC')
+            self.assertEqual(obs_slices, exp)
+            self.assertEqual(obs_mixed, exp)
+
+    def test_replace_index_in_positional_metadata(self):
+        positional_metadata = {'where': self._make_index('001110110'
+                                                         '10001110000')}
+        seq = Sequence('AAGATTGATACCACAGTTGT',
+                       positional_metadata=positional_metadata)
+        obs = seq.replace('where', '-')
+        exp = Sequence('AA---T--T-CCA---TTGT',
+                       positional_metadata=positional_metadata)
+        self.assertEqual(obs, exp)
+
+    def test_replace_does_not_mutate_original(self):
+        seq = Sequence('ATCG')
+        index = self._make_index('0011')
+        seq.replace(index, '-')
+        obs = seq
+        exp = Sequence('ATCG')
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_metadata(self):
+        seq = Sequence('GCACGGCAAGAAGCGCCCCA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        index = self._make_index('01100001110010001100')
+        obs = seq.replace(index, '-')
+        exp = Sequence('G--CGGC---AA-CGC--CA',
+                       metadata={'NM': 'Kestrel Gorlick'},
+                       positional_metadata={'diff':
+                                            list('01100001110010001100')})
+        self.assertEqual(obs, exp)
+
+    def test_replace_with_subclass(self):
+        seq = DNA('CGACAACCGATGTGCTGTAA')
+        index = self._make_index('10101000111111110011')
+        obs = seq.replace(index, '-')
+        exp = DNA('-G-C-ACC--------GT--')
+        self.assertEqual(obs, exp)
+
+    def test_replace_invalid_char_for_type_error(self):
+        seq = DNA('TAAACGGAACGCTACGTCTG')
+        index = self._make_index('01000001101011001001')
+        with self.assertRaisesRegex(ValueError, "Invalid character.*'F'"):
+            seq.replace(index, 'F')
+
+    def test_replace_invalid_char_error(self):
+        seq = Sequence('GGGAGCTAGA')
+        index = self._make_index('1000101110')
+        with self.assertRaisesRegex(UnicodeEncodeError,
+                                    "can't encode character.*not in "
+                                    "range\(128\)"):
+            seq.replace(index, '\uFFFF')
+
+    def test_replace_non_single_character_error(self):
+        seq = Sequence('CCGAACTGTC')
+        index = self._make_index('1100110011')
+        with self.assertRaisesRegex(TypeError, 'string of length 2 found'):
+            seq.replace(index, 'AB')
+
+    def _make_index(self, bools):
+        return [bool(int(char)) for char in bools]
 
     def test_lowercase_mungeable_key(self):
         # NOTE: This test relies on Sequence._munge_to_index_array working
@@ -1398,10 +1363,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'z': 5/11})
 
-        chars = u'z'
-        self.assertEqual(seq.frequencies(chars=chars), {u'z': 5})
+        chars = 'z'
+        self.assertEqual(seq.frequencies(chars=chars), {'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'z': 5/11})
+                         {'z': 5/11})
 
         chars = np.fromstring('z', dtype='|S1')[0]
         self.assertEqual(seq.frequencies(chars=chars), {b'z': 5})
@@ -1414,10 +1379,10 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
                          {b'x': 0.0, b'z': 5/11})
 
-        chars = {u'x', u'z'}
-        self.assertEqual(seq.frequencies(chars=chars), {u'x': 0, u'z': 5})
+        chars = {'x', 'z'}
+        self.assertEqual(seq.frequencies(chars=chars), {'x': 0, 'z': 5})
         self.assertEqual(seq.frequencies(chars=chars, relative=True),
-                         {u'x': 0.0, u'z': 5/11})
+                         {'x': 0.0, 'z': 5/11})
 
         chars = {
             np.fromstring('x', dtype='|S1')[0],
@@ -1454,32 +1419,33 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_frequencies_invalid_chars(self):
         seq = Sequence('abcabc')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars='')
 
-        with six.assertRaisesRegex(self, ValueError, '0 characters'):
+        with self.assertRaisesRegex(ValueError, '0 characters'):
             seq.frequencies(chars={''})
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars='ab')
 
-        with six.assertRaisesRegex(self, ValueError, '2 characters'):
+        with self.assertRaisesRegex(ValueError, '2 characters'):
             seq.frequencies(chars={'b', 'ab'})
 
-        with six.assertRaisesRegex(self, TypeError, 'string.*NoneType'):
+        with self.assertRaisesRegex(TypeError, 'string.*NoneType'):
             seq.frequencies(chars={'a', None})
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
-            seq.frequencies(chars=u'\u1F30')
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars='\u1F30')
 
-        with six.assertRaisesRegex(self, ValueError, 'outside the range'):
-            seq.frequencies(chars={'c', u'\u1F30'})
+        with self.assertRaisesRegex(ValueError, 'outside the range'):
+            seq.frequencies(chars={'c', '\u1F30'})
 
-        with six.assertRaisesRegex(self, TypeError, 'set.*int'):
+        with self.assertRaisesRegex(TypeError, 'set.*int'):
             seq.frequencies(chars=42)
 
     def _compare_kmers_results(self, observed, expected):
-        for obs, exp in zip_longest(observed, expected, fillvalue=None):
+        for obs, exp in itertools.zip_longest(observed, expected,
+                                              fillvalue=None):
             self.assertEqual(obs, exp)
 
     def test_iter_kmers(self):
@@ -1935,13 +1901,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertIsNot(seq_copy, seq)
             self.assertIsNot(seq_copy._bytes, seq._bytes)
 
-            # metadata attributes should be None and not initialized to a
-            # "missing" representation
-            self.assertIsNone(seq._metadata)
-            self.assertIsNone(seq._positional_metadata)
-            self.assertIsNone(seq_copy._metadata)
-            self.assertIsNone(seq_copy._positional_metadata)
-
     def test_copy_with_metadata_shallow(self):
         # copy.copy and Sequence.copy should behave identically
         for copy_method in lambda seq: seq.copy(), copy.copy:
@@ -2174,22 +2133,22 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence(seq_str,
                        positional_metadata={'quality': range(len(seq_str))})
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   "No positional metadata associated with "
-                                   "key 'introns'"):
+        with self.assertRaisesRegex(ValueError,
+                                    "No positional metadata associated with "
+                                    "key 'introns'"):
             seq._munge_to_index_array('introns')
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   "Column 'quality' in positional metadata "
-                                   "does not correspond to a boolean "
-                                   "vector"):
+        with self.assertRaisesRegex(TypeError,
+                                    "Column 'quality' in positional metadata "
+                                    "does not correspond to a boolean "
+                                    "vector"):
             seq._munge_to_index_array('quality')
 
     def test_munge_to_bytestring_return_bytes(self):
         seq = Sequence('')
         m = 'dummy_method'
         str_inputs = ('', 'a', 'acgt')
-        unicode_inputs = (u'', u'a', u'acgt')
+        unicode_inputs = ('', 'a', 'acgt')
         byte_inputs = (b'', b'a', b'acgt')
         seq_inputs = (Sequence(''), Sequence('a'), Sequence('acgt'))
         all_inputs = str_inputs + unicode_inputs + byte_inputs + seq_inputs
@@ -2202,12 +2161,12 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
     def test_munge_to_bytestring_unicode_out_of_ascii_range(self):
         seq = Sequence('')
-        all_inputs = (u'\x80', u'abc\x80', u'\x80abc')
+        all_inputs = ('\x80', 'abc\x80', '\x80abc')
         for input_ in all_inputs:
-            with six.assertRaisesRegex(self, UnicodeEncodeError,
-                                       "'ascii' codec can't encode character"
-                                       ".*in position.*: ordinal not in"
-                                       " range\(128\)"):
+            with self.assertRaisesRegex(UnicodeEncodeError,
+                                        "'ascii' codec can't encode character"
+                                        ".*in position.*: ordinal not in"
+                                        " range\(128\)"):
                 seq._munge_to_bytestring(input_, 'dummy_method')
 
 
@@ -2248,16 +2207,16 @@ class TestDistance(TestSequenceBase):
         seq1 = SequenceSubclass("abcdef")
         seq2 = Sequence("12bcef")
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'SequenceSubclass.*Sequence.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'SequenceSubclass.*Sequence.*`distance`'):
             seq1.distance(seq2)
 
-        with six.assertRaisesRegex(self, TypeError,
-                                   'Sequence.*SequenceSubclass.*`distance`'):
+        with self.assertRaisesRegex(TypeError,
+                                    'Sequence.*SequenceSubclass.*`distance`'):
             seq2.distance(seq1)
 
     def test_munging_invalid_characters_to_self_type(self):
-        with six.assertRaisesRegex(self, ValueError, 'Invalid characters.*X'):
+        with self.assertRaisesRegex(ValueError, 'Invalid characters.*X'):
             DNA("ACGT").distance("WXYZ")
 
     def test_munging_invalid_type_to_self_type(self):
@@ -2276,7 +2235,7 @@ class TestDistance(TestSequenceBase):
         def metric(a, b):
             return 'too far'
 
-        with six.assertRaisesRegex(self, ValueError, 'string.*float'):
+        with self.assertRaisesRegex(ValueError, 'string.*float'):
             Sequence('abc').distance('cba', metric=metric)
 
     def test_arbitrary_metric(self):
@@ -2358,9 +2317,9 @@ class TestDistance(TestSequenceBase):
 #
 # these doctests exercise the correct formatting of Sequence's repr in a
 # variety of situations. they are more extensive than the unit tests above
-# (TestSequence.test_repr) but are only currently run in py3. thus, they cannot
-# be relied upon for coverage (the unit tests take care of this)
-class SequenceReprDoctests(object):
+# (TestSequence.test_repr) but cannot be relied upon for coverage (the unit
+# tests take care of this)
+class SequenceReprDoctests:
     r"""
     >>> import pandas as pd
     >>> from skbio import Sequence

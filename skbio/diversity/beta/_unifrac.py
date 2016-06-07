@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import functools
 
 import numpy as np
@@ -69,8 +67,8 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     Notes
     -----
     Unweighted UniFrac was originally described in [1]_. A discussion of
-    unweighted (qualitative) versus weighted (quantitiative) diversity metrics
-    is presented in [2]_. Deeper mathemtical discussions of this metric is
+    unweighted (qualitative) versus weighted (quantitative) diversity metrics
+    is presented in [2]_. Deeper mathematical discussions of this metric is
     presented in [3]_.
 
     If computing unweighted UniFrac for multiple pairs of samples, using
@@ -132,9 +130,9 @@ def unweighted_unifrac(u_counts, v_counts, otu_ids, tree, validate=True):
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the unweighted UniFrac distance between the samples.
 
@@ -258,9 +256,9 @@ def weighted_unifrac(u_counts, v_counts, otu_ids, tree,
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     Compute the weighted UniFrac distance between the samples.
 
@@ -331,7 +329,7 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-        Vectors indicating presense (value greater than zero) and absense
+        Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
     branch_lengths : np.array
@@ -365,7 +363,7 @@ def _weighted_unifrac(u_node_counts, v_node_counts, u_total_count,
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-        Vectors indicating presense (value greater than zero) and absense
+        Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
     u_total_count, v_total_counts : int
@@ -412,7 +410,7 @@ def _weighted_unifrac_normalized(u_node_counts, v_node_counts, u_total_count,
     Parameters
     ----------
     u_node_counts, v_node_counts : np.array
-         Vectors indicating presense (value greater than zero) and absense
+         Vectors indicating presence (value greater than zero) and absence
          (value equal to zero) of nodes in two samples, `u` and `v`. Order is
          assumed to be the same as in `branch_lengths`.
     u_total_count, v_total_counts : int

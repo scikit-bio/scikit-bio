@@ -236,7 +236,7 @@ Stats:
     length: 35
     has gaps: False
     has degenerates: False
-    has non-degenerates: True
+    has definites: True
     GC-content: 14.29%
 ----------------------------------------
 0 TATGTATATA TAACATATAC ATATATACAT ACATA
@@ -283,10 +283,6 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import range, zip
-
 import re
 
 import numpy as np
@@ -317,7 +313,12 @@ def _fastq_sniffer(fh):
 
     try:
         not_empty = False
-        for _ in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
+        for _, seq in zip(range(10), _fastq_to_generator(fh, phred_offset=33)):
+            split_length = len((seq.metadata['id'] +
+                                seq.metadata['description']).split(':'))
+            description = seq.metadata['description'].split(':')
+            if split_length == 10 and description[1] in 'YN':
+                return True, {'variant': 'illumina1.8'}
             not_empty = True
         return not_empty, {}
     except (FASTQFormatError, ValueError):
@@ -532,8 +533,7 @@ def _sequences_to_fastq(obj, fh, variant, phred_offset,
                         id_whitespace_replacement,
                         description_newline_replacement, lowercase=None):
     def seq_gen():
-        for seq in obj:
-            yield seq
+        yield from obj
 
     _generator_to_fastq(
         seq_gen(), fh, variant=variant, phred_offset=phred_offset,

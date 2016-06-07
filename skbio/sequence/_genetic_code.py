@@ -6,10 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
-from future.builtins import range
 
 from skbio.util._decorator import classproperty, stable, classonlymethod
 from skbio._base import SkbioObject
@@ -106,14 +103,14 @@ class GeneticCode(SkbioObject):
     >>> rna = RNA('AUGCCACUUUAA')
     >>> GeneticCode.from_ncbi().translate(rna)
     Protein
-    -----------------------------
+    --------------------------
     Stats:
         length: 4
         has gaps: False
         has degenerates: False
-        has non-degenerates: True
+        has definites: True
         has stops: True
-    -----------------------------
+    --------------------------
     0 MPL*
 
     """
@@ -129,7 +126,7 @@ class GeneticCode(SkbioObject):
             # indices corresponding to U, C, A, and G. 255 was chosen to
             # represent invalid character offsets because it will create an
             # invalid (out of bounds) index into `amino_acids` which should
-            # error noisily. this is important in case the valid nondegenerate
+            # error noisily. this is important in case the valid definite
             # IUPAC RNA characters change in the future and the assumptions
             # currently made by the code become invalid
             table = np.empty(ord(b'U') + 1, dtype=np.uint8)
@@ -469,14 +466,14 @@ class GeneticCode(SkbioObject):
         >>> sgc = GeneticCode.from_ncbi()
         >>> sgc.translate(rna)
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 7
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 SILPL*E
 
         In this command, we used the default ``start`` behavior, which starts
@@ -487,14 +484,14 @@ class GeneticCode(SkbioObject):
 
         >>> sgc.translate(rna, start='require')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 5
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*E
 
         Note that the codon coding for L (CUG) is an alternative start codon in
@@ -508,14 +505,14 @@ class GeneticCode(SkbioObject):
 
         >>> sgc.translate(rna, start='require', stop='require')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 MPL
 
         Passing "require" to both ``start`` and ``stop`` trims the translation
@@ -585,12 +582,8 @@ class GeneticCode(SkbioObject):
             elif stop == 'require':
                 self._raise_require_error('stop', reading_frame)
 
-        metadata = None
-        if sequence.has_metadata():
-            metadata = sequence.metadata
-
         # turn off validation because `translated` is guaranteed to be valid
-        return Protein(translated, metadata=metadata, validate=False)
+        return Protein(translated, metadata=sequence.metadata, validate=False)
 
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):
@@ -614,7 +607,7 @@ class GeneticCode(SkbioObject):
             raise NotImplementedError("scikit-bio does not currently support "
                                       "translation of degenerate sequences."
                                       "`RNA.expand_degenerates` can be used "
-                                      "to obtain all non-degenerate versions "
+                                      "to obtain all definite versions "
                                       "of a degenerate sequence.")
 
     def _raise_require_error(self, name, reading_frame):
@@ -683,69 +676,69 @@ class GeneticCode(SkbioObject):
         ...     protein
         ...     print('')
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 MPL*
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 CHF
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 ATL
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 4
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 LKWH
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: True
-        -----------------------------
+        --------------------------
         0 *SG
         <BLANKLINE>
         Protein
-        -----------------------------
+        --------------------------
         Stats:
             length: 3
             has gaps: False
             has degenerates: False
-            has non-degenerates: True
+            has definites: True
             has stops: False
-        -----------------------------
+        --------------------------
         0 KVA
         <BLANKLINE>
 

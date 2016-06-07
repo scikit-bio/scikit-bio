@@ -135,7 +135,7 @@ After listing public module members, we encourage a usage example section
 showing how to use some of the module's functionality. Examples should be
 written in [doctest](http://docs.python.org/3/library/doctest.html) format so
 that they can be automatically tested (e.g., using ```make test``` or
-```python -m skbio.test```). Doctests should be written in Python 3.
+```python -m skbio.test```).
 
     Examples
     --------

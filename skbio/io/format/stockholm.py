@@ -117,12 +117,16 @@ Where ``DE`` is the feature name and ``CBS Domain`` is the feature data.
 GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
 
 .. note:: When reading, duplicate GF feature names will have their values
-   concatenated in the order they appear in the file. When writing, each GF
-   feature will be placed on its own line, regardless of length.
+   concatenated in the order they appear in the file. Concatenation will
+   also add a space between lines if one isn't already there in order to avoid
+   joining words together. When writing, each GF feature will be placed on its
+   own line, regardless of length.
 
 .. note:: Trees labelled with ``NH``/``TN`` are handled differently than other
    GF features. When reading a Stockholm file with these features, the reader
-   follows the rules described in [2]_.
+   follows the rules described in [2]_. Trees split over multiple lines will
+   have their values concatenated. Unlike other GF features, trees will never
+   have a space added when they are concatenated.
 
    A single tree without an identifier will be stored as::
 
@@ -147,6 +151,39 @@ GF metadata is stored in the ``TabularMSA`` ``metadata`` dictionary.
            }
        }
 
+.. note:: References labelled with ``RN``/``RM``/``RT``/``RA``/``RL``/``RC``
+   are handled differently than other GF features. When reading a Stockholm
+   file with these features, the reader populates a list of dictionaries,
+   where each dictionary represents a single reference. The list contains
+   references in the order they appear in the file, regardless of the value
+   provided for ``RN``. If a reference does not include all possible reference
+   tags (e.g. ``RC`` is missing), the dictionary will only contain the
+   reference tags present for that reference. When writing, the writer adds a
+   reference number (``RN``) line before writing each reference, for example:
+
+   .. code-block:: none
+
+      #=GF RN [1]
+      #=GF RA Kestrel Gorlick
+      ...
+      #=GF RN [2]
+      ...
+
+   References will be stored as::
+
+       metadata = {
+           'RN': [{
+               'RM': 'reference medline',
+               'RT': 'reference title',
+               'RA': 'reference author',
+               'RL': 'reference location',
+               'RC': 'reference comment'
+           }, {
+               'RM': 'reference medline',
+               ...
+           }]
+       }
+
 GS metadata
 +++++++++++
 Data relating to a specific sequence in the multiple sequence alignment.
@@ -166,8 +203,10 @@ Where ``O83071/259-312`` is the sequence name, ``AC`` is the feature name, and
 GS metadata is stored in the sequence-specific ``metadata`` dictionary.
 
 .. note:: When reading, duplicate GS feature names will have their values
-   concatenated in the order they appear in the file. When writing, each GS
-   feature will be placed on its own line, regardless of length.
+   concatenated in the order they appear in the file. Concatenation will
+   also add a space between lines if one isn't already there in order to avoid
+   joining words together. When writing, each GS feature will be placed on its
+   own line, regardless of length.
 
 GR metadata
 +++++++++++
@@ -240,7 +279,7 @@ Suppose we have a Stockholm file containing an MSA of protein sequences
 >>> fs = '\\n'.join([
 ...         '# STOCKHOLM 1.0',
 ...         '#=GF CC CBS domains are small intracellular modules mostly'
-...         ' found ',
+...         ' found',
 ...         '#=GF CC in 2 or four copies within a protein.',
 ...         '#=GS O83071/192-246 AC O83071',
 ...         '#=GS O31698/88-139 OS Bacillus subtilis',
@@ -363,11 +402,6 @@ References
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.utils import viewitems
-from future.builtins import zip
-
 from collections import OrderedDict
 
 from skbio.alignment import TabularMSA
@@ -375,6 +409,7 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.io import create_format, StockholmFormatError
 
 stockholm = create_format('stockholm')
+_REFERENCE_TAGS = frozenset({'RM', 'RT', 'RA', 'RL', 'RC'})
 
 
 @stockholm.sniffer()
@@ -397,7 +432,10 @@ def _stockholm_sniffer(fh):
 def _stockholm_to_tabular_msa(fh, constructor=None):
     # Checks that user has passed required constructor parameter
     if constructor is None:
-        raise ValueError("Must provide `constructor` parameter.")
+        raise ValueError("Must provide `constructor` parameter indicating the "
+                         "type of sequences in the alignment. `constructor` "
+                         "must be a subclass of `GrammaredSequence` "
+                         "(e.g., `DNA`, `RNA`, `Protein`).")
     # Checks that contructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
         raise TypeError("`constructor` must be a subclass of "
@@ -447,7 +485,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
 
 
 # For storing intermediate data used to construct a Sequence object.
-class _MSAData(object):
+class _MSAData:
     def __init__(self):
         self._seqs = {}
         self._seq_order = []
@@ -474,12 +512,32 @@ class _MSAData(object):
         # Handles extra line(s) of an already created tree
         elif feature_name == 'NH' and feature_name in self._metadata:
             trees = self._metadata[feature_name]
-            tree_id = list(trees.keys())[-1]
-            self._metadata[feature_name][tree_id] = (trees[tree_id] +
-                                                     feature_data)
+            if isinstance(trees, OrderedDict):
+                tree_id = next(reversed(trees))
+                self._metadata[feature_name][tree_id] = (trees[tree_id] +
+                                                         feature_data)
+            else:
+                self._metadata[feature_name] = (self._metadata[feature_name] +
+                                                feature_data)
+        elif feature_name == 'RN':
+            if feature_name not in self._metadata:
+                self._metadata[feature_name] = [OrderedDict()]
+            else:
+                self._metadata[feature_name].append(OrderedDict())
+        elif feature_name in _REFERENCE_TAGS:
+            if 'RN' not in self._metadata:
+                raise StockholmFormatError("Expected 'RN' tag to precede "
+                                           "'%s' tag." % feature_name)
+            reference_dict = self._metadata['RN'][-1]
+            if feature_name not in reference_dict:
+                reference_dict[feature_name] = feature_data
+            else:
+                padding = _get_padding(reference_dict[feature_name])
+                reference_dict[feature_name] += padding + feature_data
         elif feature_name in self._metadata:
+            padding = _get_padding(self._metadata[feature_name][-1])
             self._metadata[feature_name] = (self._metadata[feature_name] +
-                                            feature_data)
+                                            padding + feature_data)
         else:
             self._metadata[feature_name] = feature_data
 
@@ -525,7 +583,7 @@ class _MSAData(object):
                           index=self._seq_order)
 
 
-class _SeqData(object):
+class _SeqData:
     def __init__(self, name):
         self.name = name
         self._seq = None
@@ -548,7 +606,8 @@ class _SeqData(object):
         if self.metadata is None:
             self.metadata = OrderedDict()
         if feature_name in self.metadata:
-            self.metadata[feature_name] += feature_data
+            padding = _get_padding(self.metadata[feature_name][-1])
+            self.metadata[feature_name] += padding + feature_data
         else:
             self.metadata[feature_name] = feature_data
 
@@ -636,42 +695,64 @@ def _tabular_msa_to_stockholm(obj, fh):
     fh.write("# STOCKHOLM 1.0\n")
 
     # Writes GF data to file
-    if obj.has_metadata():
-        for gf_feature, gf_feature_data in viewitems(obj.metadata):
-            if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
-                for tree_id, tree in viewitems(obj.metadata[gf_feature]):
-                    fh.write("#=GF TN %s\n" % tree_id)
-                    fh.write("#=GF NH %s\n" % tree)
-            else:
-                fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
+    for gf_feature, gf_feature_data in obj.metadata.items():
+        if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
+            for tree_id, tree in obj.metadata[gf_feature].items():
+                fh.write("#=GF TN %s\n" % tree_id)
+                fh.write("#=GF NH %s\n" % tree)
+        elif gf_feature == 'RN':
+            if not isinstance(gf_feature_data, list):
+                raise StockholmFormatError("Expected 'RN' to contain a list "
+                                           "of reference dictionaries, got %r."
+                                           % gf_feature_data)
+            for ref_num, dictionary in enumerate(gf_feature_data, start=1):
+                if not isinstance(dictionary, dict):
+                    raise StockholmFormatError("Expected reference information"
+                                               " to be stored as a dictionary,"
+                                               " found reference %d stored as "
+                                               "%r."
+                                               % (ref_num,
+                                                  type(dictionary).__name__))
+                fh.write("#=GF RN [%d]\n" % ref_num)
+                for feature in dictionary:
+                    if feature not in _REFERENCE_TAGS:
+                        raise StockholmFormatError("Invalid reference tag %r "
+                                                   "found in reference dictio"
+                                                   "nary %d. Valid reference "
+                                                   "tags are: %s."
+                                                   % (feature, ref_num,
+                                                      ', '.join([
+                                                            tag for tag in
+                                                            _REFERENCE_TAGS])))
+                    fh.write("#=GF %s %s\n" % (feature,
+                                               dictionary[feature]))
+        else:
+            fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
     unpadded_data = []
     # Writes GS data to file, retrieves GR data, and retrieves sequence data
     for seq, seq_name in zip(obj, obj.index):
         seq_name = str(seq_name)
-        if seq.has_metadata():
-            for gs_feature, gs_feature_data in viewitems(seq.metadata):
-                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
-                                              gs_feature_data))
+        for gs_feature, gs_feature_data in seq.metadata.items():
+            fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
+                                          gs_feature_data))
         unpadded_data.append((seq_name, str(seq)))
-        if seq.has_positional_metadata():
-            df = _format_positional_metadata(seq.positional_metadata,
-                                             'Sequence-specific positional '
-                                             'metadata (GR)')
-            for gr_feature in df.columns:
-                gr_feature_data = ''.join(df[gr_feature])
-                gr_string = "#=GR %s %s" % (seq_name, gr_feature)
-                unpadded_data.append((gr_string, gr_feature_data))
+        df = _format_positional_metadata(seq.positional_metadata,
+                                         'Sequence-specific positional '
+                                         'metadata (GR)')
+        for gr_feature in df.columns:
+            gr_feature_data = ''.join(df[gr_feature])
+            gr_string = "#=GR %s %s" % (seq_name, gr_feature)
+            unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
-    if obj.has_positional_metadata():
-        df = _format_positional_metadata(obj.positional_metadata,
-                                         'Multiple sequence alignment '
-                                         'positional metadata (GC)')
-        for gc_feature in df.columns:
-            gc_feature_data = ''.join(df[gc_feature])
-            gc_string = "#=GC %s" % gc_feature
-            unpadded_data.append((gc_string, gc_feature_data))
+    df = _format_positional_metadata(obj.positional_metadata,
+                                     'Multiple sequence alignment '
+                                     'positional metadata (GC)')
+    for gc_feature in df.columns:
+        gc_feature_data = ''.join(df[gc_feature])
+        gc_string = "#=GC %s" % gc_feature
+        unpadded_data.append((gc_string, gc_feature_data))
 
     # Writes GR, GC, and raw data to file with padding
     _write_padded_data(unpadded_data, fh)
@@ -708,3 +789,7 @@ def _format_positional_metadata(df, data_type):
                                        " in column %s of incorrect length."
                                        % (data_type, column))
     return str_df
+
+
+def _get_padding(item):
+    return '' if item[-1].isspace() else ' '

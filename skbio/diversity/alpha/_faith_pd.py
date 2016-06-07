@@ -6,8 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 from skbio.util._decorator import experimental
 from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_otu_ids_and_tree,
@@ -109,9 +107,9 @@ def faith_pd(counts, otu_ids, tree, validate=True):
     >>> from io import StringIO
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(StringIO(
-    ...                      u'(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
-    ...                      u'(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
-    ...                      u',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
+    ...                      '(((((OTU1:0.5,OTU2:0.5):0.5,OTU3:1.0):1.0):0.0,'
+    ...                      '(OTU4:0.75,(OTU5:0.5,((OTU6:0.33,OTU7:0.62):0.5'
+    ...                      ',OTU8:0.5):0.5):0.5):1.25):0.0)root;'))
 
     We can then compute the Faith PD of the sample.
 
