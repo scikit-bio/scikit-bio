@@ -645,7 +645,8 @@ def ancom(table, grouping,
           tau=0.02,
           theta=0.1,
           multiple_comparisons_correction=None,
-          significance_test=None):
+          significance_test=None,
+          percentiles=[0.0, 25.0, 50.0, 75.0, 100.0]):
     r""" Performs a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
@@ -869,18 +870,19 @@ def ancom(table, grouping,
 
     # Compute DataFrame of mean/std abundances for all features on a
     # per category basis.
-    # This code needs to be cleaned up a lot - just a proof-of-concept
-    # for now to illustrate what needs to be done.
     cat_values = input_grouping.values
     cs = np.unique(cat_values)
     cat_dists = {k: mat[cat_values == k] for k in cs}
-    cat_means = {k: np.mean(v, axis=0) for k, v in cat_dists.items()}
-    cat_means = pd.DataFrame.from_dict(cat_means)
-    cat_means.columns = ['Mean: %s' % e for e in cat_means.columns]
-    cat_stds = {k: np.std(v, axis=0) for k, v in cat_dists.items()}
-    cat_stds = pd.DataFrame.from_dict(cat_stds)
-    cat_stds.columns = ['Std: %s' % e for e in cat_stds.columns]
-    cat_sum = pd.concat([cat_means, cat_stds], axis=1)
+    cat_percentiles = []
+    for percentile in percentiles:
+        data = {k: np.percentile(v, percentile, axis=0)
+                     for k, v in cat_dists.items()}
+        data = pd.DataFrame.from_dict(data)
+        data.index = mat.columns
+        data.columns = ['%s: %r percentile' % (e, percentile)
+                        for e in data.columns]
+        cat_percentiles.append(data)
+    cat_percentiles = pd.concat(cat_percentiles, axis=1)
 
     n_feat = mat.shape[1]
 
@@ -915,7 +917,7 @@ def ancom(table, grouping,
     labs = mat.columns
     ancom_df = pd.DataFrame({'W': pd.Series(W, index=labs),
                            'reject': pd.Series(reject, index=labs)})
-    return pd.concat([ancom_df, cat_sum], axis=1)
+    return pd.concat([ancom_df, cat_percentiles], axis=1)
 
 def _holm_bonferroni(p):
     """ Performs Holm-Bonferroni correction for pvalues
