@@ -246,7 +246,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Characters defined as gaps.
 
         """
-        pass  # pragma: no cover
+        raise NotImplementedError
 
     @abstractproperty
     @classproperty
@@ -264,7 +264,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Default gap character.
 
         """
-        pass  # pragma: no cover
+        raise NotImplementedError
 
     @classproperty
     @stable(as_of='0.4.0')
@@ -305,7 +305,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             Definite characters.
 
         """
-        pass  # pragma: no cover
+        raise NotImplementedError
 
     @abstractproperty
     @classproperty
@@ -320,7 +320,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             definite characters it represents.
 
         """
-        pass  # pragma: no cover
+        raise NotImplementedError
 
     @property
     def _motifs(self):

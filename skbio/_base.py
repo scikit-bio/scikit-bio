@@ -31,7 +31,7 @@ class SkbioObject(metaclass=abc.ABCMeta):
     """
     @abc.abstractmethod
     def __str__(self):
-        pass
+        raise NotImplementedError
 
 
 class OrdinationResults(SkbioObject):

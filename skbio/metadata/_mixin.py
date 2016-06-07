@@ -88,7 +88,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __init__(self, metadata=None):
-        pass
+        raise NotImplementedError
 
     def _init_(self, metadata=None):
         if metadata is None:
@@ -100,7 +100,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __eq__(self, other):
-        pass
+        raise NotImplementedError
 
     def _eq_(self, other):
         # We're not simply comparing self.metadata to other.metadata in order
@@ -117,14 +117,14 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __ne__(self, other):
-        pass
+        raise NotImplementedError
 
     def _ne_(self, other):
         return not (self == other)
 
     @abc.abstractmethod
     def __copy__(self):
-        pass
+        raise NotImplementedError
 
     def _copy_(self):
         if self.has_metadata():
@@ -134,7 +134,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __deepcopy__(self, memo):
-        pass
+        raise NotImplementedError
 
     def _deepcopy_(self, memo):
         if self.has_metadata():
@@ -188,7 +188,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
             Positional metadata axis length.
 
         """
-        pass
+        raise NotImplementedError
 
     @property
     @stable(as_of="0.4.0")
@@ -313,7 +313,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __init__(self, positional_metadata=None):
-        pass
+        raise NotImplementedError
 
     def _init_(self, positional_metadata=None):
         if positional_metadata is None:
@@ -325,7 +325,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __eq__(self, other):
-        pass
+        raise NotImplementedError
 
     def _eq_(self, other):
         # We're not simply comparing self.positional_metadata to
@@ -345,14 +345,14 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __ne__(self, other):
-        pass
+        raise NotImplementedError
 
     def _ne_(self, other):
         return not (self == other)
 
     @abc.abstractmethod
     def __copy__(self):
-        pass
+        raise NotImplementedError
 
     def _copy_(self):
         if self.has_positional_metadata():
@@ -363,7 +363,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __deepcopy__(self, memo):
-        pass
+        raise NotImplementedError
 
     def _deepcopy_(self, memo):
         if self.has_positional_metadata():

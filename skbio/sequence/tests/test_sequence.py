@@ -1106,6 +1106,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         exp = DNA('-G-C-ACC--------GT--')
         self.assertEqual(obs, exp)
 
+    def test_replace_with_bytes(self):
+        seq = Sequence('ABC123')
+
+        obs = seq.replace([1, 3, 5], b'*')
+
+        self.assertEqual(obs, Sequence('A*C*2*'))
+
     def test_replace_invalid_char_for_type_error(self):
         seq = DNA('TAAACGGAACGCTACGTCTG')
         index = self._make_index('01000001101011001001')
