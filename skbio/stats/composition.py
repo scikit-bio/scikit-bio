@@ -102,6 +102,7 @@ array([ 0.25,  0.25,  0.5 ])
 import numpy as np
 import pandas as pd
 import scipy.stats
+import skbio.util
 from skbio.util._decorator import experimental
 
 
@@ -643,16 +644,16 @@ def ancom(table, grouping,
           alpha=0.05,
           tau=0.02,
           theta=0.1,
-          multiple_comparisons_correction=None,
+          multiple_comparisons_correction='holm-bonferroni',
           significance_test=None,
-          percentiles=[0.0, 25.0, 50.0, 75.0, 100.0]):
+          percentiles=(0.0, 25.0, 50.0, 75.0, 100.0)):
     r""" Performs a differential abundance test using ANCOM.
 
     This is done by calculating pairwise log ratios between all features
     and performing a significance test to determine if there is a significant
     difference in feature ratios with respect to the variable of interest.
 
-    In an experiment with only two treatments, this test tests the following
+    In an experiment with only two treatments, this tests the following
     hypothesis for feature :math:`i`
 
     .. math::
@@ -697,6 +698,10 @@ def ancom(table, grouping,
         classes.  This function must be able to accept at least two 1D
         array_like arguments of floats and returns a test statistic and a
         p-value. By default ``scipy.stats.f_oneway`` is used.
+    percentiles : iterable of floats, optional
+        Percentile abundances to return for each feature in each group. By
+        default, will return the minimum, 25th percentile, median, 75th
+        percentile, and maximum abundances for each feature in each group.
 
     Returns
     -------
@@ -707,7 +712,15 @@ def ancom(table, grouping,
         `"W"` is the W-statistic, or number of features that a single feature
         is tested to be significantly different against.
 
-        `"reject"` indicates if feature is significantly different or not.
+        `"Reject null hypothesis"` indicates if feature is differentially
+        abundant across groups (`True`) or not (`False`).
+
+    pd.DataFrame
+        A table of features and their percentile abundances in each group. If
+        ``percentiles`` is empty, this will be an empty ``pd.DataFrame``. The
+        rows in this object will be features, and the columns will be a
+        multi-index where the first index is the percentile, and the second
+        index is the group.
 
     See Also
     --------
@@ -733,9 +746,11 @@ def ancom(table, grouping,
 
     This method cannot handle any zero counts as input, since the logarithm
     of zero cannot be computed.  While this is an unsolved problem, many
-    studies have shown promising results by replacing the zeros with pseudo
-    counts. This can be also be done via the ``multiplicative_replacement``
-    method.
+    studies, including [2]_, have shown promising results by adding
+    pseudocounts to all values in the matrix. In [2]_, a pseudocount of 0.001
+    was used, though the authors note that a pseudocount of 1.0 may also be
+    useful. Zero counts can also be addressed using the
+    ``multiplicative_replacement`` method.
 
     References
     ----------
@@ -752,7 +767,8 @@ def ancom(table, grouping,
     >>> from skbio.stats.composition import ancom
     >>> import pandas as pd
 
-    Now let's load in a pd.DataFrame with 6 samples and 7 unknown bacteria:
+    Now let's load in a DataFrame with 6 samples and 7 features (e.g.,
+    these may be bacterial OTUs):
 
     >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
     ...                       [9,  11, 12, 10, 10, 10, 10],
@@ -760,25 +776,28 @@ def ancom(table, grouping,
     ...                       [22, 21, 9,  10, 10, 10, 10],
     ...                       [20, 22, 10, 10, 13, 10, 10],
     ...                       [23, 21, 14, 10, 10, 10, 10]],
-    ...                      index=['s1','s2','s3','s4','s5','s6'],
-    ...                      columns=['b1','b2','b3','b4','b5','b6','b7'])
+    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
+    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
+    ...                               'b7'])
 
-    Then create a grouping vector.  In this scenario, there
-    are only two classes, and suppose these classes correspond to the
-    treatment due to a drug and a control.  The first three samples
-    are controls and the last three samples are treatments.
+    Then create a grouping vector. In this example, there is a treatment group
+    and a placebo group.
 
-    >>> grouping = pd.Series([0, 0, 0, 1, 1, 1],
-    ...                      index=['s1','s2','s3','s4','s5','s6'])
+    >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
+    ...                       'placebo', 'placebo', 'placebo'],
+    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
 
-    Now run ``ancom`` and see if there are any features that have any
-    significant differences between the treatment and the control.
+    Now run ``ancom`` to determine if there are any features that are
+    significantly different in abundance between the treatment and the placebo
+    groups. The first DataFrame that is returned contains the ANCOM test
+    results, and the second contains the percentile abundance data for each
+    feature in each group.
 
-    >>> results = ancom(table, grouping)
-    >>> results['W']
+    >>> ancom_df, percentile_df = ancom(table, grouping)
+    >>> ancom_df['W']
     b1    0
     b2    4
-    b3    1
+    b3    0
     b4    1
     b5    1
     b6    0
@@ -788,10 +807,13 @@ def ancom(table, grouping,
     The W-statistic is the number of features that a single feature is tested
     to be significantly different against.  In this scenario, `b2` was detected
     to have significantly different abundances compared to four of the other
-    species. To summarize the results from the W-statistic, let's take a look
-    at the results from the hypothesis test:
+    features. To summarize the results from the W-statistic, let's take a look
+    at the results from the hypothesis test. The `Reject null hypothesis`
+    column in the table indicates whether the null hypothesis was rejected,
+    and that a feature was therefore observed to be differentially abundant
+    across the groups.
 
-    >>> results['reject']
+    >>> ancom_df['Reject null hypothesis']
     b1    False
     b2     True
     b3    False
@@ -799,10 +821,42 @@ def ancom(table, grouping,
     b5    False
     b6    False
     b7    False
-    Name: reject, dtype: bool
+    Name: Reject null hypothesis, dtype: bool
 
-    From this we can conclude that only `b2` was significantly
-    different between the treatment and the control.
+    From this we can conclude that only `b2` was significantly different in
+    abundance between the treatment and the placebo. We still don't know, for
+    example, in which group `b2` was more abundant. We therefore may next be
+    interested in comparing the abundance of `b2` across the two groups.
+    We can do that using the second DataFrame that was returned. Here we
+    compare the median (50th percentile) abundance of `b2` in the treatment and
+    placebo groups:
+
+    >>> percentile_df[50.0].loc['b2']
+    Group
+    placebo      21.0
+    treatment    11.0
+    Name: b2, dtype: float64
+
+    We can also look at a full five-number summary for ``b2`` in the treatment
+    and placebo groups:
+
+    >>> percentile_df.loc['b2'] # doctest: +NORMALIZE_WHITESPACE
+    Percentile  Group
+    0.0         placebo      21.0
+    25.0        placebo      21.0
+    50.0        placebo      21.0
+    75.0        placebo      21.5
+    100.0       placebo      22.0
+    0.0         treatment    11.0
+    25.0        treatment    11.0
+    50.0        treatment    11.0
+    75.0        treatment    11.0
+    100.0       treatment    11.0
+    Name: b2, dtype: float64
+
+    Taken together, these data tell us that `b2` is present in significantly
+    higher abundance in the placebo group samples than in the treatment group
+    samples.
 
     """
     if not isinstance(table, pd.DataFrame):
@@ -814,7 +868,7 @@ def ancom(table, grouping,
 
     if np.any(table <= 0):
         raise ValueError('Cannot handle zeros or negative values in `table`. '
-                         'Use pseudo counts or ``multiplicative_replacement``.'
+                         'Use pseudocounts or ``multiplicative_replacement``.'
                          )
 
     if not 0 < alpha < 1:
@@ -838,9 +892,20 @@ def ancom(table, grouping,
     if (table.isnull()).any().any():
         raise ValueError('Cannot handle missing values in `table`.')
 
-    input_grouping = grouping.copy()
-    groups, _grouping = np.unique(grouping, return_inverse=True)
-    grouping = pd.Series(_grouping, index=grouping.index)
+    percentiles = list(percentiles)
+    for percentile in percentiles:
+        if not 0.0 <= percentile <= 100.0:
+            raise ValueError('Percentiles must be in the range [0, 100], %r '
+                             'was provided.' % percentile)
+
+    duplicates = skbio.util.find_duplicates(percentiles)
+    if duplicates:
+        formatted_duplicates = ', '.join(repr(e) for e in duplicates)
+        raise ValueError('Percentile values must be unique. The following'
+                         ' value(s) were duplicated: %s.' %
+                         formatted_duplicates)
+
+    groups = np.unique(grouping)
     num_groups = len(groups)
 
     if num_groups == len(grouping):
@@ -866,22 +931,6 @@ def ancom(table, grouping,
     if (len(mat) != table_index_len or len(cats) != grouping_index_len):
         raise ValueError('`table` index and `grouping` '
                          'index must be consistent.')
-
-    # Compute DataFrame of mean/std abundances for all features on a
-    # per category basis.
-    cat_values = input_grouping.values
-    cs = np.unique(cat_values)
-    cat_dists = {k: mat[cat_values == k] for k in cs}
-    cat_percentiles = []
-    for percentile in percentiles:
-        data = {k: np.percentile(v, percentile, axis=0)
-                     for k, v in cat_dists.items()}
-        data = pd.DataFrame.from_dict(data)
-        data.index = mat.columns
-        data.columns = ['%s: %r percentile' % (e, percentile)
-                        for e in data.columns]
-        cat_percentiles.append(data)
-    cat_percentiles = pd.concat(cat_percentiles, axis=1)
 
     n_feat = mat.shape[1]
 
@@ -913,10 +962,28 @@ def ancom(table, grouping,
         else:
             nu = cutoff[4]
         reject = (W >= nu*n_feat)
-    labs = mat.columns
-    ancom_df = pd.DataFrame({'W': pd.Series(W, index=labs),
-                           'reject': pd.Series(reject, index=labs)})
-    return pd.concat([ancom_df, cat_percentiles], axis=1)
+
+    feat_ids = mat.columns
+    ancom_df = pd.DataFrame(
+        {'W': pd.Series(W, index=feat_ids),
+         'Reject null hypothesis': pd.Series(reject, index=feat_ids)})
+
+    if len(percentiles) == 0:
+        return ancom_df, pd.DataFrame()
+    else:
+        data = []
+        columns = []
+        for group in groups:
+            feat_dists = mat[cats == group]
+            for percentile in percentiles:
+                columns.append((percentile, group))
+                data.append(np.percentile(feat_dists, percentile, axis=0))
+        columns = pd.MultiIndex.from_tuples(columns,
+                                            names=['Percentile', 'Group'])
+        percentile_df = pd.DataFrame(
+            np.asarray(data).T, columns=columns, index=feat_ids)
+        return ancom_df, percentile_df
+
 
 def _holm_bonferroni(p):
     """ Performs Holm-Bonferroni correction for pvalues

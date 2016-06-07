@@ -20,6 +20,9 @@
 
 ### Backward-incompatible changes [experimental]
 * `TabularMSA.append` and `TabularMSA.extend` now require one of `minter`, `index`, or `reset_index` to be provided when incorporating new sequences into an MSA. Previous behavior was to auto-increment the index labels if `minter` and `index` weren't provided and the MSA had a default integer index, otherwise error. Use `reset_index=True` to obtain the previous behavior in a more explicit way.
+* `skbio.stats.composition.ancom` now returns two `pd.DataFrame` objects, where it previously returned one. The first contains the ANCOM test results, as before, and the second contains percentile abundances of each feature in each group. The specific percentiles that are computed and returned is controlled by the new `percentiles` parameter to `skbio.stats.composition.ancom`. In the future, this second `pd.DataFrame` will not be returned by this function, but will be available through the [contingency table API](https://github.com/biocore/scikit-bio/issues/848). ([#1293](https://github.com/biocore/scikit-bio/issues/1293))
+* `skbio.stats.composition.ancom` now performs multiple comparisons correction by default. The previous behavior of not performing multiple comparisons correction can be achieved by passing ``multiple_comparisons_correction=None``.
+* The ``reject`` column in the first ``pd.DataFrame`` returned from `skbio.stats.composition.ancom` has been renamed ``Reject null hypothesis`` for clarity. ([#1375](https://github.com/biocore/scikit-bio/issues/1375))
 
 ### Bug fixes
 * Fixed row and column names to `biplot_scores` in the `OrdinationResults` object from `skbio.stats.ordination`. This fix affect the `cca` and `rda` methods. ([#1322](https://github.com/biocore/scikit-bio/issues/1322))
