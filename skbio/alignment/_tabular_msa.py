@@ -767,9 +767,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
         if isinstance(sequences, TabularMSA):
-            if metadata is None:
+            if metadata is None and sequences.has_metadata():
                 metadata = sequences.metadata
-            if positional_metadata is None:
+            if (positional_metadata is None and
+                    sequences.has_positional_metadata()):
                 positional_metadata = sequences.positional_metadata
             if minter is None and index is None:
                 index = sequences.index
@@ -800,9 +801,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         override values.
         """
         if metadata is NotImplemented:
-            metadata = self.metadata
+            if self.has_metadata():
+                metadata = self.metadata
+            else:
+                metadata = None
+
         if positional_metadata is NotImplemented:
-            positional_metadata = self.positional_metadata
+            if self.has_positional_metadata():
+                positional_metadata = self.positional_metadata
+            else:
+                positional_metadata = None
 
         if index is NotImplemented:
             if isinstance(sequences, pd.Series):
@@ -1192,7 +1200,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _get_position_(self, i):
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
         # TODO: change for #1198
-        if len(self):
+        if len(self) and self.has_positional_metadata():
             seq.metadata = dict(self.positional_metadata.iloc[i])
         return seq
 
@@ -1200,7 +1208,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         seqs = self._seqs.apply(lambda seq: seq[i])
         # TODO: change for #1198
         pm = None
-        if len(self):
+        if len(self) and self.has_positional_metadata():
             pm = self.positional_metadata.iloc[i]
         return self._constructor_(seqs, positional_metadata=pm)
     # end of helpers
@@ -1383,7 +1391,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if dtype is None:
             dtype = Sequence
 
-        positional_metadata = self.positional_metadata
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
 
         consensus = []
         for position in self.iter_positions():
@@ -2234,8 +2244,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 [self.positional_metadata, other.positional_metadata],
                 ignore_index=True, **concat_kwargs)
 
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
         joined = self.__class__(joined_seqs, index=join_index,
                                 positional_metadata=joined_positional_metadata)
+
+        if not joined.has_positional_metadata():
+            del joined.positional_metadata
+
         return joined
 
     def _assert_joinable(self, other):
@@ -2266,6 +2285,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             diff = self.positional_metadata.columns.sym_diff(
                 other.positional_metadata.columns)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
             if len(diff) > 0:
                 raise ValueError(
                     "Positional metadata columns must all match with "

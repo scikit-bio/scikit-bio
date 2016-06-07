@@ -709,6 +709,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
         self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
 
+    def test_getitem_with_tuple_of_mixed_no_metadata(self):
+        seq = Sequence("0123456789abcdef")
+        eseq = Sequence("0123fed9")
+        self.assertEqual(seq[0, 1, 2, 3, 15, 14, 13, 9], eseq)
+        self.assertEqual(seq[0, 1, 2, 3, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9], eseq)
+        self.assertEqual(seq[0:4, :-4:-1, 9:10], eseq)
+
     def test_getitem_with_iterable_of_mixed_has_positional_metadata(self):
         s = "0123456789abcdef"
         length = len(s)

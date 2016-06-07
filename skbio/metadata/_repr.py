@@ -54,7 +54,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._lines.to_str()
 
     def _process_metadata(self):
-        if self._obj.metadata:
+        if self._obj.has_metadata():
             self._lines.add_line('Metadata:')
             # Python 3 doesn't allow sorting of mixed types so we can't just
             # use sorted() on the metadata keys. Sort first by type then sort
@@ -112,7 +112,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._wrap_text_with_indent(value_repr, key_fmt, extra_indent)
 
     def _process_positional_metadata(self):
-        if len(self._obj.positional_metadata.columns):
+        if self._obj.has_positional_metadata():
             self._lines.add_line('Positional metadata:')
             for key in self._obj.positional_metadata.columns.values.tolist():
                 dtype = self._obj.positional_metadata[key].dtype

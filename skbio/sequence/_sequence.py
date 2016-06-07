@@ -507,7 +507,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             how = 'inner'
             cols = set()
             for s in seqs:
-                cols.add(frozenset(s.positional_metadata))
+                if s.has_positional_metadata():
+                    cols.add(frozenset(s.positional_metadata))
+                else:
+                    cols.add(frozenset())
             if len(cols) > 1:
                 raise ValueError("The positional metadata of the sequences do"
                                  " not have matching columns. Consider setting"
@@ -517,6 +520,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         for seq in seqs:
             seq_data.append(seq._bytes)
             pm_data.append(seq.positional_metadata)
+            if not seq.has_positional_metadata():
+                del seq.positional_metadata
 
         pm = pd.concat(pm_data, join=how, ignore_index=True)
         bytes_ = np.concatenate(seq_data)
@@ -556,9 +561,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             # decendants/ancestors
             sequence._assert_can_cast_to(type(self))
 
-            if metadata is None:
+            if metadata is None and sequence.has_metadata():
                 metadata = sequence.metadata
-            if positional_metadata is None:
+            if (positional_metadata is None and
+                    sequence.has_positional_metadata()):
                 positional_metadata = sequence.positional_metadata
 
             sequence = sequence._bytes
@@ -847,13 +853,19 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                         list(_slices_from_iter(self._bytes, indexable)))
                     index = _as_slice_if_single_index(indexable)
 
-                    pos_md_slices = list(_slices_from_iter(
-                                         self.positional_metadata, index))
-                    positional_metadata = pd.concat(pos_md_slices)
+                    positional_metadata = None
+                    if self.has_positional_metadata():
+                        pos_md_slices = list(_slices_from_iter(
+                                             self.positional_metadata, index))
+                        positional_metadata = pd.concat(pos_md_slices)
+
+                    metadata = None
+                    if self.has_metadata():
+                        metadata = self.metadata
 
                     return self._constructor(
                         sequence=seq,
-                        metadata=self.metadata,
+                        metadata=metadata,
                         positional_metadata=positional_metadata)
         elif (isinstance(indexable, str) or
                 isinstance(indexable, bool)):
@@ -875,17 +887,24 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         seq = self._bytes[indexable]
         positional_metadata = self._slice_positional_metadata(indexable)
 
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
         return self._constructor(
             sequence=seq,
-            metadata=self.metadata,
+            metadata=metadata,
             positional_metadata=positional_metadata)
 
     def _slice_positional_metadata(self, indexable):
-        if _is_single_index(indexable):
-            index = _single_index_to_slice(indexable)
+        if self.has_positional_metadata():
+            if _is_single_index(indexable):
+                index = _single_index_to_slice(indexable)
+            else:
+                index = indexable
+            return self.positional_metadata.iloc[index]
         else:
-            index = indexable
-        return self.positional_metadata.iloc[index]
+            return None
 
     @stable(as_of="0.4.0")
     def __len__(self):
@@ -1457,11 +1476,19 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         seq_bytes = self._bytes.copy()
         seq_bytes[index] = character
 
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
         # Use __class__ instead of _constructor so that validations are
         # performed for subclasses (the user could have introduced invalid
         # characters).
-        return self.__class__(seq_bytes, metadata=self.metadata,
-                              positional_metadata=self.positional_metadata)
+        return self.__class__(seq_bytes, metadata=metadata,
+                              positional_metadata=positional_metadata)
 
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
@@ -1927,7 +1954,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             step = k
             count = len(self) // k
 
-        if len(self) == 0 or len(self.positional_metadata.columns):
+        if len(self) == 0 or self.has_positional_metadata():
             # Slower path when sequence is empty or positional metadata needs
             # to be sliced.
             for i in range(0, len(self) - k + 1, step):
@@ -1936,10 +1963,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             # Optimized path when positional metadata doesn't need slicing.
             kmers = np.lib.stride_tricks.as_strided(
                 self._bytes, shape=(k, count), strides=(1, step)).T
+
+            metadata = None
+            if self.has_metadata():
+                metadata = self.metadata
+
             for s in kmers:
                 yield self._constructor(
                     sequence=s,
-                    metadata=self.metadata,
+                    metadata=metadata,
                     positional_metadata=None)
 
     @stable(as_of="0.4.0")
