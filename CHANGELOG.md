@@ -5,6 +5,7 @@
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
 ### Features
+* Added more descriptive error message to `skbio.io.registry` when attempting to read without specifying `into` and when there is no generator reader. ([#1326](https://github.com/biocore/scikit-bio/issues/1326))
 * Added support for reference tags to `skbio.io.format.stockholm` reader and writer. ([#1348](https://github.com/biocore/scikit-bio/issues/1348))
 * Expanded error message in `skbio.io.format.stockholm` reader when `constructor` is not passed, in order to provide better explanation to user. ([#1327](https://github.com/biocore/scikit-bio/issues/1327))
 * Added `skbio.sequence.distance.kmer_distance` for computing the kmer distance between two sequences. ([#913](https://github.com/biocore/scikit-bio/issues/913))
