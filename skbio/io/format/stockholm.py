@@ -695,64 +695,69 @@ def _tabular_msa_to_stockholm(obj, fh):
     fh.write("# STOCKHOLM 1.0\n")
 
     # Writes GF data to file
-    for gf_feature, gf_feature_data in obj.metadata.items():
-        if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
-            for tree_id, tree in obj.metadata[gf_feature].items():
-                fh.write("#=GF TN %s\n" % tree_id)
-                fh.write("#=GF NH %s\n" % tree)
-        elif gf_feature == 'RN':
-            if not isinstance(gf_feature_data, list):
-                raise StockholmFormatError("Expected 'RN' to contain a list "
-                                           "of reference dictionaries, got %r."
-                                           % gf_feature_data)
-            for ref_num, dictionary in enumerate(gf_feature_data, start=1):
-                if not isinstance(dictionary, dict):
-                    raise StockholmFormatError("Expected reference information"
-                                               " to be stored as a dictionary,"
-                                               " found reference %d stored as "
-                                               "%r."
-                                               % (ref_num,
-                                                  type(dictionary).__name__))
-                fh.write("#=GF RN [%d]\n" % ref_num)
-                for feature in dictionary:
-                    if feature not in _REFERENCE_TAGS:
-                        raise StockholmFormatError("Invalid reference tag %r "
-                                                   "found in reference dictio"
-                                                   "nary %d. Valid reference "
-                                                   "tags are: %s."
-                                                   % (feature, ref_num,
-                                                      ', '.join([
-                                                            tag for tag in
-                                                            _REFERENCE_TAGS])))
-                    fh.write("#=GF %s %s\n" % (feature,
-                                               dictionary[feature]))
-        else:
-            fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
+    if obj.has_metadata():
+        for gf_feature, gf_feature_data in obj.metadata.items():
+            if gf_feature == 'NH' and isinstance(gf_feature_data, dict):
+                for tree_id, tree in gf_feature_data.items():
+                    fh.write("#=GF TN %s\n" % tree_id)
+                    fh.write("#=GF NH %s\n" % tree)
+            elif gf_feature == 'RN':
+                if not isinstance(gf_feature_data, list):
+                    raise StockholmFormatError(
+                        "Expected 'RN' to contain a list of reference "
+                        "dictionaries, got %r." % gf_feature_data)
+
+                for ref_num, dictionary in enumerate(gf_feature_data, start=1):
+                    if not isinstance(dictionary, dict):
+                        raise StockholmFormatError(
+                            "Expected reference information to be stored as a "
+                            "dictionary, found reference %d stored as %r." %
+                            (ref_num, type(dictionary).__name__))
+
+                    fh.write("#=GF RN [%d]\n" % ref_num)
+                    for feature in dictionary:
+                        if feature not in _REFERENCE_TAGS:
+                            formatted_reference_tags = ', '.join(
+                                [tag for tag in _REFERENCE_TAGS])
+                            raise StockholmFormatError(
+                                "Invalid reference tag %r found in reference "
+                                "dictionary %d. Valid reference tags are: %s."
+                                % (feature, ref_num, formatted_reference_tags))
+
+                        fh.write("#=GF %s %s\n" % (feature,
+                                                   dictionary[feature]))
+            else:
+                fh.write("#=GF %s %s\n" % (gf_feature, gf_feature_data))
 
     unpadded_data = []
     # Writes GS data to file, retrieves GR data, and retrieves sequence data
     for seq, seq_name in zip(obj, obj.index):
         seq_name = str(seq_name)
-        for gs_feature, gs_feature_data in seq.metadata.items():
-            fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
-                                          gs_feature_data))
+
+        if seq.has_metadata():
+            for gs_feature, gs_feature_data in seq.metadata.items():
+                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature,
+                                              gs_feature_data))
+
         unpadded_data.append((seq_name, str(seq)))
-        df = _format_positional_metadata(seq.positional_metadata,
-                                         'Sequence-specific positional '
-                                         'metadata (GR)')
-        for gr_feature in df.columns:
-            gr_feature_data = ''.join(df[gr_feature])
-            gr_string = "#=GR %s %s" % (seq_name, gr_feature)
-            unpadded_data.append((gr_string, gr_feature_data))
+        if seq.has_positional_metadata():
+            df = _format_positional_metadata(seq.positional_metadata,
+                                             'Sequence-specific positional '
+                                             'metadata (GR)')
+            for gr_feature in df.columns:
+                gr_feature_data = ''.join(df[gr_feature])
+                gr_string = "#=GR %s %s" % (seq_name, gr_feature)
+                unpadded_data.append((gr_string, gr_feature_data))
 
     # Retrieves GC data
-    df = _format_positional_metadata(obj.positional_metadata,
-                                     'Multiple sequence alignment '
-                                     'positional metadata (GC)')
-    for gc_feature in df.columns:
-        gc_feature_data = ''.join(df[gc_feature])
-        gc_string = "#=GC %s" % gc_feature
-        unpadded_data.append((gc_string, gc_feature_data))
+    if obj.has_positional_metadata():
+        df = _format_positional_metadata(obj.positional_metadata,
+                                         'Multiple sequence alignment '
+                                         'positional metadata (GC)')
+        for gc_feature in df.columns:
+            gc_feature_data = ''.join(df[gc_feature])
+            gc_string = "#=GC %s" % gc_feature
+            unpadded_data.append((gc_string, gc_feature_data))
 
     # Writes GR, GC, and raw data to file with padding
     _write_padded_data(unpadded_data, fh)

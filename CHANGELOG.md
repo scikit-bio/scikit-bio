@@ -34,8 +34,6 @@ an empty generator.
 
 ### Deprecated functionality [stable]
 * Deprecated use of the term "non-degenerate", in favor of "definite". `GrammaredSequence.nondegenerate_chars`, `GrammaredSequence.nondegenerates`, and `GrammaredSequence.has_nondegenerates` have been renamed to `GrammaredSequence.definite_chars`, `GrammaredSequence.definites`, and `GrammaredSequence.has_definites`, respectively. The old names will be removed in scikit-bio 0.5.2. Relevant affected public classes include `GrammaredSequence`, `DNA`, `RNA`, and `Protein`.
-* Deprecated `Sequence.has_metadata` and `TabularMSA.has_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `bool(obj.metadata)` to determine if the metadata dict is empty.
-* Deprecated `Sequence.has_positional_metadata` and `TabularMSA.has_positional_metadata` methods, which will be removed in scikit-bio 0.5.2. Use `len(obj.positional_metadata.columns)` to determine if positional metadata columns are present, or `obj.positional_metadata.empty` to determine if the positional metadata DataFrame is empty (empty index OR empty columns).
 
 ### Deprecated functionality [experimental]
 * Deprecated function `skbio.util.create_dir`. This function will be removed in scikit-bio 0.5.1. Please use the Python standard library

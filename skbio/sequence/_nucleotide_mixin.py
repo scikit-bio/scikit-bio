@@ -71,7 +71,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         the complement of ``A`` is ambiguous. Thanks, nature...
 
         """
-        return set()  # pragma: no cover
+        raise NotImplementedError
 
     @stable(as_of='0.4.0')
     def complement(self, reverse=False):
@@ -145,10 +145,19 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         """
         result = self._complement_lookup[self._bytes]
+
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
         complement = self._constructor(
             sequence=result,
-            metadata=self.metadata,
-            positional_metadata=self.positional_metadata)
+            metadata=metadata,
+            positional_metadata=positional_metadata)
 
         if reverse:
             complement = complement[::-1]
