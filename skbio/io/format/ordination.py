@@ -189,7 +189,7 @@ Load the ordination results from the file:
 import numpy as np
 import pandas as pd
 
-from skbio._base import OrdinationResults
+from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
 
 ordination = create_format('ordination')

@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import svd, lstsq
 
-from skbio._base import OrdinationResults
-from ._utils import corr, svd_rank, scale
 from skbio.util._decorator import experimental
+from ._ordination_results import OrdinationResults
+from ._utils import corr, svd_rank, scale
 
 
 @experimental(as_of="0.4.0")
@@ -68,6 +68,12 @@ def rda(y, x, scale_Y=False, scaling=1):
         transformed coordinates for feature and samples, biplot
         scores, sample constraints, etc.
 
+    See Also
+    --------
+    ca
+    cca
+    OrdinationResults
+
     Notes
     -----
     The algorithm is based on [1]_, \S 11.1, and is expected to
@@ -76,10 +82,6 @@ def rda(y, x, scale_Y=False, scaling=1):
     :math:`\sqrt{\frac{s}{n-1}}` `n` is the number of samples,
     and `s` is the original eigenvalues. Here we will only return
     the original eigenvalues, as recommended in [1]_.
-
-    See Also
-    --------
-    cca
 
     References
     ----------

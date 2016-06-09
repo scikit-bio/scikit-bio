@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import svd, lstsq
 
-from skbio._base import OrdinationResults
+from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 from skbio.util._decorator import experimental
 
@@ -62,9 +62,14 @@ def cca(y, x, scaling=1):
     NotImplementedError
         If scaling is not 1 or 2.
 
+    See Also
+    --------
+    ca
+    rda
+    OrdinationResults
+
     Notes
     -----
-
     The algorithm is based on [3]_, \S 11.2, and is expected to give
     the same results as ``cca(y, x)`` in R's package vegan, except
     that this implementation won't drop constraining variables due to
@@ -80,12 +85,6 @@ def cca(y, x, scaling=1):
     other. In some sense, it assumes linear responses of "species" to
     "environmental variables" and is not well suited to analyze
     ecological data.
-
-    See Also
-    --------
-    ca
-    rda
-    OrdinationResults
 
     References
     ----------
