@@ -872,6 +872,21 @@ class TestRead(RegistryTest):
         self.assertEqual(TestClass([1, 2, 3, 4]), instance)
         fh.close()
 
+    def test_into_is_none_and_no_generator_reader(self):
+        format1 = self.registry.create_format('format1')
+
+        fh = StringIO('1\n2\n3\n4')
+
+        @format1.reader(TestClass)
+        def reader(fh):
+            self.assertIsInstance(fh, io.TextIOBase)
+            return
+
+        with self.assertRaisesRegex(UnrecognizedFormatError,
+                                    "Cannot read 'format1'.*Possible.*include"
+                                    ": TestClass"):
+            self.registry.read(fh, format='format1')
+
     def test_into_is_none(self):
         format1 = self.registry.create_format('format1')
 
