@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import svd
 
-from skbio._base import OrdinationResults
+from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
 from skbio.util._decorator import experimental
 
@@ -79,14 +79,16 @@ def ca(X, scaling=1):
     ValueError
         If any of the input matrix elements are negative.
 
+    See Also
+    --------
+    cca
+    rda
+    OrdinationResults
+
     Notes
     -----
     The algorithm is based on [1]_, \S 9.4.1., and is expected to give the same
     results as ``cca(X)`` in R's package vegan.
-
-    See Also
-    --------
-    cca
 
     References
     ----------
