@@ -1197,7 +1197,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         except TypeError:  # NaN hit the constructor, key was bad... probably
             raise KeyError("Part of `%r` was not in the index.")
 
-    def _get_position_(self, i):
+    def _get_position_(self, i, ignore_metadata=False):
+        if ignore_metadata:
+            return Sequence(''.join([str(s[i]) for s in self._seqs]))
+
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
         # TODO: change for #1198
         if len(self) and self.has_positional_metadata():
@@ -1214,13 +1217,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     # end of helpers
 
     @experimental(as_of='0.4.1')
-    def iter_positions(self, reverse=False):
+    def iter_positions(self, reverse=False, ignore_metadata=False):
         """Iterate over positions (columns) in the MSA.
 
         Parameters
         ----------
         reverse : bool, optional
             If ``True``, iterate over positions in reverse order.
+        ignore_metadata : bool, optional
+            If ``True``, ``Sequence.metadata`` and
+            ``Sequence.positional_metadata`` will not be included. This can
+            significantly improve performance if metadata is not needed.
 
         Yields
         ------
@@ -1241,10 +1248,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         real biological sequence.
 
         Each ``Sequence`` object will have its corresponding MSA positional
-        metadata stored as ``metadata``.
+        metadata stored as ``metadata`` unless ``ignore_metadata`` is set to
+        ``True``.
 
         Sequences will have their positional metadata concatenated using an
-        outer join. See ``Sequence.concat(how='outer')`` for details.
+        outer join unless ``ignore_metadata`` is set to ``True``. See
+        ``Sequence.concat(how='outer')`` for details.
 
         Examples
         --------
@@ -1330,7 +1339,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
-        return (self._get_position_(index) for index in indices)
+        return (self._get_position_(index, ignore_metadata=ignore_metadata)
+                for index in indices)
 
     @experimental(as_of='0.4.1')
     def consensus(self):
