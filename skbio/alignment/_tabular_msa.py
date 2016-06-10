@@ -1419,7 +1419,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             base += 1
 
         def f(p):
-            freqs = list(p.kmer_frequencies(k=1).values())
+            freqs = list(p.frequencies().values())
             return 1. - scipy.stats.entropy(freqs, base=base)
         return f
 
@@ -1478,12 +1478,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ``"inverse_shannon_uncertainty"`` metric.
 
         ``gap_mode = "include"`` will result in all gap characters being
-        recoded to ``Alignment.dtype.default_gap_char``. Because no
+        recoded to ``TabularMSA.dtype.default_gap_char``. Because no
         conservation metrics that we are aware of consider different gap
         characters differently (e.g., none of the metrics described in [1]_),
         they are all treated the same within this method.
 
-        The ``inverse_shannon_uncertainty`` metric is simiply one minus
+        The ``inverse_shannon_uncertainty`` metric is simply one minus
         Shannon's uncertainty metric. This method uses the inverse of Shannon's
         uncertainty so that larger values imply higher conservation. Shannon's
         uncertainty is also referred to as Shannon's entropy, but when making
@@ -1549,12 +1549,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     pos_seq = pos_seq.degap()
                 else:  # gap_mode == 'include' is the only choice left
                     # Recode all gap characters with pos_seq.default_gap_char.
-                    # This logic should be replaced with a call to
-                    # pos_seq.replace when it exists.
-                    # https://github.com/biocore/scikit-bio/issues/1222
-                    with pos_seq._byte_ownership():
-                        pos_seq._bytes[pos_seq.gaps()] = \
-                            ord(pos_seq.default_gap_char)
+                    pos_seq = pos_seq.replace(pos_seq.gaps(),
+                                              pos_seq.default_gap_char)
 
             if cons is None:
                 cons = metric_f(pos_seq)
