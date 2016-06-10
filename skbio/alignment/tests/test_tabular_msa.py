@@ -2833,10 +2833,24 @@ class TestIterPositions(unittest.TestCase):
 
         self.assertEqual(obs, [])
 
+    def test_no_sequences_ignore_metadata(self):
+        msa = TabularMSA([])
+
+        obs = list(msa.iter_positions(ignore_metadata=True))
+
+        self.assertEqual(obs, [])
+
     def test_no_sequences_reverse(self):
         msa = TabularMSA([])
 
         obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs, [])
+
+    def test_no_sequences_reverse_ignore_metadata(self):
+        msa = TabularMSA([])
+
+        obs = list(msa.iter_positions(reverse=True, ignore_metadata=True))
 
         self.assertEqual(obs, [])
 
@@ -2848,11 +2862,27 @@ class TestIterPositions(unittest.TestCase):
 
         self.assertEqual(obs, [])
 
+    def test_no_positions_ignore_metadata(self):
+        msa = TabularMSA([DNA(''),
+                          DNA('')])
+
+        obs = list(msa.iter_positions(ignore_metadata=True))
+
+        self.assertEqual(obs, [])
+
     def test_no_positions_reverse(self):
         msa = TabularMSA([DNA(''),
                           DNA('')])
 
         obs = list(msa.iter_positions(reverse=True))
+
+        self.assertEqual(obs, [])
+
+    def test_no_positions_reverse_ignore_metadata(self):
+        msa = TabularMSA([DNA(''),
+                          DNA('')])
+
+        obs = list(msa.iter_positions(reverse=True, ignore_metadata=True))
 
         self.assertEqual(obs, [])
 
@@ -2933,6 +2963,20 @@ class TestIterPositions(unittest.TestCase):
              Sequence('AA-', metadata={'pm1': 0.5, 'foo': 9},
                       positional_metadata={'foo': [42, np.nan, -1],
                                            'bar': [np.nan, np.nan, 'baz']})])
+
+    def test_with_positional_metadata_ignore_metadata(self):
+        # MSA *and* sequence positional metadata.
+        msa_positional_metadata = {'pm1': [0.5, 1.5], 'foo': [9, 99]}
+        seqs = [
+            DNA('AC', positional_metadata={'foo': [42, 43]}),
+            DNA('A-'),
+            DNA('--', positional_metadata={'foo': [-1, -2],
+                                           'bar': ['baz', 'bazz']})]
+        msa = TabularMSA(seqs, positional_metadata=msa_positional_metadata)
+
+        obs = list(msa.iter_positions(ignore_metadata=True))
+
+        self.assertEqual(obs, [Sequence('AA-'), Sequence('C--')])
 
 
 class TestConsensus(unittest.TestCase):

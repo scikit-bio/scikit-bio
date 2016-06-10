@@ -16,6 +16,7 @@
 * `TemporaryFile` and `NamedTemporaryFile` are now supported IO sources for `skbio.io` and related functionality.  ([#1291](https://github.com/biocore/scikit-bio/issues/1291))
 * Added `tree_node_class=TreeNode` parameter to `skbio.tree.majority_rule` to support returning consensus trees of type `TreeNode` (the default) or a type that has the same interface as `TreeNode` (e.g. `TreeNode` subclasses) ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
 * `TreeNode.from_linkage_matrix` and `TreeNode.from_taxonomy` now support constructing `TreeNode` subclasses. `TreeNode.bifurcate` now supports `TreeNode` subclasses ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
+* The `ignore_metadata` keyword has been added to `TablueMSA.iter_positions` to improve performance when metadata is not necessary.
 
 ### Backward-incompatible changes [stable]
 
@@ -36,6 +37,7 @@ an empty generator.
 * `TreeNode.prune` can now handle a root with a single descendent. Previously, the root was ignored from possibly having a single descendent. ([#1247](https://github.com/biocore/scikit-bio/issues/1247))
 * Providing the `format` keyword to `skbio.io.read` when creating a generator with an empty file will now return an empty generator instead of raising `StopIteration`. ([#1313](https://github.com/biocore/scikit-bio/issues/1313))
 * `OrdinationResults` is now importable from `skbio` and `skbio.stats.ordination` and correctly linked from the documentation ([#1205](https://github.com/biocore/scikit-bio/issues/1205))
+* Fixed performance bug in pairwise aligners resulting in 100x worse performance than in 0.2.4.
 
 ### Deprecated functionality [stable]
 * Deprecated use of the term "non-degenerate", in favor of "definite". `GrammaredSequence.nondegenerate_chars`, `GrammaredSequence.nondegenerates`, and `GrammaredSequence.has_nondegenerates` have been renamed to `GrammaredSequence.definite_chars`, `GrammaredSequence.definites`, and `GrammaredSequence.has_definites`, respectively. The old names will be removed in scikit-bio 0.5.2. Relevant affected public classes include `GrammaredSequence`, `DNA`, `RNA`, and `Protein`.
