@@ -41,6 +41,30 @@ class TestInterval(unittest.TestCase):
         self.assertDictEqual(f.metadata, {'name': 'sagA',
                                           'function': 'transport'})
 
+    def test_constructor_iterables(self):
+        f = Interval(interval_metadata=IntervalMetadata(),
+                     intervals=((1, 2), (4, 7)),
+                     boundaries=((True, False), (False, False)),
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+        self.assertTrue(f._interval_metadata is not None)
+        self.assertListEqual(f.intervals, [(1, 2), (4, 7)])
+        self.assertListEqual(f.boundaries, [(True, False), (False, False)])
+        self.assertDictEqual(f.metadata, {'name': 'sagA',
+                                          'function': 'transport'})
+
+    def test_scrambled_constructor(self):
+        f = Interval(interval_metadata=IntervalMetadata(),
+                     intervals=[(4, 7), (1, 2)],
+                     boundaries=[(True, False), (False, True)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+        self.assertTrue(f._interval_metadata is not None)
+        self.assertListEqual(f.intervals, [(1, 2), (4, 7)])
+        self.assertListEqual(f.boundaries, [(False, True), (True, False)])
+        self.assertDictEqual(f.metadata, {'name': 'sagA',
+                                          'function': 'transport'})
+
     def test_bad_constructor(self):
         with self.assertRaises(TypeError):
             Interval(interval_metadata=IntervalMetadata(),
@@ -128,24 +152,24 @@ class TestInterval(unittest.TestCase):
                          {'gene': 'sagA', 'location': 0})
         self.assertTrue(im._intervals is not None)
 
-        feats = im.query(intervals=[(1, 2)])
+        feats = list(im.query(intervals=[(1, 2)]))
 
         self.assertEqual(len(feats), 1)
         self.assertEqual(feats[0].metadata, {'gene': 'sagA', 'location': 0})
 
         feats[0].drop()
-        feats = im.query(intervals=[(1, 2)])
+        feats = list(im.query(intervals=[(1, 2)]))
         self.assertEqual(len(feats), 0)
 
     def test_drop_none(self):
         im = IntervalMetadata()
         im.add(metadata={'gene': 'sagA', 'location': 0},
                intervals=[(0, 2), (4, 7)])
-        invs = im.query(intervals=[(0, 7)])
+        invs = list(im.query(intervals=[(0, 7)]))
         im.drop(intervals=[(0, 7)])
         invs[0].drop()
 
-        feats = im.query(intervals=[(1, 2)])
+        feats = list(im.query(intervals=[(1, 2)]))
         self.assertEqual(len(feats), 0)
 
     def test_equal(self):
@@ -202,6 +226,33 @@ class TestInterval(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             f.intervals()
 
+    def test_get_boundaries(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        self.assertEqual(f.boundaries, [(True, False), (False, False)])
+
+    def test_get_boundaries_bad(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        f.drop()
+        with self.assertRaises(RuntimeError):
+            f.boundaries()
+
+    def test_set_boundaries(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        f.intervals = [(False, False), (False, False)]
+        self.assertEqual(f.intervals, [(False, False), (False, False)])
+
     def test_set_interval(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
@@ -229,7 +280,7 @@ class TestInterval(unittest.TestCase):
         f.metadata = {'name': 'sagB', 'function': 'transport'}
         self.assertDictEqual(f.metadata,
                              {'name': 'sagB', 'function': 'transport'})
-        feats = im.query([(1, 2)])
+        feats = list(im.query([(1, 2)]))
         self.assertDictEqual(feats[0].metadata,
                              {'name': 'sagB', 'function': 'transport'})
 
@@ -281,18 +332,66 @@ class TestIntervalMetadata(unittest.TestCase):
                          {'gene': 'sagA', 'location': 0})
         self.assertTrue(im._intervals is not None)
 
-    def test_query(self):
+    def test_query_empty(self):
         im = IntervalMetadata()
         im.add(intervals=[(0, 2), (4, 7)],
                metadata={'gene': 'sagA', 'location': 0})
         im.add(intervals=[(3, 5)],
                metadata={'gene': 'sagB', 'location': 0})
+        im.add(intervals=[(10, 15)],
+               metadata={'gene': 'sagA', 'location': 0})
+        feats = list(im.query())
+        self.assertEqual(len(feats), 0)
 
-        feats = im.query(intervals=[(1, 2)])
+    def test_query_no_hits(self):
+        im = IntervalMetadata()
+        im.add(intervals=[(0, 2), (4, 7)],
+               metadata={'gene': 'sagA', 'location': 0})
+        im.add(intervals=[(3, 5)],
+               metadata={'gene': 'sagB', 'location': 0})
+        im.add(intervals=[(10, 15)],
+               metadata={'gene': 'sagA', 'location': 0})
+        feats = list(im.query(intervals=[(100, 200)]))
+        self.assertEqual(len(feats), 0)
+
+        feats = list(im.query(metadata={'gene':'sagC'}))
+        self.assertEqual(len(feats), 0)
+
+        feats = list(im.query(intervals=[(1, 2)],
+                              metadata={'gene':'sagC'}))
+        self.assertEqual(len(feats), 0)
+
+    def test_query_intersection(self):
+        im = IntervalMetadata()
+        im.add(intervals=[(0, 2), (4, 7)],
+               metadata={'gene': 'sagA', 'location': 0})
+        im.add(intervals=[(3, 5)],
+               metadata={'gene': 'sagB', 'location': 0})
+        im.add(intervals=[(10, 15)],
+               metadata={'gene': 'sagA', 'location': 0})
+        feats = list(im.query(intervals=[(1, 5)],
+                              metadata={'gene': 'sagA'}))
+        self.assertEqual(len(feats), 1)
+        self.assertEqual(feats[0].metadata, {'gene': 'sagA', 'location': 0})
+        self.assertEqual(feats[0].intervals, [(0, 2), (4, 7)])
+
+    def test_query_interval_only(self):
+        im = IntervalMetadata()
+        im.add(intervals=[(0, 2), (4, 7)],
+               metadata={'gene': 'sagA', 'location': 0})
+        im.add(intervals=[(3, 5)],
+               metadata={'gene': 'sagB', 'location': 0})
+        feats = list(im.query(intervals=[(1, 2)]))
         self.assertEqual(len(feats), 1)
         self.assertEqual(feats[0].metadata, {'gene': 'sagA', 'location': 0})
 
-        feats = im.query(metadata={'gene': 'sagB'})
+    def test_query_metadata_only(self):
+        im = IntervalMetadata()
+        im.add(intervals=[(0, 2), (4, 7)],
+               metadata={'gene': 'sagA', 'location': 0})
+        im.add(intervals=[(3, 5)],
+               metadata={'gene': 'sagB', 'location': 0})
+        feats = list(im.query(metadata={'gene': 'sagB'}))
         self.assertEqual(len(feats), 1)
         self.assertEqual(feats[0].metadata, {'gene': 'sagB', 'location': 0})
         self.assertEqual(feats[0].intervals, [(3, 5)])
@@ -305,10 +404,10 @@ class TestIntervalMetadata(unittest.TestCase):
                metadata={'gene': 'sagA', 'software': 'chiime'})
         im.add(intervals=[(3, 5)],
                metadata={'gene': 'sagA', 'software': 'keimei'})
-        feats = im.query(metadata={'gene': 'sagA'})
+        feats = list(im.query(metadata={'gene': 'sagA'}))
         self.assertEqual(len(feats), 3)
 
-        feats = im.query(metadata={'software': 'qiime'})
+        feats = list(im.query(metadata={'software': 'qiime'}))
         self.assertEqual(len(feats), 1)
         self.assertEqual(feats[0].metadata,
                          {'gene': 'sagA', 'software': 'qiime'})
@@ -321,7 +420,7 @@ class TestIntervalMetadata(unittest.TestCase):
         im.add(metadata={'gene': 'sagB', 'location': 0},
                intervals=[(3, 5)])
 
-        feats = im.query(intervals=[(1, 5)])
+        feats = list(im.query(intervals=[(1, 5)]))
         exp = [Interval(metadata={'gene': 'sagA', 'location': 0},
                         intervals=[(0, 2), (4, 7)],
                         interval_metadata=im),
@@ -336,7 +435,7 @@ class TestIntervalMetadata(unittest.TestCase):
         interval_metadata.add(intervals=[(40, 70)],
                               boundaries=None,
                               metadata={'name': 'sagB'})
-        res = interval_metadata.query(intervals=[(100, 101)])
+        res = list(interval_metadata.query(intervals=[(100, 101)]))
         self.assertEqual(len(res), 0)
 
     def test_query_intersection(self):
@@ -348,7 +447,7 @@ class TestIntervalMetadata(unittest.TestCase):
         im.add(metadata={'gene': 'sagB', 'location': 0},
                intervals=[(3, 5)])
 
-        feats = im.query(intervals=[(1, 5)], metadata={'gene': 'sagA'})
+        feats = list(im.query(intervals=[(1, 5)], metadata={'gene': 'sagA'}))
         exp = [Interval(metadata={'gene': 'sagA', 'location': 0},
                         intervals=[(0, 2), (4, 7)],
                         interval_metadata=im)]
@@ -396,14 +495,13 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertGreater(len(feats), 0)
 
     def test_drop_interval(self):
-        from skbio.metadata import IntervalMetadata
         interval_metadata = IntervalMetadata()
         interval_metadata.add(intervals=[(0, 2), (4, 7)],
                               boundaries=None, metadata={'name': 'sagA'})
         interval_metadata.add(intervals=[(40, 70)],
                               boundaries=None, metadata={'name': 'sagB'})
         interval_metadata.drop(metadata={'name': 'sagA'})
-        res = interval_metadata.query(intervals=[(1, 2)])
+        res = list(interval_metadata.query(intervals=[(1, 2)]))
         self.assertEqual(len(res), 0)
         feats = list(interval_metadata.query(metadata={'name': 'sagB'}))
         self.assertGreater(len(feats), 0)
@@ -413,7 +511,7 @@ class TestIntervalMetadata(unittest.TestCase):
         interval_metadata.add(metadata={'gene': 'sagB', 'location': 0},
                               intervals=[(3, 5)])
         interval_metadata._reverse(length=10)
-        feats = interval_metadata.query([(5, 7)])
+        feats = list(interval_metadata.query([(5, 7)]))
         exp = Interval(intervals=[(5, 7)],
                        metadata={'gene': 'sagB', 'location': 0},
                        interval_metadata=interval_metadata)
