@@ -204,9 +204,17 @@ class RNA(GrammaredSequence, NucleotideMixin,
         """
         seq = self._string.replace(b'U', b'T')
 
+        metadata = None
+        if self.has_metadata():
+            metadata = self.metadata
+
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
+
         # turn off validation because `seq` is guaranteed to be valid
-        return skbio.DNA(seq, metadata=self.metadata,
-                         positional_metadata=self.positional_metadata,
+        return skbio.DNA(seq, metadata=metadata,
+                         positional_metadata=positional_metadata,
                          validate=False)
 
     @stable(as_of="0.4.0")

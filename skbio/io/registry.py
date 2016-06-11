@@ -502,7 +502,13 @@ class IORegistry:
             # on the first call from __iter__
             # eta-reduction is possible, but we want to the type to be
             # GeneratorType
-            return (x for x in itertools.chain([next(gen)], gen))
+            try:
+                return (x for x in itertools.chain([next(gen)], gen))
+            except StopIteration:
+                # If the error was a StopIteration, then we want to return an
+                # empty generator as `next(gen)` failed.
+                # See #1313 for more info.
+                return (x for x in [])
         else:
             return self._read_ret(file, format, into, verify, kwargs)
 
@@ -552,10 +558,24 @@ class IORegistry:
 
         reader = self.get_reader(fmt, into)
         if reader is None:
+            possible_intos = [r.__name__ for r in
+                              self._get_possible_readers(fmt)]
+            message = ''
+            if possible_intos:
+                message = ("Possible values for `into` include: %s"
+                           % ', '.join(possible_intos))
+            into_message = '`into` also not provided.' if not into else ''
             raise UnrecognizedFormatError(
-                "Cannot read %r from %r, no %s reader found." %
-                (fmt, file, into.__name__ if into else 'generator'))
+                "Cannot read %r from %r, no %s reader found. %s %s" %
+                (fmt, file, into.__name__ if into else 'generator',
+                 into_message, message))
         return reader, kwargs
+
+    def _get_possible_readers(self, fmt):
+        for lookup in self._lookups:
+            if fmt in lookup:
+                return list(lookup[fmt].readers)
+        return []
 
     @stable(as_of="0.4.0")
     def write(self, obj, format, into, **kwargs):

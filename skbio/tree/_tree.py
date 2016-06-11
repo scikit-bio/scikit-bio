@@ -383,6 +383,18 @@ class TreeNode(SkbioObject):
             if len(node.children) == 1:
                 nodes_to_remove.append(node)
 
+        # if a single descendent from the root, the root adopts the childs
+        # properties. we can't "delete" the root as that would be deleting
+        # self.
+        if len(self.children) == 1:
+            node_to_copy = self.children[0]
+            efc = self._exclude_from_copy
+            for key in node_to_copy.__dict__:
+                if key not in efc:
+                    self.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
+            self.remove(node_to_copy)
+            self.children.extend(node_to_copy.children)
+
         # clean up the single children nodes
         for node in nodes_to_remove:
             child = node.children[0]
@@ -1762,7 +1774,8 @@ class TreeNode(SkbioObject):
         Raises
         ------
         ValueError
-            If no tips could be found in the tree
+            If no tips could be found in the tree, or if not all tips were
+            found.
 
         Examples
         --------
@@ -1879,13 +1892,13 @@ class TreeNode(SkbioObject):
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
                 else:
-                    new_node = TreeNode(name=name)
+                    new_node = cls(name=name)
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
                     cur_node.append(new_node)
                     cur_node = new_node
 
-            cur_node.append(TreeNode(name=id_))
+            cur_node.append(cls(name=id_))
 
         # scrub the lookups
         for node in root.non_tips(include_self=True):
@@ -1938,13 +1951,13 @@ class TreeNode(SkbioObject):
         tip_width = len(id_list)
         cluster_count = len(linkage_matrix)
         lookup_len = cluster_count + tip_width
-        node_lookup = np.empty(lookup_len, dtype=TreeNode)
+        node_lookup = np.empty(lookup_len, dtype=cls)
 
         for i, name in enumerate(id_list):
-            node_lookup[i] = TreeNode(name=name)
+            node_lookup[i] = cls(name=name)
 
         for i in range(tip_width, lookup_len):
-            node_lookup[i] = TreeNode()
+            node_lookup[i] = cls()
 
         newest_cluster_index = cluster_count + 1
         for link in linkage_matrix:
@@ -2301,12 +2314,20 @@ class TreeNode(SkbioObject):
         if self is other:
             return 0.0
 
-        root = self.root()
-        lca = root.lowest_common_ancestor([self, other])
-        accum = self.accumulate_to_ancestor(lca)
-        accum += other.accumulate_to_ancestor(lca)
+        self_ancestors = [self] + list(self.ancestors())
+        other_ancestors = [other] + list(other.ancestors())
 
-        return accum
+        if self in other_ancestors:
+            return other.accumulate_to_ancestor(self)
+        elif other in self_ancestors:
+            return self.accumulate_to_ancestor(other)
+        else:
+            root = self.root()
+            lca = root.lowest_common_ancestor([self, other])
+            accum = self.accumulate_to_ancestor(lca)
+            accum += other.accumulate_to_ancestor(lca)
+
+            return accum
 
     def _set_max_distance(self):
         """Propagate tip distance information up the tree
@@ -2769,7 +2790,7 @@ class TreeNode(SkbioObject):
                 stack = n.children
                 while len(stack) > 2:
                     ind = stack.pop()
-                    intermediate = TreeNode()
+                    intermediate = self.__class__()
                     intermediate.length = insert_length
                     intermediate.extend(stack)
                     n.append(intermediate)

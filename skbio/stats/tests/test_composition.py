@@ -546,11 +546,198 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(original_table, test_table)
         # Test to make sure that the input table hasn't be altered
         pdt.assert_series_equal(original_cats, test_cats)
-        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
-                            'reject': np.array([True, True, False, False,
-                                                False, False, False],
-                                               dtype=bool)})
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
+
+    def test_ancom_percentiles(self):
+        table = pd.DataFrame([[12, 11],
+                              [9, 11],
+                              [1, 11],
+                              [22, 100],
+                              [20, 53],
+                              [23, 1]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1', 'b2'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+
+        percentiles = [0.0, 25.0, 50.0, 75.0, 100.0]
+        groups = ['a', 'b']
+        tuples = [(p, g) for g in groups for p in percentiles]
+        exp_mi = pd.MultiIndex.from_tuples(tuples,
+                                           names=['Percentile', 'Group'])
+        exp_data = np.array(
+            [[1.0, 11.0], [5.0, 11.0], [9.0, 11.0], [10.5, 11.0], [12.0, 11.0],
+             [20.0, 1.0], [21.0, 27.0], [22.0, 53.0], [22.5, 76.5],
+             [23.0, 100.0]])
+        exp = pd.DataFrame(exp_data.T, columns=exp_mi, index=['b1', 'b2'])
+
+        result = ancom(table, grouping)[1]
         assert_data_frame_almost_equal(result, exp)
+
+    def test_ancom_percentiles_alt_categories(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'c', 'b', 'b', 'c'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+
+        percentiles = [0.0, 25.0, 50.0, 75.0, 100.0]
+        groups = ['a', 'b', 'c']
+        tuples = [(p, g) for g in groups for p in percentiles]
+        exp_mi = pd.MultiIndex.from_tuples(tuples,
+                                           names=['Percentile', 'Group'])
+        exp_data = np.array([[9.0], [9.75], [10.5], [11.25], [12.0],  # a
+                             [20.0], [20.5], [21.0], [21.5], [22.0],  # b
+                             [1.0], [6.5], [12.0], [17.5], [23.0]])   # c
+        exp = pd.DataFrame(exp_data.T, columns=exp_mi, index=['b1'])
+
+        result = ancom(table, grouping, percentiles=percentiles)[1]
+        assert_data_frame_almost_equal(result, exp)
+
+    def test_ancom_alt_percentiles(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+
+        percentiles = [42.0, 50.0]
+        groups = ['a', 'b']
+        tuples = [(p, g) for g in groups for p in percentiles]
+        exp_mi = pd.MultiIndex.from_tuples(tuples,
+                                           names=['Percentile', 'Group'])
+        exp_data = np.array([[7.71999999], [9.0],  # a
+                             [21.68], [22.0]])     # b
+        exp = pd.DataFrame(exp_data.T, columns=exp_mi, index=['b1'])
+
+        result = ancom(table, grouping, percentiles=percentiles)[1]
+        assert_data_frame_almost_equal(result, exp)
+
+    def test_ancom_percentiles_swapped(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'b', 'a', 'b', 'b'],
+                             index=['s1', 's2', 's4', 's3', 's5', 's6'])
+
+        percentiles = [42.0, 50.0]
+        groups = ['a', 'b']
+        tuples = [(p, g) for g in groups for p in percentiles]
+        exp_mi = pd.MultiIndex.from_tuples(tuples,
+                                           names=['Percentile', 'Group'])
+        exp_data = np.array([[7.71999999], [9.0],  # a
+                             [21.68], [22.0]])     # b
+        exp = pd.DataFrame(exp_data.T, columns=exp_mi, index=['b1'])
+
+        result = ancom(table, grouping, percentiles=percentiles)[1]
+        assert_data_frame_almost_equal(result, exp)
+
+    def test_ancom_percentile_order_unimportant(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+        # order of percentiles in unimportant after sorting
+        result1 = ancom(table, grouping, percentiles=[50.0, 42.0])[1]
+        result2 = ancom(table, grouping, percentiles=[42.0, 50.0])[1]
+        assert_data_frame_almost_equal(
+            result1.sort_index(axis=1), result2.sort_index(axis=1))
+
+    def test_ancom_percentiles_iterator(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+
+        percentiles = [42.0, 50.0]
+        groups = ['a', 'b']
+        tuples = [(p, g) for g in groups for p in percentiles]
+        exp_mi = pd.MultiIndex.from_tuples(tuples,
+                                           names=['Percentile', 'Group'])
+        exp_data = np.array([[7.71999999], [9.0],  # a
+                             [21.68], [22.0]])     # b
+        exp = pd.DataFrame(exp_data.T, columns=exp_mi, index=['b1'])
+
+        result = ancom(table, grouping, percentiles=iter(percentiles))[1]
+        assert_data_frame_almost_equal(result, exp)
+
+    def test_ancom_no_percentiles(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+        result = ancom(table, grouping, percentiles=[])[1]
+        assert_data_frame_almost_equal(result, pd.DataFrame())
+
+    def test_ancom_percentile_out_of_range(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+        with self.assertRaises(ValueError):
+            ancom(table, grouping, percentiles=[-1.0])
+        with self.assertRaises(ValueError):
+            ancom(table, grouping, percentiles=[100.1])
+        with self.assertRaises(ValueError):
+            ancom(table, grouping, percentiles=[10.0, 3.0, 101.0, 100])
+
+    def test_ancom_duplicate_percentiles(self):
+        table = pd.DataFrame([[12],
+                              [9],
+                              [1],
+                              [22],
+                              [20],
+                              [23]],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                             columns=['b1'])
+        grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
+                             index=['s1', 's2', 's3', 's4', 's5', 's6'])
+        with self.assertRaises(ValueError):
+            ancom(table, grouping, percentiles=[10.0, 10.0])
 
     def test_ancom_basic_proportions(self):
         # Converts from counts to proportions
@@ -565,11 +752,12 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(original_table, test_table)
         # Test to make sure that the input table hasn't be altered
         pdt.assert_series_equal(original_cats, test_cats)
-        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
-                            'reject': np.array([True, True, False, False,
-                                                False, False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_multiple_groups(self):
         test_table = pd.DataFrame(self.table4)
@@ -581,135 +769,152 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(original_table, test_table)
         # Test to make sure that the input table hasn't be altered
         pdt.assert_series_equal(original_cats, test_cats)
-        exp = pd.DataFrame({'W': np.array([8, 7, 3, 3, 7, 3, 3, 3, 3]),
-                            'reject': np.array([True, True, False, False,
-                                                True, False, False, False,
-                                                False], dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([8, 7, 3, 3, 7, 3, 3, 3, 3]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 True, False, False, False,
+                                                 False], dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_noncontiguous(self):
         result = ancom(self.table5,
                        self.cats5,
                        multiple_comparisons_correction=None)
-        exp = pd.DataFrame({'W': np.array([6, 2, 2, 2, 2, 6, 2]),
-                            'reject': np.array([True, False, False, False,
-                                                False, True, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([6, 2, 2, 2, 2, 6, 2]),
+             'Reject null hypothesis': np.array([True, False, False, False,
+                                                 False, True, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_unbalanced(self):
         result = ancom(self.table6,
                        self.cats6,
                        multiple_comparisons_correction=None)
-        exp = pd.DataFrame({'W': np.array([5, 3, 3, 2, 2, 5, 2]),
-                            'reject': np.array([True, False, False, False,
-                                                False, True, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 3, 3, 2, 2, 5, 2]),
+             'Reject null hypothesis': np.array([True, False, False, False,
+                                                 False, True, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_letter_categories(self):
         result = ancom(self.table7,
                        self.cats7,
                        multiple_comparisons_correction=None)
-        exp = pd.DataFrame({'W': np.array([5, 3, 3, 2, 2, 5, 2]),
-                            'reject': np.array([True, False, False, False,
-                                                False, True, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 3, 3, 2, 2, 5, 2]),
+             'Reject null hypothesis': np.array([True, False, False, False,
+                                                 False, True, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_multiple_comparisons(self):
         result = ancom(self.table1,
                        self.cats1,
                        multiple_comparisons_correction='holm-bonferroni',
                        significance_test=scipy.stats.mannwhitneyu)
-        exp = pd.DataFrame({'W': np.array([0]*7),
-                            'reject': np.array([False]*7, dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([0]*7),
+             'Reject null hypothesis': np.array([False]*7, dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_alternative_test(self):
         result = ancom(self.table1,
                        self.cats1,
                        multiple_comparisons_correction=None,
                        significance_test=scipy.stats.ttest_ind)
-        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
-                            'reject': np.array([True,  True, False, False,
-                                                False, False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True,  True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_normal_data(self):
         result = ancom(self.table2,
                        self.cats2,
                        multiple_comparisons_correction=None,
                        significance_test=scipy.stats.ttest_ind)
-        exp = pd.DataFrame({'W': np.array([8, 8, 3, 3,
-                                           8, 3, 3, 3, 3]),
-                            'reject': np.array([True, True, False, False,
-                                                True, False, False,
-                                                False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([8, 8, 3, 3, 8, 3, 3, 3, 3]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 True, False, False,
+                                                 False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_basic_counts_swapped(self):
         result = ancom(self.table8, self.cats8)
-        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
-                            'reject': np.array([True, True, False, False,
-                                                False, False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_no_signal(self):
         result = ancom(self.table3,
                        self.cats3,
                        multiple_comparisons_correction=None)
-        exp = pd.DataFrame({'W': np.array([0]*7),
-                            'reject': np.array([False]*7, dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([0]*7),
+             'Reject null hypothesis': np.array([False]*7, dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_tau(self):
-        exp1 = pd.DataFrame({'W': np.array([8, 7, 3, 3, 7, 3, 3, 3, 3]),
-                            'reject': np.array([True, False, False, False,
-                                                False, False, False, False,
-                                                False], dtype=bool)})
-        exp2 = pd.DataFrame({'W': np.array([17, 17, 5, 6, 16, 5, 7, 5,
-                                            4, 5, 8, 4, 5, 16, 5, 11, 4, 6]),
-                            'reject': np.array([True, True, False, False,
-                                                True, False, False, False,
-                                                False, False, False, False,
-                                                False, True, False, False,
-                                                False, False],  dtype=bool)})
-        exp3 = pd.DataFrame({'W': np.array([16, 16, 17, 10, 17, 16, 16,
-                                            15, 15, 15, 13, 10, 10, 10,
-                                            9, 9, 9, 9]),
-                            'reject': np.array([True, True, True, False,
-                                                True, True, True, True,
-                                                True, True, True, False,
-                                                False, False, False, False,
-                                                False, False],  dtype=bool)})
+        exp1 = pd.DataFrame(
+            {'W': np.array([8, 7, 3, 3, 7, 3, 3, 3, 3]),
+             'Reject null hypothesis': np.array([True, False, False, False,
+                                                 False, False, False, False,
+                                                 False], dtype=bool)})
+        exp2 = pd.DataFrame(
+            {'W': np.array([17, 17, 5, 6, 16, 5, 7, 5,
+                            4, 5, 8, 4, 5, 16, 5, 11, 4, 6]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 True, False, False, False,
+                                                 False, False, False, False,
+                                                 False, True, False, False,
+                                                 False, False],  dtype=bool)})
+        exp3 = pd.DataFrame(
+            {'W': np.array([16, 16, 17, 10, 17, 16, 16,
+                            15, 15, 15, 13, 10, 10, 10,
+                            9, 9, 9, 9]),
+             'Reject null hypothesis': np.array([True, True, True, False,
+                                                 True, True, True, True,
+                                                 True, True, True, False,
+                                                 False, False, False, False,
+                                                 False, False], dtype=bool)})
 
-        result1 = ancom(self.table4, self.cats4, tau=0.25)
-        result2 = ancom(self.table9, self.cats9, tau=0.02)
-        result3 = ancom(self.table10, self.cats10, tau=0.02)
+        result1 = ancom(self.table4, self.cats4,
+                        multiple_comparisons_correction=None, tau=0.25)
+        result2 = ancom(self.table9, self.cats9,
+                        multiple_comparisons_correction=None, tau=0.02)
+        result3 = ancom(self.table10, self.cats10,
+                        multiple_comparisons_correction=None, tau=0.02)
 
-        assert_data_frame_almost_equal(result1, exp1)
-        assert_data_frame_almost_equal(result2, exp2)
-        assert_data_frame_almost_equal(result3, exp3)
+        assert_data_frame_almost_equal(result1[0], exp1)
+        assert_data_frame_almost_equal(result2[0], exp2)
+        assert_data_frame_almost_equal(result3[0], exp3)
 
     def test_ancom_theta(self):
         result = ancom(self.table1, self.cats1, theta=0.3)
-        exp = pd.DataFrame({'W': np.array([5, 5, 2, 2, 2, 2, 2]),
-                            'reject': np.array([True, True, False, False,
-                                                False, False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        exp = pd.DataFrame(
+            {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
+             'Reject null hypothesis': np.array([True, True, False, False,
+                                                 False, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_alpha(self):
-        result = ancom(self.table1, self.cats1, alpha=0.5)
-        exp = pd.DataFrame({'W': np.array([6, 6, 4, 5, 5, 4, 2]),
-                            'reject': np.array([True, True, False, True,
-                                                True, False, False],
-                                               dtype=bool)})
-        assert_data_frame_almost_equal(result, exp)
+        result = ancom(self.table1, self.cats1,
+                       multiple_comparisons_correction=None, alpha=0.5)
+        exp = pd.DataFrame(
+            {'W': np.array([6, 6, 4, 5, 5, 4, 2]),
+             'Reject null hypothesis': np.array([True, True, False, True,
+                                                 True, False, False],
+                                                dtype=bool)})
+        assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_fail_type(self):
         with self.assertRaises(TypeError):

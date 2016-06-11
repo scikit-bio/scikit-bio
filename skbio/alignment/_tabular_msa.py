@@ -139,6 +139,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
     """
     default_write_format = 'fasta'
+    __hash__ = None
 
     @property
     @experimental(as_of='0.4.1')
@@ -766,9 +767,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def __init__(self, sequences, metadata=None, positional_metadata=None,
                  minter=None, index=None):
         if isinstance(sequences, TabularMSA):
-            if metadata is None:
+            if metadata is None and sequences.has_metadata():
                 metadata = sequences.metadata
-            if positional_metadata is None:
+            if (positional_metadata is None and
+                    sequences.has_positional_metadata()):
                 positional_metadata = sequences.positional_metadata
             if minter is None and index is None:
                 index = sequences.index
@@ -799,9 +801,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         override values.
         """
         if metadata is NotImplemented:
-            metadata = self.metadata
+            if self.has_metadata():
+                metadata = self.metadata
+            else:
+                metadata = None
+
         if positional_metadata is NotImplemented:
-            positional_metadata = self.positional_metadata
+            if self.has_positional_metadata():
+                positional_metadata = self.positional_metadata
+            else:
+                positional_metadata = None
 
         if index is NotImplemented:
             if isinstance(sequences, pd.Series):
@@ -1188,10 +1197,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         except TypeError:  # NaN hit the constructor, key was bad... probably
             raise KeyError("Part of `%r` was not in the index.")
 
-    def _get_position_(self, i):
+    def _get_position_(self, i, ignore_metadata=False):
+        if ignore_metadata:
+            return Sequence(''.join([str(s[i]) for s in self._seqs]))
+
         seq = Sequence.concat([s[i] for s in self._seqs], how='outer')
         # TODO: change for #1198
-        if len(self):
+        if len(self) and self.has_positional_metadata():
             seq.metadata = dict(self.positional_metadata.iloc[i])
         return seq
 
@@ -1199,19 +1211,23 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         seqs = self._seqs.apply(lambda seq: seq[i])
         # TODO: change for #1198
         pm = None
-        if len(self):
+        if len(self) and self.has_positional_metadata():
             pm = self.positional_metadata.iloc[i]
         return self._constructor_(seqs, positional_metadata=pm)
     # end of helpers
 
     @experimental(as_of='0.4.1')
-    def iter_positions(self, reverse=False):
+    def iter_positions(self, reverse=False, ignore_metadata=False):
         """Iterate over positions (columns) in the MSA.
 
         Parameters
         ----------
         reverse : bool, optional
             If ``True``, iterate over positions in reverse order.
+        ignore_metadata : bool, optional
+            If ``True``, ``Sequence.metadata`` and
+            ``Sequence.positional_metadata`` will not be included. This can
+            significantly improve performance if metadata is not needed.
 
         Yields
         ------
@@ -1232,10 +1248,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         real biological sequence.
 
         Each ``Sequence`` object will have its corresponding MSA positional
-        metadata stored as ``metadata``.
+        metadata stored as ``metadata`` unless ``ignore_metadata`` is set to
+        ``True``.
 
         Sequences will have their positional metadata concatenated using an
-        outer join. See ``Sequence.concat(how='outer')`` for details.
+        outer join unless ``ignore_metadata`` is set to ``True``. See
+        ``Sequence.concat(how='outer')`` for details.
 
         Examples
         --------
@@ -1321,7 +1339,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
-        return (self._get_position_(index) for index in indices)
+        return (self._get_position_(index, ignore_metadata=ignore_metadata)
+                for index in indices)
 
     @experimental(as_of='0.4.1')
     def consensus(self):
@@ -1382,7 +1401,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if dtype is None:
             dtype = Sequence
 
-        positional_metadata = self.positional_metadata
+        positional_metadata = None
+        if self.has_positional_metadata():
+            positional_metadata = self.positional_metadata
 
         consensus = []
         for position in self.iter_positions():
@@ -1408,7 +1429,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             base += 1
 
         def f(p):
-            freqs = list(p.kmer_frequencies(k=1).values())
+            freqs = list(p.frequencies().values())
             return 1. - scipy.stats.entropy(freqs, base=base)
         return f
 
@@ -1467,12 +1488,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ``"inverse_shannon_uncertainty"`` metric.
 
         ``gap_mode = "include"`` will result in all gap characters being
-        recoded to ``Alignment.dtype.default_gap_char``. Because no
+        recoded to ``TabularMSA.dtype.default_gap_char``. Because no
         conservation metrics that we are aware of consider different gap
         characters differently (e.g., none of the metrics described in [1]_),
         they are all treated the same within this method.
 
-        The ``inverse_shannon_uncertainty`` metric is simiply one minus
+        The ``inverse_shannon_uncertainty`` metric is simply one minus
         Shannon's uncertainty metric. This method uses the inverse of Shannon's
         uncertainty so that larger values imply higher conservation. Shannon's
         uncertainty is also referred to as Shannon's entropy, but when making
@@ -1538,12 +1559,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     pos_seq = pos_seq.degap()
                 else:  # gap_mode == 'include' is the only choice left
                     # Recode all gap characters with pos_seq.default_gap_char.
-                    # This logic should be replaced with a call to
-                    # pos_seq.replace when it exists.
-                    # https://github.com/biocore/scikit-bio/issues/1222
-                    with pos_seq._byte_ownership():
-                        pos_seq._bytes[pos_seq.gaps()] = \
-                            ord(pos_seq.default_gap_char)
+                    pos_seq = pos_seq.replace(pos_seq.gaps(),
+                                              pos_seq.default_gap_char)
 
             if cons is None:
                 cons = metric_f(pos_seq)
@@ -2233,8 +2250,17 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                 [self.positional_metadata, other.positional_metadata],
                 ignore_index=True, **concat_kwargs)
 
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
         joined = self.__class__(joined_seqs, index=join_index,
                                 positional_metadata=joined_positional_metadata)
+
+        if not joined.has_positional_metadata():
+            del joined.positional_metadata
+
         return joined
 
     def _assert_joinable(self, other):
@@ -2265,6 +2291,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             diff = self.positional_metadata.columns.sym_diff(
                 other.positional_metadata.columns)
+
+            if not self.has_positional_metadata():
+                del self.positional_metadata
+            if not other.has_positional_metadata():
+                del other.positional_metadata
+
             if len(diff) > 0:
                 raise ValueError(
                     "Positional metadata columns must all match with "

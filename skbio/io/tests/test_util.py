@@ -522,6 +522,60 @@ class TestWriteBufferedReader(WritableBinarySourceTests, WritableSourceTest):
             return f.read()
 
 
+class TestReadNamedTemporaryFile(ReadableBinarySourceTests,
+                                 ReadableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        fileobj = tempfile.NamedTemporaryFile()
+        with io.open(path, mode='rb') as fh:
+            fileobj.write(fh.read())
+            fileobj.flush()
+            fileobj.seek(0)
+        return fileobj
+
+
+class TestWriteNamedTemporaryFile(WritableBinarySourceTests,
+                                  WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return tempfile.NamedTemporaryFile()
+
+    def get_contents(self, file):
+        file.flush()
+        file.seek(0)
+        contents = file.read()
+        file.close()
+        return contents
+
+
+class TestReadTemporaryFile(ReadableBinarySourceTests, ReadableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        fileobj = tempfile.TemporaryFile()
+        with io.open(path, mode='rb') as fh:
+            fileobj.write(fh.read())
+            fileobj.flush()
+            fileobj.seek(0)
+        return fileobj
+
+
+class TestWriteTemporaryFile(WritableBinarySourceTests, WritableSourceTest):
+    expected_close = False
+
+    def get_fileobj(self, path):
+        return tempfile.TemporaryFile()
+
+    def get_contents(self, file):
+        file.flush()
+        file.seek(0)
+        contents = file.read()
+        file.close()
+        return contents
+
+
 class TestIterableReaderWriter(unittest.TestCase):
     def test_open(self):
         def gen():

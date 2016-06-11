@@ -898,12 +898,14 @@ def _compute_score_and_traceback_matrices(
 
     # Iterate over the characters in aln2 (which corresponds to the vertical
     # sequence in the matrix)
-    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(), 1):
+    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(
+            ignore_metadata=True), 1):
         aln2_chars = str(aln2_chars)
 
         # Iterate over the characters in aln1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(), 1):
+        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(
+                ignore_metadata=True), 1):
             aln1_chars = str(aln1_chars)
 
             # compute the score for a match/mismatch

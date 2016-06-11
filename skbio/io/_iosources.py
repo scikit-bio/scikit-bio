@@ -9,7 +9,7 @@
 import io
 import gzip
 import bz2
-from tempfile import gettempdir
+import tempfile
 import itertools
 
 import requests
@@ -21,6 +21,14 @@ from ._fileobject import (IterableStringWriterIO, IterableStringReaderIO,
                           WrappedBufferedRandom)
 
 
+# NamedTemporaryFile isn't an actual file class, it is a function which
+# returns _TemporaryFileWrapper around a normal file object. Instead of
+# relying on this implementation, we take whatever the class of the result of
+# NamedTemporaryFile is.
+with tempfile.NamedTemporaryFile() as fh:
+    _WrappedTemporaryFile = type(fh)
+
+
 def get_io_sources():
     return (
         # The order of these source is significant as they will short-circuit
@@ -29,6 +37,7 @@ def get_io_sources():
         BytesIOSource,
         BufferedIOSource,
         TextIOSource,
+        WrappedTemporaryFileSource,
         IterableSource
     )
 
@@ -96,7 +105,7 @@ class HTTPSource(IOSource):
 
     def get_reader(self):
         sess = CacheControl(requests.Session(),
-                            cache=FileCache(gettempdir()))
+                            cache=FileCache(tempfile.gettempdir()))
         req = sess.get(self.file)
 
         # if the response is not 200, an exception will be raised
@@ -155,6 +164,25 @@ class TextIOSource(IOSource):
 
     def get_writer(self):
         return self.file
+
+
+class WrappedTemporaryFileSource(IOSource):
+    closeable = False
+
+    def can_read(self):
+        return (isinstance(self.file, _WrappedTemporaryFile) and
+                self.file.readable())
+
+    def can_write(self):
+        return (isinstance(self.file, _WrappedTemporaryFile) and
+                self.file.writable())
+
+    def get_reader(self):
+        # _TemporaryFileWrapper has a file attribute which is an actual fileobj
+        return self.file.file
+
+    def get_writer(self):
+        return self.file.file
 
 
 class IterableSource(IOSource):
