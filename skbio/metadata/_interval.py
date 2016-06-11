@@ -245,12 +245,13 @@ class IntervalMetadata():
         --------
         >>> from skbio.metadata import IntervalMetadata
         >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(intervals=[(0, 2), (4, 7)],
+        >>> interval_metadata.add(intervals=[(0, 2)],
         ...                       boundaries=None, metadata={'name': 'sagA'})
         >>> interval_metadata.add(intervals=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> interval_metadata.query(intervals=[(1, 2)])
-        [Interval(intervals=[(0, 2), (4, 7)], metadata={'name': 'sagA'})]
+        >>> list(interval_metadata.query(intervals=[(1, 2)]))
+        [<Interval: start=0, end=2, 1 contiguous intervals, 1 metadata keys, \
+dropped=False>]
 
         """
         # Add an interval to the tree. Note that the add functionality is
@@ -308,12 +309,13 @@ class IntervalMetadata():
         --------
         >>> from skbio.metadata import IntervalMetadata
         >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(intervals=[(0, 2), (4, 7)],
+        >>> interval_metadata.add(intervals=[(0, 2)],
         ...                       boundaries=None, metadata={'name': 'sagA'})
         >>> interval_metadata.add(intervals=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> interval_metadata.query(intervals=[(1, 2)])
-        [Interval(intervals=[(0, 2), (4, 7)], metadata={'name': 'sagA'})]
+        >>> list(interval_metadata.query(intervals=[(1, 2)]))
+        [<Interval: start=0, end=2, 1 contiguous intervals, 1 metadata keys, \
+dropped=False>]
 
         Note
         ----
@@ -392,7 +394,7 @@ class IntervalMetadata():
         >>> interval_metadata.add(intervals=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
         >>> interval_metadata.drop(metadata={'name': 'sagA'})
-        >>> interval_metadata.query(metadata={'name': 'sagA'})
+        >>> list(interval_metadata.query(metadata={'name': 'sagA'}))
         []
         """
         if metadata is None:
