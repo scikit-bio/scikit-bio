@@ -10,12 +10,24 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-from skbio.metadata._interval import _assert_valid_interval
+from skbio.metadata._interval import (_assert_valid_interval,
+                                      _assert_valid_boundary)
 from skbio.metadata import Interval
 from skbio.metadata import IntervalMetadata
 
 
 class TestInterval(unittest.TestCase):
+
+    def test_default_constructor(self):
+        f = Interval(interval_metadata=IntervalMetadata(),
+                     intervals=[(1, 2), (4, 7)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+        self.assertTrue(f._interval_metadata is not None)
+        self.assertListEqual(f.intervals, [(1, 2), (4, 7)])
+        self.assertListEqual(f.boundaries, [(True, True), (True, True)])
+        self.assertDictEqual(f.metadata, {'name': 'sagA',
+                                          'function': 'transport'})
 
     def test_constructor(self):
         f = Interval(interval_metadata=IntervalMetadata(),
@@ -36,24 +48,51 @@ class TestInterval(unittest.TestCase):
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_repr(self):
+    def test_bad_constructor_bad_boundaries(self):
+        with self.assertRaises(ValueError):
+            Interval(interval_metadata=IntervalMetadata(),
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+    def test_repr_one_interval(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        exp = (r"<Interval: start=1, end=2, 1 contiguous interval,"
+               " 2 metadata keys, dropped=False>")
+        res = repr(f)
+        self.assertEqual(res, exp)
+
+    def test_repr_two_intervals(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
                      intervals=[(1, 2), (4, 7)],
                      metadata={'name': 'sagA', 'function': 'transport'})
-        exp = (r"<Interval: parent=%s, 2 intervals,"
-               " 2 fields, dropped=False>") % (hex(id(im)))
+        exp = (r"<Interval: start=1, end=7, 2 non-contiguous intervals,"
+               " 2 metadata keys, dropped=False>")
         res = repr(f)
+        self.assertEqual(res, exp)
+
+    def test_str_two_intervals(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        exp = (r"<Interval: start=1, end=7, 2 non-contiguous intervals,"
+               " 2 metadata keys, dropped=False>")
+        res = str(f)
         self.assertEqual(res, exp)
 
     def test_cmp(self):
         f1 = Interval(interval_metadata=IntervalMetadata(),
                       intervals=[(1, 2)],
-                      boundaries=[(True, False), (False, False)],
+                      boundaries=[(True, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
         f2 = Interval(interval_metadata=IntervalMetadata(),
                       intervals=[(10, 20)],
-                      boundaries=[(True, False), (False, False)],
+                      boundaries=[(True, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
         self.assertTrue(f1._cmp(f2))
         self.assertFalse(f2._cmp(f1))
@@ -61,7 +100,7 @@ class TestInterval(unittest.TestCase):
     def test_contains(self):
         f1 = Interval(interval_metadata=IntervalMetadata(),
                       intervals=[(1, 2)],
-                      boundaries=[(True, False), (False, False)],
+                      boundaries=[(True, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
         self.assertIn('name', f1.metadata)
         self.assertIn('function', f1.metadata)
@@ -71,11 +110,11 @@ class TestInterval(unittest.TestCase):
 
         f1 = Interval(interval_metadata=IntervalMetadata(),
                       intervals=[(1, 2)],
-                      boundaries=[(True, False), (False, False)],
+                      boundaries=[(True, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
         f2 = Interval(interval_metadata=IntervalMetadata(),
                       intervals=[(1, 2)],
-                      boundaries=[(True, False), (False, False)],
+                      boundaries=[(True, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
         self.assertEqual(f1._hash(), f2._hash())
 
@@ -144,6 +183,25 @@ class TestInterval(unittest.TestCase):
                       interval_metadata=im)
         self.assertEqual(f1, f2)
 
+    def test_get_interval(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        self.assertEqual(f.intervals, [(1, 2), (4, 7)])
+        self.assertEqual(im._is_stale_tree, True)
+
+    def test_get_interval_bad(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        f.drop()
+        with self.assertRaises(RuntimeError):
+            f.intervals()
+
     def test_set_interval(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
@@ -162,12 +220,20 @@ class TestInterval(unittest.TestCase):
                          metadata={'name': 'sagA', 'function': 'transport'})
             f.intervals = [(1, 3), (4, 7)]
 
-
-class TestIntervalMetadata(unittest.TestCase):
-
-    def test_init(self):
+    def test_set_metadata(self):
         im = IntervalMetadata()
-        self.assertEqual(im._is_stale_tree, False)
+        f = Interval(interval_metadata=im,
+                     intervals=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        f.metadata = {'name': 'sagB', 'function': 'transport'}
+        self.assertDictEqual(f.metadata,
+                             {'name': 'sagB', 'function': 'transport'})
+        feats = im.query([(1, 2)])
+        self.assertDictEqual(feats[0].metadata,
+                             {'name': 'sagB', 'function': 'transport'})
+
+class TestIntervalUtil(unittest.TestCase):
 
     def test_assert_valid_interval_tuple(self):
         interval = (1, 2)
@@ -184,6 +250,25 @@ class TestIntervalMetadata(unittest.TestCase):
     def test_assert_valid_interval_tuple_bad(self):
         with self.assertRaises(ValueError):
             _assert_valid_interval((1, 2, 3))
+
+    def test_assert_valid_boundary_tuple(self):
+        boundary = (True, False)
+        _assert_valid_boundary(boundary)
+        st, end = boundary
+        self.assertEqual(st, True)
+        self.assertEqual(end, False)
+
+    def test_assert_valid_boundary_tuple_bad(self):
+        boundary = (True, False, True)
+        with self.assertRaises(ValueError):
+            _assert_valid_boundary(boundary)
+
+
+class TestIntervalMetadata(unittest.TestCase):
+
+    def test_init(self):
+        im = IntervalMetadata()
+        self.assertEqual(im._is_stale_tree, False)
 
     def test_add(self):
         im = IntervalMetadata()
@@ -365,61 +450,19 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(interval_metadata1, interval_metadata4)
 
     def test_repr(self):
-
+        self.maxDiff = None
         interval_metadata = IntervalMetadata()
         interval_metadata.add(metadata={'gene': 'sagA', 'location': '0'},
                               intervals=[(0, 2), (4, 7)])
         interval_metadata.add(metadata={'gene': 'sagB', 'location': '3'},
                               intervals=[(3, 15)])
-        interval_metadata.add(metadata={'gene': 'sagC', 'location': '3'},
-                              intervals=[(4, 15)])
-        interval_metadata.add(metadata={'gene': 'sagD', 'location': '3'},
-                              intervals=[(5, 15)])
-        interval_metadata.add(metadata={'gene': 'sagE', 'location': '3'},
-                              intervals=[(6, 15)])
-        interval_metadata.add(metadata={'gene': 'sagF', 'location': '3'},
-                              intervals=[(7, 15)])
-        interval_metadata.add(metadata={'gene': 'sagG', 'location': '3'},
-                              intervals=[(8, 15)])
-        interval_metadata.add(metadata={'gene': 'sagH', 'location': '3'},
-                              intervals=[(9, 15)])
-        interval_metadata.add(metadata={'gene': 'sagI', 'location': '3'},
-                              intervals=[(10, 15)])
-        interval_metadata.add(metadata={'gene': 'sagJ', 'location': '3'},
-                              intervals=[(13, 15)])
-        interval_metadata.add(metadata={'gene': 'sagK', 'location': '3'},
-                              intervals=[(14, 15)])
+
         interval_metadata2 = IntervalMetadata()
         exp = [Interval(intervals=[(0, 2), (4, 7)],
                         metadata={'location': '0', 'gene': 'sagA'},
                         interval_metadata=interval_metadata2),
                Interval(intervals=[(3, 15)],
                         metadata={'location': '3', 'gene': 'sagB'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(4, 15)],
-                        metadata={'location': '3', 'gene': 'sagC'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(5, 15)],
-                        metadata={'location': '3', 'gene': 'sagD'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(6, 15)],
-                        metadata={'location': '3', 'gene': 'sagE'},
-                        interval_metadata=interval_metadata2),
-               '...',
-               Interval(intervals=[(8, 15)],
-                        metadata={'location': '3', 'gene': 'sagG'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(9, 15)],
-                        metadata={'location': '3', 'gene': 'sagH'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(10, 15)],
-                        metadata={'location': '3', 'gene': 'sagI'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(13, 15)],
-                        metadata={'location': '3', 'gene': 'sagJ'},
-                        interval_metadata=interval_metadata2),
-               Interval(intervals=[(14, 15)],
-                        metadata={'location': '3', 'gene': 'sagK'},
                         interval_metadata=interval_metadata2)]
         self.assertEqual(str(exp), repr(interval_metadata))
 

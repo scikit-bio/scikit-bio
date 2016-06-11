@@ -43,14 +43,18 @@ class Interval:
             iv.append(interval)
 
         if boundaries is not None:
+            if len(boundaries) != len(intervals):
+                msg = ('The number of boundaries (%d) needs '
+                       'to be equal to the number of intervals (%d)')
+                raise ValueError(msg % (len(boundaries), len(intervals)))
             self.boundaries = boundaries
         else:
-            self.boundaries = []
+            self.boundaries = [(True, True)] * len(intervals)
 
         if metadata is not None:
-            self.metadata = metadata
+            self._metadata = metadata
         else:
-            self.metadata = {}
+            self._metadata = {}
 
         self._interval_metadata = interval_metadata
 
@@ -90,31 +94,31 @@ class Interval:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    # TODO: Add test
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
         # need pformat to print out the dictionary
         # in a consistent manner
         classname = self.__class__.__name__
         num_intervals = len(self.intervals)
-        num_fields = len(self.metadata.keys())
+        num_keys = len(self.metadata.keys())
         parent = hex(id(self._interval_metadata))
-        summary = ('<%s: parent=%s, %d intervals, '
-                   '%d fields, dropped=%s>') % (
-                       classname, parent, num_intervals,
-                       num_fields, self.dropped)
+        sts, ends = zip(*self.intervals)
+        st = min(sts)
+        end = max(ends)
+        coords = "start=%d, end=%d" % (st, end)
+
+        if num_intervals == 1:
+            interval_summary = '1 contiguous interval'
+        else:
+            interval_summary = '%d non-contiguous intervals' % num_intervals
+        summary = ('<%s: %s, %s, %d metadata keys, dropped=%s>' %
+                   (classname, coords, interval_summary,
+                    num_keys, self.dropped))
         return summary
 
-    # TODO: Add test
     @experimental(as_of='0.4.2-dev')
     def __str__(self):
-        intervals = ','.join(map(_str_intervals,
-                                 zip(self.intervals, self.boundaries)))
-
-        # need pformat to print out the dictionary
-        # in a consistent manner
-        metadata = pformat(self.metadata)
-        return "[%s], %s" % (intervals, metadata)
+        return self.__repr__()
 
     @experimental(as_of='0.4.2-dev')
     def drop(self):
@@ -128,6 +132,8 @@ class Interval:
     @property
     @experimental(as_of='0.4.2-dev')
     def intervals(self):
+        if self.dropped:
+            raise RuntimeError('Cannot retrieved dropped intervals.')
         return self._intervals
 
     @intervals.setter
@@ -138,6 +144,17 @@ class Interval:
         self._intervals = value
         if self._interval_metadata is not None:
             self._interval_metadata._is_stale_tree = True
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    @experimental(as_of='0.4.2-dev')
+    def metadata(self, value):
+        if not isinstance(value, dict):
+            raise TypeError("metadata must be a dict, not %r" % value)
+        self._metadata = value
 
     @property
     @experimental(as_of='0.4.2-dev')
@@ -360,10 +377,9 @@ def _assert_valid_interval(interval):
             raise ValueError("An interval must be a tuple of exactly "
                              "two coordinates, not %r" % (interval, ))
     else:
-        raise TypeError('The interval must be associated with '
-                        'a tuple.')
+        raise TypeError("Each interval must be a tuple, not %r" % interval)
 
-# TODO: create a test for this
+
 def _assert_valid_boundary(boundary):
 
     if isinstance(boundary, tuple):
@@ -373,16 +389,5 @@ def _assert_valid_boundary(boundary):
             raise ValueError("An boundary must be a tuple of exactly "
                              "two coordinates, not %r" % (boundary, ))
     else:
-        raise TypeError('The boundary must be associated with '
-                        'a tuple.')
+        raise TypeError("Each interval must be a tuple, not %r" % boundary)
 
-# TODO: create a test for this
-def _str_interval(interval, boundary):
-    if boundary[0] and boundary[1]:
-        return "[%d, %d]" % interval
-    elif boundary[0] and not boundary[1]:
-        return "[%d, %d)" % interval
-    elif not boundary[0] and boundary[1]:
-        return "(%d, %d]" % interval
-    else:
-        return "(%d, %d)" % interval
