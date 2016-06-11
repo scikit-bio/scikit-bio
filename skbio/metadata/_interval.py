@@ -8,9 +8,7 @@
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import experimental
-from pprint import pformat
 from itertools import chain
-import numpy as np
 
 
 class Interval:
@@ -42,7 +40,7 @@ class Interval:
 
         ivs = list(intervals)
 
-        ## Intervals
+        # Intervals
         self._interval_metadata = interval_metadata
         # http://stackoverflow.com/a/6422754/1167475
         # Used to sort boundaries later
@@ -50,7 +48,7 @@ class Interval:
                                         key=lambda x:x[1])]
         self.intervals = sorted(ivs)
 
-        ## Boundaries
+        # Boundaries
         if boundaries is not None:
             bds = list(boundaries)
             if len(bds) != len(ivs):
@@ -61,7 +59,7 @@ class Interval:
         else:
             self.boundaries = [(True, True)] * len(ivs)
 
-        ## Metadata
+        # Metadata
         if metadata is not None:
             self._metadata = metadata
         else:
@@ -105,7 +103,6 @@ class Interval:
         classname = self.__class__.__name__
         num_intervals = len(self.intervals)
         num_keys = len(self.metadata.keys())
-        parent = hex(id(self._interval_metadata))
         sts, ends = zip(*self.intervals)
         st = min(sts)
         end = max(ends)
@@ -282,14 +279,11 @@ class IntervalMetadata():
         if metadata is None:
             return []
 
-        queries = []
         for inv in intervals:
             for (key, value) in metadata.items():
                 if inv.metadata[key] != value:
                     continue
                 yield inv
-                #queries.append(inv)
-        #return queries
 
     @experimental(as_of='0.4.2-dev')
     def query(self, intervals=None, boundaries=None, metadata=None):
@@ -435,8 +429,8 @@ class IntervalMetadata():
     def __str__(self):
         return self.__repr__()
 
-def _assert_valid_interval(interval):
 
+def _assert_valid_interval(interval):
     if isinstance(interval, tuple):
         try:
             start, end = interval
@@ -450,7 +444,6 @@ def _assert_valid_interval(interval):
 
 
 def _assert_valid_boundary(boundary):
-
     if isinstance(boundary, tuple):
         try:
             start, end = boundary
@@ -459,4 +452,3 @@ def _assert_valid_boundary(boundary):
                              "two coordinates, not %r" % (boundary, ))
     else:
         raise TypeError("Each interval must be a tuple, not %r" % boundary)
-
