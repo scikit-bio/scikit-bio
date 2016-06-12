@@ -250,7 +250,7 @@ class IntervalMetadata():
         >>> interval_metadata.add(intervals=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
         >>> list(interval_metadata.query(intervals=[(1, 2)]))
-        [<Interval: start=0, end=2, 1 contiguous intervals, 1 metadata keys, \
+        [<Interval: start=0, end=2, 1 contiguous interval, 1 metadata keys, \
 dropped=False>]
 
         """
@@ -314,7 +314,7 @@ dropped=False>]
         >>> interval_metadata.add(intervals=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
         >>> list(interval_metadata.query(intervals=[(1, 2)]))
-        [<Interval: start=0, end=2, 1 contiguous intervals, 1 metadata keys, \
+        [<Interval: start=0, end=2, 1 contiguous interval, 1 metadata keys, \
 dropped=False>]
 
         Note
