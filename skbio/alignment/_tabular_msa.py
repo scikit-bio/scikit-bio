@@ -1406,7 +1406,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             positional_metadata = self.positional_metadata
 
         consensus = []
-        for position in self.iter_positions():
+        for position in self.iter_positions(ignore_metadata=True):
             freqs = position.frequencies()
 
             gap_freq = 0
@@ -1532,7 +1532,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                         gap_mode == 'include')
 
         result = []
-        for p in self.iter_positions():
+        for p in self.iter_positions(ignore_metadata=True):
             cons = None
             # cast p to self.dtype for access to gap/degenerate related
             # functionality
@@ -1627,7 +1627,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         """
         if self._is_sequence_axis(axis):
-            seq_iterator = self.iter_positions()
+            seq_iterator = self.iter_positions(ignore_metadata=True)
             length = self.shape.sequence
         else:
             seq_iterator = self
