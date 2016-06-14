@@ -105,7 +105,7 @@ def hamming(seq1, seq2):
     return float(distance)
 
 
-@experimental(as_of='0.4.2-dev')
+@experimental(as_of='0.5.0')
 def kmer_distance(seq1, seq2, k, overlap=True):
     """Compute the kmer distance between a pair of sequences
 
