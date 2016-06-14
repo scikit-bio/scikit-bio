@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Sequence.__iter__
+================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Sequence.__iter__

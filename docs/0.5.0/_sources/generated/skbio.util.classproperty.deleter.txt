@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.deleter
+================================
+
+.. currentmodule:: skbio.util
+
+.. automethod:: classproperty.deleter

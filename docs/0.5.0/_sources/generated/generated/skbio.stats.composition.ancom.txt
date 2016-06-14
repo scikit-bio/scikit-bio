@@ -1,0 +1,6 @@
+skbio.stats.composition.ancom
+=============================
+
+.. currentmodule:: skbio.stats.composition
+
+.. autofunction:: ancom

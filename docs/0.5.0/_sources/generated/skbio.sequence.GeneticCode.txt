@@ -1,0 +1,53 @@
+skbio.sequence.GeneticCode
+==========================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: GeneticCode
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         
+         GeneticCode.__eq__
+         
+         GeneticCode.__format__
+         
+         
+         GeneticCode.__ne__
+         
+         
+         
+         
+         
+         
+         GeneticCode.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         GeneticCode.from_ncbi
+         
+         GeneticCode.translate
+         
+         GeneticCode.translate_six_frames
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         GeneticCode.name
+         GeneticCode.reading_frames
+

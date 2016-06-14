@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.__contains__
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.__contains__

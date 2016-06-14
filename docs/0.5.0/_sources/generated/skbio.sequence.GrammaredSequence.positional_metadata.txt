@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.positional_metadata
+====================================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GrammaredSequence.positional_metadata
