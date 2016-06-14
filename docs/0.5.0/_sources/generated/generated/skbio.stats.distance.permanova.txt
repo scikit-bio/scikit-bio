@@ -1,0 +1,6 @@
+skbio.stats.distance.permanova
+==============================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autofunction:: permanova

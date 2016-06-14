@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.__str__
+==========================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.__str__

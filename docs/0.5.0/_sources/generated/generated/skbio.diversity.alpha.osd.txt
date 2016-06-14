@@ -1,0 +1,6 @@
+skbio.diversity.alpha.osd
+=========================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: osd

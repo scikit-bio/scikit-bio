@@ -1,0 +1,105 @@
+h1, h2, h3 {
+    color: #24372C !important;
+}
+
+a {
+    color: #259D57 !important;
+}
+
+a:active, a:hover, a:focus {
+    color: #00B84D !important;
+}
+
+blockquote {
+    font-size: 14px !important;
+}
+
+code {
+    color: #259D57 !important;
+    font-size: 100% !important;
+}
+
+code.descclassname, code.descname {
+    padding: 2px 0px;
+}
+
+cite, code.docutils.literal:not(.xref) {
+    padding: 1px 4px !important;
+    font-size: 100% !important;
+    color: #000 !important;
+    background-color: #F5F5F5 !important;
+    white-space: nowrap !important;
+    border-radius: 4px !important;
+    border: 1px solid #CCC !important;
+    font-style: normal !important;
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace !important;
+}
+
+a code.docutils.literal:not(.xref) {
+    color: #259D57 !important;
+    background: none !important;
+    border: none !important;
+}
+
+a:active code.docutils.literal:not(.xref),
+a:hover code.docutils.literal:not(.xref),
+a:focus code.docutils.literal:not(.xref) {
+    color: #00B84D !important;
+}
+
+#navbar .dropdown-menu > li > a:active code.docutils.literal:not(.xref),
+#navbar .dropdown-menu > li > a:hover code.docutils.literal:not(.xref),
+#navbar .dropdown-menu > li > a:focus code.docutils.literal:not(.xref) {
+    color: #FFF !important;
+}
+
+.label {
+    display: table-cell !important;
+    color: #000 !important;
+    font-size: 100% !important;
+    text-align: left !important;
+    width: 6em !important;
+}
+
+table.citation {
+    border-left: 1px solid #DDD !important;
+}
+
+table.citation td > em {
+    display: none !important;
+}
+
+.table > tbody > tr > td {
+    border-top: 1px solid #DDD !important;
+}
+
+#navbar {
+    background: #24372C !important;
+    border: none !important;
+    border-bottom: 4px solid #259D57 !important;
+}
+
+#navbar a {
+    color: #FFF !important;
+}
+
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+    background-color: #259D57 !important;
+}
+
+.navbar-default .navbar-nav > li > a:active {
+    background-color: #00B84D !important;
+}
+
+#navbar .dropdown-menu > li > a {
+    color: #259D57 !important;
+}
+
+#navbar .dropdown-menu > li > a:hover {
+    color: #FFF !important;
+    background-color: #00B84D !important;
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    background-color: #00B84D !important;
+}

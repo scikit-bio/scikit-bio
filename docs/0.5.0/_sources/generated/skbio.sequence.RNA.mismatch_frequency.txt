@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.mismatch_frequency
+=====================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.mismatch_frequency

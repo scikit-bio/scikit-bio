@@ -1,0 +1,6 @@
+skbio.diversity.alpha.fisher_alpha
+==================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: fisher_alpha

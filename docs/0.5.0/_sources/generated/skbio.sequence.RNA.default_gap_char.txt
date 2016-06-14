@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.default_gap_char
+===================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.default_gap_char

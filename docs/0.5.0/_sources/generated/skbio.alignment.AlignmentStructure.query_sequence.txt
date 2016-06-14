@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.AlignmentStructure.query_sequence
+=================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: AlignmentStructure.query_sequence

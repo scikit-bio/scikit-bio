@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.definite_chars
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: RNA.definite_chars

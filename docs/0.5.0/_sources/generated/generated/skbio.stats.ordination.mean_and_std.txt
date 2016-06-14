@@ -1,0 +1,6 @@
+skbio.stats.ordination.mean_and_std
+===================================
+
+.. currentmodule:: skbio.stats.ordination
+
+.. autofunction:: mean_and_std

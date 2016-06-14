@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.AlignmentStructure.optimal_alignment_score
+==========================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: AlignmentStructure.optimal_alignment_score
