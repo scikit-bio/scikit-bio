@@ -421,9 +421,6 @@ plot_include_source = True
 plot_formats = [('png', 96), ]
 #plot_html_show_formats = False
 
-import math
-phi = (math.sqrt(5) + 1)/2
-
 font_size = 13*72/96.0  # 13 px
 
 plot_rcparams = {
@@ -433,12 +430,11 @@ plot_rcparams = {
     'xtick.labelsize': font_size,
     'ytick.labelsize': font_size,
     'legend.fontsize': font_size,
-    'figure.figsize': (3*phi, 3),
     'figure.subplot.bottom': 0.2,
     'figure.subplot.left': 0.2,
     'figure.subplot.right': 0.9,
-    'figure.subplot.top': 0.85,
-    'figure.subplot.wspace': 0.4,
+    'figure.subplot.top': 0.9,
+    'figure.subplot.wspace': 0.2,
     'text.usetex': False,
 
     # Some of our figures have legends outside the axes area. When they're
@@ -449,9 +445,7 @@ plot_rcparams = {
     'savefig.bbox': 'tight'
 }
 
-if not use_matplotlib_plot_directive:
-    import matplotlib
-    matplotlib.rcParams.update(plot_rcparams)
+matplotlib.rcParams.update(plot_rcparams)
 
 # -----------------------------------------------------------------------------
 # Intersphinx configuration
