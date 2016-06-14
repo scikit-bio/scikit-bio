@@ -1,5 +1,21 @@
 # scikit-bio changelog
 
+## Version 0.5.0-dev  (changes since 0.5.0 go here)
+
+### Features
+
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [stable]
+
+### Miscellaneous
+
 ## Version 0.5.0 (2016-06-14)
 
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
