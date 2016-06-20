@@ -1,11 +1,24 @@
 # scikit-bio changelog
 
-## Version 0.5.0 (changes since 0.5.0 go here)
+## Version 0.5.0-dev  (changes since 0.5.0 go here)
 
 ### Features
+
 * Added `IntervalMetadata` object in `skbio.metadata._interval`. [#1356](https://github.com/biocore/scikit-bio/issues/1356)
 
-## Version 0.4.2-dev (changes since 0.4.2 go here)
+### Backward-incompatible changes [stable]
+
+### Backward-incompatible changes [experimental]
+
+### Bug fixes
+
+### Deprecated functionality [stable]
+
+### Deprecated functionality [stable]
+
+### Miscellaneous
+
+## Version 0.5.0 (2016-06-14)
 
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
 
@@ -21,7 +34,8 @@
 * `TemporaryFile` and `NamedTemporaryFile` are now supported IO sources for `skbio.io` and related functionality.  ([#1291](https://github.com/biocore/scikit-bio/issues/1291))
 * Added `tree_node_class=TreeNode` parameter to `skbio.tree.majority_rule` to support returning consensus trees of type `TreeNode` (the default) or a type that has the same interface as `TreeNode` (e.g. `TreeNode` subclasses) ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
 * `TreeNode.from_linkage_matrix` and `TreeNode.from_taxonomy` now support constructing `TreeNode` subclasses. `TreeNode.bifurcate` now supports `TreeNode` subclasses ([#1193](https://github.com/biocore/scikit-bio/pull/1193))
-* The `ignore_metadata` keyword has been added to `TablueMSA.iter_positions` to improve performance when metadata is not necessary.
+* The `ignore_metadata` keyword has been added to `TabularMSA.iter_positions` to improve performance when metadata is not necessary.
+* Pairwise aligners in `skbio.alignment` now propagate per-sequence `metadata` objects (this does not include `positional_metadata`).
 
 ### Backward-incompatible changes [stable]
 

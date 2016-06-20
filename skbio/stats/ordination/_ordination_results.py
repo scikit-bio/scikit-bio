@@ -252,9 +252,7 @@ class OrdinationResults(SkbioObject):
         # derived from
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
         fig = plt.figure()
-        # create the axes, leaving room for a legend as described here:
-        # http://stackoverflow.com/a/9651897/3424666
-        ax = fig.add_axes([0.1, 0.1, 0.6, 0.75], projection='3d')
+        ax = fig.add_subplot(111, projection='3d')
 
         xs = coord_matrix[axes[0]]
         ys = coord_matrix[axes[1]]
@@ -289,7 +287,7 @@ class OrdinationResults(SkbioObject):
                 fig.colorbar(plot)
             else:
                 self._plot_categorical_legend(ax, category_to_color)
-
+        fig.tight_layout()
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):

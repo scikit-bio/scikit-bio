@@ -1409,7 +1409,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         return self._string.count(
             self._munge_to_bytestring(subsequence, "count"), start, end)
 
-    @experimental(as_of="0.4.2-dev")
+    @experimental(as_of="0.5.0")
     def replace(self, where, character):
         """Replace values in this sequence with a different character.
 
