@@ -1,5 +1,10 @@
 # scikit-bio changelog
 
+## Version 0.5.0 (changes since 0.5.0 go here)
+
+### Features
+* Added `IntervalMetadata` object in `skbio.metadata._interval`. [#1356](https://github.com/biocore/scikit-bio/issues/1356)
+
 ## Version 0.4.2-dev (changes since 0.4.2 go here)
 
 **IMPORTANT**: scikit-bio is no longer compatible with Python 2. scikit-bio is compatible with Python 3.4 and later.
