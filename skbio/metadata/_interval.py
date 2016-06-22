@@ -9,6 +9,7 @@
 from ._intersection import IntervalTree
 from skbio.util._decorator import experimental
 from itertools import chain
+import operator
 
 
 class Interval:
@@ -44,8 +45,9 @@ class Interval:
         self._interval_metadata = interval_metadata
         # http://stackoverflow.com/a/6422754/1167475
         # Used to sort boundaries later
+
         indices = [i[0] for i in sorted(enumerate(ivs),
-                                        key=lambda x:x[1])]
+                                        key=operator.itemgetter(1))]
         self.intervals = sorted(ivs)
 
         # Boundaries
@@ -84,6 +86,7 @@ class Interval:
                           self.boundaries))
 
     def _cmp(self, other):
+        """ Comparison operator required for sorting intervals. """
         return self.intervals < other.intervals
 
     @experimental(as_of='0.4.2-dev')
@@ -102,7 +105,7 @@ class Interval:
         # in a consistent manner
         classname = self.__class__.__name__
         num_intervals = len(self.intervals)
-        num_keys = len(self.metadata.keys())
+        num_keys = len(self.metadata)
         sts, ends = zip(*self.intervals)
         st = min(sts)
         end = max(ends)
@@ -415,8 +418,11 @@ dropped=False>]
 
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
-        self_metadata = sorted(self._metadata, key=lambda x: x.intervals)
-        other_metadata = sorted(other._metadata, key=lambda x: x.intervals)
+
+        self_metadata = sorted(self._metadata,
+                               key=operator.attrgetter('intervals'))
+        other_metadata = sorted(other._metadata,
+                                key=operator.attrgetter('intervals'))
         return self_metadata == other_metadata
 
     @experimental(as_of='0.4.2-dev')
