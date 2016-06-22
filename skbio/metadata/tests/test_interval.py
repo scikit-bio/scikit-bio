@@ -14,6 +14,7 @@ from skbio.metadata._interval import (_assert_valid_interval,
                                       _assert_valid_boundary)
 from skbio.metadata import Interval
 from skbio.metadata import IntervalMetadata
+from skbio.metadata._intersection import IntervalTree
 
 
 class TestInterval(unittest.TestCase):
@@ -389,7 +390,7 @@ class TestIntervalMetadata(unittest.TestCase):
                          [(1, 2), (4, 7)])
         self.assertEqual(im._metadata[0].metadata,
                          {'gene': 'sagA', 'location': 0})
-        self.assertTrue(im._intervals is not None)
+        self.assertTrue(isinstance(im._intervals, IntervalTree))
         ivs = list(im.query(intervals=[(1, 2)]))
         self.assertEqual(len(ivs), 1)
         self.assertListEqual(ivs[0].intervals, [(1, 2), (4, 7)])

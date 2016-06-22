@@ -86,7 +86,10 @@ class Interval:
                           self.boundaries))
 
     def _cmp(self, other):
-        """ Comparison operator required for sorting intervals. """
+        """ Comparison operator required for sorting intervals.
+
+        Note that this method does not check for equality.
+        """
         return self.intervals < other.intervals
 
     @experimental(as_of='0.4.2-dev')

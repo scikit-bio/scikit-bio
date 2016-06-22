@@ -14,6 +14,8 @@ from skbio.metadata._intersection import IntervalNode
 from skbio.metadata._intersection import IntervalTree
 
 
+# Note: More bounds checking on input parameters are performed
+# within test_interval.py
 class NeighborTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -72,6 +74,7 @@ class UpDownStreamTestCase(unittest.TestCase):
         iv = self.intervals
         upstreams = iv.upstream_of_interval(IntervalObj(59, 60),
                                             num_intervals=200)
+
         for u in upstreams:
             self.assertTrue(u.end < 59)
 
