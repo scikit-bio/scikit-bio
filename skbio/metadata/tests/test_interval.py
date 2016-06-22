@@ -390,7 +390,7 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(im._metadata[0].metadata,
                          {'gene': 'sagA', 'location': 0})
         self.assertTrue(im._intervals is not None)
-        ivs = list(im.query(intervals=[(1,2)]))
+        ivs = list(im.query(intervals=[(1, 2)]))
         self.assertEqual(len(ivs), 1)
         self.assertListEqual(ivs[0].intervals, [(1, 2), (4, 7)])
         self.assertDictEqual(ivs[0].metadata, {'gene': 'sagA', 'location': 0})
