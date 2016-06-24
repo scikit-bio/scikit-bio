@@ -341,30 +341,9 @@ class classproperty(property):
 class classonlymethod(classmethod):
     """Just like `classmethod`, but it can't be called on an instance."""
 
-    def __init__(self, function):
-        super(classonlymethod, self).__init__(function)
-
     def __get__(self, obj, cls=None):
         if obj is not None:
             raise TypeError("Class-only method called on an instance. Use"
                             " '%s.%s' instead."
                             % (cls.__name__, self.__func__.__name__))
-
-        evaldict = self.__func__.__globals__.copy()
-        evaldict['_call_'] = self.__func__
-        evaldict['_cls_'] = cls
-        fun = FunctionMakerDropFirstArg.create(
-            self.__func__, "return _call_(_cls_, %(shortsignature)s)",
-            evaldict, __wrapped__=self.__func__)
-        fun.__func__ = self.__func__  # Doctests need the orginal function
-        return fun
-
-
-class FunctionMakerDropFirstArg(decorator.FunctionMaker):
-    def __init__(self, *args, **kwargs):
-        super(FunctionMakerDropFirstArg, self).__init__(*args, **kwargs)
-        self.signature = self._remove_first_arg(self.signature)
-        self.shortsignature = self._remove_first_arg(self.shortsignature)
-
-    def _remove_first_arg(self, string):
-        return ",".join(string.split(',')[1:])[1:]
+        return super().__get__(obj, cls)
