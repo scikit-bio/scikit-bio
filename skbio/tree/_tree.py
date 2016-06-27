@@ -450,10 +450,19 @@ class TreeNode(SkbioObject):
         if not ids.issubset(all_tips):
             raise ValueError("ids are not a subset of the tree.")
 
-        while len(list(tcopy.tips())) != len(ids):
-            for n in list(tcopy.tips()):
-                if n.name not in ids:
-                    n.parent.remove(n)
+        marked = set()
+        for tip in tcopy.tips():
+            if tip.name in ids:
+                marked.add(tip)
+                for anc in tip.ancestors():
+                    if anc in marked:
+                        break
+                    else:
+                        marked.add(anc)
+
+        for node in list(tcopy.traverse()):
+            if node not in marked:
+                node.parent.remove(node)
 
         tcopy.prune()
 
