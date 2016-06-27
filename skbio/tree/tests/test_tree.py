@@ -306,7 +306,7 @@ class TreeTests(TestCase):
     def test_shear_prune_parent_dropped(self):
         bugtree = "((a,b),((c,d),(e,f)));"
         to_keep = ['c', 'd']
-        exp = "(c,d);"
+        exp = "(c,d);\n"
         obs = str(TreeNode.read(io.StringIO(bugtree)).shear(to_keep))
         self.assertEqual(obs, exp)
 

@@ -10,6 +10,8 @@
 
 ### Bug fixes
 
+* `skbio.tree.TreeNode.prune` was not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root.
+
 ### Deprecated functionality [stable]
 
 ### Deprecated functionality [stable]

@@ -383,6 +383,21 @@ class TreeNode(SkbioObject):
             if len(node.children) == 1:
                 nodes_to_remove.append(node)
 
+        # clean up the single children nodes
+        for node in nodes_to_remove:
+            child = node.children[0]
+
+            if child.length is None or node.length is None:
+                child.length = child.length or node.length
+            else:
+                child.length += node.length
+
+            if node.parent is None:
+                continue
+
+            node.parent.append(child)
+            node.parent.remove(node)
+
         # if a single descendent from the root, the root adopts the childs
         # properties. we can't "delete" the root as that would be deleting
         # self.
@@ -394,18 +409,6 @@ class TreeNode(SkbioObject):
                     self.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
             self.remove(node_to_copy)
             self.children.extend(node_to_copy.children)
-
-        # clean up the single children nodes
-        for node in nodes_to_remove:
-            child = node.children[0]
-
-            if child.length is None or node.length is None:
-                child.length = child.length or node.length
-            else:
-                child.length += node.length
-
-            node.parent.append(child)
-            node.parent.remove(node)
 
     @experimental(as_of="0.4.0")
     def shear(self, names):
