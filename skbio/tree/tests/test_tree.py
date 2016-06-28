@@ -303,6 +303,21 @@ class TreeTests(TestCase):
         self.assertEqual(len(n.children), 2)
         self.assertNotIn(n, self.simple_t.children)
 
+    def test_shear_prune_parent_dropped(self):
+        bugtree = "((a,b),((c,d),(e,f)));"
+        to_keep = ['c', 'd']
+        exp = "(c,d);\n"
+        obs = str(TreeNode.read(io.StringIO(bugtree)).shear(to_keep))
+        self.assertEqual(obs, exp)
+
+    def test_prune_nested_single_descendent(self):
+        bugtree = "(((a,b)));"
+        exp = "(a,b);\n"
+        t = TreeNode.read(io.StringIO(bugtree))
+        t.prune()
+        obs = str(t)
+        self.assertEqual(obs, exp)
+
     def test_prune_root_single_desc(self):
         t = TreeNode.read(["((a,b)c)extra;"])
         exp = "(a,b)c;\n"
