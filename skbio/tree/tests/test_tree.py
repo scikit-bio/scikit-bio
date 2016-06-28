@@ -310,6 +310,14 @@ class TreeTests(TestCase):
         obs = str(TreeNode.read(io.StringIO(bugtree)).shear(to_keep))
         self.assertEqual(obs, exp)
 
+    def test_prune_nested_single_descendent(self):
+        bugtree = "(((a,b)));"
+        exp = "(a,b);\n"
+        t = TreeNode.read(io.StringIO(bugtree))
+        t.prune()
+        obs = str(t)
+        self.assertEqual(obs, exp)
+
     def test_prune_root_single_desc(self):
         t = TreeNode.read(["((a,b)c)extra;"])
         exp = "(a,b)c;\n"

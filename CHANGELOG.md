@@ -10,7 +10,7 @@
 
 ### Bug fixes
 
-* `skbio.tree.TreeNode.prune` was not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root.
+* `skbio.tree.TreeNode.prune` and implicitly `skbio.tree.TreeNode.shear` were not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root. Previously, an `AttributeError` would raise as `parent` would be `None` in this situation. 
 
 ### Deprecated functionality [stable]
 
