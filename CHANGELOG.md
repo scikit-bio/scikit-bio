@@ -8,6 +8,9 @@
 
 ### Backward-incompatible changes [experimental]
 
+### Performance enhancements
+* `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
+
 ### Bug fixes
 
 ### Deprecated functionality [stable]
