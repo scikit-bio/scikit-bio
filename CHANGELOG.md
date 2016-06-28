@@ -8,6 +8,9 @@
 
 ### Backward-incompatible changes [experimental]
 
+### Performance enhancements
+* `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
+
 ### Bug fixes
 
 * `skbio.tree.TreeNode.prune` and implicitly `skbio.tree.TreeNode.shear` were not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root. Previously, an `AttributeError` would raise as `parent` would be `None` in this situation. 
