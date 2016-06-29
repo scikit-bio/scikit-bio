@@ -38,7 +38,7 @@ class TestRDAResults(TestCase):
                            'Site5', 'Site6', 'Site7', 'Site8', 'Site9']
         self.feature_ids = ['Species0', 'Species1', 'Species2', 'Species3',
                             'Species4', 'Species5']
-        self.env_ids = map(str, range(4))
+        self.env_ids = list(map(str, range(4)))
         self.pc_ids = ['RDA1', 'RDA2', 'RDA3', 'RDA4', 'RDA5', 'RDA6', 'RDA7']
 
         self.Y = pd.DataFrame(
@@ -52,9 +52,6 @@ class TestRDAResults(TestCase):
     def test_scaling1(self):
 
         scores = rda(self.Y, self.X, scaling=1)
-
-        biplot_scores = pd.DataFrame(np.loadtxt(
-            get_data_path('example2_biplot_scaling1')))
 
         sample_constraints = pd.DataFrame(np.loadtxt(
             get_data_path('example2_sample_constraints_scaling1')))
@@ -77,18 +74,19 @@ class TestRDAResults(TestCase):
                 'example2_sample_constraints_scaling1')),
             index=self.sample_ids,
             columns=self.pc_ids)
+        mat = np.loadtxt(get_data_path(
+            'example2_biplot_scaling1'))
+        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pc_ids)
 
-        biplot_scores = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example2_biplot_scaling1')))
-
-        # These are wrong. See issue #1002
         proportion_explained = pd.Series([0.44275783, 0.25614586,
                                           0.15280354, 0.10497021,
                                           0.02873375, 0.00987052,
                                           0.00471828],
                                          index=self.pc_ids)
-        # These are wrong. See issue #1002
+
         eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
                              1.680705, 0.577350, 0.275984],
                             index=self.pc_ids)
@@ -104,15 +102,16 @@ class TestRDAResults(TestCase):
 
         assert_ordination_results_equal(scores, exp,
                                         ignore_directionality=True,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
     def test_scaling2(self):
 
         scores = rda(self.Y, self.X, scaling=2)
-
-        biplot_scores = pd.DataFrame(np.loadtxt(
-            get_data_path('example2_biplot_scaling2')))
+        mat = np.loadtxt(get_data_path('example2_biplot_scaling2'))
+        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pc_ids)
 
         sample_constraints = pd.DataFrame(np.loadtxt(
             get_data_path('example2_sample_constraints_scaling2')))
@@ -136,17 +135,19 @@ class TestRDAResults(TestCase):
             index=self.sample_ids,
             columns=self.pc_ids)
 
-        biplot_scores = pd.DataFrame(
-            np.loadtxt(get_data_path(
-                'example2_biplot_scaling2')))
+        mat = np.loadtxt(get_data_path(
+            'example2_biplot_scaling2'))
+        cropped_pc_ids = self.pc_ids[:mat.shape[1]]
+        biplot_scores = pd.DataFrame(mat,
+                                     index=self.env_ids,
+                                     columns=cropped_pc_ids)
 
-        # These are wrong. See issue #1002
         proportion_explained = pd.Series([0.44275783, 0.25614586,
                                           0.15280354, 0.10497021,
                                           0.02873375, 0.00987052,
                                           0.00471828],
                                          index=self.pc_ids)
-        # These are wrong. See issue #1002
+
         eigvals = pd.Series([25.897954, 14.982578, 8.937841, 6.139956,
                              1.680705, 0.577350, 0.275984],
                             index=self.pc_ids)
@@ -162,7 +163,6 @@ class TestRDAResults(TestCase):
 
         assert_ordination_results_equal(scores, exp,
                                         ignore_directionality=True,
-                                        ignore_biplot_scores_labels=True,
                                         decimal=6)
 
 

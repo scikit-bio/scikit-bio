@@ -150,7 +150,6 @@ def get_data_path(fn, subfolder='data'):
 @experimental(as_of="0.4.0")
 def assert_ordination_results_equal(left, right, ignore_method_names=False,
                                     ignore_axis_labels=False,
-                                    ignore_biplot_scores_labels=False,
                                     ignore_directionality=False,
                                     decimal=7):
     """Assert that ordination results objects are equal.
@@ -166,8 +165,6 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
         Ignore differences in `short_method_name` and `long_method_name`.
     ignore_axis_labels : bool, optional
         Ignore differences in axis labels (i.e., column labels).
-    ignore_biplot_scores_labels : bool, optional
-        Ignore differences in `biplot_scores` row and column labels.
     ignore_directionality : bool, optional
         Ignore differences in directionality (i.e., differences in signs) for
         attributes `samples`, `features` and `biplot_scores`.
@@ -195,8 +192,7 @@ def assert_ordination_results_equal(left, right, ignore_method_names=False,
                         decimal=decimal)
 
     _assert_frame_equal(left.biplot_scores, right.biplot_scores,
-                        ignore_biplot_scores_labels,
-                        ignore_biplot_scores_labels,
+                        ignore_columns=ignore_axis_labels,
                         ignore_directionality=ignore_directionality,
                         decimal=decimal)
 

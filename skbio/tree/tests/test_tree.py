@@ -20,6 +20,10 @@ from skbio.tree import (DuplicateNodeError, NoLengthError,
 from skbio.util import RepresentationWarning
 
 
+class TreeNodeSubclass(TreeNode):
+    pass
+
+
 class TreeTests(TestCase):
 
     def setUp(self):
@@ -33,7 +37,6 @@ class TreeTests(TestCase):
         nodes['c'].append(nodes['f'])
         nodes['f'].append(nodes['g'])
         nodes['a'].append(nodes['h'])
-        self.TreeNode = nodes
         self.TreeRoot = nodes['a']
 
         def rev_f(items):
@@ -300,6 +303,27 @@ class TreeTests(TestCase):
         self.assertEqual(len(n.children), 2)
         self.assertNotIn(n, self.simple_t.children)
 
+    def test_shear_prune_parent_dropped(self):
+        bugtree = "((a,b),((c,d),(e,f)));"
+        to_keep = ['c', 'd']
+        exp = "(c,d);\n"
+        obs = str(TreeNode.read(io.StringIO(bugtree)).shear(to_keep))
+        self.assertEqual(obs, exp)
+
+    def test_prune_nested_single_descendent(self):
+        bugtree = "(((a,b)));"
+        exp = "(a,b);\n"
+        t = TreeNode.read(io.StringIO(bugtree))
+        t.prune()
+        obs = str(t)
+        self.assertEqual(obs, exp)
+
+    def test_prune_root_single_desc(self):
+        t = TreeNode.read(["((a,b)c)extra;"])
+        exp = "(a,b)c;\n"
+        t.prune()
+        self.assertEqual(str(t), exp)
+
     def test_prune(self):
         """Collapse single descendent nodes"""
         # check the identity case
@@ -552,6 +576,12 @@ class TreeTests(TestCase):
 
         with self.assertRaises(NoParentError):
             a.accumulate_to_ancestor(b)
+
+    def test_distance_nontip(self):
+        # example derived from issue #807, credit @wwood
+        tstr = "((A:1.0,B:2.0)'g__genus1':3.0)root;"
+        tree = TreeNode.read(io.StringIO(tstr))
+        self.assertEqual(tree.find('A').distance(tree.find('g__genus1')), 1.0)
 
     def test_distance(self):
         """Get the distance between two nodes"""
@@ -826,6 +856,18 @@ class TreeTests(TestCase):
         self.assertEqual(str(t1), '(((a,b),c),(d,e));\n')
         self.assertEqual(str(t2), '((c,(a,b)));\n')
         self.assertEqual(str(t3), '((c,(a,b):0));\n')
+
+    def test_bifurcate_with_subclass(self):
+        tree = TreeNodeSubclass()
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+        tree.append(TreeNodeSubclass())
+
+        tree.bifurcate()
+
+        for node in tree.traverse():
+            self.assertIs(type(node), TreeNodeSubclass)
 
     def test_index_tree_single_node(self):
         """index_tree handles single node tree"""
@@ -1125,7 +1167,13 @@ class TreeTests(TestCase):
 
         root = TreeNode.from_taxonomy(input_lineages.items())
 
+        self.assertIs(type(root), TreeNode)
+
         self.assertEqual(root.compare_subsets(exp), 0.0)
+
+        root = TreeNodeSubclass.from_taxonomy(input_lineages.items())
+
+        self.assertIs(type(root), TreeNodeSubclass)
 
     def test_to_taxonomy(self):
         input_lineages = {'1': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
@@ -1167,9 +1215,16 @@ class TreeTests(TestCase):
                               [4.0, 11.0, 34.0,  7.0]])
 
         tree = TreeNode.from_linkage_matrix(linkage, id_list)
+
+        self.assertIs(type(tree), TreeNode)
+
         self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
                          "F:0.5):5.75):2.0):6.25):2.5);\n",
                          str(tree))
+
+        tree = TreeNodeSubclass.from_linkage_matrix(linkage, id_list)
+
+        self.assertIs(type(tree), TreeNodeSubclass)
 
     def test_shuffle_invalid_iter(self):
         shuffler = self.simple_t.shuffle(n=-1)

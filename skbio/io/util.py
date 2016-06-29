@@ -75,27 +75,32 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
 
     Supported inputs:
 
-    +----------------------------+----------+-----------+-------------+
-    | type                       | can read | can write | source type |
-    +============================+==========+===========+=============+
-    | file path                  | True     | True      | Binary      |
-    +----------------------------+----------+-----------+-------------+
-    | URL                        | True     | False     | Binary      |
-    +----------------------------+----------+-----------+-------------+
-    | ``["lines list\n"]``       | True     | True      | Text        |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.StringIO`       | True     | True      | Text        |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.BytesIO`        | True     | True      | Binary      |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.TextIOWrapper`  | True     | True      | Text        |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.BufferedReader` | True     | False     | Binary      |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.BufferedWriter` | False    | True      | Binary      |
-    +----------------------------+----------+-----------+-------------+
-    | :class:`io.BufferedRandom` | True     | True      | Binary      |
-    +----------------------------+----------+-----------+-------------+
+    +--------------------------------------+--------+---------+-----------+
+    | type                                 | can \  | can \   | source \  |
+    |                                      | read   | write   | type      |
+    +======================================+========+=========+===========+
+    | file path                            | True   | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | URL                                  | True   | False   | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | ``["lines list\n"]``                 | True   | True    | Text      |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.StringIO`                 | True   | True    | Text      |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.BytesIO`                  | True   | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.TextIOWrapper`            | True   | True    | Text      |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.BufferedReader`           | True   | False   | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.BufferedWriter`           | False  | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | :class:`io.BufferedRandom`           | True   | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | :func:`tempfile.TemporaryFile`       | True   | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
+    | :func:`tempfile.NamedTemporaryFile`  | True   | True    | Binary    |
+    +--------------------------------------+--------+---------+-----------+
 
     .. note:: When reading a list of unicode (str) lines, the input for
        `newline` is used to determine the number of lines in the resulting file
@@ -109,7 +114,7 @@ def open(file, mode=_d['mode'], encoding=_d['encoding'], errors=_d['errors'],
     mode : {'r', 'w'}, optional
         Whether to return a readable or writable file. Conversely, this does
         not imply that the returned file will be unwritable or unreadable.
-        To geta binary filehandle set `encoding` to binary.
+        To get a binary filehandle set `encoding` to binary.
     encoding : str, optional
         The encoding scheme to use for the file. If set to 'binary', no bytes
         will be translated. Otherwise this matches the behavior of

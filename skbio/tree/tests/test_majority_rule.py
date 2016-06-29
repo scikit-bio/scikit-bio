@@ -70,6 +70,34 @@ class MajorityRuleTests(TestCase):
         trees = majority_rule(trees)
         self.assertEqual(len(trees), 4)
 
+        for tree in trees:
+            self.assertIs(type(tree), TreeNode)
+
+        exp = set([
+                  frozenset(['a']),
+                  frozenset(['b']),
+                  frozenset([None, 'c', 'd']),
+                  frozenset([None, 'e', 'f'])])
+
+        obs = set([frozenset([n.name for n in t.traverse()]) for t in trees])
+        self.assertEqual(obs, exp)
+
+    def test_majority_rule_tree_node_class(self):
+        class TreeNodeSubclass(TreeNode):
+            pass
+
+        trees = [
+            TreeNode.read(io.StringIO("((a,b),(c,d),(e,f));")),
+            TreeNode.read(io.StringIO("(a,(c,d),b,(e,f));")),
+            TreeNode.read(io.StringIO("((c,d),(e,f),b);")),
+            TreeNode.read(io.StringIO("(a,(c,d),(e,f));"))]
+
+        trees = majority_rule(trees, tree_node_class=TreeNodeSubclass)
+        self.assertEqual(len(trees), 4)
+
+        for tree in trees:
+            self.assertIs(type(tree), TreeNodeSubclass)
+
         exp = set([
                   frozenset(['a']),
                   frozenset(['b']),
@@ -166,7 +194,7 @@ class MajorityRuleTests(TestCase):
         edge_lengths = {frozenset(['A', 'B']): 1,
                         frozenset(['A']): 2,
                         frozenset(['B']): 3}
-        tree = _build_trees(clade_counts, edge_lengths, 'foo')[0]
+        tree = _build_trees(clade_counts, edge_lengths, 'foo', TreeNode)[0]
         self.assertEqual(tree.foo, 6)
         tree_foos = set([c.foo for c in tree.children])
         tree_lens = set([c.length for c in tree.children])

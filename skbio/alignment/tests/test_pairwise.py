@@ -220,8 +220,11 @@ class PairwiseAlignmentTests(TestCase):
             Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
 
-        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE-"),
-                                              Protein("---PAW-HEAE")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s2"})]))
+
         self.assertEqual(obs_score, 23.0)
         self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
@@ -231,8 +234,11 @@ class PairwiseAlignmentTests(TestCase):
             Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
 
-        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE-"),
-                                              Protein("---PAW-HEAE")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s2"})]))
+
         self.assertEqual(obs_score, 23.0)
         self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
@@ -244,9 +250,12 @@ class PairwiseAlignmentTests(TestCase):
             TabularMSA([Protein("PAWHEAE", metadata={'id': "s3"})]),
             gap_open_penalty=10., gap_extend_penalty=5.)
 
-        self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE-"),
-                                              Protein("HDAGAWGHDE-"),
-                                              Protein("---PAW-HEAE")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([Protein("HEAGAWGHEE-", metadata={'id': "s1"}),
+                        Protein("HDAGAWGHDE-", metadata={'id': "s2"}),
+                        Protein("---PAW-HEAE", metadata={'id': "s3"})]))
+
         self.assertEqual(obs_score, 21.0)
         self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
 
@@ -329,8 +338,10 @@ class PairwiseAlignmentTests(TestCase):
             Protein("PAWHEAE", metadata={'id': "s2"}),
             gap_open_penalty=10., gap_extend_penalty=5.)
 
-        self.assertEqual(obs_msa, TabularMSA([Protein("AWGHE"),
-                                              Protein("AW-HE")]))
+        self.assertEqual(
+            obs_msa, TabularMSA([Protein("AWGHE", metadata={'id': "s1"}),
+                                 Protein("AW-HE", metadata={'id': "s2"})]))
+
         self.assertEqual(obs_score, 26.0)
         self.assertEqual(obs_start_end, [(4, 8), (1, 4)])
 
@@ -381,8 +392,11 @@ class PairwiseAlignmentTests(TestCase):
             gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
 
-        self.assertEqual(obs_msa, TabularMSA([DNA("-GACCTTGACCAGGTACC"),
-                                              DNA("GAACTTTGAC---GTAAC")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                        DNA("GAACTTTGAC---GTAAC", metadata={'id': "s2"})]))
+
         self.assertEqual(obs_score, 32.0)
         self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
 
@@ -394,9 +408,12 @@ class PairwiseAlignmentTests(TestCase):
             gap_open_penalty=10., gap_extend_penalty=0.5, match_score=5,
             mismatch_score=-4)
 
-        self.assertEqual(obs_msa, TabularMSA([DNA("-GACCTTGACCAGGTACC"),
-                                              DNA("-GACCATGACCAGGTACC"),
-                                              DNA("GAACTTTGAC---GTAAC")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("-GACCTTGACCAGGTACC", metadata={'id': "s1"}),
+                        DNA("-GACCATGACCAGGTACC", metadata={'id': "s2"}),
+                        DNA("GAACTTTGAC---GTAAC", metadata={'id': "s3"})]))
+
         self.assertEqual(obs_score, 27.5)
         self.assertEqual(obs_start_end, [(0, 16), (0, 14)])
 
@@ -441,8 +458,11 @@ class PairwiseAlignmentTests(TestCase):
             gap_open_penalty=10., gap_extend_penalty=5., match_score=5,
             mismatch_score=-4)
 
-        self.assertEqual(obs_msa, TabularMSA([DNA("ACCTTGAC"),
-                                              DNA("ACTTTGAC")]))
+        self.assertEqual(
+            obs_msa,
+            TabularMSA([DNA("ACCTTGAC", metadata={'id': "s1"}),
+                        DNA("ACTTTGAC", metadata={'id': "s2"})]))
+
         self.assertEqual(obs_score, 31.0)
         self.assertEqual(obs_start_end, [(1, 8), (2, 9)])
 
@@ -663,10 +683,11 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([DNA("ACG-")], [DNA("ACGT")], 1, 0, 0)
+        expected = ([DNA("ACG-", metadata={'id': 'foo'})],
+                    [DNA("ACGT", metadata={'id': 'bar'})], 1, 0, 0)
         actual = _traceback(tback_m, score_m,
-                            TabularMSA([DNA('ACG', metadata={'id': ''})]),
-                            TabularMSA([DNA('ACGT', metadata={'id': ''})]),
+                            TabularMSA([DNA('ACG', metadata={'id': 'foo'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'bar'})]),
                             4, 3)
         self.assertEqual(actual, expected)
 
@@ -684,10 +705,10 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
         # start at bottom-right
-        expected = ([DNA("ACG-"),
-                     DNA("ACG-")],
-                    [DNA("ACGT"),
-                     DNA("ACGT")],
+        expected = ([DNA("ACG-", metadata={'id': 's1'}),
+                     DNA("ACG-", metadata={'id': 's2'})],
+                    [DNA("ACGT", metadata={'id': 's3'}),
+                     DNA("ACGT", metadata={'id': 's4'})],
                     1, 0, 0)
         actual = _traceback(tback_m, score_m,
                             TabularMSA([DNA('ACG', metadata={'id': 's1'}),
@@ -698,11 +719,11 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(actual, expected)
 
         # start at highest-score
-        expected = ([DNA("ACG")],
-                    [DNA("ACG")], 6, 0, 0)
+        expected = ([DNA("ACG", metadata={'id': 'foo'})],
+                    [DNA("ACG", metadata={'id': 'bar'})], 6, 0, 0)
         actual = _traceback(tback_m, score_m,
-                            TabularMSA([DNA('ACG', metadata={'id': ''})]),
-                            TabularMSA([DNA('ACGT', metadata={'id': ''})]),
+                            TabularMSA([DNA('ACG', metadata={'id': 'foo'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'bar'})]),
                             3, 3)
         self.assertEqual(actual, expected)
 
@@ -713,11 +734,11 @@ class PairwiseAlignmentTests(TestCase):
                    [2, 2, 2, 1],
                    [2, 2, 2, 2]]
         tback_m = np.array(tback_m)
-        expected = ([DNA("G")],
-                    [DNA("G")], 6, 2, 2)
+        expected = ([DNA("G", metadata={'id': 'a'})],
+                    [DNA("G", metadata={'id': 'a'})], 6, 2, 2)
         actual = _traceback(tback_m, score_m,
-                            TabularMSA([DNA('ACG', metadata={'id': ''})]),
-                            TabularMSA([DNA('ACGT', metadata={'id': ''})]),
+                            TabularMSA([DNA('ACG', metadata={'id': 'a'})]),
+                            TabularMSA([DNA('ACGT', metadata={'id': 'a'})]),
                             3, 3)
         self.assertEqual(actual, expected)
 

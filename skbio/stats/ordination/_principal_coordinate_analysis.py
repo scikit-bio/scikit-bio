@@ -12,10 +12,10 @@ import pandas as pd
 import numpy as np
 from scipy.linalg import eigh
 
-from skbio._base import OrdinationResults
 from skbio.stats.distance import DistanceMatrix
-from ._utils import e_matrix, f_matrix
 from skbio.util._decorator import experimental
+from ._ordination_results import OrdinationResults
+from ._utils import e_matrix, f_matrix
 
 # - In cogent, after computing eigenvalues/vectors, the imaginary part
 #   is dropped, if any. We know for a fact that the eigenvalues are
@@ -32,7 +32,7 @@ def pcoa(distance_matrix):
 
     Principal Coordinate Analysis (PCoA) is a method similar to PCA
     that works from distance matrices, and so it can be used with
-    ecologically meaningful distances like unifrac for bacteria.
+    ecologically meaningful distances like UniFrac for bacteria.
 
     In ecology, the euclidean distance preserved by Principal
     Component Analysis (PCA) is often not a good choice because it
@@ -45,12 +45,23 @@ def pcoa(distance_matrix):
     similar.).
 
     Parameters
-    ==========
+    ----------
     distance_matrix : DistanceMatrix
         A distance matrix.
 
+    Returns
+    -------
+    OrdinationResults
+        Object that stores the PCoA results, including eigenvalues, the
+        proportion explained by each of them, and transformed sample
+        coordinates.
+
+    See Also
+    --------
+    OrdinationResults
+
     Notes
-    =====
+    -----
     It is sometimes known as metric multidimensional scaling or
     classical scaling.
 

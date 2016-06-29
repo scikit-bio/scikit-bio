@@ -58,7 +58,18 @@ class TestStockholmSniffer(unittest.TestCase):
             'stockholm_all_data_types',
             'stockholm_two_of_each_metadata',
             'stockholm_data_only',
-            'stockholm_nonstring_labels'
+            'stockholm_nonstring_labels',
+            'stockholm_missing_reference_items',
+            'stockholm_multiple_references',
+            'stockholm_runon_references',
+            'stockholm_runon_references_mixed',
+            'stockholm_single_reference',
+            'stockholm_missing_reference_items',
+            'stockholm_missing_rn_tag',
+            'stockholm_different_padding',
+            'stockholm_multi_line_tree_no_id',
+            'stockholm_multi_line_tree_with_id',
+            'stockholm_multiple_multi_line_trees'
             ]]
 
         self.negatives = [get_data_path(e) for e in [
@@ -245,6 +256,105 @@ class TestStockholmReader(unittest.TestCase):
                                               'tree3': 'IJKL'}})
         self.assertEqual(msa, exp)
 
+    def test_stockhom_single_reference(self):
+        fp = get_data_path('stockholm_single_reference')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                          ('RT', 'A Title'),
+                                          ('RA', 'The Author'),
+                                          ('RL', 'A Location'),
+                                          ('RC', 'Comment')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multiple_references(self):
+        fp = get_data_path('stockholm_multiple_references')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                          ('RT', 'Title 1'),
+                                          ('RA', 'Author 1'),
+                                          ('RL', 'Location 1'),
+                                          ('RC', 'Comment 1')]),
+                             OrderedDict([('RM', '987654321'),
+                                          ('RT', 'Title 2'),
+                                          ('RA', 'Author 2'),
+                                          ('RL', 'Location 2'),
+                                          ('RC', 'Comment 2')]),
+                             OrderedDict([('RM', '132465879'),
+                                          ('RT', 'Title 3'),
+                                          ('RA', 'Author 3'),
+                                          ('RL', 'Location 3'),
+                                          ('RC', 'Comment 3')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_runon_references(self):
+        fp = get_data_path('stockholm_runon_references')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                          ('RT', 'A Runon Title'),
+                                          ('RA', 'The Author'),
+                                          ('RL', 'A Location'),
+                                          ('RC', 'A Runon Comment')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_mixed_runon_references(self):
+        fp = get_data_path('stockholm_runon_references_mixed')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RC', 'A Runon Comment'),
+                                          ('RM', '123456789'),
+                                          ('RT', 'A Runon Title'),
+                                          ('RA', 'The Author'),
+                                          ('RL', 'A Location')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_to_msa_different_padding(self):
+        fp = get_data_path('stockholm_different_padding')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RC',
+                                           'A Runon Comment Without '
+                                           'Whitespace')]),
+                             OrderedDict([('RC',
+                                           'A Runon Comment With '
+                                           'Whitespace')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_handles_missing_reference_items(self):
+        fp = get_data_path('stockholm_missing_reference_items')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RT', 'A Title'),
+                                          ('RA', 'The Author')])]})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_no_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_no_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': 'ABCDEFGH'})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multiple_multi_line_trees(self):
+        fp = get_data_path('stockholm_multiple_multi_line_trees')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH',
+                                              'tree2': 'IJKLMNOP'}})
+        self.assertEqual(msa, exp)
+
+    def test_stockholm_multi_line_tree_with_id(self):
+        fp = get_data_path('stockholm_multi_line_tree_with_id')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        exp = TabularMSA([], metadata={'NH': {'tree1': 'ABCDEFGH'}})
+        self.assertEqual(msa, exp)
+
     def test_multiple_msa_file(self):
         fp = get_data_path('stockholm_multiple_msa')
         msa = _stockholm_to_tabular_msa(fp, constructor=RNA)
@@ -278,6 +388,12 @@ class TestStockholmReader(unittest.TestCase):
         fp = get_data_path('stockholm_duplicate_tree_ids')
         with self.assertRaisesRegex(StockholmFormatError,
                                     'Tree.*tree1.*in file.'):
+            _stockholm_to_tabular_msa(fp, constructor=DNA)
+
+    def test_stockholm_missing_reference_number_error(self):
+        fp = get_data_path('stockholm_missing_rn_tag')
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Expected 'RN'.*'RL' tag."):
             _stockholm_to_tabular_msa(fp, constructor=DNA)
 
     def test_nonexistent_gr_error(self):
@@ -479,6 +595,50 @@ class TestStockholmWriter(unittest.TestCase):
             exp = fh.read()
         self.assertEqual(obs, exp)
 
+    def test_msa_to_stockholm_single_reference(self):
+        fp = get_data_path('stockholm_single_reference')
+        msa = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                          ('RT', 'A Title'),
+                                          ('RA', 'The Author'),
+                                          ('RL', 'A Location'),
+                                          ('RC', 'Comment')])]})
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_msa_to_stockholm_multiple_references(self):
+        fp = get_data_path('stockholm_multiple_references')
+        msa = TabularMSA(
+            [],
+            metadata={'RN': [OrderedDict([('RM', '123456789'),
+                                          ('RT', 'Title 1'),
+                                          ('RA', 'Author 1'),
+                                          ('RL', 'Location 1'),
+                                          ('RC', 'Comment 1')]),
+                             OrderedDict([('RM', '987654321'),
+                                          ('RT', 'Title 2'),
+                                          ('RA', 'Author 2'),
+                                          ('RL', 'Location 2'),
+                                          ('RC', 'Comment 2')]),
+                             OrderedDict([('RM', '132465879'),
+                                          ('RT', 'Title 3'),
+                                          ('RA', 'Author 3'),
+                                          ('RL', 'Location 3'),
+                                          ('RC', 'Comment 3')])]})
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
     def test_msa_to_stockholm_data_only(self):
         fp = get_data_path('stockholm_data_only')
         msa = TabularMSA([RNA('ACUCCGACAUGCUCC'),
@@ -557,6 +717,39 @@ class TestStockholmWriter(unittest.TestCase):
     def test_round_trip_multiple_trees(self):
         fp = get_data_path('stockholm_multiple_trees')
         msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_single_reference(self):
+        fp = get_data_path('stockholm_single_reference')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_multiple_references(self):
+        fp = get_data_path('stockholm_multiple_references')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
+        fh = io.StringIO()
+        _tabular_msa_to_stockholm(msa, fh)
+        obs = fh.getvalue()
+        fh.close()
+        with io.open(fp) as fh:
+            exp = fh.read()
+        self.assertEqual(obs, exp)
+
+    def test_round_trip_missing_references(self):
+        fp = get_data_path('stockholm_missing_reference_items')
+        msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         fh = io.StringIO()
         _tabular_msa_to_stockholm(msa, fh)
         obs = fh.getvalue()
@@ -679,6 +872,35 @@ class TestStockholmWriter(unittest.TestCase):
                                     '.*Found value\(s\) in column AC'):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
+
+    def test_rn_not_list_of_refs_error(self):
+        msa = TabularMSA([], metadata={'RN': '1'})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Expected 'RN'.*list of reference"
+                                    ".*got '1'"):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_rn_data_not_in_dict_error(self):
+        msa = TabularMSA([], metadata={'RN': [OrderedDict([('RL',
+                                                            'Flagstaff')]),
+                                              'Incorrect Item']})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Expected reference information.*stored"
+                                    " as a dictionary, found.*2 stored as "
+                                    "'str'"):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+
+    def test_invalid_reference_tag_error(self):
+        msa = TabularMSA([], metadata={'RN': [OrderedDict([('RL', 'Flagstaff'),
+                                                           ('foo', 'bar')])]})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    "Invalid reference.*foo' found in.*1.*Vali"
+                                    "d reference tags are:"):
+                fh = io.StringIO()
+                _tabular_msa_to_stockholm(msa, fh)
+
 
 if __name__ == '__main__':
     unittest.main()

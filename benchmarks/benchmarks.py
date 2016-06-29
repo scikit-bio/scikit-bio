@@ -61,4 +61,5 @@ class BenchmarkSuite:
         dna_seq.gc_content()
 
     def time_search_for_motif_in_gapped(self):
-        dna_seq.find_with_regex(motif_1_regex, ignore=dna_seq.gaps())
+        consume_iterator(
+            dna_seq.find_with_regex(motif_1_regex, ignore=dna_seq.gaps()))

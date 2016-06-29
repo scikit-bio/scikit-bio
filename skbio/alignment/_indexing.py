@@ -82,15 +82,15 @@ class _Indexing(metaclass=ABCMeta):
 
     @abstractmethod
     def is_scalar(self, indexable, axis):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _get_sequence(self, obj, indexable):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _slice_sequences(self, obj, indexable):
-        pass
+        raise NotImplementedError
 
     def _get_position(self, obj, indexable):
         return obj._get_position_(indexable)

@@ -718,16 +718,24 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
             (alignment.target_begin, alignment.target_end_optimal)
         ]
 
+    metadata1 = metadata2 = None
+    if sequence1.has_metadata():
+        metadata1 = sequence1.metadata
+    if sequence2.has_metadata():
+        metadata2 = sequence2.metadata
+
     constructor = type(sequence1)
     msa = TabularMSA([
-        constructor(alignment.aligned_query_sequence),
-        constructor(alignment.aligned_target_sequence)
+        constructor(alignment.aligned_query_sequence, metadata=metadata1,
+                    validate=False),
+        constructor(alignment.aligned_target_sequence, metadata=metadata2,
+                    validate=False)
     ])
 
     return msa, alignment.optimal_alignment_score, start_end
 
 
-@deprecated(as_of="0.4.0", until="0.5.0",
+@deprecated(as_of="0.4.0", until="0.5.1",
             reason="Will be replaced by a SubstitutionMatrix class. To track "
                    "progress, see [#161]"
                    "(https://github.com/biocore/scikit-bio/issues/161).")
@@ -898,12 +906,14 @@ def _compute_score_and_traceback_matrices(
 
     # Iterate over the characters in aln2 (which corresponds to the vertical
     # sequence in the matrix)
-    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(), 1):
+    for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(
+            ignore_metadata=True), 1):
         aln2_chars = str(aln2_chars)
 
         # Iterate over the characters in aln1 (which corresponds to the
         # horizontal sequence in the matrix)
-        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(), 1):
+        for aln1_pos, aln1_chars in enumerate(aln1.iter_positions(
+                ignore_metadata=True), 1):
             aln1_chars = str(aln1_chars)
 
             # compute the score for a match/mismatch
@@ -1009,15 +1019,23 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row,
             raise ValueError(
                 "Invalid value in traceback matrix: %s" % current_value)
 
-    for i in range(aln1_sequence_count):
-        aligned_seq = ''.join(aligned_seqs1[i][::-1])
+    for i, (aligned_seq, original) in enumerate(zip(aligned_seqs1, aln1)):
+        aligned_seq = ''.join(aligned_seq)[::-1]
         constructor = aln1.dtype
-        aligned_seqs1[i] = constructor(aligned_seq)
+        metadata = None
+        if original.has_metadata():
+            metadata = original.metadata
+        aligned_seqs1[i] = constructor(aligned_seq, metadata=metadata,
+                                       validate=False)
 
-    for i in range(aln2_sequence_count):
-        aligned_seq = ''.join(aligned_seqs2[i][::-1])
+    for i, (aligned_seq, original) in enumerate(zip(aligned_seqs2, aln2)):
+        aligned_seq = ''.join(aligned_seq)[::-1]
         constructor = aln2.dtype
-        aligned_seqs2[i] = constructor(aligned_seq)
+        metadata = None
+        if original.has_metadata():
+            metadata = original.metadata
+        aligned_seqs2[i] = constructor(aligned_seq, metadata=metadata,
+                                       validate=False)
 
     return aligned_seqs1, aligned_seqs2, best_score, current_col, current_row
 
