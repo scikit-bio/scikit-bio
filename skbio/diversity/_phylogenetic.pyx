@@ -41,6 +41,10 @@ def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,
         Py_ssize_t i, p_i, n_rows
         np.ndarray[np.double_t, ndim=1] mask
         np.ndarray[np.double_t, ndim=1] tip_ds = a.copy()
+        np.double_t* a_ptr = <np.double_t*> a.data
+        np.double_t* tip_ds_ptr = <np.double_t*> tip_ds.data
+        np.double_t* mask_ptr
+        DTYPE_t* tip_indices_ptr = <DTYPE_t*> tip_indices.data
 
     # preorder reduction over the tree to gather distances at the tips
     n_rows = tip_ds.shape[0]
@@ -48,17 +52,18 @@ def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,
         i = n.id
         p_i = n.parent.id
 
-        tip_ds[i] += tip_ds[p_i]
+        tip_ds_ptr[i] += tip_ds_ptr[p_i]
 
     # construct a mask that represents the locations of the tips
     mask = np.zeros(n_rows, dtype=np.double)
+    mask_ptr = <np.double_t*> mask.data
     for i in range(tip_indices.shape[0]):
-        mask[tip_indices[i]] = 1.0
+        mask_ptr[tip_indices_ptr[i]] = 1.0
 
     # apply the mask such that tip_ds only includes values which correspond to
     # the tips of the tree.
     for i in range(n_rows):
-        tip_ds[i] *= mask[i]
+        tip_ds_ptr[i] *= mask_ptr[i]
 
     return tip_ds
 
@@ -123,31 +128,36 @@ cdef _traverse_reduce(np.ndarray[DTYPE_t, ndim=2] child_index,
     This method operates inplace on ``a``
     """
     cdef:
-        Py_ssize_t i, j, k
+        Py_ssize_t i, j, k, n_nodes = child_index.shape[0]
+        Py_ssize_t ci_offset, a_offset
         DTYPE_t node, start, end
         DTYPE_t n_envs = a.shape[1]
+        DTYPE_t* ci_ptr = <DTYPE_t*> child_index.data
+        DTYPE_t* a_ptr = <DTYPE_t*> a.data
 
     # possible GPGPU target
-    for i in range(child_index.shape[0]):
-        node = child_index[i, 0]
-        start = child_index[i, 1]
-        end = child_index[i, 2]
+    ci_offset = 3  # node, start, stop
+    a_offset = n_envs
+    for i in range(n_nodes):
+        node = ci_ptr[i * ci_offset + 0]
+        start = ci_ptr[i * ci_offset + 1]
+        end = ci_ptr[i * ci_offset + 2]
 
         for j in range(start, end + 1):
             for k in range(n_envs):
-                a[node, k] += a[j, k]
+                a_ptr[node * a_offset + k] += a_ptr[j * a_offset + k]
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _nodes_by_counts(np.ndarray counts,
+def _nodes_by_counts(np.ndarray counts_in,
                      np.ndarray tip_ids,
                      dict indexed):
     """Construct the count array, and the counts up the tree
 
     Parameters
     ----------
-    counts : np.array of int
+    counts_in : np.array of int
         A 1D or 2D vector in which each row corresponds to the observed counts
         in an environment. The rows are expected to be in order with respect to
         `tip_ids`.
@@ -165,25 +175,27 @@ def _nodes_by_counts(np.ndarray counts,
     """
     cdef:
         np.ndarray nodes, observed_ids
-        np.ndarray[DTYPE_t, ndim=2] count_array, counts_t
+        np.ndarray[DTYPE_t, ndim=2] count_array, counts_t, counts_dtype
         np.ndarray[DTYPE_t, ndim=1] observed_indices, otus_in_nodes
         Py_ssize_t i, j
         set observed_ids_set
         object n
         dict node_lookup
         DTYPE_t n_count_vectors, n_count_otus
+        DTYPE_t* otus_in_nodes_ptr 
+        DTYPE_t* observed_indices_ptr
 
     nodes = indexed['name']
 
     # allow counts to be a vector
-    counts = np.atleast_2d(counts)
-    counts = counts.astype(DTYPE)
+    counts_dtype = np.atleast_2d(counts_in).astype(DTYPE)
 
     # determine observed IDs. It may be possible to unroll these calls to
     # squeeze a little more performance
-    observed_indices = counts.sum(0).nonzero()[0]
+    observed_indices = counts_dtype.sum(0).nonzero()[0]
     observed_ids = tip_ids[observed_indices]
     observed_ids_set = set(observed_ids)
+    observed_indices_ptr = <DTYPE_t*> observed_indices.data
 
     # construct mappings of the observed to their positions in the node array
     node_lookup = {}
@@ -194,21 +206,26 @@ def _nodes_by_counts(np.ndarray counts,
 
     # determine the positions of the observed IDs in nodes
     otus_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)
+    otus_in_nodes_ptr = <DTYPE_t*> otus_in_nodes.data
     for i in range(observed_ids.shape[0]):
         n = observed_ids[i]
-        otus_in_nodes[i] = node_lookup[n]
+        otus_in_nodes_ptr[i] = node_lookup[n]
 
     # count_array has a row per node (not tip) and a column per env.
-    n_count_vectors = counts.shape[0]
+    n_count_vectors = counts_dtype.shape[0]
     count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=DTYPE)
+    count_array_ptr = <DTYPE_t*> count_array.data
 
     # populate the counts array with the counts of each observation in each
     # env
-    counts_t = counts.transpose()
+    counts_t = counts_dtype.transpose()
     n_count_otus = otus_in_nodes.shape[0]
     for i in range(n_count_otus):
         for j in range(n_count_vectors):
-            count_array[otus_in_nodes[i], j] = counts_t[observed_indices[i], j]
+            # pointer arithmetic on counts_t is not working for an unknown
+            # reason, possibly due to astype or transpose.
+            count_array_ptr[otus_in_nodes_ptr[i] * n_count_vectors + j] =\
+                    counts_t[observed_indices_ptr[i], j]
 
     _traverse_reduce(indexed['child_index'], count_array)
 
