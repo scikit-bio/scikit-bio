@@ -7,6 +7,7 @@
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
+* Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex. 
 
 ### Performance enhancements
 * `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
