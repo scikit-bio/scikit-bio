@@ -494,16 +494,17 @@ class DissimilarityMatrix(SkbioObject):
         -------
         pd.Series
             ``pd.Series`` with IDs on index.
+
         Examples
         --------
         >>> from skbio import DistanceMatrix
         >>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
-        >>> dm.to_data_frame()
-            a    b    c
+        >>> df = dm.to_data_frame()
+             a    b    c
         a  0.0  1.0  2.0
         b  1.0  0.0  3.0
         c  2.0  3.0  0.0
-        >>> dm.to_series()
+        >>> df.to_series()
         a  a    0.0
            b    1.0
            c    2.0
@@ -514,6 +515,7 @@ class DissimilarityMatrix(SkbioObject):
            b    3.0
            c    0.0
         dtype: float64
+
         """
         df = pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
         stacked = df.stack()
