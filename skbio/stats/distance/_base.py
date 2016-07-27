@@ -500,11 +500,14 @@ class DissimilarityMatrix(SkbioObject):
         >>> from skbio import DistanceMatrix
         >>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
         >>> df = dm.to_data_frame()
+        >>> df
              a    b    c
         a  0.0  1.0  2.0
         b  1.0  0.0  3.0
         c  2.0  3.0  0.0
-        >>> df.to_series()
+
+        >>> s = df.to_series()
+        >>> s
         a  a    0.0
            b    1.0
            c    2.0
