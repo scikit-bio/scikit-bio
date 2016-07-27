@@ -497,7 +497,7 @@ class DissimilarityMatrix(SkbioObject):
         Examples
         --------
         >>> from skbio import DistanceMatrix
-        >>>>>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
+        >>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
         >>> dm.to_data_frame()
             a    b    c
         a  0.0  1.0  2.0
