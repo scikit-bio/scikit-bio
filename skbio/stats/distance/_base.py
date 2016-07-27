@@ -506,8 +506,8 @@ class DissimilarityMatrix(SkbioObject):
         b  1.0  0.0  3.0
         c  2.0  3.0  0.0
 
-        >>> s = df.to_series()
-        >>> s
+        >>> df = df.to_series()
+        >>> df
         a  a    0.0
            b    1.0
            c    2.0
