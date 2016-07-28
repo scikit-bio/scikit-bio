@@ -478,9 +478,10 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
     def test_to_series_3x3(self):
         df = self.dm_3x3.to_series()
         exp = pd.Series([0.0, 0.01, 4.2, 0.01, 0.0, 12.0, 4.2, 12.0, 0.0],
-                        pd.MultiIndex(levels=[['a', 'b', 'c'], ['a', 'b', 'c']],
+                        pd.MultiIndex(levels=[['a', 'b', 'c'],
+                                              ['a', 'b', 'c']],
                         labels=[[0, 0, 0, 1, 1, 1, 2, 2, 2],
-                            [0, 1, 2, 0, 1, 2, 0, 1, 2]]))
+                                [0, 1, 2, 0, 1, 2, 0, 1, 2]]))
         assert_series_almost_equal(df, exp)
 
     def test_to_series_default_ids(self):
