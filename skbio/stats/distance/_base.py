@@ -490,6 +490,7 @@ class DissimilarityMatrix(SkbioObject):
     @experimental(as_of="0.5.0")
     def to_series(self):
         """Create a ``pandas.Series`` from this ``DissimilarityMatrix``.
+
         Returns
         -------
         pd.Series
