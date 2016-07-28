@@ -515,7 +515,7 @@ class DissimilarityMatrix(SkbioObject):
         df = pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
         stacked = df.stack()
         return pd.Series(stacked)
-        
+
     @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
