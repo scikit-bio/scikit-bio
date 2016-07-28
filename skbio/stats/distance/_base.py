@@ -487,7 +487,7 @@ class DissimilarityMatrix(SkbioObject):
         """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
-    @experimental(as_of="0.5.0")
+    @experimental(as_of="0.5.0-dev")
     def to_series(self):
         """Create a ``pandas.Series`` from this ``DissimilarityMatrix``.
 
