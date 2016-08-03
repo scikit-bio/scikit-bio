@@ -501,21 +501,19 @@ class DissimilarityMatrix(SkbioObject):
         >>> from skbio import DistanceMatrix
         >>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
         >>> dm.to_series()
-        a  a    0.0
-           b    1.0
+        a  b    1.0
            c    2.0
         b  a    1.0
-           b    0.0
            c    3.0
         c  a    2.0
            b    3.0
-           c    0.0
         dtype: float64
 
         """
         df = pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
         stacked = df.stack()
-        return stacked
+        series = stacked[stacked > 0]
+        return series
 
     @experimental(as_of="0.4.0")
     def __str__(self):

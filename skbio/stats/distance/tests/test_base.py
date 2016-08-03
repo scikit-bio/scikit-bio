@@ -473,6 +473,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         exp = pd.Series([0.0],
                         pd.MultiIndex(levels=[['a'], ['a']],
                         labels=[[0], [0]]))
+        exp = exp[exp > 0]
         assert_series_almost_equal(series, exp)
 
     def test_to_series_3x3(self):
@@ -482,6 +483,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
                                               ['a', 'b', 'c']],
                         labels=[[0, 0, 0, 1, 1, 1, 2, 2, 2],
                                 [0, 1, 2, 0, 1, 2, 0, 1, 2]]))
+        exp = exp[exp > 0]
         assert_series_almost_equal(series, exp)
 
     def test_to_series_default_ids(self):
@@ -489,6 +491,7 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         exp = pd.Series([0.0, 0.123, 0.123, 0.0],
                         pd.MultiIndex(levels=[['0', '1'], ['0', '1']],
                         labels=[[0, 0, 1, 1], [0, 1, 0, 1]]))
+        exp = exp[exp > 0]
         assert_series_almost_equal(series, exp)
 
     def test_str(self):
