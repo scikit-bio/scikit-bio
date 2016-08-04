@@ -11,6 +11,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
+import itertools
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import squareform
@@ -487,34 +488,6 @@ class DissimilarityMatrix(SkbioObject):
         """
         return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
 
-    @experimental(as_of="0.5.0-dev")
-    def to_series(self):
-        """Create a ``pandas.Series`` from this ``DissimilarityMatrix``.
-
-        Returns
-        -------
-        pd.Series
-            ``pd.Series`` with IDs on index.
-
-        Examples
-        --------
-        >>> from skbio import DistanceMatrix
-        >>> dm = DistanceMatrix([[0, 1, 2],[1,0,3],[2,3,0]], ids=['a','b','c'])
-        >>> dm.to_series()
-        a  b    1.0
-           c    2.0
-        b  a    1.0
-           c    3.0
-        c  a    2.0
-           b    3.0
-        dtype: float64
-
-        """
-        df = pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
-        stacked = df.stack()
-        series = stacked[stacked > 0]
-        return series
-
     @experimental(as_of="0.4.0")
     def __str__(self):
         """Return a string representation of the dissimilarity matrix.
@@ -843,6 +816,52 @@ class DistanceMatrix(DissimilarityMatrix):
 
         """
         return squareform(self._data, force='tovector', checks=False)
+
+    @experimental(as_of="0.5.0-dev")
+    def to_series(self):
+        """Create a ``pandas.Series`` from this ``DistanceMatrix``.
+
+        The series will contain distances in condensed form: only distances from one matrix triangle are included,
+        and the diagonal is excluded. The series' index will be a ``pd.MultiIndex`` relating pairs of IDs to distances.
+        The pairs of IDs will be in row-major order with respect to the upper matrix triangle.
+
+        To obtain all distances (i.e. both upper and lower matrix triangles and the diagonal), use
+        ``DistanceMatrix.to_data_frame``. To obtain *only* the distances in condensed form
+        (e.g. for use with SciPy), use ``DistanceMatrix.condensed_form``.
+
+        Returns
+        -------
+        pd.Series
+            ``pd.Series`` with pairs of IDs on the index.
+
+        See Also
+        --------
+        to_data_frame
+        condensed_form
+        scipy.spatial.distance.squareform
+
+        Examples
+        --------
+        >>> from skbio import DistanceMatrix
+        >>> dm = DistanceMatrix([[0, 1, 2, 3],
+        >>>                      [1, 0, 4, 5],
+        >>>                      [2, 4, 0, 6],
+        >>>                      [3, 5, 6, 0]], ids=['a', 'b', 'c', 'd'])
+        >>> dm.to_series()
+        a  b    1.0
+           c    2.0
+           d    3.0
+        b  c    4.0
+           d    5.0
+        c  d    6.0
+        dtype: float64
+
+        """
+        distances = self.condensed_form()
+        # `id_pairs` will not be interpreted as a `pd.MultiIndex` if it is an iterable returned by `itertools.combinations`.
+        id_pairs = list(itertools.combinations(self.ids, 2))
+        index = pd.Index(id_pairs, tupleize_cols=True)
+        return pd.Series(data=distances, index=index, dtype=float)
 
     @experimental(as_of="0.4.0")
     def permute(self, condensed=False):

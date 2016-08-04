@@ -6,7 +6,7 @@
 * `DissimilarityMatrix` now has a new constructor method called `from_iterable`. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * `DissimilarityMatrix` now allows non-hollow matrices. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
-* 'DissimilarityMatrix' now has a new method called 'to_series' to create a Pandas series. ([#1397](https://github.com/biocore/scikit-bio/issues/1397)).
+* `DistanceMatrix` now has a new method called 'to_series' to create a Pandas series. ([#1397](https://github.com/biocore/scikit-bio/issues/1397)).
 
 ### Backward-incompatible changes [stable]
 
