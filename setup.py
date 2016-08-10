@@ -91,7 +91,7 @@ if USE_CYTHON:
 
 setup(name='scikit-bio',
       version=version,
-      license='BSD',
+      license='BSD-3-Clause',
       description=description,
       long_description=long_description,
       author="scikit-bio development team",
