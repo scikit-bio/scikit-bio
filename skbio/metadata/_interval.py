@@ -13,7 +13,7 @@ import operator
 
 
 class Interval:
-    '''Stores the position and metadata of an interval.
+    """Stores the position and metadata of an interval.
 
     This class supports the storing data for contiguous intervals
     and non-contiguous intervals.
@@ -35,13 +35,15 @@ class Interval:
     See Also
     --------
     skbio.metadata.IntervalMetadata
-    '''
+    """
     def __init__(self, interval_metadata, intervals,
                  boundaries=None, metadata=None):
-
+        if intervals is None:
+            raise ValueError('Cannot handle empty set of `intervals`.')
         ivs = list(intervals)
 
         # Intervals
+        # Question: what is this?
         self._interval_metadata = interval_metadata
         # http://stackoverflow.com/a/6422754/1167475
         # Used to sort boundaries later
@@ -207,11 +209,27 @@ class Interval:
 
 
 class IntervalMetadata():
-    """ Stores Interval objects """
+    """ Stores Interval objects.
+
+    A `IntervalMetadata`  metadata about intervals along a single coordinate
+    system. For instance, this can be used to store functional annotations
+    about genes across a genome.  The intervals
+
+    This object is typically coupled with another object, such as a `Sequence`
+    object, or a `TabularMSA` object.
+
+    """
     def __init__(self):
-        # stores metadata for each feature
+
+        # List of Interval objects, containing metadata for each interval.
+        # Question: rename to _intervals?
         self._metadata = []
+
+        # IntervalTree object to allow faster querying of interval objects.
+        # Question: rename to _interval_tree?
         self._intervals = IntervalTree()
+
+        # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
 
     def _reverse(self, length):
@@ -236,6 +254,13 @@ class IntervalMetadata():
 
     def add(self, intervals, boundaries=None, metadata=None):
         """ Adds a feature to the metadata object.
+
+        This method creates a list of `Interval` objects to be inserted into
+        the `IntervalMetadata` object, which contains information about the
+        interval positions, the metadata corresponding to the intervals, and
+        the boundary information corresponding to the intervals. The resulting
+        interval objects are then placed into the interval tree for faster
+        querying of intervals based on position.
 
         Parameters
         ----------
@@ -262,6 +287,7 @@ dropped=False>]
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
+        # Question: Can we return an Interval object.
         Interval(interval_metadata=self,
                  intervals=intervals,
                  boundaries=boundaries,
@@ -294,17 +320,28 @@ dropped=False>]
 
     @experimental(as_of='0.4.2-dev')
     def query(self, intervals=None, boundaries=None, metadata=None):
-        """ Looks up Interval objects with the intervals, boundaries and keywords.
+        """ Looks up `Interval` objects with the intervals, boundaries and keywords.
+
+        All Interval objects that satisfy a set of position constraints,
+        boundary conditions, and metadata keywords will be returned from
+        this function.  For instance, this can be used to look for all genes
+        within a specific interval in a genome.  Or it could be used to
+        find all toxin genes across a subset of a genome.
+
 
         Parameters
         ----------
         intervals : iterable of tuple of ints
-            A list of intervals associated with the Interval object.
+            A list of intervals associated with the `Interval` object.
+            Specifies what ranges of intervals to look for the `Interval`
+            objects.
         boundaries : iterable of tuple of bool
-            A list of boundaries associated with the Interval object.
+            A list of boundaries associated with the `Interval` object.
+            Specifies if the search should be inclusive or not.
         metadata : dict
             A dictionary of key word attributes associated with the
-            Interval object.
+            Interval object.  Specifies what metadata keywords and
+            values to look for.
 
         Returns
         -------
@@ -336,6 +373,15 @@ dropped=False>]
         if self._is_stale_tree:
             self._rebuild_tree(self._metadata)
             self._is_stale_tree = False
+
+        # TODO:
+        # 1: Grabbing intervals outside of sequence
+        # 2: Adding annotations that are incompatible with the sequence type.
+        # 3: strand information (ordered interval?)
+
+        # TODO:
+        # Can we have faster querying.
+        # (i.e. caching of metadata or database lookups).
 
         # empty iterator
         def empty():
@@ -379,7 +425,9 @@ dropped=False>]
     def drop(self, intervals=None, boundaries=None, metadata=None):
         """ Drops Interval objects according to a specified query.
 
-        Drops all Interval objects that matches the query.
+        Intervals are first queried from the IntervalMetadata object
+        using the query functionality. These intervals are then dropped
+        from the IntervalTree object before being deleted.
 
         Parameters
         ----------
