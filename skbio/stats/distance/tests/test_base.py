@@ -78,6 +78,11 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DistanceMatrixError):
             DistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
 
+    def test_init_non_hollow_dm(self):
+        data = [[1, 1], [1, 1]]
+        obs = DissimilarityMatrix(data, ['a', 'b'])
+        self.assertTrue(np.array_equal(obs.data, data))
+
     def test_init_no_ids(self):
         exp = DissimilarityMatrix(self.dm_3x3_data, ('0', '1', '2'))
         obs = DissimilarityMatrix(self.dm_3x3_data)
@@ -113,10 +118,122 @@ class DissimilarityMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DissimilarityMatrixError):
             DissimilarityMatrix(data, [])
 
-        # Non-hollow.
-        data = [[0.0, 1.0], [1.0, 0.01]]
+    def test_from_iterable_non_hollow_data(self):
+        iterable = (x for x in range(4))
+
+        exp = DissimilarityMatrix([[1, 1, 1, 1],
+                                   [1, 1, 1, 1],
+                                   [1, 1, 1, 1],
+                                   [1, 1, 1, 1]])
+        res = DissimilarityMatrix.from_iterable(iterable, lambda a, b: 1)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_asymmetric_data(self):
+        iterable = (x for x in range(4))
+
+        exp = DissimilarityMatrix([[0, 1, 2, 3],
+                                   [-1, 0, 1, 2],
+                                   [-2, -1, 0, 1],
+                                   [-3, -2, -1, 0]])
+        res = DissimilarityMatrix.from_iterable(iterable, lambda a, b: b - a)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_no_key(self):
+        iterable = (x for x in range(4))
+
+        exp = DissimilarityMatrix([[0, 1, 2, 3],
+                                   [1, 0, 1, 2],
+                                   [2, 1, 0, 1],
+                                   [3, 2, 1, 0]])
+        res = DissimilarityMatrix.from_iterable(iterable,
+                                                lambda a, b: abs(b - a))
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_with_key(self):
+        iterable = (x for x in range(4))
+
+        exp = DissimilarityMatrix([[0, 1, 2, 3],
+                                   [1, 0, 1, 2],
+                                   [2, 1, 0, 1],
+                                   [3, 2, 1, 0]], ['0', '1', '4', '9'])
+        res = DissimilarityMatrix.from_iterable(iterable,
+                                                lambda a, b: abs(b - a),
+                                                key=lambda x: str(x ** 2))
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_empty(self):
         with self.assertRaises(DissimilarityMatrixError):
-            DissimilarityMatrix(data, ['a', 'b'])
+            DissimilarityMatrix.from_iterable([], lambda x: x)
+
+    def test_from_iterable_single(self):
+        exp = DissimilarityMatrix([[100]])
+        res = DissimilarityMatrix.from_iterable(["boo"], lambda a, b: 100)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_with_keys(self):
+        iterable = (x for x in range(4))
+
+        exp = DissimilarityMatrix([[0, 1, 2, 3],
+                                   [1, 0, 1, 2],
+                                   [2, 1, 0, 1],
+                                   [3, 2, 1, 0]], ['0', '1', '4', '9'])
+        res = DissimilarityMatrix.from_iterable(iterable,
+                                                lambda a, b: abs(b - a),
+                                                keys=iter(['0', '1', '4', '9'])
+                                                )
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_with_key_and_keys(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(ValueError):
+            DissimilarityMatrix.from_iterable(iterable,
+                                              lambda a, b: abs(b - a),
+                                              key=str,
+                                              keys=['1', '2', '3', '4'])
+
+    def test_from_iterable_scipy_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DissimilarityMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DissimilarityMatrix.from_iterable(
+            seqs,
+            metric=scipy.spatial.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
+
+    def test_from_iterable_skbio_hamming_metric_with_metadata(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = DissimilarityMatrix([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'])
+
+        dm = DissimilarityMatrix.from_iterable(
+            seqs,
+            metric=skbio.sequence.distance.hamming,
+            keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
 
     def test_data(self):
         for dm, exp in zip(self.dms, self.dm_redundant_forms):
@@ -481,6 +598,11 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         with self.assertRaises(DistanceMatrixError):
             DistanceMatrix(data, ['a', 'b'])
 
+        # Non-hollow
+        data = [[1.0, 2.0], [2.0, 1.0]]
+        with self.assertRaises(DistanceMatrixError):
+            DistanceMatrix(data, ['a', 'b'])
+
         # Ensure that the superclass validation is still being performed.
         with self.assertRaises(DissimilarityMatrixError):
             DistanceMatrix([[1, 2, 3]], ['a'])
@@ -499,6 +621,46 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         res = DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a))
         self.assertEqual(res, exp)
 
+    def test_from_iterable_validate_equal_valid_data(self):
+        validate_true = DistanceMatrix.from_iterable((x for x in range(4)),
+                                                     lambda a, b: abs(b - a),
+                                                     validate=True)
+        validate_false = DistanceMatrix.from_iterable((x for x in range(4)),
+                                                      lambda a, b: abs(b - a),
+                                                      validate=False)
+        self.assertEqual(validate_true, validate_false)
+
+    def test_from_iterable_validate_false(self):
+        iterable = (x for x in range(4))
+
+        exp = DistanceMatrix([[0, 1, 2, 3],
+                              [1, 0, 1, 2],
+                              [2, 1, 0, 1],
+                              [3, 2, 1, 0]])
+        res = DistanceMatrix.from_iterable(iterable, lambda a, b: abs(b - a),
+                                           validate=False)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_validate_non_hollow(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError):
+            DistanceMatrix.from_iterable(iterable, lambda a, b: 1)
+
+    def test_from_iterable_validate_false_non_symmetric(self):
+        exp = DistanceMatrix([[0, 1, 2, 3],
+                              [1, 0, 1, 2],
+                              [2, 1, 0, 1],
+                              [3, 2, 1, 0]])
+        res = DistanceMatrix.from_iterable((x for x in range(4)),
+                                           lambda a, b: a - b,
+                                           validate=False)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_validate_asym(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError):
+            DistanceMatrix.from_iterable(iterable, lambda a, b: b - a)
+
     def test_from_iterable_with_key(self):
         iterable = (x for x in range(4))
 
@@ -516,7 +678,7 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
 
     def test_from_iterable_single(self):
         exp = DistanceMatrix([[0]])
-        res = DistanceMatrix.from_iterable(["boo"], lambda _: 100)
+        res = DistanceMatrix.from_iterable(["boo"], lambda a, b: 0)
         self.assertEqual(res, exp)
 
     def test_from_iterable_with_keys(self):

@@ -75,13 +75,16 @@ extensions = [
     Extension("skbio.metadata._intersection",
               ["skbio/metadata/_intersection" + ext]),
     Extension("skbio.stats.__subsample",
-              ["skbio/stats/__subsample" + ext]),
+              ["skbio/stats/__subsample" + ext],
+              include_dirs=[np.get_include()]),
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=ssw_extra_compile_args,
+              include_dirs=[np.get_include()]),
     Extension("skbio.diversity._phylogenetic",
-              ["skbio/diversity/_phylogenetic" + ext])
+              ["skbio/diversity/_phylogenetic" + ext],
+              include_dirs=[np.get_include()])
 ]
 
 if USE_CYTHON:
@@ -90,7 +93,7 @@ if USE_CYTHON:
 
 setup(name='scikit-bio',
       version=version,
-      license='BSD',
+      license='BSD-3-Clause',
       description=description,
       long_description=long_description,
       author="scikit-bio development team",
