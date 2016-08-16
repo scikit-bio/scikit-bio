@@ -214,15 +214,9 @@ class IntervalMetadata():
     This object is typically coupled with another object, such as a `Sequence`
     object, or a `TabularMSA` object.
 
-    Parameters
-    ----------
-
-    Attributes
-    ----------
-    _metadata :
-
     See Also
     --------
+    `skbio.metadata.Interval`
 
     Examples
     --------
@@ -259,9 +253,9 @@ class IntervalMetadata():
     >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
     >>> list(q3)
     []
+    >>> list(im._query_attributes({'gene': 'foo'}))
     """
     def __init__(self):
-
         # List of Interval objects.
         self._intervals = []
 
@@ -308,7 +302,7 @@ class IntervalMetadata():
         locations : iterable of tuple of ints
             A list of locations associated with the Interval object.
         boundaries : iterable of tuple of bool
-            A list of boundaries associated with the Interval object.
+            A list of boundaries associated with the locations.
         metadata : dict
             A dictionary of key word attributes associated with the
             Interval object.
@@ -317,6 +311,10 @@ class IntervalMetadata():
         -------
         `Interval`
             The `Interval` object just added.
+
+        See Also
+        --------
+        `skbio.metadata._add`
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
@@ -337,31 +335,30 @@ class IntervalMetadata():
                 self._interval_tree.add(start, end, f)
 
     def _query_interval(self, location):
-        """ Fetches Interval objects based on query location"""
+        """ Fetches Interval objects that overlap with location."""
         _assert_valid_location(location)
         start, end = location
         intvls = self._interval_tree.find(start, end)
         return intvls
 
-    def _query_attribute(self, intervals, metadata):
-        """ Fetches Interval objects based on query attributes.
-
-        TODO:
-        # Can we have faster querying.
-        # (i.e. caching of metadata or database lookups).
-        """
+    def _query_attribute(self, metadata, intervals=None):
+        """Fetches Interval objects based on query attributes."""
         if metadata is None:
             return []
+
+        if intervals is None:
+            intervals = self._intervals
 
         for intvl in intervals:
             for (key, value) in metadata.items():
                 if intvl.metadata[key] != value:
-                    continue
+                    break
+            else:
                 yield intvl
 
     @experimental(as_of='0.4.2-dev')
     def query(self, locations=None, metadata=None):
-        """ Looks up `Interval` objects with the intervals, boundaries and keywords.
+        """ Looks up `Interval` objects with the intervals, and keywords.
 
         All `Interval` objects that satisfy the position constraints and metadata
         will be returned from this function. For instance, this can be used to look for all genes
