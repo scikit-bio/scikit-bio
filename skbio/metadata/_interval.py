@@ -227,6 +227,7 @@ class IntervalMetadata():
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
+    >>> from pprint import pprint
     >>> im = IntervalMetadata()
     >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
@@ -247,6 +248,17 @@ class IntervalMetadata():
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    >>> q1 = im.query([(7, 9)])
+    >>> list(q1)  # doctest: +ELLIPSIS
+    [Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})]
+    >>> q2 = im.query([(1, 2), (3, 4)])
+    >>> pprint(list(q2))  # doctest: +ELLIPSIS
+    [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'}),
+     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'}),
+     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})]
+    >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
+    >>> list(q3)
+    []
     """
     def __init__(self):
 
@@ -276,7 +288,7 @@ class IntervalMetadata():
             # staled doesn't need to be called, since the setter for
             # Interval will take care of this
             intvls = list(map(lambda x: (length-x[1], length-x[0]),
-                            f.locations))
+                              f.locations))
             f.locations = intvls
 
     def sort(self, ascending=True):
@@ -303,19 +315,8 @@ class IntervalMetadata():
 
         Returns
         -------
-
-        Examples
-        --------
-        >>> from skbio.metadata import IntervalMetadata
-        >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(locations=[(0, 2)],
-        ...                       boundaries=None, metadata={'name': 'sagA'})
-        >>> interval_metadata.add(locations=[(40, 70)],
-        ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> list(interval_metadata.query(locations=[(1, 2)]))
-        [<Interval: start=0, end=2, 1 contiguous interval, 1 metadata keys, \
-dropped=False>]
-
+        `Interval`
+            The `Interval` object just added.
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
@@ -343,7 +344,12 @@ dropped=False>]
         return intvls
 
     def _query_attribute(self, intervals, metadata):
-        """ Fetches Interval objects based on query attributes"""
+        """ Fetches Interval objects based on query attributes.
+
+        TODO:
+        # Can we have faster querying.
+        # (i.e. caching of metadata or database lookups).
+        """
         if metadata is None:
             return []
 
@@ -354,25 +360,22 @@ dropped=False>]
                 yield intvl
 
     @experimental(as_of='0.4.2-dev')
-    def query(self, intervals=None, boundaries=None, metadata=None):
+    def query(self, locations=None, metadata=None):
         """ Looks up `Interval` objects with the intervals, boundaries and keywords.
 
-        All Interval objects that satisfy a set of position constraints,
-        boundary conditions, and metadata keywords will be returned from
-        this function.  For instance, this can be used to look for all genes
+        All `Interval` objects that satisfy the position constraints and metadata
+        will be returned from this function. For instance, this can be used to look for all genes
         within a specific interval in a genome.  Or it could be used to
         find all toxin genes across a subset of a genome.
 
 
         Parameters
         ----------
-        intervals : iterable of tuple of ints
+        locations : iterable of tuples of int pair
             A list of intervals associated with the `Interval` object.
             Specifies what ranges of intervals to look for the `Interval`
-            objects.
-        boundaries : iterable of tuple of bool
-            A list of boundaries associated with the `Interval` object.
-            Specifies if the search should be inclusive or not.
+            objects. An satisfying interval feature only need to overlap
+
         metadata : dict
             A dictionary of key word attributes associated with the
             Interval object.  Specifies what metadata keywords and
@@ -382,18 +385,6 @@ dropped=False>]
         -------
         generator, Interval
             A generator of Interval objects satisfying the search criteria.
-
-        Examples
-        --------
-        >>> from skbio.metadata import IntervalMetadata
-        >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(intervals=[(0, 2)],
-        ...                       boundaries=None, metadata={'name': 'sagA'})
-        >>> interval_metadata.add(intervals=[(40, 70)],
-        ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> list(interval_metadata.query(intervals=[(1, 2)]))
-        [<Interval: start=0, end=2, 1 contiguous interval, 1 metadata keys, \
-dropped=False>]
 
         Note
         ----
@@ -409,36 +400,26 @@ dropped=False>]
             self._rebuild_tree(self._intervals)
             self._is_stale_tree = False
 
-        # TODO:
-        # 1: Grabbing intervals outside of sequence
-        # 2: Adding annotations that are incompatible with the sequence type.
-        # 3: strand information (ordered interval?)
-
-        # TODO:
-        # Can we have faster querying.
-        # (i.e. caching of metadata or database lookups).
-
         # empty iterator
         def empty():
             return
             yield
         seen = set()
         intvls = empty()
-        if intervals is None and metadata is None:
+        if locations is None and metadata is None:
             return
             yield
         # only metadata specified
-        elif intervals is None and metadata is not None:
-            intvls = self._query_attribute(self._intervals,
-                                         metadata)
+        elif locations is None and metadata is not None:
+            intvls = self._query_attribute(self._intervals, metadata)
             for q in intvls:
                 if id(q) not in seen:
                     seen.add(id(q))
                     yield q
 
-        # only intervals specified
-        elif intervals is not None and metadata is None:
-            for value in intervals:
+        # only locations specified
+        elif locations is not None and metadata is None:
+            for value in locations:
                 intvls = chain(intvls, self._query_interval(value))
                 for q in intvls:
                     if id(q) not in seen:
@@ -447,8 +428,8 @@ dropped=False>]
         # both are specified
         else:
             # Find queries by interval
-            if intervals is not None:
-                for value in intervals:
+            if locations is not None:
+                for value in locations:
                     intvls = chain(intvls, self._query_interval(value))
             intvls = self._query_attribute(intvls, metadata)
             for q in intvls:
@@ -477,21 +458,22 @@ dropped=False>]
         Examples
         --------
         >>> from skbio.metadata import IntervalMetadata
-        >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(locations=[(0, 2), (4, 7)],
-        ...                       boundaries=None, metadata={'name': 'sagA'})
-        >>> interval_metadata.add(locations=[(40, 70)],
-        ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> interval_metadata.drop(metadata={'name': 'sagA'})
-        >>> list(interval_metadata.query(metadata={'name': 'sagA'}))
-        []
+        >>> im = IntervalMetadata()
+        >>> im.add(locations=[(0, 2), (4, 7)], metadata={'name': 'sagA'})   # doctest: +ELLIPSIS
+        Interval(interval_metadata=..., locations=[(0, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
+        >>> im.add(locations=[(40, 70)], metadata={'name': 'sagB'})   # doctest: +ELLIPSIS
+        Interval(interval_metadata=..., locations=[(40, 70)], boundaries=[(True, True)], metadata={'name': 'sagB'})
+        >>> im.drop(metadata={'name': 'sagA'})
+        >>> im   # doctest: +ELLIPSIS
+        1 interval features
+        -------------------
+        Interval(interval_metadata=..., locations=[(40, 70)], boundaries=[(True, True)], metadata={'name': 'sagB'})
         """
         if metadata is None:
             metadata = {}
 
         to_delete = {id(f) for f in
                      self.query(locations=locations,
-                                boundaries=boundaries,
                                 metadata=metadata)}
 
         new_intvls = []
