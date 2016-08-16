@@ -49,9 +49,9 @@ class Interval:
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> gene1 = Interval(interval_metadata=IntervalMetadata(),
     ...                  locations=[(1, 2), (4, 7)],
-    ...                  metadata={'name': 'sagA', 'function': 'transport'})
-    >>> gene1
-    <Interval: start=1, end=7, 2 non-contiguous intervals, 2 metadata keys, dropped=False>
+    ...                  metadata={'name': 'sagA'})
+    >>> gene1    # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
@@ -119,24 +119,9 @@ class Interval:
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
         ''''''
-        # need pformat to print out the dictionary
-        # in a consistent manner
-        classname = self.__class__.__name__
-        num_intervals = len(self.locations)
-        num_keys = len(self.metadata)
-        sts, ends = zip(*self.locations)
-        st = min(sts)
-        end = max(ends)
-        coords = "start=%d, end=%d" % (st, end)
-
-        if num_intervals == 1:
-            interval_summary = '1 contiguous interval'
-        else:
-            interval_summary = '%d non-contiguous intervals' % num_intervals
-        summary = ('<%s: %s, %s, %d metadata keys, dropped=%s>' %
-                   (classname, coords, interval_summary,
-                    num_keys, self.dropped))
-        return summary
+        s = '{}(interval_metadata=<{!r}>, locations={!r}, boundaries={!r}, metadata={!r})'
+        return s.format(self.__class__.__name__, id(self._interval_metadata),
+                        self.locations, self.boundaries, self.metadata)
 
     @experimental(as_of='0.4.2-dev')
     def __str__(self):
@@ -222,7 +207,7 @@ class Interval:
 class IntervalMetadata():
     """Stores the interval features of a sequence as a list of `Interval` objects.
 
-    A `IntervalMetadata`  includes intervals along a single coordinate
+    A `IntervalMetadata` includes intervals along a single coordinate
     system. For instance, this can be used to store functional annotations
     about genes across a genome.
 
@@ -243,11 +228,15 @@ class IntervalMetadata():
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> im = IntervalMetadata()
-    >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})
-    <Interval: start=3, end=9, 1 contiguous interval, 1 metadata keys, dropped=False>
-    >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})
-    <Interval: start=1, end=7, 2 non-contiguous intervals, 1 metadata keys, dropped=False>
-    >>> im
+    >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    >>> im    # doctest: +ELLIPSIS
+    2 interval features
+    -------------------
+    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     """
     def __init__(self):
 
@@ -279,6 +268,8 @@ class IntervalMetadata():
             invs = list(map(lambda x: (length-x[1], length-x[0]),
                             f.locations))
             f.locations = invs
+
+    def sort(self):
 
     def add(self, locations, boundaries=None, metadata=None):
         """ Adds a feature to the metadata object.
@@ -513,11 +504,18 @@ dropped=False>]
 
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
-        return str(self._intervals)
+        ''''''
+        n = len(self._intervals)
+        l1 = '{} interval features'.format(n)
+        l2 = '-' * len(l1)
 
-    @experimental(as_of='0.4.2-dev')
-    def __str__(self):
-        return self.__repr__()
+        if n <= 5:
+            items = [repr(i) for i in self._intervals]
+        else:
+            items = [repr(self._intervals[i]) for i in [0, 1, n-2, n-1]]
+            items[2:2] = '...'
+
+        return '\n'.join([l1, l2, *items])
 
 
 def _assert_valid_location(location):
