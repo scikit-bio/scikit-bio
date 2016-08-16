@@ -6,7 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import chain
 import operator
 
 from ._intersection import IntervalTree
@@ -23,7 +22,7 @@ class Interval:
     ----------
     interval_metadata : object
         A reference to the `IntervalMetadata` object that this
-        interval is associated to.
+        Interval object is associated to.
     locations : iterable of tuple of ints
         List of tuples representing start and end coordinates.
     boundaries : iterable of tuple of bool
@@ -253,7 +252,6 @@ class IntervalMetadata():
     >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
     >>> list(q3)
     []
-    >>> list(im._query_attributes({'gene': 'foo'}))
     """
     def __init__(self):
         # List of Interval objects.
@@ -344,7 +342,8 @@ class IntervalMetadata():
     def _query_attribute(self, metadata, intervals=None):
         """Fetches Interval objects based on query attributes."""
         if metadata is None:
-            return []
+            return
+            yield
 
         if intervals is None:
             intervals = self._intervals
@@ -358,81 +357,61 @@ class IntervalMetadata():
 
     @experimental(as_of='0.4.2-dev')
     def query(self, locations=None, metadata=None):
-        """ Looks up `Interval` objects with the intervals, and keywords.
+        """Yield `Interval` object with the locations and attributes.
 
-        All `Interval` objects that satisfy the position constraints and metadata
-        will be returned from this function. For instance, this can be used to look for all genes
-        within a specific interval in a genome.  Or it could be used to
-        find all toxin genes across a subset of a genome.
-
+        The `Interval` objects must meet both requirements: 1) overlap
+        with any of the spans specified by `locations`; 2) satisfy `metadata`
+        specification. For instance, you can identify all the recA genes
+        that overlap with (10, 100) or (900, 1000) with this code
+        `interval_metadata.query([(10, 100), (900, 1000)], {'gene': 'recA'})`.
 
         Parameters
         ----------
         locations : iterable of tuples of int pair
-            A list of intervals associated with the `Interval` object.
-            Specifies what ranges of intervals to look for the `Interval`
-            objects. An satisfying interval feature only need to overlap
+            Specifies locations to look for the `Interval`
+            objects. An satisfying interval feature only need to overlap with
+            one location. Default (`None`) means all `Interval`s meet
+            this requirement.
 
         metadata : dict
             A dictionary of key word attributes associated with the
-            Interval object.  Specifies what metadata keywords and
-            values to look for.
+            `Interval` object. It specifies what metadata keywords and
+            values to look for. Default (`None`) means all `Interval`s
+            meet this requirement.
 
         Returns
         -------
         generator, Interval
             A generator of Interval objects satisfying the search criteria.
-
-        Note
-        ----
-        There are two types of queries to perform
-        1. Query by interval.
-        2. Query by key/val pair (i.e. 'gene':'sagA').
-
-        If no intervals are specified, then only metadata will be searched for.
-        If no metadata is specified, then only intervals will be searched for.
-        Otherwise, the search will return the intersection of the two results.
         """
+        # don't forget to update before query
         if self._is_stale_tree:
             self._rebuild_tree(self._intervals)
             self._is_stale_tree = False
 
-        # empty iterator
-        def empty():
-            return
-            yield
         seen = set()
-        intvls = empty()
-        if locations is None and metadata is None:
-            return
-            yield
-        # only metadata specified
-        elif locations is None and metadata is not None:
-            intvls = self._query_attribute(self._intervals, metadata)
-            for q in intvls:
-                if id(q) not in seen:
-                    seen.add(id(q))
-                    yield q
 
-        # only locations specified
-        elif locations is not None and metadata is None:
-            for value in locations:
-                intvls = chain(intvls, self._query_interval(value))
+        if locations is None:
+            if metadata is None:
+                return iter(self._intervals)
+            else:
+                # only metadata specified
+                for q in self._query_attribute(metadata):
+                    yield q
+        else:
+            for loc in locations:
+                intvls = self._query_interval(loc)
                 for q in intvls:
                     if id(q) not in seen:
-                        seen.add(id(q))
-                        yield q
-        # both are specified
-        else:
-            # Find queries by interval
-            if locations is not None:
-                for value in locations:
-                    intvls = chain(intvls, self._query_interval(value))
-            intvls = self._query_attribute(intvls, metadata)
-            for q in intvls:
-                if id(q) not in seen:
-                    seen.add(id(q))
-                    yield q
+                        if metadata is None:
+                            seen.add(id(q))
+                            yield q
+                        else:
+                            intvls = self._query_attribute(metadata, intvls)
+                            for q in intvls:
+                                if id(q) not in seen:
+                                    seen.add(id(q))
+                                    yield q
 
     @experimental(as_of='0.4.2-dev')
     def drop(self, locations=None, boundaries=None, metadata=None):
