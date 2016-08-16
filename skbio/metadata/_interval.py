@@ -230,13 +230,23 @@ class IntervalMetadata():
     >>> im = IntervalMetadata()
     >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    >>> im.add(locations=[(3, 7)], metadata={'gene': 'sagC'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     >>> im    # doctest: +ELLIPSIS
-    2 interval features
+    3 interval features
     -------------------
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    >>> im.sort()
+    >>> im    # doctest: +ELLIPSIS
+    3 interval features
+    -------------------
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
+    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
     def __init__(self):
 
@@ -269,7 +279,11 @@ class IntervalMetadata():
                             f.locations))
             f.locations = invs
 
-    def sort(self):
+    def sort(self, ascending=True):
+        '''Sort intervals by their starting and ending coordinates.'''
+        self._intervals = sorted(
+            self._intervals,
+            key=lambda i: [i.locations[0][0], i.locations[-1][1]])
 
     def add(self, locations, boundaries=None, metadata=None):
         """ Adds a feature to the metadata object.
@@ -492,11 +506,9 @@ dropped=False>]
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
         ''''''
-        self_obj = sorted(self._intervals,
-                          key=operator.attrgetter('locations'))
-        other_obj = sorted(other._metadata,
-                           key=operator.attrgetter('locations'))
-        return self_obj == other_obj
+        self.sort()
+        other.sort()
+        return self._intervals == other._intervals
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
