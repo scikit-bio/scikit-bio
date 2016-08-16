@@ -275,9 +275,9 @@ class IntervalMetadata():
         for f in self._intervals:
             # staled doesn't need to be called, since the setter for
             # Interval will take care of this
-            invs = list(map(lambda x: (length-x[1], length-x[0]),
+            intvls = list(map(lambda x: (length-x[1], length-x[0]),
                             f.locations))
-            f.locations = invs
+            f.locations = intvls
 
     def sort(self, ascending=True):
         '''Sort intervals by their starting and ending coordinates.'''
@@ -339,19 +339,19 @@ dropped=False>]
         """ Fetches Interval objects based on query location"""
         _assert_valid_location(location)
         start, end = location
-        invs = self._interval_tree.find(start, end)
-        return invs
+        intvls = self._interval_tree.find(start, end)
+        return intvls
 
     def _query_attribute(self, intervals, metadata):
         """ Fetches Interval objects based on query attributes"""
         if metadata is None:
             return []
 
-        for inv in intervals:
+        for intvl in intervals:
             for (key, value) in metadata.items():
-                if inv.metadata[key] != value:
+                if intvl.metadata[key] != value:
                     continue
-                yield inv
+                yield intvl
 
     @experimental(as_of='0.4.2-dev')
     def query(self, intervals=None, boundaries=None, metadata=None):
@@ -423,15 +423,15 @@ dropped=False>]
             return
             yield
         seen = set()
-        invs = empty()
+        intvls = empty()
         if intervals is None and metadata is None:
             return
             yield
         # only metadata specified
         elif intervals is None and metadata is not None:
-            invs = self._query_attribute(self._intervals,
+            intvls = self._query_attribute(self._intervals,
                                          metadata)
-            for q in invs:
+            for q in intvls:
                 if id(q) not in seen:
                     seen.add(id(q))
                     yield q
@@ -439,8 +439,8 @@ dropped=False>]
         # only intervals specified
         elif intervals is not None and metadata is None:
             for value in intervals:
-                invs = chain(invs, self._query_interval(value))
-                for q in invs:
+                intvls = chain(intvls, self._query_interval(value))
+                for q in intvls:
                     if id(q) not in seen:
                         seen.add(id(q))
                         yield q
@@ -449,9 +449,9 @@ dropped=False>]
             # Find queries by interval
             if intervals is not None:
                 for value in intervals:
-                    invs = chain(invs, self._query_interval(value))
-            invs = self._query_attribute(invs, metadata)
-            for q in invs:
+                    intvls = chain(intvls, self._query_interval(value))
+            intvls = self._query_attribute(intvls, metadata)
+            for q in intvls:
                 if id(q) not in seen:
                     seen.add(id(q))
                     yield q
@@ -494,13 +494,13 @@ dropped=False>]
                                 boundaries=boundaries,
                                 metadata=metadata)}
 
-        new_invs = []
+        new_intvls = []
         # iterate through queries and drop them
-        for inv in self._intervals:
-            if id(inv) not in to_delete:
-                new_invs.append(inv)
+        for intvl in self._intervals:
+            if id(intvl) not in to_delete:
+                new_intvls.append(intvl)
 
-        self._intervals = new_invs
+        self._intervals = new_intvls
         self._is_stale_tree = True
 
     @experimental(as_of='0.4.2-dev')
