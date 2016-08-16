@@ -24,10 +24,10 @@ class Interval:
     interval_metadata : object
         A reference to the `IntervalMetadata` object that this
         interval is associated to.
-    intervals : iterable of tuple of ints
+    locations : iterable of tuple of ints
         List of tuples representing start and end coordinates.
     boundaries : iterable of tuple of bool
-        List of tuples, representing the openness of each interval.
+        List of tuples, representing the openness of each location.
         If this isn't specified, then all of the boundaries are True.
     metadata : dict
         Dictionary of attributes storing information of the feature
@@ -35,7 +35,9 @@ class Interval:
 
     Attributes
     ----------
+    locations :
 
+    boundaries :
 
     See Also
     --------
@@ -46,16 +48,16 @@ class Interval:
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> gene1 = Interval(interval_metadata=IntervalMetadata(),
-    ...                  intervals=[(1, 2), (4, 7)],
+    ...                  locations=[(1, 2), (4, 7)],
     ...                  metadata={'name': 'sagA', 'function': 'transport'})
     >>> gene1
     <Interval: start=1, end=7, 2 non-contiguous intervals, 2 metadata keys, dropped=False>
     """
-    def __init__(self, interval_metadata, intervals,
+    def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
-        if intervals is None:
-            raise ValueError('Cannot handle empty set of `intervals`.')
-        ivs = list(intervals)
+        if locations is None:
+            raise ValueError('Cannot handle empty set of `locations`.')
+        ivs = list(locations)
 
         # Intervals
         self._interval_metadata = interval_metadata
@@ -63,7 +65,7 @@ class Interval:
         # Used to sort boundaries later
         indices = [i[0] for i in sorted(enumerate(ivs),
                                         key=operator.itemgetter(1))]
-        self.intervals = sorted(ivs)
+        self.locations = sorted(ivs)
 
         # Boundaries
         if boundaries is not None:
@@ -78,37 +80,40 @@ class Interval:
 
         # Metadata
         if metadata is not None:
-            self._metadata = metadata
+            self.metadata = metadata
         else:
-            self._metadata = {}
+            self.metadata = {}
 
         if interval_metadata is not None:
-            self._add_interval()
+            self._add()
 
-    def _add_interval(self):
-        """ Add an interval object to the IntervalTree within
-            IntervalMetadata."""
+    def _add(self):
+        """Add the current `Interval` to the IntervalMetadata object."""
         # Add directly to the tree.  So no need for _is_stale_tree
-        for loc in self.intervals:
+        # Questions: directly adding leads to rebuilding of the tree?
+        for loc in self.locations:
             start, end = loc
-            self._interval_metadata._intervals.add(start, end, self)
-        self._interval_metadata._metadata.append(self)
+            self._interval_metadata._interval_tree.add(start, end, self)
+        self._interval_metadata._intervals.append(self)
 
     def _cmp(self, other):
-        """ Comparison operator required for sorting intervals.
+        """Compare 2 `Interval`s by their locations.
 
-        Note that this method does not check for equality.
+        It is required for sorting by coordinates. Note that this
+        method does not check for equality.
         """
-        return self.intervals < other.intervals
+        return self.locations < other.locations
 
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
+        ''''''
         return ((self.metadata == other.metadata) and
-                (self.intervals == other.intervals) and
+                (self.locations == other.locations) and
                 (self.boundaries == other.boundaries))
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
+        ''''''
         return not self.__eq__(other)
 
     @experimental(as_of='0.4.2-dev')
@@ -117,9 +122,9 @@ class Interval:
         # need pformat to print out the dictionary
         # in a consistent manner
         classname = self.__class__.__name__
-        num_intervals = len(self.intervals)
+        num_intervals = len(self.locations)
         num_keys = len(self.metadata)
-        sts, ends = zip(*self.intervals)
+        sts, ends = zip(*self.locations)
         st = min(sts)
         end = max(ends)
         coords = "start=%d, end=%d" % (st, end)
@@ -139,11 +144,9 @@ class Interval:
 
     @experimental(as_of='0.4.2-dev')
     def drop(self):
-        self._interval_metadata.drop(intervals=self.intervals,
+        self._interval_metadata.drop(intervals=self.locations,
                                      boundaries=self.boundaries,
                                      metadata=self.metadata)
-        self.boundaries = None
-        self.intervals = None
         self._interval_metadata = None
 
     @property
@@ -170,25 +173,25 @@ class Interval:
 
     @property
     @experimental(as_of='0.4.2-dev')
-    def intervals(self):
+    def locations(self):
         if self.dropped:
-            raise RuntimeError('Cannot retrieve intervals from.'
-                               'dropped Interval object.')
-        return self._intervals
+            raise RuntimeError(
+                'Cannot retrieve locations from dropped Interval object.')
+        return self._locations
 
-    @intervals.setter
+    @locations.setter
     @experimental(as_of='0.4.2-dev')
-    def intervals(self, value):
+    def locations(self, value):
         if value is None:
-            self._intervals = None
+            self._locations = None
         else:
-            for interval in value:
-                _assert_valid_interval(interval)
+            for location in value:
+                _assert_valid_location(location)
 
             if self.dropped:
-                raise RuntimeError('Cannot change intervals to dropped '
-                                   'Interval object.')
-            self._intervals = value
+                raise RuntimeError(
+                    'Cannot change locations to dropped Interval object.')
+            self._locations = value
             if self._interval_metadata is not None:
                 self._interval_metadata._is_stale_tree = True
 
@@ -196,8 +199,8 @@ class Interval:
     @experimental(as_of='0.4.2-dev')
     def metadata(self):
         if self.dropped:
-            raise RuntimeError('Cannot retrieve intervals from.'
-                               'dropped Interval object.')
+            raise RuntimeError(
+                'Cannot retrieve metadata from dropped Interval object.')
         return self._metadata
 
     @metadata.setter
@@ -217,11 +220,11 @@ class Interval:
 
 
 class IntervalMetadata():
-    """ Stores Interval objects.
+    """Stores the interval features of a sequence as a list of `Interval` objects.
 
-    A `IntervalMetadata`  metadata about intervals along a single coordinate
+    A `IntervalMetadata`  includes intervals along a single coordinate
     system. For instance, this can be used to store functional annotations
-    about genes across a genome.  The intervals
+    about genes across a genome.
 
     This object is typically coupled with another object, such as a `Sequence`
     object, or a `TabularMSA` object.
@@ -231,22 +234,28 @@ class IntervalMetadata():
 
     Attributes
     ----------
+    _metadata :
 
     See Also
     --------
 
     Examples
     --------
+    >>> from skbio.metadata import Interval, IntervalMetadata
+    >>> im = IntervalMetadata()
+    >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})
+    <Interval: start=3, end=9, 1 contiguous interval, 1 metadata keys, dropped=False>
+    >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})
+    <Interval: start=1, end=7, 2 non-contiguous intervals, 1 metadata keys, dropped=False>
+    >>> im
     """
     def __init__(self):
 
-        # List of Interval objects, containing metadata for each interval.
-        # Question: rename to _intervals?
-        self._metadata = []
+        # List of Interval objects.
+        self._intervals = []
 
         # IntervalTree object to allow faster querying of interval objects.
-        # Question: rename to _interval_tree?
-        self._intervals = IntervalTree()
+        self._interval_tree = IntervalTree()
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
@@ -264,27 +273,23 @@ class IntervalMetadata():
             Largest end coordinate to perform reverse complement.
             This typically corresponds to the length of sequence.
         """
-        for f in self._metadata:
+        for f in self._intervals:
             # staled doesn't need to be called, since the setter for
             # Interval will take care of this
             invs = list(map(lambda x: (length-x[1], length-x[0]),
-                            f.intervals))
-            f.intervals = invs
+                            f.locations))
+            f.locations = invs
 
-    def add(self, intervals, boundaries=None, metadata=None):
+    def add(self, locations, boundaries=None, metadata=None):
         """ Adds a feature to the metadata object.
 
-        This method creates a list of `Interval` objects to be inserted into
-        the `IntervalMetadata` object, which contains information about the
-        interval positions, the metadata corresponding to the intervals, and
-        the boundary information corresponding to the intervals. The resulting
-        interval objects are then placed into the interval tree for faster
-        querying of intervals based on position.
+        This method creates a `Interval` object and insert it into
+        the `IntervalMetadata` object.
 
         Parameters
         ----------
-        intervals : iterable of tuple of ints
-            A list of intervals associated with the Interval object.
+        locations : iterable of tuple of ints
+            A list of locations associated with the Interval object.
         boundaries : iterable of tuple of bool
             A list of boundaries associated with the Interval object.
         metadata : dict
@@ -298,35 +303,38 @@ class IntervalMetadata():
         --------
         >>> from skbio.metadata import IntervalMetadata
         >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(intervals=[(0, 2)],
+        >>> interval_metadata.add(locations=[(0, 2)],
         ...                       boundaries=None, metadata={'name': 'sagA'})
-        >>> interval_metadata.add(intervals=[(40, 70)],
+        >>> interval_metadata.add(locations=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
-        >>> list(interval_metadata.query(intervals=[(1, 2)]))
+        >>> list(interval_metadata.query(locations=[(1, 2)]))
         [<Interval: start=0, end=2, 1 contiguous interval, 1 metadata keys, \
 dropped=False>]
 
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
-        # Question: Can we return an Interval object.
         return Interval(interval_metadata=self,
-                        intervals=intervals,
+                        locations=locations,
                         boundaries=boundaries,
                         metadata=metadata)
 
+    def _exist(self, locations, boundaries, metadata):
+        '''Return True if the interval data exists.'''
+        self._query_interval(locations)
+
     def _rebuild_tree(self, intervals):
         """ Rebuilds the IntervalTree when the tree is stale."""
-        self._intervals = IntervalTree()
+        self._interval_tree = IntervalTree()
         for f in intervals:
-            for start, end in f.intervals:
-                self._intervals.add(start, end, f)
+            for start, end in f.locations:
+                self._interval_tree.add(start, end, f)
 
-    def _query_interval(self, interval):
-        """ Fetches Interval objects based on query interval"""
-        _assert_valid_interval(interval)
-        start, end = interval
-        invs = self._intervals.find(start, end)
+    def _query_interval(self, location):
+        """ Fetches Interval objects based on query location"""
+        _assert_valid_location(location)
+        start, end = location
+        invs = self._interval_tree.find(start, end)
         return invs
 
     def _query_attribute(self, intervals, metadata):
@@ -393,7 +401,7 @@ dropped=False>]
         Otherwise, the search will return the intersection of the two results.
         """
         if self._is_stale_tree:
-            self._rebuild_tree(self._metadata)
+            self._rebuild_tree(self._intervals)
             self._is_stale_tree = False
 
         # TODO:
@@ -416,7 +424,7 @@ dropped=False>]
             yield
         # only metadata specified
         elif intervals is None and metadata is not None:
-            invs = self._query_attribute(self._metadata,
+            invs = self._query_attribute(self._intervals,
                                          metadata)
             for q in invs:
                 if id(q) not in seen:
@@ -444,17 +452,17 @@ dropped=False>]
                     yield q
 
     @experimental(as_of='0.4.2-dev')
-    def drop(self, intervals=None, boundaries=None, metadata=None):
+    def drop(self, locations=None, boundaries=None, metadata=None):
         """ Drops Interval objects according to a specified query.
 
-        Intervals are first queried from the IntervalMetadata object
-        using the query functionality. These intervals are then dropped
+        Locations are first queried from the IntervalMetadata object
+        using the query functionality. These locations are then dropped
         from the IntervalTree object before being deleted.
 
         Parameters
         ----------
-        intervals : iterable of tuple of ints
-            A list of intervals associated with the Interval object.
+        locations : iterable of tuple of ints
+            A list of locations associated with the Interval object.
         boundaries : iterable of tuple of bool
             A list of boundaries associated with the Interval object.
         metadata : dict
@@ -465,9 +473,9 @@ dropped=False>]
         --------
         >>> from skbio.metadata import IntervalMetadata
         >>> interval_metadata = IntervalMetadata()
-        >>> interval_metadata.add(intervals=[(0, 2), (4, 7)],
+        >>> interval_metadata.add(locations=[(0, 2), (4, 7)],
         ...                       boundaries=None, metadata={'name': 'sagA'})
-        >>> interval_metadata.add(intervals=[(40, 70)],
+        >>> interval_metadata.add(locations=[(40, 70)],
         ...                       boundaries=None, metadata={'name': 'sagB'})
         >>> interval_metadata.drop(metadata={'name': 'sagA'})
         >>> list(interval_metadata.query(metadata={'name': 'sagA'}))
@@ -476,27 +484,28 @@ dropped=False>]
         if metadata is None:
             metadata = {}
 
-        queried_invs = self.query(intervals=intervals,
-                                  boundaries=boundaries,
-                                  metadata=metadata)
-        queried_invs = {q._hash(): q for q in queried_invs}
+        to_delete = {id(f) for f in
+                     self.query(locations=locations,
+                                boundaries=boundaries,
+                                metadata=metadata)}
 
         new_invs = []
         # iterate through queries and drop them
-        for inv in self._metadata:
-            if id(inv) not in queried_invs:
+        for inv in self._intervals:
+            if id(inv) not in to_delete:
                 new_invs.append(inv)
-        self._metadata = new_invs
+
+        self._intervals = new_invs
         self._is_stale_tree = True
 
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
-
-        self_metadata = sorted(self._metadata,
-                               key=operator.attrgetter('intervals'))
-        other_metadata = sorted(other._metadata,
-                                key=operator.attrgetter('intervals'))
-        return self_metadata == other_metadata
+        ''''''
+        self_obj = sorted(self._intervals,
+                          key=operator.attrgetter('locations'))
+        other_obj = sorted(other._metadata,
+                           key=operator.attrgetter('locations'))
+        return self_obj == other_obj
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
@@ -504,24 +513,24 @@ dropped=False>]
 
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
-        return str(self._metadata)
+        return str(self._intervals)
 
     @experimental(as_of='0.4.2-dev')
     def __str__(self):
         return self.__repr__()
 
 
-def _assert_valid_interval(interval):
-    if isinstance(interval, tuple):
+def _assert_valid_location(location):
+    if isinstance(location, tuple):
         try:
-            start, end = interval
+            start, end = location
             if start > end:
                 raise ValueError("`start` is greater than `end`.")
         except:
-            raise ValueError("An interval must be a tuple of exactly "
-                             "two coordinates, not %r" % (interval, ))
+            raise ValueError("An location must be a tuple of exactly "
+                             "two coordinates, not %r" % (location, ))
     else:
-        raise TypeError("Each interval must be a tuple, not %r" % interval)
+        raise TypeError("Each location must be a tuple, not %r" % location)
 
 
 def _assert_valid_boundary(boundary):
@@ -532,4 +541,4 @@ def _assert_valid_boundary(boundary):
             raise ValueError("An boundary must be a tuple of exactly "
                              "two coordinates, not %r" % (boundary, ))
     else:
-        raise TypeError("Each interval must be a tuple, not %r" % boundary)
+        raise TypeError("Each boundary must be a tuple, not %r" % boundary)
