@@ -6,10 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._intersection import IntervalTree
-from skbio.util._decorator import experimental
 from itertools import chain
 import operator
+
+from ._intersection import IntervalTree
+from skbio.util._decorator import experimental
 
 
 class Interval:
@@ -27,14 +28,28 @@ class Interval:
         List of tuples representing start and end coordinates.
     boundaries : iterable of tuple of bool
         List of tuples, representing the openness of each interval.
-        If this isn't specified, then all of the boundaries are true.
+        If this isn't specified, then all of the boundaries are True.
     metadata : dict
         Dictionary of attributes storing information of the feature
         such as `strand`, `gene_name` or `product`.
 
+    Attributes
+    ----------
+
+
     See Also
     --------
     skbio.metadata.IntervalMetadata
+
+
+    Examples
+    --------
+    >>> from skbio.metadata import Interval, IntervalMetadata
+    >>> gene1 = Interval(interval_metadata=IntervalMetadata(),
+    ...                  intervals=[(1, 2), (4, 7)],
+    ...                  metadata={'name': 'sagA', 'function': 'transport'})
+    >>> gene1
+    <Interval: start=1, end=7, 2 non-contiguous intervals, 2 metadata keys, dropped=False>
     """
     def __init__(self, interval_metadata, intervals,
                  boundaries=None, metadata=None):
@@ -43,11 +58,9 @@ class Interval:
         ivs = list(intervals)
 
         # Intervals
-        # Question: what is this?
         self._interval_metadata = interval_metadata
-        # http://stackoverflow.com/a/6422754/1167475
-        # Used to sort boundaries later
 
+        # Used to sort boundaries later
         indices = [i[0] for i in sorted(enumerate(ivs),
                                         key=operator.itemgetter(1))]
         self.intervals = sorted(ivs)
@@ -81,12 +94,6 @@ class Interval:
             self._interval_metadata._intervals.add(start, end, self)
         self._interval_metadata._metadata.append(self)
 
-    # This is required for creating unique sets of intervals
-    def _hash(self):
-        return hash(tuple(sorted(self.metadata.items()) +
-                          self.intervals +
-                          self.boundaries))
-
     def _cmp(self, other):
         """ Comparison operator required for sorting intervals.
 
@@ -106,6 +113,7 @@ class Interval:
 
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
+        ''''''
         # need pformat to print out the dictionary
         # in a consistent manner
         classname = self.__class__.__name__
@@ -218,6 +226,17 @@ class IntervalMetadata():
     This object is typically coupled with another object, such as a `Sequence`
     object, or a `TabularMSA` object.
 
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+
+    See Also
+    --------
+
+    Examples
+    --------
     """
     def __init__(self):
 
@@ -272,6 +291,9 @@ class IntervalMetadata():
             A dictionary of key word attributes associated with the
             Interval object.
 
+        Returns
+        -------
+
         Examples
         --------
         >>> from skbio.metadata import IntervalMetadata
@@ -288,10 +310,10 @@ dropped=False>]
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
         # Question: Can we return an Interval object.
-        Interval(interval_metadata=self,
-                 intervals=intervals,
-                 boundaries=boundaries,
-                 metadata=metadata)
+        return Interval(interval_metadata=self,
+                        intervals=intervals,
+                        boundaries=boundaries,
+                        metadata=metadata)
 
     def _rebuild_tree(self, intervals):
         """ Rebuilds the IntervalTree when the tree is stale."""
@@ -397,8 +419,8 @@ dropped=False>]
             invs = self._query_attribute(self._metadata,
                                          metadata)
             for q in invs:
-                if q._hash() not in seen:
-                    seen.add(q._hash())
+                if id(q) not in seen:
+                    seen.add(id(q))
                     yield q
 
         # only intervals specified
@@ -406,8 +428,8 @@ dropped=False>]
             for value in intervals:
                 invs = chain(invs, self._query_interval(value))
                 for q in invs:
-                    if q._hash() not in seen:
-                        seen.add(q._hash())
+                    if id(q) not in seen:
+                        seen.add(id(q))
                         yield q
         # both are specified
         else:
@@ -417,8 +439,8 @@ dropped=False>]
                     invs = chain(invs, self._query_interval(value))
             invs = self._query_attribute(invs, metadata)
             for q in invs:
-                if q._hash() not in seen:
-                    seen.add(q._hash())
+                if id(q) not in seen:
+                    seen.add(id(q))
                     yield q
 
     @experimental(as_of='0.4.2-dev')
@@ -462,7 +484,7 @@ dropped=False>]
         new_invs = []
         # iterate through queries and drop them
         for inv in self._metadata:
-            if inv._hash() not in queried_invs:
+            if id(inv) not in queried_invs:
                 new_invs.append(inv)
         self._metadata = new_invs
         self._is_stale_tree = True
