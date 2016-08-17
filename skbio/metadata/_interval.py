@@ -13,16 +13,18 @@ from skbio.util._decorator import experimental
 
 
 class Interval:
-    """Stores the position and metadata of an interval.
+    """Stores the position and metadata of an interval feature.
 
-    This class supports the storing data for contiguous intervals
-    and non-contiguous intervals.
+    This class stores interval feature. An interval feature
+    is defined as a sub-region of a sequence that is a functional
+    entity, e.g., a gene, a riboswitch, an exon, etc. It can span
+    a single contiguous region or multiple non-contiguous regions.
 
     Parameters
     ----------
     interval_metadata : object
-        A reference to the `IntervalMetadata` object that this
-        Interval object is associated to.
+        A reference to the ``IntervalMetadata`` object that this
+        ``Interval`` object is associated to.
     locations : iterable of tuple of ints
         List of tuples representing start and end coordinates.
     boundaries : iterable of tuple of bool
@@ -30,13 +32,13 @@ class Interval:
         If this isn't specified, then all of the boundaries are True.
     metadata : dict
         Dictionary of attributes storing information of the feature
-        such as `strand`, `gene_name` or `product`.
+        such as "strand", "gene_name", or "product".
 
     Attributes
     ----------
-    locations :
-
-    boundaries :
+    locations
+    boundaries
+    metadata
 
     See Also
     --------
@@ -46,10 +48,10 @@ class Interval:
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> gene1 = Interval(interval_metadata=IntervalMetadata(),
+    >>> gene = Interval(interval_metadata=IntervalMetadata(),
     ...                  locations=[(1, 2), (4, 7)],
     ...                  metadata={'name': 'sagA'})
-    >>> gene1    # doctest: +ELLIPSIS
+    >>> gene    # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     """
     def __init__(self, interval_metadata, locations,
@@ -87,7 +89,7 @@ class Interval:
             self._add()
 
     def _add(self):
-        """Add the current `Interval` to the IntervalMetadata object."""
+        """Add the current ``Interval`` to the IntervalMetadata object."""
         # Add directly to the tree.  So no need for _is_stale_tree
         # Questions: directly adding leads to rebuilding of the tree?
         for loc in self.locations:
@@ -95,39 +97,61 @@ class Interval:
             self._interval_metadata._interval_tree.add(start, end, self)
         self._interval_metadata._intervals.append(self)
 
-    def _cmp(self, other):
-        """Compare 2 `Interval`s by their locations.
-
-        It is required for sorting by coordinates. Note that this
-        method does not check for equality.
-        """
-        return self.locations < other.locations
-
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
-        ''''''
+        '''Test if this ``Interval`` object is equal to another.
+
+        Parameters
+        ----------
+        other : Interval
+            Interval to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates if the two objects are equal.
+        '''
         return ((self.metadata == other.metadata) and
                 (self.locations == other.locations) and
                 (self.boundaries == other.boundaries))
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
-        ''''''
+        '''Test if this ``Interval`` object is not equal to another.
+
+        Parameters
+        ----------
+        other : Interval
+            Interval to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates if the two objects are not equal.
+        '''
         return not self.__eq__(other)
 
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
-        ''''''
+        '''Return a string representation of this ``Interval`` object.
+
+        Returns
+        -------
+        str
+            String representation of this ``Interval`` object.
+        '''
         s = '{}(interval_metadata=<{!r}>, locations={!r}, boundaries={!r}, metadata={!r})'
         return s.format(self.__class__.__name__, id(self._interval_metadata),
                         self.locations, self.boundaries, self.metadata)
 
     @experimental(as_of='0.4.2-dev')
-    def __str__(self):
-        return self.__repr__()
-
-    @experimental(as_of='0.4.2-dev')
     def drop(self):
+        '''Drop this ``Interval`` object from the interval metadata it links to.
+
+        See Also
+        --------
+        skbio.metadata.IntervalMetadata.drop
+        '''
         self._interval_metadata.drop(intervals=self.locations,
                                      boundaries=self.boundaries,
                                      metadata=self.metadata)
@@ -136,6 +160,17 @@ class Interval:
     @property
     @experimental(as_of='0.4.2-dev')
     def boundaries(self):
+        '''The openness of each coordinate.
+
+        This indicates that the exact boundary point of a interval feature
+        is unknown. The location may begin or end at some points outside
+        the specified coordinates. This accommodates the location format [1]_
+        of INSDC.
+
+        References
+        ----------
+        .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
+        '''
         if self.dropped:
             raise RuntimeError('Cannot retrieve boundaries from.'
                                'dropped Interval object.')
@@ -158,6 +193,11 @@ class Interval:
     @property
     @experimental(as_of='0.4.2-dev')
     def locations(self):
+        '''The coordinates of the interval feature.
+
+        It should be a list of tuples of int pair. Each tuple stores
+        the start and end coordinates of a span of the interval feature.
+        '''
         if self.dropped:
             raise RuntimeError(
                 'Cannot retrieve locations from dropped Interval object.')
@@ -182,6 +222,11 @@ class Interval:
     @property
     @experimental(as_of='0.4.2-dev')
     def metadata(self):
+        '''The metadata of the interval feature.
+
+        It stores the metadata (eg. gene name, function, ID, etc.) of
+        the interval feature as a dict.
+        '''
         if self.dropped:
             raise RuntimeError(
                 'Cannot retrieve metadata from dropped Interval object.')
@@ -200,22 +245,33 @@ class Interval:
     @property
     @experimental(as_of='0.4.2-dev')
     def dropped(self):
+        '''Boolean value indicating if the ``Interval`` object is dropped.
+
+        Notes
+        -----
+        This property is not writable.
+
+        See Also
+        --------
+        skbio.metadata.Interval.drop
+        '''
         return self._interval_metadata is None
 
 
 class IntervalMetadata():
-    """Stores the interval features of a sequence as a list of `Interval` objects.
+    """Stores the interval features of a sequence as a list of ``Interval`` objects.
 
-    A `IntervalMetadata` includes intervals along a single coordinate
+    ``IntervalMetadata`` object to allow for the storage, modification, and
+    querying of interval features covering a region of a single coordinate
     system. For instance, this can be used to store functional annotations
     about genes across a genome.
 
-    This object is typically coupled with another object, such as a `Sequence`
-    object, or a `TabularMSA` object.
+    This object is typically coupled with another object, such as a ``Sequence``
+    object, or a ``TabularMSA`` object.
 
     See Also
     --------
-    `skbio.metadata.Interval`
+    skbio.metadata.Interval
 
     Examples
     --------
@@ -264,7 +320,7 @@ class IntervalMetadata():
         self._is_stale_tree = False
 
     def _reverse(self, length):
-        """ Reverse complements IntervalMetadata object.
+        """Reverse complements IntervalMetadata object.
 
         This operation reverses all of the interval coordinates.
         For instance, this can be used to compare coordinates
@@ -290,10 +346,10 @@ class IntervalMetadata():
             key=lambda i: [i.locations[0][0], i.locations[-1][1]])
 
     def add(self, locations, boundaries=None, metadata=None):
-        """ Adds a feature to the metadata object.
+        """Adds a feature to the metadata object.
 
-        This method creates a `Interval` object and insert it into
-        the `IntervalMetadata` object.
+        This method creates a ``Interval`` object and insert it into
+        the ``IntervalMetadata`` object.
 
         Parameters
         ----------
@@ -307,12 +363,12 @@ class IntervalMetadata():
 
         Returns
         -------
-        `Interval`
-            The `Interval` object just added.
+        Interval
+            The ``Interval`` object just added.
 
         See Also
         --------
-        `skbio.metadata._add`
+        skbio.metadata._add
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
@@ -326,14 +382,14 @@ class IntervalMetadata():
         self._query_interval(locations)
 
     def _rebuild_tree(self, intervals):
-        """ Rebuilds the IntervalTree when the tree is stale."""
+        """Rebuilds the IntervalTree when the tree is stale."""
         self._interval_tree = IntervalTree()
         for f in intervals:
             for start, end in f.locations:
                 self._interval_tree.add(start, end, f)
 
     def _query_interval(self, location):
-        """ Fetches Interval objects that overlap with location."""
+        """Fetches Interval objects that overlap with location."""
         _assert_valid_location(location)
         start, end = location
         intvls = self._interval_tree.find(start, end)
@@ -357,26 +413,26 @@ class IntervalMetadata():
 
     @experimental(as_of='0.4.2-dev')
     def query(self, locations=None, metadata=None):
-        """Yield `Interval` object with the locations and attributes.
+        """Yield ``Interval`` object with the locations and attributes.
 
-        The `Interval` objects must meet both requirements: 1) overlap
-        with any of the spans specified by `locations`; 2) satisfy `metadata`
+        The ``Interval`` objects must meet both requirements: 1) overlap
+        with any of the spans specified by ``locations``; 2) satisfy ``metadata``
         specification. For instance, you can identify all the recA genes
         that overlap with (10, 100) or (900, 1000) with this code
-        `interval_metadata.query([(10, 100), (900, 1000)], {'gene': 'recA'})`.
+        ``interval_metadata.query([(10, 100), (900, 1000)], {'gene': 'recA'})``.
 
         Parameters
         ----------
         locations : iterable of tuples of int pair
-            Specifies locations to look for the `Interval`
+            Specifies locations to look for the ``Interval``
             objects. An satisfying interval feature only need to overlap with
-            one location. Default (`None`) means all `Interval`s meet
+            one location. Default (``None``) means all ``Interval``s meet
             this requirement.
 
         metadata : dict
             A dictionary of key word attributes associated with the
-            `Interval` object. It specifies what metadata keywords and
-            values to look for. Default (`None`) means all `Interval`s
+            ``Interval`` object. It specifies what metadata keywords and
+            values to look for. Default (``None``) means all ``Interval``s
             meet this requirement.
 
         Returns
@@ -415,7 +471,7 @@ class IntervalMetadata():
 
     @experimental(as_of='0.4.2-dev')
     def drop(self, locations=None, boundaries=None, metadata=None):
-        """ Drops Interval objects according to a specified query.
+        """Drops Interval objects according to a specified query.
 
         Locations are first queried from the IntervalMetadata object
         using the query functionality. These locations are then dropped
@@ -463,18 +519,47 @@ class IntervalMetadata():
 
     @experimental(as_of='0.4.2-dev')
     def __eq__(self, other):
-        ''''''
+        '''Test if this object is equal to another.
+
+        Parameters
+        ----------
+        other : Interval
+            Interval to test for equality against.
+
+        Returns
+        -------
+        bool
+            Indicates if the two objects are equal.
+        '''
         self.sort()
         other.sort()
         return self._intervals == other._intervals
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
+        '''Test if this object is not equal to another.
+
+        Parameters
+        ----------
+        other : Interval
+            Interval to test for inequality against.
+
+        Returns
+        -------
+        bool
+            Indicates if the two objects are not equal.
+        '''
         return not self.__eq__(other)
 
     @experimental(as_of='0.4.2-dev')
     def __repr__(self):
-        ''''''
+        '''Return a string representation of this object.
+
+        Returns
+        -------
+        str
+            String representation of this ``IntervalMetadata`` object.
+        '''
         n = len(self._intervals)
         l1 = '{} interval features'.format(n)
         l2 = '-' * len(l1)
