@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 
-from skbio.metadata._interval import (_assert_valid_interval,
+from skbio.metadata._interval import (_assert_valid_location,
                                       _assert_valid_boundary)
 from skbio.metadata import Interval
 from skbio.metadata import IntervalMetadata
@@ -346,21 +346,21 @@ class TestInterval(unittest.TestCase):
 
 
 class TestIntervalUtil(unittest.TestCase):
-    def test_assert_valid_interval_tuple(self):
+    def test_assert_valid_location_tuple(self):
         interval = (1, 2)
-        _assert_valid_interval(interval)
+        _assert_valid_location(interval)
         st, end = interval
         self.assertEqual(st, 1)
         self.assertEqual(end, 2)
 
-    def test_assert_valid_interval_tuple_swapped(self):
+    def test_assert_valid_location_tuple_swapped(self):
         interval = (2, 1)
         with self.assertRaises(ValueError):
-            _assert_valid_interval(interval)
+            _assert_valid_location(interval)
 
-    def test_assert_valid_interval_tuple_bad(self):
+    def test_assert_valid_location_tuple_bad(self):
         with self.assertRaises(ValueError):
-            _assert_valid_interval((1, 2, 3))
+            _assert_valid_location((1, 2, 3))
 
     def test_assert_valid_boundary_tuple(self):
         boundary = (True, False)
@@ -424,6 +424,12 @@ class TestIntervalMetadata(unittest.TestCase):
         feats = list(im.query(intervals=[(1, 2)],
                               metadata={'gene': 'sagC'}))
         self.assertEqual(len(feats), 0)
+
+    def test_query_attribute(self):
+        im = IntervalMetadata()
+        im.add(locations=[(1, 9)], metadata={'gene': 'RecA', 'func': 'recombinase'})
+        f = im._query_attribute({'gene': 'foo', 'func': 'recombinase'})
+        print(list(f))
 
     def test_query_interval_only(self):
         im = IntervalMetadata()
