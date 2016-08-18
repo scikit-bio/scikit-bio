@@ -386,9 +386,21 @@ class IntervalMetadata():
     def _query_interval(self, location):
         """Fetches Interval objects that overlap with the location."""
         _assert_valid_location(location)
+        # don't forget to update before query
+        if self._is_stale_tree:
+            self._rebuild_tree()
+            self._is_stale_tree = False
+
         start, end = location
         intvls = self._interval_tree.find(start, end)
-        return intvls
+        # if a ``Interval`` has multiple non contiguous spans, multiple of which
+        # overlap with the location, then this ``Interval`` object will be returned
+        # multiple times. So we remove duplicates.
+        seen = set()
+        for intvl in intvls:
+            if id(intvl) not in seen:
+                seen.add(id(intvl))
+                yield intvl
 
     def _query_attribute(self, metadata, intervals=None):
         """Fetches Interval objects based on query attributes.
@@ -444,35 +456,13 @@ class IntervalMetadata():
         generator, Interval
             A generator of Interval objects satisfying the search criteria.
         """
-        # don't forget to update before query
-        if self._is_stale_tree:
-            self._rebuild_tree()
-            self._is_stale_tree = False
-
-        seen = set()
-
         if locations is None:
-            if metadata is None:
-                return
-                yield
-            else:
-                # only metadata specified
-                for q in self._query_attribute(metadata):
-                    yield q
+            for q in self._query_attribute(metadata):
+                yield q
         else:
             for loc in locations:
                 intvls = self._query_interval(loc)
-                for q in intvls:
-                    if id(q) not in seen:
-                        if metadata is None:
-                            seen.add(id(q))
-                            yield q
-                        else:
-                            intvls = self._query_attribute(metadata, intvls)
-                            for q in intvls:
-                                if id(q) not in seen:
-                                    seen.add(id(q))
-                                    yield q
+                return self._query_attribute(metadata, intvls)
 
     @experimental(as_of='0.4.2-dev')
     def drop(self, locations=None, boundaries=None, metadata=None):
