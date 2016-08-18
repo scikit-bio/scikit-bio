@@ -152,8 +152,7 @@ class Interval:
         --------
         skbio.metadata.IntervalMetadata.drop
         '''
-        self._interval_metadata.drop(intervals=self.locations,
-                                     boundaries=self.boundaries,
+        self._interval_metadata.drop(locations=self.locations,
                                      metadata=self.metadata)
         self._interval_metadata = None
 
@@ -377,10 +376,6 @@ class IntervalMetadata():
                         boundaries=boundaries,
                         metadata=metadata)
 
-    def _exist(self, locations, boundaries, metadata):
-        '''Return True if the interval data exists.'''
-        self._query_interval(locations)
-
     def _rebuild_tree(self, intervals):
         """Rebuilds the IntervalTree when the tree is stale."""
         self._interval_tree = IntervalTree()
@@ -396,7 +391,16 @@ class IntervalMetadata():
         return intvls
 
     def _query_attribute(self, metadata, intervals=None):
-        """Fetches Interval objects based on query attributes."""
+        """Fetches Interval objects based on query attributes.
+
+        Parameters
+        ----------
+        metadata : dict or ``None``
+            If it is ``None``, return empty iterator; if it is
+            ``{}``, return an interator of all the ``Interval``
+            objects.
+        intervals : a iterable of ``Interval`` objects
+        """
         if metadata is None:
             return
             yield
@@ -449,7 +453,8 @@ class IntervalMetadata():
 
         if locations is None:
             if metadata is None:
-                return iter(self._intervals)
+                return
+                yield
             else:
                 # only metadata specified
                 for q in self._query_attribute(metadata):
@@ -580,7 +585,7 @@ def _assert_valid_location(location):
             if start > end:
                 raise ValueError("`start` is greater than `end`.")
         except:
-            raise ValueError("An location must be a tuple of exactly "
+            raise ValueError("A location must be a tuple of exactly "
                              "two coordinates, not %r" % (location, ))
     else:
         raise TypeError("Each location must be a tuple, not %r" % location)
@@ -591,7 +596,9 @@ def _assert_valid_boundary(boundary):
         try:
             start, end = boundary
         except:
-            raise ValueError("An boundary must be a tuple of exactly "
-                             "two coordinates, not %r" % (boundary, ))
+            raise ValueError("A boundary must be a tuple of exactly "
+                             "two, not %r" % (boundary, ))
+        if not (isinstance(start, bool) and isinstance(end, bool)):
+            raise ValueError('A boundary must be a tuple of two booleans')
     else:
         raise TypeError("Each boundary must be a tuple, not %r" % boundary)
