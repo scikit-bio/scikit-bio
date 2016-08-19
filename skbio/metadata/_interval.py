@@ -335,8 +335,11 @@ class IntervalMetadata():
             # staled doesn't need to be called, since the setter for
             # Interval will take care of this
             intvls = list(map(lambda x: (length-x[1], length-x[0]),
-                              f.locations))
+                              reversed(f.locations)))
             f.locations = intvls
+
+        # DONT' forget this!!!
+        self._is_stale_tree = True
 
     def sort(self, ascending=True):
         '''Sort intervals by their starting and ending coordinates.'''
