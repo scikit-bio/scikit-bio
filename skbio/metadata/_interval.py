@@ -564,8 +564,8 @@ class IntervalMetadata():
         if n <= 5:
             items = [repr(i) for i in self._intervals]
         else:
-            items = [repr(self._intervals[i]) for i in [0, 1, n-2, n-1]]
-            items[2:2] = '...'
+            items = [repr(self._intervals[i]) for i in [0, 1, 2, n-2, n-1]]
+            items[2] = '...'
 
         return '\n'.join([l1, l2, *items])
 
