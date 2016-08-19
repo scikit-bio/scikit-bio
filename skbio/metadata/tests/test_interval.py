@@ -277,10 +277,24 @@ class TestIntervalMetadata(unittest.TestCase):
             locations=[(3, 5)],
             metadata={'gene': 'sagB', 'location': 0})
 
-
     def test_init(self):
         self.assertFalse(self.im_empty._is_stale_tree)
         self.assertEqual(self.im_empty._intervals, [])
+
+    def test_sort(self):
+        im = deepcopy(self.im_2)
+        self.im_2.sort(False)
+        self.assertEqual(im, self.im_2)
+        self.assertEqual(self.im_2._intervals[0], self.interval_2)
+        self.assertEqual(self.im_2._intervals[1], self.interval_1)
+
+        self.im_2.sort()
+        self.assertEqual(im, self.im_2)
+        self.assertEqual(self.im_2._intervals[0], self.interval_1)
+        self.assertEqual(self.im_2._intervals[1], self.interval_2)
+
+        self.im_empty.sort()
+        self.assertEqual(self.im_empty, IntervalMetadata())
 
     def test_add(self):
         self.im_empty.add(locations=[(1, 2), (4, 7)],
