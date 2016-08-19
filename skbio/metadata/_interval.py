@@ -345,7 +345,8 @@ class IntervalMetadata():
         '''Sort intervals by their starting and ending coordinates.'''
         self._intervals = sorted(
             self._intervals,
-            key=lambda i: [i.locations[0][0], i.locations[-1][1]])
+            key=lambda i: [i.locations[0][0], i.locations[-1][1]],
+            reverse=not ascending)
 
     def add(self, locations, boundaries=None, metadata=None):
         """Adds a feature to the metadata object.
@@ -528,9 +529,11 @@ class IntervalMetadata():
         bool
             Indicates if the two objects are equal.
         '''
-        self.sort()
-        other.sort()
-        return self._intervals == other._intervals
+        self_intervals = sorted(self._intervals,
+                                key=operator.attrgetter('locations'))
+        other_intervals = sorted(other._intervals,
+                                 key=operator.attrgetter('locations'))
+        return self_intervals == other_intervals
 
     @experimental(as_of='0.4.2-dev')
     def __ne__(self, other):
