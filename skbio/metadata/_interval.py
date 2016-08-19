@@ -55,34 +55,23 @@ class Interval:
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
-        if locations is None:
-            raise ValueError('Cannot handle empty set of `locations`.')
-        ivs = list(locations)
-
         # Intervals
         self._interval_metadata = interval_metadata
 
-        # Used to sort boundaries later
-        indices = [i[0] for i in sorted(enumerate(ivs),
-                                        key=operator.itemgetter(1))]
-        self.locations = sorted(ivs)
+        locations = list(locations)
+        self.locations = locations
 
-        # Boundaries
-        if boundaries is not None:
-            bds = list(boundaries)
-            if len(bds) != len(ivs):
-                msg = ('The number of boundaries (%d) needs '
-                       'to be equal to the number of intervals (%d).')
-                raise ValueError(msg % (len(bds), len(ivs)))
-            self.boundaries = [bds[i] for i in indices]
-        else:
-            self.boundaries = [(True, True)] * len(ivs)
+        # Boundaries: has to be after locations assignment because locations setter
+        # reset boundaries.
+        indices = [i[0] for i in sorted(enumerate(locations),
+                                        key=operator.itemgetter(1))]
+        self.boundaries = boundaries
+        self.boundaries = [self.boundaries[i] for i in indices]
 
         # Metadata
-        if metadata is not None:
-            self.metadata = metadata
-        else:
-            self.metadata = {}
+        if metadata is None:
+            metadata = {}
+        self.metadata = metadata
 
         if interval_metadata is not None:
             self._add()
@@ -177,15 +166,27 @@ class Interval:
     @boundaries.setter
     @experimental(as_of='0.5.0-dev')
     def boundaries(self, value):
+        if self.dropped:
+            raise RuntimeError('Cannot change boundaries to dropped '
+                               'Interval object.')
+        nl = len(self.locations)
         if value is None:
-            self._boundaries = None
+            self._boundaries = [(True, True)] * nl
         else:
+            try:
+                value = list(value)
+            except:
+                raise TypeError(
+                    'Cannot give a non-iterable (%r) to `boundaries`.' % value)
+
+            nb = len(value)
+            if nb != nl:
+                msg = ('The length of boundaries (%d) needs '
+                       'to be equal to the length of locations (%d).')
+                raise ValueError(msg % (nb, nl))
+
             for boundary in value:
                 _assert_valid_boundary(boundary)
-
-            if self.dropped:
-                raise RuntimeError('Cannot change boundaries to dropped '
-                                   'Interval object.')
             self._boundaries = value
 
     @property
@@ -204,18 +205,33 @@ class Interval:
     @locations.setter
     @experimental(as_of='0.5.0-dev')
     def locations(self, value):
-        if value is None:
-            self._locations = None
-        else:
-            for location in value:
-                _assert_valid_location(location)
+        '''Set ``locations``.
 
-            if self.dropped:
-                raise RuntimeError(
-                    'Cannot change locations to dropped Interval object.')
-            self._locations = value
-            if self._interval_metadata is not None:
-                self._interval_metadata._is_stale_tree = True
+        WARNING: setting ``locations`` will reset ``boundaries`` value to True.
+        This is not totally surprising because it is justifiable your old
+        boundaries don't fit the new locations.
+        '''
+        if self.dropped:
+            raise RuntimeError(
+                'Cannot change locations to dropped Interval object.')
+        # check iterability
+        try:
+            value = list(value)
+        except:
+            raise TypeError(
+                'Cannot give a non-iterable (%r) to `locations`.' % value)
+        # check it is not empty
+        if len(value) == 0:
+            raise ValueError(
+                'Cannot give empty `location`.')
+        # check each contiguous span is in right format
+        for location in value:
+            _assert_valid_location(location)
+        # don't forget to sort the spans
+        self._locations = sorted(value)
+        # reset all the boundaries to True!!
+        self.boundaries = None
+        self._interval_metadata._is_stale_tree = True
 
     @property
     @experimental(as_of='0.5.0-dev')

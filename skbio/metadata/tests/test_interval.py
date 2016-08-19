@@ -65,7 +65,7 @@ class TestInterval(unittest.TestCase):
         self.assertDictEqual(f.metadata, {'name': 'sagA',
                                           'function': 'transport'})
 
-    def test_scrambled_constructor(self):
+    def test_init_locations_scrambled(self):
         f = Interval(interval_metadata=IntervalMetadata(),
                      locations=[(4, 7), (1, 2)],
                      boundaries=[(True, False), (False, True)],
@@ -77,14 +77,14 @@ class TestInterval(unittest.TestCase):
         self.assertDictEqual(f.metadata, {'name': 'sagA',
                                           'function': 'transport'})
 
-    def test_bad_constructor(self):
+    def test_init_bad(self):
         with self.assertRaises(TypeError):
             Interval(interval_metadata=IntervalMetadata(),
                      locations=[1, (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_bad_constructor_bad_boundaries(self):
+    def test_init_bad_boundaries(self):
         with self.assertRaises(ValueError):
             Interval(interval_metadata=IntervalMetadata(),
                      locations=[(1, 2), (4, 7)],
@@ -158,17 +158,31 @@ class TestInterval(unittest.TestCase):
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
-        f.locations = [(1, 3), (4, 7)]
+        f.locations = [(4, 7), (1, 3)]
         self.assertEqual(f.locations, [(1, 3), (4, 7)])
+        self.assertEqual(f.boundaries, [(True, True), (True, True)])
         self.assertEqual(im._is_stale_tree, True)
 
-    def test_set_locations_none(self):
+    def test_set_locations_on_dropped(self):
         with self.assertRaises(RuntimeError):
             f = Interval(interval_metadata=None,
                          locations=[(1, 2), (4, 7)],
                          boundaries=[(True, False), (False, False)],
                          metadata={'name': 'sagA', 'function': 'transport'})
             f.locations = [(1, 3), (4, 7)]
+
+    def test_set_locations_bad(self):
+        f = Interval(interval_metadata=IntervalMetadata(),
+                     locations=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        for value in [1, 's', None]:
+            with self.assertRaises(TypeError):
+                f.locations = value
+
+        for value in [[(3, 1)], [('s', 1)], ()]:
+            with self.assertRaises(ValueError):
+                f.locations = value
 
     def test_get_boundaries(self):
         im = IntervalMetadata()
@@ -184,8 +198,21 @@ class TestInterval(unittest.TestCase):
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
-        f.locations = [(False, False), (False, False)]
-        self.assertEqual(f.locations, [(False, False), (False, False)])
+        f.boundaries = [(False, False), (False, False)]
+        self.assertEqual(f.boundaries, [(False, False), (False, False)])
+
+    def test_set_boundaries_bad(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     locations=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        for value in [[(False, False)], ()]:
+            with self.assertRaises(ValueError):
+                f.boundaries = value
+        for value in [1, 's', None]:
+            with self.assertRaises(TypeError):
+                f.locations = value
 
     def test_get_metadata(self):
         im = IntervalMetadata()
@@ -205,6 +232,8 @@ class TestInterval(unittest.TestCase):
         f.metadata = {'name': 'sagB', 'function': 'transport'}
         self.assertDictEqual(f.metadata,
                              {'name': 'sagB', 'function': 'transport'})
+        f.metadata = {}
+        self.assertDictEqual(f.metadata, {})
 
     def test_get_bad(self):
         im = IntervalMetadata()
@@ -214,11 +243,11 @@ class TestInterval(unittest.TestCase):
                      metadata={'name': 'sagA', 'function': 'transport'})
         f.drop()
         with self.assertRaises(RuntimeError):
-            f.boundaries()
+            f.boundaries
         with self.assertRaises(RuntimeError):
-            f.locations()
+            f.locations
         with self.assertRaises(RuntimeError):
-            f.locations()
+            f.metadata
 
 
 class TestIntervalUtil(unittest.TestCase):
