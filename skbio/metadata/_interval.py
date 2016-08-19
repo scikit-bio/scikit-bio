@@ -44,7 +44,6 @@ class Interval:
     --------
     skbio.metadata.IntervalMetadata
 
-
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
@@ -97,7 +96,7 @@ class Interval:
             self._interval_metadata._interval_tree.add(start, end, self)
         self._interval_metadata._intervals.append(self)
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __eq__(self, other):
         '''Test if this ``Interval`` object is equal to another.
 
@@ -115,7 +114,7 @@ class Interval:
                 (self.locations == other.locations) and
                 (self.boundaries == other.boundaries))
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __ne__(self, other):
         '''Test if this ``Interval`` object is not equal to another.
 
@@ -131,7 +130,7 @@ class Interval:
         '''
         return not self.__eq__(other)
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __repr__(self):
         '''Return a string representation of this ``Interval`` object.
 
@@ -144,7 +143,7 @@ class Interval:
         return s.format(self.__class__.__name__, id(self._interval_metadata),
                         self.locations, self.boundaries, self.metadata)
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def drop(self):
         '''Drop this ``Interval`` object from the interval metadata it links to.
 
@@ -157,7 +156,7 @@ class Interval:
         self._interval_metadata = None
 
     @property
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def boundaries(self):
         '''The openness of each coordinate.
 
@@ -176,7 +175,7 @@ class Interval:
         return self._boundaries
 
     @boundaries.setter
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def boundaries(self, value):
         if value is None:
             self._boundaries = None
@@ -190,7 +189,7 @@ class Interval:
             self._boundaries = value
 
     @property
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def locations(self):
         '''The coordinates of the interval feature.
 
@@ -203,7 +202,7 @@ class Interval:
         return self._locations
 
     @locations.setter
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def locations(self, value):
         if value is None:
             self._locations = None
@@ -219,7 +218,7 @@ class Interval:
                 self._interval_metadata._is_stale_tree = True
 
     @property
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def metadata(self):
         '''The metadata of the interval feature.
 
@@ -232,7 +231,7 @@ class Interval:
         return self._metadata
 
     @metadata.setter
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def metadata(self, value):
         if self.dropped:
             raise RuntimeError('Cannot change metadata to dropped '
@@ -242,7 +241,7 @@ class Interval:
         self._metadata = value
 
     @property
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def dropped(self):
         '''Boolean value indicating if the ``Interval`` object is dropped.
 
@@ -432,7 +431,7 @@ class IntervalMetadata():
             else:
                 yield intvl
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def query(self, locations=None, metadata=None):
         """Yield ``Interval`` object with the locations and attributes.
 
@@ -472,7 +471,7 @@ class IntervalMetadata():
                 for intvl in self._query_attribute(metadata, intvls):
                     yield intvl
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def drop(self, locations=None, metadata=None):
         """Drops Interval objects according to a specified query.
 
@@ -515,7 +514,7 @@ class IntervalMetadata():
         self._intervals = new_intvls
         self._is_stale_tree = True
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __eq__(self, other):
         '''Test if this object is equal to another.
 
@@ -535,7 +534,7 @@ class IntervalMetadata():
                                  key=operator.attrgetter('locations'))
         return self_intervals == other_intervals
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __ne__(self, other):
         '''Test if this object is not equal to another.
 
@@ -551,7 +550,7 @@ class IntervalMetadata():
         '''
         return not self.__eq__(other)
 
-    @experimental(as_of='0.4.2-dev')
+    @experimental(as_of='0.5.0-dev')
     def __repr__(self):
         '''Return a string representation of this object.
 
