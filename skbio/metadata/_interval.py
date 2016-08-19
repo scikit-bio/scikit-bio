@@ -422,7 +422,8 @@ class IntervalMetadata():
 
         for intvl in intervals:
             for (key, value) in metadata.items():
-                if intvl.metadata[key] != value:
+                if (key not in intvl.metadata or
+                    intvl.metadata[key] != value):
                     break
             else:
                 yield intvl
@@ -457,27 +458,28 @@ class IntervalMetadata():
             A generator of Interval objects satisfying the search criteria.
         """
         if locations is None:
-            for q in self._query_attribute(metadata):
-                yield q
+            for intvl in self._query_attribute(metadata):
+                yield intvl
         else:
             for loc in locations:
                 intvls = self._query_interval(loc)
-                return self._query_attribute(metadata, intvls)
+                if metadata is None:
+                    metadata = {}
+                for intvl in self._query_attribute(metadata, intvls):
+                    yield intvl
 
     @experimental(as_of='0.4.2-dev')
-    def drop(self, locations=None, boundaries=None, metadata=None):
+    def drop(self, locations=None, metadata=None):
         """Drops Interval objects according to a specified query.
 
         Locations are first queried from the IntervalMetadata object
         using the query functionality. These locations are then dropped
-        from the IntervalTree object before being deleted.
+        from the ``IntervalTree`` object before being deleted.
 
         Parameters
         ----------
         locations : iterable of tuple of ints
             A list of locations associated with the Interval object.
-        boundaries : iterable of tuple of bool
-            A list of boundaries associated with the Interval object.
         metadata : dict
             A dictionary of key word attributes associated with the
             Interval object.
@@ -496,9 +498,6 @@ class IntervalMetadata():
         -------------------
         Interval(interval_metadata=..., locations=[(40, 70)], boundaries=[(True, True)], metadata={'name': 'sagB'})
         """
-        if metadata is None:
-            metadata = {}
-
         to_delete = {id(f) for f in
                      self.query(locations=locations,
                                 metadata=metadata)}
