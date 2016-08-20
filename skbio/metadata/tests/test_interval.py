@@ -235,6 +235,16 @@ class TestInterval(unittest.TestCase):
         f.metadata = {}
         self.assertDictEqual(f.metadata, {})
 
+    def test_set_metadata_bad(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     locations=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        for value in [1, '', None]:
+            with self.assertRaises(TypeError):
+                f.metadata = value
+
     def test_get_bad(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,

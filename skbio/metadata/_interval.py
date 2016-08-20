@@ -292,18 +292,24 @@ class IntervalMetadata():
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> from pprint import pprint
     >>> im = IntervalMetadata()
+    >>>
+    >>> # Adding gene metadata
     >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
     >>> im.add(locations=[(3, 7)], metadata={'gene': 'sagC'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    >>>
+    >>> # Show the object representation
     >>> im    # doctest: +ELLIPSIS
     3 interval features
     -------------------
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    >>>
+    >>> # Sorting the interval features by their location
     >>> im.sort()
     >>> im    # doctest: +ELLIPSIS
     3 interval features
@@ -311,6 +317,8 @@ class IntervalMetadata():
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    >>>
+    >>> # Query the interval features
     >>> q1 = im.query([(7, 9)])
     >>> list(q1)  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})]
