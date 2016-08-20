@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import operator
+from functools import wraps
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import experimental
@@ -330,8 +331,8 @@ class IntervalMetadata():
     >>> q2 = im.query([(1, 2), (3, 4)])
     >>> pprint(list(q2))  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'}),
-     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'}),
-     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})]
+     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'}),
+     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})]
     >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
     >>> list(q3)
     []
@@ -348,6 +349,7 @@ class IntervalMetadata():
 
     def rebuild_tree(method):
         """Rebuilds the IntervalTree."""
+        @wraps(method)
         def inner(self, *args, **kwargs):
             if self._is_stale_tree is False:
                 return method(self, *args, **kwargs)
