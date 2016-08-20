@@ -321,16 +321,21 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(self.im_empty._intervals, [])
 
     def test_sort(self):
+        interval = Interval(
+            self.im_2,
+            [(1, 2), (3, 8)],
+            metadata={'gene': 'sagA',  'location': 0})
         im = deepcopy(self.im_2)
         self.im_2.sort(False)
+        # check the sort does not have other side effects
         self.assertEqual(im, self.im_2)
-        self.assertEqual(self.im_2._intervals[0], self.interval_2)
-        self.assertEqual(self.im_2._intervals[1], self.interval_1)
+        self.assertEqual(self.im_2._intervals,
+                         [self.interval_2, interval, self.interval_1])
 
         self.im_2.sort()
         self.assertEqual(im, self.im_2)
-        self.assertEqual(self.im_2._intervals[0], self.interval_1)
-        self.assertEqual(self.im_2._intervals[1], self.interval_2)
+        self.assertEqual(self.im_2._intervals,
+                         [self.interval_1, interval, self.interval_2])
 
         self.im_empty.sort()
         self.assertEqual(self.im_empty, IntervalMetadata())

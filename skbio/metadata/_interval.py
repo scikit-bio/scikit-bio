@@ -387,7 +387,10 @@ class IntervalMetadata():
 
     @rebuild_tree
     def sort(self, ascending=True):
-        '''Sort intervals by their starting and ending coordinates.'''
+        '''Sort intervals by their starting and ending coordinates.
+
+        An interval with [(1, 2), (4, 7)] will be sorted in front
+        of another one with [(1, 2), (3, 8)].'''
         self._intervals = sorted(
             self._intervals,
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
