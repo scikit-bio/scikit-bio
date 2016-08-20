@@ -405,10 +405,13 @@ class IntervalMetadata():
 
     def _rebuild_tree(self):
         """Rebuilds the IntervalTree."""
+        if self._is_stale_tree is False:
+            return
         self._interval_tree = IntervalTree()
         for f in self._intervals:
             for start, end in f.locations:
                 self._interval_tree.add(start, end, f)
+        self._is_stale_tree = False
 
     def _query_interval(self, location):
         """Fetches Interval objects that overlap with the location."""
@@ -416,7 +419,6 @@ class IntervalMetadata():
         # don't forget to update before query
         if self._is_stale_tree:
             self._rebuild_tree()
-            self._is_stale_tree = False
 
         start, end = location
         intvls = self._interval_tree.find(start, end)
