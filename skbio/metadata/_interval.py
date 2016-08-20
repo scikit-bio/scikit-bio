@@ -283,6 +283,11 @@ class IntervalMetadata():
     This object is typically coupled with another object, such as a ``Sequence``
     object, or a ``TabularMSA`` object.
 
+    Notes
+    -----
+    When you add more methods into this class, you should decorate it with
+    ``rebuild_tree`.
+
     See Also
     --------
     skbio.metadata.Interval
@@ -341,6 +346,20 @@ class IntervalMetadata():
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
 
+    def rebuild_tree(method):
+        """Rebuilds the IntervalTree."""
+        def inner(self, *args, **kwargs):
+            if self._is_stale_tree is False:
+                return method(self, *args, **kwargs)
+            self._interval_tree = IntervalTree()
+            for f in self._intervals:
+                for start, end in f.locations:
+                    self._interval_tree.add(start, end, f)
+            self._is_stale_tree = False
+            return method(self, *args, **kwargs)
+        return inner
+
+    @rebuild_tree
     def _reverse(self, length):
         """Reverse complements IntervalMetadata object.
 
@@ -364,6 +383,7 @@ class IntervalMetadata():
         # DONT' forget this!!!
         self._is_stale_tree = True
 
+    @rebuild_tree
     def sort(self, ascending=True):
         '''Sort intervals by their starting and ending coordinates.'''
         self._intervals = sorted(
@@ -371,6 +391,7 @@ class IntervalMetadata():
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
             reverse=not ascending)
 
+    @rebuild_tree
     def add(self, locations, boundaries=None, metadata=None):
         """Adds a feature to the metadata object.
 
@@ -403,22 +424,10 @@ class IntervalMetadata():
                         boundaries=boundaries,
                         metadata=metadata)
 
-    def _rebuild_tree(self):
-        """Rebuilds the IntervalTree."""
-        if self._is_stale_tree is False:
-            return
-        self._interval_tree = IntervalTree()
-        for f in self._intervals:
-            for start, end in f.locations:
-                self._interval_tree.add(start, end, f)
-        self._is_stale_tree = False
-
+    @rebuild_tree
     def _query_interval(self, location):
         """Fetches Interval objects that overlap with the location."""
         _assert_valid_location(location)
-        # don't forget to update before query
-        if self._is_stale_tree:
-            self._rebuild_tree()
 
         start, end = location
         intvls = self._interval_tree.find(start, end)
@@ -431,6 +440,7 @@ class IntervalMetadata():
                 seen.add(id(intvl))
                 yield intvl
 
+    @rebuild_tree
     def _query_attribute(self, metadata, intervals=None):
         """Fetches Interval objects based on query attributes.
 
@@ -458,6 +468,7 @@ class IntervalMetadata():
                 yield intvl
 
     @experimental(as_of='0.5.0-dev')
+    @rebuild_tree
     def query(self, locations=None, metadata=None):
         """Yield ``Interval`` object with the locations and attributes.
 
@@ -498,6 +509,7 @@ class IntervalMetadata():
                     yield intvl
 
     @experimental(as_of='0.5.0-dev')
+    @rebuild_tree
     def drop(self, locations=None, metadata=None):
         """Drops Interval objects according to a specified query.
 
@@ -541,6 +553,7 @@ class IntervalMetadata():
         self._is_stale_tree = True
 
     @experimental(as_of='0.5.0-dev')
+    @rebuild_tree
     def __eq__(self, other):
         '''Test if this object is equal to another.
 
@@ -561,6 +574,7 @@ class IntervalMetadata():
         return self_intervals == other_intervals
 
     @experimental(as_of='0.5.0-dev')
+    @rebuild_tree
     def __ne__(self, other):
         '''Test if this object is not equal to another.
 
@@ -577,6 +591,7 @@ class IntervalMetadata():
         return not self.__eq__(other)
 
     @experimental(as_of='0.5.0-dev')
+    @rebuild_tree
     def __repr__(self):
         '''Return a string representation of this object.
 

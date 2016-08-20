@@ -358,8 +358,6 @@ class TestIntervalMetadata(unittest.TestCase):
             self.assertEqual(intervals[0], i)
 
     def test_query_interval(self):
-        self.im_2._rebuild_tree()
-
         intervals = list(self.im_2._query_interval((1, 2)))
         self.assertEqual(len(intervals), 1)
         self.assertEqual(intervals[0], self.interval_1)
@@ -424,7 +422,6 @@ class TestIntervalMetadata(unittest.TestCase):
 
     def test_reverse(self):
         self.im_2._reverse(length=10)
-        self.im_2._rebuild_tree()
         _ = Interval(
             interval_metadata=self.im_empty,
             locations=[(3, 6), (8, 9)],
