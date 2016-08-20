@@ -52,7 +52,8 @@ class Interval:
     ...                  locations=[(1, 2), (4, 7)],
     ...                  metadata={'name': 'sagA'})
     >>> gene    # doctest: +ELLIPSIS
-    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
@@ -62,8 +63,8 @@ class Interval:
         locations = list(locations)
         self.locations = locations
 
-        # Boundaries: has to be after locations assignment because locations setter
-        # reset boundaries.
+        # Boundaries: has to be after locations assignment because
+        # locations setter reset boundaries.
         indices = [i[0] for i in sorted(enumerate(locations),
                                         key=operator.itemgetter(1))]
         self.boundaries = boundaries
@@ -129,7 +130,8 @@ class Interval:
         str
             String representation of this ``Interval`` object.
         '''
-        s = '{}(interval_metadata=<{!r}>, locations={!r}, boundaries={!r}, metadata={!r})'
+        s = ('{}(interval_metadata=<{!r}>, locations={!r}, '
+             'boundaries={!r}, metadata={!r})')
         return s.format(self.__class__.__name__, id(self._interval_metadata),
                         self.locations, self.boundaries, self.metadata)
 
@@ -274,15 +276,15 @@ class Interval:
 
 
 class IntervalMetadata():
-    """Stores the interval features of a sequence as a list of ``Interval`` objects.
+    """Stores the interval features of a sequence.
 
     ``IntervalMetadata`` object to allow for the storage, modification, and
     querying of interval features covering a region of a single coordinate
     system. For instance, this can be used to store functional annotations
     about genes across a genome.
 
-    This object is typically coupled with another object, such as a ``Sequence``
-    object, or a ``TabularMSA`` object.
+    This object is typically coupled with another object, such as a
+    ``Sequence`` object, or a ``TabularMSA`` object.
 
     Notes
     -----
@@ -300,39 +302,55 @@ class IntervalMetadata():
     >>> im = IntervalMetadata()
     >>>
     >>> # Adding gene metadata
-    >>> im.add(locations=[(3, 9)], metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
-    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
-    >>> im.add(locations=[(3, 7)], metadata={'gene': 'sagC'})  # doctest: +ELLIPSIS
-    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
-    >>> im.add(locations=[(1, 2), (4, 7)], metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
-    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    >>> im.add(locations=[(3, 9)],
+    ...        metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    >>> im.add(locations=[(3, 7)],
+    ...        metadata={'gene': 'sagC'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(3, 7)], \
+boundaries=[(True, True)], metadata={'gene': 'sagC'})
+    >>> im.add(locations=[(1, 2), (4, 7)],
+    ...        metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     >>>
     >>> # Show the object representation
     >>> im    # doctest: +ELLIPSIS
     3 interval features
     -------------------
-    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
-    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
-    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    Interval(interval_metadata=..., locations=[(3, 7)], \
+boundaries=[(True, True)], metadata={'gene': 'sagC'})
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
     >>>
     >>> # Sorting the interval features by their location
     >>> im.sort()
     >>> im    # doctest: +ELLIPSIS
     3 interval features
     -------------------
-    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
-    Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})
-    Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})
+    Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=..., locations=[(3, 7)], \
+boundaries=[(True, True)], metadata={'gene': 'sagC'})
+    Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'})
     >>>
     >>> # Query the interval features
     >>> q1 = im.query([(7, 9)])
     >>> list(q1)  # doctest: +ELLIPSIS
-    [Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'})]
+    [Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'})]
     >>> q2 = im.query([(1, 2), (3, 4)])
     >>> pprint(list(q2))  # doctest: +ELLIPSIS
-    [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'}),
-     Interval(interval_metadata=..., locations=[(3, 9)], boundaries=[(True, True)], metadata={'gene': 'sagB'}),
-     Interval(interval_metadata=..., locations=[(3, 7)], boundaries=[(True, True)], metadata={'gene': 'sagC'})]
+    [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'}),
+     Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'}),
+     Interval(interval_metadata=..., locations=[(3, 7)], \
+boundaries=[(True, True)], metadata={'gene': 'sagC'})]
     >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
     >>> list(q3)
     []
@@ -436,9 +454,10 @@ class IntervalMetadata():
 
         start, end = location
         intvls = self._interval_tree.find(start, end)
-        # if a ``Interval`` has multiple non contiguous spans, multiple of which
-        # overlap with the location, then this ``Interval`` object will be returned
-        # multiple times. So we remove duplicates.
+        # if a ``Interval`` has multiple non contiguous spans,
+        # multiple of which overlap with the location, then
+        # this ``Interval`` object will be returned
+        # multiple times. So we need to remove duplicates.
         seen = set()
         for intvl in intvls:
             if id(intvl) not in seen:
@@ -467,7 +486,7 @@ class IntervalMetadata():
         for intvl in intervals:
             for (key, value) in metadata.items():
                 if (key not in intvl.metadata or
-                    intvl.metadata[key] != value):
+                        intvl.metadata[key] != value):
                     break
             else:
                 yield intvl
@@ -478,10 +497,11 @@ class IntervalMetadata():
         """Yield ``Interval`` object with the locations and attributes.
 
         The ``Interval`` objects must meet both requirements: 1) overlap
-        with any of the spans specified by ``locations``; 2) satisfy ``metadata``
-        specification. For instance, you can identify all the recA genes
-        that overlap with (10, 100) or (900, 1000) with this code
-        ``interval_metadata.query([(10, 100), (900, 1000)], {'gene': 'recA'})``.
+        with any of the spans specified by ``locations``; 2) satisfy
+        ``metadata`` specification. For instance, you can identify
+        all the recA genes that overlap with (10, 100) or (900, 1000)
+        with this code ``interval_metadata.query([(10, 100),
+        (900, 1000)], {'gene': 'recA'})``.
 
         Parameters
         ----------
@@ -534,15 +554,20 @@ class IntervalMetadata():
         --------
         >>> from skbio.metadata import IntervalMetadata
         >>> im = IntervalMetadata()
-        >>> im.add(locations=[(0, 2), (4, 7)], metadata={'name': 'sagA'})   # doctest: +ELLIPSIS
-        Interval(interval_metadata=..., locations=[(0, 2), (4, 7)], boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
-        >>> im.add(locations=[(40, 70)], metadata={'name': 'sagB'})   # doctest: +ELLIPSIS
-        Interval(interval_metadata=..., locations=[(40, 70)], boundaries=[(True, True)], metadata={'name': 'sagB'})
+        >>> im.add(locations=[(0, 2), (4, 7)],
+        ...        metadata={'name': 'sagA'})   # doctest: +ELLIPSIS
+        Interval(interval_metadata=..., locations=[(0, 2), (4, 7)], \
+boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
+        >>> im.add(locations=[(40, 70)],
+        ...        metadata={'name': 'sagB'})   # doctest: +ELLIPSIS
+        Interval(interval_metadata=..., locations=[(40, 70)], \
+boundaries=[(True, True)], metadata={'name': 'sagB'})
         >>> im.drop(metadata={'name': 'sagA'})
         >>> im   # doctest: +ELLIPSIS
         1 interval features
         -------------------
-        Interval(interval_metadata=..., locations=[(40, 70)], boundaries=[(True, True)], metadata={'name': 'sagB'})
+        Interval(interval_metadata=..., locations=[(40, 70)], \
+boundaries=[(True, True)], metadata={'name': 'sagB'})
         """
         to_delete = {id(f) for f in
                      self.query(locations=locations,
@@ -615,7 +640,7 @@ class IntervalMetadata():
             items = [repr(self._intervals[i]) for i in [0, 1, 2, n-2, n-1]]
             items[2] = '...'
 
-        return '\n'.join([l1, l2, *items])
+        return '\n'.join([l1, l2] + items)
 
 
 def _assert_valid_location(location):

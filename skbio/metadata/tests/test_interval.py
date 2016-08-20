@@ -5,6 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 import unittest
 from copy import deepcopy
 
@@ -375,7 +376,8 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(intervals[0], self.interval_2)
 
     def test_query(self):
-        intervals = list(self.im_2.query(locations=[(1, 5)], metadata={'gene': 'sagA'}))
+        intervals = list(self.im_2.query(locations=[(1, 5)],
+                                         metadata={'gene': 'sagA'}))
         self.assertEqual(len(intervals), 1)
         self.assertEqual(intervals[0], self.interval_1)
 
@@ -391,7 +393,7 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(len(intervals), 0)
 
         intervals = list(self.im_2.query(locations=[(1, 2)],
-                                  metadata={'gene': 'sagC'}))
+                                         metadata={'gene': 'sagC'}))
         self.assertEqual(len(intervals), 0)
 
     def test_query_interval_only(self):
@@ -427,11 +429,11 @@ class TestIntervalMetadata(unittest.TestCase):
 
     def test_reverse(self):
         self.im_2._reverse(length=10)
-        _ = Interval(
+        Interval(
             interval_metadata=self.im_empty,
             locations=[(3, 6), (8, 9)],
             metadata={'gene': 'sagA',  'location': 0})
-        _ = Interval(
+        Interval(
             interval_metadata=self.im_empty,
             locations=[(5, 7)],
             metadata={'gene': 'sagB', 'location': 0})
@@ -467,23 +469,29 @@ class TestIntervalMetadata(unittest.TestCase):
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagB'})
-        exp = r'''2 interval features
+        exp = '''2 interval features
 -------------------
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagB'}\)'''
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagB'}\)'''
         self.assertRegex(repr(self.im_empty), exp)
 
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagC'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagD'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagE'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagF'})
-        exp = r'''6 interval features
+        exp = '''6 interval features
 -------------------
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagB'}\)
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagB'}\)
 ...
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagE'}\)
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], boundaries=\[\(True, True\)\], metadata={'gene': 'sagF'}\)'''
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagE'}\)
+Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], \
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagF'}\)'''
         self.assertRegex(repr(self.im_empty), exp)
 
 
