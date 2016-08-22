@@ -19,7 +19,8 @@ class Interval:
     This class stores interval feature. An interval feature
     is defined as a sub-region of a sequence that is a functional
     entity, e.g., a gene, a riboswitch, an exon, etc. It can span
-    a single contiguous region or multiple non-contiguous regions.
+    a single contiguous region or multiple non-contiguous regions (e.g.
+    multiple exons in a transcript, or multiple genes in an operon).
 
     Parameters
     ----------
@@ -90,6 +91,9 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     @experimental(as_of='0.5.0-dev')
     def __eq__(self, other):
         '''Test if this ``Interval`` object is equal to another.
+
+        The equality is performed by checking if the ``metadata``,
+        ``location`` and ``boundaries`` are equal.
 
         Parameters
         ----------
@@ -278,7 +282,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 class IntervalMetadata():
     """Stores the interval features of a sequence.
 
-    ``IntervalMetadata`` object to allow for the storage, modification, and
+    ``IntervalMetadata`` object allows storage, modification, and
     querying of interval features covering a region of a single coordinate
     system. For instance, this can be used to store functional annotations
     about genes across a genome.
@@ -366,7 +370,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
         self._is_stale_tree = False
 
     def _rebuild_tree(method):
-        """Rebuilds the IntervalTree."""
+        """Rebuild the IntervalTree."""
         @wraps(method)
         def inner(self, *args, **kwargs):
             if self._is_stale_tree is False:
@@ -438,7 +442,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
         See Also
         --------
-        skbio.metadata._add
+        skbio.metadata.Interval._add
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
