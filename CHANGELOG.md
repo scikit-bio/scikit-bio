@@ -20,6 +20,7 @@
 
 * `skbio.tree.TreeNode.prune` and implicitly `skbio.tree.TreeNode.shear` were not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root. Previously, an `AttributeError` would raise as `parent` would be `None` in this situation. 
 * numpy linking was fixed for installation under El Capitan.
+* A bug was introduced in #1398 into `TreeNode.prune` and fixed in #1416 in which, under the special case of a single descendent existing from the root, the resulting children parent references were not updated. The cause of the bug was a call made to `self.children.extend` as opposed to `self.extend` where the former is a `list.extend` without knowledge of the tree, while the latter is `TreeNode.extend` which is able to adjust references to `self.parent`.
 
 ### Deprecated functionality [stable]
 
