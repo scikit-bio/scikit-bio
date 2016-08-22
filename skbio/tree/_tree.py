@@ -408,7 +408,7 @@ class TreeNode(SkbioObject):
                 if key not in efc:
                     self.__dict__[key] = deepcopy(node_to_copy.__dict__[key])
             self.remove(node_to_copy)
-            self.children.extend(node_to_copy.children)
+            self.extend(node_to_copy.children)
 
     @experimental(as_of="0.4.0")
     def shear(self, names):
