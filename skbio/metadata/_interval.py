@@ -299,11 +299,13 @@ class IntervalMetadata():
 
     Notes
     -----
-    When you add more methods into this class, you should decorate it with
-    ``_rebuild_tree`. Additionally, if your method add, delete, or changes
-    the coordinates of any interval features, you should set
-     ``self._is_stale_tree`` to ``True`` to indicate the interval tree
-    needs to be rebuilt.
+    When you add a method into this class and if you method need to fetch
+    info from ``IntervalMetadata._interval_tree``, you should decorate it with
+    ``_rebuild_tree`. This decorator will check if the current interval tree
+    is stale and will update it if so. Additionally, if your method add,
+    delete, or changes the coordinates of any interval features, you should
+    set ``self._is_stale_tree`` to ``True`` at the end of your method to
+    indicate the interval tree becomes stale.
 
     See Also
     --------
@@ -399,7 +401,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
             return method(self, *args, **kwargs)
         return inner
 
-    @_rebuild_tree
     def _reverse(self, length):
         """Reverse ``IntervalMetadata`` object.
 
@@ -423,7 +424,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
         # DONT' forget this!!!
         self._is_stale_tree = True
 
-    @_rebuild_tree
     def sort(self, ascending=True):
         '''Sort interval features by their coordinates.
 
@@ -441,7 +441,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
             reverse=not ascending)
 
-    @_rebuild_tree
     def add(self, locations, boundaries=None, metadata=None):
         """Add a feature to the metadata object.
 
@@ -491,7 +490,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
                 seen.add(id(intvl))
                 yield intvl
 
-    @_rebuild_tree
     def _query_attribute(self, metadata, intervals=None):
         """Yield ``Interval`` objects based on query attributes.
 
@@ -561,7 +559,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
                     yield intvl
 
     @experimental(as_of='0.5.0-dev')
-    @_rebuild_tree
     def drop(self, locations=None, metadata=None):
         """Drops Interval objects according to a specified query.
 
@@ -609,7 +606,6 @@ boundaries=[(True, True)], metadata={'name': 'sagB'})
         self._is_stale_tree = True
 
     @experimental(as_of='0.5.0-dev')
-    @_rebuild_tree
     def __eq__(self, other):
         '''Test if this object is equal to another.
 
@@ -634,7 +630,6 @@ boundaries=[(True, True)], metadata={'name': 'sagB'})
         return self_intervals == other_intervals
 
     @experimental(as_of='0.5.0-dev')
-    @_rebuild_tree
     def __ne__(self, other):
         '''Test if this object is not equal to another.
 
@@ -655,7 +650,6 @@ boundaries=[(True, True)], metadata={'name': 'sagB'})
         return not self.__eq__(other)
 
     @experimental(as_of='0.5.0-dev')
-    @_rebuild_tree
     def __repr__(self):
         '''Return a string representation of this object.
 
