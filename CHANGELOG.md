@@ -7,6 +7,8 @@
 * `DissimilarityMatrix` now allows non-hollow matrices. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 
+* Added `IntervalMetadata` object in `skbio.metadata._interval`. [#1356](https://github.com/biocore/scikit-bio/issues/1356)
+
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
