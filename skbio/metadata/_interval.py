@@ -183,6 +183,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     @boundaries.setter
     @experimental(as_of='0.5.0-dev')
     def boundaries(self, value):
+        '''Set ``boundaries``.
+
+        The ``value`` should be ``None`` (meaning all boundaries are ``True``)
+        or an iterable matching ``self.locations``.'''
         if self.dropped:
             raise RuntimeError('Cannot change boundaries to dropped '
                                'Interval object.')
@@ -419,11 +423,11 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         return inner
 
     def _reverse(self, length):
-        """Reverse ``IntervalMetadata`` object.
+        """Reverse the location coordinates with given length.
 
-        This operation reverses all of the interval coordinates.
-        For instance, this can be used to compare coordinates
-        in the forward strand to coordinates in the reversal strand.
+        This modifies the coordinates by subtracting them from the
+        given length. This operation facilitates the sequence
+        reverse complement.
 
         Parameters
         ----------

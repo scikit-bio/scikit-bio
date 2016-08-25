@@ -209,7 +209,7 @@ class TestInterval(unittest.TestCase):
         for value in [[(False, False)], ()]:
             with self.assertRaises(ValueError):
                 f.boundaries = value
-        for value in [1, 's', None]:
+        for value in [1, True]:
             with self.assertRaises(TypeError):
                 f.boundaries = value
 
