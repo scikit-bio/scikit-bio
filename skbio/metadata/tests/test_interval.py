@@ -80,6 +80,12 @@ class TestInterval(unittest.TestCase):
 
     def test_init_bad(self):
         with self.assertRaises(TypeError):
+            Interval(interval_metadata=None,
+                     locations=[(4, 7)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+    def test_init_bad_locations(self):
+        with self.assertRaises(TypeError):
             Interval(interval_metadata=IntervalMetadata(),
                      locations=[1, (4, 7)],
                      boundaries=[(True, False), (False, False)],
@@ -164,14 +170,6 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f.boundaries, [(True, True), (True, True)])
         self.assertEqual(im._is_stale_tree, True)
 
-    def test_set_locations_on_dropped(self):
-        with self.assertRaises(RuntimeError):
-            f = Interval(interval_metadata=None,
-                         locations=[(1, 2), (4, 7)],
-                         boundaries=[(True, False), (False, False)],
-                         metadata={'name': 'sagA', 'function': 'transport'})
-            f.locations = [(1, 3), (4, 7)]
-
     def test_set_locations_bad(self):
         f = Interval(interval_metadata=IntervalMetadata(),
                      locations=[(1, 2), (4, 7)],
@@ -213,7 +211,7 @@ class TestInterval(unittest.TestCase):
                 f.boundaries = value
         for value in [1, 's', None]:
             with self.assertRaises(TypeError):
-                f.locations = value
+                f.boundaries = value
 
     def test_get_metadata(self):
         im = IntervalMetadata()
@@ -246,7 +244,7 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.metadata = value
 
-    def test_get_bad(self):
+    def test_set_get_bad(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
                      locations=[(1, 2), (4, 7)],
@@ -259,6 +257,12 @@ class TestInterval(unittest.TestCase):
             f.locations
         with self.assertRaises(RuntimeError):
             f.metadata
+        with self.assertRaises(RuntimeError):
+            f.boundaries = None
+        with self.assertRaises(RuntimeError):
+            f.locations = [(1, 2)]
+        with self.assertRaises(RuntimeError):
+            f.metadata = {}
 
 
 class TestIntervalUtil(unittest.TestCase):
@@ -328,7 +332,7 @@ class TestIntervalMetadata(unittest.TestCase):
             metadata={'gene': 'sagA',  'location': 0})
         im = deepcopy(self.im_2)
         self.im_2.sort(False)
-        # check the sort does not have other side effects
+        # check sorting does not have other side effects
         self.assertEqual(im, self.im_2)
         self.assertEqual(self.im_2._intervals,
                          [self.interval_2, interval, self.interval_1])
@@ -368,12 +372,14 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(len(intervals), 1)
         self.assertEqual(intervals[0], self.interval_1)
 
-        intervals = list(self.im_2._query_interval((1, 7)))
-        self.assertEqual(len(intervals), 2)
-
         intervals = list(self.im_2._query_interval((3, 4)))
         self.assertEqual(len(intervals), 1)
         self.assertEqual(intervals[0], self.interval_2)
+
+        intervals = {repr(i) for i in self.im_2._query_interval((1, 7))}
+        self.assertEqual(len(intervals), 2)
+        self.assertSetEqual(intervals,
+                            {repr(i) for i in self.im_2._intervals})
 
     def test_query(self):
         intervals = list(self.im_2.query(locations=[(1, 5)],
