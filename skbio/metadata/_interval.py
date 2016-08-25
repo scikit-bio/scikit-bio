@@ -66,6 +66,9 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
+        if not isinstance(interval_metadata, IntervalMetadata):
+            raise TypeError('You need to provide an IntervalMetadata'
+                            'object, not %r' % interval_metadata)
         # Intervals
         self._interval_metadata = interval_metadata
 
@@ -85,8 +88,8 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             metadata = {}
         self.metadata = metadata
 
-        if interval_metadata is not None:
-            self._add()
+        # add this interval feature to the associated IntervalMetadata
+        self._add()
 
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
