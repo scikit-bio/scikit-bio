@@ -299,6 +299,12 @@ class IntervalMetadata():
 
     Notes
     -----
+    This class stores coordinates of all feature locations into a interval
+    tree. It allows the speed up of query-by-location. The building of
+    interval tree is deferred until necessary to save computation. It is
+    updated from all coordinates only when you need to fetch info from
+    the interval tree.
+
     When you add a method into this class and if you method need to fetch
     info from ``IntervalMetadata._interval_tree``, you should decorate it with
     ``_rebuild_tree`. This decorator will check if the current interval tree
@@ -365,17 +371,25 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     >>> list(q1)  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})]
-    >>> q2 = im.query([(1, 2), (3, 4)])
-    >>> pprint(list(q2))  # doctest: +ELLIPSIS
+    >>> q2 = im.query(metadata={'gene': 'sagA'})
+    >>> list(q2)  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
-boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'}),
-     Interval(interval_metadata=..., locations=[(3, 9)], \
-boundaries=[(True, True)], metadata={'gene': 'sagB'}),
-     Interval(interval_metadata=..., locations=[(3, 7)], \
-boundaries=[(True, True)], metadata={'gene': 'sagC'})]
+boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})]
     >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
     >>> list(q3)
     []
+
+    Drop genes:
+
+    >>> im.drop(metadata={'gene': 'sagA'})
+    >>> im.sort()
+    >>> im   # doctest: +ELLIPSIS
+    2 interval features
+    -------------------
+    Interval(interval_metadata=..., locations=[(3, 7)], \
+boundaries=[(True, True)], metadata={'gene': 'sagC'})
+    Interval(interval_metadata=..., locations=[(3, 9)], \
+boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
     def __init__(self):
         # List of Interval objects.
@@ -572,25 +586,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
         metadata : dict
             A dictionary of key word attributes associated with the
             Interval object.
-
-        Examples
-        --------
-        >>> from skbio.metadata import IntervalMetadata
-        >>> im = IntervalMetadata()
-        >>> im.add(locations=[(0, 2), (4, 7)],
-        ...        metadata={'name': 'sagA'})   # doctest: +ELLIPSIS
-        Interval(interval_metadata=..., locations=[(0, 2), (4, 7)], \
-boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
-        >>> im.add(locations=[(40, 70)],
-        ...        metadata={'name': 'sagB'})   # doctest: +ELLIPSIS
-        Interval(interval_metadata=..., locations=[(40, 70)], \
-boundaries=[(True, True)], metadata={'name': 'sagB'})
-        >>> im.drop(metadata={'name': 'sagA'})
-        >>> im   # doctest: +ELLIPSIS
-        1 interval features
-        -------------------
-        Interval(interval_metadata=..., locations=[(40, 70)], \
-boundaries=[(True, True)], metadata={'name': 'sagB'})
         """
         to_delete = {id(f) for f in
                      self.query(locations=locations,
