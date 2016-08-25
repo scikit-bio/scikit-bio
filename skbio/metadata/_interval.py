@@ -14,9 +14,9 @@ from skbio.util._decorator import experimental
 
 
 class Interval:
-    """Stores the position and metadata of an interval feature.
+    """Stores the location and metadata of an interval feature.
 
-    This class stores interval feature. An interval feature
+    This class stores an interval feature. An interval feature
     is defined as a sub-region of a sequence that is a functional
     entity, e.g., a gene, a riboswitch, an exon, etc. It can span
     a single contiguous region or multiple non-contiguous regions (e.g.
@@ -30,8 +30,12 @@ class Interval:
     locations : iterable of tuple of ints
         List of tuples representing start and end coordinates.
     boundaries : iterable of tuple of bool
-        List of tuples, representing the openness of each location.
-        If this isn't specified, then all of the boundaries are True.
+        List of tuples, representing the openness of each location coordinates.
+        If this isn't specified, then all of the boundaries are True. If any
+        of the coordinate boundaries is False, it indicates that the exact
+        boundary point of a interval feature is unknown. The location may
+        begin or end at some points outside the specified coordinates. This
+        accommodates the location format [1]_ of INSDC.
     metadata : dict
         Dictionary of attributes storing information of the feature
         such as "strand", "gene_name", or "product".
@@ -50,11 +54,15 @@ class Interval:
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> gene = Interval(interval_metadata=IntervalMetadata(),
-    ...                  locations=[(1, 2), (4, 7)],
-    ...                  metadata={'name': 'sagA'})
+    ...                 locations=[(1, 2), (4, 7)],
+    ...                 metadata={'name': 'sagA'})
     >>> gene    # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
 boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
+
+    References
+    ----------
+    .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
@@ -68,6 +76,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         # locations setter reset boundaries.
         indices = [i[0] for i in sorted(enumerate(locations),
                                         key=operator.itemgetter(1))]
+        # use the boundaries setter to validate the value
         self.boundaries = boundaries
         self.boundaries = [self.boundaries[i] for i in indices]
 
@@ -81,8 +90,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
-        # Add directly to the tree.  So no need for _is_stale_tree
-        # Questions: directly adding leads to rebuilding of the tree?
         for loc in self.locations:
             start, end = loc
             self._interval_metadata._interval_tree.add(start, end, self)
@@ -246,7 +253,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         '''The metadata of the interval feature.
 
         It stores the metadata (eg. gene name, function, ID, etc.) of
-        the interval feature as a dict.
+        the interval feature as a ``dict``.
         '''
         if self.dropped:
             raise RuntimeError(
@@ -293,7 +300,10 @@ class IntervalMetadata():
     Notes
     -----
     When you add more methods into this class, you should decorate it with
-    ``_rebuild_tree`.
+    ``_rebuild_tree`. Additionally, if your method add, delete, or changes
+    the coordinates of any interval features, you should set
+     ``self._is_stale_tree`` to ``True`` to indicate the interval tree
+    needs to be rebuilt.
 
     See Also
     --------
@@ -301,11 +311,14 @@ class IntervalMetadata():
 
     Examples
     --------
+    Create an ``IntervalMetadata`` object:
+
     >>> from skbio.metadata import Interval, IntervalMetadata
     >>> from pprint import pprint
     >>> im = IntervalMetadata()
-    >>>
-    >>> # Adding gene metadata
+
+    Let's add some genes annotations:
+
     >>> im.add(locations=[(3, 9)],
     ...        metadata={'gene': 'sagB'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(3, 9)], \
@@ -318,8 +331,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})
     ...        metadata={'gene': 'sagA'})  # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
 boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
-    >>>
-    >>> # Show the object representation
+
+    Show the object representation:
+
     >>> im    # doctest: +ELLIPSIS
     3 interval features
     -------------------
@@ -329,8 +343,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
 boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
-    >>>
-    >>> # Sorting the interval features by their location
+
+    We can sort the genes by their locations:
+
     >>> im.sort()
     >>> im    # doctest: +ELLIPSIS
     3 interval features
@@ -341,8 +356,9 @@ boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})
 boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})
-    >>>
-    >>> # Query the interval features
+
+    Query the genes by location and/or metadata:
+
     >>> q1 = im.query([(7, 9)])
     >>> list(q1)  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(3, 9)], \
@@ -385,7 +401,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
     @_rebuild_tree
     def _reverse(self, length):
-        """Reverse complements IntervalMetadata object.
+        """Reverse ``IntervalMetadata`` object.
 
         This operation reverses all of the interval coordinates.
         For instance, this can be used to compare coordinates
@@ -409,10 +425,17 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
     @_rebuild_tree
     def sort(self, ascending=True):
-        '''Sort intervals by their starting and ending coordinates.
+        '''Sort interval features by their coordinates.
 
-        An interval with [(1, 2), (4, 7)] will be sorted in front
-        of another one with [(1, 2), (3, 8)].'''
+        It sorts by the start coordinate first. If they are the same between
+        two interval features, they will be sorted by comparing their end
+        coordinates. For example, an interval feature with [(1, 2), (4, 7)]
+        will be sorted in front of another one with [(1, 2), (3, 8)].
+
+        Parameters
+        ----------
+        ascending : bool
+            sort in ascending or descending coordinates.'''
         self._intervals = sorted(
             self._intervals,
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
@@ -420,9 +443,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
     @_rebuild_tree
     def add(self, locations, boundaries=None, metadata=None):
-        """Adds a feature to the metadata object.
+        """Add a feature to the metadata object.
 
-        This method creates a ``Interval`` object and insert it into
+        This method creates an ``Interval`` object and insert it into
         the ``IntervalMetadata`` object.
 
         Parameters
@@ -438,7 +461,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
         Returns
         -------
         Interval
-            The ``Interval`` object just added.
+            The ``Interval`` object added.
 
         See Also
         --------
@@ -453,13 +476,13 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
     @_rebuild_tree
     def _query_interval(self, location):
-        """Fetches Interval objects that overlap with the location."""
+        """Yield ``Interval`` objects that overlap with the location."""
         _assert_valid_location(location)
 
         start, end = location
         intvls = self._interval_tree.find(start, end)
-        # if a ``Interval`` has multiple non contiguous spans,
-        # multiple of which overlap with the location, then
+        # if a ``Interval`` has many non-contiguous spans and
+        # multiple of them overlap with the location, then
         # this ``Interval`` object will be returned
         # multiple times. So we need to remove duplicates.
         seen = set()
@@ -470,7 +493,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
 
     @_rebuild_tree
     def _query_attribute(self, metadata, intervals=None):
-        """Fetches Interval objects based on query attributes.
+        """Yield ``Interval`` objects based on query attributes.
 
         Parameters
         ----------
@@ -478,7 +501,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
             If it is ``None``, return empty iterator; if it is
             ``{}``, return an interator of all the ``Interval``
             objects.
-        intervals : a iterable of ``Interval`` objects
+        intervals : an iterable of ``Interval`` objects
         """
         if metadata is None:
             return
@@ -542,9 +565,8 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})]
     def drop(self, locations=None, metadata=None):
         """Drops Interval objects according to a specified query.
 
-        Locations are first queried from the IntervalMetadata object
-        using the query functionality. These locations are then dropped
-        from the ``IntervalTree`` object before being deleted.
+        Locations are first queried from the ``IntervalMetadata`` object
+        using the query functionality. These locations are then dropped.
 
         Parameters
         ----------
@@ -591,6 +613,10 @@ boundaries=[(True, True)], metadata={'name': 'sagB'})
     def __eq__(self, other):
         '''Test if this object is equal to another.
 
+        This is performed by check if all the interval features
+        are equal between the two objects after sorting them by
+        locations.
+
         Parameters
         ----------
         other : Interval
@@ -621,6 +647,10 @@ boundaries=[(True, True)], metadata={'name': 'sagB'})
         -------
         bool
             Indicates if the two objects are not equal.
+
+        See Also
+        --------
+        skbio.metadata.IntervalMetadata.__eq__
         '''
         return not self.__eq__(other)
 
