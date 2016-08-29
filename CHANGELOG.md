@@ -6,13 +6,12 @@
 * `DissimilarityMatrix` now has a new constructor method called `from_iterable`. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * `DissimilarityMatrix` now allows non-hollow matrices. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
-
-* Added `IntervalMetadata` object in `skbio.metadata._interval`. [#1356](https://github.com/biocore/scikit-bio/issues/1356)
+* Added `IntervalMetadata` and `Interval` classes in `skbio.metadata._interval` to allow store, query, and manipulate information of a sub-region of a sequence. ([#1414](https://github.com/biocore/scikit-bio/issues/1414)).
 
 ### Backward-incompatible changes [stable]
 
 ### Backward-incompatible changes [experimental]
-* Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex. 
+* Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex.
 * `DistanceMatrix.from_iterable` default behavior is now to validate matrix by computing all pairwise distances. Pass `validate=False` to get the previous behavior (no validation, but faster execution).([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 
 ### Performance enhancements
@@ -20,7 +19,7 @@
 
 ### Bug fixes
 
-* `skbio.tree.TreeNode.prune` and implicitly `skbio.tree.TreeNode.shear` were not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root. Previously, an `AttributeError` would raise as `parent` would be `None` in this situation. 
+* `skbio.tree.TreeNode.prune` and implicitly `skbio.tree.TreeNode.shear` were not handling a situation in which a parent was validly removed during pruning operations as may happen if the resulting subtree does not include the root. Previously, an `AttributeError` would raise as `parent` would be `None` in this situation.
 * numpy linking was fixed for installation under El Capitan.
 
 ### Deprecated functionality [stable]

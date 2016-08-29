@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import operator
-from functools import wraps
+import functools
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import experimental
@@ -17,52 +17,57 @@ class Interval:
     """Stores the location and metadata of an interval feature.
 
     This class stores an interval feature. An interval feature
-    is defined as a sub-region of a sequence that is a functional
-    entity, e.g., a gene, a riboswitch, an exon, etc. It can span
-    a single contiguous region or multiple non-contiguous regions (e.g.
-    multiple exons in a transcript, or multiple genes in an operon).
+    is defined as a sub-region of a biological sequence or sequence
+    alignment that is a functional entity, e.g., a gene, a riboswitch,
+    an exon, etc. It can span a single contiguous region or multiple
+    non-contiguous regions (e.g. multiple exons in a transcript, or
+    multiple genes in an operon).
 
     Parameters
     ----------
     interval_metadata : object
         A reference to the ``IntervalMetadata`` object that this
         ``Interval`` object is associated to.
-    locations : iterable of tuple of ints
-        List of tuples representing start and end coordinates.
-    boundaries : iterable of tuple of bool
-        List of tuples, representing the openness of each location coordinates.
+    locations : iterable of tuple of int
+        Tuples representing start and end coordinates.
+    boundaries : iterable of tuple of bool, optional
+        Tuples representing the openness of each location coordinates.
         If this isn't specified, then all of the boundaries are True. If any
         of the coordinate boundaries is False, it indicates that the exact
         boundary point of a interval feature is unknown. The location may
         begin or end at some points outside the specified coordinates. This
         accommodates the location format [1]_ of INSDC.
-    metadata : dict
+    metadata : dict, optional
         Dictionary of attributes storing information of the feature
         such as "strand", "gene_name", or "product".
-
-    Attributes
-    ----------
-    locations
-    boundaries
-    metadata
 
     See Also
     --------
     skbio.metadata.IntervalMetadata
 
+    Notes
+    -----
+    While the construction of an ``Interval`` object automatically add
+    itself to its associated ``IntervalMetadata`` object, ``IntervalMetadata.add
+    is the typical/easier way to create and add it to ``IntervalMetadata``.
+
+    References
+    ----------
+    .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
+
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> gene = Interval(interval_metadata=IntervalMetadata(),
+    >>> interval_metadata = IntervalMetadata()
+
+    Create a gene of two exons (from 1 to 2 and 4 to 7):
+
+    >>> gene = Interval(interval_metadata,
     ...                 locations=[(1, 2), (4, 7)],
     ...                 metadata={'name': 'sagA'})
     >>> gene    # doctest: +ELLIPSIS
     Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
 boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
-
-    References
-    ----------
-    .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
     """
     def __init__(self, interval_metadata, locations,
                  boundaries=None, metadata=None):
@@ -103,7 +108,9 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         '''Test if this ``Interval`` object is equal to another.
 
         The equality is performed by checking if the ``metadata``,
-        ``location`` and ``boundaries`` are equal.
+        ``location`` and ``boundaries`` are equal. Since the ``locations``
+        and the ``boundaries`` are sorted, the permutations of them during
+        the ``Interval`` construction or assignment won't matter.
 
         Parameters
         ----------
@@ -144,14 +151,25 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         str
             String representation of this ``Interval`` object.
         '''
-        s = ('{}(interval_metadata=<{!r}>, locations={!r}, '
-             'boundaries={!r}, metadata={!r})')
-        return s.format(self.__class__.__name__, id(self._interval_metadata),
-                        self.locations, self.boundaries, self.metadata)
+        if self.dropped:
+            s = ('{}(dropped=True, locations={!r}, '
+                 'boundaries={!r}, metadata={!r})')
+            return s.format(self.__class__.__name__,
+                            self.locations, self.boundaries, self.metadata)
+        else:
+            s = ('{}(interval_metadata=<{!r}>, locations={!r}, '
+                 'boundaries={!r}, metadata={!r})')
+            return s.format(self.__class__.__name__,
+                            id(self._interval_metadata),
+                            self.locations, self.boundaries, self.metadata)
 
     @experimental(as_of='0.5.0-dev')
     def drop(self):
         '''Drop this ``Interval`` object from the interval metadata it links to.
+
+        If the ``Interval`` object is dropped, you can still get values of
+        ``locations``, ``boundaries``, and ``metadata`` attributes, but you
+        can not change their values with the setters.
 
         See Also
         --------
@@ -175,9 +193,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         ----------
         .. [1] ftp://ftp.ebi.ac.uk/pub/databases/embl/doc/FT_current.html#3.4.3
         '''
-        if self.dropped:
-            raise RuntimeError('Cannot retrieve boundaries from.'
-                               'dropped Interval object.')
         return self._boundaries
 
     @boundaries.setter
@@ -186,13 +201,14 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         '''Set ``boundaries``.
 
         The ``value`` should be ``None`` (meaning all boundaries are ``True``)
-        or an iterable matching ``self.locations``.'''
+        or an iterable matching ``self.locations``.
+        '''
         if self.dropped:
             raise RuntimeError('Cannot change boundaries to dropped '
                                'Interval object.')
-        nl = len(self.locations)
+        locations_n = len(self.locations)
         if value is None:
-            self._boundaries = [(True, True)] * nl
+            self._boundaries = [(True, True)] * locations_n
         else:
             try:
                 value = list(value)
@@ -200,11 +216,11 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
                 raise TypeError(
                     'Cannot give a non-iterable (%r) to `boundaries`.' % value)
 
-            nb = len(value)
-            if nb != nl:
+            boundaries_n = len(value)
+            if boundaries_n != locations_n:
                 msg = ('The length of boundaries (%d) needs '
                        'to be equal to the length of locations (%d).')
-                raise ValueError(msg % (nb, nl))
+                raise ValueError(msg % (boundaries_n, locations_n))
 
             for boundary in value:
                 _assert_valid_boundary(boundary)
@@ -218,9 +234,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         It should be a list of tuples of int pair. Each tuple stores
         the start and end coordinates of a span of the interval feature.
         '''
-        if self.dropped:
-            raise RuntimeError(
-                'Cannot retrieve locations from dropped Interval object.')
         return self._locations
 
     @locations.setter
@@ -262,9 +275,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         It stores the metadata (eg. gene name, function, ID, etc.) of
         the interval feature as a ``dict``.
         '''
-        if self.dropped:
-            raise RuntimeError(
-                'Cannot retrieve metadata from dropped Interval object.')
         return self._metadata
 
     @metadata.setter
@@ -289,6 +299,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         See Also
         --------
         skbio.metadata.Interval.drop
+        skbio.metadata.IntervalMetadata.drop
         '''
         return self._interval_metadata is None
 
@@ -410,7 +421,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
-        @wraps(method)
+        @functools.wraps(method)
         def inner(self, *args, **kwargs):
             if self._is_stale_tree is False:
                 return method(self, *args, **kwargs)
@@ -423,11 +434,11 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         return inner
 
     def _reverse(self, length):
-        """Reverse the location coordinates with given length.
+        """Reverse ``IntervalMetadata`` object.
 
-        This modifies the coordinates by subtracting them from the
-        given length. This operation facilitates the sequence
-        reverse complement.
+        This operation reverses all of the interval coordinates.
+        For instance, this can be used to compare coordinates
+        in the forward strand to coordinates in the reversal strand.
 
         Parameters
         ----------
@@ -436,8 +447,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             This typically corresponds to the length of sequence.
         """
         for f in self._intervals:
-            # staled doesn't need to be called, since the setter for
-            # Interval will take care of this
             intvls = list(map(lambda x: (length-x[1], length-x[0]),
                               reversed(f.locations)))
             f.locations = intvls
@@ -456,7 +465,8 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         Parameters
         ----------
         ascending : bool
-            sort in ascending or descending coordinates.'''
+            sort in ascending or descending coordinates.
+        '''
         self._intervals = sorted(
             self._intervals,
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
@@ -471,9 +481,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         Parameters
         ----------
         locations : iterable of tuple of ints
-            A list of locations associated with the Interval object.
+            Tuples representing start and end coordinates.
         boundaries : iterable of tuple of bool
-            A list of boundaries associated with the locations.
+            Tuples representing the openness of each location coordinates.
         metadata : dict
             A dictionary of key word attributes associated with the
             Interval object.
@@ -524,7 +534,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         """
         if metadata is None:
             return
-            yield
 
         if intervals is None:
             intervals = self._intervals
@@ -679,7 +688,7 @@ def _assert_valid_location(location):
             start, end = location
             if start > end:
                 raise ValueError("`start` is greater than `end`.")
-        except:
+        except ValueError:
             raise ValueError("A location must be a tuple of exactly "
                              "two coordinates, not %r" % (location, ))
     else:
@@ -690,7 +699,7 @@ def _assert_valid_boundary(boundary):
     if isinstance(boundary, tuple):
         try:
             start, end = boundary
-        except:
+        except ValueError:
             raise ValueError("A boundary must be a tuple of exactly "
                              "two, not %r" % (boundary, ))
         if not (isinstance(start, bool) and isinstance(end, bool)):

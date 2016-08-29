@@ -1,3 +1,8 @@
+# -----------------------------------------------------------------------------
+# This code is taken from bx_python project as it is. The license
+# for this code is included in license/bx_python.txt
+# -----------------------------------------------------------------------------
+
 """
 Data structure for performing intersect queries on a set of intervals which
 preserves all information about the intervals (unlike bitset projection methods).
