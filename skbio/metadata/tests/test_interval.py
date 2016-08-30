@@ -261,9 +261,9 @@ class TestInterval(unittest.TestCase):
     def test_set_on_dropped(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
-                     locations=[(1, 2), (4, 7)],
-                     boundaries=[(True, False), (False, False)],
-                     metadata={'name': 'sagA', 'function': 'transport'})
+                     locations=[(1, 2)],
+                     boundaries=[(True, False)],
+                     metadata={'name': 'sagA'})
         f.drop()
         with self.assertRaises(RuntimeError):
             f.boundaries = None
@@ -271,6 +271,18 @@ class TestInterval(unittest.TestCase):
             f.locations = [(1, 2)]
         with self.assertRaises(RuntimeError):
             f.metadata = {}
+
+    def test_get_on_dropped(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     locations=[(1, 2)],
+                     boundaries=[(True, False)],
+                     metadata={'name': 'sagA'})
+        f.drop()
+
+        self.assertEqual(f.boundaries, [(True, False)])
+        self.assertEqual(f.locations, [(1, 2)])
+        self.assertEqual(f.metadata, {'name': 'sagA'})
 
 
 class TestIntervalUtil(unittest.TestCase):
@@ -332,6 +344,21 @@ class TestIntervalMetadata(unittest.TestCase):
     def test_init(self):
         self.assertFalse(self.im_empty._is_stale_tree)
         self.assertEqual(self.im_empty._intervals, [])
+
+    def test_duplicate(self):
+        '''Test query and drop methods on duplicate Intervals.'''
+        intvl_1 = self.im_empty.add([(1, 2)])
+        intvl_2 = self.im_empty.add([(1, 2)])
+        self.assertEqual(len(list(self.im_empty.query([(1, 2)]))), 2)
+        self.im_empty.drop([intvl_1])
+        self.assertEqual(len(self.im_empty._intervals), 1)
+        self.assertTrue(self.im_empty._intervals[0] is intvl_2)
+
+    def test_duplicate_locations(self):
+        intvl = self.im_empty.add([(1,2), (1, 2)])
+        intvls = list(self.im_empty.query([(1, 2)]))
+        self.assertEqual(len(intvls), 1)
+        self.assertTrue(intvl is intvls[0])
 
     def test_sort(self):
         interval = Interval(
@@ -433,13 +460,14 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(len(intervals), 0)
 
     def test_drop(self):
-        self.im_2.drop([(1, 2)], {'gene': 'sagA'})
+        intvl = self.im_2._intervals[0]
+        self.im_2.drop([intvl])
         self.assertEqual(len(self.im_2._intervals), 1)
         self.assertEqual(self.im_2._intervals[0], self.interval_2)
 
-    def test_drop_none(self):
-        self.im_2.drop()
-        self.assertEqual(len(self.im_2._intervals), 2)
+    def test_drop_all(self):
+        self.im_2.drop(self.im_2._intervals)
+        self.assertEqual(self.im_2, self.im_empty)
 
     def test_reverse(self):
         self.im_2._reverse(length=10)

@@ -8,6 +8,7 @@
 
 import sys
 import unittest
+import random
 
 from skbio.metadata._intersection import IntervalObj
 from skbio.metadata._intersection import IntervalNode
@@ -155,7 +156,6 @@ class LotsaTestCase(unittest.TestCase):
         iv = self.intervals
         path = sys.path[:]
         sys.path = sys.path[2:]
-        random = __import__("random")
         sys.path = path
         for t in range(25):
             start = random.randint(0, self.max - 10000)
@@ -164,8 +164,7 @@ class LotsaTestCase(unittest.TestCase):
             for feat in results:
                 self.assertTrue(
                         (feat.end >= start and feat.end <= end) or
-                        (feat.start <= end and feat.start >= start)
-                        )
+                        (feat.start <= end and feat.start >= start))
 
 
 class IntervalTreeTest(unittest.TestCase):

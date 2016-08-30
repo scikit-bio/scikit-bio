@@ -177,8 +177,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         skbio.metadata.IntervalMetadata.drop
         '''
         if not self.dropped:
-            self._interval_metadata.drop(locations=self.locations,
-                                         metadata=self.metadata)
+            self._interval_metadata.drop([self])
             self._interval_metadata = None
 
     @property
@@ -307,15 +306,16 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
 
 class IntervalMetadata():
-    """Stores the interval features of a sequence.
+    """Stores the interval features.
 
     ``IntervalMetadata`` object allows storage, modification, and
     querying of interval features covering a region of a single coordinate
     system. For instance, this can be used to store functional annotations
-    about genes across a genome.
+    about genes across a genome. This object is also applied to the sequence
+    alignment.
 
     This object is typically coupled with another object, such as a
-    ``Sequence`` object, or a ``TabularMSA`` object.
+    ``Sequence`` object (or its child class), or a ``TabularMSA`` object.
 
     Notes
     -----
@@ -342,7 +342,6 @@ class IntervalMetadata():
     Create an ``IntervalMetadata`` object:
 
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> from pprint import pprint
     >>> im = IntervalMetadata()
 
     Let's add some genes annotations:
@@ -591,28 +590,23 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
                     yield intvl
 
     @experimental(as_of='0.5.0-dev')
-    def drop(self, locations=None, metadata=None):
-        """Drops Interval objects according to a specified query.
-
-        Locations are first queried from the ``IntervalMetadata`` object
-        using the query functionality. These locations are then dropped.
+    def drop(self, intervals):
+        """Drops Interval objects.
 
         Parameters
         ----------
-        locations : iterable of tuple of ints
-            A list of locations associated with the Interval object.
-        metadata : dict
-            A dictionary of key word attributes associated with the
-            Interval object.
+        interval : iterable of ``Interval``
+            ``Interval`` objects to drop from this object.
+
         """
-        to_delete = {id(f) for f in
-                     self.query(locations=locations,
-                                metadata=metadata)}
+        to_delete = {id(f) for f in intervals}
 
         new_intvls = []
         # iterate through queries and drop them
         for intvl in self._intervals:
-            if id(intvl) not in to_delete:
+            if id(intvl) in to_delete:
+                intvl._interval_metadata = None
+            else:
                 new_intvls.append(intvl)
 
         self._intervals = new_intvls
@@ -678,6 +672,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         if n <= 5:
             items = [repr(i) for i in self._intervals]
         else:
+            # intentionally overwrite items[2] to make code cleaner
             items = [repr(self._intervals[i]) for i in [0, 1, 2, n-2, n-1]]
             items[2] = '...'
 
