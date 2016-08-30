@@ -178,7 +178,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         '''
         if not self.dropped:
             self._interval_metadata.drop([self])
-            self._interval_metadata = None
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -386,21 +385,22 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
     Query the genes by location and/or metadata:
 
-    >>> q1 = im.query([(7, 9)])
-    >>> list(q1)  # doctest: +ELLIPSIS
+    >>> intvls = im.query([(1, 2)], metadata={'gene': 'foo'})
+    >>> list(intvls)
+    []
+    >>> intvls = im.query([(7, 9)])
+    >>> list(intvls)  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})]
-    >>> q2 = im.query(metadata={'gene': 'sagA'})
-    >>> list(q2)  # doctest: +ELLIPSIS
+    >>> intvls = im.query(metadata={'gene': 'sagA'})
+    >>> intvls = list(intvls)
+    >>> intvls  # doctest: +ELLIPSIS
     [Interval(interval_metadata=..., locations=[(1, 2), (4, 7)], \
 boundaries=[(True, True), (True, True)], metadata={'gene': 'sagA'})]
-    >>> q3 = im.query([(1, 2)], metadata={'gene': 'foo'})
-    >>> list(q3)
-    []
 
-    Drop genes:
+    Drop the gene(s) we get from query:
 
-    >>> im.drop(metadata={'gene': 'sagA'})
+    >>> im.drop(intvls)
     >>> im.sort()
     >>> im   # doctest: +ELLIPSIS
     2 interval features
@@ -592,6 +592,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     @experimental(as_of='0.5.0-dev')
     def drop(self, intervals):
         """Drops Interval objects.
+
+        The given ``Interval`` objects will be removed and their
+        associated ``IntervalMetadata`` will be set to ``None``.
 
         Parameters
         ----------

@@ -355,7 +355,7 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertTrue(self.im_empty._intervals[0] is intvl_2)
 
     def test_duplicate_locations(self):
-        intvl = self.im_empty.add([(1,2), (1, 2)])
+        intvl = self.im_empty.add([(1, 2), (1, 2)])
         intvls = list(self.im_empty.query([(1, 2)]))
         self.assertEqual(len(intvls), 1)
         self.assertTrue(intvl is intvls[0])
@@ -464,6 +464,8 @@ class TestIntervalMetadata(unittest.TestCase):
         self.im_2.drop([intvl])
         self.assertEqual(len(self.im_2._intervals), 1)
         self.assertEqual(self.im_2._intervals[0], self.interval_2)
+        # test the intvl was set to dropped
+        self.assertTrue(intvl.dropped)
 
     def test_drop_all(self):
         self.im_2.drop(self.im_2._intervals)
