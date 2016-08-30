@@ -468,8 +468,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         ascending : bool, optional
             sort in ascending or descending coordinates.
         '''
-        self._intervals = sorted(
-            self._intervals,
+        self._intervals.sort(
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
             reverse=not ascending)
 
