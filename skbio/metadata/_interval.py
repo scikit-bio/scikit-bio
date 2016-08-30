@@ -212,7 +212,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         else:
             try:
                 value = list(value)
-            except:
+            except TypeError:
                 raise TypeError(
                     'Cannot give a non-iterable (%r) to `boundaries`.' % value)
 
@@ -251,7 +251,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         # check iterability
         try:
             value = list(value)
-        except:
+        except TypeError:
             raise TypeError(
                 'Cannot give a non-iterable (%r) to `locations`.' % value)
         # check it is not empty
@@ -465,7 +465,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         Parameters
         ----------
-        ascending : bool
+        ascending : bool, optional
             sort in ascending or descending coordinates.
         '''
         self._intervals = sorted(

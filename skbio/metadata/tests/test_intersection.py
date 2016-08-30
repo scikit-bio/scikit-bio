@@ -6,6 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+# This code is taken from bx-python project and added with a test for a new
+# function `update` from line 195 to 211. The license for this code is
+# included in licenses/bx_python.txt.
+# ----------------------------------------------------------------------------
+
 import sys
 import unittest
 import random

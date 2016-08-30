@@ -291,7 +291,7 @@ class TestIntervalUtil(unittest.TestCase):
         for intvl in intvls:
             try:
                 _assert_valid_location(intvl)
-            except:
+            except TypeError:
                 self.assertTrue(False)
 
     def test_assert_valid_location_wrong_type(self):
@@ -301,7 +301,7 @@ class TestIntervalUtil(unittest.TestCase):
                 _assert_valid_location(intvl)
 
     def test_assert_valid_location_wrong_value(self):
-        intvls = [(2, 1), (True, 0), ('s', 'r')]
+        intvls = [(1, 2, 3), (2, 1), (True, 0), ('s', 'r')]
         for intvl in intvls:
             with self.assertRaises(ValueError):
                 _assert_valid_location(intvl)
