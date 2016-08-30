@@ -106,6 +106,12 @@ class TestInterval(unittest.TestCase):
                " boundaries=\[\(True, True\)\], metadata={'name': 'sagA'}\)")
         obs = repr(f)
         self.assertRegex(obs, exp)
+        # test for dropped
+        f.drop()
+        exp = (r"Interval\(dropped=True, locations=\[\(1, 2\)\],"
+               " boundaries=\[\(True, True\)\], metadata={'name': 'sagA'}\)")
+        obs = repr(f)
+        self.assertRegex(obs, exp)
 
     def test_drop(self):
         f = Interval(interval_metadata=IntervalMetadata(),
@@ -114,6 +120,14 @@ class TestInterval(unittest.TestCase):
         f.drop()
         self.assertTrue(f._interval_metadata is None)
         self.assertTrue(f.dropped)
+        self.assertTrue(f.locations, [(1, 2)])
+        self.assertTrue(f.metadata, {'name': 'sagA'})
+        # test the idempotence
+        f.drop()
+        self.assertTrue(f._interval_metadata is None)
+        self.assertTrue(f.dropped)
+        self.assertTrue(f.locations, [(1, 2)])
+        self.assertTrue(f.metadata, {'name': 'sagA'})
 
     def test_equal(self):
         f1 = Interval(interval_metadata=IntervalMetadata(),
@@ -244,19 +258,13 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.metadata = value
 
-    def test_set_get_bad(self):
+    def test_set_on_dropped(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
         f.drop()
-        with self.assertRaises(RuntimeError):
-            f.boundaries
-        with self.assertRaises(RuntimeError):
-            f.locations
-        with self.assertRaises(RuntimeError):
-            f.metadata
         with self.assertRaises(RuntimeError):
             f.boundaries = None
         with self.assertRaises(RuntimeError):
@@ -295,13 +303,13 @@ class TestIntervalUtil(unittest.TestCase):
                 self.assertTrue(False)
 
     def test_assert_valid_boundary_wrong_value(self):
-        boundaries = [(True, False, True), (0, 1), ('s', '')]
+        boundaries = [(True, False, True), ()]
         for boundary in boundaries:
             with self.assertRaises(ValueError):
                 _assert_valid_boundary(boundary)
 
     def test_assert_valid_boundary_wrong_type(self):
-        boundaries = [[True, False], 's', 1]
+        boundaries = [[True, False], 's', 1, (0, 1), ('s', '')]
         for boundary in boundaries:
             with self.assertRaises(TypeError):
                 _assert_valid_boundary(boundary)

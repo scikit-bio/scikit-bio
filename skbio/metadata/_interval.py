@@ -48,8 +48,9 @@ class Interval:
     Notes
     -----
     While the construction of an ``Interval`` object automatically add
-    itself to its associated ``IntervalMetadata`` object, ``IntervalMetadata.add
-    is the typical/easier way to create and add it to ``IntervalMetadata``.
+    itself to its associated ``IntervalMetadata`` object,
+    ``IntervalMetadata.add`` is the typical/easier way to
+    create and add it to ``IntervalMetadata``.
 
     References
     ----------
@@ -175,9 +176,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         --------
         skbio.metadata.IntervalMetadata.drop
         '''
-        self._interval_metadata.drop(locations=self.locations,
-                                     metadata=self.metadata)
-        self._interval_metadata = None
+        if not self.dropped:
+            self._interval_metadata.drop(locations=self.locations,
+                                         metadata=self.metadata)
+            self._interval_metadata = None
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -473,20 +475,20 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             reverse=not ascending)
 
     def add(self, locations, boundaries=None, metadata=None):
-        """Add a feature to the metadata object.
+        """Create and add an ``Interval`` to this ``IntervalMetadata``.
 
-        This method creates an ``Interval`` object and insert it into
+        This method creates an ``Interval`` object and inserts it into
         the ``IntervalMetadata`` object.
 
         Parameters
         ----------
         locations : iterable of tuple of ints
             Tuples representing start and end coordinates.
-        boundaries : iterable of tuple of bool
+        boundaries : iterable of tuple of bool, optional
             Tuples representing the openness of each location coordinates.
-        metadata : dict
-            A dictionary of key word attributes associated with the
-            Interval object.
+        metadata : dict, optional
+            A dictionary of key-value pairs associated with the
+            ``Interval`` object.
 
         Returns
         -------
@@ -495,7 +497,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         See Also
         --------
-        skbio.metadata.Interval._add
+        skbio.metadata.Interval
         """
         # Add an interval to the tree. Note that the add functionality is
         # built within the Interval constructor.
@@ -560,22 +562,22 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         Parameters
         ----------
-        locations : iterable of tuples of int pair
+        locations : iterable of tuples of int pair, optional
             Specifies locations to look for the ``Interval``
             objects. An satisfying interval feature only need to overlap with
             one location. Default (``None``) means all ``Interval``s meet
             this requirement.
 
-        metadata : dict
+        metadata : dict, optional
             A dictionary of key word attributes associated with the
             ``Interval`` object. It specifies what metadata keywords and
             values to look for. Default (``None``) means all ``Interval``s
             meet this requirement.
 
-        Returns
-        -------
-        generator, Interval
-            A generator of Interval objects satisfying the search criteria.
+        Yields
+        ------
+        Interval
+            ``Interval`` object satisfying the search criteria.
         """
         if locations is None:
             for intvl in self._query_attribute(metadata):
@@ -686,13 +688,15 @@ def _assert_valid_location(location):
     if isinstance(location, tuple):
         try:
             start, end = location
-            if start > end:
-                raise ValueError("`start` is greater than `end`.")
         except ValueError:
             raise ValueError("A location must be a tuple of exactly "
-                             "two coordinates, not %r" % (location, ))
+                             "two coordinates, not {!r}".format(location))
+        if not (isinstance(start, int) and
+                isinstance(end, int)) or start > end:
+            raise ValueError("`start` must be a smaller int than `end`.")
     else:
-        raise TypeError("Each location must be a tuple, not %r" % location)
+        raise TypeError("Each location must be a tuple, not {!r}".format(
+            location))
 
 
 def _assert_valid_boundary(boundary):
@@ -701,8 +705,9 @@ def _assert_valid_boundary(boundary):
             start, end = boundary
         except ValueError:
             raise ValueError("A boundary must be a tuple of exactly "
-                             "two, not %r" % (boundary, ))
+                             "two, not {!r}".format(boundary))
         if not (isinstance(start, bool) and isinstance(end, bool)):
-            raise ValueError('A boundary must be a tuple of two booleans')
+            raise TypeError('A boundary must be a tuple of two booleans')
     else:
-        raise TypeError("Each boundary must be a tuple, not %r" % boundary)
+        raise TypeError("Each boundary must be a tuple, not {!r}".format(
+            boundary))
