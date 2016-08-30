@@ -449,8 +449,8 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             This typically corresponds to the length of sequence.
         """
         for f in self._intervals:
-            intvls = list(map(lambda x: (length-x[1], length-x[0]),
-                              reversed(f.locations)))
+            intvls = [(length-x[1], length-x[0]) for x in
+                      reversed(f.locations)]
             f.locations = intvls
 
         # DONT' forget this!!!
