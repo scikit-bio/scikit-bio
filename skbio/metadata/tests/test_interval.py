@@ -193,7 +193,7 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.locations = value
 
-        for value in [[(3, 1)], [('s', 1)], ()]:
+        for value in [[(3, 1)], [('s', 1)], (), None]:
             with self.assertRaises(ValueError):
                 f.locations = value
 
@@ -220,12 +220,24 @@ class TestInterval(unittest.TestCase):
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
-        for value in [[(False, False)], ()]:
+        for value in [[(False, False)], (), None]:
             with self.assertRaises(ValueError):
                 f.boundaries = value
         for value in [1, True]:
             with self.assertRaises(TypeError):
                 f.boundaries = value
+
+    def test_delete_boundaries(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     locations=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        del f.boundaries
+        self.assertEqual(f.boundaries, [(True, True), (True, True)])
+        # delete again
+        del f.boundaries
+        self.assertEqual(f.boundaries, [(True, True), (True, True)])
 
     def test_get_metadata(self):
         im = IntervalMetadata()
@@ -258,7 +270,16 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.metadata = value
 
-    def test_set_on_dropped(self):
+    def test_delete_metadata(self):
+        im = IntervalMetadata()
+        f = Interval(interval_metadata=im,
+                     locations=[(1, 2), (4, 7)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        del f.metadata
+        self.assertEqual(f.metadata, {})
+
+    def test_set_delete_on_dropped(self):
         im = IntervalMetadata()
         f = Interval(interval_metadata=im,
                      locations=[(1, 2)],
@@ -271,6 +292,10 @@ class TestInterval(unittest.TestCase):
             f.locations = [(1, 2)]
         with self.assertRaises(RuntimeError):
             f.metadata = {}
+        with self.assertRaises(RuntimeError):
+            del f.boundaries
+        with self.assertRaises(RuntimeError):
+            del f.metadata
 
     def test_get_on_dropped(self):
         im = IntervalMetadata()

@@ -171,14 +171,11 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             self._interval_metadata.drop([self])
 
     def _locations_boundaries_setter(self, locations=None, boundaries=None):
-        # Check that `self` is not in a dropped state.
         if self.dropped:
-            raise RuntimeError('Cannot change boundaries to dropped '
+            raise RuntimeError('Cannot change the dropped '
                                'Interval object.')
-        # Casts to `list`, validation, sorting, and setting of `locations` and `boundaries`
-        # happen here. Note that sorting should only need to be performed once here
-        # (do an argsort).
-        #
+        # Casts to `list`, validation, sorting, and setting of `locations`
+        # and `boundaries` happen here.
         if locations is not None:
             # check iterability
             try:
@@ -225,15 +222,16 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             else:
                 self._boundaries = boundaries
         else:
-            # If only `locations` is provided, reset `self.boundaries` to all `Trues`.
+            # If only `locations` is provided, reset `self.boundaries` to
+            # all `True`.
             if boundaries is None:
                 locations.sort()
                 self._locations = locations
                 # reset all the boundaries to True!!
-                self._boundaries = [(True, True)] * spans
+                del self.boundaries
 
-            # If both `locations` and `boundaries` are provided, set `self.locations`
-            # and `self.boundaries`.
+            # If both `locations` and `boundaries` are provided, set
+            # `self.locations` and `self.boundaries`.
             else:
                 combo = [i for i in sorted(zip(locations, boundaries))]
                 # use the boundaries setter to validate the value
@@ -263,10 +261,21 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     def boundaries(self, value):
         '''Set ``boundaries``.
 
-        The ``value`` should be ``None`` (meaning all boundaries are ``True``)
-        or an iterable matching ``self.locations``.
+        The ``value`` should an iterable matching ``self.locations``.
         '''
         self._locations_boundaries_setter(boundaries=value)
+
+    @boundaries.deleter
+    @experimental(as_of='0.5.0-dev')
+    def boundaries(self):
+        '''Delete ``boundaries``.
+
+        This set all boundaries to be True.
+        '''
+        if self.dropped:
+            raise RuntimeError('Cannot change boundaries dropped '
+                               'Interval object.')
+        self._boundaries = [(True, True)] * len(self.locations)
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -309,10 +318,25 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             raise TypeError("metadata must be a dict, not %r" % value)
         self._metadata = value
 
+    @metadata.deleter
+    @experimental(as_of='0.5.0-dev')
+    def metadata(self):
+        '''Delete metadata.
+
+        This set metadata to be empty dict.
+        '''
+        if self.dropped:
+            raise RuntimeError('Cannot change metadata to dropped '
+                               'Interval object.')
+        self._metadata = {}
+
     @property
     @experimental(as_of='0.5.0-dev')
     def dropped(self):
         '''Boolean value indicating if the ``Interval`` object is dropped.
+
+        If it is dropped, it means it is not associated with IntervalMetadata
+        object any more.
 
         Notes
         -----
