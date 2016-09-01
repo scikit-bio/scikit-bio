@@ -78,16 +78,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         # Intervals
         self._interval_metadata = interval_metadata
 
-        locations = list(locations)
-        self.locations = locations
-
-        # Boundaries: has to be after locations assignment because
-        # locations setter reset boundaries.
-        indices = [i[0] for i in sorted(enumerate(locations),
-                                        key=operator.itemgetter(1))]
-        # use the boundaries setter to validate the value
-        self.boundaries = boundaries
-        self.boundaries = [self.boundaries[i] for i in indices]
+        self._locations_boundaries_setter(locations, boundaries)
 
         # Metadata
         if metadata is None:
@@ -179,6 +170,78 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         if not self.dropped:
             self._interval_metadata.drop([self])
 
+    def _locations_boundaries_setter(self, locations=None, boundaries=None):
+        # Check that `self` is not in a dropped state.
+        if self.dropped:
+            raise RuntimeError('Cannot change boundaries to dropped '
+                               'Interval object.')
+        # Casts to `list`, validation, sorting, and setting of `locations` and `boundaries`
+        # happen here. Note that sorting should only need to be performed once here
+        # (do an argsort).
+        #
+        if locations is not None:
+            # check iterability
+            try:
+                # check iterability
+                locations = list(locations)
+            except TypeError:
+                raise TypeError(
+                    'Cannotgive an iterable (%r) to `locations`.' % locations)
+
+            # check it is not empty
+            if not locations:
+                raise ValueError('Cannot give empty `location`.')
+            # check each contiguous span is in right format
+            for location in locations:
+                _assert_valid_location(location)
+
+            spans = len(locations)
+        else:
+            spans = len(self.locations)
+
+        if boundaries is not None:
+            try:
+                boundaries = list(boundaries)
+            except TypeError:
+                raise TypeError(
+                    'Cannot give a non-iterable (%r) '
+                    'to `boundaries`.' % boundaries)
+
+            if len(boundaries) != spans:
+                raise ValueError(
+                    'The length of boundaries must '
+                    'be equal to the length of locations {!r}.')
+
+            for boundary in boundaries:
+                _assert_valid_boundary(boundary)
+
+        if locations is None:
+            # `locations` and `boundaries` cannot both be omitted.
+            if boundaries is None:
+                raise ValueError('You must give `None` to both `locations` '
+                                 'and `boundaries`.')
+            # If only `boundaries` is provided, set `self.boundaries` and don't
+            # change `self.locations`.
+            else:
+                self._boundaries = boundaries
+        else:
+            # If only `locations` is provided, reset `self.boundaries` to all `Trues`.
+            if boundaries is None:
+                locations.sort()
+                self._locations = locations
+                # reset all the boundaries to True!!
+                self._boundaries = [(True, True)] * spans
+
+            # If both `locations` and `boundaries` are provided, set `self.locations`
+            # and `self.boundaries`.
+            else:
+                combo = [i for i in sorted(zip(locations, boundaries))]
+                # use the boundaries setter to validate the value
+                self._boundaries = [i[1] for i in combo]
+                self._locations = [i[0] for i in combo]
+
+            self._interval_metadata._is_stale_tree = True
+
     @property
     @experimental(as_of='0.5.0-dev')
     def boundaries(self):
@@ -203,28 +266,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         The ``value`` should be ``None`` (meaning all boundaries are ``True``)
         or an iterable matching ``self.locations``.
         '''
-        if self.dropped:
-            raise RuntimeError('Cannot change boundaries to dropped '
-                               'Interval object.')
-        locations_n = len(self.locations)
-        if value is None:
-            self._boundaries = [(True, True)] * locations_n
-        else:
-            try:
-                value = list(value)
-            except TypeError:
-                raise TypeError(
-                    'Cannot give a non-iterable (%r) to `boundaries`.' % value)
-
-            boundaries_n = len(value)
-            if boundaries_n != locations_n:
-                msg = ('The length of boundaries (%d) needs '
-                       'to be equal to the length of locations (%d).')
-                raise ValueError(msg % (boundaries_n, locations_n))
-
-            for boundary in value:
-                _assert_valid_boundary(boundary)
-            self._boundaries = value
+        self._locations_boundaries_setter(boundaries=value)
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -245,27 +287,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         This is not totally surprising because it is justifiable your old
         boundaries don't fit the new locations.
         '''
-        if self.dropped:
-            raise RuntimeError(
-                'Cannot change locations to dropped Interval object.')
-        # check iterability
-        try:
-            value = list(value)
-        except TypeError:
-            raise TypeError(
-                'Cannot give a non-iterable (%r) to `locations`.' % value)
-        # check it is not empty
-        if len(value) == 0:
-            raise ValueError(
-                'Cannot give empty `location`.')
-        # check each contiguous span is in right format
-        for location in value:
-            _assert_valid_location(location)
-        # don't forget to sort the spans
-        self._locations = sorted(value)
-        # reset all the boundaries to True!!
-        self.boundaries = None
-        self._interval_metadata._is_stale_tree = True
+        self._locations_boundaries_setter(locations=value)
 
     @property
     @experimental(as_of='0.5.0-dev')

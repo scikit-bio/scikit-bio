@@ -189,7 +189,7 @@ class TestInterval(unittest.TestCase):
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
-        for value in [1, 's', None]:
+        for value in [1, 's']:
             with self.assertRaises(TypeError):
                 f.locations = value
 
