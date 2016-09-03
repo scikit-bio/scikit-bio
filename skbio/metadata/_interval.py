@@ -172,8 +172,8 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
     def _locations_boundaries_setter(self, locations=None, boundaries=None):
         if self.dropped:
-            raise RuntimeError('Cannot change the dropped '
-                               'Interval object.')
+            raise RuntimeError('Cannot change `locations` or `boundaries` '
+                               'on a dropped Interval object.')
         # Casts to `list`, validation, sorting, and setting of `locations`
         # and `boundaries` happen here.
         if locations is not None:
@@ -182,12 +182,12 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
                 # check iterability
                 locations = list(locations)
             except TypeError:
-                raise TypeError(
-                    'Cannotgive an iterable (%r) to `locations`.' % locations)
+                raise TypeError('Cannot give an non-iterable (%r) '
+                                'to `locations`.' % locations)
 
             # check it is not empty
             if not locations:
-                raise ValueError('Cannot give empty `location`.')
+                raise ValueError('Cannot give empty `locations`.')
             # check each contiguous span is in right format
             for location in locations:
                 _assert_valid_location(location)
@@ -207,7 +207,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             if len(boundaries) != spans:
                 raise ValueError(
                     'The length of boundaries must '
-                    'be equal to the length of locations {!r}.')
+                    'be equal to the length of locations.')
 
             for boundary in boundaries:
                 _assert_valid_boundary(boundary)
@@ -233,10 +233,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             # If both `locations` and `boundaries` are provided, set
             # `self.locations` and `self.boundaries`.
             else:
-                combo = [i for i in sorted(zip(locations, boundaries))]
-                # use the boundaries setter to validate the value
-                self._boundaries = [i[1] for i in combo]
-                self._locations = [i[0] for i in combo]
+                locations, boundaries = [
+                    list(e) for e in zip(*sorted(zip(locations, boundaries)))]
+                self._locations = locations
+                self._boundaries = boundaries
 
             self._interval_metadata._is_stale_tree = True
 
@@ -273,7 +273,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         This set all boundaries to be True.
         '''
         if self.dropped:
-            raise RuntimeError('Cannot change boundaries dropped '
+            raise RuntimeError('Cannot change boundaries on dropped '
                                'Interval object.')
         self._boundaries = [(True, True)] * len(self.locations)
 
@@ -312,7 +312,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     @experimental(as_of='0.5.0-dev')
     def metadata(self, value):
         if self.dropped:
-            raise RuntimeError('Cannot change metadata to dropped '
+            raise RuntimeError('Cannot change metadata on dropped '
                                'Interval object.')
         if not isinstance(value, dict):
             raise TypeError("metadata must be a dict, not %r" % value)
@@ -323,7 +323,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     def metadata(self):
         '''Delete metadata.
 
-        This set metadata to be empty dict.
+        This sets metadata to be empty dict.
         '''
         if self.dropped:
             raise RuntimeError('Cannot change metadata to dropped '
@@ -643,7 +643,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         Parameters
         ----------
-        interval : iterable of ``Interval``
+        intervals : iterable of ``Interval``
             ``Interval`` objects to drop from this object.
 
         """
