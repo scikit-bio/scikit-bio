@@ -215,7 +215,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         if locations is None:
             # `locations` and `boundaries` cannot both be omitted.
             if boundaries is None:
-                raise ValueError('You must give `None` to both `locations` '
+                raise ValueError('Cannot give `None` to both `locations` '
                                  'and `boundaries`.')
             # If only `boundaries` is provided, set `self.boundaries` and don't
             # change `self.locations`.
