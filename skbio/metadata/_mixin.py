@@ -11,7 +11,8 @@ import copy
 
 import pandas as pd
 
-from skbio.util._decorator import stable
+from skbio.util._decorator import stable, experimental
+from skbio.metadata import IntervalMetadata
 
 
 class MetadataMixin(metaclass=abc.ABCMeta):
@@ -406,3 +407,125 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         """
         return (self._positional_metadata is not None and
                 len(self.positional_metadata.columns) > 0)
+
+
+class IntervalMetadataMixin(metaclass=abc.ABCMeta):
+    def __init__(self, interval_metadata=None):
+        raise NotImplementedError
+
+    def _init_(self, interval_metadata=None):
+        self.interval_metadata = interval_metadata
+
+    @property
+    @experimental(as_of="0.5.0-dev")
+    def interval_metadata(self):
+        '''``IntervalMetadata`` object containing info about interval features.
+
+        >>> from skbio import DNA
+        >>> from skbio.metadata import IntervalMetadata
+        >>> im = IntervalMetadata()
+        >>> intvl = im.add([(0, 3)], metadata={'gene': 'sagA'})
+        >>> seq = DNA('ACGT', interval_metadata=im)
+        >>> seq
+        DNA
+        --------------------------
+        Interval metadata:
+            1 interval features
+        Stats:
+            length: 4
+            has gaps: False
+            has degenerates: False
+            has definites: True
+            GC-content: 50.00%
+        --------------------------
+        0 ACGT
+        '''
+        if self._interval_metadata is None:
+            # Not using setter to avoid copy.
+            self._interval_metadata = IntervalMetadata()
+        return self._interval_metadata
+
+    @interval_metadata.setter
+    def interval_metadata(self, interval_metadata):
+        if interval_metadata is None:
+            interval_metadata = IntervalMetadata()
+        if isinstance(interval_metadata, IntervalMetadata):
+            # copy all the data to the mixin
+            self._interval_metadata = copy.deepcopy(interval_metadata)
+        else:
+            raise TypeError('You must provide `IntervalMetadata` object.')
+
+    @interval_metadata.deleter
+    def interval_metadata(self):
+        self._interval_metadata = None
+
+    @experimental(as_of="0.5.0-dev")
+    def has_interval_metadata(self):
+        """Determine if the object has interval metadata.
+
+        An object has interval metadata if its ``interval_metadata``
+        has at least one ```Interval`` objects.
+
+        Returns
+        -------
+        bool
+            Indicates whether the object has interval metadata.
+
+        Examples
+        --------
+        .. note:: scikit-bio objects with interval metadata share a common
+           interface for accessing and manipulating their interval metadata.
+           The following examples use scikit-bio's ``DNA`` class for
+           demonstration. These examples apply to all other
+           scikit-bio objects storing interval metadata.
+
+        >>> from skbio import DNA
+        >>> seq = DNA('ACGT')
+        >>> seq.has_interval_metadata()
+        False
+        >>> from skbio.metadata import IntervalMetadata
+        >>> im = IntervalMetadata()
+        >>> seq = DNA('ACGT', interval_metadata=im)
+        >>> seq.has_interval_metadata()
+        False
+        >>> intvl = im.add([(0, 1)], metadata={'gene': 'sagA'})
+        >>> seq = DNA('ACGT', interval_metadata=im)
+        >>> seq.has_interval_metadata()
+        True
+        """
+        return (self._interval_metadata is not None and
+                len(self.interval_metadata._intervals) > 0)
+
+    @abc.abstractmethod
+    def __eq__(self, other):
+        raise NotImplementedError
+
+    def _eq_(self, other):
+        return self.interval_metadata == other.interval_metadata
+
+    @abc.abstractmethod
+    def __ne__(self, other):
+        raise NotImplementedError
+
+    def _ne_(self, other):
+        return not (self == other)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        raise NotImplementedError
+
+    def _copy_(self):
+        if self.has_interval_metadata():
+            return copy.copy(self.interval_metadata)
+        else:
+            return None
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo):
+        raise NotImplementedError
+
+    def _deepcopy_(self, memo):
+        if self.has_interval_metadata():
+            return copy.deepcopy(self.interval_metadata, memo)
+        else:
+            return None

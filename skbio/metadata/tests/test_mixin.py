@@ -8,11 +8,15 @@
 
 import unittest
 
-from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
+from skbio.metadata._mixin import (MetadataMixin,
+                                   PositionalMetadataMixin,
+                                   IntervalMetadataMixin)
 from skbio.util._decorator import overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
-                                     PositionalMetadataMixinTests)
+                                     PositionalMetadataMixinTests,
+                                     IntervalMetadataMixinTests)
+from skbio.metadata._interval import IntervalMetadata
 
 
 class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
@@ -74,6 +78,40 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                 return copy
 
         self._positional_metadata_constructor_ = ExamplePositionalMetadataMixin
+
+
+class TestIntervalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
+                                IntervalMetadataMixinTests):
+    def setUp(self):
+        self.im = IntervalMetadata()
+        self.intvls = [
+            {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}},
+            # repeat it
+            {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}}]
+
+        class ExampleIntervalMetadataMixin(IntervalMetadataMixin):
+            def __init__(self, interval_metadata=None):
+                IntervalMetadataMixin._init_(
+                    self, interval_metadata=interval_metadata)
+
+            def __eq__(self, other):
+                return IntervalMetadataMixin._eq_(self, other)
+
+            def __ne__(self, other):
+                return IntervalMetadataMixin._ne_(self, other)
+
+            def __copy__(self):
+                copy = self.__class__(interval_metadata=None)
+                copy._interval_metadata = IntervalMetadataMixin._copy_(self)
+                return copy
+
+            def __deepcopy__(self, memo):
+                copy = self.__class__(interval_metadata=None)
+                copy._interval_metadata = IntervalMetadataMixin._deepcopy_(
+                    self, memo)
+                return copy
+
+        self._interval_metadata_constructor_ = ExampleIntervalMetadataMixin
 
 
 if __name__ == '__main__':
