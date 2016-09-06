@@ -15,8 +15,8 @@ from skbio._base import ElasticLines
 
 
 class _MetadataReprBuilder(metaclass=ABCMeta):
-    """Abstract base class for building  a repr for an object containing
-    metadata and/or positional metadata.
+    """Abstract base class for building a repr for an object containing
+    metadata, positional metadata, and/or interval metadata.
 
     Parameters
     ----------
@@ -50,6 +50,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         self._process_header()
         self._process_metadata()
         self._process_positional_metadata()
+        self._process_interval_metadata()
         self._process_stats()
         self._process_data()
 
@@ -125,6 +126,13 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         key_fmt = self._format_key(key)
         dtype_fmt = '<dtype: %s>' % str(dtype)
         return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
+
+    def _process_interval_metadata(self):
+        if self._obj.has_interval_metadata():
+            self._lines.add_line('Interval metadata:')
+            self._lines.add_line(
+                    self._indent + '%d interval features' % len(
+                        self._obj.interval_metadata._intervals))
 
     def _format_key(self, key):
         """Format metadata key.
