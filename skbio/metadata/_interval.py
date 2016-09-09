@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import operator
+import copy
 import functools
 
 from ._intersection import IntervalTree
@@ -59,7 +60,7 @@ class Interval:
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> interval_metadata = IntervalMetadata()
+    >>> interval_metadata = IntervalMetadata(10)
 
     Create a gene of two exons (from 1 to 2 and 4 to 7):
 
@@ -397,7 +398,7 @@ class IntervalMetadata():
     Create an ``IntervalMetadata`` object:
 
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> im = IntervalMetadata()
+    >>> im = IntervalMetadata(10)
 
     Let's add some genes annotations:
 
@@ -479,6 +480,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         self._is_stale_tree = False
 
     @property
+    @experimental(as_of='0.5.0-dev')
     def num_interval_features(self):
         '''The total number of interval features.'''
         return len(self._intervals)
@@ -512,6 +514,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         # DONT' forget this!!!
         self._is_stale_tree = True
 
+    @experimental(as_of='0.5.0-dev')
     def sort(self, ascending=True):
         '''Sort interval features by their coordinates.
 
@@ -529,6 +532,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
             reverse=not ascending)
 
+    @experimental(as_of='0.5.0-dev')
     def add(self, locations, boundaries=None, metadata=None):
         """Create and add an ``Interval`` to this ``IntervalMetadata``.
 
@@ -736,6 +740,44 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             items[2] = '...'
 
         return '\n'.join([l1, l2] + items)
+
+    @experimental(as_of='0.5.0-dev')
+    def __copy__(self):
+        '''Return a shallow copy.
+
+        Notes
+        -----
+        The references to original ``Interval`` objects are created
+        in the returned copy object.
+
+        See Also
+        --------
+        deepcopy
+        '''
+        return self._copy(False, {})
+
+    @experimental(as_of='0.5.0-dev')
+    def __deepcopy__(self, memo):
+        '''Return a deep copy.
+
+        See Also
+        --------
+        copy
+        '''
+        return self._copy(True, memo)
+
+    @experimental(as_of='0.5.0-dev')
+    def _copy(self, deep, memo):
+        '''Return a deep copy'''
+        cp = IntervalMetadata(self.upper_bound)
+        cp._is_stale_tree = self._is_stale_tree
+        if deep:
+            cp._interval_tree = copy.deepcopy(self._interval_tree, memo)
+            cp._intervals = copy.deepcopy(self._intervals, memo)
+        else:
+            cp._interval_tree = copy.copy(self._interval_tree)
+            cp._intervals = copy.copy(self._intervals)
+        return cp
 
 
 def _assert_valid_location(location):

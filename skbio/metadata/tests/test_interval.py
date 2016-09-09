@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import unittest
-from copy import deepcopy
+from copy import deepcopy, copy
 
 from skbio.metadata._interval import (_assert_valid_location,
                                       _assert_valid_boundary)
@@ -355,15 +355,58 @@ class TestIntervalMetadata(unittest.TestCase):
     def setUp(self):
         self.im_empty = IntervalMetadata(10)
         self.im_1 = IntervalMetadata(10)
-        self.interval_1 = Interval(
+        self.im_1_1 = Interval(
             interval_metadata=self.im_1,
             locations=[(1, 2), (4, 7)],
             metadata={'gene': 'sagA',  'location': 0})
-        self.im_2 = deepcopy(self.im_1)
-        self.interval_2 = Interval(
+        self.im_2 = IntervalMetadata(10)
+        self.im_2_1 = Interval(
+            interval_metadata=self.im_2,
+            locations=[(1, 2), (4, 7)],
+            metadata={'gene': 'sagA',  'location': 0})
+        self.im_2_2 = Interval(
             interval_metadata=self.im_2,
             locations=[(3, 5)],
-            metadata={'gene': 'sagB', 'location': 0})
+            metadata={'gene': 'sagB', 'location': 0, 'spam': [0]})
+
+    def test_copy_empty(self):
+        obs = copy(self.im_empty)
+        self.assertEqual(obs, self.im_empty)
+        self.assertIsNot(obs._intervals, self.im_empty._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_empty._interval_tree)
+
+    def test_copy(self):
+        obs = copy(self.im_2)
+        self.assertEqual(obs, self.im_2)
+        self.assertIsNot(obs._intervals, self.im_2._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
+
+        for i in range(self.im_2.num_interval_features):
+            self.assertIs(obs._intervals[i], self.im_2._intervals[i])
+
+    def test_deepcopy(self):
+        obs = deepcopy(self.im_2)
+        self.assertEqual(obs, self.im_2)
+        self.assertIsNot(obs._intervals, self.im_2._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
+
+        for i in range(self.im_2.num_interval_features):
+            i1, i2 = obs._intervals[i], self.im_2._intervals[i]
+            self.assertIsNot(i1, i2)
+            self.assertIsNot(i1.locations, i2.locations)
+            self.assertIsNot(i1.boundaries, i2.boundaries)
+            self.assertIsNot(i1.metadata, i2.metadata)
+
+        i2.metadata['spam'].append(1)
+        self.assertEqual(i2.metadata,
+                         {'gene': 'sagB', 'location': 0, 'spam': [0, 1]})
+        self.assertEqual(i1.metadata,
+                         {'gene': 'sagB', 'location': 0, 'spam': [0]})
+
+    def test_deepcopy_memo_is_respected(self):
+        memo = {}
+        deepcopy(self.im_1, memo)
+        self.assertGreater(len(memo), 4)
 
     def test_init(self):
         self.assertFalse(self.im_empty._is_stale_tree)
@@ -399,12 +442,12 @@ class TestIntervalMetadata(unittest.TestCase):
         # check sorting does not have other side effects
         self.assertEqual(im, self.im_2)
         self.assertEqual(self.im_2._intervals,
-                         [self.interval_2, interval, self.interval_1])
+                         [self.im_2_2, interval, self.im_2_1])
 
         self.im_2.sort()
         self.assertEqual(im, self.im_2)
         self.assertEqual(self.im_2._intervals,
-                         [self.interval_1, interval, self.interval_2])
+                         [self.im_2_1, interval, self.im_2_2])
 
         self.im_empty.sort()
         self.assertEqual(self.im_empty, IntervalMetadata(10))
@@ -434,11 +477,11 @@ class TestIntervalMetadata(unittest.TestCase):
     def test_query_interval(self):
         intervals = list(self.im_2._query_interval((1, 2)))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_1)
+        self.assertEqual(intervals[0], self.im_2_1)
 
         intervals = list(self.im_2._query_interval((3, 4)))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_2)
 
         intervals = {repr(i) for i in self.im_2._query_interval((1, 7))}
         self.assertEqual(len(intervals), 2)
@@ -449,7 +492,7 @@ class TestIntervalMetadata(unittest.TestCase):
         intervals = list(self.im_2.query(locations=[(1, 5)],
                                          metadata={'gene': 'sagA'}))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_1)
+        self.assertEqual(intervals[0], self.im_2_1)
 
     def test_query_empty(self):
         intervals = list(self.im_1.query())
@@ -471,18 +514,18 @@ class TestIntervalMetadata(unittest.TestCase):
                     [(1, 2), (3, 4)]]:
             intervals = list(self.im_2.query(locations=loc))
             self.assertEqual(len(intervals), 2)
-            self.assertEqual(intervals[0], self.interval_1)
-            self.assertEqual(intervals[1], self.interval_2)
+            self.assertEqual(intervals[0], self.im_2_1)
+            self.assertEqual(intervals[1], self.im_2_2)
 
     def test_query_metadata_only(self):
         intervals = list(self.im_2.query(metadata={'gene': 'sagB'}))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_2)
 
         intervals = list(self.im_2.query(metadata={'location': 0}))
         self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], self.interval_1)
-        self.assertEqual(intervals[1], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_1)
+        self.assertEqual(intervals[1], self.im_2_2)
 
     def test_query_negative(self):
         intervals = list(self.im_2.query(locations=[(100, 101)]))
@@ -492,7 +535,7 @@ class TestIntervalMetadata(unittest.TestCase):
         intvl = self.im_2._intervals[0]
         self.im_2.drop([intvl])
         self.assertEqual(len(self.im_2._intervals), 1)
-        self.assertEqual(self.im_2._intervals[0], self.interval_2)
+        self.assertEqual(self.im_2._intervals[0], self.im_2_2)
         # test the intvl was set to dropped
         self.assertTrue(intvl.dropped)
 
@@ -509,7 +552,7 @@ class TestIntervalMetadata(unittest.TestCase):
         Interval(
             interval_metadata=self.im_empty,
             locations=[(5, 7)],
-            metadata={'gene': 'sagB', 'location': 0})
+            metadata={'gene': 'sagB', 'location': 0, 'spam': [0]})
         self.assertEqual(self.im_2, self.im_empty)
 
     def test_eq(self):
