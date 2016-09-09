@@ -90,6 +90,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
+        if self.locations[-1][-1] > self._interval_metadata.upper_bound:
+            raise ValueError('Cannot set `locations` (%r) with coordinate '
+                             'larger than upper bound.' % self.locations)
+
         for loc in self.locations:
             start, end = loc
             self._interval_metadata._interval_tree.add(start, end, self)
@@ -215,7 +219,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         if locations is None:
             # `locations` and `boundaries` cannot both be omitted.
             if boundaries is None:
-                raise ValueError('You must give `None` to both `locations` '
+                raise ValueError('Cannot give `None` to both `locations` '
                                  'and `boundaries`.')
             # If only `boundaries` is provided, set `self.boundaries` and don't
             # change `self.locations`.
@@ -362,6 +366,12 @@ class IntervalMetadata():
     This object is typically coupled with another object, such as a
     ``Sequence`` object (or its child class), or a ``TabularMSA`` object.
 
+    Parameters
+    ----------
+    upper_bound : int
+        Defines the upper bound of the interval features. No coordinate can
+        be greater than it.
+
     Notes
     -----
     This class stores coordinates of all feature locations into a interval
@@ -456,7 +466,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
-    def __init__(self):
+    def __init__(self, upper_bound):
+        self.upper_bound = upper_bound
+
         # List of Interval objects.
         self._intervals = []
 
@@ -465,6 +477,11 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
+
+    @property
+    def num_interval_features(self):
+        '''The total number of interval features.'''
+        return len(self._intervals)
 
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
@@ -480,22 +497,16 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             return method(self, *args, **kwargs)
         return inner
 
-    def _reverse(self, length):
+    def _reverse(self):
         """Reverse ``IntervalMetadata`` object.
 
         This operation reverses all of the interval coordinates.
         For instance, this can be used to compare coordinates
         in the forward strand to coordinates in the reversal strand.
-
-        Parameters
-        ----------
-        length : int
-            Largest end coordinate to perform reverse complement.
-            This typically corresponds to the length of sequence.
         """
         for f in self._intervals:
-            intvls = [(length-x[1], length-x[0]) for x in
-                      reversed(f.locations)]
+            intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
+                      for x in reversed(f.locations)]
             f.locations = intvls
 
         # DONT' forget this!!!
