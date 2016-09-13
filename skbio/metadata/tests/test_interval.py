@@ -21,10 +21,10 @@ class TestInterval(unittest.TestCase):
         self.im = IntervalMetadata(100)
 
     def test_init_default(self):
-        f = Interval(self.im, locations=[(1, 2), (4, 7)])
+        f = Interval(self.im, locations=[(0, 2), (4, 100)])
 
         self.assertTrue(f._interval_metadata is not None)
-        self.assertListEqual(f.locations, [(1, 2), (4, 7)])
+        self.assertListEqual(f.locations, [(0, 2), (4, 100)])
         self.assertListEqual(f.boundaries, [(True, True), (True, True)])
         self.assertDictEqual(f.metadata, {})
 
@@ -86,10 +86,15 @@ class TestInterval(unittest.TestCase):
                      locations=[(4, 7)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_init_larger_than_upper_bound(self):
+    def test_init_larger_out_of_bounds(self):
         with self.assertRaises(ValueError):
             Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 101)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        with self.assertRaises(ValueError):
+            Interval(interval_metadata=self.im,
+                     locations=[(-1, 2), (4, 6)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
@@ -202,7 +207,8 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.locations = value
 
-        for value in [[(3, 1)], [('s', 1)], (), None]:
+        for value in [[(-1, 2)], [(1, 101)],
+                      [(3, 1)], [('s', 1)], (), None]:
             with self.assertRaises(ValueError):
                 f.locations = value
 

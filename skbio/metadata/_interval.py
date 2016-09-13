@@ -91,12 +91,6 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
-        upper_bound = self._interval_metadata.upper_bound
-        if self.locations[-1][-1] > upper_bound:
-            raise ValueError('Cannot set `locations` (%r) with coordinate '
-                             'larger than upper bound (%r).' %
-                             (self.locations, upper_bound))
-
         for loc in self.locations:
             start, end = loc
             self._interval_metadata._interval_tree.add(start, end, self)
@@ -233,6 +227,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             # all `True`.
             if boundaries is None:
                 locations.sort()
+                self._check_bounds(locations)
                 self._locations = locations
                 # reset all the boundaries to True!!
                 del self.boundaries
@@ -242,10 +237,22 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             else:
                 locations, boundaries = [
                     list(e) for e in zip(*sorted(zip(locations, boundaries)))]
+                self._check_bounds(locations)
                 self._locations = locations
                 self._boundaries = boundaries
 
             self._interval_metadata._is_stale_tree = True
+
+    @experimental(as_of='0.5.0-dev')
+    def _check_bounds(self, locations):
+        '''`locations must be sorted.'''
+        upper_bound = self._interval_metadata.upper_bound
+        lower_bound = 0
+        if locations[-1][-1] > upper_bound or locations[0][0] < lower_bound:
+            raise ValueError('Cannot set `locations` (%r) with coordinate '
+                             'larger than upper bound (%r) or smaller than '
+                             'lower bound (%r).' %
+                             (locations, upper_bound, lower_bound))
 
     @property
     @experimental(as_of='0.5.0-dev')
