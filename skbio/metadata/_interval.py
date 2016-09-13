@@ -794,7 +794,9 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             else:
                 metadata_cp = copy.copy(interval.metadata)
 
-            cp.add(locations_cp, boundaries=boundaries_cp, metadata=metadata_cp)
+            cp.add(locations_cp,
+                   boundaries=boundaries_cp,
+                   metadata=metadata_cp)
 
         return cp
 

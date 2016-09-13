@@ -388,7 +388,14 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
 
         for i in range(self.im_2.num_interval_features):
-            self.assertIs(obs._intervals[i], self.im_2._intervals[i])
+            i1, i2 = obs._intervals[i], self.im_2._intervals[i]
+            self.assertIsNot(i1, i2)
+            self.assertIsNot(i1.locations, i2.locations)
+            self.assertIsNot(i1.boundaries, i2.boundaries)
+            self.assertIsNot(i1._interval_metadata, i2._interval_metadata)
+            self.assertIsNot(i1.metadata, i2.metadata)
+            for k in i1.metadata:
+                self.assertIs(i1.metadata[k], i2.metadata[k])
 
     def test_deepcopy(self):
         obs = deepcopy(self.im_2)
@@ -412,7 +419,7 @@ class TestIntervalMetadata(unittest.TestCase):
     def test_deepcopy_memo_is_respected(self):
         memo = {}
         deepcopy(self.im_1, memo)
-        self.assertGreater(len(memo), 4)
+        self.assertGreater(len(memo), 2)
 
     def test_init(self):
         self.assertFalse(self.im_empty._is_stale_tree)
