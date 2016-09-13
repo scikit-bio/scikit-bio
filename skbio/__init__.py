@@ -18,7 +18,8 @@ from skbio.alignment import local_pairwise_align_ssw, TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
-
+import skbio.diversity  # noqa
+import skbio.stats.evolve  # noqa
 
 __all__ = ['Sequence', 'DNA', 'RNA', 'Protein', 'GeneticCode',
            'DistanceMatrix', 'local_pairwise_align_ssw', 'TabularMSA',
