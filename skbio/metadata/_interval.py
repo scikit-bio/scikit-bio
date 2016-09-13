@@ -91,9 +91,11 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
-        if self.locations[-1][-1] > self._interval_metadata.upper_bound:
+        upper_bound = self._interval_metadata.upper_bound
+        if self.locations[-1][-1] > upper_bound:
             raise ValueError('Cannot set `locations` (%r) with coordinate '
-                             'larger than upper bound.' % self.locations)
+                             'larger than upper bound (%r).' %
+                             (self.locations, upper_bound))
 
         for loc in self.locations:
             start, end = loc
@@ -468,7 +470,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})
 boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
     def __init__(self, upper_bound):
-        self.upper_bound = upper_bound
+        self._upper_bound = upper_bound
 
         # List of Interval objects.
         self._intervals = []
@@ -478,6 +480,12 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
+
+    @property
+    @experimental(as_of='0.5.0-dev')
+    def upper_bound(self):
+        '''The upper bound of interval features.'''
+        return self._upper_bound
 
     @property
     @experimental(as_of='0.5.0-dev')
