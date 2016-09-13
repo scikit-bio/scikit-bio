@@ -92,12 +92,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
     def _add(self):
         """Add the current ``Interval`` to the IntervalMetadata object."""
         upper_bound = self._interval_metadata.upper_bound
-        lower_bound = self._interval_metadata.lower_bound
-        if lower_bound >= self.locations[-1][-1] > upper_bound:
+        if self.locations[-1][-1] > upper_bound:
             raise ValueError('Cannot set `locations` (%r) with coordinate '
-                             'larger than upper bound (%r) or smaller than '
-                             'lower bound (%r).' %
-                             (self.locations, upper_bound, lower_bound))
+                             'larger than upper bound (%r).' %
+                             (self.locations, upper_bound))
 
         for loc in self.locations:
             start, end = loc
@@ -471,9 +469,8 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
-    def __init__(self, upper_bound, lower_bound=0):
+    def __init__(self, upper_bound):
         self._upper_bound = upper_bound
-        self._lower_bound = lower_bound
 
         # List of Interval objects.
         self._intervals = []
@@ -489,12 +486,6 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     def upper_bound(self):
         '''The upper bound of interval features.'''
         return self._upper_bound
-
-    @property
-    @experimental(as_of='0.5.0-dev')
-    def lower_bound(self):
-        '''The lower bound of interval features.'''
-        return self._lower_bound
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -783,17 +774,21 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         '''
         return self._copy(True, memo)
 
-    @experimental(as_of='0.5.0-dev')
     def _copy(self, deep, memo):
-        '''Return a deep copy'''
-        cp = IntervalMetadata(self.upper_bound, self.lower_bound)
-        cp._is_stale_tree = self._is_stale_tree
-        if deep:
-            cp._interval_tree = copy.deepcopy(self._interval_tree, memo)
-            cp._intervals = copy.deepcopy(self._intervals, memo)
-        else:
-            cp._interval_tree = copy.copy(self._interval_tree)
-            cp._intervals = copy.copy(self._intervals)
+        cp = IntervalMetadata(self.upper_bound)
+
+        for interval in self._intervals:
+            # Only need to shallow-copy `locations` and `boundaries`
+            # because their elements are immutable.
+            locations_cp = interval.locations[:]
+            boundaries_cp = interval.boundaries[:]
+            if deep:
+                metadata_cp = copy.deepcopy(interval.metadata, memo)
+            else:
+                metadata_cp = copy.copy(interval.metadata)
+
+            cp.add(locations_cp, boundaries=boundaries_cp, metadata=metadata_cp)
+
         return cp
 
 
