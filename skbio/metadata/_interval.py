@@ -243,11 +243,10 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
 
             self._interval_metadata._is_stale_tree = True
 
-    @experimental(as_of='0.5.0-dev')
     def _check_bounds(self, locations):
         '''`locations must be sorted.'''
         upper_bound = self._interval_metadata.upper_bound
-        lower_bound = 0
+        lower_bound = self._interval_metadata.lower_bound
         if locations[-1][-1] > upper_bound or locations[0][0] < lower_bound:
             raise ValueError('Cannot set `locations` (%r) with coordinate '
                              'larger than upper bound (%r) or smaller than '
@@ -493,6 +492,12 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     def upper_bound(self):
         '''The upper bound of interval features.'''
         return self._upper_bound
+
+    @property
+    @experimental(as_of='0.5.0-dev')
+    def lower_bound(self):
+        '''The lower bound of interval features.'''
+        return 0
 
     @property
     @experimental(as_of='0.5.0-dev')

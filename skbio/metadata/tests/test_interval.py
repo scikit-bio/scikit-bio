@@ -86,7 +86,7 @@ class TestInterval(unittest.TestCase):
                      locations=[(4, 7)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_init_larger_out_of_bounds(self):
+    def test_init_out_of_bounds(self):
         with self.assertRaises(ValueError):
             Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 101)],
