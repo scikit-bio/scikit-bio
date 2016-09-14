@@ -98,6 +98,14 @@ class TestInterval(unittest.TestCase):
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
+    def test_init_upper_bound_lt_lower_bound(self):
+        try:
+            IntervalMetadata(0)
+        except ValueError:
+            self.fail('`IntervalMetdata` raised ValueError unexpectedly')
+        with self.assertRaises(ValueError):
+            IntervalMetadata(-1)
+
     def test_init_bad_locations(self):
         with self.assertRaises(TypeError):
             Interval(interval_metadata=self.im,

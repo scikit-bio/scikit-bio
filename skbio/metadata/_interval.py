@@ -477,6 +477,10 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
     def __init__(self, upper_bound):
         self._upper_bound = upper_bound
+        if self.upper_bound < self.lower_bound:
+            raise ValueError('Cannot set `upper_bound` (%r) '
+                             'smaller than `lower_bound` (%r)'
+                             % (self.upper_bound, self.lower_bound))
 
         # List of Interval objects.
         self._intervals = []
