@@ -771,12 +771,13 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         Notes
         -----
-        The references to original ``Interval`` objects are created
-        in the returned copy object.
+        The ``IntervalMetadata`` copy will have copies of the
+        ``Interval`` objects present in this object.  The ``metadata``
+        dictionary of each ``Interval`` object will be a shallow copy.
 
         See Also
         --------
-        deepcopy
+        __deepcopy__
         '''
         return self._copy(False, {})
 
@@ -784,9 +785,15 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     def __deepcopy__(self, memo):
         '''Return a deep copy.
 
+        Notes
+        -----
+        The ``IntervalMetadata`` copy will have copies of the
+        ``Interval`` objects present in this object.  The ``metadata``
+        dictionary of each ``Interval`` object will be a deep copy.
+
         See Also
         --------
-        copy
+        __copy__
         '''
         return self._copy(True, memo)
 
