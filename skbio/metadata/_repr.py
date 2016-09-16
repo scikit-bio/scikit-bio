@@ -130,9 +130,11 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
     def _process_interval_metadata(self):
         if self._obj.has_interval_metadata():
             self._lines.add_line('Interval metadata:')
-            self._lines.add_line(
-                    self._indent + '%d interval features' % len(
-                        self._obj.interval_metadata._intervals))
+            n = self._obj.interval_metadata.num_interval_features
+            line = self._indent + '%d interval feature' % n
+            if n > 1:
+                line += 's'
+            self._lines.add_line(line)
 
     def _format_key(self, key):
         """Format metadata key.

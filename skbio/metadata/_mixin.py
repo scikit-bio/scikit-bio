@@ -410,7 +410,6 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
 
 class IntervalMetadataMixin(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
     def _interval_metadata_axis_len_(self):
         ''''''
         raise NotImplementedError
