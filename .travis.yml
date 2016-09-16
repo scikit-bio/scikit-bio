@@ -20,7 +20,7 @@ install:
   - source activate env_name
   - pip install -r ci/pip_requirements.txt
   - pip install . --no-deps
-  - 'echo "backend: Agg" > matplotlibrc'
+  - 'echo "backend: Agg" > ci/matplotlibrc'
 script:
   - WITH_COVERAGE=TRUE make test
   - if [ ${MAKE_DOC} ]; then make -C doc clean html; fi
