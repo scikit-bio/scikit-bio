@@ -908,23 +908,32 @@ class PositionalMetadataMixinTests:
 
 
 class IntervalMetadataMixinTests:
+    def _set_up(self):
+        self.upper_bound = 9
+        self.im = IntervalMetadata(self.upper_bound)
+        self.intvls = [
+            {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}},
+            # repeat it
+            {'locations': [(0, 1)], 'metadata': {'gene': ['a'],
+                                                 'product': 'foo'}}]
+
     def test_constructor_invalid(self):
         with self.assertRaises(TypeError):
-            self._interval_metadata_constructor_('')
+            self._interval_metadata_constructor_(0, '')
 
     def test_eq_basic(self):
-        im1 = IntervalMetadata()
+        im1 = IntervalMetadata(self.upper_bound)
         im1.add(**self.intvls[0])
-        obj1 = self._interval_metadata_constructor_(im1)
+        obj1 = self._interval_metadata_constructor_(self.upper_bound, im1)
 
-        im2 = IntervalMetadata()
+        im2 = IntervalMetadata(self.upper_bound)
         im2.add(**self.intvls[0])
-        obj2 = self._interval_metadata_constructor_(im2)
+        obj2 = self._interval_metadata_constructor_(self.upper_bound, im2)
 
         self.assertReallyEqual(obj1, obj2)
 
     def test_copy_interval_metadata_empty(self):
-        obj = self._interval_metadata_constructor_()
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         obj_copy = copy.copy(obj)
 
         self.assertEqual(obj, obj_copy)
@@ -932,7 +941,7 @@ class IntervalMetadataMixinTests:
 
     def test_copy_interval_metadata(self):
         self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_(self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         obj_copy = copy.copy(obj)
 
         self.assertEqual(obj, obj_copy)
@@ -940,12 +949,36 @@ class IntervalMetadataMixinTests:
 
         self.assertIsNot(obj.interval_metadata,
                          obj_copy.interval_metadata)
-        # the underlying Intervals are the same
-        self.assertIs(obj.interval_metadata._intervals,
-                      obj_copy.interval_metadata._intervals)
+        self.assertIsNot(obj.interval_metadata._intervals,
+                         obj_copy.interval_metadata._intervals)
+        for i, j in zip(obj.interval_metadata._intervals,
+                        obj_copy.interval_metadata._intervals):
+            self.assertIsNot(i, j)
+            self.assertIsNot(i.metadata, j.metadata)
+            for k in i.metadata:
+                self.assertIs(i.metadata[k], j.metadata[k])
+
+    def test_deepcopy_interval_metadata(self):
+        self.im.add(**self.intvls[1])
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
+        obj_copy = copy.deepcopy(obj)
+
+        self.assertEqual(obj, obj_copy)
+        self.assertIsNot(obj, obj_copy)
+
+        self.assertIsNot(obj.interval_metadata,
+                         obj_copy.interval_metadata)
+        self.assertIsNot(obj.interval_metadata._intervals,
+                         obj_copy.interval_metadata._intervals)
+        for i, j in zip(obj.interval_metadata._intervals,
+                        obj_copy.interval_metadata._intervals):
+            self.assertIsNot(i, j)
+            self.assertIsNot(i.metadata, j.metadata)
+            self.assertIsNot(i.metadata['gene'], j.metadata['gene'])
+            self.assertIs(i.metadata['product'], j.metadata['product'])
 
     def test_deepcopy_interval_metadata_empty(self):
-        obj = self._interval_metadata_constructor_()
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         obj_copy = copy.deepcopy(obj)
 
         self.assertEqual(obj, obj_copy)
@@ -954,14 +987,14 @@ class IntervalMetadataMixinTests:
     def test_deepcopy_memo_is_respected(self):
         # Basic test to ensure deepcopy's memo is passed through to recursive
         # deepcopy calls.
-        obj = self._interval_metadata_constructor_(self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         memo = {}
         copy.deepcopy(obj, memo)
         self.assertGreater(len(memo), 1)
 
     def test_interval_metadata_getter(self):
         self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_(self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         self.assertIsInstance(obj.interval_metadata, IntervalMetadata)
         self.assertEqual(self.im, obj.interval_metadata)
 
@@ -976,77 +1009,62 @@ class IntervalMetadataMixinTests:
         self.im.add(**self.intvls[1])
         self.assertEqual(obj.interval_metadata, self.im)
 
-    def test_interval_metadata_setter_makes_deep_copy(self):
-        intvl = self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_()
+    def test_interval_metadata_setter_makes_copy(self):
+        intvl = self.im.add(**self.intvls[1])
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         obj.interval_metadata = self.im
 
         self.assertEqual(obj.interval_metadata, self.im)
         self.assertIsNot(obj.interval_metadata, self.im)
 
-        # Change metadata
-        im = IntervalMetadata()
-        im.add(**self.intvls[0])
-        intvl.locations = [(100, 101)]
+        # Changing mutable value of metadata of the old interval
+        # also changes obj.
+        intvl.metadata['gene'].append('b')
+        self.assertEqual(obj.interval_metadata, self.im)
+
+        # Changing old interval doesn't change obj
+        intvl.locations = [(3, 6)]
         self.assertNotEqual(obj.interval_metadata, self.im)
-        self.assertEqual(obj.interval_metadata, im)
-
-        # Change single value of underlying data.
-        im = IntervalMetadata()
-        im.add(**self.intvls[1])
-        intvl.metadata['gene'] = 'foo'
-        self.assertNotEqual(obj.interval_metadata, self.im)
-        self.assertEqual(obj.interval_metadata, im)
-
-    def test_interval_metadata_setter_none(self):
-        self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_(self.im)
-
-        self.assertTrue(obj.has_interval_metadata())
-
-        obj.interval_metadata = None
-        self.assertFalse(obj.has_interval_metadata())
 
     def test_interval_metadata_setter_invalid_type(self):
         self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_(
-            interval_metadata=self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
 
-        with self.assertRaisesRegex(
-                TypeError,
-                'You must provide `IntervalMetadata` object'):
-            obj.interval_metadata = 2
+        for i in [2, None, '', {}, []]:
+            with self.assertRaisesRegex(
+                    TypeError,
+                    'You must provide `IntervalMetadata` object'):
+                obj.interval_metadata = i
 
         self.assertEqual(self.im, obj.interval_metadata)
 
     def test_interval_metadata_deleter_empty(self):
-        obj = self._interval_metadata_constructor_(self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
 
         del obj.interval_metadata
         self.assertIsNone(obj._interval_metadata)
         self.assertFalse(obj.has_interval_metadata())
 
-        # Delete again.
+        # Delete again. test idempotent
         del obj.interval_metadata
         self.assertIsNone(obj._interval_metadata)
         self.assertFalse(obj.has_interval_metadata())
 
     def test_interval_metadata_deleter(self):
         self.im.add(**self.intvls[0])
-        obj = self._interval_metadata_constructor_(self.im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
 
         del obj.interval_metadata
         self.assertIsNone(obj._interval_metadata)
         self.assertFalse(obj.has_interval_metadata())
 
     def test_has_interval_metadata(self):
-        obj = self._interval_metadata_constructor_()
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         self.assertFalse(obj.has_interval_metadata())
 
-        im = IntervalMetadata()
-        obj = self._interval_metadata_constructor_(im)
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         self.assertFalse(obj.has_interval_metadata())
 
-        im.add([(0, 1)])
-        obj = self._interval_metadata_constructor_(im)
+        self.im.add([(0, 1)])
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         self.assertTrue(obj.has_interval_metadata())

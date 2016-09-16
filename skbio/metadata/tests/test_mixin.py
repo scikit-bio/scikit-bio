@@ -83,20 +83,14 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
 class TestIntervalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                                 IntervalMetadataMixinTests):
     def setUp(self):
-        upper_bound = 9
-        self.im = IntervalMetadata(upper_bound)
-        self.intvls = [
-            {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}},
-            # repeat it
-            {'locations': [(0, 1)], 'metadata': {'gene': ['a'],
-                                                 'product': 'foo'}}]
+        super()._set_up()
 
         class ExampleIntervalMetadataMixin(IntervalMetadataMixin):
             @overrides(IntervalMetadataMixin)
             def _interval_metadata_axis_len_(self):
                 return self._axis_len
 
-            def __init__(self, axis_len=upper_bound, interval_metadata=None):
+            def __init__(self, axis_len, interval_metadata=None):
                 self._axis_len = axis_len
                 IntervalMetadataMixin._init_(
                     self, interval_metadata=interval_metadata)
