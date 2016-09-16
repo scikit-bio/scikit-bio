@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import operator
+import copy
 import functools
 
 from ._intersection import IntervalTree
@@ -59,7 +60,7 @@ class Interval:
     Examples
     --------
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> interval_metadata = IntervalMetadata()
+    >>> interval_metadata = IntervalMetadata(10)
 
     Create a gene of two exons (from 1 to 2 and 4 to 7):
 
@@ -215,7 +216,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
         if locations is None:
             # `locations` and `boundaries` cannot both be omitted.
             if boundaries is None:
-                raise ValueError('You must give `None` to both `locations` '
+                raise ValueError('Cannot give `None` to both `locations` '
                                  'and `boundaries`.')
             # If only `boundaries` is provided, set `self.boundaries` and don't
             # change `self.locations`.
@@ -226,6 +227,7 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             # all `True`.
             if boundaries is None:
                 locations.sort()
+                self._check_bounds(locations)
                 self._locations = locations
                 # reset all the boundaries to True!!
                 del self.boundaries
@@ -235,10 +237,21 @@ boundaries=[(True, True), (True, True)], metadata={'name': 'sagA'})
             else:
                 locations, boundaries = [
                     list(e) for e in zip(*sorted(zip(locations, boundaries)))]
+                self._check_bounds(locations)
                 self._locations = locations
                 self._boundaries = boundaries
 
             self._interval_metadata._is_stale_tree = True
+
+    def _check_bounds(self, locations):
+        '''`locations must be sorted.'''
+        upper_bound = self._interval_metadata.upper_bound
+        lower_bound = self._interval_metadata.lower_bound
+        if locations[-1][-1] > upper_bound or locations[0][0] < lower_bound:
+            raise ValueError('Cannot set `locations` (%r) with coordinate '
+                             'larger than upper bound (%r) or smaller than '
+                             'lower bound (%r).' %
+                             (locations, upper_bound, lower_bound))
 
     @property
     @experimental(as_of='0.5.0-dev')
@@ -362,6 +375,12 @@ class IntervalMetadata():
     This object is typically coupled with another object, such as a
     ``Sequence`` object (or its child class), or a ``TabularMSA`` object.
 
+    Parameters
+    ----------
+    upper_bound : int
+        Defines the upper bound of the interval features. No coordinate can
+        be greater than it.
+
     Notes
     -----
     This class stores coordinates of all feature locations into a interval
@@ -387,7 +406,7 @@ class IntervalMetadata():
     Create an ``IntervalMetadata`` object:
 
     >>> from skbio.metadata import Interval, IntervalMetadata
-    >>> im = IntervalMetadata()
+    >>> im = IntervalMetadata(10)
 
     Let's add some genes annotations:
 
@@ -456,7 +475,13 @@ boundaries=[(True, True)], metadata={'gene': 'sagC'})
     Interval(interval_metadata=..., locations=[(3, 9)], \
 boundaries=[(True, True)], metadata={'gene': 'sagB'})
     """
-    def __init__(self):
+    def __init__(self, upper_bound):
+        self._upper_bound = upper_bound
+        if self.upper_bound < self.lower_bound:
+            raise ValueError('Cannot set `upper_bound` (%r) '
+                             'smaller than `lower_bound` (%r)'
+                             % (self.upper_bound, self.lower_bound))
+
         # List of Interval objects.
         self._intervals = []
 
@@ -465,6 +490,24 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
+
+    @property
+    @experimental(as_of='0.5.0-dev')
+    def upper_bound(self):
+        '''The upper bound of interval features.'''
+        return self._upper_bound
+
+    @property
+    @experimental(as_of='0.5.0-dev')
+    def lower_bound(self):
+        '''The lower bound of interval features.'''
+        return 0
+
+    @property
+    @experimental(as_of='0.5.0-dev')
+    def num_interval_features(self):
+        '''The total number of interval features.'''
+        return len(self._intervals)
 
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
@@ -480,27 +523,22 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             return method(self, *args, **kwargs)
         return inner
 
-    def _reverse(self, length):
+    def _reverse(self):
         """Reverse ``IntervalMetadata`` object.
 
         This operation reverses all of the interval coordinates.
         For instance, this can be used to compare coordinates
         in the forward strand to coordinates in the reversal strand.
-
-        Parameters
-        ----------
-        length : int
-            Largest end coordinate to perform reverse complement.
-            This typically corresponds to the length of sequence.
         """
         for f in self._intervals:
-            intvls = [(length-x[1], length-x[0]) for x in
-                      reversed(f.locations)]
+            intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
+                      for x in reversed(f.locations)]
             f.locations = intvls
 
         # DONT' forget this!!!
         self._is_stale_tree = True
 
+    @experimental(as_of='0.5.0-dev')
     def sort(self, ascending=True):
         '''Sort interval features by their coordinates.
 
@@ -518,6 +556,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             key=lambda i: [i.locations[0][0], i.locations[-1][1]],
             reverse=not ascending)
 
+    @experimental(as_of='0.5.0-dev')
     def add(self, locations, boundaries=None, metadata=None):
         """Create and add an ``Interval`` to this ``IntervalMetadata``.
 
@@ -725,6 +764,57 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
             items[2] = '...'
 
         return '\n'.join([l1, l2] + items)
+
+    @experimental(as_of='0.5.0-dev')
+    def __copy__(self):
+        '''Return a shallow copy.
+
+        Notes
+        -----
+        The ``IntervalMetadata`` copy will have copies of the
+        ``Interval`` objects present in this object.  The ``metadata``
+        dictionary of each ``Interval`` object will be a shallow copy.
+
+        See Also
+        --------
+        __deepcopy__
+        '''
+        return self._copy(False, {})
+
+    @experimental(as_of='0.5.0-dev')
+    def __deepcopy__(self, memo):
+        '''Return a deep copy.
+
+        Notes
+        -----
+        The ``IntervalMetadata`` copy will have copies of the
+        ``Interval`` objects present in this object.  The ``metadata``
+        dictionary of each ``Interval`` object will be a deep copy.
+
+        See Also
+        --------
+        __copy__
+        '''
+        return self._copy(True, memo)
+
+    def _copy(self, deep, memo):
+        cp = IntervalMetadata(self.upper_bound)
+
+        for interval in self._intervals:
+            # Only need to shallow-copy `locations` and `boundaries`
+            # because their elements are immutable.
+            locations_cp = interval.locations[:]
+            boundaries_cp = interval.boundaries[:]
+            if deep:
+                metadata_cp = copy.deepcopy(interval.metadata, memo)
+            else:
+                metadata_cp = copy.copy(interval.metadata)
+
+            cp.add(locations_cp,
+                   boundaries=boundaries_cp,
+                   metadata=metadata_cp)
+
+        return cp
 
 
 def _assert_valid_location(location):
