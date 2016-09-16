@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import unittest
-from copy import deepcopy
+from copy import deepcopy, copy
 
 from skbio.metadata._interval import (_assert_valid_location,
                                       _assert_valid_boundary)
@@ -17,17 +17,19 @@ from skbio.metadata._intersection import IntervalTree
 
 
 class TestInterval(unittest.TestCase):
+    def setUp(self):
+        self.im = IntervalMetadata(100)
+
     def test_init_default(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
-                     locations=[(1, 2), (4, 7)])
+        f = Interval(self.im, locations=[(0, 2), (4, 100)])
 
         self.assertTrue(f._interval_metadata is not None)
-        self.assertListEqual(f.locations, [(1, 2), (4, 7)])
+        self.assertListEqual(f.locations, [(0, 2), (4, 100)])
         self.assertListEqual(f.boundaries, [(True, True), (True, True)])
         self.assertDictEqual(f.metadata, {})
 
     def test_init(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -39,7 +41,7 @@ class TestInterval(unittest.TestCase):
                                           'function': 'transport'})
 
     def test_init_iterables(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=((1, 2), (4, 7)),
                      boundaries=((True, False), (False, False)),
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -55,7 +57,7 @@ class TestInterval(unittest.TestCase):
             for x in [(1, 2), (4, 7)]:
                 yield x
 
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=gen(),
                      boundaries=((True, False), (False, False)),
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -67,7 +69,7 @@ class TestInterval(unittest.TestCase):
                                           'function': 'transport'})
 
     def test_init_locations_scrambled(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=[(4, 7), (1, 2)],
                      boundaries=[(True, False), (False, True)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -84,22 +86,42 @@ class TestInterval(unittest.TestCase):
                      locations=[(4, 7)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
+    def test_init_out_of_bounds(self):
+        with self.assertRaises(ValueError):
+            Interval(interval_metadata=self.im,
+                     locations=[(1, 2), (4, 101)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+        with self.assertRaises(ValueError):
+            Interval(interval_metadata=self.im,
+                     locations=[(-1, 2), (4, 6)],
+                     boundaries=[(True, False), (False, False)],
+                     metadata={'name': 'sagA', 'function': 'transport'})
+
+    def test_init_upper_bound_lt_lower_bound(self):
+        try:
+            IntervalMetadata(0)
+        except ValueError:
+            self.fail('`IntervalMetdata` raised ValueError unexpectedly')
+        with self.assertRaises(ValueError):
+            IntervalMetadata(-1)
+
     def test_init_bad_locations(self):
         with self.assertRaises(TypeError):
-            Interval(interval_metadata=IntervalMetadata(),
+            Interval(interval_metadata=self.im,
                      locations=[1, (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
     def test_init_bad_boundaries(self):
         with self.assertRaises(ValueError):
-            Interval(interval_metadata=IntervalMetadata(),
+            Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
     def test_repr(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2)],
                      metadata={'name': 'sagA'})
         exp = (r"Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\],"
@@ -114,7 +136,7 @@ class TestInterval(unittest.TestCase):
         self.assertRegex(obs, exp)
 
     def test_drop(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2)],
                      metadata={'name': 'sagA'})
         f.drop()
@@ -130,22 +152,22 @@ class TestInterval(unittest.TestCase):
         self.assertTrue(f.metadata, {'name': 'sagA'})
 
     def test_equal(self):
-        f1 = Interval(interval_metadata=IntervalMetadata(),
+        f1 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 7)],
                       boundaries=[(True, False), (False, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
 
-        f2 = Interval(interval_metadata=IntervalMetadata(),
+        f2 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 7)],
                       boundaries=[(True, False), (False, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
 
-        f3 = Interval(interval_metadata=IntervalMetadata(),
+        f3 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 8)],
                       boundaries=[(True, True), (False, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
 
-        f4 = Interval(interval_metadata=IntervalMetadata(),
+        f4 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 8)],
                       boundaries=[(True, False), (False, False)],
                       metadata={'name': 'sagB', 'function': 'transport'})
@@ -155,7 +177,7 @@ class TestInterval(unittest.TestCase):
         self.assertNotEqual(f4, f3)
 
     def test_equal_scrambled(self):
-        im = IntervalMetadata()
+        im = self.im
         f1 = Interval(locations=[(9, 12), (4, 5)],
                       metadata={'name': 'sagA', 'function': 'transport'},
                       interval_metadata=im)
@@ -165,7 +187,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f1, f2)
 
     def test_get_locations(self):
-        im = IntervalMetadata()
+        im = self.im
         f = Interval(interval_metadata=im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
@@ -174,7 +196,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(im._is_stale_tree, True)
 
     def test_set_locations(self):
-        im = IntervalMetadata()
+        im = self.im
         f = Interval(interval_metadata=im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
@@ -185,7 +207,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(im._is_stale_tree, True)
 
     def test_set_locations_bad(self):
-        f = Interval(interval_metadata=IntervalMetadata(),
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -193,21 +215,20 @@ class TestInterval(unittest.TestCase):
             with self.assertRaises(TypeError):
                 f.locations = value
 
-        for value in [[(3, 1)], [('s', 1)], (), None]:
+        for value in [[(-1, 2)], [(1, 101)],
+                      [(3, 1)], [('s', 1)], (), None]:
             with self.assertRaises(ValueError):
                 f.locations = value
 
     def test_get_boundaries(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
         self.assertEqual(f.boundaries, [(True, False), (False, False)])
 
     def test_set_boundaries(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -215,8 +236,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f.boundaries, [(False, False), (False, False)])
 
     def test_set_boundaries_bad(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -228,8 +248,7 @@ class TestInterval(unittest.TestCase):
                 f.boundaries = value
 
     def test_delete_boundaries(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -240,8 +259,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f.boundaries, [(True, True), (True, True)])
 
     def test_get_metadata(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -249,8 +267,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f.metadata, {'name': 'sagB', 'function': 'transport'})
 
     def test_set_metadata(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -261,8 +278,7 @@ class TestInterval(unittest.TestCase):
         self.assertDictEqual(f.metadata, {})
 
     def test_set_metadata_bad(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -271,8 +287,7 @@ class TestInterval(unittest.TestCase):
                 f.metadata = value
 
     def test_delete_metadata(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2), (4, 7)],
                      boundaries=[(True, False), (False, False)],
                      metadata={'name': 'sagA', 'function': 'transport'})
@@ -280,8 +295,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(f.metadata, {})
 
     def test_set_delete_on_dropped(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2)],
                      boundaries=[(True, False)],
                      metadata={'name': 'sagA'})
@@ -298,8 +312,7 @@ class TestInterval(unittest.TestCase):
             del f.metadata
 
     def test_get_on_dropped(self):
-        im = IntervalMetadata()
-        f = Interval(interval_metadata=im,
+        f = Interval(interval_metadata=self.im,
                      locations=[(1, 2)],
                      boundaries=[(True, False)],
                      metadata={'name': 'sagA'})
@@ -354,21 +367,76 @@ class TestIntervalUtil(unittest.TestCase):
 
 class TestIntervalMetadata(unittest.TestCase):
     def setUp(self):
-        self.im_empty = IntervalMetadata()
-        self.im_1 = IntervalMetadata()
-        self.interval_1 = Interval(
+        self.im_empty = IntervalMetadata(10)
+        self.im_1 = IntervalMetadata(10)
+        self.im_1_1 = Interval(
             interval_metadata=self.im_1,
             locations=[(1, 2), (4, 7)],
             metadata={'gene': 'sagA',  'location': 0})
-        self.im_2 = deepcopy(self.im_1)
-        self.interval_2 = Interval(
+        self.im_2 = IntervalMetadata(10)
+        self.im_2_1 = Interval(
+            interval_metadata=self.im_2,
+            locations=[(1, 2), (4, 7)],
+            metadata={'gene': 'sagA',  'location': 0})
+        self.im_2_2 = Interval(
             interval_metadata=self.im_2,
             locations=[(3, 5)],
-            metadata={'gene': 'sagB', 'location': 0})
+            metadata={'gene': 'sagB', 'location': 0, 'spam': [0]})
+
+    def test_copy_empty(self):
+        obs = copy(self.im_empty)
+        self.assertEqual(obs, self.im_empty)
+        self.assertIsNot(obs._intervals, self.im_empty._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_empty._interval_tree)
+
+    def test_copy(self):
+        obs = copy(self.im_2)
+        self.assertEqual(obs, self.im_2)
+        self.assertIsNot(obs._intervals, self.im_2._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
+
+        for i in range(self.im_2.num_interval_features):
+            i1, i2 = obs._intervals[i], self.im_2._intervals[i]
+            self.assertIsNot(i1, i2)
+            self.assertIsNot(i1.locations, i2.locations)
+            self.assertIsNot(i1.boundaries, i2.boundaries)
+            self.assertIsNot(i1._interval_metadata, i2._interval_metadata)
+            self.assertIsNot(i1.metadata, i2.metadata)
+            for k in i1.metadata:
+                self.assertIs(i1.metadata[k], i2.metadata[k])
+
+    def test_deepcopy(self):
+        obs = deepcopy(self.im_2)
+        self.assertEqual(obs, self.im_2)
+        self.assertIsNot(obs._intervals, self.im_2._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
+
+        for i in range(self.im_2.num_interval_features):
+            i1, i2 = obs._intervals[i], self.im_2._intervals[i]
+            self.assertIsNot(i1, i2)
+            self.assertIsNot(i1.locations, i2.locations)
+            self.assertIsNot(i1.boundaries, i2.boundaries)
+            self.assertIsNot(i1.metadata, i2.metadata)
+
+        i2.metadata['spam'].append(1)
+        self.assertEqual(i2.metadata,
+                         {'gene': 'sagB', 'location': 0, 'spam': [0, 1]})
+        self.assertEqual(i1.metadata,
+                         {'gene': 'sagB', 'location': 0, 'spam': [0]})
+
+    def test_deepcopy_memo_is_respected(self):
+        memo = {}
+        deepcopy(self.im_1, memo)
+        self.assertGreater(len(memo), 2)
 
     def test_init(self):
         self.assertFalse(self.im_empty._is_stale_tree)
         self.assertEqual(self.im_empty._intervals, [])
+
+    def test_num_interval_features(self):
+        self.assertEqual(self.im_empty.num_interval_features, 0)
+        self.assertEqual(self.im_1.num_interval_features, 1)
+        self.assertEqual(self.im_2.num_interval_features, 2)
 
     def test_duplicate(self):
         '''Test query and drop methods on duplicate Intervals.'''
@@ -395,15 +463,15 @@ class TestIntervalMetadata(unittest.TestCase):
         # check sorting does not have other side effects
         self.assertEqual(im, self.im_2)
         self.assertEqual(self.im_2._intervals,
-                         [self.interval_2, interval, self.interval_1])
+                         [self.im_2_2, interval, self.im_2_1])
 
         self.im_2.sort()
         self.assertEqual(im, self.im_2)
         self.assertEqual(self.im_2._intervals,
-                         [self.interval_1, interval, self.interval_2])
+                         [self.im_2_1, interval, self.im_2_2])
 
         self.im_empty.sort()
-        self.assertEqual(self.im_empty, IntervalMetadata())
+        self.assertEqual(self.im_empty, IntervalMetadata(10))
 
     def test_add(self):
         self.im_empty.add(locations=[(1, 2), (4, 7)],
@@ -430,11 +498,11 @@ class TestIntervalMetadata(unittest.TestCase):
     def test_query_interval(self):
         intervals = list(self.im_2._query_interval((1, 2)))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_1)
+        self.assertEqual(intervals[0], self.im_2_1)
 
         intervals = list(self.im_2._query_interval((3, 4)))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_2)
 
         intervals = {repr(i) for i in self.im_2._query_interval((1, 7))}
         self.assertEqual(len(intervals), 2)
@@ -445,7 +513,7 @@ class TestIntervalMetadata(unittest.TestCase):
         intervals = list(self.im_2.query(locations=[(1, 5)],
                                          metadata={'gene': 'sagA'}))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_1)
+        self.assertEqual(intervals[0], self.im_2_1)
 
     def test_query_empty(self):
         intervals = list(self.im_1.query())
@@ -467,18 +535,18 @@ class TestIntervalMetadata(unittest.TestCase):
                     [(1, 2), (3, 4)]]:
             intervals = list(self.im_2.query(locations=loc))
             self.assertEqual(len(intervals), 2)
-            self.assertEqual(intervals[0], self.interval_1)
-            self.assertEqual(intervals[1], self.interval_2)
+            self.assertEqual(intervals[0], self.im_2_1)
+            self.assertEqual(intervals[1], self.im_2_2)
 
     def test_query_metadata_only(self):
         intervals = list(self.im_2.query(metadata={'gene': 'sagB'}))
         self.assertEqual(len(intervals), 1)
-        self.assertEqual(intervals[0], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_2)
 
         intervals = list(self.im_2.query(metadata={'location': 0}))
         self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], self.interval_1)
-        self.assertEqual(intervals[1], self.interval_2)
+        self.assertEqual(intervals[0], self.im_2_1)
+        self.assertEqual(intervals[1], self.im_2_2)
 
     def test_query_negative(self):
         intervals = list(self.im_2.query(locations=[(100, 101)]))
@@ -488,7 +556,7 @@ class TestIntervalMetadata(unittest.TestCase):
         intvl = self.im_2._intervals[0]
         self.im_2.drop([intvl])
         self.assertEqual(len(self.im_2._intervals), 1)
-        self.assertEqual(self.im_2._intervals[0], self.interval_2)
+        self.assertEqual(self.im_2._intervals[0], self.im_2_2)
         # test the intvl was set to dropped
         self.assertTrue(intvl.dropped)
 
@@ -497,7 +565,7 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(self.im_2, self.im_empty)
 
     def test_reverse(self):
-        self.im_2._reverse(length=10)
+        self.im_2._reverse()
         Interval(
             interval_metadata=self.im_empty,
             locations=[(3, 6), (8, 9)],
@@ -505,24 +573,24 @@ class TestIntervalMetadata(unittest.TestCase):
         Interval(
             interval_metadata=self.im_empty,
             locations=[(5, 7)],
-            metadata={'gene': 'sagB', 'location': 0})
+            metadata={'gene': 'sagB', 'location': 0, 'spam': [0]})
         self.assertEqual(self.im_2, self.im_empty)
 
     def test_eq(self):
-        im1 = IntervalMetadata()
+        im1 = IntervalMetadata(10)
         im1.add(metadata={'gene': 'sagA', 'location': '0'},
                 locations=[(0, 2), (4, 7)])
         im1.add(metadata={'gene': 'sagB', 'location': '3'},
                 locations=[(3, 5)])
 
         # The ordering shouldn't matter
-        im2 = IntervalMetadata()
+        im2 = IntervalMetadata(10)
         im2.add(metadata={'gene': 'sagB', 'location': '3'},
                 locations=[(3, 5)])
         im2.add(metadata={'gene': 'sagA', 'location': '0'},
                 locations=[(0, 2), (4, 7)])
 
-        im3 = IntervalMetadata()
+        im3 = IntervalMetadata(10)
         im3.add(metadata={'gene': 'sagA', 'location': '3'},
                 locations=[(0, 2), (4, 7)])
         im3.add(metadata={'gene': 'sagB', 'location': '3'},
