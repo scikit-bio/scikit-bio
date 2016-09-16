@@ -600,8 +600,8 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertNotEqual(im1, im3)
 
     def test_repr(self):
-        exp = '''0 interval features
--------------------'''
+        exp = '''0 interval feature
+------------------'''
         self.assertEqual(repr(self.im_empty), exp)
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})

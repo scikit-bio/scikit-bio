@@ -752,8 +752,10 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         str
             String representation of this ``IntervalMetadata`` object.
         '''
-        n = len(self._intervals)
-        l1 = '{} interval features'.format(n)
+        n = self.num_interval_features
+        l1 = '{} interval feature'.format(n)
+        if n > 1:
+            l1 += 's'
         l2 = '-' * len(l1)
 
         if n <= 5:
