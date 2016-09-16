@@ -83,14 +83,21 @@ class TestPositionalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
 class TestIntervalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                                 IntervalMetadataMixinTests):
     def setUp(self):
-        self.im = IntervalMetadata()
+        upper_bound = 9
+        self.im = IntervalMetadata(upper_bound)
         self.intvls = [
             {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}},
             # repeat it
-            {'locations': [(0, 1)], 'metadata': {'gene': 'sagA'}}]
+            {'locations': [(0, 1)], 'metadata': {'gene': ['a'],
+                                                 'product': 'foo'}}]
 
         class ExampleIntervalMetadataMixin(IntervalMetadataMixin):
-            def __init__(self, interval_metadata=None):
+            @overrides(IntervalMetadataMixin)
+            def _interval_metadata_axis_len_(self):
+                return self._axis_len
+
+            def __init__(self, axis_len=upper_bound, interval_metadata=None):
+                self._axis_len = axis_len
                 IntervalMetadataMixin._init_(
                     self, interval_metadata=interval_metadata)
 
@@ -101,12 +108,12 @@ class TestIntervalMetadataMixin(unittest.TestCase, ReallyEqualMixin,
                 return IntervalMetadataMixin._ne_(self, other)
 
             def __copy__(self):
-                copy = self.__class__(interval_metadata=None)
+                copy = self.__class__(self._axis_len, interval_metadata=None)
                 copy._interval_metadata = IntervalMetadataMixin._copy_(self)
                 return copy
 
             def __deepcopy__(self, memo):
-                copy = self.__class__(interval_metadata=None)
+                copy = self.__class__(self._axis_len, interval_metadata=None)
                 copy._interval_metadata = IntervalMetadataMixin._deepcopy_(
                     self, memo)
                 return copy

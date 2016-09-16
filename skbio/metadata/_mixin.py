@@ -410,27 +410,40 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
 
 class IntervalMetadataMixin(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def _interval_metadata_axis_len_(self):
+        ''''''
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def __init__(self, interval_metadata=None):
         raise NotImplementedError
 
     def _init_(self, interval_metadata=None):
-        self.interval_metadata = interval_metadata
+        if interval_metadata is None:
+            # Could use deleter but this is less overhead and needs to be fast.
+            self._interval_metadata = None
+        else:
+            # Use setter for validation and copy.
+            self.interval_metadata = interval_metadata
 
     @property
     @experimental(as_of="0.5.0-dev")
     def interval_metadata(self):
         '''``IntervalMetadata`` object containing info about interval features.
 
+        Examples
+        --------
         >>> from skbio import DNA
         >>> from skbio.metadata import IntervalMetadata
-        >>> im = IntervalMetadata()
+        >>> im = IntervalMetadata(4)
         >>> intvl = im.add([(0, 3)], metadata={'gene': 'sagA'})
         >>> seq = DNA('ACGT', interval_metadata=im)
         >>> seq
         DNA
         --------------------------
         Interval metadata:
-            1 interval features
+            1 interval feature
         Stats:
             length: 4
             has gaps: False
@@ -442,16 +455,22 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         '''
         if self._interval_metadata is None:
             # Not using setter to avoid copy.
-            self._interval_metadata = IntervalMetadata()
+            self._interval_metadata = IntervalMetadata(
+                self._interval_metadata_axis_len_())
         return self._interval_metadata
 
     @interval_metadata.setter
     def interval_metadata(self, interval_metadata):
-        if interval_metadata is None:
-            interval_metadata = IntervalMetadata()
         if isinstance(interval_metadata, IntervalMetadata):
+            upper_bound = interval_metadata.upper_bound
+            axis_len = self._interval_metadata_axis_len_()
+            if upper_bound != axis_len:
+                raise ValueError(
+                    'The upper bound for the interval features (%d) '
+                    'must match the interval metadata axis length (%d)'
+                    % (upper_bound, axis_len))
             # copy all the data to the mixin
-            self._interval_metadata = copy.deepcopy(interval_metadata)
+            self._interval_metadata = copy.copy(interval_metadata)
         else:
             raise TypeError('You must provide `IntervalMetadata` object.')
 
@@ -484,7 +503,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         >>> seq.has_interval_metadata()
         False
         >>> from skbio.metadata import IntervalMetadata
-        >>> im = IntervalMetadata()
+        >>> im = IntervalMetadata(4)
         >>> seq = DNA('ACGT', interval_metadata=im)
         >>> seq.has_interval_metadata()
         False
@@ -494,14 +513,27 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         True
         """
         return (self._interval_metadata is not None and
-                len(self.interval_metadata._intervals) > 0)
+                self.interval_metadata.num_interval_features > 0)
 
     @abc.abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
     def _eq_(self, other):
-        return self.interval_metadata == other.interval_metadata
+        # We're not simply comparing self.interval_metadata to
+        # other.interval_metadata in order to avoid creating "empty"
+        # interval metadata representations on the objects if they don't have
+        # interval metadata.
+        if self.has_interval_metadata() and other.has_interval_metadata():
+            return self.interval_metadata == other.interval_metadata
+        elif not (self.has_interval_metadata() or
+                  other.has_interval_metadata()):
+            # Both don't have interval metadata.
+            return (self._interval_metadata_axis_len_() ==
+                    other._interval_metadata_axis_len_())
+        else:
+            # One has interval metadata while the other does not.
+            return False
 
     @abc.abstractmethod
     def __ne__(self, other):
