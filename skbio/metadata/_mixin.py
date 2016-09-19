@@ -430,27 +430,6 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     @experimental(as_of="0.5.0-dev")
     def interval_metadata(self):
         '''``IntervalMetadata`` object containing info about interval features.
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> from skbio.metadata import IntervalMetadata
-        >>> im = IntervalMetadata(4)
-        >>> intvl = im.add([(0, 3)], metadata={'gene': 'sagA'})
-        >>> seq = DNA('ACGT', interval_metadata=im)
-        >>> seq
-        DNA
-        --------------------------
-        Interval metadata:
-            1 interval feature
-        Stats:
-            length: 4
-            has gaps: False
-            has degenerates: False
-            has definites: True
-            GC-content: 50.00%
-        --------------------------
-        0 ACGT
         '''
         if self._interval_metadata is None:
             # Not using setter to avoid copy.
@@ -496,20 +475,6 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
            The following examples use scikit-bio's ``DNA`` class for
            demonstration. These examples apply to all other
            scikit-bio objects storing interval metadata.
-
-        >>> from skbio import DNA
-        >>> seq = DNA('ACGT')
-        >>> seq.has_interval_metadata()
-        False
-        >>> from skbio.metadata import IntervalMetadata
-        >>> im = IntervalMetadata(4)
-        >>> seq = DNA('ACGT', interval_metadata=im)
-        >>> seq.has_interval_metadata()
-        False
-        >>> intvl = im.add([(0, 1)], metadata={'gene': 'sagA'})
-        >>> seq = DNA('ACGT', interval_metadata=im)
-        >>> seq.has_interval_metadata()
-        True
         """
         return (self._interval_metadata is not None and
                 self.interval_metadata.num_interval_features > 0)

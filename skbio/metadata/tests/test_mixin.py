@@ -16,7 +16,6 @@ from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests,
                                      IntervalMetadataMixinTests)
-from skbio.metadata._interval import IntervalMetadata
 
 
 class TestMetadataMixin(unittest.TestCase, ReallyEqualMixin,
