@@ -128,7 +128,8 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
 
     def _process_interval_metadata(self):
-        if self._obj.has_interval_metadata():
+        if (hasattr(self._obj, "has_interval_metadata") and
+           self._obj.has_interval_metadata()):
             self._lines.add_line('Interval metadata:')
             n = self._obj.interval_metadata.num_interval_features
             line = self._indent + '%d interval feature' % n
