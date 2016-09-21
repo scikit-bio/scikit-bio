@@ -1128,3 +1128,13 @@ class IntervalMetadataMixinTests:
         self.im.add([(0, 1)])
         obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
         self.assertTrue(obj.has_interval_metadata())
+
+    def test_reverse(self):
+        self.im.add(**self.intvls[0])
+        obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
+
+        obj.interval_metadata._reverse()
+
+        im = IntervalMetadata(self.upper_bound)
+        im.add(locations=[(0, 7), (8, 9)], metadata={'gene': 'sagA'})
+        self.assertEqual(obj.interval_metadata, im)
