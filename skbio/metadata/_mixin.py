@@ -468,13 +468,6 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         bool
             Indicates whether the object has interval metadata.
 
-        Examples
-        --------
-        .. note:: scikit-bio objects with interval metadata share a common
-           interface for accessing and manipulating their interval metadata.
-           The following examples use scikit-bio's ``DNA`` class for
-           demonstration. These examples apply to all other
-           scikit-bio objects storing interval metadata.
         """
         return (self._interval_metadata is not None and
                 self.interval_metadata.num_interval_features > 0)
