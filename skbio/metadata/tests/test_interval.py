@@ -605,15 +605,13 @@ class TestIntervalMetadata(unittest.TestCase):
         self.assertEqual(repr(self.im_empty), exp)
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})
-        self.im_empty.add([(3, 4)], metadata={'gene': 'sagB'})
-        exp = '''2 interval features
--------------------
+        exp = '''1 interval feature
+------------------
 Interval\(interval_metadata=<[0-9]+>, locations=\[\(1, 2\)\], \
-boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)
-Interval\(interval_metadata=<[0-9]+>, locations=\[\(3, 4\)\], \
-boundaries=\[\(True, True\)\], metadata={'gene': 'sagB'}\)'''
+boundaries=\[\(True, True\)\], metadata={'gene': 'sagA'}\)'''
         self.assertRegex(repr(self.im_empty), exp)
 
+        self.im_empty.add([(3, 4)], metadata={'gene': 'sagB'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagC'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagD'})
         self.im_empty.add([(3, 4)], metadata={'gene': 'sagE'})

@@ -981,6 +981,15 @@ class IntervalMetadataMixinTests:
         obj2 = self._interval_metadata_constructor_(self.upper_bound)
         self.assertReallyNotEqual(obj1, obj2)
 
+    def test_ne_only_one_is_empty(self):
+        im1 = IntervalMetadata(self.upper_bound)
+        im1.add(**self.intvls[0])
+        obj1 = self._interval_metadata_constructor_(self.upper_bound, im1)
+
+        obj2 = self._interval_metadata_constructor_(self.upper_bound)
+
+        self.assertReallyNotEqual(obj1, obj2)
+
     def test_ne(self):
         im1 = IntervalMetadata(self.upper_bound)
         im1.add(**self.intvls[0])
