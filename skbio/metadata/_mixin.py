@@ -410,8 +410,16 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
 
 
 class IntervalMetadataMixin(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
     def _interval_metadata_axis_len_(self):
-        ''''''
+        '''Return length of axis that positional metadata applies to.
+
+        Returns
+        -------
+        int
+            Positional metadata axis length.
+
+        '''
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -430,6 +438,11 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     @experimental(as_of="0.5.0-dev")
     def interval_metadata(self):
         '''``IntervalMetadata`` object containing info about interval features.
+
+        Notes
+        -----
+        This property can be set and deleted. When setting new interval metadata, a
+        shallow copy of the `IntervalMetadata` object is made.
         '''
         if self._interval_metadata is None:
             # Not using setter to avoid copy.
@@ -442,7 +455,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         if isinstance(interval_metadata, IntervalMetadata):
             upper_bound = interval_metadata.upper_bound
             axis_len = self._interval_metadata_axis_len_()
-            if upper_bound != axis_len:
+            if upper_bound != axis_len or :
                 raise ValueError(
                     'The upper bound for the interval features (%d) '
                     'must match the interval metadata axis length (%d)'
