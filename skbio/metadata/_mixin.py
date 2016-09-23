@@ -454,8 +454,13 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     def interval_metadata(self, interval_metadata):
         if isinstance(interval_metadata, IntervalMetadata):
             upper_bound = interval_metadata.upper_bound
+            lower_bound = interval_metadata.lower_bound
             axis_len = self._interval_metadata_axis_len_()
-            if upper_bound != axis_len or :
+            if lower_bound != 0:
+                raise ValueError(
+                    'The lower bound for the interval features (%d) '
+                    'must be zero.' % lower_bound)
+            if upper_bound != axis_len:
                 raise ValueError(
                     'The upper bound for the interval features (%d) '
                     'must match the interval metadata axis length (%d)'
