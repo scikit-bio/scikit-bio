@@ -152,7 +152,12 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
         self.assertTrue(f.locations, [(1, 2)])
         self.assertTrue(f.metadata, {'name': 'sagA'})
 
-    def test_equal(self):
+    def test_eq(self):
+        f0 = Interval(interval_metadata=self.im,
+                      locations=[(4, 7), (1, 2)],
+                      boundaries=[(False, False), (True, False)],
+                      metadata={'name': 'sagA', 'function': 'transport'})
+
         f1 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 7)],
                       boundaries=[(True, False), (False, False)],
@@ -164,28 +169,29 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
                       metadata={'name': 'sagA', 'function': 'transport'})
 
         f3 = Interval(interval_metadata=self.im,
-                      locations=[(1, 2), (4, 8)],
+                      locations=[(1, 2), (4, 7)],
                       boundaries=[(True, True), (False, False)],
                       metadata={'name': 'sagA', 'function': 'transport'})
 
         f4 = Interval(interval_metadata=self.im,
                       locations=[(1, 2), (4, 8)],
                       boundaries=[(True, False), (False, False)],
-                      metadata={'name': 'sagB', 'function': 'transport'})
-        self.assertReallyEqual(f2, f1)
-        self.assertReallyNotEqual(f1, f3)
-        self.assertReallyNotEqual(f1, f4)
-        self.assertReallyNotEqual(f4, f3)
+                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_equal_scrambled(self):
-        im = self.im
-        f1 = Interval(locations=[(9, 12), (4, 5)],
-                      metadata={'name': 'sagA', 'function': 'transport'},
-                      interval_metadata=im)
-        f2 = Interval(locations=[(4, 5), (9, 12)],
-                      metadata={'name': 'sagA', 'function': 'transport'},
-                      interval_metadata=im)
-        self.assertReallyEqual(f1, f2)
+        f5 = Interval(interval_metadata=self.im,
+                      locations=[(1, 2), (4, 7)],
+                      boundaries=[(True, False), (False, False)],
+                      metadata={'name': 'sagB', 'function': 'transport'})
+
+        # scramble locations/boundaries
+        self.assertReallyEqual(f0, f1)
+        self.assertReallyEqual(f2, f1)
+        # diff boundaries
+        self.assertReallyNotEqual(f1, f3)
+        # diff locations
+        self.assertReallyNotEqual(f1, f4)
+        # diff metadata
+        self.assertReallyNotEqual(f1, f5)
 
     def test_get_locations(self):
         im = self.im
@@ -434,6 +440,12 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         self.assertFalse(self.im_empty._is_stale_tree)
         self.assertEqual(self.im_empty._intervals, [])
 
+    def test_init_upper_bound_0(self):
+        im = IntervalMetadata(0)
+        im.add([(0, 0)])
+        self.assertEqual(im.upper_bound, 0)
+        self.assertEqual(im.num_interval_features, 1)
+
     def test_num_interval_features(self):
         self.assertEqual(self.im_empty.num_interval_features, 0)
         self.assertEqual(self.im_1.num_interval_features, 1)
@@ -609,8 +621,8 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         self.assertReallyNotEqual(im1, im2)
 
     def test_repr(self):
-        exp = '''0 interval feature
-------------------'''
+        exp = '''0 interval features
+-------------------'''
         self.assertEqual(repr(self.im_empty), exp)
 
         self.im_empty.add([(1, 2)], metadata={'gene': 'sagA'})
