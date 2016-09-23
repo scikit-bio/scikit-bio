@@ -703,7 +703,8 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
     def __eq__(self, other):
         '''Test if this object is equal to another.
 
-        This is performed by check if all the interval features
+        It checks if the coordinate spaces are the same between the
+        two objects. If so, then check if all the interval features
         are equal between the two objects after sorting them by
         locations.
 
@@ -716,12 +717,17 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         -------
         bool
             Indicates if the two objects are equal.
+
         '''
-        self_intervals = sorted(self._intervals,
-                                key=operator.attrgetter('locations'))
-        other_intervals = sorted(other._intervals,
-                                 key=operator.attrgetter('locations'))
-        return self_intervals == other_intervals
+        if self.upper_bound != other.upper_bound or \
+           self.lower_bound != other.lower_bound:
+            return False
+        else:
+            self_intervals = sorted(self._intervals,
+                                    key=operator.attrgetter('locations'))
+            other_intervals = sorted(other._intervals,
+                                     key=operator.attrgetter('locations'))
+            return self_intervals == other_intervals
 
     @experimental(as_of='0.5.0-dev')
     def __ne__(self, other):
@@ -741,7 +747,7 @@ boundaries=[(True, True)], metadata={'gene': 'sagB'})
         --------
         skbio.metadata.IntervalMetadata.__eq__
         '''
-        return not self.__eq__(other)
+        return not (self == other)
 
     @experimental(as_of='0.5.0-dev')
     def __repr__(self):

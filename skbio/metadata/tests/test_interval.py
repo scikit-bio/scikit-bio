@@ -14,9 +14,10 @@ from skbio.metadata._interval import (_assert_valid_location,
 from skbio.metadata import Interval
 from skbio.metadata import IntervalMetadata
 from skbio.metadata._intersection import IntervalTree
+from skbio.util._testing import ReallyEqualMixin
 
 
-class TestInterval(unittest.TestCase):
+class TestInterval(unittest.TestCase, ReallyEqualMixin):
     def setUp(self):
         self.im = IntervalMetadata(100)
 
@@ -171,10 +172,10 @@ class TestInterval(unittest.TestCase):
                       locations=[(1, 2), (4, 8)],
                       boundaries=[(True, False), (False, False)],
                       metadata={'name': 'sagB', 'function': 'transport'})
-        self.assertEqual(f2, f1)
-        self.assertNotEqual(f1, f3)
-        self.assertNotEqual(f1, f4)
-        self.assertNotEqual(f4, f3)
+        self.assertReallyEqual(f2, f1)
+        self.assertReallyNotEqual(f1, f3)
+        self.assertReallyNotEqual(f1, f4)
+        self.assertReallyNotEqual(f4, f3)
 
     def test_equal_scrambled(self):
         im = self.im
@@ -184,7 +185,7 @@ class TestInterval(unittest.TestCase):
         f2 = Interval(locations=[(4, 5), (9, 12)],
                       metadata={'name': 'sagA', 'function': 'transport'},
                       interval_metadata=im)
-        self.assertEqual(f1, f2)
+        self.assertReallyEqual(f1, f2)
 
     def test_get_locations(self):
         im = self.im
@@ -365,7 +366,7 @@ class TestIntervalUtil(unittest.TestCase):
                 _assert_valid_boundary(boundary)
 
 
-class TestIntervalMetadata(unittest.TestCase):
+class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
     def setUp(self):
         self.im_empty = IntervalMetadata(10)
         self.im_1 = IntervalMetadata(10)
@@ -576,7 +577,7 @@ class TestIntervalMetadata(unittest.TestCase):
             metadata={'gene': 'sagB', 'location': 0, 'spam': [0]})
         self.assertEqual(self.im_2, self.im_empty)
 
-    def test_eq(self):
+    def test_eq_ne(self):
         im1 = IntervalMetadata(10)
         im1.add(metadata={'gene': 'sagA', 'location': '0'},
                 locations=[(0, 2), (4, 7)])
@@ -596,8 +597,16 @@ class TestIntervalMetadata(unittest.TestCase):
         im3.add(metadata={'gene': 'sagB', 'location': '3'},
                 locations=[(3, 5)])
 
-        self.assertEqual(im1, im2)
-        self.assertNotEqual(im1, im3)
+        self.assertReallyEqual(im1, im2)
+        self.assertReallyNotEqual(im1, im3)
+
+    def test_ne_diff_bounds(self):
+        im1 = IntervalMetadata(10)
+        im2 = IntervalMetadata(9)
+        intvl = {'locations': [(0, 1)], 'metadata': {'spam': 'foo'}}
+        im1.add(**intvl)
+        im2.add(**intvl)
+        self.assertReallyNotEqual(im1, im2)
 
     def test_repr(self):
         exp = '''0 interval feature
