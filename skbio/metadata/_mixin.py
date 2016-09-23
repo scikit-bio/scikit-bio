@@ -468,7 +468,8 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             # copy all the data to the mixin
             self._interval_metadata = copy.copy(interval_metadata)
         else:
-            raise TypeError('You must provide `IntervalMetadata` object.')
+            raise TypeError('You must provide `IntervalMetadata` object, '
+                            'not type %s.' % type(interval_metadata).__name__)
 
     @interval_metadata.deleter
     def interval_metadata(self):
