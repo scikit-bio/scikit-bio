@@ -934,6 +934,14 @@ class IntervalMetadataMixinTests:
             self.assertFalse(obj.has_interval_metadata())
             self.assertIsInstance(obj.interval_metadata, IntervalMetadata)
 
+    def test_constructor_with_interval_metadata(self):
+        for n in 1, 2, 3:
+            im = IntervalMetadata(n)
+            im.add([(0, 1)], metadata={'a': 'b'})
+            obj = self._interval_metadata_constructor_(n, im)
+            self.assertTrue(obj.has_interval_metadata())
+            self.assertIsInstance(obj.interval_metadata, IntervalMetadata)
+
     def test_constructor_makes_shallow_copy_of_interval_metadata(self):
         intvl = self.im.add(**self.intvls[1])
         obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
