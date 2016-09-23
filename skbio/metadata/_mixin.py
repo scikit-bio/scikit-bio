@@ -441,8 +441,10 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
 
         Notes
         -----
-        This property can be set and deleted. When setting new interval metadata, a
-        shallow copy of the `IntervalMetadata` object is made.
+        This property can be set and deleted. When setting new
+        interval metadata, a shallow copy of the ``IntervalMetadata``
+        object is made.
+
         '''
         if self._interval_metadata is None:
             # Not using setter to avoid copy.
