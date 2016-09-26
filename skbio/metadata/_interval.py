@@ -62,9 +62,9 @@ class Interval:
 
     Examples
     --------
-    Let's say we have a gene called "sagA" with 10 nt as shown in the
-    following diagram.  The second row represents the two exons
-    (indicated by "=") on this gene:
+    Hypothetically, let's say we have a gene called "genA" with 10 nt
+    as shown in the following diagram.  The second row represents the
+    two exons (indicated by "=") on this gene:
 
     ::
 
@@ -82,10 +82,10 @@ class Interval:
 
     >>> gene = Interval(interval_metadata,
     ...                 bounds=[(1, 5), (7, 9)],
-    ...                 metadata={'name': 'sagA'})
+    ...                 metadata={'name': 'genA'})
     >>> gene    # doctest: +ELLIPSIS
     Interval(interval_metadata=..., bounds=[(1, 5), (7, 9)], \
-fuzzy=[(False, False), (False, False)], metadata={'name': 'sagA'})
+fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
 
     """
     def __init__(self, interval_metadata, bounds,
@@ -313,7 +313,9 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'sagA'})
         '''The coordinates of the interval feature.
 
         It should be a list of tuples of int pair. Each tuple stores
-        the start and end coordinates of a span of the interval feature.
+        the start and end coordinates of a span of the interval
+        feature. The coordinates are *zero-based*. They are inclusive on
+        the start and exclusive on the end.
         '''
         return self._bounds
 
@@ -585,7 +587,9 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         Parameters
         ----------
         bounds : iterable of tuple of ints
-            Tuples representing start and end coordinates.
+            Tuples representing start and end coordinates. It is *zero-based*
+            numbering. It is always inclusive on start bound and exclusive on
+            end bound.
         fuzzy : iterable of tuple of bool, optional
             Tuples representing the fuzziness of each bound coordinates.
         metadata : dict, optional
@@ -729,8 +733,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         Parameters
         ----------
-        other : Interval
-            Interval to test for equality against.
+        other : IntervalMetadata
+            Interval metadata to test for equality against.
 
         Returns
         -------
@@ -753,8 +757,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         Parameters
         ----------
-        other : Interval
-            Interval to test for inequality against.
+        other : IntervalMetadata
+            Interval metadata to test for inequality against.
 
         Returns
         -------
