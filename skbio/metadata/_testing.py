@@ -992,10 +992,13 @@ class IntervalMetadataMixinTests:
 
         self.assertReallyEqual(obj1, obj2)
 
-    def test_eq_both_empty(self):
+    def test_eq_handles_missing_positional_metadata_efficiently(self):
         obj1 = self._interval_metadata_constructor_(self.upper_bound)
         obj2 = self._interval_metadata_constructor_(self.upper_bound)
         self.assertReallyEqual(obj1, obj2)
+
+        self.assertIsNone(obj1._interval_metadata)
+        self.assertIsNone(obj2._interval_metadata)
 
     def test_ne_diff_len(self):
         obj1 = self._interval_metadata_constructor_(0)
