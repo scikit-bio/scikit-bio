@@ -912,9 +912,9 @@ class IntervalMetadataMixinTests:
         self.upper_bound = 9
         self.im = IntervalMetadata(self.upper_bound)
         self.intvls = [
-            {'locations': [(0, 1), (2, 9)], 'metadata': {'gene': 'sagA'}},
-            {'locations': [(0, 1)], 'metadata': {'gene': ['a'],
-                                                 'product': 'foo'}}]
+            {'bounds': [(0, 1), (2, 9)], 'metadata': {'gene': 'sagA'}},
+            {'bounds': [(0, 1)], 'metadata': {'gene': ['a'],
+                                              'product': 'foo'}}]
 
     def test_constructor_invalid(self):
         with self.assertRaisesRegex(TypeError,
@@ -968,7 +968,7 @@ class IntervalMetadataMixinTests:
         self.assertEqual(obj.interval_metadata, self.im)
 
         # Changing old interval doesn't change obj
-        intvl.locations = [(3, 6)]
+        intvl.bounds = [(3, 6)]
         self.assertNotEqual(obj.interval_metadata, self.im)
 
     def test_eq_basic(self):
@@ -1163,7 +1163,7 @@ class IntervalMetadataMixinTests:
         self.assertEqual(obj.interval_metadata, self.im)
 
         # Changing old interval doesn't change obj
-        intvl.locations = [(3, 6)]
+        intvl.bounds = [(3, 6)]
         self.assertNotEqual(obj.interval_metadata, self.im)
 
     def test_interval_metadata_setter_len_mismatch(self):
