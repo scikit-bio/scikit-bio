@@ -16,14 +16,16 @@ import pandas as pd
 
 import skbio.sequence.distance
 from skbio._base import SkbioObject
-from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
+from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin,
+                                   IntervalMetadataMixin)
+from skbio.metadata import Interval
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
 
 
-class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
-               SkbioObject):
+class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
+               collections.Sequence, SkbioObject):
     """Store generic sequence data and optional associated metadata.
 
     ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
@@ -51,6 +53,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         constructor. Each column of metadata must be the same length as
         `sequence`. A shallow copy of the positional metadata will be made if
         necessary (see Examples section below for details).
+    interval_metadata : IntervalMetadata
+        Arbitrary metadata which applies to intervals within a sequence to
+        store interval features (such as genes, ncRNA on the sequence).
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters. If ``False``, no characters will be converted.
@@ -64,6 +69,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     values
     metadata
     positional_metadata
+    interval_metadata
     observed_chars
 
     See Also
@@ -83,6 +89,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     --------
     >>> from pprint import pprint
     >>> from skbio import Sequence
+    >>> from skbio.metadata import IntervalMetadata
 
     **Creating sequences:**
 
@@ -102,8 +109,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     >>> metadata = {'id':'seq-id', 'desc':'seq desc', 'authors': ['Alice']}
     >>> positional_metadata = {'quality': [3, 3, 4, 10],
     ...                        'exons': [True, True, False, True]}
+    >>> interval_metadata = IntervalMetadata(4)
+    >>> interval = interval_metadata.add([(1, 3)], metadata={'gene': 'sagA'})
     >>> seq = Sequence('ACGT', metadata=metadata,
-    ...                positional_metadata=positional_metadata)
+    ...                positional_metadata=positional_metadata,
+    ...                interval_metadata=interval_metadata)
     >>> seq
     Sequence
     -----------------------------
@@ -114,6 +124,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     Positional metadata:
         'exons': <dtype: bool>
         'quality': <dtype: int64>
+    Interval metadata:
+        1 interval feature
     Stats:
         length: 4
     -----------------------------
@@ -154,6 +166,13 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     1   True        3
     2  False        4
     3   True       10
+
+    Retrieve interval metadata:
+
+    >>> seq.interval_metadata   # doctest: +ELLIPSIS
+    1 interval feature
+    ------------------
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
 
     **Updating sequence metadata:**
 
@@ -314,6 +333,26 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     2      []        4
     3      []       10
 
+    You can also update the interval metadata. Let's re-create a
+    ``Sequence`` object with interval metadata at first:
+
+    >>> seq = Sequence('ACGT', interval_metadata=IntervalMetadata())
+    >>> interval = seq.interval_metadata.add([(1, 3)], metadata={'gene': 'foo'})
+
+    You can update directly on the ``Interval`` object:
+
+    >>> interval  # doctest: +ELLIPSIS
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'foo'})
+    >>> interval.bounds = [(0, 2)]
+    >>> interval  # doctest: +ELLIPSIS
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'foo'})
+
+    You can also query and obtain the interval features you are interested and then modify them:
+
+    >>> intervals = list(seq.interval_metadata.query(metadata={'gene': 'foo'}))
+    >>> intervals[0].fuzzy = [(True, False)]
+    >>> print(intervals[0])  # doctest: +ELLIPSIS
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, False)], metadata={'gene': 'foo'})
     """
     _number_of_extended_ascii_codes = 256
     # ASCII is built such that the difference between uppercase and lowercase
@@ -396,7 +435,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         Parameters
         ----------
-        seqs : iterable (Sequence)
+        sequences : iterable (Sequence)
             An iterable of ``Sequence`` objects or appropriate subclasses.
         how : {'strict', 'inner', 'outer'}, optional
             How to intersect the `positional_metadata` of the sequences.
@@ -500,8 +539,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         if len(seqs) == 0:
             return cls("")
 
+        new_upper_bound = 0
         for seq in seqs:
             seq._assert_can_cast_to(cls)
+            new_upper_bound += len(seq)
 
         if how == 'strict':
             how = 'inner'
@@ -517,16 +558,26 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
                                  " how='inner' or how='outer'")
         seq_data = []
         pm_data = []
-        for seq in seqs:
+        length = 0
+        new_im = seqs[0].interval_metadata
+        new_im._upper_bound = new_upper_bound
+        for i, seq in enumerate(seqs):
             seq_data.append(seq._bytes)
             pm_data.append(seq.positional_metadata)
             if not seq.has_positional_metadata():
                 del seq.positional_metadata
+            length += len(seq)
+            if i != 0:
+                for interval in seq.interval_metadata._intervals:
+                    fuzzy = interval.fuzzy
+                    bounds = [[loc + length for loc in span]
+                                 for span in interval.bounds]
+                    new_im.add(bounds, fuzzy, interval.metadata)
 
         pm = pd.concat(pm_data, join=how, ignore_index=True)
         bytes_ = np.concatenate(seq_data)
 
-        return cls(bytes_, positional_metadata=pm)
+        return cls(bytes_, positional_metadata=pm, interval_metadata=new_im)
 
     @classmethod
     def _assert_can_cast_to(cls, target):
@@ -538,9 +589,13 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     def _positional_metadata_axis_len_(self):
         return len(self)
 
+    @overrides(IntervalMetadataMixin)
+    def _interval_metadata_axis_len_(self):
+        return len(self)
+
     @stable(as_of="0.4.0")
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 lowercase=False):
+                 interval_metadata=None, lowercase=False):
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
                 self._set_bytes_contiguous(sequence)
@@ -566,7 +621,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             if (positional_metadata is None and
                     sequence.has_positional_metadata()):
                 positional_metadata = sequence.positional_metadata
-
+            if (interval_metadata is None and
+                    sequence.has_interval_metadata()):
+                interval_metadata = sequence.interval_metadata
             sequence = sequence._bytes
             self._owns_bytes = False
             self._set_bytes(sequence)
@@ -592,6 +649,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         MetadataMixin._init_(self, metadata=metadata)
         PositionalMetadataMixin._init_(
             self, positional_metadata=positional_metadata)
+        IntervalMetadataMixin._init_(
+            self, interval_metadata=interval_metadata)
 
         if lowercase is False:
             pass
@@ -705,13 +764,14 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         False
 
         Define a sequence with the same sequence of characters as ``u`` but
-        with different metadata and positional metadata:
+        with different metadata, positional metadata, and interval metadata:
 
         >>> v = Sequence('ACGA', metadata={'id': 'abc'},
         ...              positional_metadata={'quality':[1, 5, 3, 3]})
+        >>> v.interval_metadata.add([(0, 1)])
 
-        The two sequences are not considered equal because their metadata and
-        positional metadata do not match:
+        The two sequences are not considered equal because their metadata,
+        positional metadata, and interval metadata do not match:
 
         >>> u == v
         False
@@ -728,6 +788,9 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
             return False
 
         if not PositionalMetadataMixin._eq_(self, other):
+            return False
+
+        if not IntervalMetadataMixin._eq_(self, other):
             return False
 
         return True
@@ -769,6 +832,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
     @stable(as_of="0.4.0")
     def __getitem__(self, indexable):
         """Slice this sequence.
+
+        Notes
+        -----
+        This drops the ``self.interval_metadaa`` from the returned
+        new ``Sequence`` object.
 
         Parameters
         ----------
@@ -1052,6 +1120,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Short sequence without metadata:
 
         >>> from skbio import Sequence
+        >>> from skbio.metadata._interval import IntervalMetadata
         >>> Sequence('ACGTAATGGATACGTAATGCA')
         Sequence
         -------------------------
@@ -1074,7 +1143,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         300 ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
         360 ACGTACGTAC GTACGTACGT ACGTACGTAC GTACGTACGT
 
-        Sequence with metadata and positional metadata:
+        Sequence with metadata, positional metadata, and interval metadata:
 
         >>> metadata = {
         ...     'id': 'seq-id',
@@ -1088,8 +1157,11 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         ...     'quality': [3, 10, 11, 10],
         ...     'exons': [True, True, False, True]
         ... }
+        >>> interval_metadata = IntervalMetadata()
+        >>> _ = interval_metadata.add([(0, 2)], metadata={'gene': 'sagA'})
         >>> Sequence('ACGT', metadata=metadata,
-        ...          positional_metadata=positional_metadata)
+        ...          positional_metadata=positional_metadata,
+        ...          interval_metadata=interval_metadata)
         Sequence
         ----------------------------------------------------------------------
         Metadata:
@@ -1102,6 +1174,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         Positional metadata:
             'exons': <dtype: bool>
             'quality': <dtype: int64>
+        Interval metadata:
+            1 interval feature
         Stats:
             length: 4
         ----------------------------------------------------------------------
@@ -1194,10 +1268,13 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
 
         >>> from pprint import pprint
         >>> from skbio import Sequence
+        >>> from skbio.metadata import IntervalMetadata
         >>> seq = Sequence('ACGT',
         ...                metadata={'id': 'seq-id', 'authors': ['Alice']},
         ...                positional_metadata={'quality': [7, 10, 8, 5],
-        ...                                     'list': [[], [], [], []]})
+        ...                                     'list': [[], [], [], []]},
+        ...                interval_metadata=IntervalMetadata())
+        >>> interval = seq.interval_metadata.add([(0, 2)], metadata={'gene': 'sagA'})
 
         Make a shallow copy of the sequence:
 
@@ -1229,6 +1306,28 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         1   []       10
         2   []        8
         3   []        5
+
+        >>> seq_copy.interval_metadata is not seq.interval_metadata
+        >>> interval2 = seq_copy.interval_metadata.add([(2, 3)], metadata={'gene': 'sagB'})
+        >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
+        2 interval features
+        -------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(2, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagB'})
+        >>> seq.interval_metadata  # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+
+        >>> interval.bounds = [(1, 3)]
+        >>> seq.interval_metadata  # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+        >>> seq_copy.interval_metadata  # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
 
         Since only a *shallow* copy was made, updates to mutable objects stored
         as metadata affect the original sequence's metadata:
@@ -1302,16 +1401,21 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         bytes_ = np.copy(self._bytes)
 
         seq_copy = self._constructor(sequence=bytes_, metadata=None,
-                                     positional_metadata=None)
+                                     positional_metadata=None,
+                                     interval_metadata=None)
 
         if deep:
             seq_copy._metadata = MetadataMixin._deepcopy_(self, memo)
             seq_copy._positional_metadata = \
                 PositionalMetadataMixin._deepcopy_(self, memo)
+            seq_copy._interval_metadata = IntervalMetadataMixin._deepcopy_(
+                self, memo)
         else:
             seq_copy._metadata = MetadataMixin._copy_(self)
             seq_copy._positional_metadata = \
                 PositionalMetadataMixin._copy_(self)
+            seq_copy._interval_metadata = IntervalMetadataMixin._copy_(
+                self)
 
         return seq_copy
 
@@ -1484,11 +1588,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, collections.Sequence,
         if self.has_positional_metadata():
             positional_metadata = self.positional_metadata
 
+        interval_metadata = None
+        if self.has_interval_metadata():
+            interval_metadata = self.interval_metadata
         # Use __class__ instead of _constructor so that validations are
         # performed for subclasses (the user could have introduced invalid
         # characters).
         return self.__class__(seq_bytes, metadata=metadata,
-                              positional_metadata=positional_metadata)
+                              positional_metadata=positional_metadata,
+                              interval_metadata=interval_metadata)
 
     @stable(as_of="0.4.0")
     def index(self, subsequence, start=None, end=None):
