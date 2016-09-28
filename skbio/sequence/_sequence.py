@@ -18,7 +18,7 @@ import skbio.sequence.distance
 from skbio._base import SkbioObject
 from skbio.metadata._mixin import (MetadataMixin, PositionalMetadataMixin,
                                    IntervalMetadataMixin)
-from skbio.metadata import Interval
+from skbio.metadata import Interval, IntervalMetadata
 from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.util._decorator import (stable, experimental, deprecated,
                                    classonlymethod, overrides)
@@ -539,10 +539,8 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         if len(seqs) == 0:
             return cls("")
 
-        new_upper_bound = 0
         for seq in seqs:
             seq._assert_can_cast_to(cls)
-            new_upper_bound += len(seq)
 
         if how == 'strict':
             how = 'inner'
@@ -558,26 +556,18 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
                                  " how='inner' or how='outer'")
         seq_data = []
         pm_data = []
-        length = 0
-        new_im = seqs[0].interval_metadata
-        new_im._upper_bound = new_upper_bound
         for i, seq in enumerate(seqs):
             seq_data.append(seq._bytes)
             pm_data.append(seq.positional_metadata)
             if not seq.has_positional_metadata():
                 del seq.positional_metadata
-            length += len(seq)
-            if i != 0:
-                for interval in seq.interval_metadata._intervals:
-                    fuzzy = interval.fuzzy
-                    bounds = [[loc + length for loc in span]
-                                 for span in interval.bounds]
-                    new_im.add(bounds, fuzzy, interval.metadata)
 
         pm = pd.concat(pm_data, join=how, ignore_index=True)
         bytes_ = np.concatenate(seq_data)
 
-        return cls(bytes_, positional_metadata=pm, interval_metadata=new_im)
+        im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
+
+        return cls(bytes_, positional_metadata=pm, interval_metadata=im)
 
     @classmethod
     def _assert_can_cast_to(cls, target):

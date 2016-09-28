@@ -114,6 +114,37 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaises(TypeError):
             SequenceSubclass.concat([seq1, seq2])
 
+    def test_concat_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq2.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2])
+        exp = Sequence('12345678')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(5, 7)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
+
+    def test_concat_one_seq_has_none_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq3 = Sequence("910")
+        seq3.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2, seq3])
+        exp = Sequence('12345678910')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(9, 11)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
+
     def test_concat_default_how(self):
         seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
         seq2 = Sequence("5678", positional_metadata={'a': [2]*4})
@@ -214,7 +245,6 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                        pd.DataFrame(index=range(11)))
         self.assertEqual(seq.interval_metadata,
                          IntervalMetadata(len(seq)))
-        self.assertEqual(seq.interval_metadata.upper_bound, len(seq))
 
     def test_init_nondefault_parameters(self):
         s = '.ABC123xyz-'
@@ -255,6 +285,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
+
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(0))
 
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(0)))
