@@ -832,7 +832,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Notes
         -----
-        This drops the ``self.interval_metadaa`` from the returned
+        This drops the ``self.interval_metadata`` from the returned
         new ``Sequence`` object.
 
         Parameters

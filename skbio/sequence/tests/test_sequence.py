@@ -310,6 +310,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(1))
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(1)))
 
@@ -332,6 +334,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(14))
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(14)))
 
@@ -363,14 +367,19 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                      interval_metadata=im))
 
         # subclasses work too
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         seq = SequenceSubclass('ACGT',
                                metadata={'id': 'foo',
                                          'description': 'bar baz'},
-                               positional_metadata={'quality': range(4)})
+                               positional_metadata={'quality': range(4)},
+                               interval_metadata=im)
+
         self.assertEqual(
             Sequence(seq),
             Sequence('ACGT', metadata={'id': 'foo', 'description': 'bar baz'},
-                     positional_metadata={'quality': range(4)}))
+                     positional_metadata={'quality': range(4)},
+                     interval_metadata=im))
 
     def test_init_from_non_descendant_sequence_object(self):
         seq = SequenceSubclass('ACGT')
@@ -520,9 +529,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(Sequence('xYzxxZz').observed_chars,
                          {'x', 'Y', 'z', 'Z'})
         self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
+
+        im = IntervalMetadata(6)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         self.assertEqual(
             Sequence('aabbcc', metadata={'foo': 'bar'},
-                     positional_metadata={'foo': range(6)}).observed_chars,
+                     positional_metadata={'foo': range(6)},
+                     interval_metadata=im).observed_chars,
             {'a', 'b', 'c'})
 
         with self.assertRaises(AttributeError):
@@ -595,12 +608,16 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_eq_sequences_from_different_sources_compare_equal(self):
         # sequences that have the same data but are constructed from different
         # types of data should compare equal
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         seq1 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
-                        positional_metadata={'quality': (1, 2, 3, 4)})
+                        positional_metadata={'quality': (1, 2, 3, 4)},
+                        interval_metadata=im)
         seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
                         metadata={'id': 'foo', 'desc': 'abc'},
                         positional_metadata={'quality': np.array([1, 2, 3,
-                                                                  4])})
+                                                                  4])},
+                        interval_metadata=im)
         self.assertTrue(seq1 == seq2)
 
     def test_eq_type_mismatch(self):
@@ -619,6 +636,21 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence('ACGT')
         self.assertFalse(seq1 == seq2)
 
+    def test_eq_interval_metadata_mismatch(self):
+        im1 = IntervalMetadata(4)
+        im1.add([(0, 3)], metadata={'gene': 'sagA'})
+        im2 = IntervalMetadata(4)
+        im2.add([(0, 2)], metadata={'gene': 'sagA'})
+        # both provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT', interval_metadata=im2)
+        self.assertFalse(seq1 == seq2)
+
+        # one provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT')
+        self.assertFalse(seq1 == seq2)
+
     def test_eq_sequence_mismatch(self):
         seq1 = Sequence('ACGT')
         seq2 = Sequence('TGCA')
@@ -627,6 +659,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_getitem_gives_new_sequence(self):
         seq = Sequence("Sequence string !1@2#3?.,")
         self.assertFalse(seq is seq[:])
+
+    def test_getitem_drops_interval_metadata(self):
+        s = "Sequence string !1@2#3?.,"
+        seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': 'sagA'})
+
+        eseq = Sequence('Se', metadata={'id': 'id', 'description': 'dsc'})
+        self.assertEqual(seq[:2], eseq)
 
     def test_getitem_with_int_has_positional_metadata(self):
         s = "Sequence string !1@2#3?.,"
