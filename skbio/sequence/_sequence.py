@@ -1262,6 +1262,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         ...                metadata={'id': 'seq-id', 'authors': ['Alice']},
         ...                positional_metadata={'quality': [7, 10, 8, 5],
         ...                                     'list': [[], [], [], []]})
+        >>> interval = seq.interval_metadata.add([(0, 2)], metadata={'gene': 'p53'})
 
         Make a shallow copy of the sequence:
 
@@ -1278,7 +1279,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         >>> pprint(seq.metadata)
         {'authors': ['Alice'], 'id': 'seq-id'}
 
-        The same applies to the sequence's positional metadata:
+        The same applies to the sequence's positional and interval metadata:
 
         >>> seq_copy.positional_metadata.loc[0, 'quality'] = 999
         >>> seq_copy.positional_metadata
@@ -1294,21 +1295,49 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         2   []        8
         3   []        5
 
+        >>> interval.metadata['gene'] = ['BCC7']
+        >>> seq.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': ['BCC7']})
+        >>> interval.bounds = [(1, 3)]
+        >>> seq.interval_metadata  # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7']})
+        >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'p53'})
+
+        >>> interval2 = seq_copy.interval_metadata.add(
+        ...     [(2, 3)], metadata={'gene': 'brca1'})
+        >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
+        2 interval features
+        -------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'p53'})
+        Interval(interval_metadata=<...>, bounds=[(2, 3)], fuzzy=[(False, False)], metadata={'gene': 'brca1'})
+        >>> seq.interval_metadata  # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7']})
+
         Since only a *shallow* copy was made, updates to mutable objects stored
         as metadata affect the original sequence's metadata:
 
+        >>> seq_copy = seq.copy()
         >>> seq_copy.metadata['authors'].append('Bob')
         >>> pprint(seq_copy.metadata)
-        {'authors': ['Alice', 'Bob'], 'id': 'new-id'}
+        {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
         >>> pprint(seq.metadata)
         {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
 
-        The same applies to the sequence's positional metadata:
+        The same applies to the sequence's positional and interval metadata:
 
         >>> seq_copy.positional_metadata.loc[0, 'list'].append(1)
         >>> seq_copy.positional_metadata
           list  quality
-        0  [1]      999
+        0  [1]        7
         1   []       10
         2   []        8
         3   []        5
@@ -1318,6 +1347,16 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         1   []       10
         2   []        8
         3   []        5
+
+        >>> interval.metadata['gene'].append('p53')
+        >>> seq.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7', 'p53']})
+        >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7', 'p53']})
 
         Perform a deep copy to avoid this behavior:
 
@@ -1332,7 +1371,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         >>> pprint(seq.metadata)
         {'authors': ['Alice', 'Bob'], 'id': 'seq-id'}
 
-        Nor its positional metadata:
+        Nor its positional or interval metadata:
 
         >>> seq_deep_copy.positional_metadata.loc[0, 'list'].append(2)
         >>> seq_deep_copy.positional_metadata
@@ -1348,6 +1387,15 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         2   []        8
         3   []        5
 
+        >>> interval.metadata['gene'].append('tp53')
+        >>> seq.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7', 'p53', 'tp53']})
+        >>> seq_deep_copy.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': ['BCC7', 'p53']})
         """
         return self._copy(deep, {})
 
@@ -1366,16 +1414,21 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         bytes_ = np.copy(self._bytes)
 
         seq_copy = self._constructor(sequence=bytes_, metadata=None,
-                                     positional_metadata=None)
+                                     positional_metadata=None,
+                                     interval_metadata=None)
 
         if deep:
             seq_copy._metadata = MetadataMixin._deepcopy_(self, memo)
             seq_copy._positional_metadata = \
                 PositionalMetadataMixin._deepcopy_(self, memo)
+            seq_copy._interval_metadata = IntervalMetadataMixin._deepcopy_(
+                self, memo)
         else:
             seq_copy._metadata = MetadataMixin._copy_(self)
             seq_copy._positional_metadata = \
                 PositionalMetadataMixin._copy_(self)
+            seq_copy._interval_metadata = IntervalMetadataMixin._copy_(
+                self)
 
         return seq_copy
 
