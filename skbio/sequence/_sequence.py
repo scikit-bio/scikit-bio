@@ -172,7 +172,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
     >>> seq.interval_metadata   # doctest: +ELLIPSIS
     1 interval feature
     ------------------
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': 'sagA'})
 
     **Updating sequence metadata:**
 
@@ -336,16 +336,16 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
     You can also update the interval metadata. Let's re-create a
     ``Sequence`` object with interval metadata at first:
 
-    >>> seq = Sequence('ACGT', interval_metadata=IntervalMetadata())
+    >>> seq = Sequence('ACGT')
     >>> interval = seq.interval_metadata.add([(1, 3)], metadata={'gene': 'foo'})
 
     You can update directly on the ``Interval`` object:
 
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'gene': 'foo'})
     >>> interval.bounds = [(0, 2)]
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'foo'})
 
     You can also query and obtain the interval features you are interested and then modify them:
 
@@ -768,7 +768,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         >>> v = Sequence('ACGA', metadata={'id': 'abc'},
         ...              positional_metadata={'quality':[1, 5, 3, 3]})
-        >>> v.interval_metadata.add([(0, 1)])
+        >>> _ = v.interval_metadata.add([(0, 1)])
 
         The two sequences are not considered equal because their metadata,
         positional metadata, and interval metadata do not match:
@@ -1101,6 +1101,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
           in the order they appear in the positional metadata ``pd.DataFrame``.
           Column names (i.e., keys) follow the same display rules as metadata
           keys
+        * interval metadata: the number of interval features will be displayed.
         * sequence stats (e.g., length)
         * up to five lines of chunked sequence data. Each line of chunked
           sequence data displays the current position in the sequence
@@ -1157,11 +1158,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         ...     'quality': [3, 10, 11, 10],
         ...     'exons': [True, True, False, True]
         ... }
-        >>> interval_metadata = IntervalMetadata()
-        >>> _ = interval_metadata.add([(0, 2)], metadata={'gene': 'sagA'})
-        >>> Sequence('ACGT', metadata=metadata,
-        ...          positional_metadata=positional_metadata,
-        ...          interval_metadata=interval_metadata)
+        >>> seq = Sequence('ACGT', metadata=metadata,
+        ...          positional_metadata=positional_metadata)
+        >>> _ = seq.interval_metadata.add([(0, 2)], metadata={'gene': 'sagA'})
+        >>> seq
         Sequence
         ----------------------------------------------------------------------
         Metadata:
@@ -1268,12 +1268,10 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
 
         >>> from pprint import pprint
         >>> from skbio import Sequence
-        >>> from skbio.metadata import IntervalMetadata
         >>> seq = Sequence('ACGT',
         ...                metadata={'id': 'seq-id', 'authors': ['Alice']},
         ...                positional_metadata={'quality': [7, 10, 8, 5],
-        ...                                     'list': [[], [], [], []]},
-        ...                interval_metadata=IntervalMetadata())
+        ...                                     'list': [[], [], [], []]})
         >>> interval = seq.interval_metadata.add([(0, 2)], metadata={'gene': 'sagA'})
 
         Make a shallow copy of the sequence:
@@ -1291,7 +1289,7 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         >>> pprint(seq.metadata)
         {'authors': ['Alice'], 'id': 'seq-id'}
 
-        The same applies to the sequence's positional metadata:
+        The same applies to the sequence's positional and interval metadata:
 
         >>> seq_copy.positional_metadata.loc[0, 'quality'] = 999
         >>> seq_copy.positional_metadata
@@ -1307,27 +1305,39 @@ class Sequence(MetadataMixin, PositionalMetadataMixin, IntervalMetadataMixin,
         2   []        8
         3   []        5
 
-        >>> seq_copy.interval_metadata is not seq.interval_metadata
-        >>> interval2 = seq_copy.interval_metadata.add([(2, 3)], metadata={'gene': 'sagB'})
+        >>> interval.metadata['product'] = 'sagA protein'
+        >>> pprint(seq.interval_metadata)   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'product': 'sagA protein', 'gene': 'sagA'})
+
+        >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
+        1 interval feature
+        ------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'sagA'})
+
+        >>> interval2 = seq_copy.interval_metadata.add(
+        ...     [(2, 3)], metadata={'gene': 'sagB'})
         >>> seq_copy.interval_metadata   # doctest: +ELLIPSIS
         2 interval features
         -------------------
-        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
-        Interval(interval_metadata=<...>, bounds=[(2, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagB'})
-        >>> seq.interval_metadata  # doctest: +ELLIPSIS
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(2, 3)], fuzzy=[(False, False)], metadata={'gene': 'sagB'})
+        >>> pprint(seq.interval_metadata)  # doctest: +ELLIPSIS
         1 interval feature
         ------------------
-        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'product': 'sagA protein', 'gene': 'sagA'})
 
         >>> interval.bounds = [(1, 3)]
         >>> seq.interval_metadata  # doctest: +ELLIPSIS
         1 interval feature
         ------------------
-        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(False, False)], metadata={'product': 'sagA protein', 'gene': 'sagA'})
         >>> seq_copy.interval_metadata  # doctest: +ELLIPSIS
-        1 interval feature
-        ------------------
-        Interval(interval_metadata=<...>, bounds=[(1, 3)], fuzzy=[(True, True)], metadata={'gene': 'sagA'})
+        2 interval features
+        -------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], fuzzy=[(False, False)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(2, 3)], fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         Since only a *shallow* copy was made, updates to mutable objects stored
         as metadata affect the original sequence's metadata:
