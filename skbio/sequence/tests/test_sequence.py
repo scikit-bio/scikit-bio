@@ -249,7 +249,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_init_nondefault_parameters(self):
         s = '.ABC123xyz-'
         im = IntervalMetadata(len(s))
-        intvl = im.add([(0, 1)], metadata={'gene': 'sagA'})
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
         seq = Sequence(s,
                        metadata={'id': 'foo', 'description': 'bar baz'},
                        positional_metadata={'quality': range(11)},
@@ -533,9 +533,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq_b = Sequence("B")
 
         im = IntervalMetadata(1)
-        intvl = im.add([(0, 1)], metadata={'gene': 'sagA'})
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
         im2 = IntervalMetadata(1)
-        intvl2 = im.add([(0, 1)], metadata={'gene': 'sagB'})
+        im.add([(0, 1)], metadata={'gene': 'sagB'})
 
         self.assertTrue(seq_a == seq_a)
         self.assertTrue(Sequence("a") == Sequence("a"))
@@ -2021,8 +2021,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                              seq.interval_metadata._intervals[0])
             self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
                              seq.interval_metadata._intervals[0].metadata)
-            self.assertIs(seq_copy.interval_metadata._intervals[0].metadata['gene'],
-                             seq.interval_metadata._intervals[0].metadata['gene'])
+            self.assertIs(
+                seq_copy.interval_metadata._intervals[0].metadata['gene'],
+                seq.interval_metadata._intervals[0].metadata['gene'])
             seq_copy.metadata['foo'].append(2)
             seq_copy.metadata['foo2'] = 42
 
@@ -2066,8 +2067,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                              seq.interval_metadata._intervals[0])
             self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
                              seq.interval_metadata._intervals[0].metadata)
-            self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata['gene'],
-                             seq.interval_metadata._intervals[0].metadata['gene'])
+            self.assertIsNot(
+                seq_copy.interval_metadata._intervals[0].metadata['gene'],
+                seq.interval_metadata._intervals[0].metadata['gene'])
             seq_copy.metadata['foo'].append(2)
             seq_copy.metadata['foo2'] = 42
 
