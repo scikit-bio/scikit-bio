@@ -105,6 +105,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     ----------
     values
     metadata
+    interval_metadata
     positional_metadata
     alphabet
     gap_chars
