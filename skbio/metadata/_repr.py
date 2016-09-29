@@ -15,8 +15,11 @@ from skbio._base import ElasticLines
 
 
 class _MetadataReprBuilder(metaclass=ABCMeta):
-    """Abstract base class for building a repr for an object containing
-    metadata, positional metadata, and/or interval metadata.
+    """An ABC for building a repr from an object containing metadata.
+
+    This abstract base class constructs a repr string for an
+    object which contains metadata, positional metadata and/or
+    interval metadata.
 
     Parameters
     ----------
@@ -26,6 +29,7 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         Maximum width of the repr.
     indent : int
         Number of spaces to use for indented lines.
+
     """
     def __init__(self, obj, width, indent):
         self._obj = obj
@@ -128,6 +132,8 @@ class _MetadataReprBuilder(metaclass=ABCMeta):
         return self._wrap_text_with_indent(dtype_fmt, key_fmt, 1)
 
     def _process_interval_metadata(self):
+        # TODO: this hasattr check can be removed once all the relevant
+        # classes have interval_metadata added to it.
         if (hasattr(self._obj, "has_interval_metadata") and
            self._obj.has_interval_metadata()):
             self._lines.add_line('Interval metadata:')

@@ -563,7 +563,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                                  " how='inner' or how='outer'")
         seq_data = []
         pm_data = []
-        for i, seq in enumerate(seqs):
+        for seq in seqs:
             seq_data.append(seq._bytes)
             pm_data.append(seq.positional_metadata)
             if not seq.has_positional_metadata():
