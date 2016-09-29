@@ -268,6 +268,7 @@ from skbio.io.format._base import (
     _get_nth_sequence, _line_generator, _too_many_blanks)
 from skbio.util._misc import chunk_str
 from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.metadata import IntervalMetadata
 
 
 genbank = create_format('genbank')
@@ -364,7 +365,7 @@ def _protein_to_genbank(obj, fh):
 def _construct(record, constructor=None, **kwargs):
     '''Construct the object of Sequence, DNA, RNA, or Protein.
     '''
-    seq, md, pmd = record
+    seq, md, imd = record
     if 'lowercase' not in kwargs:
         kwargs['lowercase'] = True
     if constructor is None:
@@ -377,10 +378,10 @@ def _construct(record, constructor=None, **kwargs):
 
     if constructor == RNA:
         return DNA(
-            seq, metadata=md, positional_metadata=pmd, **kwargs).transcribe()
+            seq, metadata=md, interval_metadata=imd, **kwargs).transcribe()
     else:
         return constructor(
-            seq, metadata=md, positional_metadata=pmd, **kwargs)
+            seq, metadata=md, interval_metadata=imd, **kwargs)
 
 
 def _parse_genbanks(fh):
@@ -395,7 +396,7 @@ def _parse_genbanks(fh):
 
 def _parse_single_genbank(chunks):
     metadata = {}
-    positional_metadata = None
+    interval_metadata = None
     sequence = ''
     # each section starts with a HEADER without indent.
     section_splitter = _yield_section(
@@ -423,10 +424,10 @@ def _parse_single_genbank(chunks):
             sequence = parsed
         elif header == 'FEATURES':
             metadata[header] = parsed[0]
-            positional_metadata = pd.concat(parsed[1], axis=1)
+            interval_metadata = parsed[1]
         else:
             metadata[header] = parsed
-    return sequence, metadata, positional_metadata
+    return sequence, metadata, interval_metadata
 
 
 def _serialize_single_genbank(obj, fh):
@@ -435,7 +436,13 @@ def _serialize_single_genbank(obj, fh):
     Always write it in NCBI canonical way:
     1. sequence in lowercase
     2. 'u' as 't' even in RNA molecules.
+
+    Parameters
+    ----------
+    obj : Sequence or its child class
+
     '''
+    # write out the headers
     md = obj.metadata
     for header in _HEADERS:
         if header in md:
@@ -449,6 +456,16 @@ def _serialize_single_genbank(obj, fh):
                     fh.write(s)
             else:
                 fh.write(out)
+
+    # write out the feature table
+    fh.write('FEATURES:{indent}Location/Qualifiers\n{feat}'.format(
+        indent=indent,
+        feat=_serialize_single_feature(feature, indent=21)))
+
+    for s in  _serialize_features(obj.interval_metadata):
+        fh.write(s)
+
+    # write out the sequence
     # always write RNA seq as DNA
     if isinstance(obj, RNA):
         obj = obj.reverse_transcribe()
@@ -598,8 +615,7 @@ def _serialize_source(header, obj, indent=12):
 def _parse_features(lines, length):
     '''Parse FEATURES field.
     '''
-    features = []
-    positional_metadata = []
+    imd = IntervalMetadata(length)
     # skip the 1st FEATURES line
     if lines[0].startswith('FEATURES'):
         lines = lines[1:]
@@ -609,77 +625,86 @@ def _parse_features(lines, length):
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
-    for i, section in enumerate(section_splitter(lines)):
-        # print(i) ; continue
-        feature, pmd = _parse_single_feature(section, length, i)
-        features.append(feature)
-        positional_metadata.append(pmd)
-    return features, positional_metadata
+    section_iter = section_splitter(lines)
+    # 1st section is metadata for the whole sequence
+    section = next(section_iter)
+    md = _parse_single_feature(section[1:])
+    # parse the rest sections of features
+    for section in section_iter:
+        _parse_single_feature(section, imd)
+    return md, imd
 
 
-def _serialize_features(header, obj, indent=21):
-    first = True
-    for feature in obj:
-        if first:
-            first = False
-            yield '{header:<{indent}}Location/Qualifiers\n{feat}'.format(
-                header=header, indent=indent,
-                feat=_serialize_single_feature(feature, indent))
-        else:
-            yield _serialize_single_feature(feature, indent)
+def _serialize_features(intervals, indent=21):
+    '''
+    Parameters
+    ----------
+    intervals : list of ``Interval``
+    '''
+    for intvl in intervals:
+        yield _serialize_single_feature(intvl.metadata, indent)
 
 
-def _parse_single_feature(lines, length, index):
+def _parse_single_feature(lines, imd=None):
     '''Parse a feature.
 
-    Returns
-    -------
-    tuple
-        Tuple of a dict of `metadata` and a pandas.Series of
-        `positional_metadata` for the feature.
+    Parse a feature and add it to ``IntervalMetadata`` object.
 
+    Parameters
+    ----------
+    imd : IntervalMetadata
     '''
-    feature = {}
-    feature['index_'] = index
     # each component of a feature starts with '/', except the 1st
     # component of location.
     section_splitter = _yield_section(
         lambda x: x.startswith('/'), strip=True)
-    first = True
-    for section in section_splitter(lines):
-        if first:
-            # first section is the Location string
-            first = False
-            type, location = _parse_section_default(
-                section, join_delimitor='', return_label=True)
-            feature['type_'] = type
-            feature['location'] = location
-            loc, loc_pmd = _parse_loc_str(location, length)
-            feature.update(loc)
+    section_iter = section_splitter(lines)
+
+    if imd is None:
+        metadata = {}
+    else:
+        # 1st section is location
+        section = next(section_iter)
+        feature_type, feature_loc = _parse_section_default(
+            section, join_delimitor='', return_label=True)
+        intvl = imd.add(*_parse_loc_str(feature_loc))
+
+        metadata = {'__type__': feature_type}
+
+    for section in section_iter:
+        # following sections are Qualifiers
+        k, v = _parse_section_default(
+            section, label_delimitor='=',
+            join_delimitor=' ', return_label=True)
+        # 1st char is '/'
+        k = k[1:]
+
+        # some Qualifiers can appear multiple times
+        if k in metadata:
+            if not isinstance(metadata[k], list):
+                metadata[k] = [metadata[k]]
+            metadata[k].append(v)
         else:
-            # following sections are Qualifiers
-            k, v = _parse_section_default(
-                section, label_delimitor='=',
-                join_delimitor=' ', return_label=True)
-            k = k[1:]
+            metadata[k] = v
 
-            # some Qualifiers can appear multiple times
-            if k in feature:
-                if not isinstance(feature[k], list):
-                    feature[k] = [feature[k]]
-                feature[k].append(v)
-            else:
-                feature[k] = v
-    return feature, loc_pmd
+    if imd is None:
+        return metadata
+    else:
+        intvl.metadata.update(metadata)
 
-
-def _serialize_single_feature(obj, indent=21):
+def _serialize_single_feature(intvl_md, indent=21):
+    '''
+    Parameters
+    ----------
+    intvl_md : dict
+        Interval.metadata
+    '''
     padding = ' ' * 8
     qualifiers = []
-    for k in sorted(obj):
-        if k.endswith('_') or k in ('location', 'type'):
+    for k in sorted(intvl_md):
+        if k.endswith('__') and k.startswith('__'):
             continue
-        v = obj[k]
+        v = intvl_md[k]
         if isinstance(v, list):
             for vi in v:
                 qualifiers.append(_serialize_qualifier(k, vi))
@@ -688,8 +713,10 @@ def _serialize_single_feature(obj, indent=21):
 
     qualifiers = [' ' * indent + i for i in qualifiers]
     return '{header:>{indent}}{loc}\n{qualifiers}\n'.format(
-        header=obj['type_'] + padding, loc=obj['location'],
-        indent=indent, qualifiers='\n'.join(qualifiers))
+        header=intvl_md['__type__'] + padding,
+        loc=intvl_md['__location__'],
+        indent=indent,
+        qualifiers='\n'.join(qualifiers))
 
 
 def _serialize_qualifier(key, value):
@@ -706,13 +733,13 @@ def _serialize_qualifier(key, value):
     return '/{k}={v}'.format(k=key, v=value)
 
 
-def _parse_loc_str(loc_str, length):
+def _parse_loc_str(loc_str):
     '''Parse location string.
 
-    Warning: This converts coordinates to 0-based from 1-based as
-    in GenBank format.
+    .. warning: This converts coordinates to 0-based from 1-based
+    GenBank coordinate system.
 
-    The location descriptor can be one of the following:
+    The location descriptor can be one of the following [1]_:
     (a) a single base number. e.g. 467
     (b) a site between two indicated adjoining bases. e.g. 123^124
     (c) a single base chosen from within a specified range of bases (not
@@ -721,47 +748,81 @@ def _parse_loc_str(loc_str, length):
     (e) a remote entry identifier followed by a local location
         descriptor (i.e., a-d). e.g. J00194.1:100..202
 
-    TODO:
-    handle (b), (c), (e) cases correctly
+    Notes
+    -----
+    This does not fully handle (e) case. It will discard the remote
+    entry part and only keep the local part. When it parses locations
+    across strand (e.g. "complement(123..145),200..209"), it will
+    record all the span parts but will record strand as negative.
+
+    References
+    ----------
+    .. [1] http://www.insdc.org/files/feature_table.html#3.4
+
     '''
-    pmd = np.zeros(length, dtype=bool)
-    res = {'rc_': False,
-           'left_partial_': False,
-           'right_partial_': False}
-    items = re.split('[(),]+', loc_str)
+    # define the tokens
     operators = ['join', 'complement', 'order']
-    if 'complement' in items:
-        res['rc_'] = True
-    for i in items:
-        i = i.strip()
-        if i in operators or not i:
-            continue
-        elif ':' in i:  # (e)
-            index = []
-        elif '..' in i:  # (d)
-            beg, end = i.split('..')
-            if beg.startswith('<'):
-                beg = beg[1:]
-                res['left_partial_'] = True
+    LPAREN = r'(?P<LPAREN>\()'
+    RPAREN = r'(?P<RPAREN>\))'
+    COMMA = r'(?P<COMMA>,)'
+    WS = r'(?P<WS>\s+)'
+    a = r'(?P<A>\d+)'
+    b = r'(?P<B>\d+\^\d+)'
+    c = r'(?P<C>\d+\.\d+)'
+    d = r'(?P<D><?\d+\.\.>?\d+)'
+    e_left  = r'(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)'
+    e_right = r'(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)'
+    illegal = r'(?P<ILLEGAL>.+)'
+    # The order of tokens in the master regular expression also
+    # matters. When matching, re tries to match pattens in the order
+    # specified. Thus, if a pattern happens to be a substring of a
+    # longer pattern, you need to make sure the longer pattern goes
+    # first.
+    master_pat = re.compile('|'.join(
+        operators + [WS, LPAREN, RPAREN, COMMA,
+                     b, c, d, e_left, e_right, a,
+                     illegal]))
+
+    scanner = master_pat.scanner(loc_str)
+
+    bounds = []
+    fuzzy = []
+
+    metadata = {'__location__': loc_str,
+                '__strand__': 1}
+
+    for m in iter(scanner.match, None):
+        p, v = m.lastgroup, m.group()
+        if v == 'complement':
+            metadata['__strand__'] = -1
+        elif p == 'A':
+            start = int(v)
+            bounds.append((start-1, start))
+            fuzzy.append((False, False))
+        elif p == 'B':
+            start, end = v.split('^')
+            start = int(start)
+            bounds.append((start-1, start))
+            fuzzy.append((False, False))
+        elif p == 'C' or p == 'D':
+            if p == 'C':
+                start, end = v.split('.')
+            else:
+                start, end = v.split('..')
+            fuzzy_s = fuzzy_e = False
+            if start.startswith('<'):
+                start = start[1:]
+                fuzzy_s = True
             if end.startswith('>'):
                 end = end[1:]
-                res['right_partial_'] = True
-            beg = int(beg)
-            end = int(end)
-            index = range(beg-1, end)
-        elif '.' in i:  # (c)
-            index = []
-        elif i.isdigit():  # (a)
-            index = int(i) - 1
-        elif '^' in i:  # (b)
-            index = []
-        else:
+                fuzzy_e = True
+            bounds.append((int(start)-1, int(end)))
+            fuzzy.append((fuzzy_s, fuzzy_e))
+        elif p == 'ILLEGAL':
             raise GenBankFormatError(
-                'Could not parse location string: "%s"' %
-                loc_str)
-        pmd[index] = True
+                'Could not parse location string: "%s"' % loc_str)
 
-    return res, pd.Series(pmd)
+    return bounds, fuzzy, metadata
 
 
 def _parse_origin(lines):
