@@ -359,52 +359,49 @@ class WriterTests(GenBankIOTests):
     def test_generator_to_genbank(self):
         seq, md, imd, constructor = self.single
         obj = constructor(seq, md, interval_metadata=imd)
-        fh = io.StringIO()
-        _generator_to_genbank([obj], fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _generator_to_genbank([obj], fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_lower_fp) as fh:
+        with open(self.single_lower_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_sequence_to_genbank(self):
-        fh = io.StringIO()
-        for i, (seq, md, imd, constructor) in enumerate(self.multi):
-            obj = Sequence(seq, md, interval_metadata=imd, lowercase=True)
-            _sequence_to_genbank(obj, fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            for i, (seq, md, imd, constructor) in enumerate(self.multi):
+                obj = Sequence(seq, md, interval_metadata=imd, lowercase=True)
+                _sequence_to_genbank(obj, fh)
+            obs = fh.getvalue()
 
-        with io.open(self.multi_fp) as fh:
+        with open(self.multi_fp) as fh:
             exp = fh.read()
+
         self.assertEqual(obs, exp)
 
     def test_dna_protein_to_genbank(self):
         writers = [_protein_to_genbank,
                    _dna_to_genbank]
-        fh = io.StringIO()
-        for i, (seq, md, imd, constructor) in enumerate(self.multi):
-            obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
-            writers[i](obj, fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            for i, (seq, md, imd, constructor) in enumerate(self.multi):
+                obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+                writers[i](obj, fh)
+            obs = fh.getvalue()
 
-        with io.open(self.multi_fp) as fh:
+        with open(self.multi_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_rna_to_genbank(self):
-        fh = io.StringIO()
-        seq, md, imd, constructor = self.single_rna
-        obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
-        _rna_to_genbank(obj, fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            seq, md, imd, constructor = self.single_rna
+            obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+            _rna_to_genbank(obj, fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_rna_fp) as fh:
+        with open(self.single_rna_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
@@ -412,56 +409,51 @@ class WriterTests(GenBankIOTests):
 
 class RoundtripTests(GenBankIOTests):
     def test_roundtrip_generator(self):
-        fh = io.StringIO()
-        _generator_to_genbank(_genbank_to_generator(self.multi_fp), fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _generator_to_genbank(_genbank_to_generator(self.multi_fp), fh)
+            obs = fh.getvalue()
 
-        with io.open(self.multi_fp) as fh:
+        with open(self.multi_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_roundtrip_rna(self):
-        fh = io.StringIO()
-        _rna_to_genbank(_genbank_to_rna(self.single_rna_fp), fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _rna_to_genbank(_genbank_to_rna(self.single_rna_fp), fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_rna_fp) as fh:
+        with open(self.single_rna_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_roundtrip_dna(self):
-        fh = io.StringIO()
-        _dna_to_genbank(_genbank_to_dna(self.single_rna_fp), fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _dna_to_genbank(_genbank_to_dna(self.single_rna_fp), fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_rna_fp) as fh:
+        with open(self.single_rna_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_roundtrip_protein(self):
-        fh = io.StringIO()
-        _protein_to_genbank(_genbank_to_protein(self.single_lower_fp), fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _protein_to_genbank(_genbank_to_protein(self.single_lower_fp), fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_lower_fp) as fh:
+        with open(self.single_lower_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
 
     def test_roundtrip_sequence(self):
-        fh = io.StringIO()
-        _sequence_to_genbank(_genbank_to_sequence(self.single_rna_fp), fh)
-        obs = fh.getvalue()
-        fh.close()
+        with io.StringIO() as fh:
+            _sequence_to_genbank(_genbank_to_sequence(self.single_rna_fp), fh)
+            obs = fh.getvalue()
 
-        with io.open(self.single_rna_fp) as fh:
+        with open(self.single_rna_fp) as fh:
             exp = fh.read()
 
         self.assertEqual(obs, exp)
