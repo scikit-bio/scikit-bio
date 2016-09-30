@@ -449,23 +449,21 @@ def _serialize_single_genbank(obj, fh):
             serializer = _SERIALIZER_TABLE.get(
                 header, _serialize_section_default)
             if header == 'FEATURES':
-                out = serializer(header, md[header])
-                # write out the feature table
-                fh.write('FEATURES:{indent}Location/Qualifiers\n{feat}'.format(
-                    indent=indent,
-                    feat=_serialize_single_feature(feature, indent=21)))
-
-                for s in  _serialize_features(obj.interval_metadata._intervals):
+                indent = 21
+                fh.write('{header:<{indent}}Location/Qualifiers\n{feat}'.format(
+                    header=header, indent=indent,
+                    feat=_serialize_single_feature(md[header], indent)))
+                for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
             else:
                 out = serializer(header, md[header])
-            # test if 'out' is a iterator.
-            # cf. Effective Python Item 17
-            if iter(out) is iter(out):
-                for s in out:
-                    fh.write(s)
-            else:
-                fh.write(out)
+                # test if 'out' is a iterator.
+                # cf. Effective Python Item 17
+                if iter(out) is iter(out):
+                    for s in out:
+                        fh.write(s)
+                else:
+                    fh.write(out)
 
     # write out the sequence
     # always write RNA seq as DNA
