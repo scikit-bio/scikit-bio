@@ -108,7 +108,9 @@ class GenBankIOTests(TestCase):
              'DEFINITION': "alkaline phosphatase signal mRNA, 5' end.",
              'FEATURES': {'db_xref': '"taxon:562"',
                           'mol_type': '"mRNA"',
-                          'organism': '"Escherichia coli"'},
+                          'organism': '"Escherichia coli"',
+                          '__type__': 'source',
+                          '__location__': '1..63'},
              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
              'LOCUS': {'date': '26-APR-1993',
                        'division': 'BCT',
@@ -150,7 +152,9 @@ class GenBankIOTests(TestCase):
               'COMMENT': 'Method: direct peptide sequencing.',
               'DBSOURCE': 'accession AAB29917.1',
               'DEFINITION': 'L-carnitine amidase {N-terminal}',
-              'FEATURES': {'organism': '"Bacteria"'},
+              'FEATURES': {'organism': '"Bacteria"',
+                           '__type__': 'source',
+                           '__location__': '1..9'},
               'KEYWORDS': '.',
               'LOCUS': {'date': '23-SEP-1994',
                         'division': 'BCT',
@@ -180,7 +184,9 @@ class GenBankIOTests(TestCase):
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
               'FEATURES': {'country': '"Brazil: Parana, Paranavai"',
-                            'environmental_sample': ''},
+                           '__type__': 'source',
+                           '__location__': '1..9',
+                           'environmental_sample': ''},
               'KEYWORDS': 'ENV.',
               'LOCUS': {'date': '29-AUG-2010',
                         'division': 'ENV',
@@ -270,27 +276,17 @@ REFERENCE   1  (bases 1 to 154478)
             '1^2']
 
         expects = [
-            ([(8, 9)], [(False, False)],
-             {'__location__': '9', '__strand__': 1}),
-            ([(2, 8)], [(False, False)],
-             {'__location__': '3..8', '__strand__': 1}),
-            ([(2, 8)], [(True, False)],
-             {'__location__': '<3..8', '__strand__': 1}),
-            ([(2, 8)], [(False, True)],
-             {'__location__': '3..>8', '__strand__': 1}),
-            ([(2, 8)], [(False, True)],
-             {'__location__': 'complement(3..>8)', '__strand__': -1}),
+            ([(8, 9)], [(False, False)], {'__strand__': 1}),
+            ([(2, 8)], [(False, False)], {'__strand__': 1}),
+            ([(2, 8)], [(True, False)],  {'__strand__': 1}),
+            ([(2, 8)], [(False, True)],  {'__strand__': 1}),
+            ([(2, 8)], [(False, True)],  {'__strand__': -1}),
             ([(2, 5), (6, 9)], [(False, True), (True, False)],
-             {'__location__': 'complement(join(3..>5,<7..9))',
-              '__strand__': -1}),
-            ([(2, 8)], [(False, False)],
-             {'__location__': 'join(J00194.1:1..9,3..8)', '__strand__': 1}),
-            ([(2, 8)], [(False, False)],
-             {'__location__': 'join(3..8,J00194.1:1..9)', '__strand__': 1}),
-            ([(0, 9)], [(False, False)],
-             {'__location__': '1.9', '__strand__': 1}),
-            ([(0, 1)], [(False, False)],
-             {'__location__': '1^2', '__strand__': 1})]
+             {'__strand__': -1}),
+            ([(2, 8)], [(False, False)], {'__strand__': 1}),
+            ([(2, 8)], [(False, False)], {'__strand__': 1}),
+            ([(0, 9)], [(False, False)], {'__strand__': 1}),
+            ([(0, 1)], [(False, False)], {'__strand__': 1})]
 
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example)
@@ -335,7 +331,6 @@ REFERENCE   1  (bases 1 to 154478)
         obs = _genbank_to_rna(self.single_rna_fp)
         exp = constructor(seq, metadata=md,
                           lowercase=True, interval_metadata=imd)
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
@@ -362,8 +357,8 @@ class WriterTests(GenBankIOTests):
                 _serialize_locus('LOCUS', parsed), serialized[0] + '\n')
 
     def test_generator_to_genbank(self):
-        seq, md, pmd, constructor = self.single
-        obj = constructor(seq, md, pmd)
+        seq, md, imd, constructor = self.single
+        obj = constructor(seq, md, interval_metadata=imd)
         fh = io.StringIO()
         _generator_to_genbank([obj], fh)
         obs = fh.getvalue()
@@ -376,8 +371,8 @@ class WriterTests(GenBankIOTests):
 
     def test_sequence_to_genbank(self):
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
-            obj = Sequence(seq, md, pmd, lowercase=True)
+        for i, (seq, md, imd, constructor) in enumerate(self.multi):
+            obj = Sequence(seq, md, interval_metadata=imd, lowercase=True)
             _sequence_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -390,8 +385,8 @@ class WriterTests(GenBankIOTests):
         writers = [_protein_to_genbank,
                    _dna_to_genbank]
         fh = io.StringIO()
-        for i, (seq, md, pmd, constructor) in enumerate(self.multi):
-            obj = constructor(seq, md, pmd, lowercase=True)
+        for i, (seq, md, imd, constructor) in enumerate(self.multi):
+            obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
             writers[i](obj, fh)
         obs = fh.getvalue()
         fh.close()
@@ -403,8 +398,8 @@ class WriterTests(GenBankIOTests):
 
     def test_rna_to_genbank(self):
         fh = io.StringIO()
-        seq, md, pmd, constructor = self.single_rna
-        obj = constructor(seq, md, pmd, lowercase=True)
+        seq, md, imd, constructor = self.single_rna
+        obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
         _rna_to_genbank(obj, fh)
         obs = fh.getvalue()
         fh.close()

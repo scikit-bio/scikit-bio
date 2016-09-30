@@ -448,7 +448,17 @@ def _serialize_single_genbank(obj, fh):
         if header in md:
             serializer = _SERIALIZER_TABLE.get(
                 header, _serialize_section_default)
-            out = serializer(header, md[header])
+            if header == 'FEATURES':
+                out = serializer(header, md[header])
+                # write out the feature table
+                fh.write('FEATURES:{indent}Location/Qualifiers\n{feat}'.format(
+                    indent=indent,
+                    feat=_serialize_single_feature(feature, indent=21)))
+
+                for s in  _serialize_features(obj.interval_metadata._intervals):
+                    fh.write(s)
+            else:
+                out = serializer(header, md[header])
             # test if 'out' is a iterator.
             # cf. Effective Python Item 17
             if iter(out) is iter(out):
@@ -456,14 +466,6 @@ def _serialize_single_genbank(obj, fh):
                     fh.write(s)
             else:
                 fh.write(out)
-
-    # write out the feature table
-    fh.write('FEATURES:{indent}Location/Qualifiers\n{feat}'.format(
-        indent=indent,
-        feat=_serialize_single_feature(feature, indent=21)))
-
-    for s in  _serialize_features(obj.interval_metadata):
-        fh.write(s)
 
     # write out the sequence
     # always write RNA seq as DNA
@@ -628,7 +630,7 @@ def _parse_features(lines, length):
     section_iter = section_splitter(lines)
     # 1st section is metadata for the whole sequence
     section = next(section_iter)
-    md = _parse_single_feature(section[1:])
+    md = _parse_single_feature(section)
     # parse the rest sections of features
     for section in section_iter:
         _parse_single_feature(section, imd)
@@ -660,16 +662,15 @@ def _parse_single_feature(lines, imd=None):
         lambda x: x.startswith('/'), strip=True)
     section_iter = section_splitter(lines)
 
-    if imd is None:
-        metadata = {}
-    else:
-        # 1st section is location
-        section = next(section_iter)
-        feature_type, feature_loc = _parse_section_default(
-            section, join_delimitor='', return_label=True)
-        intvl = imd.add(*_parse_loc_str(feature_loc))
+    # 1st section is location
+    section = next(section_iter)
+    feature_type, feature_loc = _parse_section_default(
+        section, join_delimitor='', return_label=True)
 
-        metadata = {'__type__': feature_type}
+    metadata = {'__type__': feature_type, '__location__': feature_loc}
+
+    if imd is not None:
+        intvl = imd.add(*_parse_loc_str(feature_loc))
 
     for section in section_iter:
         # following sections are Qualifiers
@@ -788,8 +789,7 @@ def _parse_loc_str(loc_str):
     bounds = []
     fuzzy = []
 
-    metadata = {'__location__': loc_str,
-                '__strand__': 1}
+    metadata = {'__strand__': 1}
 
     for m in iter(scanner.match, None):
         p, v = m.lastgroup, m.group()
