@@ -107,7 +107,8 @@ Reading and Writing GenBank Files
 Suppose we have the following GenBank file [example modified from [1_]::
 
 
->>> gb_str = '''LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012
+>>> gb_str = '''
+... LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012
 ... DEFINITION  Chain A, Structure Of A Mutant Class-I Preq1.
 ... ACCESSION   3K1V_A
 ... VERSION     3K1V_A  GI:260656459
@@ -243,8 +244,6 @@ References
 # ----------------------------------------------------------------------------
 
 import re
-import numpy as np
-import pandas as pd
 from functools import partial
 
 from skbio.io import create_format, GenBankFormatError
@@ -434,9 +433,11 @@ def _serialize_single_genbank(obj, fh):
                 header, _serialize_section_default)
             if header == 'FEATURES':
                 indent = 21
-                fh.write('{header:<{indent}}Location/Qualifiers\n{feat}'.format(
-                    header=header, indent=indent,
-                    feat=_serialize_single_feature(md[header], indent)))
+                fh.write('{header:<{indent}}Location/Qualifiers\n'
+                         '{feat}'.format(
+                             header=header, indent=indent,
+                             feat=_serialize_single_feature(
+                                 md[header], indent)))
                 for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
             else:
@@ -675,6 +676,7 @@ def _parse_single_feature(lines, imd=None):
     else:
         intvl.metadata.update(metadata)
 
+
 def _serialize_single_feature(intvl_md, indent=21):
     '''
     Parameters
@@ -753,7 +755,7 @@ def _parse_loc_str(loc_str):
     b = r'(?P<B>\d+\^\d+)'
     c = r'(?P<C>\d+\.\d+)'
     d = r'(?P<D><?\d+\.\.>?\d+)'
-    e_left  = r'(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)'
+    e_left = r'(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)'
     e_right = r'(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)'
     illegal = r'(?P<ILLEGAL>.+)'
     # The order of tokens in the master regular expression also

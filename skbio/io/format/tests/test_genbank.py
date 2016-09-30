@@ -7,9 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import io
-import numpy as np
-import pandas as pd
-import numpy.testing as npt
 from unittest import TestCase, main
 
 from skbio import Protein, DNA, RNA, Sequence
@@ -135,10 +132,10 @@ class GenBankIOTests(TestCase):
         self.multi_fp = get_data_path('genbank_multi_records')
         imd_pro = IntervalMetadata(9)
         imd_pro.add([(0, 9)], [(False, True)],
-                  {'__location__': '1..>9',
-                   'product': '"L-carnitine amidase"',
-                   '__strand__': 1,
-                   '__type__': 'Protein'})
+                    {'__location__': '1..>9',
+                     'product': '"L-carnitine amidase"',
+                     '__strand__': 1,
+                     '__type__': 'Protein'})
         imd_dna = IntervalMetadata(9)
         imd_dna.add([(1, 8)], [(True, True)],
                     {'__location__': 'complement(<2..>8)',
@@ -261,8 +258,6 @@ REFERENCE   1  (bases 1 to 154478)
             self.assertEqual(k, _parse_section_default(i, **j))
 
     def test_parse_loc_str(self):
-        length = 12
-
         examples = [
             '9',  # a single base in the presented sequence
             '3..8',
@@ -293,7 +288,6 @@ REFERENCE   1  (bases 1 to 154478)
             self.assertEqual(parsed, expect)
 
     def test_parse_loc_str_invalid(self):
-        length = 12
         examples = [
             'abc',
             '3-8']
@@ -385,7 +379,8 @@ class WriterTests(GenBankIOTests):
                    _dna_to_genbank]
         with io.StringIO() as fh:
             for i, (seq, md, imd, constructor) in enumerate(self.multi):
-                obj = constructor(seq, md, interval_metadata=imd, lowercase=True)
+                obj = constructor(
+                    seq, md, interval_metadata=imd, lowercase=True)
                 writers[i](obj, fh)
             obs = fh.getvalue()
 
