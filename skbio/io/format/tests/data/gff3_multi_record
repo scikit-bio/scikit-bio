@@ -1,0 +1,12 @@
+##gff-version   3
+##sequence-region   Chromosome 1 4641652
+#!genome-build European Nucleotide Archive ASM584v2
+#!genome-version ASM584v2
+#!genome-date 2014-08
+#!genome-build-accession GCA_000005845.2
+#!genebuild-last-updated 2014-08
+Chromosome	European Nucleotide Archive	chromosome	1	4641652	.	.	.	ID=chromosome:Chromosome;Alias=U00096.3;Is_circular=true
+###
+Chromosome	regulondb_feature	biological_region	148	148	.	+	.	external_name=Promoter thrLp (RegulonDB:ECK120010236);logic_name=regulondb_promoter
+gi|556503834|ref|NC_000913.3|	Prodigal_v2.60	CDS	3	98	1.8	+	0	ID=1_1;partial=10;start_type=Edge;rbs_motif=None;rbs_spacer=None;gc_cont=0.427;conf=60.39;score=1.84;cscore=-0.88;sscore=2.72;rscore=0.00;uscore=0.00;tscore=3.22;
+gi|556503834|ref|NC_000913.3|	Prodigal_v2.60	CDS	337	2799	333.8	+	0	ID=1_2;partial=00;start_type=ATG;rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp;gc_cont=0.531;conf=99.99;score=333.83;cscore=323.42;sscore=10.41;rscore=9.55;uscore=1.51;tscore=0.00;
