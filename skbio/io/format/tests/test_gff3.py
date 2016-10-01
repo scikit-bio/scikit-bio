@@ -48,8 +48,10 @@ class GFF3IOTests(TestCase):
                                 'PHASE': '0',
                                 'ATTR': ('ID=1_1;partial=10;start_type=Edge;'
                                          'rbs_motif=None;rbs_spacer=None;'
-                                         'gc_cont=0.427;conf=60.39;score=1.84;'
-                                         'cscore=-0.88;sscore=2.72;rscore=0.00;'
+                                         'gc_cont=0.427;conf=60.39;'
+                                         'score=1.84;'
+                                         'cscore=-0.88;sscore=2.72;'
+                                         'rscore=0.00;'
                                          'uscore=0.00;tscore=3.22;')}},
                   {'bounds': [(336, 2799)],
                    'metadata': {'SOURCE': 'Prodigal_v2.60',
@@ -58,9 +60,12 @@ class GFF3IOTests(TestCase):
                                 'STRAND': '+',
                                 'PHASE': '0',
                                 'ATTR': ('ID=1_2;partial=00;start_type=ATG;'
-                                         'rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp;'
-                                         'gc_cont=0.531;conf=99.99;score=333.83;'
-                                         'cscore=323.42;sscore=10.41;rscore=9.55;'
+                                         'rbs_motif=GGAG/GAGG;'
+                                         'rbs_spacer=5-10bp;'
+                                         'gc_cont=0.531;conf=99.99;'
+                                         'score=333.83;'
+                                         'cscore=323.42;sscore=10.41;'
+                                         'rscore=9.55;'
                                          'uscore=1.51;tscore=0.00;')}}]
 
         self.upper_bound1 = 4641652
@@ -111,7 +116,8 @@ class WriterTests(GFF3IOTests):
             _interval_metadata_to_gff3(self.imd1, fh, seq_id='Chromosome')
             # only compare the uncommented lines because the comments are not
             # stored in IntervalMetadata
-            obs = [i for i in fh.getvalue().splitlines() if not i.startswith('#')]
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
 
         with open(self.single_fp) as f:
             exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
@@ -128,7 +134,8 @@ class RoundtripTests(GFF3IOTests):
                     self.single_fp, upper_bound=self.upper_bound1),
                 fh,
                 seq_id='Chromosome')
-            obs = [i for i in fh.getvalue().splitlines() if not i.startswith('#')]
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
 
         with open(self.single_fp) as f:
             exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]

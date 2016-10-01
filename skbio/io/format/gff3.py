@@ -125,7 +125,7 @@ Interval(interval_metadata=<4601272528>, bounds=[(1049, 9000)], fuzzy=\
 Reference
 ---------
 
-.. [#] https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
+.. [#] https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md  # noqa
 
 '''
 
@@ -189,7 +189,7 @@ def _gff3_to_generator(fh, upper_bounds):
 
 @gff3.reader(IntervalMetadata)
 def _gff3_to_interval_metadata(fh, upper_bound, rec_num=1):
-    return  _get_nth_record(_parse_records(fh, [upper_bound]), rec_num)
+    return _get_nth_record(_parse_records(fh, [upper_bound]), rec_num)
 
 
 def _parse_records(fh, upper_bounds):
