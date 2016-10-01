@@ -11,7 +11,7 @@ import io
 
 from skbio.util import get_data_path
 from skbio.metadata import IntervalMetadata
-
+from skbio.io import GFF3FormatError
 from skbio.io.format.gff3 import (_gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _gff3_to_generator,
@@ -103,6 +103,13 @@ class ReaderTests(GFF3IOTests):
 
         self.assertEqual(obs, self.imd1)
 
+    def test_gff3_to_interval_metadata_bad(self):
+        with self.assertRaisesRegex(GFF3FormatError,
+                                    'do not have 9 columns in this line'):
+            _gff3_to_interval_metadata(
+                get_data_path('gff3_bad_wrong_columns'),
+                upper_bound=self.upper_bound1)
+
     def test_gff3_to_generator(self):
         obss = _gff3_to_generator(
             self.multi_fp, upper_bounds=[self.upper_bound1, self.upper_bound2])
@@ -123,6 +130,23 @@ class WriterTests(GFF3IOTests):
             exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
+
+    def test_interval_metadata_to_gff3_missing_field(self):
+        exp = 'ctg123\t.\tgene\t1\t9\t.\t.\t.\tID=gene00001;Name=EDEN'
+        imd = IntervalMetadata(9)
+        imd.add([(0, 9)], metadata={
+            # "SCORE", "PHASE" and "STRAND" are missing - they should be
+            # replaced by "."
+            'SOURCE': '.', 'TYPE': 'gene',
+            'ATTR': 'ID=gene00001;Name=EDEN'})
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
+            # only compare the uncommented lines because the comments are not
+            # stored in IntervalMetadata
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+
+        self.assertEqual([exp], obs)
 
 
 class RoundtripTests(GFF3IOTests):
