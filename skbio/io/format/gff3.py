@@ -171,23 +171,6 @@ def _gff3_sniffer(fh):
         return False, {}
 
 
-def _is_float(input):
-    try:
-        float(input)
-    except ValueError:
-        return False
-    return True
-
-
-def _parse_required(s):
-    if s.isdigit():
-        return int(s)
-    elif _is_float(s):
-        return float(s)
-    else:
-        return s
-
-
 @gff3.reader(None)
 def _gff3_to_generator(fh, upper_bounds):
     return _parse_records(fh, upper_bounds)
@@ -201,7 +184,10 @@ def _gff3_to_interval_metadata(fh, upper_bound, rec_num=1):
 def _parse_records(fh, upper_bounds):
     '''Yield record
 
-    A record is all the lines associated with the same ID (seq).
+    A record is all the lines associated with the same ID (seq). This
+    parser does minimal parsing. It does not convert variable types or
+    parse the attr of column 9.
+
     '''
     seq_id = False
     i = 0
@@ -210,6 +196,9 @@ def _parse_records(fh, upper_bounds):
     for line in _line_generator(fh, skip_blanks=True, strip=True):
         if not line.startswith('#'):
             columns = line.split('\t')
+            if len(columns) != len(_GFF3_HEADERS):
+                raise GFF3FormatError(
+                    'do not have 9 columns in this line: %s' % line)
             # the 1st column is seq ID for every feature. don't store
             # this repetitive information
             metadata = dict(zip(md_headers,
@@ -232,45 +221,29 @@ def _parse_records(fh, upper_bounds):
     yield imd
 
 
-def _attr_to_list(attr_list):
-    _tags = []
-    if any(isinstance(el, tuple) for el in attr_list):
-        for _attr in attr_list:
-            _tags.append('='.join([_attr[0], _attr[1]]))
-        return ';'.join(_tags)
-    else:
-        return '='.join([attr_list[0], attr_list[1]])
-
-
 @gff3.writer(IntervalMetadata)
-def _interval_metadata_to_gff3(obj, fh):
+def _interval_metadata_to_gff3(obj, fh, seq_id):
+    '''
+    Parameters
+    ----------
+    obj : IntervalMetadata
+    seq_id : str
+        ID for column 1 in the GFF3 file.
+    '''
     # write file header
-    fh.write('%s\n' % '##gff-version 3')
+    print('##gff-version 3', file=fh)
 
-    for features, interval in obj.features.items():
-        tab = [None] * 9
-
-        if len(features) is not 7:
-            raise GFF3FormatError(
-                "``IntervalMetadata`` can only be written in GFF3 format if all"
-                " annotation columns are found.")
-        if len(interval) is not 2:
-            raise GFF3FormatError(
-                "``IntervalMetadata`` can only be written in GFF3 format if "
-                " `START` and `END` fields are provided.")
-        if not all(_annot in set(features) for _annot in _ANNOTATION_HEADERS):
-            raise GFF3FormatError(
-                "GFF3 format requires header names to match pre-defined set: %s"
-                % ', '.join(_ANNOTATION_HEADERS))
-
-        for i, annot in enumerate(_GFF3_HEADERS):
-            if annot is 'START':
-                tab[i] = interval[0]
-            elif annot is 'END':
-                tab[i] = interval[1]
-            elif annot is 'ATTR':
-                tab[i] = _attr_to_list(features[annot])
-            else:
-                tab[i] = features[annot]
-
-        fh.write('\t'.join(map(str, tab)) + '\n')
+    for interval in obj._intervals:
+        columns = [seq_id]
+        md = interval.metadata
+        for bound in interval.bounds:
+            for head in _GFF3_HEADERS[1:]:
+                if head == 'START':
+                    columns.append(str(bound[0]+1))
+                elif head == 'END':
+                    columns.append(str(bound[1]))
+                elif head in md:
+                    columns.append(md[head])
+                else:
+                    columns.append('.')
+            print('\t'.join(columns), file=fh)

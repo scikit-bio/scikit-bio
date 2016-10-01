@@ -94,7 +94,7 @@ class SnifferTests(TestCase):
 class ReaderTests(GFF3IOTests):
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
-            self.single_fp, upper_bound=4641652, rec_num=1)
+            self.single_fp, upper_bound=self.upper_bound1, rec_num=1)
 
         self.assertEqual(obs, self.imd1)
 
@@ -107,21 +107,33 @@ class ReaderTests(GFF3IOTests):
 
 class WriterTests(GFF3IOTests):
     def test_interval_metadata_to_gff3(self):
-        for _im, _fp in zip([self.simple_exp_im, self.double_exp_im],
-                            [self.simple_fp, self.double_fp]):
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(self.imd1, fh, seq_id='Chromosome')
+            # only compare the uncommented lines because the comments are not
+            # stored in IntervalMetadata
+            obs = [i for i in fh.getvalue().splitlines() if not i.startswith('#')]
 
-            fh = io.StringIO()
-            _IntervalMetadata_to_gff3(_im, fh)
-            obs = fh.getvalue().splitlines()
+        with open(self.single_fp) as f:
+            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
 
-            with io.open(_fp) as fh:
-                exp = fh.read().splitlines()
-            self.assertSetEqual(set(exp), set(obs))
+        self.assertEqual(obs, exp)
 
 
 class RoundtripTests(GFF3IOTests):
     def test_roundtrip_generator(self):
         ''''''
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(
+                _gff3_to_interval_metadata(
+                    self.single_fp, upper_bound=self.upper_bound1),
+                fh,
+                seq_id='Chromosome')
+            obs = [i for i in fh.getvalue().splitlines() if not i.startswith('#')]
+
+        with open(self.single_fp) as f:
+            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
+
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
