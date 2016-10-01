@@ -496,6 +496,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagC'})
 fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
+    default_write_format = 'gff3'
+
     def __init__(self, upper_bound):
         self._upper_bound = upper_bound
         if self.upper_bound < self.lower_bound:
