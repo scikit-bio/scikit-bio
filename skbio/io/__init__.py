@@ -240,6 +240,7 @@ import_module('skbio.io.format.ordination')
 import_module('skbio.io.format.phylip')
 import_module('skbio.io.format.qseq')
 import_module('skbio.io.format.genbank')
+import_module('skbio.io.format.gff3')
 import_module('skbio.io.format.stockholm')
 
 # This is meant to be a handy indicator to the user that they have done

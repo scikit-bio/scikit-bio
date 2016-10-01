@@ -98,18 +98,29 @@ Examples
 --------
 
 >>> gff_str = """
-... ##gff-version	3.2.1
-... ##sequence-region	ctg123	1	1497228
-... ctg123	.	gene	1000	9000	.	+	.	ID=gene00001;Name=EDEN
-... ctg123	.	TF_binding_site	1000	1012	.	+	.	Parent=gene00001
-... ctg123	.	mRNA	1050	9000	.	+	.	ID=mRNA00001;Parent=gene00001
+... ##gff-version\t3.2.1
+... ##sequence-region\tctg123\t1\t1497228
+... ctg123\t.\tgene\t1000\t9000\t.\t+\t.\tID=gene00001;Name=EDEN
+... ctg123\t.\tTF_binding_site\t1000\t1012\t.\t+\t.\tParent=gene00001
+... ctg123\t.\tmRNA\t1050\t9000\t.\t+\t.\tID=mRNA00001;Parent=gene00001
 ... """
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
 >>> gff = io.StringIO(gff_str)
 >>> imd = read(gff, format='gff3', into=IntervalMetadata, upper_bound=2000000)
->>> imd
+>>> imd   # doctest: +SKIP
+3 interval features
+-------------------
+Interval(interval_metadata=<4601272528>, bounds=[(999, 9000)], fuzzy=\
+[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'gene', 'STRAND': '+', \
+'SCORE': '.', 'PHASE': '.', 'ATTR': 'ID=gene00001;Name=EDEN'})
+Interval(interval_metadata=<4601272528>, bounds=[(999, 1012)], fuzzy=\
+[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'TF_binding_site', \
+'STRAND': '+', 'SCORE': '.', 'PHASE': '.', 'ATTR': 'Parent=gene00001'})
+Interval(interval_metadata=<4601272528>, bounds=[(1049, 9000)], fuzzy=\
+[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'mRNA', 'STRAND': '+', \
+'SCORE': '.', 'PHASE': '.', 'ATTR': 'ID=mRNA00001;Parent=gene00001'})
 
 Reference
 ---------
@@ -165,7 +176,7 @@ def _gff3_sniffer(fh):
     except StopIteration:
         return False, {}
 
-    if re.match(r'##gff-version +3', line):
+    if re.match(r'##gff-version\s+3', line):
         return True, {}
     else:
         return False, {}
@@ -198,7 +209,7 @@ def _parse_records(fh, upper_bounds):
             columns = line.split('\t')
             if len(columns) != len(_GFF3_HEADERS):
                 raise GFF3FormatError(
-                    'do not have 9 columns in this line: %s' % line)
+                    'do not have 9 columns in this line: "%s"' % line)
             # the 1st column is seq ID for every feature. don't store
             # this repetitive information
             metadata = dict(zip(md_headers,
