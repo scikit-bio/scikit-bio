@@ -202,7 +202,7 @@ from ._exception import (UnrecognizedFormatError, FileFormatError,
                          FASTQFormatError, LSMatFormatError, NewickFormatError,
                          OrdinationFormatError, PhylipFormatError,
                          QSeqFormatError, QUALFormatError,
-                         StockholmFormatError)
+                         StockholmFormatError, GFF3FormatError)
 from .registry import write, read, sniff, create_format, io_registry
 from .util import open
 
@@ -217,6 +217,7 @@ __all__ = ['write', 'read', 'sniff', 'open', 'io_registry', 'create_format',
            'FASTAFormatError',
            'FASTQFormatError',
            'GenBankFormatError',
+           'GFF3FormatError',
            'LSMatFormatError',
            'NewickFormatError',
            'OrdinationFormatError',

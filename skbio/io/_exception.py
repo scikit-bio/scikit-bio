@@ -27,6 +27,11 @@ class GenBankFormatError(FileFormatError):
     pass
 
 
+class GFF3FormatError(FileFormatError):
+    """Raised when a ``GFF3`` formatted file cannot be parsed."""
+    pass
+
+
 class BLAST7FormatError(FileFormatError):
     """Raised when a ``blast7`` formatted file cannot be parsed."""
     pass

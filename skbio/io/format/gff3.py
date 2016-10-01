@@ -139,15 +139,11 @@ Reference
 
 import re
 
-from skbio.io import create_format, FileFormatError
+from skbio.io import create_format, GFF3FormatError
 from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import (
     _line_generator, _too_many_blanks)
 from skbio.io.format._base import _get_nth_sequence as _get_nth_record
-
-
-class GFF3FormatError(FileFormatError):
-    pass
 
 
 gff3 = create_format('gff3')
