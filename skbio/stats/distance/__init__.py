@@ -196,9 +196,11 @@ from ._bioenv import bioenv
 from ._anosim import anosim
 from ._permanova import permanova
 from ._mantel import mantel, pwmantel
+from ._regression import mrm, make_categorical_dms
 
 __all__ = ['DissimilarityMatrixError', 'DistanceMatrixError', 'MissingIDError',
-           'DissimilarityMatrix', 'DistanceMatrix', 'randdm', 'anosim',
-           'permanova', 'bioenv', 'mantel', 'pwmantel']
+           'DissimilarityMatrix', 'DistanceMatrix', 'randdm',
+           'anosim', 'permanova', 'bioenv', 'mantel', 'pwmantel',
+           'mrm', 'make_categorical_dms']
 
 test = TestRunner(__file__).test
