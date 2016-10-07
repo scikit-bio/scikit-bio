@@ -14,7 +14,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
 
 
-def _generate_id_blocks(ids=None, k=64, **kwargs):
+def _generate_id_blocks(ids, k=64):
     """Generate blocks of IDs that map into a DistanceMatrix
 
     Parameters
@@ -50,19 +50,11 @@ def _generate_id_blocks(ids=None, k=64, **kwargs):
     This method is not responsible for describing which specific pairs of IDs
     are to be computed, only the subset of the matrix of interest.
 
-    Raises
-    ------
-    ValueError
-        If IDs is None.
-
     Returns
     -------
     tuple of 1D np.array
         Index 0 contains the row IDs, and index 1 contains the column IDs
     """
-    if ids is None:
-        raise ValueError("No ids were specified")
-
     n = len(ids)
     ids_idx = np.arange(n)
 
@@ -166,7 +158,7 @@ def _block_kwargs(**kwargs):
     dict
         The parameters for the block of the distance matrix to compute.
     """
-    for row_ids, col_ids in _generate_id_blocks(**kwargs):
+    for row_ids, col_ids in _generate_id_blocks(kwargs['ids'], kwargs['k']):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         if id_pairs:
             kw = kwargs.copy()
@@ -238,7 +230,8 @@ def _reduce(blocks):
 
 
 @experimental(as_of="0.5.0-dev")
-def block_beta_diversity(metric, counts, ids, validate=True, k=64, **kwargs):
+def block_beta_diversity(metric, counts, ids, validate=True, k=64,
+                         reduce_f=_reduce, map_f=_map, **kwargs):
     """Perform a block-decomposition beta diversity calculation
 
     Parameters
@@ -254,38 +247,22 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64, **kwargs):
         Identifiers for each sample in ``counts``.
     validate : bool, optional
         See ``skbio.diversity.beta_diversity`` for details.
-    kwargs : kwargs, optional
-        Metric-specific parameters. See kwarg note below.
-
-    Keyword Arguments for block beta diversity
-    ------------------------------------------
-    The following keyword arguments are available to modify for block beta
-    diversity. All other arguments are passed on to the metric function.
-
     reduce_f : function, optional
         A method to reduce `PartialDistanceMatrix` objects into a single
         `DistanceMatrix`. The expected signature is:
-
-        `DistanceMatrix <- f(Iterable of PartialDistanceMatrix`
+            `DistanceMatrix <- f(Iterable of PartialDistanceMatrix)`
     map_f: function, optional
-        A method that accepts a `_computable`. The expected signature is:
-        `DistanceMatrix <- f(**kwargs)`. NOTE: ipyparallel's `map_async` will
-        not work here as we need to be able to pass around `**kwargs``.
+        A method that accepts a `_block_compute`. The expected signature is:
+            `DistanceMatrix <- f(**kwargs)`
+        NOTE: ipyparallel's `map_async` will not work here as we need to be
+        able to pass around `**kwargs``.
     k : int, optional
         The blocksize used when computing distances
+    kwargs : kwargs, optional
+        Metric-specific parameters. See kwarg note below.
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
-
-    if 'reduce_f' in kwargs:
-        reduce_f = kwargs.pop('reduce_f')
-    else:
-        reduce_f = _reduce
-
-    if 'map_f' in kwargs:
-        map_f = kwargs.pop('map_f')
-    else:
-        map_f = _map
 
     # The block method uses numeric IDs to take advantage of fancy indexing
     # with numpy.
