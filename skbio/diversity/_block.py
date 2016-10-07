@@ -14,19 +14,18 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
 
 
-def _generate_id_blocks(ids=None, k=None, **kwargs):
+def _generate_id_blocks(ids=None, k=64, **kwargs):
     """Generate blocks of IDs that map into a DistanceMatrix
 
     Parameters
     ----------
-    ids : Iterable
+    ids : Iterable object
         An iterable of IDs of whatever type.
-    k : int
-        The size of a block to generate IDs for
+    k : int, optional
+        The size of a block to generate IDs for, defaults to 64.
 
     Notes
     -----
-
     This method is intended to facilitate partial beta diversity calculations.
     Blocks of IDs are generated from the upper triangle of the subsequent
     distance matrix. For instance, given the following distance matrix with
@@ -51,11 +50,19 @@ def _generate_id_blocks(ids=None, k=None, **kwargs):
     This method is not responsible for describing which specific pairs of IDs
     are to be computed, only the subset of the matrix of interest.
 
+    Raises
+    ------
+    ValueError
+        If IDs is None.
+
     Returns
     -------
     tuple of 1D np.array
         Index 0 contains the row IDs, and index 1 contains the column IDs
     """
+    if ids is None:
+        raise ValueError("No ids were specified")
+
     n = len(ids)
     ids_idx = np.arange(n)
 
@@ -81,6 +88,8 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
         Block column IDs to keep in the counts matrix. Note, these correspond
         to rows in the counts matrix, but columns in a subsequent distance
         matrix.
+    kwargs : dict
+        Keyword arguments containing information about the block to compute.
 
     Returns
     -------
@@ -123,7 +132,6 @@ def _pairs_to_compute(rids, cids):
     ----------
     rids : Iterable
         The row IDs in the partial pairwise computation.
-
     cids : Iterable
         The column IDs in the partial pairwise computation.
 
@@ -202,6 +210,11 @@ def _map(func, kw_gen):
 def _reduce(blocks):
     """Reduce an iterable of partial distance matrices into a full matrix"""
     all_blocks = list(blocks)
+
+    # Determine the maximum integer ID observed in the blocks. There exists a
+    # 1-1 mapping between the integer ID and a sample ID. We increment by 1
+    # as the integer ID space begins with zero, and we'll be using this value
+    # to determine the size of the resulting full distance matrix.
     n_ids = max(map(lambda x: max(x.ids), all_blocks)) + 1
 
     mat = np.zeros((n_ids, n_ids), dtype=float)
@@ -224,22 +237,42 @@ def _reduce(blocks):
     return DistanceMatrix(mat + mat.T, list(range(n_ids)))
 
 
-@experimental(as_of="0.4.2-dev")
+@experimental(as_of="0.5.0-dev")
 def block_beta_diversity(metric, counts, ids, validate=True, k=64, **kwargs):
     """Perform a block-decomposition beta diversity calculation
 
     Parameters
     ----------
+    metric : str or callable
+        The pairwise distance function to apply. If ``metric`` is a string, it
+        must be resolvable by scikit-bio (e.g., UniFrac methods), or must be
+        callable.
+    counts : 2D array_like of ints or floats
+        Matrix containing count/abundance data where each row contains counts
+        of OTUs in a given sample.
+    ids : iterable of strs
+        Identifiers for each sample in ``counts``.
+    validate : bool, optional
+        See ``skbio.diversity.beta_diversity`` for details.
+    kwargs : kwargs, optional
+        Metric-specific parameters. See kwarg note below.
+
+    Keyword Arguments for block beta diversity
+    ------------------------------------------
+    The following keyword arguments are available to modify for block beta
+    diversity. All other arguments are passed on to the metric function.
+
     reduce_f : function, optional
         A method to reduce `PartialDistanceMatrix` objects into a single
         `DistanceMatrix`. The expected signature is:
 
         `DistanceMatrix <- f(Iterable of PartialDistanceMatrix`
-
     map_f: function, optional
         A method that accepts a `_computable`. The expected signature is:
         `DistanceMatrix <- f(**kwargs)`. NOTE: ipyparallel's `map_async` will
         not work here as we need to be able to pass around `**kwargs``.
+    k : int, optional
+        The blocksize used when computing distances
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
