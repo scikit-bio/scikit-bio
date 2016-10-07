@@ -538,7 +538,10 @@ def ilr(mat, basis=None, check=True):
 
     basis: numpy.ndarray, float, optional
         orthonormal basis for Aitchison simplex
-        defaults to J.J.Egozcue orthonormal basis
+        defaults to J.J.Egozcue orthonormal basis.
+
+    check: bool
+        Specifies if the basis is orthonormal.
 
     Examples
     --------
@@ -548,12 +551,24 @@ def ilr(mat, basis=None, check=True):
     >>> ilr(x)
     array([-0.7768362 , -0.68339802,  0.11704769])
 
+    Notes
+    -----
+    If the `basis` parameter is specified, it is expected to be a basis in the
+    Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
+    the dimensions of the basis needs be `D-1 x D`, where rows represent
+    basis vectors, and the columns represent proportions.
     """
     mat = closure(mat)
     if basis is None:
         basis = clr_inv(_gram_schmidt_basis(mat.shape[-1]))
-    elif check:
-        _check_orthogonality(basis)
+    else:
+        if len(basis.shape) != 2:
+            raise ValueError("Basis needs to be a 2D matrix, "
+                             "not a %dD matrix." %
+                             (len(basis.shape)))
+        if check:
+            _check_orthogonality(basis)
+
     return inner(mat, basis)
 
 
@@ -575,7 +590,7 @@ def ilr_inv(mat, basis=None, check=True):
 
     where :math:`[e_1,\ldots, e_{D-1}]` is an orthonormal basis in the simplex.
 
-    If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal
+    If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal
     basis derived from Gram-Schmidt orthogonalization will be used by
     default.
 
@@ -591,6 +606,10 @@ def ilr_inv(mat, basis=None, check=True):
         orthonormal basis for Aitchison simplex
         defaults to J.J.Egozcue orthonormal basis
 
+    check: bool
+        Specifies if the basis is orthonormal.
+
+
     Examples
     --------
     >>> import numpy as np
@@ -599,12 +618,27 @@ def ilr_inv(mat, basis=None, check=True):
     >>> ilr_inv(x)
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
+    Notes
+    -----
+    If the `basis` parameter is specified, it is expected to be a basis in the
+    Aitchison simplex.  If there are `D-1` elements specified in `mat`, then
+    the dimensions of the basis needs be `D-1 x D`, where rows represent
+    basis vectors, and the columns represent proportions.
     """
 
     if basis is None:
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
-    elif check:
-        _check_orthogonality(basis)
+    else:
+        if len(basis.shape) != 2:
+            raise ValueError("Basis needs to be a 2D matrix, "
+                             "not a %dD matrix." %
+                             (len(basis.shape)))
+        if check:
+            _check_orthogonality(basis)
+        # this is necessary, since the clr function
+        # performs np.squeeze()
+        basis = np.atleast_2d(clr(basis))
+
     return clr_inv(np.dot(mat, basis))
 
 
@@ -1081,6 +1115,7 @@ def _check_orthogonality(basis):
     basis: numpy.ndarray
         basis in the Aitchison simplex
     """
+    basis = np.atleast_2d(basis)
     if not np.allclose(inner(basis, basis), np.identity(len(basis)),
                        rtol=1e-4, atol=1e-6):
         raise ValueError("Aitchison basis is not orthonormal")

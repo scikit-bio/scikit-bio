@@ -15,12 +15,18 @@ import subprocess
 import sys
 import ast
 import tokenize
+import warnings
 
 import dateutil.parser
 
 if sys.version_info.major != 3:
     sys.exit("scikit-bio can only be used with Python 3. You are currently "
              "running Python %d." % sys.version_info.major)
+
+
+class ChecklistWarning(Warning):
+    """General warning class for warnings raised by checklist.py."""
+    pass
 
 
 def main():
@@ -154,6 +160,12 @@ class CopyrightHeadersValidator(RepoValidator):
     See the current standard for scikit-bio's copyright headers at
     ``http://scikit-bio.org/docs/latest/development/new_module.html``
 
+    Individual files are ignored if the first line in the file is exactly:
+
+    # checklist.py:CopyrightHeadersValidator IGNORE
+
+    If a file is ignored, a ``ChecklistWarning`` is raised.
+
     Parameters
     ----------
     skip_dirs : iterable of str, optional
@@ -190,8 +202,20 @@ class CopyrightHeadersValidator(RepoValidator):
         for _file in files:
             if not _file.endswith('.py'):
                 continue
+
             pos = 0
-            f = open(os.path.join(root, _file))
+            filepath = os.path.join(root, _file)
+            f = open(filepath)
+
+            first_line = f.readline().rstrip('\n')
+            if first_line == '# checklist.py:CopyrightHeadersValidator IGNORE':
+                warnings.warn(
+                    "File %s has IGNORE directive. Ignoring scikit-bio "
+                    "copyright header validation." % filepath,
+                    ChecklistWarning)
+                continue
+
+            f.seek(0)
             tokens = list(tokenize.generate_tokens(f.readline))
 
             # A module docstring is fully described using just two tokens: the

@@ -52,6 +52,17 @@ class TreeTests(TestCase):
         self.complex_tree = TreeNode.read(io.StringIO(
             "(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"))
 
+    def test_bug_issue_1416(self):
+        tree = TreeNode.read(['(((a,b,f,g),c),d);'])
+        new_tree = tree.shear(['a', 'b', 'c', 'f'])
+
+        exp = {'a', 'b', 'c', 'f'}
+        obs = {n.name for n in new_tree.tips()}
+
+        self.assertEqual(obs, exp)
+        self.assertEqual(id(new_tree), id(new_tree.children[0].parent))
+        self.assertEqual(id(new_tree), id(new_tree.children[1].parent))
+
     def test_observed_node_counts(self):
         """returns observed nodes counts given vector of otu observation counts
         """

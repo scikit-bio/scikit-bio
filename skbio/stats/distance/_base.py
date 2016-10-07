@@ -109,6 +109,57 @@ class DissimilarityMatrix(SkbioObject):
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
+    @classonlymethod
+    @experimental(as_of="0.5.0-dev")
+    def from_iterable(cls, iterable, metric, key=None, keys=None):
+        """Create DissimilarityMatrix from an iterable given a metric.
+
+        Parameters
+        ----------
+        iterable : iterable
+            Iterable containing objects to compute pairwise dissimilarities on.
+        metric : callable
+            A function that takes two arguments and returns a float
+            representing the dissimilarity between the two arguments.
+        key : callable or metadata key, optional
+            A function that takes one argument and returns a string
+            representing the id of the element in the dissimilarity matrix.
+            Alternatively, a key to a `metadata` property if it exists for
+            each element in the `iterable`. If None, then default ids will be
+            used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
+
+        Returns
+        -------
+        DissimilarityMatrix
+            The `metric` applied to all pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
+
+        """
+        iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same"
+                             " time.")
+
+        keys_ = None
+        if key is not None:
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = keys
+
+        dm = np.empty((len(iterable),) * 2)
+        for i, a in enumerate(iterable):
+            for j, b in enumerate(iterable):
+                dm[i, j] = metric(a, b)
+
+        return cls(dm, keys_)
+
     @property
     @experimental(as_of="0.4.0")
     def data(self):
@@ -623,9 +674,6 @@ class DissimilarityMatrix(SkbioObject):
         if data.dtype != np.double:
             raise DissimilarityMatrixError("Data must contain only floating "
                                            "point values.")
-        if np.trace(data) != 0:
-            raise DissimilarityMatrixError("Data must be hollow (i.e., the "
-                                           "diagonal can only contain zeros).")
         duplicates = find_duplicates(ids)
         if duplicates:
             formatted_duplicates = ', '.join(repr(e) for e in duplicates)
@@ -683,7 +731,8 @@ class DistanceMatrix(DissimilarityMatrix):
 
     @classonlymethod
     @experimental(as_of="0.4.1")
-    def from_iterable(cls, iterable, metric, key=None, keys=None):
+    def from_iterable(cls, iterable, metric, key=None, keys=None,
+                      validate=True):
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
         Parameters
@@ -702,24 +751,30 @@ class DistanceMatrix(DissimilarityMatrix):
         keys : iterable, optional
             An iterable of the same length as `iterable`. Each element will be
             used as the respective key.
+        validate : boolean, optional
+            If ``True``, all pairwise distances are computed, including upper
+            and lower triangles and the diagonal, and the resulting matrix is
+            validated for symmetry and hollowness. If ``False``, `metric` is
+            assumed to be hollow and symmetric and only the lower triangle
+            (excluding the diagonal) is computed. Pass ``validate=False`` if
+            you are sure `metric` is hollow and symmetric for improved
+            performance.
 
         Returns
         -------
         DistanceMatrix
-            The `metric` applied to all pairwise elements in the `iterable`.
+            The `metric` applied to pairwise elements in the `iterable`.
 
         Raises
         ------
         ValueError
             If `key` and `keys` are both provided.
 
-        Notes
-        -----
-        Symmetry and hollowness are assumed when calculating the distances via
-        `metric`. Therefore, distances are only computed for the strictly
-        upper/lower triangle.
-
         """
+        if validate:
+            return super(DistanceMatrix, cls).from_iterable(iterable, metric,
+                                                            key, keys)
+
         iterable = list(iterable)
         if key is not None and keys is not None:
             raise ValueError("Cannot use both `key` and `keys` at the same"
@@ -814,6 +869,10 @@ class DistanceMatrix(DissimilarityMatrix):
         if (data.T != data).any():
             raise DistanceMatrixError(
                 "Data must be symmetric and cannot contain NaNs.")
+
+        if np.trace(data) != 0:
+            raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
+                                      " can only contain zeros).")
 
 
 @experimental(as_of="0.4.0")

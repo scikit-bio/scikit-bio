@@ -64,6 +64,8 @@ ext = '.pyx' if USE_CYTHON else '.c'
 # details. This acts as a workaround until the next Python 3 release -- thanks
 # Wolfgang Maier (wolma) for the workaround!
 ssw_extra_compile_args = ['-Wno-error=declaration-after-statement']
+if sys.platform == 'win32':
+    ssw_extra_compile_args = []
 
 # Users with i686 architectures have reported that adding this flag allows
 # SSW to be compiled. See https://github.com/biocore/scikit-bio/issues/409 and
@@ -72,14 +74,19 @@ if platform.machine() == 'i686':
     ssw_extra_compile_args.append('-msse2')
 
 extensions = [
+    Extension("skbio.metadata._intersection",
+              ["skbio/metadata/_intersection" + ext]),
     Extension("skbio.stats.__subsample",
-              ["skbio/stats/__subsample" + ext]),
+              ["skbio/stats/__subsample" + ext],
+              include_dirs=[np.get_include()]),
     Extension("skbio.alignment._ssw_wrapper",
               ["skbio/alignment/_ssw_wrapper" + ext,
                "skbio/alignment/_lib/ssw.c"],
-              extra_compile_args=ssw_extra_compile_args),
+              extra_compile_args=ssw_extra_compile_args,
+              include_dirs=[np.get_include()]),
     Extension("skbio.diversity._phylogenetic",
-              ["skbio/diversity/_phylogenetic" + ext])
+              ["skbio/diversity/_phylogenetic" + ext],
+              include_dirs=[np.get_include()])
 ]
 
 if USE_CYTHON:
@@ -88,7 +95,7 @@ if USE_CYTHON:
 
 setup(name='scikit-bio',
       version=version,
-      license='BSD',
+      license='BSD-3-Clause',
       description=description,
       long_description=long_description,
       author="scikit-bio development team",

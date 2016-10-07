@@ -304,6 +304,32 @@ class CompositionTests(TestCase):
                             np.array([[2, 2, 6],
                                       [4, 4, 2]]))
 
+    def test_ilr_basis(self):
+        table = np.array([[1., 10.],
+                          [1.14141414, 9.90909091],
+                          [1.28282828, 9.81818182],
+                          [1.42424242, 9.72727273],
+                          [1.56565657, 9.63636364]])
+        basis = np.array([[0.80442968, 0.19557032]])
+        res = ilr(table, basis=basis)
+        exp = np.array([np.log(1/10)*np.sqrt(1/2),
+                        np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
+                        np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
+                        np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
+                        np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)])
+
+        npt.assert_allclose(res, exp)
+
+    def test_ilr_basis_one_dimension_error(self):
+        table = np.array([[1., 10.],
+                          [1.14141414, 9.90909091],
+                          [1.28282828, 9.81818182],
+                          [1.42424242, 9.72727273],
+                          [1.56565657, 9.63636364]])
+        basis = np.array([0.80442968, 0.19557032])
+        with self.assertRaises(ValueError):
+            ilr(table, basis=basis)
+
     def test_ilr_inv(self):
         mat = closure(self.cdata7)
         npt.assert_array_almost_equal(ilr_inv(ilr(mat)), mat)
@@ -319,6 +345,52 @@ class CompositionTests(TestCase):
         npt.assert_allclose(self.cdata1,
                             np.array([[2, 2, 6],
                                       [4, 4, 2]]))
+
+    def test_ilr_basis_isomorphism(self):
+        # tests to make sure that the isomorphism holds
+        # with the introduction of the basis.
+        basis = np.array([[0.80442968, 0.19557032]])
+        table = np.array([[np.log(1/10)*np.sqrt(1/2),
+                           np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
+                           np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
+                           np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
+                           np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]]).T
+        res = ilr(ilr_inv(table, basis=basis), basis=basis)
+        npt.assert_allclose(res, table.squeeze())
+
+        table = np.array([[1., 10.],
+                          [1.14141414, 9.90909091],
+                          [1.28282828, 9.81818182],
+                          [1.42424242, 9.72727273],
+                          [1.56565657, 9.63636364]])
+
+        res = ilr_inv(np.atleast_2d(ilr(table, basis=basis)).T, basis=basis)
+        npt.assert_allclose(res, closure(table.squeeze()))
+
+    def test_ilr_inv_basis(self):
+        exp = closure(np.array([[1., 10.],
+                                [1.14141414, 9.90909091],
+                                [1.28282828, 9.81818182],
+                                [1.42424242, 9.72727273],
+                                [1.56565657, 9.63636364]]))
+        basis = np.array([[0.80442968, 0.19557032]])
+        table = np.array([[np.log(1/10)*np.sqrt(1/2),
+                           np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
+                           np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
+                           np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
+                           np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]]).T
+        res = ilr_inv(table, basis=basis)
+        npt.assert_allclose(res, exp)
+
+    def test_ilr_inv_basis_one_dimension_error(self):
+        basis = clr(np.array([[0.80442968, 0.19557032]]))
+        table = np.array([[np.log(1/10)*np.sqrt(1/2),
+                           np.log(1.14141414 / 9.90909091)*np.sqrt(1/2),
+                           np.log(1.28282828 / 9.81818182)*np.sqrt(1/2),
+                           np.log(1.42424242 / 9.72727273)*np.sqrt(1/2),
+                           np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]]).T
+        with self.assertRaises(ValueError):
+            ilr_inv(table, basis=basis)
 
 
 class AncomTests(TestCase):
