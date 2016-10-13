@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+import contextlib
 
 import pandas as pd
 
@@ -32,10 +33,28 @@ def _parse_blast_data(fh, columns, error, error_message, comment=None,
     read_csv = functools.partial(pd.read_csv, na_values='N/A', sep='\t',
                                  header=None, keep_default_na=False,
                                  comment=comment, skiprows=skiprows)
-    lineone = read_csv(fh, nrows=1)
 
-    if len(lineone.columns) != len(columns):
-        raise error(error_message % (len(columns), len(lineone.columns)))
+    # HACK for https://github.com/pandas-dev/pandas/issues/14418
+    # this avoids closing the `fh`, whose lifetime isn't the responsibility
+    # of this parser
+    with _noop_close(fh) as fh:
 
-    fh.seek(0)
-    return read_csv(fh, names=columns, dtype=_possible_columns)
+        lineone = read_csv(fh, nrows=1)
+
+        if len(lineone.columns) != len(columns):
+            raise error(error_message % (len(columns), len(lineone.columns)))
+
+        fh.seek(0)
+
+        return read_csv(fh, names=columns, dtype=_possible_columns)
+
+
+# HACK for https://github.com/pandas-dev/pandas/issues/14418
+@contextlib.contextmanager
+def _noop_close(fh):
+    backup = fh.close
+    fh.close = lambda: None
+    try:
+        yield fh
+    finally:
+        fh.close = backup
