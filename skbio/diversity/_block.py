@@ -194,13 +194,22 @@ def _map(func, kw_gen):
     ----
     builtin map does not allow for mapping with kwargs.
 
+    Parallel uses of block decomposition will likely replace this method with
+    one which can distribute compute.
     """
     for kwargs in kw_gen:
         yield func(**kwargs)
 
 
 def _reduce(blocks):
-    """Reduce an iterable of partial distance matrices into a full matrix"""
+    """Reduce an iterable of partial distance matrices into a full matrix
+    
+    Note, the reduce doesn't actually care about what pairs are computed
+    so if a distance between pairs exists multiple times, it'll get
+    added. as such, this reduction is only safe to perform if by
+    the block_beta_diversity method which assures that distances are not
+    computed multiple times.
+    """
     all_blocks = list(blocks)
 
     # Determine the maximum integer ID observed in the blocks. There exists a
@@ -231,7 +240,7 @@ def _reduce(blocks):
 
 @experimental(as_of="0.5.0-dev")
 def block_beta_diversity(metric, counts, ids, validate=True, k=64,
-                         reduce_f=_reduce, map_f=_map, **kwargs):
+                         reduce_f=None, map_f=None, **kwargs):
     """Perform a block-decomposition beta diversity calculation
 
     Parameters
@@ -250,19 +259,26 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
     reduce_f : function, optional
         A method to reduce `PartialDistanceMatrix` objects into a single
         `DistanceMatrix`. The expected signature is:
-            `DistanceMatrix <- f(Iterable of PartialDistanceMatrix)`
+            `f(Iterable of DistanceMatrix) -> DistanceMatrix`
+        Note, this is the reduce within a map/reduce.
     map_f: function, optional
         A method that accepts a `_block_compute`. The expected signature is:
-            `DistanceMatrix <- f(**kwargs)`
+            `f(**kwargs) -> DistanceMatrix`
         NOTE: ipyparallel's `map_async` will not work here as we need to be
         able to pass around `**kwargs``.
     k : int, optional
         The blocksize used when computing distances
     kwargs : kwargs, optional
-        Metric-specific parameters. See kwarg note below.
+        Metric-specific parameters. 
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
+
+    if reduce_f is None:
+        reduce_f = _reduce
+
+    if map_f is None:
+        map_f = _map
 
     # The block method uses numeric IDs to take advantage of fancy indexing
     # with numpy.

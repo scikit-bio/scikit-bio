@@ -6,7 +6,6 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
 from unittest import TestCase, main
 
 import numpy as np
@@ -25,8 +24,8 @@ class ParallelBetaDiversity(TestCase):
                        [2, 3],
                        [0, 1]]
         self.sids1 = list('ABC')
-        self.tree1 = TreeNode.read(io.StringIO(
-            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'))
+        self.tree1 = TreeNode.read([
+            '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'])
         self.oids1 = ['O1', 'O2']
 
     def test_block_kwargs(self):
@@ -100,11 +99,6 @@ class ParallelBetaDiversity(TestCase):
         self.assertEqual(obs, exp)
 
     def test_reduce(self):
-        # note, the reduce doesn't actually care about what pairs are computed
-        # so if a distance between pairs exists multiple times, it'll get
-        # added. as such, this reduction is only safe to perform if by
-        # the block_beta_diversity method which assures that distances are not
-        # computed multiple times.
         dm1 = DistanceMatrix(np.array([[0, 0, 44],
                                        [0, 0, 60],
                                        [44, 60, 0]]), (2, 3, 4))
@@ -170,7 +164,7 @@ class ParallelBetaDiversity(TestCase):
                            [1, 0, 1],
                            [0, 0, 1],
                            [0, 1, 1]])
-        tree = TreeNode.read(io.StringIO('(a:1,b:2,c:3);'))
+        tree = TreeNode.read(['(a:1,b:2,c:3);'])
         otu_ids = ['a', 'b', 'c']
 
         kw = {'tree': tree, 'otu_ids': otu_ids}
