@@ -198,7 +198,7 @@ def _map(func, kw_gen):
 
 def _reduce(blocks):
     """Reduce an iterable of partial distance matrices into a full matrix
-    
+
     Note, the reduce doesn't actually care about what pairs are computed
     so if a distance between pairs exists multiple times, it'll get
     added. as such, this reduction is only safe to perform if by
@@ -256,24 +256,24 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
         `DistanceMatrix`. The expected signature is:
 
             `f(Iterable of DistanceMatrix) -> DistanceMatrix`
-        
+
         Note, this is the reduce within a map/reduce.
     map_f: function, optional
         A method that accepts a `_block_compute`. The expected signature is:
 
             `f(**kwargs) -> DistanceMatrix`
-        
+
         NOTE: ipyparallel's `map_async` will not work here as we need to be
         able to pass around `**kwargs``.
     k : int, optional
         The blocksize used when computing distances
     kwargs : kwargs, optional
-        Metric-specific parameters. 
+        Metric-specific parameters.
 
     Returns
     -------
     DistanceMatrix
-        A distance matrix relating all samples represented by counts to each 
+        A distance matrix relating all samples represented by counts to each
         other.
 
     Note
@@ -282,8 +282,8 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
     In general, if you are processing a few hundred samples or less, then it is
     likely the case that `skbio.diversity.beta_diversity` will be faster. The
     original need which motivated the development of this method was processing
-    the Earth Microbiome Project [1]_ dataset which at the time spanned over 
-    25,000 samples and 7.5 million open reference OTUs. 
+    the Earth Microbiome Project [1]_ dataset which at the time spanned over
+    25,000 samples and 7.5 million open reference OTUs.
 
     See Also
     --------
