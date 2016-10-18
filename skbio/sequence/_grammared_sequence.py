@@ -105,6 +105,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     ----------
     values
     metadata
+    interval_metadata
     positional_metadata
     alphabet
     gap_chars
@@ -328,9 +329,10 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @overrides(Sequence)
     def __init__(self, sequence, metadata=None, positional_metadata=None,
-                 lowercase=False, validate=True):
+                 interval_metadata=None, lowercase=False, validate=True):
         super(GrammaredSequence, self).__init__(
-            sequence, metadata, positional_metadata, lowercase)
+            sequence, metadata, positional_metadata,
+            interval_metadata, lowercase)
 
         if validate:
             self._validate()
@@ -695,7 +697,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             yield self._constructor(
                 sequence=''.join(definite_seq),
                 metadata=metadata,
-                positional_metadata=positional_metadata)
+                positional_metadata=positional_metadata,
+                interval_metadata=self.interval_metadata)
 
     @stable(as_of='0.4.1')
     def to_regex(self):

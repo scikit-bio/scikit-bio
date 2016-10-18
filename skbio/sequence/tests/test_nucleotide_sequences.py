@@ -14,6 +14,7 @@ from skbio import DNA, RNA, Protein, GeneticCode
 from skbio.sequence._nucleotide_mixin import NucleotideMixin
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
+from skbio.metadata import IntervalMetadata
 
 
 # This file contains tests for functionality of sequence types which implement
@@ -21,7 +22,7 @@ from skbio.util import classproperty
 # similar that the testing logic can be shared and parameterized across
 # different test data.
 
-class TestNucelotideSequence(unittest.TestCase):
+class TestNucleotideSequence(unittest.TestCase):
     def setUp(self):
         self.sequence_kinds = frozenset([
             str,
@@ -272,7 +273,8 @@ class TestNucelotideSequence(unittest.TestCase):
             comp = constructor(
                 '',
                 metadata={'id': 'foo', 'description': 'bar'},
-                positional_metadata={'quality': []}).complement()
+                positional_metadata={'quality': []},
+                interval_metadata=IntervalMetadata(0)).complement()
             self.assertEqual(
                 comp,
                 constructor(
@@ -286,16 +288,20 @@ class TestNucelotideSequence(unittest.TestCase):
             comp = constructor(seq_str).complement()
             self.assertEqual(comp, constructor(comp_str))
 
+            im = IntervalMetadata(len(seq_str))
+            im.add([(0, 1)], metadata={'gene': 'p53'})
             comp = constructor(
                 seq_str,
                 metadata={'id': 'foo', 'description': 'bar'},
-                positional_metadata={'quality': qual}).complement()
+                positional_metadata={'quality': qual},
+                interval_metadata=im).complement()
             self.assertEqual(
                 comp,
                 constructor(
                     comp_str,
                     metadata={'id': 'foo', 'description': 'bar'},
-                    positional_metadata={'quality': qual}))
+                    positional_metadata={'quality': qual},
+                    interval_metadata=im))
 
     def test_complement_with_reverse_empty(self):
         for constructor in (DNA, RNA):
@@ -305,7 +311,8 @@ class TestNucelotideSequence(unittest.TestCase):
             rc = constructor(
                 '',
                 metadata={'id': 'foo', 'description': 'bar'},
-                positional_metadata={'quality': []}).complement(reverse=True)
+                positional_metadata={'quality': []},
+                interval_metadata=IntervalMetadata(0)).complement(reverse=True)
             self.assertEqual(
                 rc,
                 constructor(
@@ -319,18 +326,30 @@ class TestNucelotideSequence(unittest.TestCase):
             rc = constructor(seq_str).complement(reverse=True)
             self.assertEqual(rc, constructor(rev_comp_str))
 
-            rc = constructor(
+            l = len(seq_str)
+            im = IntervalMetadata(l)
+            im.add([(0, 1)], metadata={'gene': 'p53'})
+            im_rc = IntervalMetadata(l)
+            im_rc.add([(l-1, l)], metadata={'gene': 'p53'})
+            original = constructor(
                 seq_str,
                 metadata={'id': 'foo', 'description': 'bar'},
                 positional_metadata={
-                    'quality': qual}).complement(reverse=True)
+                    'quality': qual},
+                interval_metadata=im)
+            rc = original.complement(reverse=True)
+
             self.assertEqual(
                 rc,
                 constructor(
                     rev_comp_str,
                     metadata={'id': 'foo', 'description': 'bar'},
                     positional_metadata={'quality':
-                                         list(qual)[::-1]}))
+                                         list(qual)[::-1]},
+                    interval_metadata=im_rc))
+            # assert the original object is not changed
+            self.assertIsNot(original.interval_metadata, im)
+            self.assertEqual(original.interval_metadata, im)
 
     def test_reverse_complement(self):
         # light tests because this just calls

@@ -29,6 +29,9 @@ class RNA(GrammaredSequence, NucleotideMixin,
         Arbitrary per-character metadata. For example, quality data from
         sequencing reads. Must be able to be passed directly to the Pandas
         DataFrame constructor.
+    interval_metadata : IntervalMetadata
+        Arbitrary metadata which applies to intervals within a sequence to
+        store interval features (such as exons or introns on the sequence).
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters in order to be valid IUPAC RNA characters. If
@@ -51,6 +54,7 @@ class RNA(GrammaredSequence, NucleotideMixin,
     ----------
     values
     metadata
+    interval_metadata
     positional_metadata
     alphabet
     gap_chars
@@ -212,9 +216,14 @@ class RNA(GrammaredSequence, NucleotideMixin,
         if self.has_positional_metadata():
             positional_metadata = self.positional_metadata
 
+        interval_metadata = None
+        if self.has_interval_metadata():
+            interval_metadata = self.interval_metadata
+
         # turn off validation because `seq` is guaranteed to be valid
         return skbio.DNA(seq, metadata=metadata,
                          positional_metadata=positional_metadata,
+                         interval_metadata=interval_metadata,
                          validate=False)
 
     @stable(as_of="0.4.0")

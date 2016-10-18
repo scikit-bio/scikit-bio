@@ -468,6 +468,34 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         self.assertEqual(len(intvls), 1)
         self.assertTrue(intvl is intvls[0])
 
+    def test_concat_empty(self):
+        for i in 0, 1, 2:
+            obs = IntervalMetadata.concat([self.im_empty] * i)
+            exp = IntervalMetadata(self.upper_bound * i)
+            self.assertEqual(obs, exp)
+
+        obs = IntervalMetadata.concat([])
+        self.assertEqual(obs, IntervalMetadata(0))
+
+    def test_concat(self):
+        im1 = IntervalMetadata(3)
+        im2 = IntervalMetadata(4)
+        im3 = IntervalMetadata(5)
+        im1.add([(0, 2)], [(True, True)])
+        im2.add([(0, 3)], [(True, False)], {'gene': 'sagA'})
+        im2.add([(2, 4)], metadata={'gene': 'sagB'})
+        im3.add([(1, 5)], [(False, True)], {'gene': 'sagC'})
+        obs = IntervalMetadata.concat([im1, im2, im3])
+
+        exp = IntervalMetadata(12)
+        exp.add(bounds=[(0, 2)], fuzzy=[(True, True)])
+        exp.add(bounds=[(3, 6)], fuzzy=[(True, False)],
+                metadata={'gene': 'sagA'})
+        exp.add(bounds=[(5, 7)], metadata={'gene': 'sagB'})
+        exp.add(bounds=[(8, 12)], fuzzy=[(False, True)],
+                metadata={'gene': 'sagC'})
+        self.assertEqual(obs, exp)
+
     def test_sort(self):
         interval = Interval(
             self.im_2,

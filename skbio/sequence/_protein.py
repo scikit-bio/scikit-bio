@@ -29,6 +29,9 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
         Arbitrary per-character metadata. For example, quality data from
         sequencing reads. Must be able to be passed directly to the Pandas
         DataFrame constructor.
+    interval_metadata : IntervalMetadata
+        Arbitrary interval metadata which applies to intervals within
+        a sequence to store interval features (such as protein domains).
     lowercase : bool or str, optional
         If ``True``, lowercase sequence characters will be converted to
         uppercase characters in order to be valid IUPAC Protein characters. If
@@ -51,6 +54,7 @@ class Protein(GrammaredSequence, metaclass=DisableSubclassingMeta):
     ----------
     values
     metadata
+    interval_metadata
     positional_metadata
     alphabet
     gap_chars
