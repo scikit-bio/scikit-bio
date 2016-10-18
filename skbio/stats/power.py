@@ -1017,7 +1017,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         m_ids = meta.loc[ids].groupby(cat).groups
         # Checks if samples from the cat groups are represented in those
         # Samples
-        id_vecs = [m_ids[o].values for o in order if o in
+        id_vecs = [m_ids[o] for o in order if o in
                    m_ids]
         # If all groups are represented, the index and results are retained
         if len(id_vecs) == len(order):
