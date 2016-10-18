@@ -33,32 +33,27 @@ class ParallelBetaDiversity(TestCase):
         exp = [{'row_ids': np.array((0, 1)),
                 'col_ids': np.array((0, 1)),
                 'id_pairs': [(0, 1)],
-                'ids': [1, 2, 3, 4, 5],
-                'foo': 'bar', 'k': 2},
+                'ids': [1, 2, 3, 4, 5]},
 
                {'row_ids': np.array((0, 1)),
                 'col_ids': np.array((2, 3)),
                 'id_pairs': [(0, 2), (0, 3), (1, 2), (1, 3)],
-                'ids': [1, 2, 3, 4, 5],
-                'foo': 'bar', 'k': 2},
+                'ids': [1, 2, 3, 4, 5]},
 
                {'row_ids': np.array((0, 1)),
                 'col_ids': np.array((4,)),
                 'id_pairs': [(0, 4), (1, 4)],
-                'ids': [1, 2, 3, 4, 5],
-                'foo': 'bar', 'k': 2},
+                'ids': [1, 2, 3, 4, 5]},
 
                {'row_ids': np.array((2, 3)),
                 'col_ids': np.array((2, 3)),
                 'id_pairs': [(2, 3), ],
-                'ids': [1, 2, 3, 4, 5],
-                'foo': 'bar', 'k': 2},
+                'ids': [1, 2, 3, 4, 5]},
 
                {'row_ids': np.array((2, 3)),
                 'col_ids': np.array((4,)),
                 'id_pairs': [(2, 4), (3, 4)],
-                'ids': [1, 2, 3, 4, 5],
-                'foo': 'bar', 'k': 2}]
+                'ids': [1, 2, 3, 4, 5]}]
 
         obs = list(_block_kwargs(**kws))
         npt.assert_equal(obs, exp)

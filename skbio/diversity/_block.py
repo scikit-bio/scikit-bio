@@ -90,13 +90,6 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
         is stored in kwargs. If applicable, a filtered ``tree`` and ``otu_ids``
         are also stored.
     """
-    # filter kwargs to valid keys for downstream block compute
-    # explicit copies are not necessary as implicit copies or overwwrites are
-    # performed below.
-    valid_block_keys = {'counts', 'ids', 'tree', 'otu_ids', 'metric',
-                        'id_pairs', 'validate'}
-    block_kwargs = {k: v for k, v in kwargs.items() if k in valid_block_keys}
-
     ids_to_keep = np.unique(np.hstack([row_ids, col_ids]))
 
     # create a view of the relevant samples
@@ -107,14 +100,14 @@ def _block_party(counts=None, row_ids=None, col_ids=None, **kwargs):
     nonzero_cols = (counts_block != 0).any(axis=0)
     counts_block = counts_block[:, nonzero_cols]
 
-    block_kwargs['counts'] = counts_block
-    block_kwargs['ids'] = ids_to_keep
+    kwargs['counts'] = counts_block
+    kwargs['ids'] = ids_to_keep
 
     if 'tree' in kwargs and 'otu_ids' in kwargs:
-        block_kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
-        block_kwargs['tree'] = kwargs['tree'].shear(block_kwargs['otu_ids'])
+        kwargs['otu_ids'] = np.asarray(kwargs['otu_ids'])[nonzero_cols]
+        kwargs['tree'] = kwargs['tree'].shear(kwargs['otu_ids'])
 
-    return block_kwargs
+    return kwargs
 
 
 def _pairs_to_compute(rids, cids):
@@ -158,10 +151,12 @@ def _block_kwargs(**kwargs):
     dict
         The parameters for the block of the distance matrix to compute.
     """
+    valid_block_keys = {'counts', 'ids', 'tree', 'otu_ids', 'metric',
+                        'id_pairs', 'validate'}
     for row_ids, col_ids in _generate_id_blocks(kwargs['ids'], kwargs['k']):
         id_pairs = _pairs_to_compute(row_ids, col_ids)
         if id_pairs:
-            kw = kwargs.copy()
+            kw = {k: v for k, v in kwargs.items() if k in valid_block_keys}
             kw['id_pairs'] = id_pairs
             kw['row_ids'] = row_ids
             kw['col_ids'] = col_ids
