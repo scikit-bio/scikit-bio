@@ -1017,10 +1017,10 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         m_ids = meta.loc[ids].groupby(cat).groups
         # Checks if samples from the cat groups are represented in those
         # Samples
-        ids_vec = id_vecs = [m_ids[o] for o in order if o in
-                             m_ids]
+        id_vecs = [m_ids[o] for o in order if o in
+                   m_ids]
         # If all groups are represented, the index and results are retained
-        if len(ids_vec) == len(order):
+        if len(id_vecs) == len(order):
             min_vec = np.array([len(v) for v in id_vecs])
             loc_vec = np.arange(0, min_vec.min())
             meta_pairs[i1] = id_vecs

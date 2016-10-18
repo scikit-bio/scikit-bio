@@ -477,9 +477,12 @@ class PowerAnalysisTest(TestCase):
 
     def test__identify_sample_groups_not_strict(self):
         # Defines the know values
-        known_pairs = {0: [['PP'], ['CD', 'NR']],
-                       1: [['MM', 'WM'], ['MH']],
-                       2: [['GW'], ['CB']]}
+        known_pairs = {1: [np.array(['PP'], dtype=object),
+                           np.array(['CD', 'NR'], dtype=object)],
+                       0: [np.array(['MM', 'WM'], dtype=object),
+                           np.array(['MH'], dtype=object)],
+                       2: [np.array(['GW'], dtype=object),
+                           np.array(['CB'], dtype=object)]}
         known_index = np.array([0, 1, 2])
         test_pairs, test_index = _identify_sample_groups(self.meta,
                                                          'INT',
@@ -487,8 +490,10 @@ class PowerAnalysisTest(TestCase):
                                                          order=['N', 'Y'],
                                                          strict_match=False)
         self.assertEqual(known_pairs.keys(), test_pairs.keys())
-        self.assertEqual(sorted(known_pairs.values()),
-                         sorted(test_pairs.values()))
+
+        for k in known_pairs:
+            for i in range(2):
+                npt.assert_array_equal(known_pairs[k][i], test_pairs[k][i])
         npt.assert_array_equal(known_index, test_index)
 
     def test__draw_paired_samples(self):
