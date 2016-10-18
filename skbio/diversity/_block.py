@@ -259,17 +259,45 @@ def block_beta_diversity(metric, counts, ids, validate=True, k=64,
     reduce_f : function, optional
         A method to reduce `PartialDistanceMatrix` objects into a single
         `DistanceMatrix`. The expected signature is:
+
             `f(Iterable of DistanceMatrix) -> DistanceMatrix`
+        
         Note, this is the reduce within a map/reduce.
     map_f: function, optional
         A method that accepts a `_block_compute`. The expected signature is:
+
             `f(**kwargs) -> DistanceMatrix`
+        
         NOTE: ipyparallel's `map_async` will not work here as we need to be
         able to pass around `**kwargs``.
     k : int, optional
         The blocksize used when computing distances
     kwargs : kwargs, optional
         Metric-specific parameters. 
+
+    Returns
+    -------
+    DistanceMatrix
+        A distance matrix relating all samples represented by counts to each 
+        other.
+
+    Note
+    ----
+    This method is designed to facilitate computing beta diversity in parallel.
+    In general, if you are processing a few hundred samples or less, then it is
+    likely the case that `skbio.diversity.beta_diversity` will be faster. The
+    original need which motivated the development of this method was processing
+    the Earth Microbiome Project [1]_ dataset which at the time spanned over 
+    25,000 samples and 7.5 million open reference OTUs. 
+
+    See Also
+    --------
+    skbio.diversity.beta_diversity
+    skbio.diversity.partial_beta_diversity
+
+    References
+    ----------
+    .. [1] http://www.earthmicrobiome.org/
     """
     if validate:
         counts = _validate_counts_matrix(counts, ids=ids)
