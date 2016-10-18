@@ -160,16 +160,18 @@ class NucleotideMixin(metaclass=ABCMeta):
             positional_metadata=positional_metadata)
 
         if reverse:
+            # this has to be before the interval metadata code,
+            # because __gititem__ drops interval_metadata.
             complement = complement[::-1]
 
         if self.has_interval_metadata():
-            interval_metadata = self.interval_metadata
+            complement.interval_metadata = self.interval_metadata
             if reverse:
                 # TODO: this can be revised to match
                 # positional_metadata when __getitem__
                 # supports interval_metadata
-                interval_metadata._reverse()
-            complement.interval_metadata = interval_metadata
+                complement.interval_metadata._reverse()
+
         return complement
 
     @stable(as_of='0.4.0')

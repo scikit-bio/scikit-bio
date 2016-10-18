@@ -331,12 +331,13 @@ class TestNucleotideSequence(unittest.TestCase):
             im.add([(0, 1)], metadata={'gene': 'p53'})
             im_rc = IntervalMetadata(l)
             im_rc.add([(l-1, l)], metadata={'gene': 'p53'})
-            rc = constructor(
+            original = constructor(
                 seq_str,
                 metadata={'id': 'foo', 'description': 'bar'},
                 positional_metadata={
                     'quality': qual},
-                interval_metadata=im).complement(reverse=True)
+                interval_metadata=im)
+            rc = original.complement(reverse=True)
 
             self.assertEqual(
                 rc,
@@ -346,6 +347,9 @@ class TestNucleotideSequence(unittest.TestCase):
                     positional_metadata={'quality':
                                          list(qual)[::-1]},
                     interval_metadata=im_rc))
+            # assert the original object is not changed
+            self.assertIsNot(original.interval_metadata, im)
+            self.assertEqual(original.interval_metadata, im)
 
     def test_reverse_complement(self):
         # light tests because this just calls
