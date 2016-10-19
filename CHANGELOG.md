@@ -21,6 +21,7 @@
 
 ### Performance enhancements
 * `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
+* The `IntervalMetadata` allows dramatic decrease in memory usage for feature rich sequences. ([#1159](https://github.com/biocore/scikit-bio/issues/1159))
 
 ### Bug fixes
 

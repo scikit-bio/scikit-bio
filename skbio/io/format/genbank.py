@@ -69,7 +69,8 @@ is stored as an ``Interval`` object in ``interval_metadata``. Each
 feature. There are a few extra keys besides the qualifiers in each
 feature section:
 
-    1. ``__strand__``: the strand of the feature located
+    1. ``__strand__``: the strand of the feature located. Positive
+       strand is stored as value of `1` and negative as `-1`.
 
     2. ``__location__``: the location string of the feature
 
@@ -77,8 +78,41 @@ feature section:
        from the header of the feature
 
 .. note:: The "dunder" (double underscore) keys are reserved with
-special meanings. The users should not use them to store interval
-feature metadata.
+   special meanings. The users should not use them to store interval
+   feature metadata.
+
+There are 5 types of location descriptors in GenBank file. This
+explains how they will be parsed into the bounds of ``Interval``
+object (note it converts the 1-based coordinate to 0-based.):
+
+    1. a single base number. e.g. 467. This is parsed to ``(466, 467)``.
+
+    2. a site between two indicated adjoining bases. e.g. 123^124. This
+       is parsed to ``(122, 123)``.
+
+    3. a single base chosen from within a specified range of bases (not
+       allowed for new entries). e.g. 102.110. This is parsed to
+       ``(101, 110)``.
+
+    4. the base numbers delimiting a sequence span. e.g. 340..565. This
+       is parsed to ``(339, 565)``.
+
+    5. a remote entry identifier followed by a local location
+       descriptor (i.e., a-d). e.g. J00194.1:100..202. This will be
+       discarded because it is not on the current sequence. When it is
+       combined with local descriptor like J00194.1:100..202,200..209,
+       the local part will be kept to be ``(199, 209)``.
+
+When a location string has descriptors across strands
+(e.g. join(complement(123..145),200..209)), it will record all the span
+parts (``[(122, 145), (199, 209)]``). It will record the value of
+``__strand__`` as ``-1`` as long as this feature has part(s) on negative
+strand.
+
+.. note:: The location information is fully stored in
+   ``Interval.metadata`` with key ``__location__``. The parser tries
+   to keep all those information, but it may lose some due to the
+   limit of data structure.
 
 Format Parameters
 -----------------
@@ -435,6 +469,9 @@ def _serialize_single_genbank(obj, fh):
             serializer = _SERIALIZER_TABLE.get(
                 header, _serialize_section_default)
             if header == 'FEATURES':
+                # magic number 21: the amount of indentation to
+                # output the features. This is not strict and can
+                # be other values (eg 22, 23, etc).
                 indent = 21
                 fh.write('{header:<{indent}}Location/Qualifiers\n'
                          '{feat}'.format(
