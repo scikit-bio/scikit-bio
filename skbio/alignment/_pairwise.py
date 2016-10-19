@@ -8,15 +8,19 @@
 
 from warnings import warn
 from itertools import product
+from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 
+import skbio
 from skbio.alignment import TabularMSA
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.util import EfficiencyWarning
 from skbio.util._decorator import experimental, deprecated
+from skbio.sequence.distance import hamming
 
 # This is temporary: blosum50 does not exist in skbio yet as per
 # issue 161. When the issue is resolved, this should be removed in favor
@@ -1053,3 +1057,56 @@ def _first_largest(scores):
         if score > result[0]:
             result = (score, direction)
     return result
+
+def OrthologTable(query_sequences, target_sequences, best_hit=True, seq_type=None):
+    """
+    Creates an ortholog table by aligning 2 iterables of sequences.
+    `query_sequences` | iterable of sequence objects : (targets will be with respect to `query_sequences`)
+    `target_sequences` | iterable of sequence objects
+    `best_hit` | type = bool: If `True`, only the best aligned sequences are in the output.  If `False`, all pairwise comparisons
+    """
+    
+    # Infer sequence type
+    if seq_type == None:
+        seq_type = getattr(skbio.sequence, 
+                           str(type(query_sequences[0])).split(".")[-1][:-2])
+    # Calculate alignments
+    D_seq_aln = defaultdict(list)
+    for seq_A in query_sequences:
+        for seq_B in target_sequences:
+            query = StripedSmithWaterman(str(seq_A))
+            alignment = query(str(seq_B))
+            aln_info = (seq_B.metadata["id"], alignment.optimal_alignment_score, alignment)
+            D_seq_aln[seq_A.metadata["id"]].append(aln_info)
+            
+    # Create pd.DataFrame from alignment
+    query_data = list()
+    for query_id, alns in D_seq_aln.items():
+        # Get best hit or complete pairwise alignment
+        if best_hit == True: alns = [sorted(alns, key=lambda x:x[1], reverse=True)[0]]
+        if best_hit == False: alns = alns
+            
+        target_data = list()
+        for (target_id, target_score, target_aln) in alns:
+            # Aligned query sequence
+            aln_query_seq = target_aln.aligned_query_sequence
+            # Aligned target sequence
+            aln_target_seq = target_aln.aligned_target_sequence
+            aln_length = len(aln_query_seq)
+            # Percent identity calculation
+            percent_identity = (1-(hamming(seq_type(aln_query_seq), seq_type(aln_target_seq))))
+            # Organize data
+            target_data.append(pd.Series(dict([ ("target_id", target_id),
+                                                ("percent_identity", percent_identity),
+                                                ("optimal_score", target_score),
+                                                ("aln_length", aln_length),
+                                                ("query_begin",target_aln.query_begin),
+                                                ("query_end", target_aln.query_end),
+                                                ("target_begin", target_aln.target_begin),
+                                                ("target_end", target_aln.target_end_optimal)])))
+        # Create pd.DataFrame from alignment
+        DF_query = pd.DataFrame(target_data)
+        DF_query.index = pd.MultiIndex.from_tuples([*zip(DF_query.shape[0]*[query_id], DF_query["target_id"])], names=["query_id","target_id"])
+        query_data.append(DF_query)
+                  
+    return pd.concat(query_data, axis=0).loc[:,["percent_identity","optimal_score","aln_length","query_begin","query_end","target_begin","target_end"]]
