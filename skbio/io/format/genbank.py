@@ -1,5 +1,4 @@
-"""
-GenBank format (:mod:`skbio.io.format.genbank`)
+"""GenBank format (:mod:`skbio.io.format.genbank`)
 ===============================================
 
 .. currentmodule:: skbio.io.format.genbank
@@ -75,7 +74,11 @@ feature section:
     2. ``__location__``: the location string of the feature
 
     3. ``__type__``: the molecular type of the feature. Its value is
-from the header of the feature
+       from the header of the feature
+
+.. note:: The "dunder" (double underscore) keys are reserved with
+special meanings. The users should not use them to store interval
+feature metadata.
 
 Format Parameters
 -----------------
