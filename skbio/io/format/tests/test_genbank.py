@@ -246,10 +246,10 @@ REFERENCE   1  (bases 1 to 154478)
             ['FOO=blah',
              '    blah'],
             ['FOO']]
-        kwargs = [{'join_delimitor': '=', 'return_label': False},
-                  {'label_delimitor': '=', 'join_delimitor': '',
+        kwargs = [{'join_delimiter': '=', 'return_label': False},
+                  {'label_delimiter': '=', 'join_delimiter': '',
                    'return_label': True},
-                  {'label_delimitor': '=', 'join_delimitor': '=',
+                  {'label_delimiter': '=', 'join_delimiter': '=',
                    'return_label': True}]
         expects = ['blah blah=blah',
                    ('FOO', 'blahblah'),

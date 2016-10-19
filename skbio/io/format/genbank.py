@@ -538,7 +538,7 @@ def _parse_reference(lines):
         skip_blanks=True, strip=False)
     for section in section_splitter(lines):
         label, data = _parse_section_default(
-            section, join_delimitor=' ', return_label=True)
+            section, join_delimiter=' ', return_label=True)
         res[label] = data
     return res
 
@@ -651,7 +651,7 @@ def _parse_single_feature(lines, imd=None):
     # 1st section is location
     section = next(section_iter)
     feature_type, feature_loc = _parse_section_default(
-        section, join_delimitor='', return_label=True)
+        section, join_delimiter='', return_label=True)
 
     metadata = {'__type__': feature_type, '__location__': feature_loc}
 
@@ -661,8 +661,8 @@ def _parse_single_feature(lines, imd=None):
     for section in section_iter:
         # following sections are Qualifiers
         k, v = _parse_section_default(
-            section, label_delimitor='=',
-            join_delimitor=' ', return_label=True)
+            section, label_delimiter='=',
+            join_delimiter=' ', return_label=True)
         # 1st char is '/'
         k = k[1:]
 
@@ -846,19 +846,19 @@ def _serialize_origin(seq, indent=9):
 
 
 def _parse_section_default(
-        lines, label_delimitor=None, join_delimitor=' ', return_label=False):
+        lines, label_delimiter=None, join_delimiter=' ', return_label=False):
     '''Parse sections in default way.
 
     Do 2 things:
-        1. split first line with label_delimitor for label
-        2. join all the lines into one str with join_delimitor.
+        1. split first line with label_delimiter for label
+        2. join all the lines into one str with join_delimiter.
     '''
     data = []
     first = True
     label = None
     for line in lines:
         if first:
-            items = line.split(label_delimitor, 1)
+            items = line.split(label_delimiter, 1)
 
             if len(items) == 2:
                 label, section = items
@@ -869,7 +869,7 @@ def _parse_section_default(
             first = False
         else:
             data.append(line)
-    data = join_delimitor.join(i.strip() for i in data)
+    data = join_delimiter.join(i.strip() for i in data)
     if return_label:
         return label, data
     else:
