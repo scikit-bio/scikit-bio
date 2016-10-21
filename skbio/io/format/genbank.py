@@ -442,8 +442,7 @@ def _parse_single_genbank(chunks):
         elif header == 'ORIGIN':
             sequence = parsed
         elif header == 'FEATURES':
-            metadata[header] = parsed[0]
-            interval_metadata = parsed[1]
+            interval_metadata = parsed
         else:
             metadata[header] = parsed
     return sequence, metadata, interval_metadata
@@ -464,30 +463,26 @@ def _serialize_single_genbank(obj, fh):
     # write out the headers
     md = obj.metadata
     for header in _HEADERS:
+        serializer = _SERIALIZER_TABLE.get(
+            header, _serialize_section_default)
         if header in md:
-            serializer = _SERIALIZER_TABLE.get(
-                header, _serialize_section_default)
-            if header == 'FEATURES':
+            out = serializer(header, md[header])
+            # test if 'out' is a iterator.
+            # cf. Effective Python Item 17
+            if iter(out) is iter(out):
+                for s in out:
+                    fh.write(s)
+            else:
+                fh.write(out)
+        if header == 'FEATURES':
+            if obj.has_interval_metadata():
                 # magic number 21: the amount of indentation before
                 # feature table starts as defined by INSDC
                 indent = 21
-                fh.write('{header:<{indent}}Location/Qualifiers\n'
-                         '{feat}'.format(
-                             header=header, indent=indent,
-                             feat=_serialize_single_feature(
-                                 md[header], indent)))
+                fh.write('{header:<{indent}}Location/Qualifiers\n'.format(
+                    header=header, indent=indent))
                 for s in serializer(obj.interval_metadata._intervals, indent):
                     fh.write(s)
-            else:
-                out = serializer(header, md[header])
-                # test if 'out' is a iterator.
-                # cf. Effective Python Item 17
-                if iter(out) is iter(out):
-                    for s in out:
-                        fh.write(s)
-                else:
-                    fh.write(out)
-
     # write out the sequence
     # always write RNA seq as DNA
     if isinstance(obj, RNA):
@@ -636,26 +631,22 @@ def _serialize_source(header, obj, indent=12):
 
 
 def _parse_features(lines, length):
-    '''Parse FEATURES field.
+    '''Parse FEATURES section (feature table).
     '''
     imd = IntervalMetadata(length)
     # skip the 1st FEATURES line
     if lines[0].startswith('FEATURES'):
         lines = lines[1:]
-    # magic number 20: the lines following header of each feature
-    # are at least indented with 20 spaces.
-    feature_indent = ' ' * 20
+    # magic number 21: the lines following header of each feature
+    # are indented with 21 spaces.
+    feature_indent = ' ' * 21
     section_splitter = _yield_section(
         lambda x: not x.startswith(feature_indent),
         skip_blanks=True, strip=False)
-    section_iter = section_splitter(lines)
-    # 1st section is metadata for the whole sequence
-    section = next(section_iter)
-    md = _parse_single_feature(section)
-    # parse the rest sections of features
-    for section in section_iter:
+
+    for section in section_splitter(lines):
         _parse_single_feature(section, imd)
-    return md, imd
+    return imd
 
 
 def _serialize_features(intervals, indent=21):
@@ -668,7 +659,7 @@ def _serialize_features(intervals, indent=21):
         yield _serialize_single_feature(intvl.metadata, indent)
 
 
-def _parse_single_feature(lines, imd=None):
+def _parse_single_feature(lines, imd):
     '''Parse a feature.
 
     Parse a feature and add it to ``IntervalMetadata`` object.
@@ -690,8 +681,7 @@ def _parse_single_feature(lines, imd=None):
 
     metadata = {'__key__': feature_type, '__location__': feature_loc}
 
-    if imd is not None:
-        intvl = imd.add(*_parse_loc_str(feature_loc))
+    intvl = imd.add(*_parse_loc_str(feature_loc))
 
     for section in section_iter:
         # following sections are Qualifiers
@@ -709,10 +699,7 @@ def _parse_single_feature(lines, imd=None):
         else:
             metadata[k] = v
 
-    if imd is None:
-        return metadata
-    else:
-        intvl.metadata.update(metadata)
+    intvl.metadata.update(metadata)
 
 
 def _serialize_single_feature(intvl_md, indent=21):

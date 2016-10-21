@@ -87,6 +87,14 @@ class GenBankIOTests(TestCase):
         self.single_rna_fp = get_data_path('genbank_single_record')
         imd = IntervalMetadata(63)
         imd.add([(0, 63)],
+                [(False, False)],
+                {'db_xref': '"taxon:562"',
+                 'mol_type': '"mRNA"',
+                 'organism': '"Escherichia coli"',
+                 '__key__': 'source',
+                 '__strand__': 1,
+                 '__location__': '1..63'})
+        imd.add([(0, 63)],
                 [(False, True)],
                 {'codon_start': '1',
                  'db_xref': ['"GI:145230"', '"taxon:562"', '"taxon:561"'],
@@ -97,17 +105,11 @@ class GenBankIOTests(TestCase):
                  'transl_table': '11',
                  'translation': '"MKQSTIALAVLPLLFTPVTKA"',
                  '__key__': 'CDS'})
-
         self.single_rna = (
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'ACCESSION': 'M14399',
              'COMMENT': 'Original source text: E.coli, cDNA to mRNA.',
              'DEFINITION': "alkaline phosphatase signal mRNA, 5' end.",
-             'FEATURES': {'db_xref': '"taxon:562"',
-                          'mol_type': '"mRNA"',
-                          'organism': '"Escherichia coli"',
-                          '__key__': 'source',
-                          '__location__': '1..63'},
              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
              'LOCUS': {'date': '26-APR-1993',
                        'division': 'BCT',
@@ -131,12 +133,23 @@ class GenBankIOTests(TestCase):
         # 4. variation of formats
         self.multi_fp = get_data_path('genbank_multi_records')
         imd_pro = IntervalMetadata(9)
+        imd_pro.add([(0, 9)], [(False, False)],
+                    {'organism': '"Bacteria"',
+                     '__key__': 'source',
+                     '__strand__': 1,
+                     '__location__': '1..9'},)
         imd_pro.add([(0, 9)], [(False, True)],
                     {'__location__': '1..>9',
                      'product': '"L-carnitine amidase"',
                      '__strand__': 1,
                      '__key__': 'Protein'})
         imd_dna = IntervalMetadata(9)
+        imd_dna.add([(0, 9)], [(False, False)],
+                    {'country': '"Brazil: Parana, Paranavai"',
+                     '__key__': 'source',
+                     '__strand__': 1,
+                     '__location__': '1..9',
+                     'environmental_sample': ''})
         imd_dna.add([(1, 8)], [(True, True)],
                     {'__location__': 'complement(<2..>8)',
                      'product': '"16S ribosomal RNA"',
@@ -149,9 +162,6 @@ class GenBankIOTests(TestCase):
               'COMMENT': 'Method: direct peptide sequencing.',
               'DBSOURCE': 'accession AAB29917.1',
               'DEFINITION': 'L-carnitine amidase {N-terminal}',
-              'FEATURES': {'organism': '"Bacteria"',
-                           '__key__': 'source',
-                           '__location__': '1..9'},
               'KEYWORDS': '.',
               'LOCUS': {'date': '23-SEP-1994',
                         'division': 'BCT',
@@ -180,10 +190,6 @@ class GenBankIOTests(TestCase):
             ('catgcaggc',
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
-              'FEATURES': {'country': '"Brazil: Parana, Paranavai"',
-                           '__key__': 'source',
-                           '__location__': '1..9',
-                           'environmental_sample': ''},
               'KEYWORDS': 'ENV.',
               'LOCUS': {'date': '29-AUG-2010',
                         'division': 'ENV',
@@ -333,6 +339,7 @@ REFERENCE   1  (bases 1 to 154478)
         obs = _genbank_to_dna(self.multi_fp, seq_num=i+1)
         exp = DNA(exp[0], metadata=exp[1], lowercase=True,
                   interval_metadata=exp[2])
+
         self.assertEqual(exp, obs)
 
     def test_genbank_to_protein(self):
