@@ -96,7 +96,7 @@ class GenBankIOTests(TestCase):
                  'protein_id': '"AAA23431.1"',
                  'transl_table': '11',
                  'translation': '"MKQSTIALAVLPLLFTPVTKA"',
-                 '__type__': 'CDS'})
+                 '__key__': 'CDS'})
 
         self.single_rna = (
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
@@ -106,7 +106,7 @@ class GenBankIOTests(TestCase):
              'FEATURES': {'db_xref': '"taxon:562"',
                           'mol_type': '"mRNA"',
                           'organism': '"Escherichia coli"',
-                          '__type__': 'source',
+                          '__key__': 'source',
                           '__location__': '1..63'},
              'KEYWORDS': 'alkaline phosphatase; signal peptide.',
              'LOCUS': {'date': '26-APR-1993',
@@ -135,13 +135,13 @@ class GenBankIOTests(TestCase):
                     {'__location__': '1..>9',
                      'product': '"L-carnitine amidase"',
                      '__strand__': 1,
-                     '__type__': 'Protein'})
+                     '__key__': 'Protein'})
         imd_dna = IntervalMetadata(9)
         imd_dna.add([(1, 8)], [(True, True)],
                     {'__location__': 'complement(<2..>8)',
                      'product': '"16S ribosomal RNA"',
                      '__strand__': -1,
-                     '__type__': 'rRNA'})
+                     '__key__': 'rRNA'})
 
         self.multi = (
             ('gsreildfk',
@@ -150,7 +150,7 @@ class GenBankIOTests(TestCase):
               'DBSOURCE': 'accession AAB29917.1',
               'DEFINITION': 'L-carnitine amidase {N-terminal}',
               'FEATURES': {'organism': '"Bacteria"',
-                           '__type__': 'source',
+                           '__key__': 'source',
                            '__location__': '1..9'},
               'KEYWORDS': '.',
               'LOCUS': {'date': '23-SEP-1994',
@@ -181,7 +181,7 @@ class GenBankIOTests(TestCase):
              {'ACCESSION': 'HQ018078',
               'DEFINITION': 'Uncultured Xylanimonas sp.16S, partial',
               'FEATURES': {'country': '"Brazil: Parana, Paranavai"',
-                           '__type__': 'source',
+                           '__key__': 'source',
                            '__location__': '1..9',
                            'environmental_sample': ''},
               'KEYWORDS': 'ENV.',

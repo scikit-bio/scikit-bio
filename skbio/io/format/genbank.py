@@ -74,8 +74,7 @@ feature section:
 
     2. ``__location__``: the location string of the feature
 
-    3. ``__type__``: the molecular type of the feature. Its value is
-       from the header of the feature
+    3. ``__key__``: the feature key
 
 .. note:: The "dunder" (double underscore) keys are reserved with
    special meanings. The users should not use them to store interval
@@ -469,9 +468,8 @@ def _serialize_single_genbank(obj, fh):
             serializer = _SERIALIZER_TABLE.get(
                 header, _serialize_section_default)
             if header == 'FEATURES':
-                # magic number 21: the amount of indentation to
-                # output the features. This is not strict and can
-                # be other values (eg 22, 23, etc).
+                # magic number 21: the amount of indentation before
+                # feature table starts as defined by INSDC
                 indent = 21
                 fh.write('{header:<{indent}}Location/Qualifiers\n'
                          '{feat}'.format(
@@ -690,7 +688,7 @@ def _parse_single_feature(lines, imd=None):
     feature_type, feature_loc = _parse_section_default(
         section, join_delimiter='', return_label=True)
 
-    metadata = {'__type__': feature_type, '__location__': feature_loc}
+    metadata = {'__key__': feature_type, '__location__': feature_loc}
 
     if imd is not None:
         intvl = imd.add(*_parse_loc_str(feature_loc))
@@ -724,7 +722,8 @@ def _serialize_single_feature(intvl_md, indent=21):
     intvl_md : dict
         Interval.metadata
     '''
-    padding = ' ' * 8
+    # there are 5 spaces before Feature Key starts.
+    padding = ' ' * 5
     qualifiers = []
     for k in sorted(intvl_md):
         if k.endswith('__') and k.startswith('__'):
@@ -736,9 +735,10 @@ def _serialize_single_feature(intvl_md, indent=21):
         else:
             qualifiers.append(_serialize_qualifier(k, v))
 
+    # the qualifiers start at column 22
     qualifiers = [' ' * indent + i for i in qualifiers]
-    return '{header:>{indent}}{loc}\n{qualifiers}\n'.format(
-        header=intvl_md['__type__'] + padding,
+    return '{header:<{indent}}{loc}\n{qualifiers}\n'.format(
+        header=padding + intvl_md['__key__'],
         loc=intvl_md['__location__'],
         indent=indent,
         qualifiers='\n'.join(qualifiers))

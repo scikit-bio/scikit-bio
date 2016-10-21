@@ -8,11 +8,11 @@ SOURCE      Escherichia coli
             Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Escherichia.
 COMMENT     Original source text: E.coli, cDNA to mRNA.
 FEATURES             Location/Qualifiers
-       source        1..63
+     source          1..63
                      /db_xref="taxon:562"
                      /mol_type="mRNA"
                      /organism="Escherichia coli"
-          CDS        1..>63
+     CDS             1..>63
                      /codon_start=1
                      /db_xref="GI:145230"
                      /db_xref="taxon:562"
