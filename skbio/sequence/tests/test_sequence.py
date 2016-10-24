@@ -26,7 +26,9 @@ from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
+                                     IntervalMetadataMixinTests,
                                      PositionalMetadataMixinTests)
+from skbio.metadata import IntervalMetadata
 
 
 class SequenceSubclass(Sequence):
@@ -51,6 +53,17 @@ class TestSequencePositionalMetadata(TestCase, ReallyEqualMixin,
             return Sequence('Z' * axis_len,
                             positional_metadata=positional_metadata)
         self._positional_metadata_constructor_ = factory
+
+
+class TestSequenceIntervalMetadata(TestCase, ReallyEqualMixin,
+                                   IntervalMetadataMixinTests):
+    def setUp(self):
+        super()._set_up()
+
+        def factory(axis_len, interval_metadata=None):
+            return Sequence('Z' * axis_len,
+                            interval_metadata=interval_metadata)
+        self._interval_metadata_constructor_ = factory
 
 
 class TestSequenceBase(TestCase):
@@ -100,6 +113,37 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = SequenceSubclassTwo("123")
         with self.assertRaises(TypeError):
             SequenceSubclass.concat([seq1, seq2])
+
+    def test_concat_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq2.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2])
+        exp = Sequence('12345678')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(5, 7)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
+
+    def test_concat_one_seq_has_none_interval_metadata(self):
+        seq1 = Sequence("1234")
+        seq1.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        seq2 = Sequence("5678")
+        seq3 = Sequence("910")
+        seq3.interval_metadata.add(
+            [(1, 3)], [(False, True)], {'gene': 'sagB'})
+        obs = Sequence.concat([seq1, seq2, seq3])
+        exp = Sequence('12345678910')
+        exp.interval_metadata.add(
+            [(0, 2)], [(True, False)], {'gene': 'sagA'})
+        exp.interval_metadata.add(
+            [(9, 11)], [(False, True)], {'gene': 'sagB'})
+        self.assertEqual(exp, obs)
 
     def test_concat_default_how(self):
         seq1 = Sequence("1234", positional_metadata={'a': [1]*4})
@@ -199,14 +243,22 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(seq.metadata, {})
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame(index=range(11)))
+        self.assertEqual(seq.interval_metadata,
+                         IntervalMetadata(len(seq)))
 
     def test_init_nondefault_parameters(self):
-        seq = Sequence('.ABC123xyz-',
+        s = '.ABC123xyz-'
+        im = IntervalMetadata(len(s))
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
+        seq = Sequence(s,
                        metadata={'id': 'foo', 'description': 'bar baz'},
-                       positional_metadata={'quality': range(11)})
+                       positional_metadata={'quality': range(11)},
+                       interval_metadata=im)
+
+        self.assertEqual(seq.interval_metadata, im)
 
         npt.assert_equal(seq.values, np.array('.ABC123xyz-', dtype='c'))
-        self.assertEqual('.ABC123xyz-', str(seq))
+        self.assertEqual(s, str(seq))
 
         self.assertTrue(seq.metadata)
         self.assertEqual(seq.metadata, {'id': 'foo', 'description': 'bar baz'})
@@ -234,6 +286,9 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(0))
+
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(0)))
 
@@ -255,6 +310,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(1))
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(1)))
 
@@ -277,6 +334,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertFalse(seq.metadata)
             self.assertEqual(seq.metadata, {})
 
+            self.assertEqual(seq.interval_metadata,
+                             IntervalMetadata(14))
             assert_data_frame_almost_equal(seq.positional_metadata,
                                            pd.DataFrame(index=range(14)))
 
@@ -293,24 +352,34 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence('ACGT',
                        metadata={'id': 'foo', 'description': 'bar baz'},
                        positional_metadata={'quality': range(4)})
+        seq.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
         self.assertEqual(Sequence(seq), seq)
 
         # should be able to override metadata
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         self.assertEqual(
             Sequence(seq, metadata={'id': 'abc', 'description': '123'},
-                     positional_metadata={'quality': [42] * 4}),
+                     positional_metadata={'quality': [42] * 4},
+                     interval_metadata=im),
             Sequence('ACGT', metadata={'id': 'abc', 'description': '123'},
-                     positional_metadata={'quality': [42] * 4}))
+                     positional_metadata={'quality': [42] * 4},
+                     interval_metadata=im))
 
         # subclasses work too
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         seq = SequenceSubclass('ACGT',
                                metadata={'id': 'foo',
                                          'description': 'bar baz'},
-                               positional_metadata={'quality': range(4)})
+                               positional_metadata={'quality': range(4)},
+                               interval_metadata=im)
+
         self.assertEqual(
             Sequence(seq),
             Sequence('ACGT', metadata={'id': 'foo', 'description': 'bar baz'},
-                     positional_metadata={'quality': range(4)}))
+                     positional_metadata={'quality': range(4)},
+                     interval_metadata=im))
 
     def test_init_from_non_descendant_sequence_object(self):
         seq = SequenceSubclass('ACGT')
@@ -460,9 +529,13 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual(Sequence('xYzxxZz').observed_chars,
                          {'x', 'Y', 'z', 'Z'})
         self.assertEqual(Sequence('\t   ').observed_chars, {' ', '\t'})
+
+        im = IntervalMetadata(6)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         self.assertEqual(
             Sequence('aabbcc', metadata={'foo': 'bar'},
-                     positional_metadata={'foo': range(6)}).observed_chars,
+                     positional_metadata={'foo': range(6)},
+                     interval_metadata=im).observed_chars,
             {'a', 'b', 'c'})
 
         with self.assertRaises(AttributeError):
@@ -471,6 +544,11 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_eq_and_ne(self):
         seq_a = Sequence("A")
         seq_b = Sequence("B")
+
+        im = IntervalMetadata(1)
+        im.add([(0, 1)], metadata={'gene': 'sagA'})
+        im2 = IntervalMetadata(1)
+        im.add([(0, 1)], metadata={'gene': 'sagB'})
 
         self.assertTrue(seq_a == seq_a)
         self.assertTrue(Sequence("a") == Sequence("a"))
@@ -481,9 +559,11 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                         Sequence("a",
                                  metadata={'id': 'b', 'description': 'c'}))
         self.assertTrue(Sequence("a", metadata={'id': 'b', 'description': 'c'},
-                                 positional_metadata={'quality': [1]}) ==
+                                 positional_metadata={'quality': [1]},
+                                 interval_metadata=im) ==
                         Sequence("a", metadata={'id': 'b', 'description': 'c'},
-                                 positional_metadata={'quality': [1]}))
+                                 positional_metadata={'quality': [1]},
+                                 interval_metadata=im))
 
         self.assertTrue(seq_a != seq_b)
         self.assertTrue(SequenceSubclass("a") != Sequence("a"))
@@ -494,10 +574,18 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                                  metadata={'id': 'c', 'description': 't'}))
         self.assertTrue(Sequence("a", positional_metadata={'quality': [1]}) !=
                         Sequence("a"))
+        self.assertTrue(Sequence("a", interval_metadata=im) !=
+                        Sequence("a"))
+
         self.assertTrue(Sequence("a", positional_metadata={'quality': [1]}) !=
                         Sequence("a", positional_metadata={'quality': [2]}))
+        self.assertTrue(Sequence("a", interval_metadata=im) !=
+                        Sequence("a", interval_metadata=im2))
+
         self.assertTrue(Sequence("c", positional_metadata={'quality': [3]}) !=
                         Sequence("b", positional_metadata={'quality': [3]}))
+        self.assertTrue(Sequence("c", interval_metadata=im) !=
+                        Sequence("b", interval_metadata=im))
         self.assertTrue(Sequence("a", metadata={'id': 'b'}) !=
                         Sequence("c", metadata={'id': 'b'}))
 
@@ -520,12 +608,16 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_eq_sequences_from_different_sources_compare_equal(self):
         # sequences that have the same data but are constructed from different
         # types of data should compare equal
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'sagB'})
         seq1 = Sequence('ACGT', metadata={'id': 'foo', 'desc': 'abc'},
-                        positional_metadata={'quality': (1, 2, 3, 4)})
+                        positional_metadata={'quality': (1, 2, 3, 4)},
+                        interval_metadata=im)
         seq2 = Sequence(np.array([65, 67, 71, 84], dtype=np.uint8),
                         metadata={'id': 'foo', 'desc': 'abc'},
                         positional_metadata={'quality': np.array([1, 2, 3,
-                                                                  4])})
+                                                                  4])},
+                        interval_metadata=im)
         self.assertTrue(seq1 == seq2)
 
     def test_eq_type_mismatch(self):
@@ -544,6 +636,21 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq2 = Sequence('ACGT')
         self.assertFalse(seq1 == seq2)
 
+    def test_eq_interval_metadata_mismatch(self):
+        im1 = IntervalMetadata(4)
+        im1.add([(0, 3)], metadata={'gene': 'sagA'})
+        im2 = IntervalMetadata(4)
+        im2.add([(0, 2)], metadata={'gene': 'sagA'})
+        # both provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT', interval_metadata=im2)
+        self.assertFalse(seq1 == seq2)
+
+        # one provided
+        seq1 = Sequence('ACGT', interval_metadata=im1)
+        seq2 = Sequence('ACGT')
+        self.assertFalse(seq1 == seq2)
+
     def test_eq_sequence_mismatch(self):
         seq1 = Sequence('ACGT')
         seq2 = Sequence('TGCA')
@@ -552,6 +659,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
     def test_getitem_gives_new_sequence(self):
         seq = Sequence("Sequence string !1@2#3?.,")
         self.assertFalse(seq is seq[:])
+
+    def test_getitem_drops_interval_metadata(self):
+        s = "Sequence string !1@2#3?.,"
+        seq = Sequence(s, metadata={'id': 'id', 'description': 'dsc'})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': 'sagA'})
+
+        eseq = Sequence('Se', metadata={'id': 'id', 'description': 'dsc'})
+        self.assertEqual(seq[:2], eseq)
 
     def test_getitem_with_int_has_positional_metadata(self):
         s = "Sequence string !1@2#3?.,"
@@ -1091,12 +1206,16 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
                        metadata={'NM': 'Kestrel Gorlick'},
                        positional_metadata={'diff':
                                             list('01100001110010001100')})
+        seq.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
+
         index = self._make_index('01100001110010001100')
         obs = seq.replace(index, '-')
         exp = Sequence('G--CGGC---AA-CGC--CA',
                        metadata={'NM': 'Kestrel Gorlick'},
                        positional_metadata={'diff':
                                             list('01100001110010001100')})
+        exp.interval_metadata.add([(0, 1)], metadata={'gene': 'sagA'})
+
         self.assertEqual(obs, exp)
 
     def test_replace_with_subclass(self):
@@ -1922,6 +2041,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             seq = Sequence('ACGT', metadata={'foo': [1]},
                            positional_metadata={'bar': [[], [], [], []],
                                                 'baz': [42, 42, 42, 42]})
+            seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
+
             seq_copy = copy_method(seq)
 
             self.assertEqual(seq_copy, seq)
@@ -1935,7 +2056,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertIs(seq_copy._metadata['foo'], seq._metadata['foo'])
             self.assertIs(seq_copy._positional_metadata.loc[0, 'bar'],
                           seq._positional_metadata.loc[0, 'bar'])
-
+            self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+            self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                             seq.interval_metadata._intervals[0])
+            self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                             seq.interval_metadata._intervals[0].metadata)
+            self.assertIs(
+                seq_copy.interval_metadata._intervals[0].metadata['gene'],
+                seq.interval_metadata._intervals[0].metadata['gene'])
             seq_copy.metadata['foo'].append(2)
             seq_copy.metadata['foo2'] = 42
 
@@ -1960,6 +2088,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             seq = Sequence('ACGT', metadata={'foo': [1]},
                            positional_metadata={'bar': [[], [], [], []],
                                                 'baz': [42, 42, 42, 42]})
+            seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
             seq_copy = copy_method(seq)
 
             self.assertEqual(seq_copy, seq)
@@ -1973,7 +2102,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
             self.assertIsNot(seq_copy._positional_metadata.loc[0, 'bar'],
                              seq._positional_metadata.loc[0, 'bar'])
-
+            self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+            self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                             seq.interval_metadata._intervals[0])
+            self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                             seq.interval_metadata._intervals[0].metadata)
+            self.assertIsNot(
+                seq_copy.interval_metadata._intervals[0].metadata['gene'],
+                seq.interval_metadata._intervals[0].metadata['gene'])
             seq_copy.metadata['foo'].append(2)
             seq_copy.metadata['foo2'] = 42
 
@@ -2335,8 +2471,7 @@ class TestDistance(TestSequenceBase):
 # (TestSequence.test_repr) but cannot be relied upon for coverage (the unit
 # tests take care of this)
 class SequenceReprDoctests:
-    r"""
-    >>> import pandas as pd
+    r""">>> import pandas as pd
     >>> from skbio import Sequence
 
     Empty (minimal) sequence:
@@ -2504,9 +2639,10 @@ class SequenceReprDoctests:
     57180 opqrstuvwx yzABCDEFGH IJKLMNOPQR STUVWXYZ!" #$%&'()*+, -./:;<=>?@
     57240 [\]^_`{|}~ 0123456789 a space
 
-    Supply horrendous metadata and positional metadata to exercise a variety of
-    metadata formatting cases and rules. Sorting should be by type, then by
-    value within each type (Python 3 doesn't allow sorting of mixed types):
+    Supply horrendous metadata, positional, and interval metadata to
+    exercise a variety of metadata formatting cases and rules. Sorting
+    should be by type, then by value within each type (Python 3
+    doesn't allow sorting of mixed types):
 
     >>> metadata = {
     ...     # str key, str value
@@ -2550,8 +2686,14 @@ class SequenceReprDoctests:
     ...     ('abc' * 90, [True, False, False, True]),
     ...     # None key
     ...     (None, range(4))])
+    >>> interval_metadata = IntervalMetadata(4)
+    >>> _ = interval_metadata.add([(0, 2), (1, 3)],
+    ...                           [(False, True), (False, False)],
+    ...                           {'gene': 'p53'})
+    >>> _ = interval_metadata.add([(1, 4)])
     >>> Sequence('ACGT', metadata=metadata,
-    ...          positional_metadata=positional_metadata)
+    ...          positional_metadata=positional_metadata,
+    ...          interval_metadata=interval_metadata)
     Sequence
     -----------------------------------------------------------------------
     Metadata:
@@ -2581,10 +2723,13 @@ class SequenceReprDoctests:
         42: <dtype: object>
         <class 'str'>: <dtype: bool>
         None: <dtype: int64>
+    Interval metadata:
+        2 interval features
     Stats:
         length: 4
     -----------------------------------------------------------------------
     0 ACGT
+
     """
     pass
 

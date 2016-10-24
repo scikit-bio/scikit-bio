@@ -15,6 +15,7 @@ import pandas as pd
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
 from skbio.util import assert_data_frame_almost_equal
+from skbio.metadata import IntervalMetadata
 
 
 class ExampleGrammaredSequence(GrammaredSequence):
@@ -146,17 +147,23 @@ class TestGrammaredSequence(TestCase):
         self.assertEqual(seq.metadata, {})
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame(index=range(8)))
+        self.assertEqual(seq.interval_metadata,
+                         IntervalMetadata(8))
 
     def test_init_nondefault_parameters(self):
+        im = IntervalMetadata(8)
+        im.add([(1, 8)], metadata={'gene': 'p53'})
         seq = ExampleGrammaredSequence(
             '.-ABCXYZ',
             metadata={'id': 'foo'},
-            positional_metadata={'quality': range(8)})
+            positional_metadata={'quality': range(8)},
+            interval_metadata=im)
 
         npt.assert_equal(seq.values, np.array('.-ABCXYZ', dtype='c'))
         self.assertEqual(seq.metadata, {'id': 'foo'})
         assert_data_frame_almost_equal(seq.positional_metadata,
                                        pd.DataFrame({'quality': range(8)}))
+        self.assertEqual(seq.interval_metadata, im)
 
     def test_init_valid_empty_sequence(self):
         # just make sure we can instantiate an empty sequence regardless of

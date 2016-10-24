@@ -11,7 +11,7 @@ import copy
 import functools
 
 from ._intersection import IntervalTree
-from skbio.util._decorator import experimental
+from skbio.util._decorator import experimental, classonlymethod
 
 
 class Interval:
@@ -558,6 +558,80 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         # DONT' forget this!!!
         self._is_stale_tree = True
+
+    @classonlymethod
+    @experimental(as_of="0.5.0-dev")
+    def concat(cls, interval_metadata):
+        '''Concatenate an iterable of ``IntervalMetadata`` objects.
+
+        It concatenates the multiple ``IntervalMetadata`` objects into
+        one coordinate space. The order of the objects in the input
+        iterable matters. The coordinate of the second
+        ``InterableMetadata`` will be shifted up with the length of
+        the first ``IntervalMetadata`` object.
+
+        This function is useful when you concatenate multiple sequences.
+
+        Parameters
+        ----------
+        interval_metadata : Iterable (IntervalMetadata)
+            The interval metadata to concatenate.
+
+        Returns
+        -------
+        IntervalMetadata
+            Concatenated interval metadata.
+
+        Examples
+        --------
+        >>> from skbio.metadata import IntervalMetadata
+
+        Create two ``IntervalMetadata`` objects:
+
+        >>> im1 = IntervalMetadata(3)
+        >>> _ = im1.add([(0, 2)], [(True, False)], {'gene': 'sagA'})
+        >>> im2 = IntervalMetadata(4)
+        >>> _ = im2.add([(1, 4)], [(True, True)], {'gene': 'sagB'})
+
+        Concatenate them into a single coordinate space. The second
+        ``IntervalMetadata``'s interval features are all shifted
+        up. The resulting ``IntervalMetadata``'s upper bound is the
+        sum of upper bounds of concatenated objects:
+
+        >>> im = IntervalMetadata.concat([im1, im2])
+        >>> im   # doctest: +ELLIPSIS
+        2 interval features
+        -------------------
+        Interval(interval_metadata=<...>, bounds=[(0, 2)], \
+fuzzy=[(True, False)], metadata={'gene': 'sagA'})
+        Interval(interval_metadata=<...>, bounds=[(4, 7)], \
+fuzzy=[(True, True)], metadata={'gene': 'sagB'})
+        >>> im.upper_bound
+        7
+
+        '''
+        interval_metadata = list(interval_metadata)
+
+        if len(interval_metadata) == 0:
+            return cls(0)
+
+        upper_bound = 0
+        for im in interval_metadata:
+            upper_bound += im.upper_bound
+        new = cls(upper_bound)
+
+        length = 0
+        for i, im in enumerate(interval_metadata):
+            for intvl in im._intervals:
+                bounds = intvl.bounds
+                fuzzy = intvl.fuzzy
+                if i != 0:
+                    bounds = [(start + length, end + length)
+                              for start, end in bounds]
+                new.add(bounds, fuzzy, intvl.metadata)
+            length += im.upper_bound
+
+        return new
 
     @experimental(as_of='0.5.0-dev')
     def sort(self, ascending=True):

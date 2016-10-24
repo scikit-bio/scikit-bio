@@ -9,6 +9,7 @@
 import unittest
 
 from skbio import DNA, RNA
+from skbio.metadata import IntervalMetadata
 
 
 # tests specific to DNA go here. tests for functionality shared by DNA and RNA
@@ -27,10 +28,15 @@ class TestDNA(unittest.TestCase):
         self.assertEqual(DNA('TTTG').transcribe(), RNA('UUUG'))
 
     def test_transcribe_preserves_all_metadata(self):
+        im = IntervalMetadata(4)
+        im.add([(0, 2)], metadata={'gene': 'p53'})
+
         exp = RNA('AGUU', metadata={'foo': 'bar'},
-                  positional_metadata={'foo': range(4)})
+                  positional_metadata={'foo': range(4)},
+                  interval_metadata=im)
         seq = DNA('AGTT', metadata={'foo': 'bar'},
-                  positional_metadata={'foo': range(4)})
+                  positional_metadata={'foo': range(4)},
+                  interval_metadata=im)
         self.assertEqual(seq.transcribe(), exp)
 
     def test_transcribe_does_not_modify_input(self):

@@ -80,15 +80,15 @@ class NucleotideMixin(metaclass=ABCMeta):
         Parameters
         ----------
         reverse : bool, optional
-            If ``True``, return the reverse complement. If positional metadata
-            is present, it will be reversed.
+            If ``True``, return the reverse complement. If positional and/or
+            interval metadata are present, they will be reversed.
 
         Returns
         -------
         NucleotideMixin
             The (reverse) complement of the nucleotide sequence. The type and
             metadata of the result will be the same as the nucleotide
-            sequence. If `reverse` is ``True``, positional metadata
+            sequence. If `reverse` is ``True``, positional or interval metadata
             will be reversed if it is present.
 
         See Also
@@ -160,7 +160,18 @@ class NucleotideMixin(metaclass=ABCMeta):
             positional_metadata=positional_metadata)
 
         if reverse:
+            # this has to be before the interval metadata code,
+            # because __gititem__ drops interval_metadata.
             complement = complement[::-1]
+
+        if self.has_interval_metadata():
+            complement.interval_metadata = self.interval_metadata
+            if reverse:
+                # TODO: this can be revised to match
+                # positional_metadata when __getitem__
+                # supports interval_metadata
+                complement.interval_metadata._reverse()
+
         return complement
 
     @stable(as_of='0.4.0')
