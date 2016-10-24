@@ -8,6 +8,7 @@
 * `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * Added `IntervalMetadata` and `Interval` classes in `skbio.metadata` to store, query, and manipulate information of a sub-region of a sequence. ([#1414](https://github.com/biocore/scikit-bio/issues/1414)).
 * `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) now takes `IntervalMetadata` in their contructor API. Some of their relevant methods are also updated acoordingly. ([#1430](https://github.com/biocore/scikit-bio/pull/1430))
+* Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/biocore/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/biocore/scikit-bio/pull/1352)). 
 
 ### Backward-incompatible changes [stable]
 * The constructor API for `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) are changed from:
