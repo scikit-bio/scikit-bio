@@ -66,19 +66,7 @@ headed with "source" (which is saved in ``metadata``), is stored in
 ``interval_metadata`` of ``Sequence`` or its sub-class. Each feature
 is stored as an ``Interval`` object in ``interval_metadata``. Each
 ``Interval`` object has ``metadata`` keeping the information of the
-feature. There are a few extra keys besides the qualifiers in each
-feature section:
-
-    1. ``__strand__``: the strand of the feature located. Positive
-       strand is stored as value of `1` and negative as `-1`.
-
-    2. ``__location__``: the location string of the feature
-
-    3. ``__key__``: the feature key
-
-.. note:: The "dunder" (double underscore) keys are reserved with
-   special meanings. The users should not use them to store interval
-   feature metadata.
+feature.
 
 There are 5 types of location descriptors in GenBank file. This
 explains how they will be parsed into the bounds of ``Interval``
@@ -105,8 +93,7 @@ object (note it converts the 1-based coordinate to 0-based.):
 When a location string has descriptors across strands
 (e.g. join(complement(123..145),200..209)), it will record all the span
 parts (``[(122, 145), (199, 209)]``). It will record the value of
-``__strand__`` as ``-1`` as long as this feature has part(s) on negative
-strand.
+``strand`` as ``?`` (meaning its strandedness is undetermined.)
 
 .. note:: The location information is fully stored in
    ``Interval.metadata`` with key ``__location__``. The parser tries
@@ -288,6 +275,7 @@ from skbio.io.format._base import (
 from skbio.util._misc import chunk_str
 from skbio.sequence import Sequence, DNA, RNA, Protein
 from skbio.metadata import IntervalMetadata
+from skbio.io.format._feature_table import _vocabulary_change, _vocabulary_skip
 
 
 genbank = create_format('genbank')
@@ -656,7 +644,7 @@ def _serialize_features(intervals, indent=21):
     intervals : list of ``Interval``
     '''
     for intvl in intervals:
-        yield _serialize_single_feature(intvl.metadata, indent)
+        yield _serialize_single_feature(intvl, indent)
 
 
 def _parse_single_feature(lines, imd):
@@ -668,6 +656,8 @@ def _parse_single_feature(lines, imd):
     ----------
     imd : IntervalMetadata
     '''
+    voca_change = _vocabulary_change('genbank')
+
     # each component of a feature starts with '/', except the 1st
     # component of location.
     section_splitter = _yield_section(
@@ -679,7 +669,7 @@ def _parse_single_feature(lines, imd):
     feature_type, feature_loc = _parse_section_default(
         section, join_delimiter='', return_label=True)
 
-    metadata = {'__key__': feature_type, '__location__': feature_loc}
+    metadata = {'type': feature_type, '__location': feature_loc}
 
     intvl = imd.add(*_parse_loc_str(feature_loc))
 
@@ -690,6 +680,8 @@ def _parse_single_feature(lines, imd):
             join_delimiter=' ', return_label=True)
         # 1st char is '/'
         k = k[1:]
+        if k in voca_change:
+            k = voca_change[k]
 
         # some Qualifiers can appear multiple times
         if k in metadata:
@@ -702,33 +694,67 @@ def _parse_single_feature(lines, imd):
     intvl.metadata.update(metadata)
 
 
-def _serialize_single_feature(intvl_md, indent=21):
+def _serialize_single_feature(intvl, indent=21):
     '''
     Parameters
     ----------
-    intvl_md : dict
-        Interval.metadata
+    intvl : Interval
     '''
     # there are 5 spaces before Feature Key starts.
     padding = ' ' * 5
     qualifiers = []
-    for k in sorted(intvl_md):
-        if k.endswith('__') and k.startswith('__'):
+    md = intvl.metadata
+    voca_skip = _vocabulary_skip('genbank')
+    voca_change = _vocabulary_change('genbank', read_in=False)
+    # sort it so the output order is deterministic
+    for k in sorted(md):
+        if k.startswith('__') or k in voca_skip:
             continue
-        v = intvl_md[k]
+        v = md[k]
+        if k in voca_change:
+            k = voca_change[k]
         if isinstance(v, list):
             for vi in v:
                 qualifiers.append(_serialize_qualifier(k, vi))
         else:
             qualifiers.append(_serialize_qualifier(k, v))
 
+    if '__location' in md:
+        loc = md['__location']
+    else:
+        loc = _serialize_location(intvl)
     # the qualifiers start at column 22
     qualifiers = [' ' * indent + i for i in qualifiers]
     return '{header:<{indent}}{loc}\n{qualifiers}\n'.format(
-        header=padding + intvl_md['__key__'],
-        loc=intvl_md['__location__'],
+        header=padding + md['type'],
+        loc=loc,
         indent=indent,
         qualifiers='\n'.join(qualifiers))
+
+
+def _serialize_location(intvl):
+    loc = []
+    for bound, fuzzy in zip(intvl.bounds, intvl.fuzzy):
+        start, end = bound
+        start += 1
+        if start == end:
+            s = str(start)
+        elif fuzzy[0] and fuzzy[1]:
+            s = '<%d..>%d' % (start, end)
+        elif fuzzy[0] and not fuzzy[1]:
+            s = '<%d..%d' % (start, end)
+        elif not fuzzy[0] and fuzzy[1]:
+            s = '%d..>%d' % (start, end)
+        else:
+            s = '%d..%d' % (start, end)
+        loc.append(s)
+    if len(loc) > 1:
+        loc_str = 'join({})'.format(','.join(loc))
+    else:
+        loc_str = loc[0]
+    if intvl.metadata.get('strand') == '-':
+        loc_str = 'complement({})'.format(loc_str)
+    return loc_str
 
 
 def _serialize_qualifier(key, value):
@@ -800,12 +826,12 @@ def _parse_loc_str(loc_str):
     bounds = []
     fuzzy = []
 
-    metadata = {'__strand__': 1}
+    metadata = {'strand': '+'}
 
     for m in iter(scanner.match, None):
         p, v = m.lastgroup, m.group()
         if v == 'complement':
-            metadata['__strand__'] = -1
+            metadata['strand'] = '-'
         elif p == 'A':
             start = int(v)
             bounds.append((start-1, start))

@@ -13,11 +13,11 @@ FEATURES             Location/Qualifiers
                      /mol_type="mRNA"
                      /organism="Escherichia coli"
      CDS             1..>63
-                     /codon_start=1
                      /db_xref="GI:145230"
                      /db_xref="taxon:562"
                      /db_xref="taxon:561"
                      /note="alkaline phosphatase signal peptide"
+                     /codon_start=1
                      /protein_id="AAA23431.1"
                      /transl_table=11
                      /translation="MKQSTIALAVLPLLFTPVTKA"

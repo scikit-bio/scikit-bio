@@ -21,7 +21,7 @@ from skbio.io.format.genbank import (
     _parse_loc_str, _parse_section_default,
     _generator_to_genbank, _sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
-    _serialize_locus)
+    _serialize_locus, _serialize_location)
 
 
 class SnifferTests(TestCase):
@@ -91,20 +91,20 @@ class GenBankIOTests(TestCase):
                 {'db_xref': '"taxon:562"',
                  'mol_type': '"mRNA"',
                  'organism': '"Escherichia coli"',
-                 '__key__': 'source',
-                 '__strand__': 1,
-                 '__location__': '1..63'})
+                 'type': 'source',
+                 'strand': '+',
+                 '__location': '1..63'})
         imd.add([(0, 63)],
                 [(False, True)],
-                {'codon_start': '1',
+                {'phase': '1',
                  'db_xref': ['"GI:145230"', '"taxon:562"', '"taxon:561"'],
-                 '__location__': '1..>63',
-                 '__strand__': 1,
+                 '__location': '1..>63',
+                 'strand': '+',
                  'note': '"alkaline phosphatase signal peptide"',
                  'protein_id': '"AAA23431.1"',
                  'transl_table': '11',
                  'translation': '"MKQSTIALAVLPLLFTPVTKA"',
-                 '__key__': 'CDS'})
+                 'type': 'CDS'})
         self.single_rna = (
             'gugaaacaaagcacuauugcacuggcugucuuaccguuacuguuuaccccugugacaaaagcc',
             {'ACCESSION': 'M14399',
@@ -135,26 +135,26 @@ class GenBankIOTests(TestCase):
         imd_pro = IntervalMetadata(9)
         imd_pro.add([(0, 9)], [(False, False)],
                     {'organism': '"Bacteria"',
-                     '__key__': 'source',
-                     '__strand__': 1,
-                     '__location__': '1..9'},)
+                     'type': 'source',
+                     'strand': '+',
+                     '__location': '1..9'},)
         imd_pro.add([(0, 9)], [(False, True)],
-                    {'__location__': '1..>9',
+                    {'__location': '1..>9',
                      'product': '"L-carnitine amidase"',
-                     '__strand__': 1,
-                     '__key__': 'Protein'})
+                     'strand': '+',
+                     'type': 'Protein'})
         imd_dna = IntervalMetadata(9)
         imd_dna.add([(0, 9)], [(False, False)],
                     {'country': '"Brazil: Parana, Paranavai"',
-                     '__key__': 'source',
-                     '__strand__': 1,
-                     '__location__': '1..9',
+                     'type': 'source',
+                     'strand': '+',
+                     '__location': '1..9',
                      'environmental_sample': ''})
         imd_dna.add([(1, 8)], [(True, True)],
-                    {'__location__': 'complement(<2..>8)',
+                    {'__location': 'complement(<2..>8)',
                      'product': '"16S ribosomal RNA"',
-                     '__strand__': -1,
-                     '__key__': 'rRNA'})
+                     'strand': '-',
+                     'type': 'rRNA'})
 
         self.multi = (
             ('gsreildfk',
@@ -277,17 +277,17 @@ REFERENCE   1  (bases 1 to 154478)
             '1^2']
 
         expects = [
-            ([(8, 9)], [(False, False)], {'__strand__': 1}),
-            ([(2, 8)], [(False, False)], {'__strand__': 1}),
-            ([(2, 8)], [(True, False)],  {'__strand__': 1}),
-            ([(2, 8)], [(False, True)],  {'__strand__': 1}),
-            ([(2, 8)], [(False, True)],  {'__strand__': -1}),
+            ([(8, 9)], [(False, False)], {'strand': '+'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'}),
+            ([(2, 8)], [(True, False)],  {'strand': '+'}),
+            ([(2, 8)], [(False, True)],  {'strand': '+'}),
+            ([(2, 8)], [(False, True)],  {'strand': '-'}),
             ([(2, 5), (6, 9)], [(False, True), (True, False)],
-             {'__strand__': -1}),
-            ([(2, 8)], [(False, False)], {'__strand__': 1}),
-            ([(2, 8)], [(False, False)], {'__strand__': 1}),
-            ([(0, 9)], [(False, False)], {'__strand__': 1}),
-            ([(0, 1)], [(False, False)], {'__strand__': 1})]
+             {'strand': '-'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'}),
+            ([(0, 9)], [(False, False)], {'strand': '+'}),
+            ([(0, 1)], [(False, False)], {'strand': '+'})]
 
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example)
@@ -331,6 +331,7 @@ REFERENCE   1  (bases 1 to 154478)
         obs = _genbank_to_rna(self.single_rna_fp)
         exp = constructor(seq, metadata=md,
                           lowercase=True, interval_metadata=imd)
+
         self.assertEqual(exp, obs)
 
     def test_genbank_to_dna(self):
@@ -356,6 +357,26 @@ class WriterTests(GenBankIOTests):
         for serialized, parsed in self.locus:
             self.assertEqual(
                 _serialize_locus('LOCUS', parsed), serialized[0] + '\n')
+
+    def test_serialize_location(self):
+        imd = IntervalMetadata(9)
+        i1 = imd.add([(0, 1)])
+        self.assertEqual(_serialize_location(i1), '1')
+
+        i2 = imd.add([(0, 2)], [(True, True)])
+        self.assertEqual(_serialize_location(i2), '<1..>2')
+
+        i3 = imd.add([(0, 2)], [(False, True)])
+        self.assertEqual(_serialize_location(i3), '1..>2')
+
+        i4 = imd.add([(0, 2)], [(True, False)])
+        self.assertEqual(_serialize_location(i4), '<1..2')
+
+        i5 = imd.add([(0, 2), (3, 9)], metadata={'strand': '-'})
+        self.assertEqual(_serialize_location(i5), 'complement(join(1..2,4..9))')
+
+        i6 = imd.add([(0, 2), (3, 9)], [(True, False), (False, True)], metadata={'strand': '-'})
+        self.assertEqual(_serialize_location(i6), 'complement(join(<1..2,4..>9))')
 
     def test_generator_to_genbank(self):
         seq, md, imd, constructor = self.single
