@@ -1,20 +1,18 @@
 """GenBank format (:mod:`skbio.io.format.genbank`)
-===============================================
+==================================================
 
 .. currentmodule:: skbio.io.format.genbank
 
-GenBank format (GenBank Flat File Format) stores sequence and its annotation
-together. The start of the annotation section is marked by a line beginning
-with the word "LOCUS". The start of sequence section is marked by a line
-beginning with the word "ORIGIN" and the end of the section is marked by a line
-with only "//".
+GenBank format (GenBank Flat File Format) stores sequence and its
+annotation together. The start of the annotation section is marked by
+a line beginning with the word "LOCUS". The start of sequence section
+is marked by a line beginning with the word "ORIGIN" and the end of
+the section is marked by a line with only "//".
 
-The GenBank file usually ends with .gb or sometimes .gbk. The GenBank format
-for protein has been renamed to GenPept. The GenBank (for nucleotide) and
-Genpept are essentially the same format.
-
-An example of a GenBank file can be see here:
-<http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html>
+The GenBank file usually ends with .gb or sometimes .gbk. The GenBank
+format for protein has been renamed to GenPept. The GenBank (for
+nucleotide) and Genpept are essentially the same format. An example of
+a GenBank file can be seen here [1]_.
 
 Format Support
 --------------
@@ -38,39 +36,85 @@ Format Specification
 --------------------
 **State: Experimental as of 0.4.1.**
 
-The International Nucleotide Sequence Database Collaboration (INSDC)
-foundational initiative between the DDBJ, EMBL, and GenBank
-(http://www.insdc.org/). These organisations all use the
-same "Feature Table" layout in their plain text flat file formats.
-
-However, the header and sequence sections of an EMBL file are very
-different in layout to those produced by GenBank/DDBJ.
-
-Feature Table Documentation:
-http://www.insdc.org/files/feature_table.html
-ftp://ftp.ncbi.nih.gov/genbank/docs/FTv10_3.html
-
-The sequence in the ``ORIGIN`` section is always in lowercase for
-the GenBank files downloaded from NCBI. For the RNA molecules, ``t``
-(thymine), instead of ``u`` (uracil) is used in the sequence. All
-GenBank writers follow these conventions while writing GenBank files.
-
-All the sections before ``FEATURES`` will be read into ``metadata`` of
-``Sequence`` or its sub-class. The header and its content of a section
-is stored as a pair of key and value in ``metadata``. For the ``REFERENCE``
+Sections before ``FEATURES``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+All the sections before ``FEATURES`` will be read into the attribute
+of ``metadata``. The header and its content of a section is stored as
+a pair of key and value in ``metadata``. For the ``REFERENCE``
 section, its value is stored as a list, as there are often multiple
 reference sections in one GenBank record.
 
-The information of all ``FEATURES`` sections, except the 1st section
-headed with "source" (which is saved in ``metadata``), is stored in
-``interval_metadata`` of ``Sequence`` or its sub-class. Each feature
-is stored as an ``Interval`` object in ``interval_metadata``. Each
-``Interval`` object has ``metadata`` keeping the information of the
-feature.
+``FEATURES`` section
+^^^^^^^^^^^^^^^^^^^^
+The International Nucleotide Sequence Database Collaboration (INSDC
+[2]_) foundational initiative between the DDBJ, EMBL, and
+GenBank. These organisations all use the same "Feature Table" layout
+in their plain text flat file formats, which are documented in detail
+[3]_. The feature keys and their qualifiers are also described in this
+webpage [4]_.
 
-There are 5 types of location descriptors in GenBank file. This
+The ``FEATURES`` section will be stored in ``interval_metadata`` of
+``Sequence`` or its sub-class. Each sub-section is stored as an
+``Interval`` object in ``interval_metadata``. Each ``Interval`` object
+has ``metadata`` keeping the information of this feature in the
+sub-section.
+
+To normalize the vocabulary between multiple formats (currently only
+the INSDC Feature Table and GFF3) to store metadata of interval
+features, we rename some terms in some formats to the same common name
+when parsing them into memory, as described in this table:
+
++-----------+-----------+-----------+---------+------------------------------+
+|   INSDC   |   GFF3    |    Key    |  Value  |         Description          |
+|  feature  |columns or |  stored   |  type   |                              |
+|   table   |attributes |           | stored  |                              |
++-----------+-----------+-----------+---------+------------------------------+
+|    N/A    |  source   |  source   |   str   |the algorithm or experiment   |
+|           |(column 2) |           |         |used to generate this feature |
++-----------+-----------+-----------+---------+------------------------------+
+|feature key|   type    |   type    |   str   |the type of the feature       |
+|           |(column 3) |           |         |                              |
++-----------+-----------+-----------+---------+------------------------------+
+|    N/A    |   score   |   score   |  float  |the score of the feature      |
+|           |(column 6) |           |         |                              |
++-----------+-----------+-----------+---------+------------------------------+
+|    N/A    |  strand   |  strand   |   str   |the strand of the feature. +  |
+|           |(column 7) |           |         |for positive strand, - for    |
+|           |           |           |         |minus strand, and . for       |
+|           |           |           |         |features that are not         |
+|           |           |           |         |stranded. In addition, ?  can |
+|           |           |           |         |be used for features whose    |
+|           |           |           |         |strandedness is relevant, but |
+|           |           |           |         |unknown.                      |
++-----------+-----------+-----------+---------+------------------------------+
+|codon_start|   phase   |   phase   | int (0, |the offset at which the first |
+|           |(column 8) |           |   1,    |complete codon of a coding    |
+|           |           |           |  or 2)  |feature can be found, relative|
+|           |           |           |         |to the first base of that     |
+|           |           |           |         |feature. It is 0, 1, or 2 in  |
+|           |           |           |         |GFF3 or 1, 2, or 3 in GenBank |
++-----------+-----------+-----------+---------+------------------------------+
+|  db_xref  |  Dbxref   |  db_xref  | list of |A database cross reference    |
+|           |           |           |   str   |                              |
++-----------+-----------+-----------+---------+------------------------------+
+| locus_tag |    ID     | locus_tag |   str   |a submitter-supplied,         |
+|           |           |           |         |systematic, stable identifier |
+|           |           |           |         |for a gene and its associated |
+|           |           |           |         |features, used for tracking   |
+|           |           |           |         |purposes                      |
++-----------+-----------+-----------+---------+------------------------------+
+|   note    |   Note    |   note    |   str   |any comment or additional     |
+|           |           |           |         |information                   |
++-----------+-----------+-----------+---------+------------------------------+
+|translation|    N/A    |translation|   str   |the protein sequence for CDS  |
+|           |           |           |         |features                      |
++-----------+-----------+-----------+---------+------------------------------+
+
+``Location`` string
++++++++++++++++++++
+There are 5 types of location descriptors in Feature Table. This
 explains how they will be parsed into the bounds of ``Interval``
-object (note it converts the 1-based coordinate to 0-based.):
+object (note it converts the 1-based coordinate to 0-based):
 
     1. a single base number. e.g. 467. This is parsed to ``(466, 467)``.
 
@@ -96,9 +140,15 @@ parts (``[(122, 145), (199, 209)]``). It will record the value of
 ``strand`` as ``?`` (meaning its strandedness is undetermined.)
 
 .. note:: The location information is fully stored in
-   ``Interval.metadata`` with key ``__location__``. The parser tries
-   to keep all those information, but it may lose some due to the
-   limit of data structure.
+   ``Interval.metadata`` with key ``__location``.
+
+``ORIGIN`` section
+^^^^^^^^^^^^^^^^^^
+The sequence in the ``ORIGIN`` section is always in lowercase for
+the GenBank files downloaded from NCBI. For the RNA molecules, ``t``
+(thymine), instead of ``u`` (uracil) is used in the sequence. All
+GenBank writers follow these conventions while writing GenBank files.
+
 
 Format Parameters
 -----------------
@@ -127,7 +177,7 @@ Examples
 
 Reading and Writing GenBank Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Suppose we have the following GenBank file [example modified from [1_]::
+Suppose we have the following GenBank file example modified from [5]_::
 
 
 >>> gb_str = '''
@@ -252,7 +302,11 @@ ORIGIN
 
 References
 ----------
-.. [1_] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
+.. _[1]: http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html
+.. _[2]: http://www.insdc.org/
+.. _[3]: http://www.insdc.org/files/feature_table.html
+.. _[4]: http://www.ebi.ac.uk/ena/WebFeat/
+.. _[5]: http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
 
 """
 
