@@ -172,14 +172,13 @@ Metadata:
     'ACCESSION': '3K1V_A'
     'COMMENT': 'SEQRES.'
     'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
-    'FEATURES': <class 'dict'>
     'KEYWORDS': '.'
     'LOCUS': <class 'dict'>
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
 Interval metadata:
-    1 interval feature
+    2 interval features
 Stats:
     length: 34
     has gaps: False
@@ -203,14 +202,13 @@ Metadata:
     'ACCESSION': '3K1V_A'
     'COMMENT': 'SEQRES.'
     'DEFINITION': 'Chain A, Structure Of A Mutant Class-I Preq1.'
-    'FEATURES': <class 'dict'>
     'KEYWORDS': '.'
     'LOCUS': <class 'dict'>
     'REFERENCE': <class 'list'>
     'SOURCE': <class 'dict'>
     'VERSION': '3K1V_A  GI:260656459'
 Interval metadata:
-    1 interval feature
+    2 interval features
 Stats:
     length: 34
     has gaps: False
@@ -240,11 +238,11 @@ REFERENCE   1  (bases 1 to 34)
   PUBMED    19234468
 COMMENT     SEQRES.
 FEATURES             Location/Qualifiers
-       source        1..34
+     source          1..34
                      /db_xref="taxon:32630"
                      /mol_type="other RNA"
                      /organism="synthetic construct"
- misc_binding        1..30
+     misc_binding    1..30
                      /bound_moiety="preQ1"
                      /note="Preq1 riboswitch"
 ORIGIN
