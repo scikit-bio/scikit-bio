@@ -19,10 +19,11 @@
 ### Backward-incompatible changes [experimental]
 * Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex.
 * `DistanceMatrix.from_iterable` default behavior is now to validate matrix by computing all pairwise distances. Pass `validate=False` to get the previous behavior (no validation, but faster execution).([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
+* GenBank I/O now parses sequence features into the attribute of `interval_metadata` instead of `positiona_metadata`. And the key of `FEATURES` is removed from `metadata` attribute.
 
 ### Performance enhancements
 * `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
-* The `IntervalMetadata` allows dramatic decrease in memory usage for feature rich sequences. ([#1159](https://github.com/biocore/scikit-bio/issues/1159))
+* The `IntervalMetadata` allows dramatic decrease in memory usage in reading GenBank files of feature rich sequences. ([#1159](https://github.com/biocore/scikit-bio/issues/1159))
 
 ### Bug fixes
 
