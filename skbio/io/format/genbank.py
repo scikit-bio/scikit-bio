@@ -1,5 +1,6 @@
-"""GenBank format (:mod:`skbio.io.format.genbank`)
-==================================================
+"""
+GenBank format (:mod:`skbio.io.format.genbank`)
+===============================================
 
 .. currentmodule:: skbio.io.format.genbank
 
@@ -65,20 +66,20 @@ features, we rename some terms in some formats to the same common name
 when parsing them into memory, as described in this table:
 
 +-----------+-----------+-----------+---------+------------------------------+
-|   INSDC   |   GFF3    |    Key    |  Value  |         Description          |
-|  feature  |columns or |  stored   |  type   |                              |
-|   table   |attributes |           | stored  |                              |
-+-----------+-----------+-----------+---------+------------------------------+
-|    N/A    |  source   |  source   |   str   |the algorithm or experiment   |
+|INSDC      |GFF3       |Key stored |Value    |Description                   |
+|feature    |columns or |           |type     |                              |
+|table      |attributes |           |stored   |                              |
++===========+===========+===========+=========+==============================+
+|N/A        |source     |source     |str      |the algorithm or experiment   |
 |           |(column 2) |           |         |used to generate this feature |
 +-----------+-----------+-----------+---------+------------------------------+
-|feature key|   type    |   type    |   str   |the type of the feature       |
+|feature key|type       |type       |str      |the type of the feature       |
 |           |(column 3) |           |         |                              |
 +-----------+-----------+-----------+---------+------------------------------+
-|    N/A    |   score   |   score   |  float  |the score of the feature      |
+|N/A        |score      |score      |float    |the score of the feature      |
 |           |(column 6) |           |         |                              |
 +-----------+-----------+-----------+---------+------------------------------+
-|    N/A    |  strand   |  strand   |   str   |the strand of the feature. +  |
+|N/A        |strand     |strand     |str      |the strand of the feature. +  |
 |           |(column 7) |           |         |for positive strand, - for    |
 |           |           |           |         |minus strand, and . for       |
 |           |           |           |         |features that are not         |
@@ -87,26 +88,26 @@ when parsing them into memory, as described in this table:
 |           |           |           |         |strandedness is relevant, but |
 |           |           |           |         |unknown.                      |
 +-----------+-----------+-----------+---------+------------------------------+
-|codon_start|   phase   |   phase   | int (0, |the offset at which the first |
-|           |(column 8) |           |   1,    |complete codon of a coding    |
-|           |           |           |  or 2)  |feature can be found, relative|
+|codon_start|phase      |phase      |int (0,  |the offset at which the first |
+|           |(column 8) |           |1, or 2) |complete codon of a coding    |
+|           |           |           |         |feature can be found, relative|
 |           |           |           |         |to the first base of that     |
 |           |           |           |         |feature. It is 0, 1, or 2 in  |
 |           |           |           |         |GFF3 or 1, 2, or 3 in GenBank |
 +-----------+-----------+-----------+---------+------------------------------+
-|  db_xref  |  Dbxref   |  db_xref  | list of |A database cross reference    |
-|           |           |           |   str   |                              |
+|db_xref    |Dbxref     |db_xref    |list of  |A database cross reference    |
+|           |           |           |str      |                              |
 +-----------+-----------+-----------+---------+------------------------------+
-| locus_tag |    ID     | locus_tag |   str   |a submitter-supplied,         |
+|locus_tag  |ID         |locus_tag  |str      |a submitter-supplied,         |
 |           |           |           |         |systematic, stable identifier |
 |           |           |           |         |for a gene and its associated |
 |           |           |           |         |features, used for tracking   |
 |           |           |           |         |purposes                      |
 +-----------+-----------+-----------+---------+------------------------------+
-|   note    |   Note    |   note    |   str   |any comment or additional     |
+|note       |Note       |note       |str      |any comment or additional     |
 |           |           |           |         |information                   |
 +-----------+-----------+-----------+---------+------------------------------+
-|translation|    N/A    |translation|   str   |the protein sequence for CDS  |
+|translation|N/A        |translation|str      |the protein sequence for CDS  |
 |           |           |           |         |features                      |
 +-----------+-----------+-----------+---------+------------------------------+
 
@@ -133,6 +134,7 @@ object (note it converts the 1-based coordinate to 0-based):
        discarded because it is not on the current sequence. When it is
        combined with local descriptor like J00194.1:100..202,200..209,
        the local part will be kept to be ``(199, 209)``.
+
 
 .. note:: The Location string is fully stored in ``Interval.metadata``
    with key ``__location``.  The key starting with ``__`` will be
@@ -174,8 +176,7 @@ Examples
 
 Reading and Writing GenBank Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Suppose we have the following GenBank file example modified from [5]_::
-
+Suppose we have the following GenBank file example modified from [5]_:
 
 >>> gb_str = '''
 ... LOCUS       3K1V_A       34 bp    RNA     linear   SYN 10-OCT-2012
@@ -299,11 +300,11 @@ ORIGIN
 
 References
 ----------
-.. _[1]: http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html
-.. _[2]: http://www.insdc.org/
-.. _[3]: http://www.insdc.org/files/feature_table.html
-.. _[4]: http://www.ebi.ac.uk/ena/WebFeat/
-.. _[5]: http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
+.. [1] http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html
+.. [2] http://www.insdc.org/
+.. [3] http://www.insdc.org/files/feature_table.html
+.. [4] http://www.ebi.ac.uk/ena/WebFeat/
+.. [5] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
 
 """
 
