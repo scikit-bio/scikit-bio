@@ -134,13 +134,10 @@ object (note it converts the 1-based coordinate to 0-based):
        combined with local descriptor like J00194.1:100..202,200..209,
        the local part will be kept to be ``(199, 209)``.
 
-When a location string has descriptors across strands
-(e.g. join(complement(123..145),200..209)), it will record all the span
-parts (``[(122, 145), (199, 209)]``). It will record the value of
-``strand`` as ``?`` (meaning its strandedness is undetermined.)
+.. note:: The Location string is fully stored in ``Interval.metadata``
+   with key ``__location``.  The key starting with ``__`` will be
+   ignored when outputting to a file.
 
-.. note:: The location information is fully stored in
-   ``Interval.metadata`` with key ``__location``.
 
 ``ORIGIN`` section
 ^^^^^^^^^^^^^^^^^^

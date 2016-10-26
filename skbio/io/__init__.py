@@ -26,6 +26,7 @@ see the associated documentation.
    phylip
    qseq
    stockholm
+   genbank
 
 .. currentmodule:: skbio.io.registry
 
