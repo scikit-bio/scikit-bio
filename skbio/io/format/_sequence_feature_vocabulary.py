@@ -157,6 +157,9 @@ def _parse_single_feature(lines, imd):
         if k in voca_change:
             k = voca_change[k]
 
+        if k == 'phase':
+            v = int(v) - 1
+
         # some Qualifiers can appear multiple times
         if k in metadata:
             if not isinstance(metadata[k], list):
@@ -286,6 +289,8 @@ def _serialize_single_feature(intvl, indent=21):
         if k.startswith('__') or k in voca_skip:
             continue
         v = md[k]
+        if k == 'phase':
+            v = str(v + 1)
         if k in voca_change:
             k = voca_change[k]
         if isinstance(v, list):

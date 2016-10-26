@@ -97,7 +97,7 @@ class GenBankIOTests(TestCase):
                  '__location': '1..63'})
         imd.add([(0, 63)],
                 [(False, True)],
-                {'phase': '1',
+                {'phase': 0,
                  'db_xref': ['"GI:145230"', '"taxon:562"', '"taxon:561"'],
                  '__location': '1..>63',
                  'strand': '+',
