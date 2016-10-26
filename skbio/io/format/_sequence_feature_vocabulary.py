@@ -10,6 +10,7 @@ import re
 
 from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import _line_generator
+from skbio.io import FileFormatError
 
 
 def _vocabulary_change(format='insdc', read_in=True):
@@ -76,21 +77,19 @@ def _parse_section_default(
         2. join all the lines into one str with join_delimiter.
     '''
     data = []
-    first = True
     label = None
-    for line in lines:
-        if first:
-            items = line.split(label_delimiter, 1)
+    line = lines[0]
 
-            if len(items) == 2:
-                label, section = items
-            else:
-                label = items[0]
-                section = ""
-            data.append(section)
-            first = False
-        else:
-            data.append(line)
+    items = line.split(label_delimiter, 1)
+
+    if len(items) == 2:
+        label, section = items
+    else:
+        label = items[0]
+        section = ""
+    data.append(section)
+
+    data.extend(lines[1:])
     data = join_delimiter.join(i.strip() for i in data)
     if return_label:
         return label, data
@@ -256,7 +255,7 @@ def _parse_loc_str(loc_str):
             bounds.append((int(start)-1, int(end)))
             fuzzy.append((fuzzy_s, fuzzy_e))
         elif p == 'ILLEGAL':
-            raise GenBankFormatError(
+            raise FileFormatError(
                 'Could not parse location string: "%s"' % loc_str)
 
     return bounds, fuzzy, metadata
