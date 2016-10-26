@@ -18,10 +18,11 @@ from skbio.io.format.genbank import (
     _genbank_to_generator, _genbank_to_sequence,
     _genbank_to_dna, _genbank_to_rna, _genbank_to_protein,
     _parse_locus, _parse_reference,
-    _parse_loc_str, _parse_section_default,
     _generator_to_genbank, _sequence_to_genbank,
     _protein_to_genbank, _rna_to_genbank, _dna_to_genbank,
-    _serialize_locus, _serialize_location)
+    _serialize_locus)
+from skbio.io.format._sequence_feature_vocabulary import (
+    _parse_loc_str, _parse_section_default, _serialize_location)
 
 
 class SnifferTests(TestCase):
