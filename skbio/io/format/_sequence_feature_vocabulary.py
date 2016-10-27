@@ -16,8 +16,8 @@ from skbio.io import FileFormatError
 def _vocabulary_change(format='insdc', read_in=True):
     '''Return a dict that converts between memory and output vocabulary.'''
     convert = {'phase': {'insdc': 'codon_start'},
+               'source': {'insdc': 'inference'},
                'db_xref': {'gff3': 'Dbxref'},
-               'locus_tag': {'gff3': 'ID'},
                'note': {'gff3': 'Note'}}
     if read_in:
         return {v[format]: k for k, v in convert.items() if format in v}
@@ -26,11 +26,12 @@ def _vocabulary_change(format='insdc', read_in=True):
 
 
 def _vocabulary_skip(format='insdc'):
-    '''Return a list of vocabularies that should be skipped when output to
-    disk for the specified format.
+    '''Return a list of vocabularies that should be skipped when auto
+    output to disk for the specified format.
+
     '''
-    skip = {'source': ('insdc'),
-            'type': ('insdc', 'gff3'),
+    skip = {'type': ('insdc', 'gff3'),
+            'ID': ('insdc'),
             'translation': ('gff3'),
             'strand': ('insdc')}
     return [k for k, v in skip.items() if format in v]

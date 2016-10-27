@@ -70,7 +70,7 @@ when parsing them into memory, as described in this table:
 |feature    |columns or |           |type     |                              |
 |table      |attributes |           |stored   |                              |
 +===========+===========+===========+=========+==============================+
-|N/A        |source     |source     |str      |the algorithm or experiment   |
+|inference  |source     |source     |str      |the algorithm or experiment   |
 |           |(column 2) |           |         |used to generate this feature |
 +-----------+-----------+-----------+---------+------------------------------+
 |feature key|type       |type       |str      |the type of the feature       |
@@ -98,11 +98,7 @@ when parsing them into memory, as described in this table:
 |db_xref    |Dbxref     |db_xref    |list of  |A database cross reference    |
 |           |           |           |str      |                              |
 +-----------+-----------+-----------+---------+------------------------------+
-|locus_tag  |ID         |locus_tag  |str      |a submitter-supplied,         |
-|           |           |           |         |systematic, stable identifier |
-|           |           |           |         |for a gene and its associated |
-|           |           |           |         |features, used for tracking   |
-|           |           |           |         |purposes                      |
+|N/A        |ID         |ID         |str      |feature ID                    |
 +-----------+-----------+-----------+---------+------------------------------+
 |note       |Note       |note       |str      |any comment or additional     |
 |           |           |           |         |information                   |
