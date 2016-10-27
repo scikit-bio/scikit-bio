@@ -180,7 +180,7 @@ def _gff3_to_generator(fh, interval_metadata):
     '''
     for seq_id, lines in _yield_record(fh):
         imd = interval_metadata[seq_id]
-        yield _parse_record(lines, obj)
+        yield _parse_record(lines, imd)
 
 
 @gff3.reader(IntervalMetadata)
