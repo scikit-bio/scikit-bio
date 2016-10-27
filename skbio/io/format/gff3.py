@@ -144,21 +144,11 @@ from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import (
     _line_generator, _too_many_blanks)
 from skbio.io.format._base import _get_nth_sequence as _get_nth_record
+from skbio.io.format._sequence_feature_vocabulary import (
+    _vocabulary_change, _vocabulary_skip)
 
 
 gff3 = create_format('gff3')
-
-
-_GFF3_HEADERS = [
-    'SEQID',
-    'SOURCE',
-    'TYPE',
-    'START',
-    'END',
-    'SCORE',
-    'STRAND',
-    'PHASE',
-    'ATTR']
 
 
 @gff3.sniffer()
@@ -179,53 +169,83 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh, upper_bounds):
-    return _parse_records(fh, upper_bounds)
+def _gff3_to_generator(fh, interval_metadata):
+    '''
+    Parameters
+    ----------
+    fh : file
+        file handler
+    interval_metadata : dict
+        key is seq ID and value is the IntervalMetadata for the seq.
+    '''
+    for seq_id, lines in _yield_record(fh):
+        imd = interval_metadata[seq_id]
+        yield _parse_record(lines, obj)
 
 
 @gff3.reader(IntervalMetadata)
-def _gff3_to_interval_metadata(fh, upper_bound, rec_num=1):
-    return _get_nth_record(_parse_records(fh, [upper_bound]), rec_num)
+def _gff3_to_interval_metadata(fh, interval_metadata, rec_num=1):
+    '''upper_bound and interval_metadata cannot be both None.'''
+    seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
+
+    return _parse_record(lines, interval_metadata=interval_metadata)
 
 
-def _parse_records(fh, upper_bounds):
-    '''Yield record
-
-    A record is all the lines associated with the same ID (seq). This
-    parser does minimal parsing. It does not convert variable types or
-    parse the attr of column 9.
-
-    '''
-    seq_id = False
-    i = 0
-    imd = IntervalMetadata(upper_bounds[i])
-    md_headers = _GFF3_HEADERS[1:3] + _GFF3_HEADERS[5:]
+def _yield_record(fh):
+    '''Yield lines that belong to the same sequence.'''
+    lines = []
+    current = False
     for line in _line_generator(fh, skip_blanks=True, strip=True):
         if not line.startswith('#'):
-            columns = line.split('\t')
-            if len(columns) != len(_GFF3_HEADERS):
-                raise GFF3FormatError(
-                    'do not have 9 columns in this line: "%s"' % line)
-            # the 1st column is seq ID for every feature. don't store
-            # this repetitive information
-            metadata = dict(zip(md_headers,
-                                columns[1:3] + columns[5:]))
-
-            start, end = columns[3:5]
-
-            bounds = [(int(start)-1, int(end))]
-
-            if columns[0] == seq_id or seq_id is False:
-                seq_id = columns[0]
-                imd.add(bounds, metadata=metadata)
+            seq_id, _ = line.split('\t', 1)
+            if current == seq_id or current is False:
+                lines.append(line)
             else:
-                seq_id = False
-                yield imd
-                i += 1
-                imd = IntervalMetadata(upper_bounds[i])
-                imd.add(bounds, metadata=metadata)
+                yield current, lines
+                current = False
+    yield current, lines
 
-    yield imd
+
+def _parse_record(lines, interval_metadata):
+    '''Parse the lines into a IntervalMetadata object.'''
+    for line in lines:
+        columns = line.split('\t')
+        # there should be 9 columns
+        if len(columns) != 9:
+            raise GFF3FormatError(
+                'do not have 9 columns in this line: "%s"' % line)
+        # the 1st column is seq ID for every feature. don't store
+        # this repetitive information
+        metadata = {'source': columns[1],
+                    'type': columns[2],
+                    'score': columns[5],
+                    'strand': columns[6]}
+        phase = columns[7]
+        if isinstance(phase, int):
+            metadata['phase'] = int(phase)
+        elif phase != '.':
+            raise GFF3FormatError(
+                'unknown value for phase column: {!r}'.format(phase))
+
+        start, end = columns[3:5]
+
+        bounds = [(int(start)-1, int(end))]
+
+        interval_metadata.add(bounds, metadata=metadata)
+
+    return interval_metadata
+
+
+def _parse_attr(s):
+    '''parse attribute column'''
+    voca_change = _vocabulary_change('gff3')
+    md = {}
+    for attr in s.split(';'):
+        k, v = attr.split('=')
+        if k in voca_change:
+            k = voca_change[k]
+        md[k] = v
+    return md
 
 
 @gff3.writer(IntervalMetadata)

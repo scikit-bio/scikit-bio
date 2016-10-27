@@ -24,6 +24,7 @@ class GFF3IOTests(TestCase):
         self.single_fp = get_data_path('gff3_single_record')
 
         intvls = [{'bounds': [(0, 4641652)],
+<<<<<<< Updated upstream
                    'metadata': {'SOURCE': 'European Nucleotide Archive',
                                 'TYPE': 'chromosome',
                                 'SCORE': '.',
@@ -47,6 +48,30 @@ class GFF3IOTests(TestCase):
                                 'STRAND': '+',
                                 'PHASE': '0',
                                 'ATTR': ('ID=1_1;partial=10;start_type=Edge;'
+=======
+                   'metadata': {'source': 'European Nucleotide Archive',
+                                'type': 'chromosome',
+                                'score': '.',
+                                'strand': '.',
+                                'locus_tag': 'chromosome:Chromosome',
+                                'Alias': 'U00096.3',
+                                'Is_circular': 'true'}},
+                  {'bounds': [(147, 148)],
+                   'metadata': {'source': 'regulondb_feature',
+                                'type': 'biological_region',
+                                'score': '.',
+                                'strand': '+',
+                                'external_name':
+                                'Promoter thrLp (RegulonDB:ECK120010236)'
+                                'logic_name': 'regulondb_promoter'}},
+                  {'bounds': [(2, 98)],
+                   'metadata': {'source': 'Prodigal_v2.60',
+                                'type': 'CDS',
+                                'score': '1.8',
+                                'strand': '+',
+                                'phase': '0',
+                                'ID': '1_1';partial=10;start_type=Edge;'
+>>>>>>> Stashed changes
                                          'rbs_motif=None;rbs_spacer=None;'
                                          'gc_cont=0.427;conf=60.39;'
                                          'score=1.84;'
@@ -54,11 +79,19 @@ class GFF3IOTests(TestCase):
                                          'rscore=0.00;'
                                          'uscore=0.00;tscore=3.22;')}},
                   {'bounds': [(336, 2799)],
+<<<<<<< Updated upstream
                    'metadata': {'SOURCE': 'Prodigal_v2.60',
                                 'TYPE': 'CDS',
                                 'SCORE': '333.8',
                                 'STRAND': '+',
                                 'PHASE': '0',
+=======
+                   'metadata': {'source': 'Prodigal_v2.60',
+                                'type': 'CDS',
+                                'score': '333.8',
+                                'strand': '+',
+                                'phase': '0',
+>>>>>>> Stashed changes
                                 'ATTR': ('ID=1_2;partial=00;start_type=ATG;'
                                          'rbs_motif=GGAG/GAGG;'
                                          'rbs_spacer=5-10bp;'
@@ -97,6 +130,18 @@ class SnifferTests(TestCase):
 
 
 class ReaderTests(GFF3IOTests):
+<<<<<<< Updated upstream
+=======
+    def test_parse_attr(self):
+        s = ('ID=id1;Parent=rna0;Dbxref=GeneID:497097,Genbank:XM_006495550.2,'
+             'MGI:MGI:3528744;gbkey=mRNA;gene=Xkr4;'
+             'product=X Kell blood group precursor related family member '
+             '4%2C transcript variant X1;transcript_id=XM_006495550.2')
+        md = {}
+        self.assertEqual(_parse_attr(s), md)
+
+
+>>>>>>> Stashed changes
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
             self.single_fp, upper_bound=self.upper_bound1, rec_num=1)
@@ -137,7 +182,11 @@ class WriterTests(GFF3IOTests):
         imd.add([(0, 9)], metadata={
             # "SCORE", "PHASE" and "STRAND" are missing - they should be
             # replaced by "."
+<<<<<<< Updated upstream
             'SOURCE': '.', 'TYPE': 'gene',
+=======
+            'source': '.', 'type': 'gene',
+>>>>>>> Stashed changes
             'ATTR': 'ID=gene00001;Name=EDEN'})
         with io.StringIO() as fh:
             _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
