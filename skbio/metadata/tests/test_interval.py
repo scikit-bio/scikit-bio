@@ -88,10 +88,12 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
                      bounds=[(4, 7)],
                      metadata={'name': 'sagA', 'function': 'transport'})
 
-    def test_init_empty(self):
+    def test_init_empty_metadata(self):
         for i in 0, 1:
-            with self.assertRaises(ValueError):
+            try:
                 Interval(interval_metadata=self.im, bounds=[(i, i)])
+            except Exception:
+                self.fail("Interval() raised exception unexpectedly!")
 
     def test_init_out_of_bounds(self):
         with self.assertRaises(ValueError):
@@ -221,7 +223,6 @@ class TestInterval(unittest.TestCase, ReallyEqualMixin):
         for value in [[(-1, 2)],   # start < lower_bound
                       [(1, 101)],  # end > upper_bound
                       [(3, 1)],    # start < end
-                      [(1, 1)],    # start == end
                       [('s', 1)], (), None]:  # invalid values
             with self.assertRaises(ValueError):
                 f.bounds = value
@@ -532,9 +533,12 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_add_eq_start_end_bound(self):
         for i in 0, 1, self.upper_bound:
-            with self.assertRaisesRegex(ValueError, '{i}.*{i}'.format(i=i)):
+            try:
                 self.im_empty.add(bounds=[(i, i)],
                                   metadata={'gene': 'sagA',  'bound': 0})
+            except Exception:
+                self.fail(
+                    "IntervalMetadata.add() raised exception unexpectedly!")
 
     def test_query_attribute(self):
         intervals = self.im_2._query_attribute({})
