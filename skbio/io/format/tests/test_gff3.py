@@ -16,7 +16,8 @@ from skbio.io.format.gff3 import (_yield_record,
                                   _gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _gff3_to_generator,
-                                  _interval_metadata_to_gff3)
+                                  _interval_metadata_to_gff3,
+                                  _serialize_imd_gff3)
 
 
 class GFF3IOTests(TestCase):
@@ -56,9 +57,16 @@ class GFF3IOTests(TestCase):
                                 'phase': 0,
                                 'ID': '1_2',
                                 'Parent': '1_1',
-                                'start_type': 'ATG',
                                 'rbs_motif': 'GGAG/GAGG',
-                                'rbs_spacer': '5-10bp'}}]
+                                'rbs_spacer': '5-10bp'}},
+                  {'bounds': [(0, 50), (55, 100)],
+                   'metadata': {'source': 'Prodigal_v2.60',
+                                'type': 'gene',
+                                'score': '1.8',
+                                'strand': '+',
+                                'phase': 0,
+                                'ID': '1_1',
+                                'gene': 'FXR receptor'}}]
 
         self.upper_bound1 = 4641652
         self.imd1 = IntervalMetadata(self.upper_bound1)
@@ -70,6 +78,9 @@ class GFF3IOTests(TestCase):
         self.imd2.add(**intvls[2])
         self.imd2.add(**intvls[3])
 
+        self.upper_bound3 = 200
+        self.imd3 = IntervalMetadata(self.upper_bound3)
+        self.imd3.add(**intvls[4])
 
 class SnifferTests(TestCase):
     def setUp(self):
@@ -118,7 +129,7 @@ class ReaderTests(GFF3IOTests):
         imd = {'Chromosome': IntervalMetadata(self.upper_bound1),
                'gi|556503834|ref|NC_000913.3|':
                IntervalMetadata(self.upper_bound2)}
-        obss = _gff3_to_generator(self.multi_fp, interval_metadata=imd)
+        obss = _gff3_to_generator(self.multi_fp, interval_metadata_dict=imd)
         for obs, exp in zip(obss, [self.imd1, self.imd2]):
             self.assertEqual(obs, exp)
 
@@ -137,14 +148,12 @@ class WriterTests(GFF3IOTests):
 
         self.assertEqual(obs, exp)
 
+
     def test_interval_metadata_to_gff3_missing_field(self):
         exp = 'ctg123\t.\tgene\t1\t9\t.\t.\t.\tID=gene00001;Name=EDEN'
         imd = IntervalMetadata(9)
         imd.add([(0, 9)], metadata={
-            # "SCORE", "PHASE" and "STRAND" are missing - they should be
-            # replaced by "."
-            'source': '.', 'type': 'gene',
-            'ATTR': 'ID=gene00001;Name=EDEN'})
+            'type': 'gene', 'ID': 'gene00001', 'Name': 'EDEN'})
         with io.StringIO() as fh:
             _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
             # only compare the uncommented lines because the comments are not
@@ -155,13 +164,33 @@ class WriterTests(GFF3IOTests):
         self.assertEqual([exp], obs)
 
 
+    def test_interval_metadata_to_gff3_sub_region(self):
+        with open(self.multi_fp) as f:
+            lines = [i.strip() for i in f if not i.startswith('#')]
+
+        with io.StringIO() as fh:
+            _serialize_imd_gff3(self.imd3, seq_id='NC_7', fh=fh, skip=False)
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+        exp = lines[-3:]
+        self.assertEqual(exp, obs)
+
+        with io.StringIO() as fh:
+            _serialize_imd_gff3(self.imd3, seq_id='NC_7', fh=fh)
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+        exp = [lines[-3]]
+        self.assertEqual(exp, obs)
+
+
 class RoundtripTests(GFF3IOTests):
-    def test_roundtrip_generator(self):
+    def test_roundtrip_interval_metadata(self):
         ''''''
         with io.StringIO() as fh:
             _interval_metadata_to_gff3(
                 _gff3_to_interval_metadata(
-                    self.single_fp, upper_bound=self.upper_bound1),
+                    self.single_fp,
+                    interval_metadata=IntervalMetadata(self.upper_bound1)),
                 fh,
                 seq_id='Chromosome')
             obs = [i for i in fh.getvalue().splitlines()

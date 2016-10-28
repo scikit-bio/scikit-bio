@@ -170,7 +170,7 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh, interval_metadata):
+def _gff3_to_generator(fh, interval_metadata_dict):
     '''Parse the GFF3 into the existing IntervalMetadata
 
     Note that if the seq_id does not exist in the input dict of
@@ -180,19 +180,27 @@ def _gff3_to_generator(fh, interval_metadata):
     ----------
     fh : file
         file handler
-    interval_metadata : dict
+    interval_metadata_dict : dict
         key is seq ID and value is the IntervalMetadata for the seq.
 
     '''
     for seq_id, lines in _yield_record(fh):
-        if seq_id in interval_metadata:
-            imd = interval_metadata[seq_id]
+        if seq_id in interval_metadata_dict:
+            imd = interval_metadata_dict[seq_id]
             yield _parse_record(lines, imd)
 
 
 @gff3.reader(IntervalMetadata)
 def _gff3_to_interval_metadata(fh, interval_metadata, rec_num=1):
-    '''upper_bound and interval_metadata cannot be both None.'''
+    '''Read a GFF3 record into the specified interval metadata.
+
+    Parameters
+    ----------
+    fh : file handler
+    interval_metadata : IntervalMetadata
+    rec_num : int
+        which record to read in.
+    '''
     seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
 
     return _parse_record(lines, interval_metadata=interval_metadata)
@@ -263,7 +271,7 @@ def _parse_attr(s):
 
 
 @gff3.writer(IntervalMetadata)
-def _interval_metadata_to_gff3(obj, fh, seq_id):
+def _interval_metadata_to_gff3(obj, fh, seq_id, skip=True):
     '''
     Parameters
     ----------
@@ -271,7 +279,7 @@ def _interval_metadata_to_gff3(obj, fh, seq_id):
     seq_id : str
         ID for column 1 in the GFF3 file.
     '''
-    _serialize_imd_gff3(obj_i, seq_id, fh)
+    _serialize_imd_gff3(obj, seq_id, fh, skip=True)
 
 
 @gff3.writer(Sequence)
@@ -354,7 +362,7 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
             if k in voca_change:
                 k = voca_change[k]
             v = md[k]
-            attr.append('%r=%r' % (k.translate(escape), v.translate(escape)))
+            attr.append('%s=%s' % (k.translate(escape), v.translate(escape)))
         columns.append(';'.join(attr))
 
         print('\t'.join(columns), file=fh)
@@ -363,6 +371,9 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
         # output each region as a standalone line in GFF3.
         if len(bd) > 1 and skip is False:
             for start, end in bd:
+                # if this is a gene, then each sub region should be an exon
+                if columns[2] == 'gene':
+                    columns[2] = 'exon'
                 columns[3] = str(start + 1)
                 columns[4] = str(end)
                 try:
@@ -371,7 +382,7 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
                     raise GFF3FormatError(
                         'You need provide ID info for '
                         'the parent interval feature: %r' % interval)
-                columns[9] = 'Parent=%r' % parent
+                columns[8] = 'Parent=%s' % parent
                 print('\t'.join(columns), file=fh)
 
 
