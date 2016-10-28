@@ -139,6 +139,7 @@ Reference
 
 import re
 
+from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
 from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import (
@@ -198,11 +199,14 @@ def _yield_record(fh):
     for line in _line_generator(fh, skip_blanks=True, strip=True):
         if not line.startswith('#'):
             seq_id, _ = line.split('\t', 1)
-            if current == seq_id or current is False:
+            if current == seq_id:
                 lines.append(line)
             else:
-                yield current, lines
-                current = False
+                if current is not False:
+                    yield current, lines
+                lines = [line]
+                current = seq_id
+
     yield current, lines
 
 
@@ -221,11 +225,13 @@ def _parse_record(lines, interval_metadata):
                     'score': columns[5],
                     'strand': columns[6]}
         phase = columns[7]
-        if isinstance(phase, int):
+        try:
             metadata['phase'] = int(phase)
-        elif phase != '.':
-            raise GFF3FormatError(
-                'unknown value for phase column: {!r}'.format(phase))
+        except ValueError:
+            if phase != '.':
+                raise GFF3FormatError(
+                    'unknown value for phase column: {!r}'.format(phase))
+        metadata.update(_parse_attr(columns[8]))
 
         start, end = columns[3:5]
 
@@ -240,6 +246,7 @@ def _parse_attr(s):
     '''parse attribute column'''
     voca_change = _vocabulary_change('gff3')
     md = {}
+    s = s.rstrip(';')
     for attr in s.split(';'):
         k, v = attr.split('=')
         if k in voca_change:
@@ -257,20 +264,70 @@ def _interval_metadata_to_gff3(obj, fh, seq_id):
     seq_id : str
         ID for column 1 in the GFF3 file.
     '''
+    _serialize_imd_gff3(obj_i, seq_id, fh)
+
+
+@gff3.writer(Sequence)
+def _sequence_to_gff3(obj, fh, seq_id):
+    '''
+    Parameters
+    ----------
+    obj : IntervalMetadata
+    seq_id : str
+        ID for column 1 in the GFF3 file.
+    '''
+    _serialize_imd_gff3(obj_i, seq_id, fh)
+
+
+@gff3.writer(DNA)
+def _dna_to_gff3(obj, fh, seq_id):
+    '''
+    Parameters
+    ----------
+    obj : IntervalMetadata
+    seq_id : str
+        ID for column 1 in the GFF3 file.
+    '''
+    _serialize_imd_gff3(obj_i, seq_id, fh)
+
+
+@gff3.writer(None)
+def _generator_to_gff3(obj, fh, seq_ids):
+    '''
+    Parameters
+    ----------
+    obj : Iterable of IntervalMetadata
+    fh : file handler
+    seq_ids : Iterable of seq id (str)
+    '''
+    for obj_i, seq_id in zip(obj, seq_ids):
+        _serialize_imd_gff3(obj_i, seq_id, fh)
+
+
+def _serialize_imd_gff3(imd, seq_id, fh):
+    '''Serialize an IntervalMetadata to GFF3.'''
     # write file header
     print('##gff-version 3', file=fh)
 
-    for interval in obj._intervals:
-        columns = [seq_id]
+    for interval in imd._intervals:
         md = interval.metadata
+        start = str(interval.bounds[0][0] + 1)
+        end = str(interval.bounds[-1][-1])
+        phase = str(md.get('phase', '.'))
+        feat_type, source, score, strand = [
+            md.get(i, '.') for i in [
+                'type', 'source', 'score', 'strand']]
+        columns = [seq_id, source, feat_type, start, end, score, strand, phase]
+        fh.write('\t'.join(columns))
+
         for bound in interval.bounds:
-            for head in _GFF3_HEADERS[1:]:
-                if head == 'START':
-                    columns.append(str(bound[0]+1))
-                elif head == 'END':
-                    columns.append(str(bound[1]))
-                elif head in md:
-                    columns.append(md[head])
-                else:
-                    columns.append('.')
+            columns.append(str(bound[0]+1))
+            columns.append(str(bound[1]))
+            columns.append(md[head])
             print('\t'.join(columns), file=fh)
+
+
+def _serialize_seq_gff3(imd, seq_id, fh):
+    '''Serialize an Sequence/DNA to GFF3.'''
+    # write file header
+    print('##gff-version 3', file=fh)

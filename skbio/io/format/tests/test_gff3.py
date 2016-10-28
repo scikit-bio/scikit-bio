@@ -12,7 +12,8 @@ import io
 from skbio.util import get_data_path
 from skbio.metadata import IntervalMetadata
 from skbio.io import GFF3FormatError
-from skbio.io.format.gff3 import (_gff3_sniffer,
+from skbio.io.format.gff3 import (_yield_record,
+                                  _gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _gff3_to_generator,
                                   _interval_metadata_to_gff3)
@@ -44,7 +45,7 @@ class GFF3IOTests(TestCase):
                                 'type': 'CDS',
                                 'score': '1.8',
                                 'strand': '+',
-                                'phase': '0',
+                                'phase': 0,
                                 'ID': '1_1',
                                 'gc_cont': '0.427'}},
                   {'bounds': [(336, 2799)],
@@ -52,7 +53,7 @@ class GFF3IOTests(TestCase):
                                 'type': 'CDS',
                                 'score': '333.8',
                                 'strand': '+',
-                                'phase': '0',
+                                'phase': 0,
                                 'ID': '1_2',
                                 'start_type': 'ATG',
                                 'rbs_motif': 'GGAG/GAGG',
@@ -87,6 +88,16 @@ class SnifferTests(TestCase):
 
 
 class ReaderTests(GFF3IOTests):
+    def test_yield_record(self):
+        obs = [('seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
+               ('seqid2', ['seqid2\tzzz'])]
+        s = ('seqid1\txxx\n'
+             'seqid1\tyyy\n'
+             'seqid2\tzzz\n')
+        fh = io.StringIO(s)
+        for i, j in zip(_yield_record(fh), obs):
+            self.assertEqual(i, j)
+
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
             self.single_fp,
@@ -100,11 +111,13 @@ class ReaderTests(GFF3IOTests):
                                     'do not have 9 columns in this line'):
             _gff3_to_interval_metadata(
                 get_data_path('gff3_bad_wrong_columns'),
-                upper_bound=self.upper_bound1)
+                interval_metadata=IntervalMetadata(self.upper_bound1))
 
     def test_gff3_to_generator(self):
-        obss = _gff3_to_generator(
-            self.multi_fp, upper_bounds=[self.upper_bound1, self.upper_bound2])
+        imd = {'Chromosome': IntervalMetadata(self.upper_bound1),
+               'gi|556503834|ref|NC_000913.3|':
+               IntervalMetadata(self.upper_bound2)}
+        obss = _gff3_to_generator(self.multi_fp, interval_metadata=imd)
         for obs, exp in zip(obss, [self.imd1, self.imd2]):
             self.assertEqual(obs, exp)
 
