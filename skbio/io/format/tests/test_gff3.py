@@ -40,9 +40,9 @@ class GFF3IOTests(TestCase):
                                 'external_name':
                                 'Promoter thrLp (RegulonDB:ECK120010236)',
                                 'logic_name': 'regulondb_promoter'}},
-                  {'bounds': [(2, 98)],
+                  {'bounds': [(336, 2799)],
                    'metadata': {'source': 'Prodigal_v2.60',
-                                'type': 'CDS',
+                                'type': 'gene',
                                 'score': '1.8',
                                 'strand': '+',
                                 'phase': 0,
@@ -55,6 +55,7 @@ class GFF3IOTests(TestCase):
                                 'strand': '+',
                                 'phase': 0,
                                 'ID': '1_2',
+                                'Parent': '1_1',
                                 'start_type': 'ATG',
                                 'rbs_motif': 'GGAG/GAGG',
                                 'rbs_spacer': '5-10bp'}}]

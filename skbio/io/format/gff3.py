@@ -171,17 +171,23 @@ def _gff3_sniffer(fh):
 
 @gff3.reader(None)
 def _gff3_to_generator(fh, interval_metadata):
-    '''
+    '''Parse the GFF3 into the existing IntervalMetadata
+
+    Note that if the seq_id does not exist in the input dict of
+    `interval_metadata`, the record will be skipped and not parsed.
+
     Parameters
     ----------
     fh : file
         file handler
     interval_metadata : dict
         key is seq ID and value is the IntervalMetadata for the seq.
+
     '''
     for seq_id, lines in _yield_record(fh):
-        imd = interval_metadata[seq_id]
-        yield _parse_record(lines, imd)
+        if seq_id in interval_metadata:
+            imd = interval_metadata[seq_id]
+            yield _parse_record(lines, imd)
 
 
 @gff3.reader(IntervalMetadata)
@@ -246,6 +252,7 @@ def _parse_attr(s):
     '''parse attribute column'''
     voca_change = _vocabulary_change('gff3')
     md = {}
+    # in case the line ending with ';', strip it.
     s = s.rstrip(';')
     for attr in s.split(';'):
         k, v = attr.split('=')
@@ -304,27 +311,59 @@ def _generator_to_gff3(obj, fh, seq_ids):
         _serialize_imd_gff3(obj_i, seq_id, fh)
 
 
-def _serialize_imd_gff3(imd, seq_id, fh):
-    '''Serialize an IntervalMetadata to GFF3.'''
+def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
+    '''Serialize an IntervalMetadata to GFF3.
+
+    Parameters
+    ----------
+    skip : bool
+        whether to skip outputting the sub regions as a line in GFF3.
+    '''
     # write file header
     print('##gff-version 3', file=fh)
 
+    column_keys = ['source', 'type', 'score', 'strand', 'phase']
+    voca_change = _vocabulary_change('gff3', False)
+    voca_skip = _vocabulary_skip('gff3')
+    voca_skip.extend(column_keys)
     for interval in imd._intervals:
         md = interval.metadata
-        start = str(interval.bounds[0][0] + 1)
-        end = str(interval.bounds[-1][-1])
-        phase = str(md.get('phase', '.'))
-        feat_type, source, score, strand = [
-            md.get(i, '.') for i in [
-                'type', 'source', 'score', 'strand']]
-        columns = [seq_id, source, feat_type, start, end, score, strand, phase]
-        fh.write('\t'.join(columns))
+        bd = interval.bounds
+        start = str(bd[0][0] + 1)
+        end = str(bd[-1][-1])
 
-        for bound in interval.bounds:
-            columns.append(str(bound[0]+1))
-            columns.append(str(bound[1]))
-            columns.append(md[head])
-            print('\t'.join(columns), file=fh)
+        source, feat_type, score, strand, phase = [
+            str(md.get(i, '.')) for i in column_keys]
+        columns = [seq_id, source, feat_type, start, end, score, strand, phase]
+
+        # serialize the attributes in column 9
+        attr = []
+        # use sort to make the output order deterministic
+        for k in sorted(md):
+            if k in voca_skip:
+                # skip the metadata don't go to attribute column
+                continue
+            if k in voca_change:
+                k = voca_change[k]
+            attr.append('%r=%r' % (k, md[k]))
+        columns.append(';'.join(attr))
+
+        print('\t'.join(columns), file=fh)
+
+        # if there are multiple regions for this feature,
+        # output each region as a standalone line in GFF3.
+        if len(bd) > 1 and skip is False:
+            for start, end in bd:
+                columns[3] = str(start + 1)
+                columns[4] = str(end)
+                try:
+                    parent = md['ID']
+                except KeyError:
+                    raise GFF3FormatError(
+                        'You need provide ID info for '
+                        'the interval feature: %r' % interval)
+                columns[9] = 'Parent=%r' % parent
+                print('\t'.join(columns), file=fh)
 
 
 def _serialize_seq_gff3(imd, seq_id, fh):
