@@ -317,7 +317,7 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
     Parameters
     ----------
     skip : bool
-        whether to skip outputting the sub regions as a line in GFF3.
+        whether to skip outputting each sub region as a line in GFF3.
     '''
     # write file header
     print('##gff-version 3', file=fh)
@@ -326,6 +326,14 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
     voca_change = _vocabulary_change('gff3', False)
     voca_skip = _vocabulary_skip('gff3')
     voca_skip.extend(column_keys)
+
+    # these characters have reserved meanings in column 9 and must be
+    # escaped when used in other contexts
+    escape = str.maketrans({';': '%3B',
+                            '=': '%3D',
+                            '&': '%26',
+                            ',': '%2C'})
+
     for interval in imd._intervals:
         md = interval.metadata
         bd = interval.bounds
@@ -345,7 +353,8 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
                 continue
             if k in voca_change:
                 k = voca_change[k]
-            attr.append('%r=%r' % (k, md[k]))
+            v = md[k]
+            attr.append('%r=%r' % (k.translate(escape), v.translate(escape)))
         columns.append(';'.join(attr))
 
         print('\t'.join(columns), file=fh)
@@ -361,7 +370,7 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
                 except KeyError:
                     raise GFF3FormatError(
                         'You need provide ID info for '
-                        'the interval feature: %r' % interval)
+                        'the parent interval feature: %r' % interval)
                 columns[9] = 'Parent=%r' % parent
                 print('\t'.join(columns), file=fh)
 
