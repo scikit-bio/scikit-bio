@@ -186,7 +186,15 @@ cdef class IntervalNode:
         if self.cleft is not EmptyNode and self.cleft.maxend > start:
             self.cleft._intersect( start, end, results )
         # This interval
-        if ( self.end > start ) and ( self.start < end ):
+        if self.end == self.start:
+            send = self.end
+        else:
+            send = self.end - 1
+        if start == end:
+            qend = end
+        else:
+            qend = end - 1
+        if ( send >= start ) and ( self.start <= qend ):
             results.append( self.interval )
         # Right subtree
         if self.cright is not EmptyNode and self.start < end:
