@@ -12,9 +12,13 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.metadata.IntervalMetadata` objects                 |
+|Yes   |Yes   |:mod:`skbio.metadata.IntervalMetadata`                         |
 +------+------+---------------------------------------------------------------+
-|Yes   |No    |generator of :mod:`skbio.metadata.IntervalMetadata` objects    |
+|Yes   |Yes   |:mod:`skbio.sequence.DNA`                                      |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.sequence.Sequence`                                 |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |generator of :mod:`skbio.metadata.IntervalMetadata`            |
 +------+------+---------------------------------------------------------------+
 
 Format Specification
@@ -147,6 +151,7 @@ from skbio.io.format._base import (
 from skbio.io.format._base import _get_nth_sequence as _get_nth_record
 from skbio.io.format._sequence_feature_vocabulary import (
     _vocabulary_change, _vocabulary_skip)
+from skbio.io import write
 
 
 gff3 = create_format('gff3')
@@ -173,8 +178,9 @@ def _gff3_sniffer(fh):
 def _gff3_to_generator(fh, interval_metadata_dict):
     '''Parse the GFF3 into the existing IntervalMetadata
 
-    Note that if the seq_id does not exist in the input dict of
-    `interval_metadata`, the record will be skipped and not parsed.
+    Note that if the seq ID does not exist in the input dict of
+    `interval_metadata_dict`, the record will be skipped and not
+    parsed.
 
     Parameters
     ----------
@@ -183,11 +189,48 @@ def _gff3_to_generator(fh, interval_metadata_dict):
     interval_metadata_dict : dict
         key is seq ID and value is the IntervalMetadata for the seq.
 
+    Yields
+    ------
+    IntervalMetadata
     '''
     for seq_id, lines in _yield_record(fh):
         if seq_id in interval_metadata_dict:
             imd = interval_metadata_dict[seq_id]
             yield _parse_record(lines, imd)
+
+
+@gff3.writer(None)
+def _generator_to_gff3(obj, fh, seq_ids, skip=True):
+    '''Write list of IntervalMetadata into file.
+
+    Parameters
+    ----------
+    obj : Iterable of IntervalMetadata
+    fh : file handler
+    seq_ids : Iterable of seq id (str)
+    '''
+    for obj_i, seq_id in zip(obj, seq_ids):
+        _serialize_interval_metadata(obj_i, seq_id, fh, skip)
+
+
+@gff3.reader(Sequence)
+def _gff3_to_sequence():
+    ''''''
+
+
+@gff3.writer(Sequence)
+def _sequence_to_gff3(obj, fh, skip=True):
+    _serialize_seq(obj, fh, skip)
+
+
+@gff3.reader(DNA)
+def _gff3_to_dna():
+    ''''''
+
+
+@gff3.writer(DNA)
+def _dna_to_gff3(obj, fh, skip=True):
+    _serialize_seq(obj, fh, skip)
 
 
 @gff3.reader(IntervalMetadata)
@@ -204,6 +247,18 @@ def _gff3_to_interval_metadata(fh, interval_metadata, rec_num=1):
     seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
 
     return _parse_record(lines, interval_metadata=interval_metadata)
+
+
+@gff3.writer(IntervalMetadata)
+def _interval_metadata_to_gff3(obj, fh, seq_id, skip=True):
+    '''
+    Parameters
+    ----------
+    obj : IntervalMetadata
+    seq_id : str
+        ID for column 1 in the GFF3 file.
+    '''
+    _serialize_interval_metadata(obj, seq_id, fh, skip=True)
 
 
 def _yield_record(fh):
@@ -270,61 +325,13 @@ def _parse_attr(s):
     return md
 
 
-@gff3.writer(IntervalMetadata)
-def _interval_metadata_to_gff3(obj, fh, seq_id, skip=True):
-    '''
-    Parameters
-    ----------
-    obj : IntervalMetadata
-    seq_id : str
-        ID for column 1 in the GFF3 file.
-    '''
-    _serialize_imd_gff3(obj, seq_id, fh, skip=True)
-
-
-@gff3.writer(Sequence)
-def _sequence_to_gff3(obj, fh, seq_id):
-    '''
-    Parameters
-    ----------
-    obj : IntervalMetadata
-    seq_id : str
-        ID for column 1 in the GFF3 file.
-    '''
-    _serialize_imd_gff3(obj_i, seq_id, fh)
-
-
-@gff3.writer(DNA)
-def _dna_to_gff3(obj, fh, seq_id):
-    '''
-    Parameters
-    ----------
-    obj : IntervalMetadata
-    seq_id : str
-        ID for column 1 in the GFF3 file.
-    '''
-    _serialize_imd_gff3(obj_i, seq_id, fh)
-
-
-@gff3.writer(None)
-def _generator_to_gff3(obj, fh, seq_ids, skip=True):
-    '''Write list of IntervalMetadata into file.
-
-    Parameters
-    ----------
-    obj : Iterable of IntervalMetadata
-    fh : file handler
-    seq_ids : Iterable of seq id (str)
-    '''
-    for obj_i, seq_id in zip(obj, seq_ids):
-        _serialize_imd_gff3(obj_i, seq_id, fh, skip)
-
-
-def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
+def _serialize_interval_metadata(
+        interval_metadata, seq_id, fh, skip=True):
     '''Serialize an IntervalMetadata to GFF3.
 
     Parameters
     ----------
+    interval_metadata : IntervalMetadata
     skip : bool
         whether to skip outputting each sub region as a line in GFF3.
     '''
@@ -343,7 +350,7 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
                             '&': '%26',
                             ',': '%2C'})
 
-    for interval in imd._intervals:
+    for interval in interval_metadata._intervals:
         md = interval.metadata
         bd = interval.bounds
         start = str(bd[0][0] + 1)
@@ -387,7 +394,8 @@ def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
                 print('\t'.join(columns), file=fh)
 
 
-def _serialize_seq_gff3(imd, seq_id, fh):
-    '''Serialize an Sequence/DNA to GFF3.'''
-    # write file header
-    print('##gff-version 3', file=fh)
+def _serialize_seq(seq, fh, skip=True):
+    '''Serialize a sequence to GFF3.'''
+    _serialize_interval_metadata(
+        seq.interval_metadata, seq.metadata['id'], fh, skip)
+    write(seq, into=fh, format='fasta')

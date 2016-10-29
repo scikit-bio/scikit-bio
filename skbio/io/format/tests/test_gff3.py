@@ -18,7 +18,7 @@ from skbio.io.format.gff3 import (_yield_record,
                                   _gff3_to_generator,
                                   _generator_to_gff3,
                                   _interval_metadata_to_gff3,
-                                  _serialize_imd_gff3)
+                                  _serialize_interval_metadata)
 
 
 class GFF3IOTests(TestCase):
@@ -170,14 +170,15 @@ class WriterTests(GFF3IOTests):
             lines = [i.strip() for i in f if not i.startswith('#')]
 
         with io.StringIO() as fh:
-            _serialize_imd_gff3(self.imd3, seq_id='NC_7', fh=fh, skip=False)
+            _serialize_interval_metadata(
+                self.imd3, seq_id='NC_7', fh=fh, skip=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
         exp = lines[-3:]
         self.assertEqual(exp, obs)
 
         with io.StringIO() as fh:
-            _serialize_imd_gff3(self.imd3, seq_id='NC_7', fh=fh)
+            _serialize_interval_metadata(self.imd3, seq_id='NC_7', fh=fh)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
         exp = [lines[-3]]
