@@ -16,6 +16,7 @@ from skbio.io.format.gff3 import (_yield_record,
                                   _gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _gff3_to_generator,
+                                  _generator_to_gff3,
                                   _interval_metadata_to_gff3,
                                   _serialize_imd_gff3)
 
@@ -197,6 +198,30 @@ class RoundtripTests(GFF3IOTests):
                    if not i.startswith('#')]
 
         with open(self.single_fp) as f:
+            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
+
+        self.assertEqual(obs, exp)
+
+    def test_roundtrip_interval_metadata_generator(self):
+        imd = {'Chromosome': IntervalMetadata(self.upper_bound1),
+               'gi|556503834|ref|NC_000913.3|':
+               IntervalMetadata(self.upper_bound2),
+               'NC_7': IntervalMetadata(self.upper_bound3)}
+
+        with io.StringIO() as fh:
+            _generator_to_gff3(
+                _gff3_to_generator(
+                    self.multi_fp,
+                    interval_metadata_dict=imd),
+                fh,
+                seq_ids=['Chromosome',
+                        'gi|556503834|ref|NC_000913.3|',
+                        'NC_7'],
+                skip=False)
+            obs = [i for i in fh.getvalue().splitlines()
+                   if not i.startswith('#')]
+
+        with open(self.multi_fp) as f:
             exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)

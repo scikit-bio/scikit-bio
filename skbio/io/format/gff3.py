@@ -307,8 +307,9 @@ def _dna_to_gff3(obj, fh, seq_id):
 
 
 @gff3.writer(None)
-def _generator_to_gff3(obj, fh, seq_ids):
-    '''
+def _generator_to_gff3(obj, fh, seq_ids, skip=True):
+    '''Write list of IntervalMetadata into file.
+
     Parameters
     ----------
     obj : Iterable of IntervalMetadata
@@ -316,7 +317,7 @@ def _generator_to_gff3(obj, fh, seq_ids):
     seq_ids : Iterable of seq id (str)
     '''
     for obj_i, seq_id in zip(obj, seq_ids):
-        _serialize_imd_gff3(obj_i, seq_id, fh)
+        _serialize_imd_gff3(obj_i, seq_id, fh, skip)
 
 
 def _serialize_imd_gff3(imd, seq_id, fh, skip=True):
