@@ -11,13 +11,18 @@ import io
 
 from skbio.util import get_data_path
 from skbio.metadata import IntervalMetadata
+from skbio.sequence import DNA, Sequence
 from skbio.io import GFF3FormatError
 from skbio.io.format.gff3 import (_yield_record,
                                   _gff3_sniffer,
                                   _gff3_to_interval_metadata,
+                                  _interval_metadata_to_gff3,
                                   _gff3_to_generator,
                                   _generator_to_gff3,
-                                  _interval_metadata_to_gff3,
+                                  _gff3_to_sequence,
+                                  _sequence_to_gff3,
+                                  _gff3_to_dna,
+                                  _dna_to_gff3,
                                   _serialize_interval_metadata)
 
 
@@ -83,11 +88,27 @@ class GFF3IOTests(TestCase):
         self.imd3 = IntervalMetadata(self.upper_bound3)
         self.imd3.add(**intvls[4])
 
+        self.seq_fp = get_data_path('gff3_dna')
+        self.seq = Sequence('ATGCATGCATGC',
+                            metadata={'id': 'NC_1', 'description':'species X'})
+        self.seq.interval_metadata.add(
+            [(0, 9)],
+            metadata={'source': 'Prodigal_v2.60',
+                      'type': 'gene',
+                      'score': '.',
+                      'strand': '+',
+                      'phase': 0,
+                      'ID': 'gene1',
+                      'Name': 'FXR'})
+        self.dna = DNA(self.seq)
+
+
 class SnifferTests(TestCase):
     def setUp(self):
         self.positive_fps = map(get_data_path, [
             'gff3_multi_record',
-            'gff3_single_record'])
+            'gff3_single_record',
+            'gff3_dna'])
         self.negative_fps = map(get_data_path, [
             'empty',
             'whitespace_only',
@@ -133,6 +154,14 @@ class ReaderTests(GFF3IOTests):
         obss = _gff3_to_generator(self.multi_fp, interval_metadata_dict=imd)
         for obs, exp in zip(obss, [self.imd1, self.imd2]):
             self.assertEqual(obs, exp)
+
+    def test_gff3_to_sequence(self):
+        obs = _gff3_to_sequence(self.seq_fp)
+        self.assertEqual(obs, self.seq)
+
+    def test_gff3_to_dna(self):
+        obs = _gff3_to_dna(self.seq_fp)
+        self.assertEqual(obs, self.dna)
 
 
 class WriterTests(GFF3IOTests):
@@ -182,6 +211,26 @@ class WriterTests(GFF3IOTests):
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
         exp = [lines[-3]]
+        self.assertEqual(exp, obs)
+
+    def test_sequence_to_gff3(self):
+        with io.StringIO() as fh:
+            _sequence_to_gff3(self.seq, fh)
+            obs = fh.getvalue()
+
+        with open(self.seq_fp) as fh:
+            exp = fh.read()
+
+        self.assertEqual(exp, obs)
+
+    def test_dna_to_gff3(self):
+        with io.StringIO() as fh:
+            _dna_to_gff3(self.dna, fh)
+            obs = fh.getvalue()
+
+        with open(self.seq_fp) as fh:
+            exp = fh.read()
+
         self.assertEqual(exp, obs)
 
 

@@ -142,6 +142,7 @@ Reference
 # ----------------------------------------------------------------------------
 
 import re
+from io import StringIO
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
@@ -151,7 +152,7 @@ from skbio.io.format._base import (
 from skbio.io.format._base import _get_nth_sequence as _get_nth_record
 from skbio.io.format._sequence_feature_vocabulary import (
     _vocabulary_change, _vocabulary_skip)
-from skbio.io import write
+from skbio.io import write, read
 
 
 gff3 = create_format('gff3')
@@ -214,8 +215,15 @@ def _generator_to_gff3(obj, fh, seq_ids, skip=True):
 
 
 @gff3.reader(Sequence)
-def _gff3_to_sequence():
+def _gff3_to_sequence(fh, rec_num=1):
     ''''''
+    seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
+    # you can't read directly from fh because in registry.py line 543
+    # file.tell() will fail "telling position disabled by next() call".
+    stream = StringIO(fh.read())
+    seq = read(stream, format='fasta', into=Sequence, seq_num=rec_num)
+    _parse_record(lines, interval_metadata=seq.interval_metadata)
+    return seq
 
 
 @gff3.writer(Sequence)
@@ -224,8 +232,13 @@ def _sequence_to_gff3(obj, fh, skip=True):
 
 
 @gff3.reader(DNA)
-def _gff3_to_dna():
+def _gff3_to_dna(fh, rec_num=1):
     ''''''
+    seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
+    stream = StringIO(fh.read())
+    seq = read(stream, format='fasta', into=DNA, seq_num=rec_num)
+    _parse_record(lines, interval_metadata=seq.interval_metadata)
+    return seq
 
 
 @gff3.writer(DNA)
@@ -245,7 +258,6 @@ def _gff3_to_interval_metadata(fh, interval_metadata, rec_num=1):
         which record to read in.
     '''
     seq_id, lines = _get_nth_record(_yield_record(fh), rec_num)
-
     return _parse_record(lines, interval_metadata=interval_metadata)
 
 
@@ -266,8 +278,15 @@ def _yield_record(fh):
     lines = []
     current = False
     for line in _line_generator(fh, skip_blanks=True, strip=True):
+        if line.startswith('##FASTA'):
+            # stop once reaching to sequence section
+            break
         if not line.startswith('#'):
-            seq_id, _ = line.split('\t', 1)
+            try:
+                seq_id, _ = line.split('\t', 1)
+            except ValueError:
+                raise GFF3FormatError(
+                    'Wrong GFF3 format at line: %s' % line)
             if current == seq_id:
                 lines.append(line)
             else:
@@ -275,7 +294,6 @@ def _yield_record(fh):
                     yield current, lines
                 lines = [line]
                 current = seq_id
-
     yield current, lines
 
 
@@ -398,4 +416,5 @@ def _serialize_seq(seq, fh, skip=True):
     '''Serialize a sequence to GFF3.'''
     _serialize_interval_metadata(
         seq.interval_metadata, seq.metadata['id'], fh, skip)
+    print('##FASTA', file=fh)
     write(seq, into=fh, format='fasta')
