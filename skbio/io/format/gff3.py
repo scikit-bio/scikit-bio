@@ -98,33 +98,40 @@ predefined meanings:
 
 * Is_circular. A flag to indicate whether a feature is circular.
 
+The columns and attributes are read in as the vocabulary defined in
+genbank parsers (:mod:`skbio.io.format.genbank`).
+
 Examples
 --------
 
 >>> gff_str = """
 ... ##gff-version\t3.2.1
 ... ##sequence-region\tctg123\t1\t1497228
-... ctg123\t.\tgene\t1000\t9000\t.\t+\t.\tID=gene00001;Name=EDEN
+... ctg123\t.\tgene\t1000\t9000\t.\t+\t0\tID=gene00001;Name=EDEN
 ... ctg123\t.\tTF_binding_site\t1000\t1012\t.\t+\t.\tParent=gene00001
 ... ctg123\t.\tmRNA\t1050\t9000\t.\t+\t.\tID=mRNA00001;Parent=gene00001
 ... """
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
+>>> im = IntervalMetadata(20000)
 >>> gff = io.StringIO(gff_str)
->>> imd = read(gff, format='gff3', into=IntervalMetadata, upper_bound=2000000)
->>> imd   # doctest: +SKIP
+>>> im_return = read(gff, format='gff3', into=IntervalMetadata,
+...                  interval_metadata=im)
+>>> im_return   # doctest: +SKIP
 3 interval features
 -------------------
 Interval(interval_metadata=<4601272528>, bounds=[(999, 9000)], fuzzy=\
-[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'gene', 'STRAND': '+', \
-'SCORE': '.', 'PHASE': '.', 'ATTR': 'ID=gene00001;Name=EDEN'})
+[(False, False)], metadata={'source': '.', 'type': 'gene', 'strand': '+', \
+'score': '.', 'phase': 0, 'ID': 'gene00001', 'Name': 'EDEN'})
 Interval(interval_metadata=<4601272528>, bounds=[(999, 1012)], fuzzy=\
-[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'TF_binding_site', \
-'STRAND': '+', 'SCORE': '.', 'PHASE': '.', 'ATTR': 'Parent=gene00001'})
+[(False, False)], metadata={'source': '.', 'type': 'TF_binding_site', \
+'strand': '+', 'score': '.', 'Parent': 'gene00001'})
 Interval(interval_metadata=<4601272528>, bounds=[(1049, 9000)], fuzzy=\
-[(False, False)], metadata={'SOURCE': '.', 'TYPE': 'mRNA', 'STRAND': '+', \
-'SCORE': '.', 'PHASE': '.', 'ATTR': 'ID=mRNA00001;Parent=gene00001'})
+[(False, False)], metadata={'source': '.', 'type': 'mRNA', 'strand': '+', \
+'score': '.', 'ID': 'mRNA00001', 'Parent': 'gene00001'})
+>>> im == im_return
+True
 
 Reference
 ---------

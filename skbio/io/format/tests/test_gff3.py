@@ -90,7 +90,8 @@ class GFF3IOTests(TestCase):
 
         self.seq_fp = get_data_path('gff3_dna')
         self.seq = Sequence('ATGCATGCATGC',
-                            metadata={'id': 'NC_1', 'description':'species X'})
+                            metadata={'id': 'NC_1',
+                                      'description': 'species X'})
         self.seq.interval_metadata.add(
             [(0, 9)],
             metadata={'source': 'Prodigal_v2.60',
@@ -178,7 +179,6 @@ class WriterTests(GFF3IOTests):
 
         self.assertEqual(obs, exp)
 
-
     def test_interval_metadata_to_gff3_missing_field(self):
         exp = 'ctg123\t.\tgene\t1\t9\t.\t.\t.\tID=gene00001;Name=EDEN'
         imd = IntervalMetadata(9)
@@ -192,7 +192,6 @@ class WriterTests(GFF3IOTests):
                    if not i.startswith('#')]
 
         self.assertEqual([exp], obs)
-
 
     def test_interval_metadata_to_gff3_sub_region(self):
         with open(self.multi_fp) as f:
@@ -265,8 +264,8 @@ class RoundtripTests(GFF3IOTests):
                     interval_metadata_dict=imd),
                 fh,
                 seq_ids=['Chromosome',
-                        'gi|556503834|ref|NC_000913.3|',
-                        'NC_7'],
+                         'gi|556503834|ref|NC_000913.3|',
+                         'NC_7'],
                 skip=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
