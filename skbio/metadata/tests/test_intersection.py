@@ -189,20 +189,6 @@ class IntervalTreeTest(unittest.TestCase):
         r = self.iv.find(100, 200)
         self.assertEqual(len(r), 5)
 
-    def test_edge_cases(self):
-        iv = IntervalTree()
-        iv.insert(1, 1, 'foo')
-        iv.insert(3, 7, 'spam')
-        self.assertEqual(iv.find(0, 1), [])
-        self.assertEqual(iv.find(1, 1), ['foo'])
-        self.assertEqual(iv.find(1, 2), ['foo'])
-        self.assertEqual(iv.find(2, 3), [])
-        self.assertEqual(iv.find(3, 3), ['spam'])
-        self.assertEqual(iv.find(3, 4), ['spam'])
-        self.assertEqual(iv.find(6, 7), ['spam'])
-        self.assertEqual(iv.find(7, 7), [])
-        self.assertEqual(iv.find(0, 8), ['foo', 'spam'])
-
     def test_traverse(self):
         a = []
         fn = a.append
