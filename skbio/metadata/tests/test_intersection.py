@@ -201,6 +201,7 @@ class IntervalTreeTest(unittest.TestCase):
         self.assertEqual(iv.find(3, 4), ['spam'])
         self.assertEqual(iv.find(6, 7), ['spam'])
         self.assertEqual(iv.find(7, 7), [])
+        self.assertEqual(iv.find(0, 8), ['foo', 'spam'])
 
     def test_traverse(self):
         a = []
