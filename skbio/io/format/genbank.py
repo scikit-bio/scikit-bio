@@ -48,11 +48,11 @@ reference sections in one GenBank record.
 ``FEATURES`` section
 ^^^^^^^^^^^^^^^^^^^^
 The International Nucleotide Sequence Database Collaboration (INSDC
-[2]_) foundational initiative between the DDBJ, EMBL, and
-GenBank. These organisations all use the same "Feature Table" layout
-in their plain text flat file formats, which are documented in detail
-[3]_. The feature keys and their qualifiers are also described in this
-webpage [4]_.
+[2]_) is a long-standing foundational initiative between the DDBJ,
+EMBL, and GenBank. These organisations all use the same "Feature
+Table" layout in their plain text flat file formats, which are
+documented in detail [3]_. The feature keys and their qualifiers are
+also described in this webpage [4]_.
 
 The ``FEATURES`` section will be stored in ``interval_metadata`` of
 ``Sequence`` or its sub-class. Each sub-section is stored as an
@@ -88,12 +88,14 @@ when parsing them into memory, as described in this table:
 |           |           |           |         |strandedness is relevant, but |
 |           |           |           |         |unknown.                      |
 +-----------+-----------+-----------+---------+------------------------------+
-|codon_start|phase      |phase      |int (0,  |the offset at which the first |
-|           |(column 8) |           |1, or 2) |complete codon of a coding    |
+|codon_start|phase      |phase      |int      |the offset at which the first |
+|           |(column 8) |           |         |complete codon of a coding    |
 |           |           |           |         |feature can be found, relative|
 |           |           |           |         |to the first base of that     |
 |           |           |           |         |feature. It is 0, 1, or 2 in  |
-|           |           |           |         |GFF3 or 1, 2, or 3 in GenBank |
+|           |           |           |         |GFF3 or 1, 2, or 3 in GenBank.|
+|           |           |           |         |The stored value is 0, 1, or  |
+|           |           |           |         |2, following in GFF3 format.  |
 +-----------+-----------+-----------+---------+------------------------------+
 |db_xref    |Dbxref     |db_xref    |list of  |A database cross reference    |
 |           |           |           |str      |                              |
@@ -133,8 +135,8 @@ object (note it converts the 1-based coordinate to 0-based):
 
 
 .. note:: The Location string is fully stored in ``Interval.metadata``
-   with key ``__location``.  The key starting with ``__`` will be
-   ignored when outputting to a file.
+   with key ``__location``.  The key starting with ``__`` is "private"
+   and should be modified with care.
 
 
 ``ORIGIN`` section
