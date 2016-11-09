@@ -1,9 +1,12 @@
-r'''GFF3 format (:mod:`skbio.io.format.gff3)
-============================================
+r'''
+GFF3 format (:mod:`skbio.io.format.gff3)
+========================================
+
+.. currentmodule:: skbio.io.format.gff3
 
 GFF3 is a standard file format for storing genomic features in a text
 file. GFF stands for Generic Feature Format. GFF files are plain
-text, 9 column, tab-delimited files [#]_.
+text, 9-column, tab-delimited files [1]_.
 
 Format Support
 --------------
@@ -28,27 +31,27 @@ version.  This is followed by a series of data lines, each one of
 which corresponds to an annotation.  The 9 columns of the annotation
 section are as follows:
 
-+--------+------------------------------------------+
-| Column | Description                              |
-+========+==========================================+
-| SEQID  | ID of the landmark used                  |
-+--------+------------------------------------------+
-| SOURCE | algorithm used to generate this feature  |
-+--------+------------------------------------------+
-| TYPE   | type of the feature                      |
-+--------+------------------------------------------+
-| START  | start of the feature                     |
-+--------+------------------------------------------+
-| END    | end of the feature                       |
-+--------+------------------------------------------+
-| SCORE  | floating point score                     |
-+--------+------------------------------------------+
-| STRAND | The strand of the feature (+/-/./?)      |
-+--------+------------------------------------------+
-| PHASE  | only for TYPE="CDS"                      |
-+--------+------------------------------------------+
-| ATTR   | feature attributes                       |
-+--------+------------------------------------------+
++-------+------------------------------------------+
+|Column | Description                              |
++=======+==========================================+
+|SEQID  | ID of the landmark used                  |
++-------+------------------------------------------+
+|SOURCE | algorithm used to generate this feature  |
++-------+------------------------------------------+
+|TYPE   | type of the feature                      |
++-------+------------------------------------------+
+|START  | start of the feature                     |
++-------+------------------------------------------+
+|END    | end of the feature                       |
++-------+------------------------------------------+
+|SCORE  | floating point score                     |
++-------+------------------------------------------+
+|STRAND | The strand of the feature (+/-/./?)      |
++-------+------------------------------------------+
+|PHASE  | only for TYPE="CDS"                      |
++-------+------------------------------------------+
+|ATTR   | feature attributes                       |
++-------+------------------------------------------+
 
 
 Column 9 (ATTR) is list of feature attributes in the format
@@ -101,6 +104,46 @@ predefined meanings:
 The columns and attributes are read in as the vocabulary defined in
 genbank parsers (:mod:`skbio.io.format.genbank`).
 
+Format Parameters
+-----------------
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``interval_metadata_dict`` is a ``dict`` parameter required for
+``IntervalMetadata`` generator. Its key is the ``str`` of sequence ID
+and its value is the ``IntervalMetadata`` object for the sequence. The
+generator will read the GFF3 file and add the annotation of sequences
+to the corresponding ``IntervalMetadata`` objects. If the annotations of
+some sequences in the GFF3 doesn't match any sequence IDs in the input
+dict of ``interval_metadata_dict``, those annotations will be skipped
+and not parsed.
+
+``interval_metadata`` is an ``IntervalMetadata`` object required for
+``IntervalMetadata`` GFF3 reader. It reads the GFF3 file and add the
+annotations to the input ``interval_metadata``.
+
+``rec_num`` is an ``int` parameter used with the ``IntervalMetadata``,
+``DNA``, and ``Sequence`` GFF3 readers. It specifies which GFF3 record
+to read from a GFF3 file with annotations of multiple sequences in it.
+
+Writer-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``skip`` is a boolean parameter used by all the GFF3 writers. It
+specifies whether you would like to write each non-contiguous
+sub-regions for a feature annotation. For example, if there is
+interval feature for a gene with two exons in an ``IntervalMetadata``
+object, it will write one line into the GFF3 file when ``skip`` is
+``True`` and will write 3 lines (one for the gene and one for each
+exon, respectively) when ``skip`` is ``False``. Default is ``True``.
+
+``seq_id`` is a ``str`` parameter required to write
+``IntervalMetadata`` to GFF3. It specify the sequence ID (column 1 in
+GFF3 file) that the annotation belong to.
+
+``seq_ids`` is an iterable parameter required for ``IntervalMetadata``
+generator. It specifies each sequence IDs for ``IntervalMetadata``
+objects.
+
 Examples
 --------
 
@@ -133,10 +176,9 @@ Interval(interval_metadata=<4601272528>, bounds=[(1049, 9000)], fuzzy=\
 >>> im == im_return
 True
 
-Reference
----------
-
-.. [#] https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md  # noqa
+References
+----------
+.. [1] https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md  # noqa
 
 '''
 
@@ -187,7 +229,7 @@ def _gff3_to_generator(fh, interval_metadata_dict):
     '''Parse the GFF3 into the existing IntervalMetadata
 
     Note that if the seq ID does not exist in the input dict of
-    `interval_metadata_dict`, the record will be skipped and not
+    ``interval_metadata_dict``, the record will be skipped and not
     parsed.
 
     Parameters
