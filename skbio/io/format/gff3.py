@@ -1,6 +1,6 @@
 r'''
-GFF3 format (:mod:`skbio.io.format.gff3)
-========================================
+GFF3 format (:mod:`skbio.io.format.gff3`)
+=========================================
 
 .. currentmodule:: skbio.io.format.gff3
 

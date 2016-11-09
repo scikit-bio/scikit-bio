@@ -27,6 +27,7 @@ see the associated documentation.
    qseq
    stockholm
    genbank
+   gff3
 
 .. currentmodule:: skbio.io.registry
 
