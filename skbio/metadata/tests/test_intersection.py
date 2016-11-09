@@ -193,6 +193,7 @@ class IntervalTreeTest(unittest.TestCase):
         iv = IntervalTree()
         iv.insert(1, 1, 'foo')
         iv.insert(3, 7, 'spam')
+        iv.insert(8, 8, 'abc')
         self.assertEqual(iv.find(0, 1), [])
         self.assertEqual(iv.find(1, 1), ['foo'])
         self.assertEqual(iv.find(1, 2), ['foo'])
@@ -202,6 +203,12 @@ class IntervalTreeTest(unittest.TestCase):
         self.assertEqual(iv.find(6, 7), ['spam'])
         self.assertEqual(iv.find(7, 7), [])
         self.assertEqual(iv.find(0, 8), ['foo', 'spam'])
+        self.assertEqual(iv.find(8, 8), ['abc'])
+        self.assertEqual(iv.find(8, 9), ['abc'])
+        self.assertEqual(iv.find(9, 9), [])
+        self.assertEqual(iv.find(0, 10), ['foo', 'spam', 'abc'])
+        self.assertEqual(iv.find(6, 10), ['spam', 'abc'])
+        self.assertEqual(iv.find(7, 9), ['abc'])
 
     def test_traverse(self):
         a = []
