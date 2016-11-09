@@ -931,8 +931,8 @@ def _assert_valid_bound(bound):
             raise ValueError("A `bound` must be a tuple of exactly "
                              "two coordinates, not {!r}".format(bound))
         if not (isinstance(start, int) and
-                isinstance(end, int)) or start >= end:
-            raise ValueError('`start` (%r) must be a smaller int '
+                isinstance(end, int)) or start > end:
+            raise ValueError('`start` (%r) cannot be a larger int '
                              'than `end` (%r).' % (start, end))
     else:
         raise TypeError("Each `bound` must be a tuple, not {!r}".format(

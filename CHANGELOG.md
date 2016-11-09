@@ -8,21 +8,22 @@
 * `DistanceMatrix.from_iterable` now accepts a `validate=True` parameter. ([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
 * Added `IntervalMetadata` and `Interval` classes in `skbio.metadata` to store, query, and manipulate information of a sub-region of a sequence. ([#1414](https://github.com/biocore/scikit-bio/issues/1414)).
 * `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) now takes `IntervalMetadata` in their contructor API. Some of their relevant methods are also updated acoordingly. ([#1430](https://github.com/biocore/scikit-bio/pull/1430))
-* Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/biocore/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/biocore/scikit-bio/pull/1352)). 
+* GenBank parser now reads and writes `Sequence` or its subclass objects with `IntervalMetadata`. ([#1440](https://github.com/biocore/scikit-bio/pull/1440))
+* Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/biocore/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/biocore/scikit-bio/pull/1352)).
 
 ### Backward-incompatible changes [stable]
-* The constructor API for `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) are changed from:
-  `(sequence, metadata=None, positional_metadata=None, lowercase=False)` to:
-  `(sequence, metadata=None, positional_metadata=None, interval_metadata=None, lowercase=False)`
+* The constructor API for `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) are changed from `(sequence, metadata=None, positional_metadata=None, lowercase=False)` to `(sequence, metadata=None, positional_metadata=None, interval_metadata=None, lowercase=False)`
 
-  The changes are made to allow these classes to adopt `IntervalMetadata` object for interval features on the sequence. The `interval_metadata` parameter is added imediately after `positional_metadata` instead of appended to the end, because it is more natural nd logical and, more importantly, because it is unlikely in practice to break user code. A user's code would break only if they had supplied `metadata`, `postional_metadata`, and `lowercase` parameters positionally. In the unlikely event that this happens, users will get an error telling them a bool isn't a valid `IntervalMetadata` type, so it won't silently produce buggy behavior.
+  The changes are made to allow these classes to adopt `IntervalMetadata` object for interval features on the sequence. The `interval_metadata` parameter is added imediately after `positional_metadata` instead of appended to the end, because it is more natural and logical and, more importantly, because it is unlikely in practice to break user code. A user's code would break only if they had supplied `metadata`, `postional_metadata`, and `lowercase` parameters positionally. In the unlikely event that this happens, users will get an error telling them a bool isn't a valid `IntervalMetadata` type, so it won't silently produce buggy behavior.
 
 ### Backward-incompatible changes [experimental]
 * Modifying basis handling in `skbio.stats.composition.ilr_inv` prior to checking for orthogonality.  Now the basis is strictly assumed to be in the Aitchison simplex.
 * `DistanceMatrix.from_iterable` default behavior is now to validate matrix by computing all pairwise distances. Pass `validate=False` to get the previous behavior (no validation, but faster execution).([#1343](https://github.com/biocore/scikit-bio/issues/1343)).
+* GenBank I/O now parses sequence features into the attribute of `interval_metadata` instead of `positiona_metadata`. And the key of `FEATURES` is removed from `metadata` attribute.
 
 ### Performance enhancements
 * `TreeNode.shear` was rewritten for approximately a 25% performance increase. ([#1399](https://github.com/biocore/scikit-bio/pull/1399))
+* The `IntervalMetadata` allows dramatic decrease in memory usage in reading GenBank files of feature rich sequences. ([#1159](https://github.com/biocore/scikit-bio/issues/1159))
 
 ### Bug fixes
 

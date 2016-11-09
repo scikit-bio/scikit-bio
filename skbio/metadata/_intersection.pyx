@@ -182,14 +182,24 @@ cdef class IntervalNode:
     find = intersect
 
     cdef void _intersect( IntervalNode self, int start, int end, list results):
+        cdef int send, qend
+
         # Left subtree
-        if self.cleft is not EmptyNode and self.cleft.maxend > start:
+        if self.cleft is not EmptyNode and self.cleft.maxend >= start:
             self.cleft._intersect( start, end, results )
         # This interval
-        if ( self.end > start ) and ( self.start < end ):
+        if start == end:
+            qend = end
+        else:
+            qend = end - 1
+        if self.end == self.start:
+            send = self.end
+        else:
+            send = self.end - 1
+        if ( send >= start ) and ( self.start <= qend ):
             results.append( self.interval )
         # Right subtree
-        if self.cright is not EmptyNode and self.start < end:
+        if self.cright is not EmptyNode and self.start <= qend:
             self.cright._intersect( start, end, results )
 
     cpdef void update(IntervalNode self, int start, int end,
