@@ -10,7 +10,7 @@
 * `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) now takes `IntervalMetadata` in their contructor API. Some of their relevant methods are also updated acoordingly. ([#1430](https://github.com/biocore/scikit-bio/pull/1430))
 * GenBank parser now reads and writes `Sequence` or its subclass objects with `IntervalMetadata`. ([#1440](https://github.com/biocore/scikit-bio/pull/1440))
 * Added parallel beta diversity calculation support via `skbio.diversity.block_beta_diversity`. The issue and idea is discussed in ([#1181](https://github.com/biocore/scikit-bio/issues/1181), while the actual code changes are in [#1352](https://github.com/biocore/scikit-bio/pull/1352)).
-* Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes.
+* Added ``skbio.io.format.gff3`` for reading and writing GFF3 files for ``DNA``, ``Sequence``, and ``IntervalMetadata`` classes. ([#1450](https://github.com/biocore/scikit-bio/pull/1450))
 
 ### Backward-incompatible changes [stable]
 * The constructor API for `Sequence` and its child classes (including `GrammaredSequence`, `RNA`, `DNA`, `Protein`) are changed from `(sequence, metadata=None, positional_metadata=None, lowercase=False)` to `(sequence, metadata=None, positional_metadata=None, interval_metadata=None, lowercase=False)`

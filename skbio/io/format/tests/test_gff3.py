@@ -14,6 +14,7 @@ from skbio.metadata import IntervalMetadata
 from skbio import DNA, Sequence
 from skbio.io import GFF3FormatError
 from skbio.io.format.gff3 import (_yield_record,
+                                  _parse_record,
                                   _gff3_sniffer,
                                   _gff3_to_interval_metadata,
                                   _interval_metadata_to_gff3,
@@ -133,27 +134,44 @@ class ReaderTests(GFF3IOTests):
         for i, j in zip(_yield_record(fh), obs):
             self.assertEqual(i, j)
 
+    def test_parse_record_raise(self):
+        chars = 'abc?!'
+        for char in chars:
+            lines = [
+                'ctg123\t.\tgene\t1000\t9000\t.\t+\t%s\tID=gene00001' % char]
+            with self.assertRaisesRegex(
+                    GFF3FormatError,
+                    "unknown value for phase column: '%s'" % char):
+                _parse_record(lines, 10000)
+
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
-            self.single_fp,
-            interval_metadata=IntervalMetadata(self.upper_bound1),
-            rec_num=1)
+            self.single_fp, length=self.upper_bound1, seq_id='Chromosome')
 
         self.assertEqual(obs, self.imd1)
+
+    def test_gff3_to_interval_metadata_empty(self):
+        exp = IntervalMetadata(self.upper_bound1)
+        obs = _gff3_to_interval_metadata(
+            # the seq id does not exist
+            self.single_fp, length=self.upper_bound1, seq_id='foo')
+
+        self.assertEqual(obs, exp)
 
     def test_gff3_to_interval_metadata_bad(self):
         with self.assertRaisesRegex(GFF3FormatError,
                                     'do not have 9 columns in this line'):
             _gff3_to_interval_metadata(
                 get_data_path('gff3_bad_wrong_columns'),
-                interval_metadata=IntervalMetadata(self.upper_bound1))
+                length=self.upper_bound1,
+                seq_id='Chromosome')
 
     def test_gff3_to_generator(self):
-        imd = {'Chromosome': IntervalMetadata(self.upper_bound1),
-               'gi|556503834|ref|NC_000913.3|':
-               IntervalMetadata(self.upper_bound2)}
-        obss = _gff3_to_generator(self.multi_fp, interval_metadata_dict=imd)
-        for obs, exp in zip(obss, [self.imd1, self.imd2]):
+        exps = [('Chromosome', self.imd1),
+               ('gi|556503834|ref|NC_000913.3|', self.imd2)]
+        obss = _gff3_to_generator(
+            self.multi_fp, lengths=[self.upper_bound1, self.upper_bound2])
+        for obs, exp in zip(obss, exps):
             self.assertEqual(obs, exp)
 
     def test_gff3_to_sequence(self):
@@ -175,7 +193,7 @@ class WriterTests(GFF3IOTests):
                    if not i.startswith('#')]
 
         with open(self.single_fp) as f:
-            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
+            exp = [i.rstrip() for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
 
@@ -199,7 +217,7 @@ class WriterTests(GFF3IOTests):
 
         with io.StringIO() as fh:
             _serialize_interval_metadata(
-                self.imd3, seq_id='NC_7', fh=fh, skip=False)
+                self.imd3, seq_id='NC_7', fh=fh, skip_subregion=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
         exp = lines[-3:]
@@ -240,14 +258,15 @@ class RoundtripTests(GFF3IOTests):
             _interval_metadata_to_gff3(
                 _gff3_to_interval_metadata(
                     self.single_fp,
-                    interval_metadata=IntervalMetadata(self.upper_bound1)),
+                    length=self.upper_bound1,
+                    seq_id='Chromosome'),
                 fh,
                 seq_id='Chromosome')
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
 
         with open(self.single_fp) as f:
-            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
+            exp = [i.rstrip() for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
 
@@ -261,17 +280,16 @@ class RoundtripTests(GFF3IOTests):
             _generator_to_gff3(
                 _gff3_to_generator(
                     self.multi_fp,
-                    interval_metadata_dict=imd),
+                    lengths=[self.upper_bound1,
+                             self.upper_bound2,
+                             self.upper_bound3]),
                 fh,
-                seq_ids=['Chromosome',
-                         'gi|556503834|ref|NC_000913.3|',
-                         'NC_7'],
-                skip=False)
+                skip_subregion=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
 
         with open(self.multi_fp) as f:
-            exp = [i[:-1] for i in f.readlines() if not i.startswith('#')]
+            exp = [i.rstrip() for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
 
