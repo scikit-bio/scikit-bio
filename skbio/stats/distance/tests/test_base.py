@@ -24,6 +24,7 @@ from skbio.stats.distance import (
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from skbio.util import assert_data_frame_almost_equal
+from skbio.util._testing import assert_series_almost_equal
 
 
 class DissimilarityMatrixTestData(TestCase):
@@ -800,6 +801,38 @@ class DistanceMatrixTests(DissimilarityMatrixTestData):
         eq_dm = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         self.assertTrue(self.dm_3x3 == eq_dm)
         self.assertTrue(eq_dm == self.dm_3x3)
+
+    def test_to_series_1x1(self):
+        series = self.dm_1x1.to_series()
+
+        exp = pd.Series([], index=[])
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_2x2(self):
+        series = self.dm_2x2.to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('a', 'b')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_4x4(self):
+        dm = DistanceMatrix([
+            [0.0, 0.2, 0.3, 0.4],
+            [0.2, 0.0, 0.5, 0.6],
+            [0.3, 0.5, 0.0, 0.7],
+            [0.4, 0.6, 0.7, 0.0]], ['a', 'b', 'c', 'd'])
+
+        series = dm.to_series()
+
+        exp = pd.Series([0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+                        index=pd.Index([('a', 'b'), ('a', 'c'), ('a', 'd'),
+                                        ('b', 'c'), ('b', 'd'), ('c', 'd')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_default_ids(self):
+        series = DistanceMatrix(self.dm_2x2_data).to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
+        assert_series_almost_equal(series, exp)
 
 
 class RandomDistanceMatrixTests(TestCase):
