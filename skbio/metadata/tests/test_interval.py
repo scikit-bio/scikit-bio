@@ -494,6 +494,28 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
                 metadata={'gene': 'sagC'})
         self.assertEqual(obs, exp)
 
+    def test_merge(self):
+        # empty + empty
+        im = IntervalMetadata(self.upper_bound)
+        self.im_empty.merge(im)
+        self.assertEqual(self.im_empty, im)
+        # empty + non-empty
+        self.im_empty.merge(self.im_1)
+        self.assertEqual(self.im_empty, self.im_1)
+        # non-empty + non-empty
+        self.im_empty.merge(self.im_2)
+        self.im_2.merge(self.im_1)
+        self.assertEqual(self.im_empty, self.im_2)
+
+    def test_merge_unequal_upper_bounds(self):
+        n = 3
+        im1 = IntervalMetadata(n)
+        for im in [self.im_empty, self.im_1]:
+            with self.assertRaisesRegex(
+                    ValueError,
+                    r'not equal \(%d != %d\)' % (self.upper_bound, n)):
+                im.merge(im1)
+
     def test_sort(self):
         interval = Interval(
             self.im_2,
