@@ -652,6 +652,11 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
                 'The upper bounds of the two IntervalMetadata objects '
                 'are not equal (%d != %d)' % (
                     self.upper_bound, other.upper_bound))
+        if self.lower_bound != other.lower_bound:
+            raise ValueError(
+                'The lower bounds of the two IntervalMetadata objects '
+                'are not equal (%d != %d)' % (
+                    self.lower_bound, other.lower_bound))
         for intvl in other._intervals:
             self.add(intvl.bounds, intvl.fuzzy, intvl.metadata)
 
