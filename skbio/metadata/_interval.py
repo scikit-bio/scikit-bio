@@ -633,6 +633,33 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         return new
 
+    @experimental(as_of='0.5.1')
+    def merge(self, other):
+        '''Merge the interval features of another ``IntervalMetadata`` object.
+
+        It adds all the interval features of the other object into
+        ``self``. Note this will not check if there are any duplicates
+        of interval features after merge.
+
+        Parameters
+        ----------
+        other : ``IntervalMetadata``
+            The other ``IntervalMetadata`` to be merged.
+
+        '''
+        if self.upper_bound != other.upper_bound:
+            raise ValueError(
+                'The upper bounds of the two IntervalMetadata objects '
+                'are not equal (%d != %d)' % (
+                    self.upper_bound, other.upper_bound))
+        if self.lower_bound != other.lower_bound:
+            raise ValueError(
+                'The lower bounds of the two IntervalMetadata objects '
+                'are not equal (%d != %d)' % (
+                    self.lower_bound, other.lower_bound))
+        for intvl in other._intervals:
+            self.add(intvl.bounds, intvl.fuzzy, intvl.metadata)
+
     @experimental(as_of='0.5.0-dev')
     def sort(self, ascending=True):
         '''Sort interval features by their coordinates.
