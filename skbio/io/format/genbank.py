@@ -48,11 +48,11 @@ reference sections in one GenBank record.
 ``FEATURES`` section
 ^^^^^^^^^^^^^^^^^^^^
 The International Nucleotide Sequence Database Collaboration (INSDC
-[2]_) is a long-standing foundational initiative between the DDBJ,
-EMBL, and GenBank. These organisations all use the same "Feature
-Table" layout in their plain text flat file formats, which are
-documented in detail [3]_. The feature keys and their qualifiers are
-also described in this webpage [4]_.
+[2]_) is a joint effort among the DDBJ, EMBL, and GenBank. These
+organisations all use the same "Feature Table" layout in their plain
+text flat file formats, which are documented in detail [3]_. The
+feature keys and their qualifiers are also described in this webpage
+[4]_.
 
 The ``FEATURES`` section will be stored in ``interval_metadata`` of
 ``Sequence`` or its sub-class. Each sub-section is stored as an
@@ -111,27 +111,27 @@ when parsing them into memory, as described in this table:
 
 ``Location`` string
 +++++++++++++++++++
-There are 5 types of location descriptors in Feature Table. This
-explains how they will be parsed into the bounds of ``Interval``
-object (note it converts the 1-based coordinate to 0-based):
+There are 5 types of location descriptors defined in Feature
+Table. This explains how they will be parsed into the bounds of
+``Interval`` object (note it converts the 1-based coordinate to
+0-based):
 
-    1. a single base number. e.g. 467. This is parsed to ``(466, 467)``.
+    1. a single base number. e.g. 67. This is parsed to ``(66, 67)``.
 
-    2. a site between two indicated adjoining bases. e.g. 123^124. This
-       is parsed to ``(122, 123)``.
+    2. a site between two neighboring bases. e.g. 67^68. This
+       is parsed to ``(66, 67)``.
 
-    3. a single base chosen from within a specified range of bases (not
-       allowed for new entries). e.g. 102.110. This is parsed to
-       ``(101, 110)``.
+    3. a single base from inside a range. e.g. 67.89. This is parsed to
+       ``(66, 89)``.
 
-    4. the base numbers delimiting a sequence span. e.g. 340..565. This
-       is parsed to ``(339, 565)``.
+    4. a pair of base numbers defining a sequence span. e.g. 67..89. This
+       is parsed to ``(66, 89)``.
 
-    5. a remote entry identifier followed by a local location
-       descriptor (i.e., a-d). e.g. J00194.1:100..202. This will be
-       discarded because it is not on the current sequence. When it is
-       combined with local descriptor like J00194.1:100..202,200..209,
-       the local part will be kept to be ``(199, 209)``.
+    5. a remote sequence identifier followed by a location descriptor
+       defined above. e.g. J00123.1:67..89. This will be discarded
+       because it is not on the current sequence. When it is combined
+       with local descriptor like J00123.1:67..89,200..209, the
+       local part will be kept to be ``(199, 209)``.
 
 
 .. note:: The Location string is fully stored in ``Interval.metadata``
