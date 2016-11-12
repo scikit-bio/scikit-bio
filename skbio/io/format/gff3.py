@@ -1,5 +1,4 @@
-'''
-GFF3 format (:mod:`skbio.io.format.gff3`)
+'''GFF3 format (:mod:`skbio.io.format.gff3`)
 =========================================
 
 .. currentmodule:: skbio.io.format.gff3
@@ -50,9 +49,10 @@ Format Parameters
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Reader of ``IntervalMetadata`` generator requires a parameter
-``lengths``. It is an iterable of int and specifies the upper bounds
-of the ``IntervalMetadata`` objects the reader yields.
+Reader of ``IntervalMetadata`` generator requires a dict called
+``id_lengths``. Its key is str of seq id and its value is int. The value
+specifies the upper bound of the ``IntervalMetadata`` object the
+reader yields corresponding to the seq id.
 
 ``IntervalMetadata`` GFF3 reader requires 2 parameters: ``seq_id`` of
 str and ``length`` of int. It reads the annotation with the specified
@@ -83,34 +83,42 @@ Examples
 Let's create a file stream with following data in GFF3 format:
 
 >>> gff_str = """
-... ##gff-version\\t3.2.1
-... ##sequence-region\\tctg123\\t1\\t1497228
-... ctg123\\t.\\tgene\\t1000\\t9000\\t.\\t+\\t0\\tID=gene00001;Name=EDEN
-... ctg123\\t.\\tTF_binding_site\\t1000\\t1012\\t.\\t+\\t.\\tParent=gene00001
-... ctg123\\t.\\tmRNA\\t1050\\t9000\\t.\\t+\\t.\\tID=mRNA00001;Parent=gene00001
+... ##gff-version 3
+... seq_1\\t.\\tgene\\t10\\t90\\t.\\t+\\t0\\tID=gen1
+... seq_1\\t.\\texon\\t10\\t30\\t.\\t+\\t.\\tParent=gen1
+... seq_1\\t.\\texon\\t50\\t90\\t.\\t+\\t.\\tParent=gen1
 ... """
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
 >>> gff = io.StringIO(gff_str)
 
-We can read it into
+We can read it into ``IntervalMetadata``:
 
 >>> im = read(gff, format='gff3', into=IntervalMetadata,
-...           seq_id='ctg123', length=10000)
->>> im   # doctest: +SKIP
+...           seq_id='seq_1', length=10000)
+>>> im  # doctest: +SKIP
 3 interval features
 -------------------
-Interval(interval_metadata=<4601272528>, bounds=[(999, 9000)], fuzzy=\
-[(False, False)], metadata={'source': '.', 'type': 'gene', 'strand': '+', \
-'score': '.', 'phase': 0, 'ID': 'gene00001', 'Name': 'EDEN'})
-Interval(interval_metadata=<4601272528>, bounds=[(999, 1012)], fuzzy=\
-[(False, False)], metadata={'source': '.', 'type': 'TF_binding_site', \
-'strand': '+', 'score': '.', 'Parent': 'gene00001'})
-Interval(interval_metadata=<4601272528>, bounds=[(1049, 9000)], fuzzy=\
-[(False, False)], metadata={'source': '.', 'type': 'mRNA', 'strand': '+', \
-'score': '.', 'ID': 'mRNA00001', 'Parent': 'gene00001'})
+Interval(interval_metadata=<4604421736>, bounds=[(9, 90)], \
+fuzzy=[(False, False)], metadata={'type': 'gene', \
+'phase': 0, 'strand': '+', 'source': '.', 'score': '.', 'ID': 'gen1'})
+Interval(interval_metadata=<4604421736>, bounds=[(9, 30)], \
+fuzzy=[(False, False)], metadata={'strand': '+', 'source': '.', \
+'type': 'exon', 'Parent': 'gen1', 'score': '.'})
+Interval(interval_metadata=<4604421736>, bounds=[(49, 90)], \
+fuzzy=[(False, False)], metadata={'strand': '+', 'source': '.', \
+'type': 'exon', 'Parent': 'gen1', 'score': '.'})
 
+We can write the ``IntervalMetadata`` object back to GFF3 file:
+
+>>> with io.StringIO() as fh:
+...     print(im.write(fh, format='gff3', seq_id='seq_1').getvalue())
+##gff-version 3
+seq_1	.	gene	10	90	.	+	0	ID=gen1
+seq_1	.	exon	10	30	.	+	.	Parent=gen1
+seq_1	.	exon	50	90	.	+	.	Parent=gen1
+<BLANKLINE>
 
 References
 ----------
@@ -162,21 +170,24 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh, lengths):
+def _gff3_to_generator(fh, id_lengths):
     '''Parse the GFF3 into the existing IntervalMetadata
 
     Parameters
     ----------
     fh : file
         file handler
+    id_lengths : dict
 
     Yields
     ------
     tuple
         str of seq id, IntervalMetadata
     '''
-    for (seq_id, lines), length in zip(_yield_record(fh), lengths):
-        yield seq_id, _parse_record(lines, length)
+    for seq_id, lines in _yield_record(fh):
+        if seq_id in id_lengths:
+            length = id_lengths[seq_id]
+            yield seq_id, _parse_record(lines, length)
 
 
 @gff3.writer(None)

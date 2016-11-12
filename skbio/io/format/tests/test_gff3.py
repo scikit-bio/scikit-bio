@@ -170,7 +170,9 @@ class ReaderTests(GFF3IOTests):
         exps = [('Chromosome', self.imd1),
                 ('gi|556503834|ref|NC_000913.3|', self.imd2)]
         obss = _gff3_to_generator(
-            self.multi_fp, lengths=[self.upper_bound1, self.upper_bound2])
+            self.multi_fp,
+            id_lengths={'Chromosome': self.upper_bound1,
+                        'gi|556503834|ref|NC_000913.3|': self.upper_bound2})
         for obs, exp in zip(obss, exps):
             self.assertEqual(obs, exp)
 
@@ -275,9 +277,10 @@ class RoundtripTests(GFF3IOTests):
             _generator_to_gff3(
                 _gff3_to_generator(
                     self.multi_fp,
-                    lengths=[self.upper_bound1,
-                             self.upper_bound2,
-                             self.upper_bound3]),
+                    id_lengths={
+                        'Chromosome': self.upper_bound1,
+                        'gi|556503834|ref|NC_000913.3|': self.upper_bound2,
+                        'NC_7': self.upper_bound3}),
                 fh,
                 skip_subregion=False)
             obs = [i for i in fh.getvalue().splitlines()
