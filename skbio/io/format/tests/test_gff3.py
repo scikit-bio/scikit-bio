@@ -168,7 +168,7 @@ class ReaderTests(GFF3IOTests):
 
     def test_gff3_to_generator(self):
         exps = [('Chromosome', self.imd1),
-               ('gi|556503834|ref|NC_000913.3|', self.imd2)]
+                ('gi|556503834|ref|NC_000913.3|', self.imd2)]
         obss = _gff3_to_generator(
             self.multi_fp, lengths=[self.upper_bound1, self.upper_bound2])
         for obs, exp in zip(obss, exps):
@@ -271,11 +271,6 @@ class RoundtripTests(GFF3IOTests):
         self.assertEqual(obs, exp)
 
     def test_roundtrip_interval_metadata_generator(self):
-        imd = {'Chromosome': IntervalMetadata(self.upper_bound1),
-               'gi|556503834|ref|NC_000913.3|':
-               IntervalMetadata(self.upper_bound2),
-               'NC_7': IntervalMetadata(self.upper_bound3)}
-
         with io.StringIO() as fh:
             _generator_to_gff3(
                 _gff3_to_generator(

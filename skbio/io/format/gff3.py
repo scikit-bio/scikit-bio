@@ -200,7 +200,7 @@ def _gff3_to_sequence(fh, seq_num=1):
     # file.tell() will fail "telling position disabled by next() call".
     stream = StringIO(fh.read())
     seq = read(stream, format='fasta', into=Sequence, seq_num=seq_num)
-    seq.interval_metadata=_parse_record(lines, len(seq))
+    seq.interval_metadata = _parse_record(lines, len(seq))
     return seq
 
 
