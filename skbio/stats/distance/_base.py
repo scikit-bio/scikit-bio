@@ -111,7 +111,7 @@ class DissimilarityMatrix(SkbioObject):
         self._id_index = self._index_list(self._ids)
 
     @classonlymethod
-    @experimental(as_of="0.5.0-dev")
+    @experimental(as_of="0.5.1")
     def from_iterable(cls, iterable, metric, key=None, keys=None):
         """Create DissimilarityMatrix from an iterable given a metric.
 
@@ -875,7 +875,7 @@ class DistanceMatrix(DissimilarityMatrix):
             raise DistanceMatrixError("Data must be hollow (i.e., the diagonal"
                                       " can only contain zeros).")
 
-    @experimental(as_of="0.5.0-dev")
+    @experimental(as_of="0.5.1")
     def to_series(self):
         """Create a ``pandas.Series`` from this ``DistanceMatrix``.
 

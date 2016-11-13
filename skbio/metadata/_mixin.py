@@ -435,7 +435,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             self.interval_metadata = interval_metadata
 
     @property
-    @experimental(as_of="0.5.0-dev")
+    @experimental(as_of="0.5.1")
     def interval_metadata(self):
         '''``IntervalMetadata`` object containing info about interval features.
 
@@ -477,7 +477,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
     def interval_metadata(self):
         self._interval_metadata = None
 
-    @experimental(as_of="0.5.0-dev")
+    @experimental(as_of="0.5.1")
     def has_interval_metadata(self):
         """Determine if the object has interval metadata.
 
