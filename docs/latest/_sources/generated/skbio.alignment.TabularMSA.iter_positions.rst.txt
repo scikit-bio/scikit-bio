@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.iter_positions
+=========================================
+
+.. currentmodule:: skbio.alignment
+
+.. automethod:: TabularMSA.iter_positions

@@ -1,0 +1,61 @@
+skbio.metadata.IntervalMetadata
+===============================
+
+.. currentmodule:: skbio.metadata
+
+.. autoclass:: IntervalMetadata
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         IntervalMetadata.__copy__
+         
+         IntervalMetadata.__deepcopy__
+         
+         
+         IntervalMetadata.__eq__
+         
+         IntervalMetadata.__format__
+         
+         
+         IntervalMetadata.__ne__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         IntervalMetadata.add
+         
+         IntervalMetadata.concat
+         
+         IntervalMetadata.drop
+         
+         IntervalMetadata.merge
+         
+         IntervalMetadata.query
+         
+         IntervalMetadata.sort
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IntervalMetadata.lower_bound
+         IntervalMetadata.num_interval_features
+         IntervalMetadata.upper_bound
+

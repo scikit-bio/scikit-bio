@@ -1,0 +1,114 @@
+skbio.alignment.TabularMSA
+==========================
+
+.. currentmodule:: skbio.alignment
+
+.. autoclass:: TabularMSA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         TabularMSA.__bool__
+         
+         TabularMSA.__contains__
+         
+         TabularMSA.__copy__
+         
+         TabularMSA.__deepcopy__
+         
+         
+         TabularMSA.__eq__
+         
+         TabularMSA.__format__
+         
+         TabularMSA.__getitem__
+         
+         
+         TabularMSA.__iter__
+         
+         TabularMSA.__len__
+         
+         TabularMSA.__ne__
+         
+         
+         
+         
+         
+         TabularMSA.__reversed__
+         
+         
+         TabularMSA.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         TabularMSA.append
+         
+         TabularMSA.consensus
+         
+         TabularMSA.conservation
+         
+         TabularMSA.extend
+         
+         TabularMSA.from_dict
+         
+         TabularMSA.gap_frequencies
+         
+         TabularMSA.has_metadata
+         
+         TabularMSA.has_positional_metadata
+         
+         TabularMSA.iter_positions
+         
+         TabularMSA.join
+         
+         TabularMSA.read
+         
+         TabularMSA.reassign_index
+         
+         TabularMSA.sort
+         
+         TabularMSA.to_dict
+         
+         TabularMSA.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TabularMSA.default_write_format
+         TabularMSA.dtype
+         TabularMSA.iloc
+         TabularMSA.index
+         TabularMSA.loc
+         TabularMSA.metadata
+         TabularMSA.positional_metadata
+         TabularMSA.shape
+

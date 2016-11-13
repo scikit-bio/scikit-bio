@@ -1,6 +1,0 @@
-skbio.util.create_dir
-=====================
-
-.. currentmodule:: skbio.util
-
-.. autofunction:: create_dir

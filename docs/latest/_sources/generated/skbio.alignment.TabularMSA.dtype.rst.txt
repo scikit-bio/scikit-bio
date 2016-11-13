@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.alignment.TabularMSA.dtype
+================================
+
+.. currentmodule:: skbio.alignment
+
+.. autoattribute:: TabularMSA.dtype

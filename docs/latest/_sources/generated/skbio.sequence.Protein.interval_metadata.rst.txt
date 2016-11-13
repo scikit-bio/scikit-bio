@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.interval_metadata
+========================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: Protein.interval_metadata

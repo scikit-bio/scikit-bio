@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.nondegenerates
+===============================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.nondegenerates

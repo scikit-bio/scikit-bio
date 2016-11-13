@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.__ne__
+=======================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: GrammaredSequence.__ne__

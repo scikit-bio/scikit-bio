@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.DNA.copy
-=======================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: DNA.copy

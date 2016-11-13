@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.stats.distance.DistanceMatrix.write
+=========================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. automethod:: DistanceMatrix.write

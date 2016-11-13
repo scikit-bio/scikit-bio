@@ -1,8 +1,0 @@
-:orphan:
-
-skbio.sequence.GrammaredSequence.copy
-=====================================
-
-.. currentmodule:: skbio.sequence
-
-.. automethod:: GrammaredSequence.copy

@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.GrammaredSequence.interval_metadata
+==================================================
+
+.. currentmodule:: skbio.sequence
+
+.. autoattribute:: GrammaredSequence.interval_metadata

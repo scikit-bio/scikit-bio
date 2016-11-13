@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.IntervalMetadata.__deepcopy__
+============================================
+
+.. currentmodule:: skbio.metadata
+
+.. automethod:: IntervalMetadata.__deepcopy__

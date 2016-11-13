@@ -1,0 +1,172 @@
+skbio.sequence.RNA
+==================
+
+.. currentmodule:: skbio.sequence
+
+.. autoclass:: RNA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         RNA.__bool__
+         
+         RNA.__contains__
+         
+         RNA.__copy__
+         
+         RNA.__deepcopy__
+         
+         
+         RNA.__eq__
+         
+         RNA.__format__
+         
+         RNA.__getitem__
+         
+         
+         RNA.__iter__
+         
+         RNA.__len__
+         
+         RNA.__ne__
+         
+         
+         
+         
+         
+         RNA.__reversed__
+         
+         
+         RNA.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         RNA.complement
+         
+         RNA.concat
+         
+         RNA.count
+         
+         RNA.definites
+         
+         RNA.degap
+         
+         RNA.degenerates
+         
+         RNA.distance
+         
+         RNA.expand_degenerates
+         
+         RNA.find_motifs
+         
+         RNA.find_with_regex
+         
+         RNA.frequencies
+         
+         RNA.gaps
+         
+         RNA.gc_content
+         
+         RNA.gc_frequency
+         
+         RNA.has_definites
+         
+         RNA.has_degenerates
+         
+         RNA.has_gaps
+         
+         RNA.has_interval_metadata
+         
+         RNA.has_metadata
+         
+         RNA.has_nondegenerates
+         
+         RNA.has_positional_metadata
+         
+         RNA.index
+         
+         RNA.is_reverse_complement
+         
+         RNA.iter_contiguous
+         
+         RNA.iter_kmers
+         
+         RNA.kmer_frequencies
+         
+         RNA.lowercase
+         
+         RNA.match_frequency
+         
+         RNA.matches
+         
+         RNA.mismatch_frequency
+         
+         RNA.mismatches
+         
+         RNA.nondegenerates
+         
+         RNA.read
+         
+         RNA.replace
+         
+         RNA.reverse_complement
+         
+         RNA.reverse_transcribe
+         
+         RNA.to_regex
+         
+         RNA.translate
+         
+         RNA.translate_six_frames
+         
+         RNA.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RNA.alphabet
+         RNA.complement_map
+         RNA.default_gap_char
+         RNA.default_write_format
+         RNA.definite_chars
+         RNA.degenerate_chars
+         RNA.degenerate_map
+         RNA.gap_chars
+         RNA.interval_metadata
+         RNA.metadata
+         RNA.nondegenerate_chars
+         RNA.observed_chars
+         RNA.positional_metadata
+         RNA.values
+

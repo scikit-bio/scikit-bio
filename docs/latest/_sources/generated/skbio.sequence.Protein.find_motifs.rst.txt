@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.find_motifs
+==================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.find_motifs

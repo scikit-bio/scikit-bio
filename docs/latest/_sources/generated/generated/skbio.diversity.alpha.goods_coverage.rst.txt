@@ -1,0 +1,6 @@
+skbio.diversity.alpha.goods_coverage
+====================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: goods_coverage

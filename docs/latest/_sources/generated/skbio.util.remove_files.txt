@@ -1,6 +1,0 @@
-skbio.util.remove_files
-=======================
-
-.. currentmodule:: skbio.util
-
-.. autofunction:: remove_files
