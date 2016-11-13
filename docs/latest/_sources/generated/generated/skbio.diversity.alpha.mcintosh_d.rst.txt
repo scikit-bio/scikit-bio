@@ -1,0 +1,6 @@
+skbio.diversity.alpha.mcintosh_d
+================================
+
+.. currentmodule:: skbio.diversity.alpha
+
+.. autofunction:: mcintosh_d

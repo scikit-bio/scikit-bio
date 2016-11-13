@@ -1,0 +1,6 @@
+skbio.alignment.make_identity_substitution_matrix
+=================================================
+
+.. currentmodule:: skbio.alignment
+
+.. autofunction:: make_identity_substitution_matrix

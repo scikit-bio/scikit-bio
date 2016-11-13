@@ -1,0 +1,33 @@
+skbio.stats.gradient.FirstDifferenceGradientANOVA
+=================================================
+
+.. currentmodule:: skbio.stats.gradient
+
+.. autoclass:: FirstDifferenceGradientANOVA
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         
+         FirstDifferenceGradientANOVA.__format__
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         FirstDifferenceGradientANOVA.get_trajectories
+
+
+
+   
+

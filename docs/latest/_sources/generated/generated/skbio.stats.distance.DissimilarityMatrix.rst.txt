@@ -1,0 +1,77 @@
+skbio.stats.distance.DissimilarityMatrix
+========================================
+
+.. currentmodule:: skbio.stats.distance
+
+.. autoclass:: DissimilarityMatrix
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         
+         DissimilarityMatrix.__contains__
+         
+         
+         DissimilarityMatrix.__eq__
+         
+         DissimilarityMatrix.__format__
+         
+         DissimilarityMatrix.__getitem__
+         
+         
+         DissimilarityMatrix.__ne__
+         
+         
+         
+         
+         
+         DissimilarityMatrix.__str__
+         
+         
+         
+         
+         
+         
+         
+         
+         DissimilarityMatrix.copy
+         
+         DissimilarityMatrix.filter
+         
+         DissimilarityMatrix.from_iterable
+         
+         DissimilarityMatrix.index
+         
+         DissimilarityMatrix.plot
+         
+         DissimilarityMatrix.read
+         
+         DissimilarityMatrix.redundant_form
+         
+         DissimilarityMatrix.to_data_frame
+         
+         DissimilarityMatrix.transpose
+         
+         DissimilarityMatrix.write
+
+
+
+   
+
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DissimilarityMatrix.T
+         DissimilarityMatrix.data
+         DissimilarityMatrix.default_write_format
+         DissimilarityMatrix.dtype
+         DissimilarityMatrix.ids
+         DissimilarityMatrix.png
+         DissimilarityMatrix.shape
+         DissimilarityMatrix.size
+         DissimilarityMatrix.svg
+

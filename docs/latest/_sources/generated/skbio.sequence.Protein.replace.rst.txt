@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.Protein.replace
+==============================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: Protein.replace

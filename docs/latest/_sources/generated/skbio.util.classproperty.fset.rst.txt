@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.util.classproperty.fset
+=============================
+
+.. currentmodule:: skbio.util
+
+.. autoattribute:: classproperty.fset

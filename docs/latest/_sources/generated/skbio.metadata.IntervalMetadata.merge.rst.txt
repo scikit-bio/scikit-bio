@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.metadata.IntervalMetadata.merge
+=====================================
+
+.. currentmodule:: skbio.metadata
+
+.. automethod:: IntervalMetadata.merge

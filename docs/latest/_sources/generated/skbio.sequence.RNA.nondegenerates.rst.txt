@@ -1,0 +1,8 @@
+:orphan:
+
+skbio.sequence.RNA.nondegenerates
+=================================
+
+.. currentmodule:: skbio.sequence
+
+.. automethod:: RNA.nondegenerates
