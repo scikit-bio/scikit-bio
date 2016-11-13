@@ -82,21 +82,31 @@ Examples
 
 Let's create a file stream with following data in GFF3 format:
 
+>>> from skbio import Sequence, DNA
 >>> gff_str = """
 ... ##gff-version 3
 ... seq_1\\t.\\tgene\\t10\\t90\\t.\\t+\\t0\\tID=gen1
 ... seq_1\\t.\\texon\\t10\\t30\\t.\\t+\\t.\\tParent=gen1
 ... seq_1\\t.\\texon\\t50\\t90\\t.\\t+\\t.\\tParent=gen1
+... seq_2\\t.\\tgene\\t80\\t96\\t.\\t-\\t.\\tID=gen2
+... ##FASTA
+... >seq_1
+... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
+... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
+... >seq_2
+... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
+... ATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGCATGC
 ... """
 >>> import io
 >>> from skbio.metadata import IntervalMetadata
 >>> from skbio.io import read
 >>> gff = io.StringIO(gff_str)
 
-We can read it into ``IntervalMetadata``:
+We can read it into ``IntervalMetadata``. Each line will be read into
+an interval feature in ``IntervalMetadata`` object:
 
 >>> im = read(gff, format='gff3', into=IntervalMetadata,
-...           seq_id='seq_1', length=10000)
+...           seq_id='seq_1', length=100)
 >>> im  # doctest: +SKIP
 3 interval features
 -------------------
@@ -112,13 +122,79 @@ fuzzy=[(False, False)], metadata={'strand': '+', 'source': '.', \
 
 We can write the ``IntervalMetadata`` object back to GFF3 file:
 
->>> with io.StringIO() as fh:
+>>> with io.StringIO() as fh:    # doctest: +NORMALIZE_WHITESPACE
 ...     print(im.write(fh, format='gff3', seq_id='seq_1').getvalue())
 ##gff-version 3
 seq_1	.	gene	10	90	.	+	0	ID=gen1
 seq_1	.	exon	10	30	.	+	.	Parent=gen1
 seq_1	.	exon	50	90	.	+	.	Parent=gen1
 <BLANKLINE>
+
+If the GFF3 file does not have the sequence ID, it will return empty object:
+
+>>> gff = io.StringIO(gff_str)
+>>> im = read(gff, format='gff3', into=IntervalMetadata,
+...           seq_id='foo', length=10000)
+>>> im
+0 interval features
+-------------------
+
+We can also read the GFF3 file into generator:
+
+>>> gff = io.StringIO(gff_str)
+>>> gen = read(gff, format='gff3', id_lengths={'seq_1': 100, 'seq_2': 120})
+>>> for im in gen:   # doctest: +SKIP
+...     print(im[0])
+...     print(im[1])
+seq_1
+3 interval features
+-------------------
+Interval(interval_metadata=<4603377592>, bounds=[(9, 90)], fuzzy=[(False, False)], metadata={'type': 'gene', 'ID': 'gen1', 'source': '.', 'score': '.', 'strand': '+', 'phase': 0})
+Interval(interval_metadata=<4603377592>, bounds=[(9, 30)], fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', 'Parent': 'gen1', 'source': '.', 'score': '.'})
+Interval(interval_metadata=<4603377592>, bounds=[(49, 90)], fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', 'Parent': 'gen1', 'source': '.', 'score': '.'})
+seq_2
+1 interval feature
+------------------
+Interval(interval_metadata=<4603378712>, bounds=[(79, 96)], fuzzy=[(False, False)], metadata={'strand': '-', 'type': 'gene', 'ID': 'gen2', 'source': '.', 'score': '.'})
+
+For the GFF3 file with sequences, we can read it into ``Sequence`` or ``DNA``:
+
+>>> gff = io.StringIO(gff_str)
+>>> seq = read(gff, format='gff3', into=Sequence, seq_num=1)
+>>> seq
+Sequence
+--------------------------------------------------------------------
+Metadata:
+    'description': ''
+    'id': 'seq_1'
+Interval metadata:
+    3 interval features
+Stats:
+    length: 100
+--------------------------------------------------------------------
+0  ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC
+60 ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC
+
+>>> gff = io.StringIO(gff_str)
+>>> seq = read(gff, format='gff3', into=DNA, seq_num=2)
+>>> seq
+DNA
+--------------------------------------------------------------------
+Metadata:
+    'description': ''
+    'id': 'seq_2'
+Interval metadata:
+    1 interval feature
+Stats:
+    length: 120
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 50.00%
+--------------------------------------------------------------------
+0  ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC
+60 ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC ATGCATGCAT GCATGCATGC
+
 
 References
 ----------
@@ -206,13 +282,7 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
 @gff3.reader(Sequence)
 def _gff3_to_sequence(fh, seq_num=1):
     ''''''
-    seq_id, lines = _get_nth_record(_yield_record(fh), seq_num)
-    # you can't read directly from fh because in registry.py line 543
-    # file.tell() will fail "telling position disabled by next() call".
-    stream = StringIO(fh.read())
-    seq = read(stream, format='fasta', into=Sequence, seq_num=seq_num)
-    seq.interval_metadata = _parse_record(lines, len(seq))
-    return seq
+    return _construct_seq(fh, Sequence, seq_num)
 
 
 @gff3.writer(Sequence)
@@ -223,11 +293,7 @@ def _sequence_to_gff3(obj, fh, skip_subregion=True):
 @gff3.reader(DNA)
 def _gff3_to_dna(fh, seq_num=1):
     ''''''
-    seq_id, lines = _get_nth_record(_yield_record(fh), seq_num)
-    stream = StringIO(fh.read())
-    seq = read(stream, format='fasta', into=DNA, seq_num=seq_num)
-    seq.interval_metadata = _parse_record(lines, len(seq))
-    return seq
+    return _construct_seq(fh, DNA, seq_num)
 
 
 @gff3.writer(DNA)
@@ -262,6 +328,19 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
         ID for column 1 in the GFF3 file.
     '''
     _serialize_interval_metadata(obj, seq_id, fh, skip_subregion=True)
+
+
+def _construct_seq(fh, constructor=DNA, seq_num=1):
+    seq_id, lines = '', []
+    for i, (j, k) in enumerate(_yield_record(fh), 1):
+        if seq_num == i:
+            seq_id, lines = j, k
+    # you can't read directly from fh because in registry.py line 543
+    # file.tell() will fail "telling position disabled by next() call".
+    stream = StringIO(fh.read())
+    seq = read(stream, format='fasta', into=constructor, seq_num=seq_num)
+    seq.interval_metadata = _parse_record(lines, len(seq))
+    return seq
 
 
 def _yield_record(fh):
