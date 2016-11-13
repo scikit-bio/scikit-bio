@@ -182,7 +182,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-@deprecated(as_of='0.5.0', until='0.5.1',
+@deprecated(as_of='0.5.0', until='0.5.2',
             reason=('The return type is unstable. Developer caution is '
                     'advised. The resulting DistanceMatrix object will '
                     'include zeros when distance has not been calculated, and '

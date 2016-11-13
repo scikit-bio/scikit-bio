@@ -2022,12 +2022,8 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertEqual(list(obs), exp)
 
     def test_copy_without_metadata(self):
-        # shallow vs deep copy with sequence only should be equivalent. thus,
-        # copy.copy, copy.deepcopy, and Sequence.copy(deep=True|False) should
-        # all be equivalent
-        for copy_method in (lambda seq: seq.copy(deep=False),
-                            lambda seq: seq.copy(deep=True),
-                            copy.copy, copy.deepcopy):
+        # shallow vs deep copy with sequence only should be equivalent
+        for copy_method in copy.copy, copy.deepcopy:
             seq = Sequence('ACGT')
             seq_copy = copy_method(seq)
 
@@ -2036,97 +2032,93 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
             self.assertIsNot(seq_copy._bytes, seq._bytes)
 
     def test_copy_with_metadata_shallow(self):
-        # copy.copy and Sequence.copy should behave identically
-        for copy_method in lambda seq: seq.copy(), copy.copy:
-            seq = Sequence('ACGT', metadata={'foo': [1]},
-                           positional_metadata={'bar': [[], [], [], []],
-                                                'baz': [42, 42, 42, 42]})
-            seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
 
-            seq_copy = copy_method(seq)
+        seq_copy = copy.copy(seq)
 
-            self.assertEqual(seq_copy, seq)
-            self.assertIsNot(seq_copy, seq)
-            self.assertIsNot(seq_copy._bytes, seq._bytes)
-            self.assertIsNot(seq_copy._metadata, seq._metadata)
-            self.assertIsNot(seq_copy._positional_metadata,
-                             seq._positional_metadata)
-            self.assertIsNot(seq_copy._positional_metadata.values,
-                             seq._positional_metadata.values)
-            self.assertIs(seq_copy._metadata['foo'], seq._metadata['foo'])
-            self.assertIs(seq_copy._positional_metadata.loc[0, 'bar'],
-                          seq._positional_metadata.loc[0, 'bar'])
-            self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
-            self.assertIsNot(seq_copy.interval_metadata._intervals[0],
-                             seq.interval_metadata._intervals[0])
-            self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
-                             seq.interval_metadata._intervals[0].metadata)
-            self.assertIs(
-                seq_copy.interval_metadata._intervals[0].metadata['gene'],
-                seq.interval_metadata._intervals[0].metadata['gene'])
-            seq_copy.metadata['foo'].append(2)
-            seq_copy.metadata['foo2'] = 42
+        self.assertEqual(seq_copy, seq)
+        self.assertIsNot(seq_copy, seq)
+        self.assertIsNot(seq_copy._bytes, seq._bytes)
+        self.assertIsNot(seq_copy._metadata, seq._metadata)
+        self.assertIsNot(seq_copy._positional_metadata,
+                         seq._positional_metadata)
+        self.assertIsNot(seq_copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIs(seq_copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIs(seq_copy._positional_metadata.loc[0, 'bar'],
+                      seq._positional_metadata.loc[0, 'bar'])
+        self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                         seq.interval_metadata._intervals[0])
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                         seq.interval_metadata._intervals[0].metadata)
+        self.assertIs(
+            seq_copy.interval_metadata._intervals[0].metadata['gene'],
+            seq.interval_metadata._intervals[0].metadata['gene'])
+        seq_copy.metadata['foo'].append(2)
+        seq_copy.metadata['foo2'] = 42
 
-            self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
-            self.assertEqual(seq.metadata, {'foo': [1, 2]})
+        self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1, 2]})
 
-            seq_copy.positional_metadata.loc[0, 'bar'].append(1)
-            seq_copy.positional_metadata.loc[0, 'baz'] = 43
+        seq_copy.positional_metadata.loc[0, 'bar'].append(1)
+        seq_copy.positional_metadata.loc[0, 'baz'] = 43
 
-            assert_data_frame_almost_equal(
-                seq_copy.positional_metadata,
-                pd.DataFrame({'bar': [[1], [], [], []],
-                              'baz': [43, 42, 42, 42]}))
-            assert_data_frame_almost_equal(
-                seq.positional_metadata,
-                pd.DataFrame({'bar': [[1], [], [], []],
-                              'baz': [42, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
 
     def test_copy_with_metadata_deep(self):
-        # copy.deepcopy and Sequence.copy(deep=True) should behave identically
-        for copy_method in lambda seq: seq.copy(deep=True), copy.deepcopy:
-            seq = Sequence('ACGT', metadata={'foo': [1]},
-                           positional_metadata={'bar': [[], [], [], []],
-                                                'baz': [42, 42, 42, 42]})
-            seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
-            seq_copy = copy_method(seq)
+        seq = Sequence('ACGT', metadata={'foo': [1]},
+                       positional_metadata={'bar': [[], [], [], []],
+                                            'baz': [42, 42, 42, 42]})
+        seq.interval_metadata.add([(0, 3)], metadata={'gene': ['sagA']})
+        seq_copy = copy.deepcopy(seq)
 
-            self.assertEqual(seq_copy, seq)
-            self.assertIsNot(seq_copy, seq)
-            self.assertIsNot(seq_copy._bytes, seq._bytes)
-            self.assertIsNot(seq_copy._metadata, seq._metadata)
-            self.assertIsNot(seq_copy._positional_metadata,
-                             seq._positional_metadata)
-            self.assertIsNot(seq_copy._positional_metadata.values,
-                             seq._positional_metadata.values)
-            self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
-            self.assertIsNot(seq_copy._positional_metadata.loc[0, 'bar'],
-                             seq._positional_metadata.loc[0, 'bar'])
-            self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
-            self.assertIsNot(seq_copy.interval_metadata._intervals[0],
-                             seq.interval_metadata._intervals[0])
-            self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
-                             seq.interval_metadata._intervals[0].metadata)
-            self.assertIsNot(
-                seq_copy.interval_metadata._intervals[0].metadata['gene'],
-                seq.interval_metadata._intervals[0].metadata['gene'])
-            seq_copy.metadata['foo'].append(2)
-            seq_copy.metadata['foo2'] = 42
+        self.assertEqual(seq_copy, seq)
+        self.assertIsNot(seq_copy, seq)
+        self.assertIsNot(seq_copy._bytes, seq._bytes)
+        self.assertIsNot(seq_copy._metadata, seq._metadata)
+        self.assertIsNot(seq_copy._positional_metadata,
+                         seq._positional_metadata)
+        self.assertIsNot(seq_copy._positional_metadata.values,
+                         seq._positional_metadata.values)
+        self.assertIsNot(seq_copy._metadata['foo'], seq._metadata['foo'])
+        self.assertIsNot(seq_copy._positional_metadata.loc[0, 'bar'],
+                         seq._positional_metadata.loc[0, 'bar'])
+        self.assertIsNot(seq_copy.interval_metadata, seq.interval_metadata)
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0],
+                         seq.interval_metadata._intervals[0])
+        self.assertIsNot(seq_copy.interval_metadata._intervals[0].metadata,
+                         seq.interval_metadata._intervals[0].metadata)
+        self.assertIsNot(
+            seq_copy.interval_metadata._intervals[0].metadata['gene'],
+            seq.interval_metadata._intervals[0].metadata['gene'])
+        seq_copy.metadata['foo'].append(2)
+        seq_copy.metadata['foo2'] = 42
 
-            self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
-            self.assertEqual(seq.metadata, {'foo': [1]})
+        self.assertEqual(seq_copy.metadata, {'foo': [1, 2], 'foo2': 42})
+        self.assertEqual(seq.metadata, {'foo': [1]})
 
-            seq_copy.positional_metadata.loc[0, 'bar'].append(1)
-            seq_copy.positional_metadata.loc[0, 'baz'] = 43
+        seq_copy.positional_metadata.loc[0, 'bar'].append(1)
+        seq_copy.positional_metadata.loc[0, 'baz'] = 43
 
-            assert_data_frame_almost_equal(
-                seq_copy.positional_metadata,
-                pd.DataFrame({'bar': [[1], [], [], []],
-                              'baz': [43, 42, 42, 42]}))
-            assert_data_frame_almost_equal(
-                seq.positional_metadata,
-                pd.DataFrame({'bar': [[], [], [], []],
-                              'baz': [42, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq_copy.positional_metadata,
+            pd.DataFrame({'bar': [[1], [], [], []],
+                          'baz': [43, 42, 42, 42]}))
+        assert_data_frame_almost_equal(
+            seq.positional_metadata,
+            pd.DataFrame({'bar': [[], [], [], []],
+                          'baz': [42, 42, 42, 42]}))
 
     def test_copy_preserves_read_only_flag_on_bytes(self):
         seq = Sequence('ACGT')

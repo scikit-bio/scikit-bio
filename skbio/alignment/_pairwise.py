@@ -735,7 +735,7 @@ def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
     return msa, alignment.optimal_alignment_score, start_end
 
 
-@deprecated(as_of="0.4.0", until="0.5.1",
+@deprecated(as_of="0.4.0", until="0.5.2",
             reason="Will be replaced by a SubstitutionMatrix class. To track "
                    "progress, see [#161]"
                    "(https://github.com/biocore/scikit-bio/issues/161).")

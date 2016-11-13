@@ -8,15 +8,9 @@
 
 import io
 import unittest
-from tempfile import NamedTemporaryFile, mkdtemp
-from os.path import exists, join
-from shutil import rmtree
-from uuid import uuid4
 
-from skbio.util import (cardinal_to_ordinal, safe_md5, remove_files,
-                        create_dir, find_duplicates, is_casava_v180_or_later)
-from skbio.util._misc import (
-    _handle_error_codes, MiniRegistry, chunk_str, resolve_key)
+from skbio.util import cardinal_to_ordinal, safe_md5, find_duplicates
+from skbio.util._misc import MiniRegistry, chunk_str, resolve_key
 
 
 class TestMiniRegistry(unittest.TestCase):
@@ -181,22 +175,7 @@ class ChunkStrTests(unittest.TestCase):
             chunk_str('abcdef', -42, ' ')
 
 
-class MiscTests(unittest.TestCase):
-    def setUp(self):
-        self.dirs_to_remove = []
-
-    def tearDown(self):
-        for element in self.dirs_to_remove:
-            rmtree(element)
-
-    def test_is_casava_v180_or_later(self):
-        self.assertFalse(is_casava_v180_or_later(b'@foo'))
-        id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
-        self.assertTrue(is_casava_v180_or_later(id_))
-
-        with self.assertRaises(ValueError):
-            is_casava_v180_or_later(b'foo')
-
+class SafeMD5Tests(unittest.TestCase):
     def test_safe_md5(self):
         exp = 'ab07acbb1e496801937adfa772424bf7'
 
@@ -205,61 +184,6 @@ class MiscTests(unittest.TestCase):
         self.assertEqual(obs.hexdigest(), exp)
 
         fd.close()
-
-    def test_remove_files(self):
-        # create list of temp file paths
-        test_fds = [NamedTemporaryFile(delete=False) for i in range(5)]
-        test_filepaths = [element.name for element in test_fds]
-
-        # should work just fine
-        remove_files(test_filepaths)
-
-        # check that an error is raised on trying to remove the files...
-        self.assertRaises(OSError, remove_files, test_filepaths)
-
-        # touch one of the filepaths so it exists
-        extra_file = NamedTemporaryFile(delete=False).name
-        test_filepaths.append(extra_file)
-
-        # no error is raised on trying to remove the files
-        # (although 5 don't exist)...
-        remove_files(test_filepaths, error_on_missing=False)
-        # ... and the existing file was removed
-        self.assertFalse(exists(extra_file))
-
-        # try to remove them with remove_files and verify that an IOError is
-        # raises
-        self.assertRaises(OSError, remove_files, test_filepaths)
-
-        # now get no error when error_on_missing=False
-        remove_files(test_filepaths, error_on_missing=False)
-
-    def test_create_dir(self):
-        # create a directory
-        tmp_dir_path = mkdtemp()
-
-        # create a random temporary directory name
-        tmp_dir_path2 = join(mkdtemp(), str(uuid4()))
-        tmp_dir_path3 = join(mkdtemp(), str(uuid4()))
-
-        self.dirs_to_remove += [tmp_dir_path, tmp_dir_path2, tmp_dir_path3]
-
-        # create on existing dir raises OSError if fail_on_exist=True
-        self.assertRaises(OSError, create_dir, tmp_dir_path,
-                          fail_on_exist=True)
-        self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=True,
-                                    handle_errors_externally=True), 1)
-
-        # return should be 1 if dir exist and fail_on_exist=False
-        self.assertEqual(create_dir(tmp_dir_path, fail_on_exist=False), 1)
-
-        # if dir not there make it and return always 0
-        self.assertEqual(create_dir(tmp_dir_path2), 0)
-        self.assertEqual(create_dir(tmp_dir_path3, fail_on_exist=True), 0)
-
-    def test_handle_error_codes_no_error(self):
-        obs = _handle_error_codes('/foo/bar/baz')
-        self.assertEqual(obs, 0)
 
 
 class CardinalToOrdinalTests(unittest.TestCase):
