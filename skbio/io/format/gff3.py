@@ -149,13 +149,21 @@ We can also read the GFF3 file into generator:
 seq_1
 3 interval features
 -------------------
-Interval(interval_metadata=<4603377592>, bounds=[(9, 90)], fuzzy=[(False, False)], metadata={'type': 'gene', 'ID': 'gen1', 'source': '.', 'score': '.', 'strand': '+', 'phase': 0})
-Interval(interval_metadata=<4603377592>, bounds=[(9, 30)], fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', 'Parent': 'gen1', 'source': '.', 'score': '.'})
-Interval(interval_metadata=<4603377592>, bounds=[(49, 90)], fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', 'Parent': 'gen1', 'source': '.', 'score': '.'})
+Interval(interval_metadata=<4603377592>, bounds=[(9, 90)], \
+fuzzy=[(False, False)], metadata={'type': 'gene', 'ID': 'gen1', \
+'source': '.', 'score': '.', 'strand': '+', 'phase': 0})
+Interval(interval_metadata=<4603377592>, bounds=[(9, 30)], \
+fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', \
+'Parent': 'gen1', 'source': '.', 'score': '.'})
+Interval(interval_metadata=<4603377592>, bounds=[(49, 90)], \
+fuzzy=[(False, False)], metadata={'strand': '+', 'type': 'exon', \
+'Parent': 'gen1', 'source': '.', 'score': '.'})
 seq_2
 1 interval feature
 ------------------
-Interval(interval_metadata=<4603378712>, bounds=[(79, 96)], fuzzy=[(False, False)], metadata={'strand': '-', 'type': 'gene', 'ID': 'gen2', 'source': '.', 'score': '.'})
+Interval(interval_metadata=<4603378712>, bounds=[(79, 96)], \
+fuzzy=[(False, False)], metadata={'strand': '-', 'type': 'gene', \
+'ID': 'gen2', 'source': '.', 'score': '.'})
 
 For the GFF3 file with sequences, we can read it into ``Sequence`` or ``DNA``:
 
@@ -219,7 +227,6 @@ from skbio.io import create_format, GFF3FormatError
 from skbio.metadata import IntervalMetadata
 from skbio.io.format._base import (
     _line_generator, _too_many_blanks)
-from skbio.io.format._base import _get_nth_sequence as _get_nth_record
 from skbio.io.format._sequence_feature_vocabulary import (
     _vocabulary_change, _vocabulary_skip)
 from skbio.io import write, read
@@ -331,10 +338,10 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
 
 
 def _construct_seq(fh, constructor=DNA, seq_num=1):
-    seq_id, lines = '', []
-    for i, (j, k) in enumerate(_yield_record(fh), 1):
+    lines = []
+    for i, (seq_id, l) in enumerate(_yield_record(fh), 1):
         if seq_num == i:
-            seq_id, lines = j, k
+            lines = l
     # you can't read directly from fh because in registry.py line 543
     # file.tell() will fail "telling position disabled by next() call".
     stream = StringIO(fh.read())
