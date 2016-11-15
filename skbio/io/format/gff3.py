@@ -253,24 +253,37 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh, id_lengths):
+def _gff3_to_generator(fh, unknown_seq_len='error'):
     '''Parse the GFF3 into the existing IntervalMetadata
 
     Parameters
     ----------
     fh : file
         file handler
-    id_lengths : dict
+    unknown_seq_len : 'error', 'ignore',
 
     Yields
     ------
     tuple
         str of seq id, IntervalMetadata
     '''
-    for seq_id, lines in _yield_record(fh):
-        if seq_id in id_lengths:
-            length = id_lengths[seq_id]
-            yield seq_id, _parse_record(lines, length)
+    id_lengths = {}
+    for data_type, sid, data in _yield_record(fh):
+        if data_type == 'pragma':
+            # get length from sequence-region pragma.
+            # the pragma lines are always before the real data lines.
+            id_lengths[seq_id] = data
+        elif data_type == 'data':
+            if sid in id_lengths:
+                length = id_lengths[sid]
+            elif unknown_seq_len == 'ignore':
+                continue
+            elif unknown_seq_len == 'error':
+                raise GFF3FormatError(
+                    'Cannot get seq length for the sequence %s' % sid)
+            else:
+                length = unknown_seq_len(sid)
+            yield sid, _parse_record(data, length)
 
 
 @gff3.writer(None)
@@ -309,18 +322,26 @@ def _dna_to_gff3(obj, fh, skip_subregion=True):
 
 
 @gff3.reader(IntervalMetadata)
-def _gff3_to_interval_metadata(fh, seq_id, length):
+def _gff3_to_interval_metadata(fh, seq_id, unknown_seq_len='error'):
     '''Read a GFF3 record into the specified interval metadata.
 
     Parameters
     ----------
     fh : file handler
-    length : int
-        seq length
     '''
-    for sid, lines in _yield_record(fh):
-        if sid == seq_id:
-            return _parse_record(lines, length)
+    length = None
+    for data_type, sid, data in _yield_record(fh):
+        if seq_id == sid:
+            if data_type == 'pragma':
+                # get length from sequence-region pragma
+                length = data
+            elif data_type == 'data':
+                if length is None:
+                    length = unknown_seq_len(seq_id)
+                return _parse_record(data, length)
+            else:
+                raise GFF3FormatError(
+                    'Unknown section in the input GFF3 file: %r %r %r' % (data_type, sid, data))
     # return an empty instead of None
     return IntervalMetadata(length)
 
@@ -355,6 +376,10 @@ def _yield_record(fh):
     lines = []
     current = False
     for line in _line_generator(fh, skip_blanks=True, strip=True):
+        if line.startswith('##sequence-region'):
+            _, seq_id, start, end = line.split()
+            length = int(end) - int(start) + 1
+            yield 'pragma', seq_id, length
         if line.startswith('##FASTA'):
             # stop once reaching to sequence section
             break
@@ -368,10 +393,10 @@ def _yield_record(fh):
                 lines.append(line)
             else:
                 if current is not False:
-                    yield current, lines
+                    yield 'data', current, lines
                 lines = [line]
                 current = seq_id
-    yield current, lines
+    yield 'data', current, lines
 
 
 def _parse_record(lines, length):
