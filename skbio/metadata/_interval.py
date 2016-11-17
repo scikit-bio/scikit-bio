@@ -264,11 +264,15 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         '''input `bounds` must be sorted.'''
         upper_bound = self._interval_metadata.upper_bound
         lower_bound = self._interval_metadata.lower_bound
-        if bounds[-1][-1] > upper_bound or bounds[0][0] < lower_bound:
+        if upper_bound is not None and bounds[-1][-1] > upper_bound:
             raise ValueError('Cannot set `bounds` (%r) with coordinate '
-                             'larger than upper bound (%r) or smaller than '
-                             'lower bound (%r).' %
-                             (bounds, upper_bound, lower_bound))
+                             'larger than upper bound (%r)' %
+                             (bounds, upper_bound))
+
+        if bounds[0][0] < lower_bound:
+            raise ValueError('Cannot set `bounds` (%r) with coordinate '
+                             'smaller than lower bound (%r).' %
+                             (bounds, lower_bound))
 
     @property
     @experimental(as_of='0.5.1')
@@ -396,9 +400,10 @@ class IntervalMetadata():
 
     Parameters
     ----------
-    upper_bound : int
+    upper_bound : int or None
         Defines the exclusive upper bound of the interval features. No
-        coordinate can be greater than it.
+        coordinate can be greater than it. It is ``None`` by default,
+        namely its upper_bound is unknown at the moment.
 
     Notes
     -----
@@ -496,12 +501,13 @@ fuzzy=[(False, False)], metadata={'gene': 'sagC'})
 fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
-    def __init__(self, upper_bound):
+    def __init__(self, upper_bound=None):
         self._upper_bound = upper_bound
-        if self.upper_bound < self.lower_bound:
-            raise ValueError('Cannot set `upper_bound` (%r) '
-                             'smaller than `lower_bound` (%r)'
-                             % (self.upper_bound, self.lower_bound))
+        if self.upper_bound is not None:
+            if self.upper_bound < self.lower_bound:
+                raise ValueError('Cannot set `upper_bound` (%r) '
+                                 'smaller than `lower_bound` (%r)'
+                                 % (self.upper_bound, self.lower_bound))
 
         # List of Interval objects.
         self._intervals = []
@@ -517,6 +523,23 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
     def upper_bound(self):
         '''The exclusive upper bound of interval features.'''
         return self._upper_bound
+
+    @upper_bound.setter
+    @experimental(as_of='0.5.1')
+    def upper_bound(self, value):
+        '''Set exclusive upper bound of interval features.
+
+        It checks all the coordinates of the interval features are not
+        bigger than the new value.
+
+        '''
+        for intvl in self._intervals:
+            if intvl.bounds[-1][-1] > value:
+                raise ValueError(
+                    'Cannot set upper bound to %r because it is smaller '
+                    'than the bounds of interval feature: %r' %
+                    (value, intvl))
+        self._upper_bound = value
 
     @property
     @experimental(as_of='0.5.1')
@@ -551,9 +574,14 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         For instance, this can be used to compare coordinates
         in the forward strand to coordinates in the reversal strand.
         """
+
         for f in self._intervals:
-            intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
-                      for x in reversed(f.bounds)]
+            try:
+                intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
+                          for x in reversed(f.bounds)]
+            except TypeError:
+                raise TypeError('You cannot reverse the coordinates '
+                                'when the upper bound is `None`')
             f.bounds = intvls
 
         # DONT' forget this!!!
@@ -561,7 +589,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     @classonlymethod
     @experimental(as_of="0.5.1")
-    def concat(cls, interval_metadata):
+    def _concat(cls, interval_metadata):
         '''Concatenate an iterable of ``IntervalMetadata`` objects.
 
         It concatenates the multiple ``IntervalMetadata`` objects into
@@ -598,7 +626,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         up. The resulting ``IntervalMetadata``'s upper bound is the
         sum of upper bounds of concatenated objects:
 
-        >>> im = IntervalMetadata.concat([im1, im2])
+        >>> im = IntervalMetadata._concat([im1, im2])
         >>> im   # doctest: +ELLIPSIS
         2 interval features
         -------------------
@@ -617,7 +645,11 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         upper_bound = 0
         for im in interval_metadata:
-            upper_bound += im.upper_bound
+            try:
+                upper_bound += im.upper_bound
+            except TypeError:
+                raise TypeError('You cannot concat the interval metadata '
+                                'because its upper bound is `None`:\n%r' % im)
         new = cls(upper_bound)
 
         length = 0

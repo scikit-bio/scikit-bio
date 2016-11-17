@@ -572,7 +572,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         pm = pd.concat(pm_data, join=how, ignore_index=True)
         bytes_ = np.concatenate(seq_data)
 
-        im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
+        im = IntervalMetadata._concat(i.interval_metadata for i in seqs)
 
         return cls(bytes_, positional_metadata=pm, interval_metadata=im)
 

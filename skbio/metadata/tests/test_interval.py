@@ -389,6 +389,14 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
             bounds=[(3, 5)],
             metadata={'gene': 'sagB', 'bound': 0, 'spam': [0]})
 
+    def test_upper_bound_setter(self):
+        # should not raise
+        self.im_2.upper_bound = self.upper_bound + 1
+        i = self.upper_bound - 1
+        with self.assertRaisesRegex(
+                ValueError, r'%r .* smaller than' % i):
+            self.im_2.upper_bound = i
+
     def test_copy_empty(self):
         obs = copy(self.im_empty)
         self.assertEqual(obs, self.im_empty)
@@ -446,6 +454,17 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         with self.assertRaises(ValueError):
             IntervalMetadata(-1)
 
+    def test_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        # bound is not checked against upper_bound
+        im.add([(0, 1000000000)])
+        with self.assertRaisesRegex(
+                TypeError, 'upper bound is `None`'):
+            im._reverse()
+        with self.assertRaisesRegex(
+                TypeError, 'upper bound is `None`'):
+            IntervalMetadata._concat([self.im_1, im])
+
     def test_num_interval_features(self):
         self.assertEqual(self.im_empty.num_interval_features, 0)
         self.assertEqual(self.im_1.num_interval_features, 1)
@@ -468,11 +487,11 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_concat_empty(self):
         for i in 0, 1, 2:
-            obs = IntervalMetadata.concat([self.im_empty] * i)
+            obs = IntervalMetadata._concat([self.im_empty] * i)
             exp = IntervalMetadata(self.upper_bound * i)
             self.assertEqual(obs, exp)
 
-        obs = IntervalMetadata.concat([])
+        obs = IntervalMetadata._concat([])
         self.assertEqual(obs, IntervalMetadata(0))
 
     def test_concat(self):
@@ -483,7 +502,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         im2.add([(0, 3)], [(True, False)], {'gene': 'sagA'})
         im2.add([(2, 4)], metadata={'gene': 'sagB'})
         im3.add([(1, 5)], [(False, True)], {'gene': 'sagC'})
-        obs = IntervalMetadata.concat([im1, im2, im3])
+        obs = IntervalMetadata._concat([im1, im2, im3])
 
         exp = IntervalMetadata(12)
         exp.add(bounds=[(0, 2)], fuzzy=[(True, True)])
