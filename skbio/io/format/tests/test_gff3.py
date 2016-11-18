@@ -75,18 +75,16 @@ class GFF3IOTests(TestCase):
                                 'ID': '1_1',
                                 'gene': 'FXR receptor'}}]
 
-        self.upper_bound1 = 4641652
-        self.imd1 = IntervalMetadata(self.upper_bound1)
+        self.upper_bound = 4641652
+        self.imd1 = IntervalMetadata(self.upper_bound)
         self.imd1.add(**intvls[0])
         self.imd1.add(**intvls[1])
 
-        self.upper_bound2 = 2799
-        self.imd2 = IntervalMetadata(self.upper_bound2)
+        self.imd2 = IntervalMetadata(None)
         self.imd2.add(**intvls[2])
         self.imd2.add(**intvls[3])
 
-        self.upper_bound3 = 200
-        self.imd3 = IntervalMetadata(self.upper_bound3)
+        self.imd3 = IntervalMetadata(None)
         self.imd3.add(**intvls[4])
 
         self.seq_fp = get_data_path('gff3_dna')
@@ -125,8 +123,8 @@ class SnifferTests(TestCase):
 
 class ReaderTests(GFF3IOTests):
     def test_yield_record(self):
-        obs = [('seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
-               ('seqid2', ['seqid2\tzzz'])]
+        obs = [('data', 'seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
+               ('data', 'seqid2', ['seqid2\tzzz'])]
         s = ('seqid1\txxx\n'
              'seqid1\tyyy\n'
              'seqid2\tzzz\n')
@@ -146,16 +144,15 @@ class ReaderTests(GFF3IOTests):
 
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
-            self.single_fp, length=self.upper_bound1, seq_id='Chromosome')
+            self.single_fp, seq_id='Chromosome')
 
         self.assertEqual(obs, self.imd1)
 
     def test_gff3_to_interval_metadata_empty(self):
-        exp = IntervalMetadata(self.upper_bound1)
+        exp = IntervalMetadata(None)
         obs = _gff3_to_interval_metadata(
             # the seq id does not exist
-            self.single_fp, length=self.upper_bound1, seq_id='foo')
-
+            self.single_fp, seq_id='foo')
         self.assertEqual(obs, exp)
 
     def test_gff3_to_interval_metadata_bad(self):
@@ -163,16 +160,12 @@ class ReaderTests(GFF3IOTests):
                                     'do not have 9 columns in this line'):
             _gff3_to_interval_metadata(
                 get_data_path('gff3_bad_wrong_columns'),
-                length=self.upper_bound1,
                 seq_id='Chromosome')
 
     def test_gff3_to_generator(self):
         exps = [('Chromosome', self.imd1),
                 ('gi|556503834|ref|NC_000913.3|', self.imd2)]
-        obss = _gff3_to_generator(
-            self.multi_fp,
-            id_lengths={'Chromosome': self.upper_bound1,
-                        'gi|556503834|ref|NC_000913.3|': self.upper_bound2})
+        obss = _gff3_to_generator(self.multi_fp)
         for obs, exp in zip(obss, exps):
             self.assertEqual(obs, exp)
 
@@ -260,7 +253,6 @@ class RoundtripTests(GFF3IOTests):
             _interval_metadata_to_gff3(
                 _gff3_to_interval_metadata(
                     self.single_fp,
-                    length=self.upper_bound1,
                     seq_id='Chromosome'),
                 fh,
                 seq_id='Chromosome')
@@ -275,14 +267,7 @@ class RoundtripTests(GFF3IOTests):
     def test_roundtrip_interval_metadata_generator(self):
         with io.StringIO() as fh:
             _generator_to_gff3(
-                _gff3_to_generator(
-                    self.multi_fp,
-                    id_lengths={
-                        'Chromosome': self.upper_bound1,
-                        'gi|556503834|ref|NC_000913.3|': self.upper_bound2,
-                        'NC_7': self.upper_bound3}),
-                fh,
-                skip_subregion=False)
+                _gff3_to_generator(self.multi_fp), fh, skip_subregion=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
 

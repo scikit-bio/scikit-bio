@@ -49,15 +49,9 @@ Format Parameters
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Reader of ``IntervalMetadata`` generator requires a dict called
-``id_lengths``. Its key is str of seq id and its value is int. The value
-specifies the upper bound of the ``IntervalMetadata`` object the
-reader yields corresponding to the seq id.
-
-``IntervalMetadata`` GFF3 reader requires 2 parameters: ``seq_id`` of
-str and ``length`` of int. It reads the annotation with the specified
-sequence ID from the GFF3 file into an ``IntervalMetadata`` object
-with upper bound of ``length``.
+``IntervalMetadata`` GFF3 reader requires 1 parameter: ``seq_id``.
+It reads the annotation with the specified
+sequence ID from the GFF3 file into an ``IntervalMetadata`` object.
 
 ``DNA`` and ``Sequence`` GFF3 readers require ``seq_num`` of int as
 parameter. It specifies which GFF3 record to read from a GFF3 file
@@ -106,7 +100,7 @@ We can read it into ``IntervalMetadata``. Each line will be read into
 an interval feature in ``IntervalMetadata`` object:
 
 >>> im = read(gff, format='gff3', into=IntervalMetadata,
-...           seq_id='seq_1', length=100)
+...           seq_id='seq_1')
 >>> im  # doctest: +SKIP
 3 interval features
 -------------------
@@ -134,7 +128,7 @@ If the GFF3 file does not have the sequence ID, it will return empty object:
 
 >>> gff = io.StringIO(gff_str)
 >>> im = read(gff, format='gff3', into=IntervalMetadata,
-...           seq_id='foo', length=10000)
+...           seq_id='foo')
 >>> im
 0 interval features
 -------------------
@@ -142,7 +136,7 @@ If the GFF3 file does not have the sequence ID, it will return empty object:
 We can also read the GFF3 file into generator:
 
 >>> gff = io.StringIO(gff_str)
->>> gen = read(gff, format='gff3', id_lengths={'seq_1': 100, 'seq_2': 120})
+>>> gen = read(gff, format='gff3')
 >>> for im in gen:   # doctest: +SKIP
 ...     print(im[0])
 ...     print(im[1])
@@ -253,14 +247,13 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh, unknown_seq_len='error'):
+def _gff3_to_generator(fh):
     '''Parse the GFF3 into the existing IntervalMetadata
 
     Parameters
     ----------
     fh : file
         file handler
-    unknown_seq_len : 'error', 'ignore',
 
     Yields
     ------
@@ -272,17 +265,9 @@ def _gff3_to_generator(fh, unknown_seq_len='error'):
         if data_type == 'pragma':
             # get length from sequence-region pragma.
             # the pragma lines are always before the real data lines.
-            id_lengths[seq_id] = data
+            id_lengths[sid] = data
         elif data_type == 'data':
-            if sid in id_lengths:
-                length = id_lengths[sid]
-            elif unknown_seq_len == 'ignore':
-                continue
-            elif unknown_seq_len == 'error':
-                raise GFF3FormatError(
-                    'Cannot get seq length for the sequence %s' % sid)
-            else:
-                length = unknown_seq_len(sid)
+            length = id_lengths.get(sid)
             yield sid, _parse_record(data, length)
 
 
@@ -322,7 +307,7 @@ def _dna_to_gff3(obj, fh, skip_subregion=True):
 
 
 @gff3.reader(IntervalMetadata)
-def _gff3_to_interval_metadata(fh, seq_id, unknown_seq_len='error'):
+def _gff3_to_interval_metadata(fh, seq_id):
     '''Read a GFF3 record into the specified interval metadata.
 
     Parameters
@@ -336,14 +321,12 @@ def _gff3_to_interval_metadata(fh, seq_id, unknown_seq_len='error'):
                 # get length from sequence-region pragma
                 length = data
             elif data_type == 'data':
-                if length is None:
-                    length = unknown_seq_len(seq_id)
                 return _parse_record(data, length)
             else:
                 raise GFF3FormatError(
                     'Unknown section in the input GFF3 file: %r %r %r' % (data_type, sid, data))
     # return an empty instead of None
-    return IntervalMetadata(length)
+    return IntervalMetadata(None)
 
 
 @gff3.writer(IntervalMetadata)
@@ -360,8 +343,8 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
 
 def _construct_seq(fh, constructor=DNA, seq_num=1):
     lines = []
-    for i, (seq_id, l) in enumerate(_yield_record(fh), 1):
-        if seq_num == i:
+    for i, (data_type, seq_id, l) in enumerate(_yield_record(fh), 1):
+        if data_type == 'data' and seq_num == i:
             lines = l
     # you can't read directly from fh because in registry.py line 543
     # file.tell() will fail "telling position disabled by next() call".
