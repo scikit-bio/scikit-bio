@@ -922,6 +922,15 @@ class IntervalMetadataMixinTests:
                                     'object.'):
             self._interval_metadata_constructor_(0, '')
 
+    def test_constructor_interval_metadata_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        for i in [0, 1, 3, 100]:
+            x = self._interval_metadata_constructor_(i, im)
+            # the upper bound is reset to seq/axis length
+            self.assertEqual(x._interval_metadata.upper_bound, i)
+        # original interval metadata upper bound is not changed
+        self.assertIsNone(im.upper_bound)
+
     def test_constructor_interval_metadata_len_mismatch(self):
         for i in [0, 1, 3, 100]:
             with self.assertRaisesRegex(
