@@ -202,6 +202,15 @@ cdef class IntervalNode:
         if self.cright is not EmptyNode and self.start <= qend:
             self.cright._intersect( start, end, results )
 
+    cpdef int _right_bound(IntervalNode self):
+        cdef IntervalNode node = self
+        while True:
+            i = node.cright
+            if i is not EmptyNode:
+                node = i
+            else:
+                return node.end
+
     cpdef void update(IntervalNode self, int start, int end,
                       object old_feature, object new_feature):
         """
@@ -416,6 +425,12 @@ cdef class IntervalTree:
         root = None
 
     # ---- Position based interfaces -----------------------------------------
+
+    def get_right_bound( self ):
+        '''Get the right bound'''
+        if self.root is None:
+            return None
+        return self.root._right_bound()
 
     def insert( self, int start, int end, object value=None ):
         """

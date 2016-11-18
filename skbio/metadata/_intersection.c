@@ -494,7 +494,7 @@ struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree;
 struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left;
 struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_right;
 
-/* "skbio/metadata/_intersection.pyx":263
+/* "skbio/metadata/_intersection.pyx":272
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -507,7 +507,7 @@ struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left {
   int max_dist;
 };
 
-/* "skbio/metadata/_intersection.pyx":278
+/* "skbio/metadata/_intersection.pyx":287
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -543,7 +543,7 @@ struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode {
 };
 
 
-/* "skbio/metadata/_intersection.pyx":305
+/* "skbio/metadata/_intersection.pyx":314
  * ## ---- Wrappers that retain the old interface -------------------------------
  * 
  * cdef class IntervalObj:             # <<<<<<<<<<<<<<
@@ -560,7 +560,7 @@ struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalObj {
 };
 
 
-/* "skbio/metadata/_intersection.pyx":357
+/* "skbio/metadata/_intersection.pyx":366
  *             return self == other or self > other
  * 
  * cdef class IntervalTree:             # <<<<<<<<<<<<<<
@@ -588,6 +588,7 @@ struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode {
   struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *(*rotate_left)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *);
   void (*set_ends)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *);
   void (*_intersect)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, int, PyObject *);
+  int (*_right_bound)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int __pyx_skip_dispatch);
   void (*update)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, int, PyObject *, PyObject *, int __pyx_skip_dispatch);
   void (*_seek_left)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, PyObject *, int, int);
   void (*_seek_right)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, PyObject *, int, int);
@@ -746,6 +747,21 @@ static void __Pyx_WriteUnraisable(const char *name, int clineno,
                                   int lineno, const char *filename,
                                   int full_traceback, int nogil);
 
+/* PyObjectCallMethO.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+/* PyObjectCallOneArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+
+/* PyObjectCallNoArg.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
+#else
+#define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
+#endif
+
 /* PyIntBinop.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx_PyInt_SubtractObjC(PyObject *op1, PyObject *op2, long intval, int inplace);
@@ -776,14 +792,6 @@ static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, long intval, 
 #define __Pyx_PyInt_AddObjC(op1, op2, intval, inplace)\
     (inplace ? PyNumber_InPlaceAdd(op1, op2) : PyNumber_Add(op1, op2))
 #endif
-
-/* PyObjectCallMethO.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
-#endif
-
-/* PyObjectCallOneArg.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
 /* PyIntBinop.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -863,6 +871,7 @@ static struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_f_5
 static struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_rotate_left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self); /* proto*/
 static CYTHON_INLINE void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_set_ends(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self); /* proto*/
 static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__intersect(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_results); /* proto*/
+static int __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_skip_dispatch); /* proto*/
 static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature, int __pyx_skip_dispatch); /* proto*/
 static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
 static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_position, PyObject *__pyx_v_results, int __pyx_v_n, int __pyx_v_max_dist); /* proto*/
@@ -916,6 +925,7 @@ static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_Intersecter[] = "Intersecter";
 static const char __pyx_k_new_feature[] = "new_feature";
 static const char __pyx_k_old_feature[] = "old_feature";
+static const char __pyx_k_right_bound[] = "_right_bound";
 static const char __pyx_k_add_interval[] = "add_interval";
 static const char __pyx_k_num_intervals[] = "num_intervals";
 static const char __pyx_k_IntervalObj_d_d[] = "IntervalObj(%d, %d";
@@ -952,6 +962,7 @@ static PyObject *__pyx_n_s_position;
 static PyObject *__pyx_n_s_pyx_vtable;
 static PyObject *__pyx_n_s_reverse;
 static PyObject *__pyx_n_s_right;
+static PyObject *__pyx_n_s_right_bound;
 static PyObject *__pyx_n_s_sort;
 static PyObject *__pyx_n_s_start;
 static PyObject *__pyx_kp_s_start_must_be_less_than_end;
@@ -968,10 +979,11 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode___repr
 static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_2__cinit__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
 static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_4insert(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_interval); /* proto */
 static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_6intersect(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, CYTHON_UNUSED PyObject *__pyx_v_sort); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8_right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_16traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func); /* proto */
 static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8interval___get__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self); /* proto */
 static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8interval_2__set__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8interval_4__del__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self); /* proto */
@@ -996,17 +1008,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_6strand
 static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_6strand_2__set__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalObj *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_6strand_4__del__(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalObj *__pyx_v_self); /* proto */
 static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree___cinit__(CYTHON_UNUSED struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2insert(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8before(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10after(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12insert_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14before_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16after_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20downstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2get_right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4insert(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8find(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10before(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12after(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14insert_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16before_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18after_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20upstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22downstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist); /* proto */
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_24traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn); /* proto */
 static PyObject *__pyx_tp_new_5skbio_8metadata_13_intersection_IntervalNode(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_5skbio_8metadata_13_intersection_IntervalObj(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_5skbio_8metadata_13_intersection_IntervalTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -3080,7 +3093,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__intersect(s
  *         if self.cright is not EmptyNode and self.start <= qend:
  *             self.cright._intersect( start, end, results )             # <<<<<<<<<<<<<<
  * 
- *     cpdef void update(IntervalNode self, int start, int end,
+ *     cpdef int _right_bound(IntervalNode self):
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_intersect(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_results);
 
@@ -3113,12 +3126,206 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__intersect(s
 /* "skbio/metadata/_intersection.pyx":205
  *             self.cright._intersect( start, end, results )
  * 
+ *     cpdef int _right_bound(IntervalNode self):             # <<<<<<<<<<<<<<
+ *         cdef IntervalNode node = self
+ *         while True:
+ */
+
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9_right_bound(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static int __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_skip_dispatch) {
+  struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_node = 0;
+  struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_i = NULL;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  int __pyx_t_6;
+  int __pyx_t_7;
+  __Pyx_RefNannySetupContext("_right_bound", 0);
+  /* Check if called by wrapper */
+  if (unlikely(__pyx_skip_dispatch)) ;
+  /* Check if overridden in Python */
+  else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_right_bound); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9_right_bound)) {
+      __Pyx_INCREF(__pyx_t_1);
+      __pyx_t_3 = __pyx_t_1; __pyx_t_4 = NULL;
+      if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_3))) {
+        __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+        if (likely(__pyx_t_4)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+          __Pyx_INCREF(__pyx_t_4);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_3, function);
+        }
+      }
+      if (__pyx_t_4) {
+        __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 205, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      } else {
+        __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 205, __pyx_L1_error)
+      }
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 205, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_r = __pyx_t_5;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      goto __pyx_L0;
+    }
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  }
+
+  /* "skbio/metadata/_intersection.pyx":206
+ * 
+ *     cpdef int _right_bound(IntervalNode self):
+ *         cdef IntervalNode node = self             # <<<<<<<<<<<<<<
+ *         while True:
+ *             i = node.cright
+ */
+  __Pyx_INCREF(((PyObject *)__pyx_v_self));
+  __pyx_v_node = __pyx_v_self;
+
+  /* "skbio/metadata/_intersection.pyx":207
+ *     cpdef int _right_bound(IntervalNode self):
+ *         cdef IntervalNode node = self
+ *         while True:             # <<<<<<<<<<<<<<
+ *             i = node.cright
+ *             if i is not EmptyNode:
+ */
+  while (1) {
+
+    /* "skbio/metadata/_intersection.pyx":208
+ *         cdef IntervalNode node = self
+ *         while True:
+ *             i = node.cright             # <<<<<<<<<<<<<<
+ *             if i is not EmptyNode:
+ *                 node = i
+ */
+    __pyx_t_1 = ((PyObject *)__pyx_v_node->cright);
+    __Pyx_INCREF(__pyx_t_1);
+    __Pyx_XDECREF_SET(__pyx_v_i, ((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_t_1));
+    __pyx_t_1 = 0;
+
+    /* "skbio/metadata/_intersection.pyx":209
+ *         while True:
+ *             i = node.cright
+ *             if i is not EmptyNode:             # <<<<<<<<<<<<<<
+ *                 node = i
+ *             else:
+ */
+    __pyx_t_6 = (__pyx_v_i != __pyx_v_5skbio_8metadata_13_intersection_EmptyNode);
+    __pyx_t_7 = (__pyx_t_6 != 0);
+    if (__pyx_t_7) {
+
+      /* "skbio/metadata/_intersection.pyx":210
+ *             i = node.cright
+ *             if i is not EmptyNode:
+ *                 node = i             # <<<<<<<<<<<<<<
+ *             else:
+ *                 return node.end
+ */
+      __Pyx_INCREF(((PyObject *)__pyx_v_i));
+      __Pyx_DECREF_SET(__pyx_v_node, __pyx_v_i);
+
+      /* "skbio/metadata/_intersection.pyx":209
+ *         while True:
+ *             i = node.cright
+ *             if i is not EmptyNode:             # <<<<<<<<<<<<<<
+ *                 node = i
+ *             else:
+ */
+      goto __pyx_L5;
+    }
+
+    /* "skbio/metadata/_intersection.pyx":212
+ *                 node = i
+ *             else:
+ *                 return node.end             # <<<<<<<<<<<<<<
+ * 
+ *     cpdef void update(IntervalNode self, int start, int end,
+ */
+    /*else*/ {
+      __pyx_r = __pyx_v_node->end;
+      goto __pyx_L0;
+    }
+    __pyx_L5:;
+  }
+
+  /* "skbio/metadata/_intersection.pyx":205
+ *             self.cright._intersect( start, end, results )
+ * 
+ *     cpdef int _right_bound(IntervalNode self):             # <<<<<<<<<<<<<<
+ *         cdef IntervalNode node = self
+ *         while True:
+ */
+
+  /* function exit code */
+  __pyx_r = 0;
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_WriteUnraisable("skbio.metadata._intersection.IntervalNode._right_bound", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XDECREF((PyObject *)__pyx_v_node);
+  __Pyx_XDECREF((PyObject *)__pyx_v_i);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9_right_bound(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9_right_bound(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("_right_bound (wrapper)", 0);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8_right_bound(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8_right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  __Pyx_RefNannySetupContext("_right_bound", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__right_bound(__pyx_v_self, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("skbio.metadata._intersection.IntervalNode._right_bound", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "skbio/metadata/_intersection.pyx":214
+ *                 return node.end
+ * 
  *     cpdef void update(IntervalNode self, int start, int end,             # <<<<<<<<<<<<<<
  *                       object old_feature, object new_feature):
  *         """
  */
 
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature, int __pyx_skip_dispatch) {
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -3137,12 +3344,12 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_update); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_update); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9update)) {
-      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 205, __pyx_L1_error)
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11update)) {
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 214, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 205, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 214, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
@@ -3157,7 +3364,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
           __pyx_t_7 = 1;
         }
       }
-      __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 205, __pyx_L1_error)
+      __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 214, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       if (__pyx_t_6) {
         __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -3174,7 +3381,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
       PyTuple_SET_ITEM(__pyx_t_8, 3+__pyx_t_7, __pyx_v_new_feature);
       __pyx_t_3 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 205, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3185,7 +3392,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":213
+  /* "skbio/metadata/_intersection.pyx":222
  * 
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
@@ -3204,7 +3411,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_9) {
 
-    /* "skbio/metadata/_intersection.pyx":214
+    /* "skbio/metadata/_intersection.pyx":223
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:
  *             self.cleft.update( start, end, old_feature, new_feature )             # <<<<<<<<<<<<<<
@@ -3213,7 +3420,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->update(__pyx_v_self->cleft, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 0);
 
-    /* "skbio/metadata/_intersection.pyx":213
+    /* "skbio/metadata/_intersection.pyx":222
  * 
  *         # Left subtree
  *         if self.cleft is not EmptyNode and self.cleft.maxend > start:             # <<<<<<<<<<<<<<
@@ -3222,7 +3429,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":216
+  /* "skbio/metadata/_intersection.pyx":225
  *             self.cleft.update( start, end, old_feature, new_feature )
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
@@ -3240,19 +3447,19 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_9) {
 
-    /* "skbio/metadata/_intersection.pyx":217
+    /* "skbio/metadata/_intersection.pyx":226
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):
  *             if self.interval == old_feature:             # <<<<<<<<<<<<<<
  *                 self.interval = new_feature
  *         # Right subtree
  */
-    __pyx_t_1 = PyObject_RichCompare(__pyx_v_self->interval, __pyx_v_old_feature, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
-    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 217, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_v_self->interval, __pyx_v_old_feature, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 226, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 226, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_9) {
 
-      /* "skbio/metadata/_intersection.pyx":218
+      /* "skbio/metadata/_intersection.pyx":227
  *         if ( self.end > start ) and ( self.start < end ):
  *             if self.interval == old_feature:
  *                 self.interval = new_feature             # <<<<<<<<<<<<<<
@@ -3265,7 +3472,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
       __Pyx_DECREF(__pyx_v_self->interval);
       __pyx_v_self->interval = __pyx_v_new_feature;
 
-      /* "skbio/metadata/_intersection.pyx":217
+      /* "skbio/metadata/_intersection.pyx":226
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):
  *             if self.interval == old_feature:             # <<<<<<<<<<<<<<
@@ -3274,7 +3481,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
     }
 
-    /* "skbio/metadata/_intersection.pyx":216
+    /* "skbio/metadata/_intersection.pyx":225
  *             self.cleft.update( start, end, old_feature, new_feature )
  *         # This interval
  *         if ( self.end > start ) and ( self.start < end ):             # <<<<<<<<<<<<<<
@@ -3283,7 +3490,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":220
+  /* "skbio/metadata/_intersection.pyx":229
  *                 self.interval = new_feature
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
@@ -3302,7 +3509,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
   __pyx_L11_bool_binop_done:;
   if (__pyx_t_9) {
 
-    /* "skbio/metadata/_intersection.pyx":221
+    /* "skbio/metadata/_intersection.pyx":230
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:
  *             self.cright.update( start, end, old_feature, new_feature )             # <<<<<<<<<<<<<<
@@ -3311,7 +3518,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->update(__pyx_v_self->cright, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 0);
 
-    /* "skbio/metadata/_intersection.pyx":220
+    /* "skbio/metadata/_intersection.pyx":229
  *                 self.interval = new_feature
  *         # Right subtree
  *         if self.cright is not EmptyNode and self.start < end:             # <<<<<<<<<<<<<<
@@ -3320,8 +3527,8 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":205
- *             self.cright._intersect( start, end, results )
+  /* "skbio/metadata/_intersection.pyx":214
+ *                 return node.end
  * 
  *     cpdef void update(IntervalNode self, int start, int end,             # <<<<<<<<<<<<<<
  *                       object old_feature, object new_feature):
@@ -3344,9 +3551,9 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(struc
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_8update[] = "\n        given a start and end, replace all objects that\n        match the old_feature with new_feature.\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_10update[] = "\n        given a start and end, replace all objects that\n        match the old_feature with new_feature.\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_old_feature = 0;
@@ -3376,21 +3583,21 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9updat
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); __PYX_ERR(0, 205, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); __PYX_ERR(0, 214, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_old_feature)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); __PYX_ERR(0, 205, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); __PYX_ERR(0, 214, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_new_feature)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); __PYX_ERR(0, 205, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); __PYX_ERR(0, 214, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) __PYX_ERR(0, 205, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) __PYX_ERR(0, 214, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -3400,33 +3607,33 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9updat
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 205, __pyx_L3_error)
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 205, __pyx_L3_error)
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 214, __pyx_L3_error)
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 214, __pyx_L3_error)
     __pyx_v_old_feature = values[2];
     __pyx_v_new_feature = values[3];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 205, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 214, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalNode.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8update(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10update(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("update", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update(__pyx_v_self, __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3443,7 +3650,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_8updat
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":223
+/* "skbio/metadata/_intersection.pyx":232
  *             self.cright.update( start, end, old_feature, new_feature )
  * 
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3460,7 +3667,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   int __pyx_t_5;
   __Pyx_RefNannySetupContext("_seek_left", 0);
 
-  /* "skbio/metadata/_intersection.pyx":225
+  /* "skbio/metadata/_intersection.pyx":234
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:             # <<<<<<<<<<<<<<
@@ -3470,7 +3677,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __pyx_t_1 = (((__pyx_v_self->maxend + __pyx_v_max_dist) < __pyx_v_position) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/metadata/_intersection.pyx":226
+    /* "skbio/metadata/_intersection.pyx":235
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:
  *             return             # <<<<<<<<<<<<<<
@@ -3479,7 +3686,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":225
+    /* "skbio/metadata/_intersection.pyx":234
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend + max_dist < position:             # <<<<<<<<<<<<<<
@@ -3488,7 +3695,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":227
+  /* "skbio/metadata/_intersection.pyx":236
  *         if self.maxend + max_dist < position:
  *             return
  *         if self.minstart > position:             # <<<<<<<<<<<<<<
@@ -3498,7 +3705,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __pyx_t_1 = ((__pyx_v_self->minstart > __pyx_v_position) != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/metadata/_intersection.pyx":228
+    /* "skbio/metadata/_intersection.pyx":237
  *             return
  *         if self.minstart > position:
  *             return             # <<<<<<<<<<<<<<
@@ -3507,7 +3714,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":227
+    /* "skbio/metadata/_intersection.pyx":236
  *         if self.maxend + max_dist < position:
  *             return
  *         if self.minstart > position:             # <<<<<<<<<<<<<<
@@ -3516,7 +3723,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":232
+  /* "skbio/metadata/_intersection.pyx":241
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3527,7 +3734,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":233
+    /* "skbio/metadata/_intersection.pyx":242
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:
  *             self.cright._seek_left(position, results, n, max_dist)             # <<<<<<<<<<<<<<
@@ -3536,7 +3743,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_left(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "skbio/metadata/_intersection.pyx":232
+    /* "skbio/metadata/_intersection.pyx":241
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3545,7 +3752,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":235
+  /* "skbio/metadata/_intersection.pyx":244
  *             self.cright._seek_left(position, results, n, max_dist)
  * 
  *         if -1 < position - self.end < max_dist:             # <<<<<<<<<<<<<<
@@ -3560,7 +3767,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/metadata/_intersection.pyx":236
+    /* "skbio/metadata/_intersection.pyx":245
  * 
  *         if -1 < position - self.end < max_dist:
  *             results.append(self.interval)             # <<<<<<<<<<<<<<
@@ -3569,14 +3776,14 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
     if (unlikely(__pyx_v_results == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      __PYX_ERR(0, 236, __pyx_L1_error)
+      __PYX_ERR(0, 245, __pyx_L1_error)
     }
     __pyx_t_4 = __pyx_v_self->interval;
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 236, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 245, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "skbio/metadata/_intersection.pyx":235
+    /* "skbio/metadata/_intersection.pyx":244
  *             self.cright._seek_left(position, results, n, max_dist)
  * 
  *         if -1 < position - self.end < max_dist:             # <<<<<<<<<<<<<<
@@ -3585,7 +3792,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":239
+  /* "skbio/metadata/_intersection.pyx":248
  * 
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3596,7 +3803,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":240
+    /* "skbio/metadata/_intersection.pyx":249
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:
  *                 self.cleft._seek_left(position, results, n, max_dist)             # <<<<<<<<<<<<<<
@@ -3605,7 +3812,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_left(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "skbio/metadata/_intersection.pyx":239
+    /* "skbio/metadata/_intersection.pyx":248
  * 
  *         # TODO: can these conditionals be more stringent?
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3614,7 +3821,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":223
+  /* "skbio/metadata/_intersection.pyx":232
  *             self.cright.update( start, end, old_feature, new_feature )
  * 
  *     cdef void _seek_left(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3631,7 +3838,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left(s
   __Pyx_RefNannyFinishContext();
 }
 
-/* "skbio/metadata/_intersection.pyx":244
+/* "skbio/metadata/_intersection.pyx":253
  * 
  * 
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3648,7 +3855,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
   int __pyx_t_5;
   __Pyx_RefNannySetupContext("_seek_right", 0);
 
-  /* "skbio/metadata/_intersection.pyx":246
+  /* "skbio/metadata/_intersection.pyx":255
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):
  *         # we know we can bail in these 2 cases.
  *         if self.maxend < position: return             # <<<<<<<<<<<<<<
@@ -3660,7 +3867,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":247
+  /* "skbio/metadata/_intersection.pyx":256
  *         # we know we can bail in these 2 cases.
  *         if self.maxend < position: return
  *         if self.minstart - max_dist > position: return             # <<<<<<<<<<<<<<
@@ -3672,7 +3879,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":253
+  /* "skbio/metadata/_intersection.pyx":262
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3683,7 +3890,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":254
+    /* "skbio/metadata/_intersection.pyx":263
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:
  *                 self.cleft._seek_right(position, results, n, max_dist)             # <<<<<<<<<<<<<<
@@ -3692,7 +3899,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_seek_right(__pyx_v_self->cleft, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "skbio/metadata/_intersection.pyx":253
+    /* "skbio/metadata/_intersection.pyx":262
  *         # the ordering of these 3 blocks makes it so the results are
  *         # ordered nearest to farest from the query position
  *         if self.cleft is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3701,7 +3908,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":256
+  /* "skbio/metadata/_intersection.pyx":265
  *                 self.cleft._seek_right(position, results, n, max_dist)
  * 
  *         if -1 < self.start - position < max_dist:             # <<<<<<<<<<<<<<
@@ -3716,7 +3923,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "skbio/metadata/_intersection.pyx":257
+    /* "skbio/metadata/_intersection.pyx":266
  * 
  *         if -1 < self.start - position < max_dist:
  *             results.append(self.interval)             # <<<<<<<<<<<<<<
@@ -3725,14 +3932,14 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
     if (unlikely(__pyx_v_results == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%s'", "append");
-      __PYX_ERR(0, 257, __pyx_L1_error)
+      __PYX_ERR(0, 266, __pyx_L1_error)
     }
     __pyx_t_4 = __pyx_v_self->interval;
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 257, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_results, __pyx_t_4); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "skbio/metadata/_intersection.pyx":256
+    /* "skbio/metadata/_intersection.pyx":265
  *                 self.cleft._seek_right(position, results, n, max_dist)
  * 
  *         if -1 < self.start - position < max_dist:             # <<<<<<<<<<<<<<
@@ -3741,7 +3948,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":259
+  /* "skbio/metadata/_intersection.pyx":268
  *             results.append(self.interval)
  * 
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3752,7 +3959,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":260
+    /* "skbio/metadata/_intersection.pyx":269
  * 
  *         if self.cright is not EmptyNode:
  *                 self.cright._seek_right(position, results, n, max_dist)             # <<<<<<<<<<<<<<
@@ -3761,7 +3968,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_seek_right(__pyx_v_self->cright, __pyx_v_position, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-    /* "skbio/metadata/_intersection.pyx":259
+    /* "skbio/metadata/_intersection.pyx":268
  *             results.append(self.interval)
  * 
  *         if self.cright is not EmptyNode:             # <<<<<<<<<<<<<<
@@ -3770,7 +3977,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":244
+  /* "skbio/metadata/_intersection.pyx":253
  * 
  * 
  *     cdef void _seek_right(IntervalNode self, int position, list results, int n, int max_dist):             # <<<<<<<<<<<<<<
@@ -3787,7 +3994,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
   __Pyx_RefNannyFinishContext();
 }
 
-/* "skbio/metadata/_intersection.pyx":263
+/* "skbio/metadata/_intersection.pyx":272
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3795,7 +4002,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right(
  *         find n features with a start > than `position`
  */
 
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left *__pyx_optional_args) {
   int __pyx_v_n = ((int)1);
   int __pyx_v_max_dist = ((int)0x9C4);
@@ -3826,13 +4033,13 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_left); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_left); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left)) {
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13left)) {
       __Pyx_XDECREF(__pyx_r);
-      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 263, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 272, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 263, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 272, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
@@ -3847,7 +4054,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
           __pyx_t_7 = 1;
         }
       }
-      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 263, __pyx_L1_error)
+      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 272, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       if (__pyx_t_6) {
         __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -3861,7 +4068,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
       PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_t_4);
       __pyx_t_3 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 263, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 272, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3873,39 +4080,39 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":270
+  /* "skbio/metadata/_intersection.pyx":279
  *         max_dist: the maximum distance to look before giving up.
  *         """
  *         cdef list results = []             # <<<<<<<<<<<<<<
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 270, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_results = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":272
+  /* "skbio/metadata/_intersection.pyx":281
  *         cdef list results = []
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )             # <<<<<<<<<<<<<<
  *         if len(results) == n: return results
  *         r = results
  */
-  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_SubtractObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 281, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 272, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 281, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_left(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-  /* "skbio/metadata/_intersection.pyx":273
+  /* "skbio/metadata/_intersection.pyx":282
  *         # use start - 1 becuase .left() assumes strictly left-of
  *         self._seek_left( position - 1, results, n, max_dist )
  *         if len(results) == n: return results             # <<<<<<<<<<<<<<
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)
  */
-  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) __PYX_ERR(0, 282, __pyx_L1_error)
   __pyx_t_10 = ((__pyx_t_7 == __pyx_v_n) != 0);
   if (__pyx_t_10) {
     __Pyx_XDECREF(__pyx_r);
@@ -3914,7 +4121,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":274
+  /* "skbio/metadata/_intersection.pyx":283
  *         self._seek_left( position - 1, results, n, max_dist )
  *         if len(results) == n: return results
  *         r = results             # <<<<<<<<<<<<<<
@@ -3924,35 +4131,35 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
   __Pyx_INCREF(__pyx_v_results);
   __pyx_v_r = __pyx_v_results;
 
-  /* "skbio/metadata/_intersection.pyx":275
+  /* "skbio/metadata/_intersection.pyx":284
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) __PYX_ERR(0, 275, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 275, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 275, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":276
+  /* "skbio/metadata/_intersection.pyx":285
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)
  *         return r[:n]             # <<<<<<<<<<<<<<
@@ -3960,13 +4167,13 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
  *     cpdef right(self, position, int n=1, int max_dist=2500):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 276, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 285, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_r = __pyx_t_5;
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":263
+  /* "skbio/metadata/_intersection.pyx":272
  * 
  * 
  *     cpdef left(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -3994,9 +4201,9 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_left(st
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_10left[] = "\n        find n features with a start > than `position`\n        f: a Interval object (or anything with an `end` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_12left[] = "\n        find n features with a start > than `position`\n        f: a Interval object (or anything with an `end` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13left(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   int __pyx_v_n;
   int __pyx_v_max_dist;
@@ -4033,7 +4240,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "left") < 0)) __PYX_ERR(0, 263, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "left") < 0)) __PYX_ERR(0, 272, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4046,32 +4253,32 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left
     }
     __pyx_v_position = values[0];
     if (values[1]) {
-      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 263, __pyx_L3_error)
+      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 272, __pyx_L3_error)
     } else {
       __pyx_v_n = ((int)1);
     }
     if (values[2]) {
-      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 263, __pyx_L3_error)
+      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 272, __pyx_L3_error)
     } else {
       __pyx_v_max_dist = ((int)0x9C4);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("left", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 263, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("left", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 272, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalNode.left", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12left(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12left(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4081,7 +4288,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left
   __pyx_t_2.__pyx_n = 2;
   __pyx_t_2.n = __pyx_v_n;
   __pyx_t_2.max_dist = __pyx_v_max_dist;
-  __pyx_t_1 = __pyx_vtabptr_5skbio_8metadata_13_intersection_IntervalNode->left(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
+  __pyx_t_1 = __pyx_vtabptr_5skbio_8metadata_13_intersection_IntervalNode->left(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -4098,7 +4305,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":278
+/* "skbio/metadata/_intersection.pyx":287
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -4106,7 +4313,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_10left
  *         find n features with a end < than position
  */
 
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_skip_dispatch, struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_right *__pyx_optional_args) {
   int __pyx_v_n = ((int)1);
   int __pyx_v_max_dist = ((int)0x9C4);
@@ -4137,13 +4344,13 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_right); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 278, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_right); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13right)) {
+    if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15right)) {
       __Pyx_XDECREF(__pyx_r);
-      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 278, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 287, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 278, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_max_dist); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 287, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_5 = __pyx_t_1; __pyx_t_6 = NULL;
@@ -4158,7 +4365,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
           __pyx_t_7 = 1;
         }
       }
-      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 278, __pyx_L1_error)
+      __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 287, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       if (__pyx_t_6) {
         __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -4172,7 +4379,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
       PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_t_4);
       __pyx_t_3 = 0;
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 278, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 287, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -4184,39 +4391,39 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":285
+  /* "skbio/metadata/_intersection.pyx":294
  *         max_dist: the maximum distance to look before giving up.
  *         """
  *         cdef list results = []             # <<<<<<<<<<<<<<
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 285, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 294, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_results = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":287
+  /* "skbio/metadata/_intersection.pyx":296
  *         cdef list results = []
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)             # <<<<<<<<<<<<<<
  *         if len(results) == n: return results
  *         r = results
  */
-  __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_position, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 296, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 287, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 296, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_seek_right(__pyx_v_self, __pyx_t_9, __pyx_v_results, __pyx_v_n, __pyx_v_max_dist);
 
-  /* "skbio/metadata/_intersection.pyx":288
+  /* "skbio/metadata/_intersection.pyx":297
  *         # use end + 1 becuase .right() assumes strictly right-of
  *         self._seek_right(position + 1, results, n, max_dist)
  *         if len(results) == n: return results             # <<<<<<<<<<<<<<
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))
  */
-  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) __PYX_ERR(0, 288, __pyx_L1_error)
+  __pyx_t_7 = PyList_GET_SIZE(__pyx_v_results); if (unlikely(__pyx_t_7 == -1)) __PYX_ERR(0, 297, __pyx_L1_error)
   __pyx_t_10 = ((__pyx_t_7 == __pyx_v_n) != 0);
   if (__pyx_t_10) {
     __Pyx_XDECREF(__pyx_r);
@@ -4225,7 +4432,7 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":289
+  /* "skbio/metadata/_intersection.pyx":298
  *         self._seek_right(position + 1, results, n, max_dist)
  *         if len(results) == n: return results
  *         r = results             # <<<<<<<<<<<<<<
@@ -4235,34 +4442,34 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
   __Pyx_INCREF(__pyx_v_results);
   __pyx_v_r = __pyx_v_results;
 
-  /* "skbio/metadata/_intersection.pyx":290
+  /* "skbio/metadata/_intersection.pyx":299
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_r, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_operator); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_attrgetter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) __PYX_ERR(0, 290, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_5) < 0) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":291
+  /* "skbio/metadata/_intersection.pyx":300
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))
  *         return r[:n]             # <<<<<<<<<<<<<<
@@ -4270,13 +4477,13 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
  *     def traverse(self, func):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 291, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyList_GetSlice(__pyx_v_r, 0, __pyx_v_n); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 300, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_r = __pyx_t_5;
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":278
+  /* "skbio/metadata/_intersection.pyx":287
  *         return r[:n]
  * 
  *     cpdef right(self, position, int n=1, int max_dist=2500):             # <<<<<<<<<<<<<<
@@ -4304,9 +4511,9 @@ static PyObject *__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_right(s
 }
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_12right[] = "\n        find n features with a end < than position\n        f: a Interval object (or anything with a `start` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_14right[] = "\n        find n features with a end < than position\n        f: a Interval object (or anything with a `start` attribute)\n        n: the number of features to return\n        max_dist: the maximum distance to look before giving up.\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15right(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   int __pyx_v_n;
   int __pyx_v_max_dist;
@@ -4343,7 +4550,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13righ
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "right") < 0)) __PYX_ERR(0, 278, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "right") < 0)) __PYX_ERR(0, 287, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4356,32 +4563,32 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13righ
     }
     __pyx_v_position = values[0];
     if (values[1]) {
-      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 278, __pyx_L3_error)
+      __pyx_v_n = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 287, __pyx_L3_error)
     } else {
       __pyx_v_n = ((int)1);
     }
     if (values[2]) {
-      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 278, __pyx_L3_error)
+      __pyx_v_max_dist = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_max_dist == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 287, __pyx_L3_error)
     } else {
       __pyx_v_max_dist = ((int)0x9C4);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("right", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 278, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("right", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 287, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalNode.right", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12right(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14right(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), __pyx_v_position, __pyx_v_n, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14right(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_position, int __pyx_v_n, int __pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4391,7 +4598,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12righ
   __pyx_t_2.__pyx_n = 2;
   __pyx_t_2.n = __pyx_v_n;
   __pyx_t_2.max_dist = __pyx_v_max_dist;
-  __pyx_t_1 = __pyx_vtabptr_5skbio_8metadata_13_intersection_IntervalNode->right(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 278, __pyx_L1_error)
+  __pyx_t_1 = __pyx_vtabptr_5skbio_8metadata_13_intersection_IntervalNode->right(__pyx_v_self, __pyx_v_position, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -4408,7 +4615,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12righ
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":293
+/* "skbio/metadata/_intersection.pyx":302
  *         return r[:n]
  * 
  *     def traverse(self, func):             # <<<<<<<<<<<<<<
@@ -4417,24 +4624,24 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_12righ
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func); /*proto*/
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_17traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func); /*proto*/
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_17traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_func) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse (wrapper)", 0);
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14traverse(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_func));
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_16traverse(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self), ((PyObject *)__pyx_v_func));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_16traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *__pyx_v_self, PyObject *__pyx_v_func) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse", 0);
 
-  /* "skbio/metadata/_intersection.pyx":294
+  /* "skbio/metadata/_intersection.pyx":303
  * 
  *     def traverse(self, func):
  *         self._traverse(func)             # <<<<<<<<<<<<<<
@@ -4443,7 +4650,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14trav
  */
   ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->__pyx_vtab)->_traverse(__pyx_v_self, __pyx_v_func);
 
-  /* "skbio/metadata/_intersection.pyx":293
+  /* "skbio/metadata/_intersection.pyx":302
  *         return r[:n]
  * 
  *     def traverse(self, func):             # <<<<<<<<<<<<<<
@@ -4458,7 +4665,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_14trav
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":296
+/* "skbio/metadata/_intersection.pyx":305
  *         self._traverse(func)
  * 
  *     cdef void _traverse(IntervalNode self, object func):             # <<<<<<<<<<<<<<
@@ -4476,7 +4683,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__traverse(st
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("_traverse", 0);
 
-  /* "skbio/metadata/_intersection.pyx":297
+  /* "skbio/metadata/_intersection.pyx":306
  * 
  *     cdef void _traverse(IntervalNode self, object func):
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)             # <<<<<<<<<<<<<<
@@ -4489,7 +4696,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__traverse(st
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cleft->__pyx_vtab)->_traverse(__pyx_v_self->cleft, __pyx_v_func);
   }
 
-  /* "skbio/metadata/_intersection.pyx":298
+  /* "skbio/metadata/_intersection.pyx":307
  *     cdef void _traverse(IntervalNode self, object func):
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)
  *         func(self)             # <<<<<<<<<<<<<<
@@ -4508,23 +4715,23 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__traverse(st
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, ((PyObject *)__pyx_v_self)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 298, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, ((PyObject *)__pyx_v_self)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
   } else {
-    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 298, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
     __Pyx_INCREF(((PyObject *)__pyx_v_self));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
     PyTuple_SET_ITEM(__pyx_t_6, 0+1, ((PyObject *)__pyx_v_self));
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 298, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":299
+  /* "skbio/metadata/_intersection.pyx":308
  *         if self.cleft is not EmptyNode: self.cleft._traverse(func)
  *         func(self)
  *         if self.cright is not EmptyNode: self.cright._traverse(func)             # <<<<<<<<<<<<<<
@@ -4537,7 +4744,7 @@ static void __pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__traverse(st
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->cright->__pyx_vtab)->_traverse(__pyx_v_self->cright, __pyx_v_func);
   }
 
-  /* "skbio/metadata/_intersection.pyx":296
+  /* "skbio/metadata/_intersection.pyx":305
  *         self._traverse(func)
  * 
  *     cdef void _traverse(IntervalNode self, object func):             # <<<<<<<<<<<<<<
@@ -4796,7 +5003,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalNode_3end_2__set_
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":322
+/* "skbio/metadata/_intersection.pyx":331
  *     cdef public object value, chrom, strand
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):             # <<<<<<<<<<<<<<
@@ -4841,7 +5048,7 @@ static int __pyx_pw_5skbio_8metadata_13_intersection_11IntervalObj_1__init__(PyO
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, 1); __PYX_ERR(0, 322, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, 1); __PYX_ERR(0, 331, __pyx_L3_error)
         }
         case  2:
         if (kw_args > 0) {
@@ -4860,7 +5067,7 @@ static int __pyx_pw_5skbio_8metadata_13_intersection_11IntervalObj_1__init__(PyO
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 322, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 331, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4873,15 +5080,15 @@ static int __pyx_pw_5skbio_8metadata_13_intersection_11IntervalObj_1__init__(PyO
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 322, __pyx_L3_error)
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 322, __pyx_L3_error)
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 331, __pyx_L3_error)
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 331, __pyx_L3_error)
     __pyx_v_value = values[2];
     __pyx_v_chrom = values[3];
     __pyx_v_strand = values[4];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 322, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 331, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalObj.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4899,7 +5106,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "skbio/metadata/_intersection.pyx":323
+  /* "skbio/metadata/_intersection.pyx":332
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):
  *         assert start <= end, "start must be less than end"             # <<<<<<<<<<<<<<
@@ -4910,12 +5117,12 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_start <= __pyx_v_end) != 0))) {
       PyErr_SetObject(PyExc_AssertionError, __pyx_kp_s_start_must_be_less_than_end);
-      __PYX_ERR(0, 323, __pyx_L1_error)
+      __PYX_ERR(0, 332, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "skbio/metadata/_intersection.pyx":324
+  /* "skbio/metadata/_intersection.pyx":333
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):
  *         assert start <= end, "start must be less than end"
  *         self.start  = start             # <<<<<<<<<<<<<<
@@ -4924,7 +5131,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
  */
   __pyx_v_self->start = __pyx_v_start;
 
-  /* "skbio/metadata/_intersection.pyx":325
+  /* "skbio/metadata/_intersection.pyx":334
  *         assert start <= end, "start must be less than end"
  *         self.start  = start
  *         self.end   = end             # <<<<<<<<<<<<<<
@@ -4933,7 +5140,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
  */
   __pyx_v_self->end = __pyx_v_end;
 
-  /* "skbio/metadata/_intersection.pyx":326
+  /* "skbio/metadata/_intersection.pyx":335
  *         self.start  = start
  *         self.end   = end
  *         self.value = value             # <<<<<<<<<<<<<<
@@ -4946,7 +5153,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   __Pyx_DECREF(__pyx_v_self->value);
   __pyx_v_self->value = __pyx_v_value;
 
-  /* "skbio/metadata/_intersection.pyx":327
+  /* "skbio/metadata/_intersection.pyx":336
  *         self.end   = end
  *         self.value = value
  *         self.chrom = chrom             # <<<<<<<<<<<<<<
@@ -4959,7 +5166,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   __Pyx_DECREF(__pyx_v_self->chrom);
   __pyx_v_self->chrom = __pyx_v_chrom;
 
-  /* "skbio/metadata/_intersection.pyx":328
+  /* "skbio/metadata/_intersection.pyx":337
  *         self.value = value
  *         self.chrom = chrom
  *         self.strand = strand             # <<<<<<<<<<<<<<
@@ -4972,7 +5179,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   __Pyx_DECREF(__pyx_v_self->strand);
   __pyx_v_self->strand = __pyx_v_strand;
 
-  /* "skbio/metadata/_intersection.pyx":322
+  /* "skbio/metadata/_intersection.pyx":331
  *     cdef public object value, chrom, strand
  * 
  *     def __init__(self, int start, int end, object value=None, object chrom=None, object strand=None ):             # <<<<<<<<<<<<<<
@@ -4991,7 +5198,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj___init__(stru
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":330
+/* "skbio/metadata/_intersection.pyx":339
  *         self.strand = strand
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -5023,18 +5230,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
   int __pyx_t_5;
   __Pyx_RefNannySetupContext("__repr__", 0);
 
-  /* "skbio/metadata/_intersection.pyx":331
+  /* "skbio/metadata/_intersection.pyx":340
  * 
  *     def __repr__(self):
  *         fstr = "IntervalObj(%d, %d" % (self.start, self.end)             # <<<<<<<<<<<<<<
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 331, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 340, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 331, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 340, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 331, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 340, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
@@ -5042,13 +5249,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
   PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
   __pyx_t_1 = 0;
   __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_IntervalObj_d_d, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 331, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyString_Format(__pyx_kp_s_IntervalObj_d_d, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 340, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_fstr = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":332
+  /* "skbio/metadata/_intersection.pyx":341
  *     def __repr__(self):
  *         fstr = "IntervalObj(%d, %d" % (self.start, self.end)
  *         if not self.value is None:             # <<<<<<<<<<<<<<
@@ -5059,31 +5266,31 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
   __pyx_t_5 = (__pyx_t_4 != 0);
   if (__pyx_t_5) {
 
-    /* "skbio/metadata/_intersection.pyx":333
+    /* "skbio/metadata/_intersection.pyx":342
  *         fstr = "IntervalObj(%d, %d" % (self.start, self.end)
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)             # <<<<<<<<<<<<<<
  *         fstr += ")"
  *         return fstr
  */
-    __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 333, __pyx_L1_error)
+    __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_v_self->value);
     __Pyx_GIVEREF(__pyx_v_self->value);
     PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_self->value);
-    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 333, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyString_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyNumber_Add(__pyx_kp_s_value_2, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 333, __pyx_L1_error)
+    __pyx_t_2 = PyNumber_Add(__pyx_kp_s_value_2, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 333, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 342, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF_SET(__pyx_v_fstr, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "skbio/metadata/_intersection.pyx":332
+    /* "skbio/metadata/_intersection.pyx":341
  *     def __repr__(self):
  *         fstr = "IntervalObj(%d, %d" % (self.start, self.end)
  *         if not self.value is None:             # <<<<<<<<<<<<<<
@@ -5092,19 +5299,19 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":334
+  /* "skbio/metadata/_intersection.pyx":343
  *         if not self.value is None:
  *             fstr += ", value=" + str(self.value)
  *         fstr += ")"             # <<<<<<<<<<<<<<
  *         return fstr
  * 
  */
-  __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_v_fstr, __pyx_kp_s__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF_SET(__pyx_v_fstr, __pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":335
+  /* "skbio/metadata/_intersection.pyx":344
  *             fstr += ", value=" + str(self.value)
  *         fstr += ")"
  *         return fstr             # <<<<<<<<<<<<<<
@@ -5116,7 +5323,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
   __pyx_r = __pyx_v_fstr;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":330
+  /* "skbio/metadata/_intersection.pyx":339
  *         self.strand = strand
  * 
  *     def __repr__(self):             # <<<<<<<<<<<<<<
@@ -5138,7 +5345,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_2__repr
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":337
+/* "skbio/metadata/_intersection.pyx":346
  *         return fstr
  * 
  *     def __richcmp__(self, other, op):             # <<<<<<<<<<<<<<
@@ -5153,7 +5360,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_11IntervalObj_5__rich
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__richcmp__ (wrapper)", 0);
-  __pyx_v_op = __Pyx_PyInt_From_int(__pyx_arg_op); if (unlikely(!__pyx_v_op)) __PYX_ERR(0, 337, __pyx_L3_error)
+  __pyx_v_op = __Pyx_PyInt_From_int(__pyx_arg_op); if (unlikely(!__pyx_v_op)) __PYX_ERR(0, 346, __pyx_L3_error)
   __Pyx_GOTREF(__pyx_v_op);
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5179,20 +5386,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
   PyObject *__pyx_t_5 = NULL;
   __Pyx_RefNannySetupContext("__richcmp__", 0);
 
-  /* "skbio/metadata/_intersection.pyx":338
+  /* "skbio/metadata/_intersection.pyx":347
  * 
  *     def __richcmp__(self, other, op):
  *         if op == 0:             # <<<<<<<<<<<<<<
  *             # <
  *             return self.start < other.start or self.end < other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":340
+    /* "skbio/metadata/_intersection.pyx":349
  *         if op == 0:
  *             # <
  *             return self.start < other.start or self.end < other.end             # <<<<<<<<<<<<<<
@@ -5200,14 +5407,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  *             # <=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 349, __pyx_L1_error)
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -5216,11 +5423,11 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L4_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 340, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -5231,7 +5438,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":338
+    /* "skbio/metadata/_intersection.pyx":347
  * 
  *     def __richcmp__(self, other, op):
  *         if op == 0:             # <<<<<<<<<<<<<<
@@ -5240,20 +5447,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":341
+  /* "skbio/metadata/_intersection.pyx":350
  *             # <
  *             return self.start < other.start or self.end < other.end
  *         elif op == 1:             # <<<<<<<<<<<<<<
  *             # <=
  *             return self == other or self < other
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 341, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 341, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":343
+    /* "skbio/metadata/_intersection.pyx":352
  *         elif op == 1:
  *             # <=
  *             return self == other or self < other             # <<<<<<<<<<<<<<
@@ -5261,8 +5468,8 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  *             # ==
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 343, __pyx_L1_error)
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 343, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 352, __pyx_L1_error)
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     } else {
@@ -5271,7 +5478,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       goto __pyx_L6_bool_binop_done;
     }
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 343, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_LT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 352, __pyx_L1_error)
     __Pyx_INCREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -5280,7 +5487,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":341
+    /* "skbio/metadata/_intersection.pyx":350
  *             # <
  *             return self.start < other.start or self.end < other.end
  *         elif op == 1:             # <<<<<<<<<<<<<<
@@ -5289,20 +5496,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":344
+  /* "skbio/metadata/_intersection.pyx":353
  *             # <=
  *             return self == other or self < other
  *         elif op == 2:             # <<<<<<<<<<<<<<
  *             # ==
  *             return self.start == other.start and self.end == other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 344, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 353, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 344, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 353, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":346
+    /* "skbio/metadata/_intersection.pyx":355
  *         elif op == 2:
  *             # ==
  *             return self.start == other.start and self.end == other.end             # <<<<<<<<<<<<<<
@@ -5310,14 +5517,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  *             # !=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 355, __pyx_L1_error)
     if (__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -5326,11 +5533,11 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L8_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 355, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -5341,7 +5548,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":344
+    /* "skbio/metadata/_intersection.pyx":353
  *             # <=
  *             return self == other or self < other
  *         elif op == 2:             # <<<<<<<<<<<<<<
@@ -5350,20 +5557,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":347
+  /* "skbio/metadata/_intersection.pyx":356
  *             # ==
  *             return self.start == other.start and self.end == other.end
  *         elif op == 3:             # <<<<<<<<<<<<<<
  *             # !=
  *             return self.start != other.start or self.end != other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_3, 3, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 347, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_3, 3, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 356, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 347, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 356, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":349
+    /* "skbio/metadata/_intersection.pyx":358
  *         elif op == 3:
  *             # !=
  *             return self.start != other.start or self.end != other.end             # <<<<<<<<<<<<<<
@@ -5371,14 +5578,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  *             # >
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 358, __pyx_L1_error)
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -5387,11 +5594,11 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L10_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_NE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 358, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -5402,7 +5609,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":347
+    /* "skbio/metadata/_intersection.pyx":356
  *             # ==
  *             return self.start == other.start and self.end == other.end
  *         elif op == 3:             # <<<<<<<<<<<<<<
@@ -5411,20 +5618,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":350
+  /* "skbio/metadata/_intersection.pyx":359
  *             # !=
  *             return self.start != other.start or self.end != other.end
  *         elif op == 4:             # <<<<<<<<<<<<<<
  *             # >
  *             return self.start > other.start or self.end > other.end
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_4, 4, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 350, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_4, 4, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 359, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 350, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 359, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":352
+    /* "skbio/metadata/_intersection.pyx":361
  *         elif op == 4:
  *             # >
  *             return self.start > other.start or self.end > other.end             # <<<<<<<<<<<<<<
@@ -5432,14 +5639,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  *             # >=
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 361, __pyx_L1_error)
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     } else {
@@ -5448,11 +5655,11 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L12_bool_binop_done;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_end); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_other, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 352, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 361, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_INCREF(__pyx_t_3);
@@ -5463,7 +5670,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":350
+    /* "skbio/metadata/_intersection.pyx":359
  *             # !=
  *             return self.start != other.start or self.end != other.end
  *         elif op == 4:             # <<<<<<<<<<<<<<
@@ -5472,20 +5679,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":353
+  /* "skbio/metadata/_intersection.pyx":362
  *             # >
  *             return self.start > other.start or self.end > other.end
  *         elif op == 5:             # <<<<<<<<<<<<<<
  *             # >=
  *             return self == other or self > other
  */
-  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_5, 5, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 353, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_op, __pyx_int_5, 5, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 362, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 353, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 362, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":355
+    /* "skbio/metadata/_intersection.pyx":364
  *         elif op == 5:
  *             # >=
  *             return self == other or self > other             # <<<<<<<<<<<<<<
@@ -5493,8 +5700,8 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  * cdef class IntervalTree:
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 355, __pyx_L1_error)
-    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 355, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 364, __pyx_L1_error)
     if (!__pyx_t_2) {
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     } else {
@@ -5503,7 +5710,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       goto __pyx_L14_bool_binop_done;
     }
-    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 355, __pyx_L1_error)
+    __pyx_t_3 = PyObject_RichCompare(__pyx_v_self, __pyx_v_other, Py_GT); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 364, __pyx_L1_error)
     __Pyx_INCREF(__pyx_t_3);
     __pyx_t_1 = __pyx_t_3;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -5512,7 +5719,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
     __pyx_t_1 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":353
+    /* "skbio/metadata/_intersection.pyx":362
  *             # >
  *             return self.start > other.start or self.end > other.end
  *         elif op == 5:             # <<<<<<<<<<<<<<
@@ -5521,7 +5728,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":337
+  /* "skbio/metadata/_intersection.pyx":346
  *         return fstr
  * 
  *     def __richcmp__(self, other, op):             # <<<<<<<<<<<<<<
@@ -5545,7 +5752,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_4__rich
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":319
+/* "skbio/metadata/_intersection.pyx":328
  * 
  *     """
  *     cdef public int start, end             # <<<<<<<<<<<<<<
@@ -5572,7 +5779,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_5start_
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 319, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5607,7 +5814,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_5start_2__set
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__set__", 0);
-  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 319, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 328, __pyx_L1_error)
   __pyx_v_self->start = __pyx_t_1;
 
   /* function exit code */
@@ -5640,7 +5847,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_3end___
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 319, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->end); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5675,7 +5882,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_3end_2__set__
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__set__", 0);
-  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 319, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_value); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 328, __pyx_L1_error)
   __pyx_v_self->end = __pyx_t_1;
 
   /* function exit code */
@@ -5689,7 +5896,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_3end_2__set__
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":320
+/* "skbio/metadata/_intersection.pyx":329
  *     """
  *     cdef public int start, end
  *     cdef public object value, chrom, strand             # <<<<<<<<<<<<<<
@@ -5958,7 +6165,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_11IntervalObj_6strand_4__de
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":415
+/* "skbio/metadata/_intersection.pyx":424
  *     cdef IntervalNode root
  * 
  *     def __cinit__( self ):             # <<<<<<<<<<<<<<
@@ -5988,7 +6195,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree___cinit__(CY
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "skbio/metadata/_intersection.pyx":416
+  /* "skbio/metadata/_intersection.pyx":425
  * 
  *     def __cinit__( self ):
  *         root = None             # <<<<<<<<<<<<<<
@@ -5998,7 +6205,7 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree___cinit__(CY
   __Pyx_INCREF(Py_None);
   __pyx_v_root = Py_None;
 
-  /* "skbio/metadata/_intersection.pyx":415
+  /* "skbio/metadata/_intersection.pyx":424
  *     cdef IntervalNode root
  * 
  *     def __cinit__( self ):             # <<<<<<<<<<<<<<
@@ -6013,8 +6220,103 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree___cinit__(CY
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":420
+/* "skbio/metadata/_intersection.pyx":429
  *     # ---- Position based interfaces -----------------------------------------
+ * 
+ *     def get_right_bound( self ):             # <<<<<<<<<<<<<<
+ *         '''Get the right bound'''
+ *         if self.root is None:
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3get_right_bound(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_2get_right_bound[] = "Get the right bound";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3get_right_bound(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_right_bound (wrapper)", 0);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2get_right_bound(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2get_right_bound(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  __Pyx_RefNannySetupContext("get_right_bound", 0);
+
+  /* "skbio/metadata/_intersection.pyx":431
+ *     def get_right_bound( self ):
+ *         '''Get the right bound'''
+ *         if self.root is None:             # <<<<<<<<<<<<<<
+ *             return None
+ *         return self.root._right_bound()
+ */
+  __pyx_t_1 = (((PyObject *)__pyx_v_self->root) == Py_None);
+  __pyx_t_2 = (__pyx_t_1 != 0);
+  if (__pyx_t_2) {
+
+    /* "skbio/metadata/_intersection.pyx":432
+ *         '''Get the right bound'''
+ *         if self.root is None:
+ *             return None             # <<<<<<<<<<<<<<
+ *         return self.root._right_bound()
+ * 
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_None);
+    __pyx_r = Py_None;
+    goto __pyx_L0;
+
+    /* "skbio/metadata/_intersection.pyx":431
+ *     def get_right_bound( self ):
+ *         '''Get the right bound'''
+ *         if self.root is None:             # <<<<<<<<<<<<<<
+ *             return None
+ *         return self.root._right_bound()
+ */
+  }
+
+  /* "skbio/metadata/_intersection.pyx":433
+ *         if self.root is None:
+ *             return None
+ *         return self.root._right_bound()             # <<<<<<<<<<<<<<
+ * 
+ *     def insert( self, int start, int end, object value=None ):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_3 = __Pyx_PyInt_From_int(((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->_right_bound(__pyx_v_self->root, 0)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 433, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
+  goto __pyx_L0;
+
+  /* "skbio/metadata/_intersection.pyx":429
+ *     # ---- Position based interfaces -----------------------------------------
+ * 
+ *     def get_right_bound( self ):             # <<<<<<<<<<<<<<
+ *         '''Get the right bound'''
+ *         if self.root is None:
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.get_right_bound", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "skbio/metadata/_intersection.pyx":435
+ *         return self.root._right_bound()
  * 
  *     def insert( self, int start, int end, object value=None ):             # <<<<<<<<<<<<<<
  *         """
@@ -6022,9 +6324,9 @@ static int __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree___cinit__(CY
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_2insert[] = "\n        Insert the interval [start,end) associated with value `value`.\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_4insert[] = "\n        Insert the interval [start,end) associated with value `value`.\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_v_start;
   int __pyx_v_end;
   PyObject *__pyx_v_value = 0;
@@ -6053,7 +6355,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3inser
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, 1); __PYX_ERR(0, 420, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, 1); __PYX_ERR(0, 435, __pyx_L3_error)
         }
         case  2:
         if (kw_args > 0) {
@@ -6062,7 +6364,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3inser
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "insert") < 0)) __PYX_ERR(0, 420, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "insert") < 0)) __PYX_ERR(0, 435, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6073,26 +6375,26 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3inser
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 420, __pyx_L3_error)
-    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 420, __pyx_L3_error)
+    __pyx_v_start = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_start == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 435, __pyx_L3_error)
+    __pyx_v_end = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_end == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 435, __pyx_L3_error)
     __pyx_v_value = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 420, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("insert", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 435, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2insert(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4insert(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2insert(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4insert(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, int __pyx_v_start, int __pyx_v_end, PyObject *__pyx_v_value) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6102,7 +6404,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
   PyObject *__pyx_t_5 = NULL;
   __Pyx_RefNannySetupContext("insert", 0);
 
-  /* "skbio/metadata/_intersection.pyx":424
+  /* "skbio/metadata/_intersection.pyx":439
  *         Insert the interval [start,end) associated with value `value`.
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6113,18 +6415,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":425
+    /* "skbio/metadata/_intersection.pyx":440
  *         """
  *         if self.root is None:
  *             self.root = IntervalNode( start, end, value )             # <<<<<<<<<<<<<<
  *         else:
  *             self.root = self.root.insert( start, end, value )
  */
-    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 440, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 440, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 440, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_GIVEREF(__pyx_t_3);
     PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
@@ -6135,7 +6437,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
     PyTuple_SET_ITEM(__pyx_t_5, 2, __pyx_v_value);
     __pyx_t_3 = 0;
     __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode), __pyx_t_5, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 440, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GIVEREF(__pyx_t_4);
@@ -6144,7 +6446,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
     __pyx_v_self->root = ((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "skbio/metadata/_intersection.pyx":424
+    /* "skbio/metadata/_intersection.pyx":439
  *         Insert the interval [start,end) associated with value `value`.
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6154,7 +6456,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
     goto __pyx_L3;
   }
 
-  /* "skbio/metadata/_intersection.pyx":427
+  /* "skbio/metadata/_intersection.pyx":442
  *             self.root = IntervalNode( start, end, value )
  *         else:
  *             self.root = self.root.insert( start, end, value )             # <<<<<<<<<<<<<<
@@ -6162,7 +6464,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
  *     add = insert
  */
   /*else*/ {
-    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->insert(__pyx_v_self->root, __pyx_v_start, __pyx_v_end, __pyx_v_value, 0)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 427, __pyx_L1_error)
+    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->insert(__pyx_v_self->root, __pyx_v_start, __pyx_v_end, __pyx_v_value, 0)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 442, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_4);
     __Pyx_GOTREF(__pyx_v_self->root);
@@ -6172,8 +6474,8 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
   }
   __pyx_L3:;
 
-  /* "skbio/metadata/_intersection.pyx":420
- *     # ---- Position based interfaces -----------------------------------------
+  /* "skbio/metadata/_intersection.pyx":435
+ *         return self.root._right_bound()
  * 
  *     def insert( self, int start, int end, object value=None ):             # <<<<<<<<<<<<<<
  *         """
@@ -6195,7 +6497,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":432
+/* "skbio/metadata/_intersection.pyx":447
  * 
  * 
  *     def update( self, start, end, old_feature, new_feature):             # <<<<<<<<<<<<<<
@@ -6204,9 +6506,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_2inser
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_4update[] = "\n        Given an interval [start, end), replace all objects that\n        match the `old_feature` with `new_feature`.\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_6update[] = "\n        Given an interval [start, end), replace all objects that\n        match the `old_feature` with `new_feature`.\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7update(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_start = 0;
   PyObject *__pyx_v_end = 0;
   PyObject *__pyx_v_old_feature = 0;
@@ -6236,21 +6538,21 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5updat
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); __PYX_ERR(0, 432, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 1); __PYX_ERR(0, 447, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_old_feature)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); __PYX_ERR(0, 432, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 2); __PYX_ERR(0, 447, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_new_feature)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); __PYX_ERR(0, 432, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, 3); __PYX_ERR(0, 447, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) __PYX_ERR(0, 432, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "update") < 0)) __PYX_ERR(0, 447, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -6267,20 +6569,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5updat
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 432, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("update", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 447, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.update", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4update(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6update(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end, __pyx_v_old_feature, __pyx_v_new_feature);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6update(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end, PyObject *__pyx_v_old_feature, PyObject *__pyx_v_new_feature) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6289,7 +6591,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4updat
   int __pyx_t_4;
   __Pyx_RefNannySetupContext("update", 0);
 
-  /* "skbio/metadata/_intersection.pyx":437
+  /* "skbio/metadata/_intersection.pyx":452
  *         match the `old_feature` with `new_feature`.
  *         """
  *         if self.root is not None:             # <<<<<<<<<<<<<<
@@ -6300,18 +6602,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4updat
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":438
+    /* "skbio/metadata/_intersection.pyx":453
  *         """
  *         if self.root is not None:
  *             self.root.update(start, end, old_feature, new_feature)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_v_start); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 438, __pyx_L1_error)
-    __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_end); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 438, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_v_start); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 453, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_end); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 453, __pyx_L1_error)
     ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->update(__pyx_v_self->root, __pyx_t_3, __pyx_t_4, __pyx_v_old_feature, __pyx_v_new_feature, 0);
 
-    /* "skbio/metadata/_intersection.pyx":437
+    /* "skbio/metadata/_intersection.pyx":452
  *         match the `old_feature` with `new_feature`.
  *         """
  *         if self.root is not None:             # <<<<<<<<<<<<<<
@@ -6320,7 +6622,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4updat
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":432
+  /* "skbio/metadata/_intersection.pyx":447
  * 
  * 
  *     def update( self, start, end, old_feature, new_feature):             # <<<<<<<<<<<<<<
@@ -6340,7 +6642,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4updat
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":441
+/* "skbio/metadata/_intersection.pyx":456
  * 
  * 
  *     def find( self, start, end ):             # <<<<<<<<<<<<<<
@@ -6349,9 +6651,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_4updat
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_6find[] = "\n        Return a sorted list of all intervals overlapping [start,end).\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_8find[] = "\n        Return a sorted list of all intervals overlapping [start,end).\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9find(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_start = 0;
   PyObject *__pyx_v_end = 0;
   PyObject *__pyx_r = 0;
@@ -6377,11 +6679,11 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7find(
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_end)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, 1); __PYX_ERR(0, 441, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, 1); __PYX_ERR(0, 456, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "find") < 0)) __PYX_ERR(0, 441, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "find") < 0)) __PYX_ERR(0, 456, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -6394,20 +6696,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7find(
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 441, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("find", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 456, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.find", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8find(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_start, __pyx_v_end);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8find(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_start, PyObject *__pyx_v_end) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6419,7 +6721,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
   PyObject *__pyx_t_7 = NULL;
   __Pyx_RefNannySetupContext("find", 0);
 
-  /* "skbio/metadata/_intersection.pyx":445
+  /* "skbio/metadata/_intersection.pyx":460
  *         Return a sorted list of all intervals overlapping [start,end).
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6430,7 +6732,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":446
+    /* "skbio/metadata/_intersection.pyx":461
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6438,13 +6740,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 446, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 461, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":445
+    /* "skbio/metadata/_intersection.pyx":460
  *         Return a sorted list of all intervals overlapping [start,end).
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6453,7 +6755,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":447
+  /* "skbio/metadata/_intersection.pyx":462
  *         if self.root is None:
  *             return []
  *         return self.root.find( start, end )             # <<<<<<<<<<<<<<
@@ -6461,7 +6763,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
  *     def before( self, position, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_find); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 447, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_find); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 462, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   __pyx_t_6 = 0;
@@ -6475,7 +6777,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
       __pyx_t_6 = 1;
     }
   }
-  __pyx_t_7 = PyTuple_New(2+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 447, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(2+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 462, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   if (__pyx_t_5) {
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -6486,7 +6788,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
   __Pyx_INCREF(__pyx_v_end);
   __Pyx_GIVEREF(__pyx_v_end);
   PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_6, __pyx_v_end);
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 447, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 462, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -6494,7 +6796,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":441
+  /* "skbio/metadata/_intersection.pyx":456
  * 
  * 
  *     def find( self, start, end ):             # <<<<<<<<<<<<<<
@@ -6516,7 +6818,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":449
+/* "skbio/metadata/_intersection.pyx":464
  *         return self.root.find( start, end )
  * 
  *     def before( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6525,9 +6827,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_6find(
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_8before[] = "\n        Find `num_intervals` intervals that lie before `position` and are no\n        further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_10before[] = "\n        Find `num_intervals` intervals that lie before `position` and are no\n        further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11before(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6566,7 +6868,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9befor
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before") < 0)) __PYX_ERR(0, 449, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before") < 0)) __PYX_ERR(0, 464, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6583,20 +6885,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9befor
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("before", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 449, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("before", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 464, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.before", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8before(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10before(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8before(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10before(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6607,7 +6909,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left __pyx_t_6;
   __Pyx_RefNannySetupContext("before", 0);
 
-  /* "skbio/metadata/_intersection.pyx":454
+  /* "skbio/metadata/_intersection.pyx":469
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6618,7 +6920,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":455
+    /* "skbio/metadata/_intersection.pyx":470
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6626,13 +6928,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 455, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 470, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":454
+    /* "skbio/metadata/_intersection.pyx":469
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6641,7 +6943,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":456
+  /* "skbio/metadata/_intersection.pyx":471
  *         if self.root is None:
  *             return []
  *         return self.root.left( position, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6649,18 +6951,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
  *     def after( self, position, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 456, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 456, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 471, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 471, __pyx_L1_error)
   __pyx_t_6.__pyx_n = 2;
   __pyx_t_6.n = __pyx_t_4;
   __pyx_t_6.max_dist = __pyx_t_5;
-  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 456, __pyx_L1_error)
+  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 471, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":449
+  /* "skbio/metadata/_intersection.pyx":464
  *         return self.root.find( start, end )
  * 
  *     def before( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6679,7 +6981,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":458
+/* "skbio/metadata/_intersection.pyx":473
  *         return self.root.left( position, num_intervals, max_dist )
  * 
  *     def after( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6688,9 +6990,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_8befor
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_10after[] = "\n        Find `num_intervals` intervals that lie after `position` and are no\n        further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_12after[] = "\n        Find `num_intervals` intervals that lie after `position` and are no\n        further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13after(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_position = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6729,7 +7031,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11afte
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after") < 0)) __PYX_ERR(0, 458, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after") < 0)) __PYX_ERR(0, 473, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6746,20 +7048,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11afte
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("after", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 458, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("after", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 473, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.after", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10after(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12after(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_position, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10after(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12after(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_position, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6770,7 +7072,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_right __pyx_t_6;
   __Pyx_RefNannySetupContext("after", 0);
 
-  /* "skbio/metadata/_intersection.pyx":463
+  /* "skbio/metadata/_intersection.pyx":478
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6781,7 +7083,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":464
+    /* "skbio/metadata/_intersection.pyx":479
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -6789,13 +7091,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 479, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":463
+    /* "skbio/metadata/_intersection.pyx":478
  *         further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -6804,7 +7106,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":465
+  /* "skbio/metadata/_intersection.pyx":480
  *         if self.root is None:
  *             return []
  *         return self.root.right( position, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -6812,18 +7114,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
  *     # ---- Interval-like object based interfaces -----------------------------
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 465, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 465, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 480, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 480, __pyx_L1_error)
   __pyx_t_6.__pyx_n = 2;
   __pyx_t_6.n = __pyx_t_4;
   __pyx_t_6.max_dist = __pyx_t_5;
-  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 465, __pyx_L1_error)
+  __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_v_position, 0, &__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 480, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":458
+  /* "skbio/metadata/_intersection.pyx":473
  *         return self.root.left( position, num_intervals, max_dist )
  * 
  *     def after( self, position, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6842,7 +7144,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":469
+/* "skbio/metadata/_intersection.pyx":484
  *     # ---- Interval-like object based interfaces -----------------------------
  * 
  *     def insert_interval( self, interval ):             # <<<<<<<<<<<<<<
@@ -6851,20 +7153,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_10afte
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_12insert_interval[] = "\n        Insert an \"interval\" like object (one with at least start and end\n        attributes)\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_14insert_interval[] = "\n        Insert an \"interval\" like object (one with at least start and end\n        attributes)\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15insert_interval(PyObject *__pyx_v_self, PyObject *__pyx_v_interval) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("insert_interval (wrapper)", 0);
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12insert_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_interval));
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14insert_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_interval));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12insert_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14insert_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -6876,18 +7178,18 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12inse
   PyObject *__pyx_t_7 = NULL;
   __Pyx_RefNannySetupContext("insert_interval", 0);
 
-  /* "skbio/metadata/_intersection.pyx":474
+  /* "skbio/metadata/_intersection.pyx":489
  *         attributes)
  *         """
  *         self.insert( interval.start, interval.end, interval )             # <<<<<<<<<<<<<<
  * 
  *     add_interval = insert_interval
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_insert); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 474, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_insert); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 489, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 474, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 489, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 474, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 489, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   __pyx_t_6 = 0;
@@ -6901,7 +7203,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12inse
       __pyx_t_6 = 1;
     }
   }
-  __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 474, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 489, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   if (__pyx_t_5) {
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -6915,13 +7217,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12inse
   PyTuple_SET_ITEM(__pyx_t_7, 2+__pyx_t_6, __pyx_v_interval);
   __pyx_t_3 = 0;
   __pyx_t_4 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 474, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 489, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":469
+  /* "skbio/metadata/_intersection.pyx":484
  *     # ---- Interval-like object based interfaces -----------------------------
  * 
  *     def insert_interval( self, interval ):             # <<<<<<<<<<<<<<
@@ -6947,7 +7249,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12inse
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":478
+/* "skbio/metadata/_intersection.pyx":493
  *     add_interval = insert_interval
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -6956,9 +7258,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_12inse
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_14before_interval[] = "\n        Find `num_intervals` intervals that lie completely before `interval`\n        and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_16before_interval[] = "\n        Find `num_intervals` intervals that lie completely before `interval`\n        and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17before_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -6997,7 +7299,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15befo
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before_interval") < 0)) __PYX_ERR(0, 478, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "before_interval") < 0)) __PYX_ERR(0, 493, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7014,20 +7316,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15befo
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("before_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 478, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("before_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 493, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.before_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14before_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16before_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14before_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16before_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7039,7 +7341,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left __pyx_t_7;
   __Pyx_RefNannySetupContext("before_interval", 0);
 
-  /* "skbio/metadata/_intersection.pyx":483
+  /* "skbio/metadata/_intersection.pyx":498
  *         and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7050,7 +7352,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":484
+    /* "skbio/metadata/_intersection.pyx":499
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -7058,13 +7360,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 484, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 499, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":483
+    /* "skbio/metadata/_intersection.pyx":498
  *         and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7073,7 +7375,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":485
+  /* "skbio/metadata/_intersection.pyx":500
  *         if self.root is None:
  *             return []
  *         return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7081,21 +7383,21 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 500, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 500, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 500, __pyx_L1_error)
   __pyx_t_7.__pyx_n = 2;
   __pyx_t_7.n = __pyx_t_4;
   __pyx_t_7.max_dist = __pyx_t_5;
-  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 485, __pyx_L1_error)
+  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 500, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":478
+  /* "skbio/metadata/_intersection.pyx":493
  *     add_interval = insert_interval
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7115,7 +7417,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":487
+/* "skbio/metadata/_intersection.pyx":502
  *         return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7124,9 +7426,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_14befo
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_16after_interval[] = "\n        Find `num_intervals` intervals that lie completely after `interval` and\n        are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_18after_interval[] = "\n        Find `num_intervals` intervals that lie completely after `interval` and\n        are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19after_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -7165,7 +7467,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17afte
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after_interval") < 0)) __PYX_ERR(0, 487, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "after_interval") < 0)) __PYX_ERR(0, 502, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7182,20 +7484,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17afte
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("after_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 487, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("after_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 502, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.after_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16after_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18after_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16after_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18after_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7207,7 +7509,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_right __pyx_t_7;
   __Pyx_RefNannySetupContext("after_interval", 0);
 
-  /* "skbio/metadata/_intersection.pyx":492
+  /* "skbio/metadata/_intersection.pyx":507
  *         are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7218,7 +7520,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":493
+    /* "skbio/metadata/_intersection.pyx":508
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -7226,13 +7528,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 508, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":492
+    /* "skbio/metadata/_intersection.pyx":507
  *         are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7241,7 +7543,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":494
+  /* "skbio/metadata/_intersection.pyx":509
  *         if self.root is None:
  *             return []
  *         return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7249,21 +7551,21 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 494, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 509, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 494, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 509, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 509, __pyx_L1_error)
   __pyx_t_7.__pyx_n = 2;
   __pyx_t_7.n = __pyx_t_4;
   __pyx_t_7.max_dist = __pyx_t_5;
-  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 494, __pyx_L1_error)
+  __pyx_t_6 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 509, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":487
+  /* "skbio/metadata/_intersection.pyx":502
  *         return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def after_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7283,7 +7585,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":496
+/* "skbio/metadata/_intersection.pyx":511
  *         return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7292,9 +7594,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_16afte
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_18upstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely upstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_20upstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely upstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21upstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -7333,7 +7635,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19upst
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "upstream_of_interval") < 0)) __PYX_ERR(0, 496, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "upstream_of_interval") < 0)) __PYX_ERR(0, 511, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7350,20 +7652,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19upst
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("upstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 496, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("upstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 511, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.upstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upstream_of_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20upstream_of_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20upstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7376,7 +7678,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_left __pyx_t_8;
   __Pyx_RefNannySetupContext("upstream_of_interval", 0);
 
-  /* "skbio/metadata/_intersection.pyx":501
+  /* "skbio/metadata/_intersection.pyx":516
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7387,7 +7689,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":502
+    /* "skbio/metadata/_intersection.pyx":517
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -7395,13 +7697,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  *             return self.root.right( interval.end, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 502, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 517, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":501
+    /* "skbio/metadata/_intersection.pyx":516
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7410,34 +7712,34 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":503
+  /* "skbio/metadata/_intersection.pyx":518
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
  *             return self.root.right( interval.end, num_intervals, max_dist )
  *         else:
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 518, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 518, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 518, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (!__pyx_t_1) {
   } else {
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 518, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 518, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":504
+    /* "skbio/metadata/_intersection.pyx":519
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":
  *             return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7445,21 +7747,21 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  *             return self.root.left( interval.start, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 504, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 519, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 504, __pyx_L1_error)
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 504, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 519, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 519, __pyx_L1_error)
     __pyx_t_7.__pyx_n = 2;
     __pyx_t_7.n = __pyx_t_5;
     __pyx_t_7.max_dist = __pyx_t_6;
-    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 504, __pyx_L1_error)
+    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 519, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":503
+    /* "skbio/metadata/_intersection.pyx":518
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
@@ -7468,7 +7770,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":506
+  /* "skbio/metadata/_intersection.pyx":521
  *             return self.root.right( interval.end, num_intervals, max_dist )
  *         else:
  *             return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7477,14 +7779,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 506, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 521, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 506, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 506, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 521, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 521, __pyx_L1_error)
     __pyx_t_8.__pyx_n = 2;
     __pyx_t_8.n = __pyx_t_6;
     __pyx_t_8.max_dist = __pyx_t_5;
-    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 506, __pyx_L1_error)
+    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 521, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_r = __pyx_t_4;
@@ -7492,7 +7794,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":496
+  /* "skbio/metadata/_intersection.pyx":511
  *         return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def upstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7512,7 +7814,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":508
+/* "skbio/metadata/_intersection.pyx":523
  *             return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def downstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7521,9 +7823,9 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_18upst
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_20downstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely downstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_22downstream_of_interval[] = "\n        Find `num_intervals` intervals that lie completely downstream of\n        `interval` and are no further than `max_dist` positions away\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23downstream_of_interval(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_interval = 0;
   PyObject *__pyx_v_num_intervals = 0;
   PyObject *__pyx_v_max_dist = 0;
@@ -7562,7 +7864,7 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21down
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "downstream_of_interval") < 0)) __PYX_ERR(0, 508, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "downstream_of_interval") < 0)) __PYX_ERR(0, 523, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -7579,20 +7881,20 @@ static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21down
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("downstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 508, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("downstream_of_interval", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 523, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("skbio.metadata._intersection.IntervalTree.downstream_of_interval", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20downstream_of_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22downstream_of_interval(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), __pyx_v_interval, __pyx_v_num_intervals, __pyx_v_max_dist);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20downstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22downstream_of_interval(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_interval, PyObject *__pyx_v_num_intervals, PyObject *__pyx_v_max_dist) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7605,7 +7907,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
   struct __pyx_opt_args_5skbio_8metadata_13_intersection_12IntervalNode_right __pyx_t_8;
   __Pyx_RefNannySetupContext("downstream_of_interval", 0);
 
-  /* "skbio/metadata/_intersection.pyx":513
+  /* "skbio/metadata/_intersection.pyx":528
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7616,7 +7918,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":514
+    /* "skbio/metadata/_intersection.pyx":529
  *         """
  *         if self.root is None:
  *             return []             # <<<<<<<<<<<<<<
@@ -7624,13 +7926,13 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  *             return self.root.left( interval.start, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 514, __pyx_L1_error)
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 529, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":513
+    /* "skbio/metadata/_intersection.pyx":528
  *         `interval` and are no further than `max_dist` positions away
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7639,34 +7941,34 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":515
+  /* "skbio/metadata/_intersection.pyx":530
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
  *             return self.root.left( interval.start, num_intervals, max_dist )
  *         else:
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 515, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 515, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_EqObjC(__pyx_t_3, __pyx_int_neg_1, -1L, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 515, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (!__pyx_t_1) {
   } else {
     __pyx_t_2 = __pyx_t_1;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 515, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_strand); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 515, __pyx_L1_error)
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_t_4, __pyx_kp_s__4, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_2 = __pyx_t_1;
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":516
+    /* "skbio/metadata/_intersection.pyx":531
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":
  *             return self.root.left( interval.start, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7674,21 +7976,21 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  *             return self.root.right( interval.end, num_intervals, max_dist )
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 516, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_start); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 531, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 516, __pyx_L1_error)
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 516, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 531, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 531, __pyx_L1_error)
     __pyx_t_7.__pyx_n = 2;
     __pyx_t_7.n = __pyx_t_5;
     __pyx_t_7.max_dist = __pyx_t_6;
-    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 516, __pyx_L1_error)
+    __pyx_t_3 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->left(__pyx_v_self->root, __pyx_t_4, 0, &__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 531, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_3;
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":515
+    /* "skbio/metadata/_intersection.pyx":530
  *         if self.root is None:
  *             return []
  *         if interval.strand == -1 or interval.strand == "-":             # <<<<<<<<<<<<<<
@@ -7697,7 +7999,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":518
+  /* "skbio/metadata/_intersection.pyx":533
  *             return self.root.left( interval.start, num_intervals, max_dist )
  *         else:
  *             return self.root.right( interval.end, num_intervals, max_dist )             # <<<<<<<<<<<<<<
@@ -7706,14 +8008,14 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 518, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_interval, __pyx_n_s_end); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 533, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 518, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 518, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_v_num_intervals); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 533, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_max_dist); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 533, __pyx_L1_error)
     __pyx_t_8.__pyx_n = 2;
     __pyx_t_8.n = __pyx_t_6;
     __pyx_t_8.max_dist = __pyx_t_5;
-    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 518, __pyx_L1_error)
+    __pyx_t_4 = ((struct __pyx_vtabstruct_5skbio_8metadata_13_intersection_IntervalNode *)__pyx_v_self->root->__pyx_vtab)->right(__pyx_v_self->root, __pyx_t_3, 0, &__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 533, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_r = __pyx_t_4;
@@ -7721,7 +8023,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
     goto __pyx_L0;
   }
 
-  /* "skbio/metadata/_intersection.pyx":508
+  /* "skbio/metadata/_intersection.pyx":523
  *             return self.root.left( interval.start, num_intervals, max_dist )
  * 
  *     def downstream_of_interval( self, interval, num_intervals=1, max_dist=2500 ):             # <<<<<<<<<<<<<<
@@ -7741,7 +8043,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
   return __pyx_r;
 }
 
-/* "skbio/metadata/_intersection.pyx":520
+/* "skbio/metadata/_intersection.pyx":535
  *             return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def traverse(self, fn):             # <<<<<<<<<<<<<<
@@ -7750,20 +8052,20 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_20down
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn); /*proto*/
-static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_22traverse[] = "\n        call fn for each element in the tree\n        ";
-static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn) {
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_25traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn); /*proto*/
+static char __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_24traverse[] = "\n        call fn for each element in the tree\n        ";
+static PyObject *__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_25traverse(PyObject *__pyx_v_self, PyObject *__pyx_v_fn) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("traverse (wrapper)", 0);
-  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22traverse(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_fn));
+  __pyx_r = __pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_24traverse(((struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *)__pyx_v_self), ((PyObject *)__pyx_v_fn));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn) {
+static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_24traverse(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalTree *__pyx_v_self, PyObject *__pyx_v_fn) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7774,7 +8076,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("traverse", 0);
 
-  /* "skbio/metadata/_intersection.pyx":524
+  /* "skbio/metadata/_intersection.pyx":539
  *         call fn for each element in the tree
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7785,7 +8087,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "skbio/metadata/_intersection.pyx":525
+    /* "skbio/metadata/_intersection.pyx":540
  *         """
  *         if self.root is None:
  *             return None             # <<<<<<<<<<<<<<
@@ -7797,7 +8099,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
     __pyx_r = Py_None;
     goto __pyx_L0;
 
-    /* "skbio/metadata/_intersection.pyx":524
+    /* "skbio/metadata/_intersection.pyx":539
  *         call fn for each element in the tree
  *         """
  *         if self.root is None:             # <<<<<<<<<<<<<<
@@ -7806,7 +8108,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
  */
   }
 
-  /* "skbio/metadata/_intersection.pyx":526
+  /* "skbio/metadata/_intersection.pyx":541
  *         if self.root is None:
  *             return None
  *         return self.root.traverse(fn)             # <<<<<<<<<<<<<<
@@ -7814,7 +8116,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
  * # For backward compatibility
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_traverse); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 526, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->root), __pyx_n_s_traverse); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 541, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_4))) {
@@ -7827,16 +8129,16 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_fn); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 526, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_fn); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 541, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
   } else {
-    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 526, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 541, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
     __Pyx_INCREF(__pyx_v_fn);
     __Pyx_GIVEREF(__pyx_v_fn);
     PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_v_fn);
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 526, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 541, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
@@ -7845,7 +8147,7 @@ static PyObject *__pyx_pf_5skbio_8metadata_13_intersection_12IntervalTree_22trav
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "skbio/metadata/_intersection.pyx":520
+  /* "skbio/metadata/_intersection.pyx":535
  *             return self.root.right( interval.end, num_intervals, max_dist )
  * 
  *     def traverse(self, fn):             # <<<<<<<<<<<<<<
@@ -7996,10 +8298,11 @@ static int __pyx_setprop_5skbio_8metadata_13_intersection_12IntervalNode_end(PyO
 static PyMethodDef __pyx_methods_5skbio_8metadata_13_intersection_IntervalNode[] = {
   {"insert", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_5insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_4insert},
   {"intersect", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_7intersect, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_6intersect},
-  {"update", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_8update},
-  {"left", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11left, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_10left},
-  {"right", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13right, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_12right},
-  {"traverse", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15traverse, METH_O, 0},
+  {"_right_bound", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_9_right_bound, METH_NOARGS, 0},
+  {"update", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_11update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_10update},
+  {"left", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_13left, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_12left},
+  {"right", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_15right, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalNode_14right},
+  {"traverse", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalNode_17traverse, METH_O, 0},
   {0, 0, 0, 0}
 };
 
@@ -8317,17 +8620,18 @@ static int __pyx_tp_clear_5skbio_8metadata_13_intersection_IntervalTree(PyObject
 }
 
 static PyMethodDef __pyx_methods_5skbio_8metadata_13_intersection_IntervalTree[] = {
-  {"insert", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_2insert},
-  {"update", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_4update},
-  {"find", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7find, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_6find},
-  {"before", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9before, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_8before},
-  {"after", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11after, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_10after},
-  {"insert_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13insert_interval, METH_O, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_12insert_interval},
-  {"before_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15before_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_14before_interval},
-  {"after_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17after_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_16after_interval},
-  {"upstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19upstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_18upstream_of_interval},
-  {"downstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21downstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_20downstream_of_interval},
-  {"traverse", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23traverse, METH_O, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_22traverse},
+  {"get_right_bound", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_3get_right_bound, METH_NOARGS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_2get_right_bound},
+  {"insert", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_5insert, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_4insert},
+  {"update", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_7update, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_6update},
+  {"find", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_9find, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_8find},
+  {"before", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_11before, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_10before},
+  {"after", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_13after, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_12after},
+  {"insert_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_15insert_interval, METH_O, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_14insert_interval},
+  {"before_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_17before_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_16before_interval},
+  {"after_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_19after_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_18after_interval},
+  {"upstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_21upstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_20upstream_of_interval},
+  {"downstream_of_interval", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_23downstream_of_interval, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_22downstream_of_interval},
+  {"traverse", (PyCFunction)__pyx_pw_5skbio_8metadata_13_intersection_12IntervalTree_25traverse, METH_O, __pyx_doc_5skbio_8metadata_13_intersection_12IntervalTree_24traverse},
   {0, 0, 0, 0}
 };
 
@@ -8441,6 +8745,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
   {&__pyx_n_s_reverse, __pyx_k_reverse, sizeof(__pyx_k_reverse), 0, 0, 1, 1},
   {&__pyx_n_s_right, __pyx_k_right, sizeof(__pyx_k_right), 0, 0, 1, 1},
+  {&__pyx_n_s_right_bound, __pyx_k_right_bound, sizeof(__pyx_k_right_bound), 0, 0, 1, 1},
   {&__pyx_n_s_sort, __pyx_k_sort, sizeof(__pyx_k_sort), 0, 0, 1, 1},
   {&__pyx_n_s_start, __pyx_k_start, sizeof(__pyx_k_start), 0, 0, 1, 1},
   {&__pyx_kp_s_start_must_be_less_than_end, __pyx_k_start_must_be_less_than_end, sizeof(__pyx_k_start_must_be_less_than_end), 0, 0, 1, 0},
@@ -8460,36 +8765,36 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "skbio/metadata/_intersection.pyx":275
+  /* "skbio/metadata/_intersection.pyx":284
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('end'), reverse=True)             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_n_s_end); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_n_s_end); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "skbio/metadata/_intersection.pyx":290
+  /* "skbio/metadata/_intersection.pyx":299
  *         if len(results) == n: return results
  *         r = results
  *         r.sort(key=operator.attrgetter('start'))             # <<<<<<<<<<<<<<
  *         return r[:n]
  * 
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_n_s_start); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 290, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_n_s_start); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 299, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "skbio/metadata/_intersection.pyx":301
+  /* "skbio/metadata/_intersection.pyx":310
  *         if self.cright is not EmptyNode: self.cright._traverse(func)
  * 
  * cdef IntervalNode EmptyNode = IntervalNode( 0, 0, IntervalObj(0, 0))             # <<<<<<<<<<<<<<
  * 
  * ## ---- Wrappers that retain the old interface -------------------------------
  */
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 301, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 310, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
   __Pyx_RefNannyFinishContext();
@@ -8607,6 +8912,7 @@ PyMODINIT_FUNC PyInit__intersection(void)
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode.rotate_left = (struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *(*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_rotate_left;
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode.set_ends = (void (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_set_ends;
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode._intersect = (void (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, int, PyObject *))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__intersect;
+  __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode._right_bound = (int (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int __pyx_skip_dispatch))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__right_bound;
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode.update = (void (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, int, PyObject *, PyObject *, int __pyx_skip_dispatch))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode_update;
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode._seek_left = (void (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_left;
   __pyx_vtable_5skbio_8metadata_13_intersection_IntervalNode._seek_right = (void (*)(struct __pyx_obj_5skbio_8metadata_13_intersection_IntervalNode *, int, PyObject *, int, int))__pyx_f_5skbio_8metadata_13_intersection_12IntervalNode__seek_right;
@@ -8618,13 +8924,13 @@ PyMODINIT_FUNC PyInit__intersection(void)
   if (__Pyx_SetVtable(__pyx_type_5skbio_8metadata_13_intersection_IntervalNode.tp_dict, __pyx_vtabptr_5skbio_8metadata_13_intersection_IntervalNode) < 0) __PYX_ERR(0, 66, __pyx_L1_error)
   if (PyObject_SetAttrString(__pyx_m, "IntervalNode", (PyObject *)&__pyx_type_5skbio_8metadata_13_intersection_IntervalNode) < 0) __PYX_ERR(0, 66, __pyx_L1_error)
   __pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode = &__pyx_type_5skbio_8metadata_13_intersection_IntervalNode;
-  if (PyType_Ready(&__pyx_type_5skbio_8metadata_13_intersection_IntervalObj) < 0) __PYX_ERR(0, 305, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5skbio_8metadata_13_intersection_IntervalObj) < 0) __PYX_ERR(0, 314, __pyx_L1_error)
   __pyx_type_5skbio_8metadata_13_intersection_IntervalObj.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "IntervalObj", (PyObject *)&__pyx_type_5skbio_8metadata_13_intersection_IntervalObj) < 0) __PYX_ERR(0, 305, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "IntervalObj", (PyObject *)&__pyx_type_5skbio_8metadata_13_intersection_IntervalObj) < 0) __PYX_ERR(0, 314, __pyx_L1_error)
   __pyx_ptype_5skbio_8metadata_13_intersection_IntervalObj = &__pyx_type_5skbio_8metadata_13_intersection_IntervalObj;
-  if (PyType_Ready(&__pyx_type_5skbio_8metadata_13_intersection_IntervalTree) < 0) __PYX_ERR(0, 357, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5skbio_8metadata_13_intersection_IntervalTree) < 0) __PYX_ERR(0, 366, __pyx_L1_error)
   __pyx_type_5skbio_8metadata_13_intersection_IntervalTree.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "IntervalTree", (PyObject *)&__pyx_type_5skbio_8metadata_13_intersection_IntervalTree) < 0) __PYX_ERR(0, 357, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "IntervalTree", (PyObject *)&__pyx_type_5skbio_8metadata_13_intersection_IntervalTree) < 0) __PYX_ERR(0, 366, __pyx_L1_error)
   __pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree = &__pyx_type_5skbio_8metadata_13_intersection_IntervalTree;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
@@ -8673,16 +8979,16 @@ PyMODINIT_FUNC PyInit__intersection(void)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode);
 
-  /* "skbio/metadata/_intersection.pyx":301
+  /* "skbio/metadata/_intersection.pyx":310
  *         if self.cright is not EmptyNode: self.cright._traverse(func)
  * 
  * cdef IntervalNode EmptyNode = IntervalNode( 0, 0, IntervalObj(0, 0))             # <<<<<<<<<<<<<<
  * 
  * ## ---- Wrappers that retain the old interface -------------------------------
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalObj), __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 301, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalObj), __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 310, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 301, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 310, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_int_0);
   __Pyx_GIVEREF(__pyx_int_0);
@@ -8693,7 +8999,7 @@ PyMODINIT_FUNC PyInit__intersection(void)
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode), __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 301, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalNode), __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 310, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_XGOTREF(((PyObject *)__pyx_v_5skbio_8metadata_13_intersection_EmptyNode));
@@ -8701,38 +9007,38 @@ PyMODINIT_FUNC PyInit__intersection(void)
   __Pyx_GIVEREF(__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "skbio/metadata/_intersection.pyx":429
+  /* "skbio/metadata/_intersection.pyx":444
  *             self.root = self.root.insert( start, end, value )
  * 
  *     add = insert             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree, __pyx_n_s_insert); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 429, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree, __pyx_n_s_insert); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 444, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree->tp_dict, __pyx_n_s_add, __pyx_t_1) < 0) __PYX_ERR(0, 429, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree->tp_dict, __pyx_n_s_add, __pyx_t_1) < 0) __PYX_ERR(0, 444, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree);
 
-  /* "skbio/metadata/_intersection.pyx":476
+  /* "skbio/metadata/_intersection.pyx":491
  *         self.insert( interval.start, interval.end, interval )
  * 
  *     add_interval = insert_interval             # <<<<<<<<<<<<<<
  * 
  *     def before_interval( self, interval, num_intervals=1, max_dist=2500 ):
  */
-  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree, __pyx_n_s_insert_interval); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 476, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetNameInClass((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree, __pyx_n_s_insert_interval); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 491, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree->tp_dict, __pyx_n_s_add_interval, __pyx_t_1) < 0) __PYX_ERR(0, 476, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree->tp_dict, __pyx_n_s_add_interval, __pyx_t_1) < 0) __PYX_ERR(0, 491, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree);
 
-  /* "skbio/metadata/_intersection.pyx":529
+  /* "skbio/metadata/_intersection.pyx":544
  * 
  * # For backward compatibility
  * Intersecter = IntervalTree             # <<<<<<<<<<<<<<
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Intersecter, ((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree)) < 0) __PYX_ERR(0, 529, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Intersecter, ((PyObject *)__pyx_ptype_5skbio_8metadata_13_intersection_IntervalTree)) < 0) __PYX_ERR(0, 544, __pyx_L1_error)
 
   /* "skbio/metadata/_intersection.pyx":1
  * # -----------------------------------------------------------------------------             # <<<<<<<<<<<<<<
@@ -9026,8 +9332,79 @@ static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
 #endif
 }
 
-/* PyIntBinop */
+/* PyObjectCallMethO */
 #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectCallOneArg */
+#if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_New(1);
+    if (unlikely(!args)) return NULL;
+    Py_INCREF(arg);
+    PyTuple_SET_ITEM(args, 0, arg);
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
+#else
+    if (likely(PyCFunction_Check(func))) {
+#endif
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
+            return __Pyx_PyObject_CallMethO(func, arg);
+        }
+    }
+    return __Pyx__PyObject_CallOneArg(func, arg);
+}
+#else
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_Pack(1, arg);
+    if (unlikely(!args)) return NULL;
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+#endif
+
+/* PyObjectCallNoArg */
+  #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
+#else
+    if (likely(PyCFunction_Check(func))) {
+#endif
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
+            return __Pyx_PyObject_CallMethO(func, NULL);
+        }
+    }
+    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
+}
+#endif
+
+/* PyIntBinop */
+    #if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx_PyInt_SubtractObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
     #if PY_MAJOR_VERSION < 3
     if (likely(PyInt_CheckExact(op1))) {
@@ -9125,7 +9502,7 @@ static PyObject* __Pyx_PyInt_SubtractObjC(PyObject *op1, PyObject *op2, CYTHON_U
 #endif
 
 /* GetBuiltinName */
-static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
+    static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
     PyObject* result = __Pyx_PyObject_GetAttrStr(__pyx_b, name);
     if (unlikely(!result)) {
         PyErr_Format(PyExc_NameError,
@@ -9139,7 +9516,7 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
 }
 
 /* GetModuleGlobalName */
-static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
     PyObject *result;
 #if CYTHON_COMPILING_IN_CPYTHON
     result = PyDict_GetItem(__pyx_d, name);
@@ -9157,7 +9534,7 @@ static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
 }
 
 /* SliceTupleAndList */
-  #if CYTHON_COMPILING_IN_CPYTHON
+      #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE void __Pyx_crop_slice(Py_ssize_t* _start, Py_ssize_t* _stop, Py_ssize_t* _length) {
     Py_ssize_t start = *_start, stop = *_stop, length = *_length;
     if (start < 0) {
@@ -9216,7 +9593,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyTuple_GetSlice(
 #endif
 
 /* PyIntBinop */
-  #if CYTHON_COMPILING_IN_CPYTHON
+      #if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
     #if PY_MAJOR_VERSION < 3
     if (likely(PyInt_CheckExact(op1))) {
@@ -9313,63 +9690,8 @@ static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED
 }
 #endif
 
-/* PyObjectCallMethO */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
-    PyObject *self, *result;
-    PyCFunction cfunc;
-    cfunc = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = cfunc(self, arg);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
-/* PyObjectCallOneArg */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_New(1);
-    if (unlikely(!args)) return NULL;
-    Py_INCREF(arg);
-    PyTuple_SET_ITEM(args, 0, arg);
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-#ifdef __Pyx_CyFunction_USED
-    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
-#else
-    if (likely(PyCFunction_Check(func))) {
-#endif
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
-            return __Pyx_PyObject_CallMethO(func, arg);
-        }
-    }
-    return __Pyx__PyObject_CallOneArg(func, arg);
-}
-#else
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_Pack(1, arg);
-    if (unlikely(!args)) return NULL;
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-#endif
-
 /* PyIntBinop */
-    #if CYTHON_COMPILING_IN_CPYTHON
+      #if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx_PyInt_EqObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
     if (op1 == op2) {
         Py_RETURN_TRUE;
@@ -9454,7 +9776,7 @@ static PyObject* __Pyx_PyInt_EqObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED 
 #endif
 
 /* KeywordStringCheck */
-    static CYTHON_INLINE int __Pyx_CheckKeywordStrings(
+      static CYTHON_INLINE int __Pyx_CheckKeywordStrings(
     PyObject *kwdict,
     const char* function_name,
     int kw_allowed)
@@ -9494,7 +9816,7 @@ invalid_keyword:
 }
 
 /* BytesEquals */
-    static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
+      static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
     return PyObject_RichCompareBool(s1, s2, equals);
 #else
@@ -9532,7 +9854,7 @@ invalid_keyword:
 }
 
 /* UnicodeEquals */
-    static CYTHON_INLINE int __Pyx_PyUnicode_Equals(PyObject* s1, PyObject* s2, int equals) {
+      static CYTHON_INLINE int __Pyx_PyUnicode_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
     return PyObject_RichCompareBool(s1, s2, equals);
 #else
@@ -9616,7 +9938,7 @@ return_ne:
 }
 
 /* SetVTable */
-    static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
+      static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
 #if PY_VERSION_HEX >= 0x02070000
     PyObject *ob = PyCapsule_New(vtable, 0, 0);
 #else
@@ -9634,7 +9956,7 @@ bad:
 }
 
 /* Import */
-    static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
+      static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
     PyObject *empty_list = 0;
     PyObject *module = 0;
     PyObject *global_dict = 0;
@@ -9708,7 +10030,7 @@ bad:
 }
 
 /* GetNameInClass */
-    static PyObject *__Pyx_GetNameInClass(PyObject *nmspace, PyObject *name) {
+      static PyObject *__Pyx_GetNameInClass(PyObject *nmspace, PyObject *name) {
     PyObject *result;
     result = __Pyx_PyObject_GetAttrStr(nmspace, name);
     if (!result)
@@ -9717,7 +10039,7 @@ bad:
 }
 
 /* CodeObjectCache */
-    static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
+      static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
     int start = 0, mid = 0, end = count - 1;
     if (end >= 0 && code_line > entries[end].code_line) {
         return count;
@@ -9797,7 +10119,7 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object) {
 }
 
 /* AddTraceback */
-    #include "compile.h"
+      #include "compile.h"
 #include "frameobject.h"
 #include "traceback.h"
 static PyCodeObject* __Pyx_CreateCodeObjectForTraceback(
@@ -9878,7 +10200,7 @@ bad:
 }
 
 /* CIntFromPyVerify */
-    #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+      #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
 #define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
@@ -9900,7 +10222,7 @@ bad:
     }
 
 /* CIntToPy */
-    static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
+      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -9927,7 +10249,7 @@ bad:
 }
 
 /* CIntFromPy */
-    static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+      static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -10112,7 +10434,7 @@ raise_neg_overflow:
 }
 
 /* CIntToPy */
-    static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -10139,7 +10461,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-    static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
+      static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -10324,7 +10646,7 @@ raise_neg_overflow:
 }
 
 /* CheckBinaryVersion */
-    static int __Pyx_check_binary_version(void) {
+      static int __Pyx_check_binary_version(void) {
     char ctversion[4], rtversion[4];
     PyOS_snprintf(ctversion, 4, "%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION);
     PyOS_snprintf(rtversion, 4, "%s", Py_GetVersion());
@@ -10340,7 +10662,7 @@ raise_neg_overflow:
 }
 
 /* InitStrings */
-    static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
+      static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
     while (t->p) {
         #if PY_MAJOR_VERSION < 3
         if (t->is_unicode) {

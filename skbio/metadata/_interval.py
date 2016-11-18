@@ -518,41 +518,6 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
 
-    @property
-    @experimental(as_of='0.5.1')
-    def upper_bound(self):
-        '''The exclusive upper bound of interval features.'''
-        return self._upper_bound
-
-    @upper_bound.setter
-    @experimental(as_of='0.5.1')
-    def upper_bound(self, value):
-        '''Set exclusive upper bound of interval features.
-
-        It checks all the coordinates of the interval features are not
-        bigger than the new value.
-
-        '''
-        for intvl in self._intervals:
-            if intvl.bounds[-1][-1] > value:
-                raise ValueError(
-                    'Cannot set upper bound to %r because it is smaller '
-                    'than the bounds of interval feature: %r' %
-                    (value, intvl))
-        self._upper_bound = value
-
-    @property
-    @experimental(as_of='0.5.1')
-    def lower_bound(self):
-        '''The inclusive lower bound of interval features.'''
-        return 0
-
-    @property
-    @experimental(as_of='0.5.1')
-    def num_interval_features(self):
-        '''The total number of interval features.'''
-        return len(self._intervals)
-
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
         @functools.wraps(method)
@@ -566,6 +531,43 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
             self._is_stale_tree = False
             return method(self, *args, **kwargs)
         return inner
+
+    @property
+    @experimental(as_of='0.5.1')
+    def upper_bound(self):
+        '''The exclusive upper bound of interval features.'''
+        return self._upper_bound
+
+    @upper_bound.setter
+    @experimental(as_of='0.5.1')
+    @_rebuild_tree   # access interval tree, thus need to rebuild tree.
+    def upper_bound(self, value):
+        '''Set exclusive upper bound of interval features.
+
+        It checks all the coordinates of the interval features are not
+        bigger than the new value.
+
+        '''
+        # it returns None if the interval tree is empty
+        right_bound = self._interval_tree.get_right_bound()
+        if right_bound is not None and right_bound > value:
+            raise ValueError(
+                'Cannot set upper bound to %r because it is smaller '
+                'than the right bound of interval tree: %r' %
+                (value, right_bound))
+        self._upper_bound = value
+
+    @property
+    @experimental(as_of='0.5.1')
+    def lower_bound(self):
+        '''The inclusive lower bound of interval features.'''
+        return 0
+
+    @property
+    @experimental(as_of='0.5.1')
+    def num_interval_features(self):
+        '''The total number of interval features.'''
+        return len(self._intervals)
 
     def _reverse(self):
         """Reverse ``IntervalMetadata`` object.

@@ -391,6 +391,9 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_upper_bound_setter(self):
         # should not raise
+        for i in [0, 9, 99, 999]:
+            self.im_empty.upper_bound = i
+
         self.im_2.upper_bound = self.upper_bound + 1
         i = self.upper_bound - 1
         with self.assertRaisesRegex(

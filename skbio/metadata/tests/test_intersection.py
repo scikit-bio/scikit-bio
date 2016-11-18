@@ -189,6 +189,18 @@ class IntervalTreeTest(unittest.TestCase):
         r = self.iv.find(100, 200)
         self.assertEqual(len(r), 5)
 
+    def test_get_right_bound(self):
+        iv = IntervalTree()
+        # if it is empty
+        self.assertEqual(iv.get_right_bound(), None)
+        iv.insert(1, 1, 'foo')
+        self.assertEqual(iv.get_right_bound(), 1)
+        iv.insert(8, 8, 'abc')
+        self.assertEqual(iv.get_right_bound(), 8)
+        # inserting smaller intervals should change right bound
+        iv.insert(3, 7, 'spam')
+        self.assertEqual(iv.get_right_bound(), 8)
+
     def test_edge_cases(self):
         iv = IntervalTree()
         iv.insert(1, 1, 'foo')
