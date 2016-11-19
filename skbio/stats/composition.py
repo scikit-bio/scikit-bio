@@ -56,7 +56,7 @@ Functions
 
 References
 ----------
-.. [1] V. Pawlowsky-Glahn, J. J. Egozcue, R. Tolosana-Delgado (2015), 
+.. [1] V. Pawlowsky-Glahn, J. J. Egozcue, R. Tolosana-Delgado (2015),
    Modeling and Analysis of Compositional Data, Wiley, Chichester, UK
 
 .. [2] J. J. Egozcue.,  "Isometric Logratio Transformations for
