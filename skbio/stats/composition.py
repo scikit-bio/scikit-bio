@@ -56,8 +56,8 @@ Functions
 
 References
 ----------
-.. [1] V. Pawlowsky-Glahn, "Lecture Notes on Compositional Data Analysis"
-   (2007)
+.. [1] V. Pawlowsky-Glahn, J. J. Egozcue, R. Tolosana-Delgado (2015),
+   Modeling and Analysis of Compositional Data, Wiley, Chichester, UK
 
 .. [2] J. J. Egozcue.,  "Isometric Logratio Transformations for
    Compositional Data Analysis" Mathematical Geology, 35.3 (2003)
