@@ -308,11 +308,11 @@ cdef class IntervalObj:
     Also accepts optional strand as +1 or -1 (used for up/downstream queries),
     a name, and any arbitrary data is sent in on the info keyword argument
 
-    >>> from bx.intervals.intersection import Interval
+    >>> from skbio.metadata._intersection import IntervalObj
 
     >>> f1 = IntervalObj(23, 36)
     >>> f2 = IntervalObj(34, 48, value={'chr':12, 'anno':'transposon'})
-    >>> f2
+    >>> f2  # doctest: +SKIP
     IntervalObj(34, 48, value={'anno': 'transposon', 'chr': 12})
 
     """
@@ -364,7 +364,7 @@ cdef class IntervalTree:
 
     Create an empty IntervalTree
 
-    >>> from bx.intervals.intersection import Interval, IntervalTree
+    >>> from skbio.metadata._intersection import IntervalObj, IntervalTree
     >>> intersecter = IntervalTree()
 
     An interval is a start and end position and a value (possibly None).
