@@ -5,6 +5,7 @@ include COPYING.txt
 include Makefile
 include README.rst
 include RELEASE.md
+include REVIEWING.md
 include checklist.py
 include asv.conf.json
 
