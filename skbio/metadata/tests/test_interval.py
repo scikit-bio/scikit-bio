@@ -389,16 +389,22 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
             bounds=[(3, 5)],
             metadata={'gene': 'sagB', 'bound': 0, 'spam': [0]})
 
-    def test_upper_bound_setter(self):
+    def test_clone(self):
+        for exp in [self.im_1, self.im_2, self.im_empty]:
+            obs = IntervalMetadata.clone(exp, self.upper_bound)
+            self.assertEqual(obs, exp)
+
+    def test_clone_no_error(self):
         # should not raise
         for i in [0, 9, 99, 999]:
-            self.im_empty.upper_bound = i
+            im = IntervalMetadata.clone(self.im_empty, i)
+            self.assertEqual(im.upper_bound, i)
 
-        self.im_2.upper_bound = self.upper_bound + 1
+    def test_clone_error(self):
         i = self.upper_bound - 1
         with self.assertRaisesRegex(
                 ValueError, r'%r .* smaller than' % i):
-            self.im_2.upper_bound = i
+            IntervalMetadata.clone(self.im_2, i)
 
     def test_copy_empty(self):
         obs = copy(self.im_empty)

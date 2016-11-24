@@ -403,7 +403,7 @@ class IntervalMetadata():
     upper_bound : int or None
         Defines the exclusive upper bound of the interval features. No
         coordinate can be greater than it. It is ``None`` by default,
-        namely its upper_bound is unknown at the moment.
+        meaning there is no upper bound to the coordinate space.
 
     Notes
     -----
@@ -521,41 +521,52 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
         @functools.wraps(method)
-        def inner(self, *args, **kwargs):
-            if self._is_stale_tree is False:
-                return method(self, *args, **kwargs)
-            self._interval_tree = IntervalTree()
-            for f in self._intervals:
+        def inner(interval_metadata, *args, **kwargs):
+            if interval_metadata._is_stale_tree is False:
+                return method(interval_metadata, *args, **kwargs)
+            interval_metadata._interval_tree = IntervalTree()
+            for f in interval_metadata._intervals:
                 for start, end in f.bounds:
-                    self._interval_tree.add(start, end, f)
-            self._is_stale_tree = False
-            return method(self, *args, **kwargs)
+                    interval_metadata._interval_tree.add(start, end, f)
+            interval_metadata._is_stale_tree = False
+            return method(interval_metadata, *args, **kwargs)
         return inner
+
+    @staticmethod
+    @_rebuild_tree   # access interval tree, thus need to rebuild tree.
+    @experimental(as_of="0.5.1")
+    def clone(interval_metadata, upper_bound=None):
+        '''Create a new ``IntervalMetadata`` from an old one.
+
+        Parameters
+        ----------
+        interval_metadata : IntervalMetadata
+            an old object to be cloned
+        upper_bound : int or None
+            Defines the exclusive upper bound of the new interval features.
+            No coordinate can be greater than it. It is ``None`` by default,
+            meaning there is no upper bound to the coordinate space.
+        '''
+        # check all the coordinates of the interval features are not
+        # bigger than the upper_bound.
+        # it returns None if the interval tree is empty
+        right_bound = interval_metadata._interval_tree.get_right_bound()
+        if (right_bound is not None and
+            upper_bound is not None and
+            right_bound > upper_bound):
+            raise ValueError(
+                'Cannot set upper bound to %r because it is smaller '
+                'than the right bound of interval tree: %r' %
+                (upper_bound, right_bound))
+        new = copy.copy(interval_metadata)
+        new._upper_bound = upper_bound
+        return new
 
     @property
     @experimental(as_of='0.5.1')
     def upper_bound(self):
         '''The exclusive upper bound of interval features.'''
         return self._upper_bound
-
-    @upper_bound.setter
-    @experimental(as_of='0.5.1')
-    @_rebuild_tree   # access interval tree, thus need to rebuild tree.
-    def upper_bound(self, value):
-        '''Set exclusive upper bound of interval features.
-
-        It checks all the coordinates of the interval features are not
-        bigger than the new value.
-
-        '''
-        # it returns None if the interval tree is empty
-        right_bound = self._interval_tree.get_right_bound()
-        if right_bound is not None and right_bound > value:
-            raise ValueError(
-                'Cannot set upper bound to %r because it is smaller '
-                'than the right bound of interval tree: %r' %
-                (value, right_bound))
-        self._upper_bound = value
 
     @property
     @experimental(as_of='0.5.1')
@@ -586,11 +597,10 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
                                 'when the upper bound is `None`')
             f.bounds = intvls
 
-        # DONT' forget this!!!
+        # DON'T forget this!!!
         self._is_stale_tree = True
 
     @classonlymethod
-    @experimental(as_of="0.5.1")
     def _concat(cls, interval_metadata):
         '''Concatenate an iterable of ``IntervalMetadata`` objects.
 
