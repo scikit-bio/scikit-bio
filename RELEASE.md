@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This guide explains how to release a new version of scikit-bio. To illustrate examples of commands you might run, let's assume that the current version is 1.2.3-dev and we want to release version 1.2.4. Our versioning system is based on Semantic Versioning, which you can read about at http://semver.org.
+This guide explains how to release a new version of scikit-bio. To illustrate examples of commands you might run, let's assume that the current version is x.y.y-dev and we want to release version x.y.z.
 
 **Note:** The following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted. They also assume that you have [Miniconda3](http://conda.pydata.org/miniconda.html) installed. It is important that you use Miniconda3, and not Miniconda2, because the root `conda` environment needs Python 3 for the build steps below.
 
@@ -10,9 +10,9 @@ This guide explains how to release a new version of scikit-bio. To illustrate ex
 
 1. Ensure the Travis build is passing against master.
 
-2. Update the version strings (1.2.3-dev) to the new version (1.2.4). This will include `__version__` defined in ``skbio/__init__.py``, as well as any `@experimental/@stable/@deprecated` [API stability decorators](http://scikit-bio.org/docs/latest/user/api_stability.html) with `as_of='1.2.3-dev'`. ``grep`` for the current version string to find all occurrences:
+2. Update the version strings (x.y.y-dev) to the new version (x.y.z). This will include `__version__` defined in ``skbio/__init__.py``, as well as any `@experimental/@stable/@deprecated` [API stability decorators](http://scikit-bio.org/docs/latest/user/api_stability.html) with `as_of='x.y.y-dev'`. ``grep`` for the current version string to find all occurrences:
 
-        grep -r '1\.2\.3-dev' .
+        grep -r 'x\.y\.y-dev' .
 
 3. Remove any deprecated functionality that was scheduled for removal on or before this release. When removing deprecated functionality, make sure the functionality has been in a deprecated state for the appropriate number of releases described in the [API stability docs](http://scikit-bio.org/docs/latest/user/api_stability.html). If there is functionality that shouldn't be removed yet, bump the `until` version to a future version. To find all deprecated functionality, search for `@deprecated` decorators:
 
@@ -20,13 +20,13 @@ This guide explains how to release a new version of scikit-bio. To illustrate ex
 
     Note any deprecated functionality that was removed in the `### Miscellaneous` section of `CHANGELOG.md`.
 
-4. Update ``CHANGELOG.md`` to include descriptions of all **user-facing** changes that made it into this release. Be sure to update the heading to include the new version (1.2.4) and the date of the release. Use the existing structure in the file as a template/guide.
+4. Update ``CHANGELOG.md`` to include descriptions of all **user-facing** changes that made it into this release. Be sure to update the heading to include the new version (x.y.z) and the date of the release. Use the existing structure in the file as a template/guide.
 
 5. Submit a pull request and merge when Travis-CI tests are passing.
 
 ## Build website docs
 
-You will need to **fully install** the latest master branch of scikit-bio (including built extensions) and build the docs from this version. Make sure the version of scikit-bio that is imported by ``import skbio`` is the correct one before building the docs.
+You will need to **fully install** the latest master branch of scikit-bio (including built extensions) and build the docs from this version. **Make sure the version of scikit-bio that is imported by ``import skbio`` is the correct one before building the docs.**
 
 1. Build the documentation locally:
 
@@ -38,20 +38,22 @@ You will need to **fully install** the latest master branch of scikit-bio (inclu
 
         git rm -rf docs/latest
 
-4. Copy over the built documentation to ``docs/1.2.4`` and ``docs/latest``:
+4. Copy over the built documentation to ``docs/x.y.z`` and ``docs/latest``:
 
         cp -r doc/build/html docs/latest
-        cp -r doc/build/html docs/1.2.4
+        cp -r doc/build/html docs/x.y.z
 
-5. Add a new list item to ``index.html`` to link to ``docs/1.2.4/index.html``.
+5. Add a new list item to ``index.html`` to link to ``docs/x.y.z/index.html``.
 
-6. Test out your changes by opening the site locally in a browser. Be sure to check the error console for any errors.
+6. Port content from ``README.md`` to ``index.html`` if there are any changes that need to be included on the front page.
 
-7. Submit a pull request with the website updates and merge. **Note:** Once merged, the live website is updated, so be sure to poke through the live site to make sure things are rendered correctly with the right version strings.
+7. Test out your changes by opening the site locally in a browser. Be sure to check the error console for any errors.
+
+8. Submit a pull request with the website updates and merge. **Note:** Once merged, the live website is updated, so be sure to poke through the live site to make sure things are rendered correctly with the right version strings.
 
 ## Tag the release
 
-From the [scikit-bio GitHub page](https://github.com/biocore/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (1.2.4) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
+From the [scikit-bio GitHub page](https://github.com/biocore/scikit-bio), click on the releases tab and draft a new release. Use the version number for the tag name (x.y.z) and create the tag against master. Fill in a release title that is consistent with previous release titles and add a summary of the release (linking to ``CHANGELOG.md`` is a good idea). This release summary will be the primary information that we point users to when we announce the release.
 
 Once the release is created on GitHub, it's a good idea to test out the release tarball before publishing to PyPI:
 
@@ -62,7 +64,7 @@ Once the release is created on GitHub, it's a good idea to test out the release 
 
 2. Install the release tarball from GitHub and run the tests:
 
-        pip install https://github.com/biocore/scikit-bio/archive/1.2.4.tar.gz
+        pip install https://github.com/biocore/scikit-bio/archive/x.y.z.tar.gz
         python -m skbio.test
 
 ## Publish the release
@@ -77,7 +79,7 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
 3. Create and activate a new `conda` environment, and test the `sdist`:
 
-        pip install dist/scikit-bio-1.2.4.tar.gz
+        pip install dist/scikit-bio-x.y.z.tar.gz
         cd  # cd somewhere outside the extracted scikit-bio directory
         python -m skbio.test
 
@@ -130,12 +132,12 @@ Assuming the GitHub release tarball correctly installs and passes its tests, you
 
 ## Post-release cleanup
 
-1. Submit and merge a pull request to update the version strings from 1.2.4 to 1.2.4-dev (`skbio.__version__` should be the only thing needing an update). Update ``CHANGELOG.md`` to include a new section for 1.2.4-dev (there won't be any changes to note here yet).
+1. Submit and merge a pull request to update the version strings from x.y.z to x.y.z-dev (`skbio.__version__` should be the only thing needing an update). Update ``CHANGELOG.md`` to include a new section for x.y.z-dev (there won't be any changes to note here yet).
 
 2. Close the release milestone on the GitHub issue tracker if there was one.
 
 3. Send an email to the skbio developers list and anyone else who might be interested (e.g., lab mailing lists). You might include links to the GitHub release page.
 
-4. Tweet about the release from `@scikit-bio`, including a link to the GitHub release page (for example, https://github.com/biocore/scikit-bio/releases/tag/1.2.4). Post a similar message to [scikit-bio's Gitter](https://gitter.im/biocore/scikit-bio).
+4. Tweet about the release from `@scikit-bio`, including a link to the GitHub release page (for example, https://github.com/biocore/scikit-bio/releases/tag/x.y.z). Post a similar message to [scikit-bio's Gitter](https://gitter.im/biocore/scikit-bio).
 
 5. :beers:
