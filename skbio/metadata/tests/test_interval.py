@@ -450,25 +450,51 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         im = IntervalMetadata(None)
         # bound is not checked against upper_bound
         im.add([(0, 1000000000)])
+        self.assertIsNone(im.upper_bound)
         with self.assertRaisesRegex(
                 TypeError, 'upper bound is `None`'):
             im._reverse()
         with self.assertRaisesRegex(
                 TypeError, 'upper bound is `None`'):
-            IntervalMetadata._concat([self.im_1, im])
+            IntervalMetadata.concat([self.im_1, im])
 
-    def test_init_from(self):
+    def test_init_copy_from(self):
         for exp in [self.im_1, self.im_2, self.im_empty]:
             obs = IntervalMetadata(self.upper_bound, exp)
             self.assertEqual(obs, exp)
 
-    def test_init_from_no_error(self):
+    def test_init_copy_from_empty_no_error(self):
         # should not raise
         for i in [None, 0, 9, 99, 999]:
             im = IntervalMetadata(i, self.im_empty)
             self.assertEqual(im.upper_bound, i)
+            self.assertEqual(self.im_empty._intervals, im._intervals)
+            self.assertEqual(self.im_empty.upper_bound, self.upper_bound)
+            # test it is shallow copy
+            self.assertIsNot(im._intervals, self.im_empty._intervals)
+            self.assertIsNot(im._interval_tree, self.im_empty._interval_tree)
 
-    def test_init_from_error(self):
+    def test_init_copy_from_no_error(self):
+        # should not raise
+        for i in [99, 999]:
+            im = IntervalMetadata(i, self.im_2)
+            self.assertEqual(im.upper_bound, i)
+            self.assertEqual(self.im_2._intervals, im._intervals)
+            self.assertEqual(self.im_2.upper_bound, self.upper_bound)
+            # test it is shallow copy
+            self.assertIsNot(im._intervals, self.im_2._intervals)
+            self.assertIsNot(im._interval_tree, self.im_2._interval_tree)
+            for i in range(self.im_2.num_interval_features):
+                i1, i2 = im._intervals[i], self.im_2._intervals[i]
+                self.assertIsNot(i1, i2)
+                self.assertIsNot(i1.bounds, i2.bounds)
+                self.assertIsNot(i1.fuzzy, i2.fuzzy)
+                self.assertIsNot(i1._interval_metadata, i2._interval_metadata)
+                self.assertIsNot(i1.metadata, i2.metadata)
+                for k in i1.metadata:
+                    self.assertIs(i1.metadata[k], i2.metadata[k])
+
+    def test_init_copy_from_error(self):
         i = self.upper_bound - 1
         with self.assertRaisesRegex(
                 ValueError, r'larger than upper bound \(%r\)' % i):
@@ -496,11 +522,11 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_concat_empty(self):
         for i in 0, 1, 2:
-            obs = IntervalMetadata._concat([self.im_empty] * i)
+            obs = IntervalMetadata.concat([self.im_empty] * i)
             exp = IntervalMetadata(self.upper_bound * i)
             self.assertEqual(obs, exp)
 
-        obs = IntervalMetadata._concat([])
+        obs = IntervalMetadata.concat([])
         self.assertEqual(obs, IntervalMetadata(0))
 
     def test_concat(self):
@@ -511,7 +537,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         im2.add([(0, 3)], [(True, False)], {'gene': 'sagA'})
         im2.add([(2, 4)], metadata={'gene': 'sagB'})
         im3.add([(1, 5)], [(False, True)], {'gene': 'sagC'})
-        obs = IntervalMetadata._concat([im1, im2, im3])
+        obs = IntervalMetadata.concat([im1, im2, im3])
 
         exp = IntervalMetadata(12)
         exp.add(bounds=[(0, 2)], fuzzy=[(True, True)])
@@ -543,6 +569,24 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
                     ValueError,
                     r'not equal \(%d != %d\)' % (self.upper_bound, n)):
                 im.merge(im1)
+
+    def test_merge_to_unbounded(self):
+        for im in [self.im_empty, self.im_1, IntervalMetadata(None)]:
+            obs = IntervalMetadata(None)
+            obs.merge(im)
+            self.assertIsNone(obs.upper_bound)
+            self.assertEqual(obs._intervals, im._intervals)
+
+    def test_merge_unbounded_to_bounded(self):
+        im = IntervalMetadata(None)
+        with self.assertRaisesRegex(
+                ValueError,
+                'Cannot merge an unbound IntervalMetadata object '
+                'to a bounded one'):
+            self.im_1.merge(im)
+        # original im is not changed
+        self.assertIsNone(im.upper_bound)
+        self.assertEqual(im._intervals, [])
 
     def test_sort(self):
         interval = Interval(

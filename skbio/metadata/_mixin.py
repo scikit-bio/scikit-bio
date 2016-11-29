@@ -469,7 +469,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
                     % (upper_bound, axis_len))
             # copy all the data to the mixin
             self._interval_metadata = IntervalMetadata(
-                axis_len, interval_metadata)
+                axis_len, copy_from=interval_metadata)
         else:
             raise TypeError('You must provide `IntervalMetadata` object, '
                             'not type %s.' % type(interval_metadata).__name__)

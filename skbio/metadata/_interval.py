@@ -386,6 +386,21 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         return self._interval_metadata is None
 
 
+def _rebuild_tree(method):
+    """Rebuild the IntervalTree."""
+    @functools.wraps(method)
+    def inner(interval_metadata, *args, **kwargs):
+        if interval_metadata._is_stale_tree is False:
+            return method(interval_metadata, *args, **kwargs)
+        interval_metadata._interval_tree = IntervalTree()
+        for f in interval_metadata._intervals:
+            for start, end in f.bounds:
+                interval_metadata._interval_tree.add(start, end, f)
+        interval_metadata._is_stale_tree = False
+        return method(interval_metadata, *args, **kwargs)
+    return inner
+
+
 class IntervalMetadata():
     """Stores the interval features.
 
@@ -402,11 +417,12 @@ class IntervalMetadata():
     ----------
     upper_bound : int or None
         Defines the exclusive upper bound of the interval features. No
-        coordinate can be greater than it. It is ``None`` by default,
-        meaning there is no upper bound to the coordinate space.
-    copy_from : IntervalMetadata or None
+        coordinate can be greater than it. ``None``
+        means that the coordinate space is unbounded.
+    copy_from : IntervalMetadata or None, optional
         Create a new object from the input ``IntervalMetadata`` object by
-        shallow copying if it is not ``None``.
+        shallow copying if it is not ``None``. The upper bound of the new
+        object will be updated with the ``upper_bound`` parameter specified.
 
     Notes
     -----
@@ -522,27 +538,11 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         if copy_from is not None:
             for interval in copy_from._intervals:
-                # Only need to shallow-copy `bounds` and `fuzzy`
-                # because their elements are immutable.
                 bounds_cp = interval.bounds[:]
                 fuzzy_cp = interval.fuzzy[:]
                 metadata_cp = copy.copy(interval.metadata)
 
                 self.add(bounds_cp, fuzzy=fuzzy_cp, metadata=metadata_cp)
-
-    def _rebuild_tree(method):
-        """Rebuild the IntervalTree."""
-        @functools.wraps(method)
-        def inner(interval_metadata, *args, **kwargs):
-            if interval_metadata._is_stale_tree is False:
-                return method(interval_metadata, *args, **kwargs)
-            interval_metadata._interval_tree = IntervalTree()
-            for f in interval_metadata._intervals:
-                for start, end in f.bounds:
-                    interval_metadata._interval_tree.add(start, end, f)
-            interval_metadata._is_stale_tree = False
-            return method(interval_metadata, *args, **kwargs)
-        return inner
 
     @property
     @experimental(as_of='0.5.1')
@@ -583,7 +583,8 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         self._is_stale_tree = True
 
     @classonlymethod
-    def _concat(cls, interval_metadata):
+    @experimental(as_of="0.5.1")
+    def concat(cls, interval_metadata):
         '''Concatenate an iterable of ``IntervalMetadata`` objects.
 
         It concatenates the multiple ``IntervalMetadata`` objects into
@@ -620,7 +621,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         up. The resulting ``IntervalMetadata``'s upper bound is the
         sum of upper bounds of concatenated objects:
 
-        >>> im = IntervalMetadata._concat([im1, im2])
+        >>> im = IntervalMetadata.concat([im1, im2])
         >>> im   # doctest: +ELLIPSIS
         2 interval features
         -------------------
@@ -667,17 +668,31 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ``self``. Note this will not check if there are any duplicates
         of interval features after merge.
 
+        Notes
+        -----
+        It will raise error if you merge an unbounded
+        ``IntervalMetadata`` object to the current object if it is
+        bounded. This avoids partially updating the current object if
+        the merge fails in the middle of the process due to the
+        possibility that some interval features to be merged may live
+        outside the current defined upper bound.
+
         Parameters
         ----------
         other : ``IntervalMetadata``
             The other ``IntervalMetadata`` to be merged.
 
         '''
-        if self.upper_bound != other.upper_bound:
-            raise ValueError(
-                'The upper bounds of the two IntervalMetadata objects '
-                'are not equal (%d != %d)' % (
-                    self.upper_bound, other.upper_bound))
+        if self.upper_bound is not None:
+            if other.upper_bound is None:
+                raise ValueError(
+                    'Cannot merge an unbound IntervalMetadata object '
+                    'to a bounded one')
+            elif self.upper_bound != other.upper_bound:
+                raise ValueError(
+                    'The upper bounds of the two IntervalMetadata objects '
+                    'are not equal (%r != %r)' % (
+                        self.upper_bound, other.upper_bound))
         if self.lower_bound != other.lower_bound:
             raise ValueError(
                 'The lower bounds of the two IntervalMetadata objects '
