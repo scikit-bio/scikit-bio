@@ -468,10 +468,8 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
                     'must match the interval metadata axis length (%d)'
                     % (upper_bound, axis_len))
             # copy all the data to the mixin
-            self._interval_metadata = copy.copy(interval_metadata)
-            if upper_bound is None:
-                # reset the upper bound to seq len if it is None
-                self._interval_metadata.upper_bound = axis_len
+            self._interval_metadata = IntervalMetadata(
+                axis_len, interval_metadata)
         else:
             raise TypeError('You must provide `IntervalMetadata` object, '
                             'not type %s.' % type(interval_metadata).__name__)

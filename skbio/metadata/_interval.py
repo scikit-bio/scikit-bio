@@ -404,6 +404,9 @@ class IntervalMetadata():
         Defines the exclusive upper bound of the interval features. No
         coordinate can be greater than it. It is ``None`` by default,
         meaning there is no upper bound to the coordinate space.
+    copy_from : IntervalMetadata or None
+        Create a new object from the input ``IntervalMetadata`` object by
+        shallow copying if it is not ``None``.
 
     Notes
     -----
@@ -501,14 +504,13 @@ fuzzy=[(False, False)], metadata={'gene': 'sagC'})
 fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
-    def __init__(self, upper_bound=None):
+    def __init__(self, upper_bound, copy_from=None):
         self._upper_bound = upper_bound
         if self.upper_bound is not None:
             if self.upper_bound < self.lower_bound:
                 raise ValueError('Cannot set `upper_bound` (%r) '
                                  'smaller than `lower_bound` (%r)'
                                  % (self.upper_bound, self.lower_bound))
-
         # List of Interval objects.
         self._intervals = []
 
@@ -517,6 +519,16 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
+
+        if copy_from is not None:
+            for interval in copy_from._intervals:
+                # Only need to shallow-copy `bounds` and `fuzzy`
+                # because their elements are immutable.
+                bounds_cp = interval.bounds[:]
+                fuzzy_cp = interval.fuzzy[:]
+                metadata_cp = copy.copy(interval.metadata)
+
+                self.add(bounds_cp, fuzzy=fuzzy_cp, metadata=metadata_cp)
 
     def _rebuild_tree(method):
         """Rebuild the IntervalTree."""
@@ -531,36 +543,6 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
             interval_metadata._is_stale_tree = False
             return method(interval_metadata, *args, **kwargs)
         return inner
-
-    @staticmethod
-    @_rebuild_tree   # access interval tree, thus need to rebuild tree.
-    @experimental(as_of="0.5.1")
-    def clone(interval_metadata, upper_bound=None):
-        '''Create a new ``IntervalMetadata`` from an old one.
-
-        Parameters
-        ----------
-        interval_metadata : IntervalMetadata
-            an old object to be cloned
-        upper_bound : int or None
-            Defines the exclusive upper bound of the new interval features.
-            No coordinate can be greater than it. It is ``None`` by default,
-            meaning there is no upper bound to the coordinate space.
-        '''
-        # check all the coordinates of the interval features are not
-        # bigger than the upper_bound.
-        # it returns None if the interval tree is empty
-        right_bound = interval_metadata._interval_tree.get_right_bound()
-        if (right_bound is not None and
-            upper_bound is not None and
-            right_bound > upper_bound):
-            raise ValueError(
-                'Cannot set upper bound to %r because it is smaller '
-                'than the right bound of interval tree: %r' %
-                (upper_bound, right_bound))
-        new = copy.copy(interval_metadata)
-        new._upper_bound = upper_bound
-        return new
 
     @property
     @experimental(as_of='0.5.1')

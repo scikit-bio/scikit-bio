@@ -389,23 +389,6 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
             bounds=[(3, 5)],
             metadata={'gene': 'sagB', 'bound': 0, 'spam': [0]})
 
-    def test_clone(self):
-        for exp in [self.im_1, self.im_2, self.im_empty]:
-            obs = IntervalMetadata.clone(exp, self.upper_bound)
-            self.assertEqual(obs, exp)
-
-    def test_clone_no_error(self):
-        # should not raise
-        for i in [0, 9, 99, 999]:
-            im = IntervalMetadata.clone(self.im_empty, i)
-            self.assertEqual(im.upper_bound, i)
-
-    def test_clone_error(self):
-        i = self.upper_bound - 1
-        with self.assertRaisesRegex(
-                ValueError, r'%r .* smaller than' % i):
-            IntervalMetadata.clone(self.im_2, i)
-
     def test_copy_empty(self):
         obs = copy(self.im_empty)
         self.assertEqual(obs, self.im_empty)
@@ -473,6 +456,23 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
         with self.assertRaisesRegex(
                 TypeError, 'upper bound is `None`'):
             IntervalMetadata._concat([self.im_1, im])
+
+    def test_init_from(self):
+        for exp in [self.im_1, self.im_2, self.im_empty]:
+            obs = IntervalMetadata(self.upper_bound, exp)
+            self.assertEqual(obs, exp)
+
+    def test_init_from_no_error(self):
+        # should not raise
+        for i in [None, 0, 9, 99, 999]:
+            im = IntervalMetadata(i, self.im_empty)
+            self.assertEqual(im.upper_bound, i)
+
+    def test_init_from_error(self):
+        i = self.upper_bound - 1
+        with self.assertRaisesRegex(
+                ValueError, r'larger than upper bound \(%r\)' % i):
+            IntervalMetadata(i, self.im_2)
 
     def test_num_interval_features(self):
         self.assertEqual(self.im_empty.num_interval_features, 0)
