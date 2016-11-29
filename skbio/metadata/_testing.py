@@ -954,7 +954,7 @@ class IntervalMetadataMixinTests:
             # error to reset upper bound to a smaller value than seq/axis len
             with self.assertRaisesRegex(
                     ValueError, r'larger than upper bound \(%r\)' % i):
-                x = self._interval_metadata_constructor_(i, im)
+                self._interval_metadata_constructor_(i, im)
             # original interval metadata upper bound is not changed
             self.assertIsNone(im.upper_bound)
 
