@@ -3,6 +3,9 @@
 ## Version 0.5.1-dev (changes since 0.5.1 go here)
 
 ### Features
+* `skbio.interval.IntervalMetadata` constructor has a new keyword argument, `copy_from`, for creating an `IntervalMetadata` object from an existing `IntervalMetadata` object with specified `upper_bound`.
+
+* `skbio.interval.IntervalMetadata` constructor allows `None` as a valid value for `upper_bound`. An `upper_bound` of `None` means that the `IntervalMetadata` object has no upper bound.
 
 ### Backward-incompatible changes [stable]
 

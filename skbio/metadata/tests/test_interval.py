@@ -448,7 +448,7 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
 
     def test_upper_bound_is_none(self):
         im = IntervalMetadata(None)
-        # bound is not checked against upper_bound
+        # should not raise error
         im.add([(0, 1000000000)])
         self.assertIsNone(im.upper_bound)
         with self.assertRaisesRegex(
@@ -459,40 +459,37 @@ class TestIntervalMetadata(unittest.TestCase, ReallyEqualMixin):
             IntervalMetadata.concat([self.im_1, im])
 
     def test_init_copy_from(self):
-        for exp in [self.im_1, self.im_2, self.im_empty]:
-            obs = IntervalMetadata(self.upper_bound, exp)
+        for i in [None, 99, 999]:
+            obs = IntervalMetadata(i, self.im_1)
+            exp = IntervalMetadata(i)
+            exp.add(bounds=[(1, 2), (4, self.upper_bound)],
+                    metadata={'gene': 'sagA',  'bound': 0})
             self.assertEqual(obs, exp)
 
-    def test_init_copy_from_empty_no_error(self):
-        # should not raise
+    def test_init_copy_from_empty(self):
         for i in [None, 0, 9, 99, 999]:
-            im = IntervalMetadata(i, self.im_empty)
-            self.assertEqual(im.upper_bound, i)
-            self.assertEqual(self.im_empty._intervals, im._intervals)
-            self.assertEqual(self.im_empty.upper_bound, self.upper_bound)
+            obs = IntervalMetadata(i, self.im_empty)
+            exp = IntervalMetadata(i)
+            self.assertEqual(obs, exp)
             # test it is shallow copy
-            self.assertIsNot(im._intervals, self.im_empty._intervals)
-            self.assertIsNot(im._interval_tree, self.im_empty._interval_tree)
+            self.assertIsNot(obs._intervals, self.im_empty._intervals)
+            self.assertIsNot(obs._interval_tree, self.im_empty._interval_tree)
 
-    def test_init_copy_from_no_error(self):
-        # should not raise
-        for i in [99, 999]:
-            im = IntervalMetadata(i, self.im_2)
-            self.assertEqual(im.upper_bound, i)
-            self.assertEqual(self.im_2._intervals, im._intervals)
-            self.assertEqual(self.im_2.upper_bound, self.upper_bound)
-            # test it is shallow copy
-            self.assertIsNot(im._intervals, self.im_2._intervals)
-            self.assertIsNot(im._interval_tree, self.im_2._interval_tree)
-            for i in range(self.im_2.num_interval_features):
-                i1, i2 = im._intervals[i], self.im_2._intervals[i]
-                self.assertIsNot(i1, i2)
-                self.assertIsNot(i1.bounds, i2.bounds)
-                self.assertIsNot(i1.fuzzy, i2.fuzzy)
-                self.assertIsNot(i1._interval_metadata, i2._interval_metadata)
-                self.assertIsNot(i1.metadata, i2.metadata)
-                for k in i1.metadata:
-                    self.assertIs(i1.metadata[k], i2.metadata[k])
+    def test_init_copy_from_shallow_copy(self):
+        obs = IntervalMetadata(self.upper_bound, self.im_2)
+        self.assertEqual(self.im_2, obs)
+        # test it is shallow copy
+        self.assertIsNot(obs._intervals, self.im_2._intervals)
+        self.assertIsNot(obs._interval_tree, self.im_2._interval_tree)
+        for i in range(self.im_2.num_interval_features):
+            i1, i2 = obs._intervals[i], self.im_2._intervals[i]
+            self.assertIsNot(i1, i2)
+            self.assertIsNot(i1.bounds, i2.bounds)
+            self.assertIsNot(i1.fuzzy, i2.fuzzy)
+            self.assertIsNot(i1._interval_metadata, i2._interval_metadata)
+            self.assertIsNot(i1.metadata, i2.metadata)
+            for k in i1.metadata:
+                self.assertIs(i1.metadata[k], i2.metadata[k])
 
     def test_init_copy_from_error(self):
         i = self.upper_bound - 1
