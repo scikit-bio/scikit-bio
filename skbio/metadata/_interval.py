@@ -386,21 +386,6 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         return self._interval_metadata is None
 
 
-def _rebuild_tree(method):
-    """Rebuild the IntervalTree."""
-    @functools.wraps(method)
-    def inner(interval_metadata, *args, **kwargs):
-        if interval_metadata._is_stale_tree is False:
-            return method(interval_metadata, *args, **kwargs)
-        interval_metadata._interval_tree = IntervalTree()
-        for f in interval_metadata._intervals:
-            for start, end in f.bounds:
-                interval_metadata._interval_tree.add(start, end, f)
-        interval_metadata._is_stale_tree = False
-        return method(interval_metadata, *args, **kwargs)
-    return inner
-
-
 class IntervalMetadata():
     """Stores the interval features.
 
@@ -561,6 +546,20 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
     def num_interval_features(self):
         '''The total number of interval features.'''
         return len(self._intervals)
+
+    def _rebuild_tree(method):
+        """Rebuild the IntervalTree."""
+        @functools.wraps(method)
+        def inner(self, *args, **kwargs):
+            if self._is_stale_tree is False:
+                return method(self, *args, **kwargs)
+            self._interval_tree = IntervalTree()
+            for f in self._intervals:
+                for start, end in f.bounds:
+                    self._interval_tree.add(start, end, f)
+            self._is_stale_tree = False
+            return method(self, *args, **kwargs)
+        return inner
 
     def _reverse(self):
         """Reverse ``IntervalMetadata`` object.
