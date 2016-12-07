@@ -7,12 +7,10 @@
 # ----------------------------------------------------------------------------
 
 import hashlib
-from os import remove, makedirs
-from os.path import exists, isdir
-from functools import partial
-from types import FunctionType
 import inspect
-from ._decorator import experimental, deprecated
+from types import FunctionType
+
+from ._decorator import experimental
 
 
 def resolve_key(obj, key):
@@ -133,40 +131,6 @@ def cardinal_to_ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n//10 % 10 != 1)*(n % 10 < 4)*n % 10::4])
 
 
-@deprecated(as_of='0.5.0', until='0.5.1',
-            reason='This functionality will be moved to the '
-                   'fastq sniffer, where it will be more useful as it will '
-                   'determine the variant of a fastq file.')
-def is_casava_v180_or_later(header_line):
-    """Check if the header looks like it is Illumina software post-casava v1.8
-
-    Parameters
-    ----------
-    header_line : bytes
-        A header line
-
-    Returns
-    -------
-    bool
-        ``True`` for if casava v1.8+, otherwise ``False``
-
-    Examples
-    --------
-    >>> from skbio.util import is_casava_v180_or_later
-    >>> is_casava_v180_or_later(b'@foo')
-    False
-    >>> id_ = b'@M00176:17:000000000-A0CNA:1:1:15487:1773 1:N:0:0'
-    >>> is_casava_v180_or_later(id_)
-    True
-
-    """
-    if not header_line.startswith(b'@'):
-        raise ValueError("Non-header line passed in.")
-    fields = header_line.split(b':')
-
-    return len(fields) == 10 and fields[7] in b'YN'
-
-
 @experimental(as_of="0.4.0")
 def safe_md5(open_file, block_size=2 ** 20):
     """Computes an md5 sum without loading the file into memory
@@ -209,122 +173,6 @@ def safe_md5(open_file, block_size=2 ** 20):
     return md5
 
 
-@deprecated(as_of="0.5.0", until="0.5.1",
-            reason="Deprecated in favor of solutions present in Python "
-                   "standard library.")
-def remove_files(list_of_filepaths, error_on_missing=True):
-    """Remove list of filepaths, optionally raising an error if any are missing
-
-    Parameters
-    ----------
-    list_of_filepaths : list of strings
-        list with filepaths to remove
-    error_on_missing : bool, optional
-        whether or not the function should raise an ``OSError`` if a file is
-        not found
-
-    Raises
-    ------
-    OSError
-        If a filepath in the list does not exist
-
-    Examples
-    --------
-    >>> from tempfile import NamedTemporaryFile
-    >>> from os.path import exists
-    >>> from skbio.util import remove_files
-    >>> h = NamedTemporaryFile(delete=False)
-    >>> exists(h.name) # it exists
-    True
-    >>> remove_files([h.name])
-    >>> exists(h.name) # and now it's gone
-    False
-
-    """
-    missing = []
-    for fp in list_of_filepaths:
-        try:
-            remove(fp)
-        except OSError:
-            missing.append(fp)
-
-    if error_on_missing and missing:
-        raise OSError("Some filepaths were not accessible: %s" %
-                      '\t'.join(missing))
-
-
-@deprecated(as_of="0.5.0", until="0.5.1",
-            reason="Deprecated in favor of solutions present in Python "
-                   "standard library.")
-def create_dir(dir_name, fail_on_exist=False, handle_errors_externally=False):
-    """Create a directory safely and fail meaningfully
-
-    Parameters
-    ----------
-    dir_name: string
-        name of directory to create
-
-    fail_on_exist: bool, optional
-        if true raise an error if ``dir_name`` already exists
-
-    handle_errors_externally: bool, optional
-        if True do not raise Errors, but return failure codes. This allows to
-        handle errors locally and e.g. hint the user at a --force_overwrite
-        options.
-
-    Returns
-    -------
-    return_value : int
-        These values are only returned if no error is raised:
-
-        - ``0``:  directory was safely created
-        - ``1``:  directory already existed
-        - ``2``:  a file with the same name exists
-        - ``3``:  any other unspecified ``OSError``
-
-    Notes
-    -----
-    Depending  of how thorough we want to be we could add tests, e.g. for
-    testing actual write permission in an existing dir.
-
-    Examples
-    --------
-    >>> from skbio.util import create_dir
-    >>> from os.path import exists, join
-    >>> from tempfile import gettempdir
-    >>> from os import rmdir
-    >>> new_dir = join(gettempdir(), 'scikitbio')
-    >>> create_dir(new_dir)
-    0
-    >>> exists(new_dir)
-    True
-    >>> rmdir(new_dir)
-
-    """
-    error_code_lookup = _get_create_dir_error_codes()
-    # pre-instanciate function with
-    ror = partial(_handle_error_codes, dir_name, handle_errors_externally)
-
-    if exists(dir_name):
-        if isdir(dir_name):
-            # dir is there
-            if fail_on_exist:
-                return ror(error_code_lookup['DIR_EXISTS'])
-            else:
-                return error_code_lookup['DIR_EXISTS']
-        else:
-            # must be file with same name
-            return ror(error_code_lookup['FILE_EXISTS'])
-    else:
-        # no dir there, try making it
-        try:
-            makedirs(dir_name)
-        except OSError:
-            return ror(error_code_lookup['OTHER_OS_ERROR'])
-
-    return error_code_lookup['NO_ERROR']
-
-
 @experimental(as_of="0.4.0")
 def find_duplicates(iterable):
     """Find duplicate elements in an iterable.
@@ -351,41 +199,3 @@ def find_duplicates(iterable):
         else:
             seen.add(e)
     return repeated
-
-
-def _get_create_dir_error_codes():
-    return {'NO_ERROR':      0,
-            'DIR_EXISTS':    1,
-            'FILE_EXISTS':   2,
-            'OTHER_OS_ERROR': 3}
-
-
-def _handle_error_codes(dir_name, suppress_errors=False,
-                        error_code=None):
-    """Wrapper function for error_handling.
-
-    dir_name: name of directory that raised the error
-    suppress_errors: if True raise Errors, otherwise return error_code
-    error_code: the code for the error
-
-    """
-    error_code_lookup = _get_create_dir_error_codes()
-
-    if error_code is None:
-        error_code = error_code_lookup['NO_ERROR']
-
-    error_strings = \
-        {error_code_lookup['DIR_EXISTS']:
-         "Directory already exists: %s" % dir_name,
-         error_code_lookup['FILE_EXISTS']:
-         "File with same name exists: %s" % dir_name,
-         error_code_lookup['OTHER_OS_ERROR']:
-         "Could not create output directory: %s. " % dir_name +
-         "Check the permissions."}
-
-    if error_code == error_code_lookup['NO_ERROR']:
-        return error_code_lookup['NO_ERROR']
-    if suppress_errors:
-        return error_code
-    else:
-        raise OSError(error_strings[error_code])

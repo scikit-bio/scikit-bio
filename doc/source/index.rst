@@ -18,6 +18,7 @@ API Reference
    workflow
    diversity
    stats
+   metadata
    util
 
 User Documentation

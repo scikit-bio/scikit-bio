@@ -102,7 +102,7 @@ class TestRunner:
         # NOTE: it doesn't seem to matter what the first element of the argv
         # list is, there just needs to be something there.
         argv = [self._filename, '-I DO_NOT_IGNORE_ANYTHING', '--with-doctest',
-                '--doctest-tests']
+                '--doctest-tests', '--doctest-extension=pyx']
         if verbose:
             argv.append('-v')
         return nose.core.run(argv=argv, defaultTest=self._test_dir,

@@ -3,8 +3,10 @@ include CHANGELOG.md
 include CONTRIBUTING.md
 include COPYING.txt
 include Makefile
+include PULL_REQUEST_TEMPLATE.md
 include README.rst
 include RELEASE.md
+include REVIEWING.md
 include checklist.py
 include asv.conf.json
 

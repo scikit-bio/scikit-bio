@@ -6,6 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import copy
 import io
 import string
 from unittest import TestCase, main
@@ -475,7 +476,7 @@ class ReaderTests(TestCase):
                 obs = list(_fasta_to_generator(fasta_fp, **kwargs))
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    e = e.copy()
+                    e = copy.copy(e)
                     del e.positional_metadata['quality']
                     self.assertEqual(o, e)
 
@@ -640,7 +641,7 @@ class ReaderTests(TestCase):
 
                 self.assertEqual(len(obs), len(exp))
                 for o, e in zip(obs, exp):
-                    e = e.copy()
+                    e = copy.copy(e)
                     del e.positional_metadata['quality']
                     self.assertEqual(o, e)
 
