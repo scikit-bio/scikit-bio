@@ -264,11 +264,15 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         '''input `bounds` must be sorted.'''
         upper_bound = self._interval_metadata.upper_bound
         lower_bound = self._interval_metadata.lower_bound
-        if bounds[-1][-1] > upper_bound or bounds[0][0] < lower_bound:
+        if upper_bound is not None and bounds[-1][-1] > upper_bound:
             raise ValueError('Cannot set `bounds` (%r) with coordinate '
-                             'larger than upper bound (%r) or smaller than '
-                             'lower bound (%r).' %
-                             (bounds, upper_bound, lower_bound))
+                             'larger than upper bound (%r)' %
+                             (bounds, upper_bound))
+
+        if bounds[0][0] < lower_bound:
+            raise ValueError('Cannot set `bounds` (%r) with coordinate '
+                             'smaller than lower bound (%r).' %
+                             (bounds, lower_bound))
 
     @property
     @experimental(as_of='0.5.1')
@@ -396,9 +400,14 @@ class IntervalMetadata():
 
     Parameters
     ----------
-    upper_bound : int
+    upper_bound : int or None
         Defines the exclusive upper bound of the interval features. No
-        coordinate can be greater than it.
+        coordinate can be greater than it. ``None``
+        means that the coordinate space is unbounded.
+    copy_from : IntervalMetadata or None, optional
+        Create a new object from the input ``IntervalMetadata`` object by
+        shallow copying if it is not ``None``. The upper bound of the new
+        object will be updated with the ``upper_bound`` parameter specified.
 
     Notes
     -----
@@ -496,13 +505,13 @@ fuzzy=[(False, False)], metadata={'gene': 'sagC'})
 fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
     """
-    def __init__(self, upper_bound):
+    def __init__(self, upper_bound, copy_from=None):
         self._upper_bound = upper_bound
-        if self.upper_bound < self.lower_bound:
-            raise ValueError('Cannot set `upper_bound` (%r) '
-                             'smaller than `lower_bound` (%r)'
-                             % (self.upper_bound, self.lower_bound))
-
+        if self.upper_bound is not None:
+            if self.upper_bound < self.lower_bound:
+                raise ValueError('Cannot set `upper_bound` (%r) '
+                                 'smaller than `lower_bound` (%r)'
+                                 % (self.upper_bound, self.lower_bound))
         # List of Interval objects.
         self._intervals = []
 
@@ -511,6 +520,14 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
 
         # Indicates if the IntervalTree needs to be rebuilt.
         self._is_stale_tree = False
+
+        if copy_from is not None:
+            for interval in copy_from._intervals:
+                bounds_cp = interval.bounds[:]
+                fuzzy_cp = interval.fuzzy[:]
+                metadata_cp = copy.copy(interval.metadata)
+
+                self.add(bounds_cp, fuzzy=fuzzy_cp, metadata=metadata_cp)
 
     @property
     @experimental(as_of='0.5.1')
@@ -551,12 +568,17 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         For instance, this can be used to compare coordinates
         in the forward strand to coordinates in the reversal strand.
         """
+
         for f in self._intervals:
-            intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
-                      for x in reversed(f.bounds)]
+            try:
+                intvls = [(self.upper_bound - x[1], self.upper_bound - x[0])
+                          for x in reversed(f.bounds)]
+            except TypeError:
+                raise TypeError('You cannot reverse the coordinates '
+                                'when the upper bound is `None`')
             f.bounds = intvls
 
-        # DONT' forget this!!!
+        # DON'T forget this!!!
         self._is_stale_tree = True
 
     @classonlymethod
@@ -617,7 +639,11 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         upper_bound = 0
         for im in interval_metadata:
-            upper_bound += im.upper_bound
+            try:
+                upper_bound += im.upper_bound
+            except TypeError:
+                raise TypeError('You cannot concat the interval metadata '
+                                'because its upper bound is `None`:\n%r' % im)
         new = cls(upper_bound)
 
         length = 0
@@ -641,17 +667,31 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ``self``. Note this will not check if there are any duplicates
         of interval features after merge.
 
+        Notes
+        -----
+        It will raise error if you merge an unbounded
+        ``IntervalMetadata`` object to the current object if it is
+        bounded. This avoids partially updating the current object if
+        the merge fails in the middle of the process due to the
+        possibility that some interval features to be merged may live
+        outside the current defined upper bound.
+
         Parameters
         ----------
         other : ``IntervalMetadata``
             The other ``IntervalMetadata`` to be merged.
 
         '''
-        if self.upper_bound != other.upper_bound:
-            raise ValueError(
-                'The upper bounds of the two IntervalMetadata objects '
-                'are not equal (%d != %d)' % (
-                    self.upper_bound, other.upper_bound))
+        if self.upper_bound is not None:
+            if other.upper_bound is None:
+                raise ValueError(
+                    'Cannot merge an unbound IntervalMetadata object '
+                    'to a bounded one')
+            elif self.upper_bound != other.upper_bound:
+                raise ValueError(
+                    'The upper bounds of the two IntervalMetadata objects '
+                    'are not equal (%r != %r)' % (
+                        self.upper_bound, other.upper_bound))
         if self.lower_bound != other.lower_bound:
             raise ValueError(
                 'The lower bounds of the two IntervalMetadata objects '

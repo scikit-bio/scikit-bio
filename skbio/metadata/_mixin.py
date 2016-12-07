@@ -462,13 +462,14 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
                 raise ValueError(
                     'The lower bound for the interval features (%d) '
                     'must be zero.' % lower_bound)
-            if upper_bound != axis_len:
+            if upper_bound is not None and upper_bound != axis_len:
                 raise ValueError(
                     'The upper bound for the interval features (%d) '
                     'must match the interval metadata axis length (%d)'
                     % (upper_bound, axis_len))
             # copy all the data to the mixin
-            self._interval_metadata = copy.copy(interval_metadata)
+            self._interval_metadata = IntervalMetadata(
+                axis_len, copy_from=interval_metadata)
         else:
             raise TypeError('You must provide `IntervalMetadata` object, '
                             'not type %s.' % type(interval_metadata).__name__)

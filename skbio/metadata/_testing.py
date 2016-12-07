@@ -922,6 +922,42 @@ class IntervalMetadataMixinTests:
                                     'object.'):
             self._interval_metadata_constructor_(0, '')
 
+    def test_constructor_empty_interval_metadata_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        for i in [0, 1, 3, 100]:
+            x = self._interval_metadata_constructor_(i, im)
+            # the upper bound is reset to seq/axis length
+            self.assertEqual(x.interval_metadata.upper_bound, i)
+            self.assertEqual(x.interval_metadata._intervals, im._intervals)
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
+
+    def test_constructor_interval_metadata_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        # populate im
+        im.add(**self.intvls[0])
+        im.add(**self.intvls[1])
+        for i in [1000, 100]:
+            x = self._interval_metadata_constructor_(i, im)
+            # the upper bound is reset to seq/axis length
+            self.assertEqual(x.interval_metadata.upper_bound, i)
+            self.assertEqual(x.interval_metadata._intervals, im._intervals)
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
+
+    def test_constructor_interval_bounds_larger_than_len(self):
+        im = IntervalMetadata(None)
+        # populate im
+        im.add(**self.intvls[0])
+        im.add(**self.intvls[1])
+        for i in [0, 1, 3]:
+            # error to reset upper bound to a smaller value than seq/axis len
+            with self.assertRaisesRegex(
+                    ValueError, r'larger than upper bound \(%r\)' % i):
+                self._interval_metadata_constructor_(i, im)
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
+
     def test_constructor_interval_metadata_len_mismatch(self):
         for i in [0, 1, 3, 100]:
             with self.assertRaisesRegex(
@@ -1188,6 +1224,45 @@ class IntervalMetadataMixinTests:
                 obj.interval_metadata = i
 
         self.assertEqual(self.im, obj.interval_metadata)
+
+    def test_interval_metadata_setter_empty_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        for i in [0, 1, 3, 100]:
+            x = self._interval_metadata_constructor_(i)
+            x.interval_metadata = im
+            self.assertFalse(x.has_interval_metadata())
+            # the upper bound is reset to seq/axis length
+            self.assertEqual(x.interval_metadata.upper_bound, i)
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
+
+    def test_interval_metadata_setter_upper_bound_is_none(self):
+        im = IntervalMetadata(None)
+        # populate im
+        im.add(**self.intvls[0])
+        im.add(**self.intvls[1])
+        for i in [1000, 100]:
+            x = self._interval_metadata_constructor_(i)
+            x.interval_metadata = im
+            # the upper bound is reset to seq/axis length
+            self.assertEqual(x.interval_metadata.upper_bound, i)
+            self.assertEqual(x.interval_metadata._intervals, im._intervals)
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
+
+    def test_interval_metadata_setter_interval_bounds_larger_than_len(self):
+        im = IntervalMetadata(None)
+        # populate im
+        im.add(**self.intvls[0])
+        im.add(**self.intvls[1])
+        for i in [0, 1, 3]:
+            # error to reset upper bound to a smaller value than seq/axis len
+            with self.assertRaisesRegex(
+                    ValueError, r'larger than upper bound \(%r\)' % i):
+                x = self._interval_metadata_constructor_(i)
+                x.interval_metadata = im
+            # original interval metadata upper bound is not changed
+            self.assertIsNone(im.upper_bound)
 
     def test_interval_metadata_deleter_empty(self):
         obj = self._interval_metadata_constructor_(self.upper_bound, self.im)
