@@ -138,8 +138,8 @@ We can also read the GFF3 file into generator:
 >>> gff = io.StringIO(gff_str)
 >>> gen = read(gff, format='gff3')
 >>> for im in gen:   # doctest: +SKIP
-...     print(im[0])
-...     print(im[1])
+...     print(im[0])   # the seq id
+...     print(im[1])   # the interval metadata on this seq
 seq_1
 3 interval features
 -------------------
@@ -264,7 +264,7 @@ def _gff3_to_generator(fh):
     for data_type, sid, data in _yield_record(fh):
         if data_type == 'pragma':
             # get length from sequence-region pragma.
-            # the pragma lines are always before the real data lines.
+            # the pragma lines are always before the real annotation lines.
             id_lengths[sid] = data
         elif data_type == 'data':
             length = id_lengths.get(sid)
@@ -324,7 +324,8 @@ def _gff3_to_interval_metadata(fh, seq_id):
                 return _parse_record(data, length)
             else:
                 raise GFF3FormatError(
-                    'Unknown section in the input GFF3 file: %r %r %r' % (data_type, sid, data))
+                    'Unknown section in the input GFF3 file: '
+                    '%r %r %r' % (data_type, sid, data))
     # return an empty instead of None
     return IntervalMetadata(None)
 
@@ -398,6 +399,7 @@ def _parse_record(lines, length):
                     'score': columns[5],
                     'strand': columns[6]}
         phase = columns[7]
+        # phase value can only be int or '.'
         try:
             metadata['phase'] = int(phase)
         except ValueError:

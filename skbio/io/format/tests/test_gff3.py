@@ -142,6 +142,12 @@ class ReaderTests(GFF3IOTests):
                     "unknown value for phase column: '%s'" % char):
                 _parse_record(lines, 10000)
 
+    def test_yield_record_raise(self):
+        s = '##gff-version   3\nseq_1 . gene 1 3 . + . ID=gene01\n'
+        with io.StringIO(s) as fh:
+            with self.assertRaises(GFF3FormatError):
+                list(_yield_record(fh))
+
     def test_gff3_to_interval_metadata(self):
         obs = _gff3_to_interval_metadata(
             self.single_fp, seq_id='Chromosome')
@@ -244,6 +250,14 @@ class WriterTests(GFF3IOTests):
             exp = fh.read()
 
         self.assertEqual(exp, obs)
+
+    def test_raise_subregion(self):
+        im = IntervalMetadata(None)
+        im.add([(0, 3), (7, 9)], metadata={'type': 'gene'})
+        with io.StringIO() as fh:
+            with self.assertRaises(GFF3FormatError):
+                _serialize_interval_metadata(
+                    im, seq_id='a', fh=fh, skip_subregion=False)
 
 
 class RoundtripTests(GFF3IOTests):
