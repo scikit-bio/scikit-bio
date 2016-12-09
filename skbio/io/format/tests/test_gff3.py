@@ -213,23 +213,24 @@ class WriterTests(GFF3IOTests):
         self.assertEqual([exp], obs)
 
     def test_interval_metadata_to_gff3_sub_region(self):
+        seq_id = 'NC_7'
         with open(self.multi_fp) as f:
-            lines = [i.strip() for i in f if not i.startswith('#')]
+            exp = [i.strip() for i in f if i.startswith(seq_id)]
 
         with io.StringIO() as fh:
             _serialize_interval_metadata(
-                self.imd3, seq_id='NC_7', fh=fh, skip_subregion=False)
+                self.imd3, seq_id=seq_id, fh=fh, skip_subregion=False)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
-        exp = lines[-3:]
         self.assertEqual(exp, obs)
 
         with io.StringIO() as fh:
-            _serialize_interval_metadata(self.imd3, seq_id='NC_7', fh=fh)
+            _serialize_interval_metadata(self.imd3, seq_id=seq_id, fh=fh)
             obs = [i for i in fh.getvalue().splitlines()
                    if not i.startswith('#')]
-        exp = [lines[-3]]
-        self.assertEqual(exp, obs)
+        # all the rest lines except the 1st are sub-region lines, so only
+        # compare the first line from exp
+        self.assertEqual(exp[:1], obs)
 
     def test_sequence_to_gff3(self):
         with io.StringIO() as fh:
