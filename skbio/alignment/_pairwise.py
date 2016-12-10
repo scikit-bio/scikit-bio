@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 import skbio
-from skbio.alignment import TabularMSA
+from skbio.alignment import TabularMSA, local_pairwise_align_ssw
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
@@ -1058,55 +1058,95 @@ def _first_largest(scores):
             result = (score, direction)
     return result
 
-def OrthologTable(query_sequences, target_sequences, best_hit=True, seq_type=None):
+# Ortholog Table
+def orthologTable(query_sequences, target_sequences, best_hit=True, min_ratio=0.5, min_identity=None, dropna=True, substitution_matrix=None, silence=True, sort="optimal_score", progress=True):
     """
     Creates an ortholog table by aligning 2 iterables of sequences.
     `query_sequences` | iterable of sequence objects : (targets will be with respect to `query_sequences`)
     `target_sequences` | iterable of sequence objects
     `best_hit` | type = bool: If `True`, only the best aligned sequences are in the output.  If `False`, all pairwise comparisons
+    `min_ratio` | Highpass filter for sequence alignments >= to the length of the query sequence * `min_ratio`
+    `min_identity` | Highpass filter to only include alignments whose % identity is >= to `min_identity`
+    `dropna` | type=bool: Drops rows that contain NaN
+    `silence` | type=bool: Silence error messages
+    `sort` | Sort by any `x` for `x` in ["percent_identity","optimal_score","aln_length", "aln_ratio", "query_begin","query_end","target_begin","target_end"]
+    `progress` | Uses `tqdm` progressbar if installed
     """
-    
     # Infer sequence type
-    if seq_type == None:
-        seq_type = getattr(skbio.sequence, 
-                           str(type(query_sequences[0])).split(".")[-1][:-2])
+    seq_type = getattr(skbio.sequence,
+                       str(type(query_sequences[0])).split(".")[-1][:-2])
+    # Default substition matrix
+    if substitution_matrix == None:
+        substitution_matrix = skbio.alignment._pairwise.blosum50
+
     # Calculate alignments
     D_seq_aln = defaultdict(list)
-    for seq_A in query_sequences:
-        for seq_B in target_sequences:
-            query = StripedSmithWaterman(str(seq_A))
-            alignment = query(str(seq_B))
-            aln_info = (seq_B.metadata["id"], alignment.optimal_alignment_score, alignment)
+
+    # Progress Bar
+    if progress:
+        if "tqdm" in sys.modules:
+            query_sequences = tqdm(query_sequences)
+
+    for i, seq_A in enumerate(query_sequences):
+        for j, seq_B in enumerate(target_sequences):
+            try:
+                if seq_type == skbio.Protein:
+                    (msa, score, ((A_start, A_end), (B_start, B_end))) = local_pairwise_align_ssw(seq_A, seq_B, substitution_matrix=substitution_matrix) #, mask_length=int(len(seq_A)*mask_proportion))
+                else:
+                    (msa, score, ((A_start, A_end), (B_start, B_end))) = local_pairwise_align_ssw(seq_A, seq_B) #, mask_length=int(len(seq_A)*mask_proportion))
+            except ValueError:
+                if silence == False: print("\nWarning: Could not align `%s` with `%s`"%(seq_A.metadata["id"], seq_B.metadata["id"]), file=sys.stderr)
+                msa = score = A_start = A_end = B_start = B_end = np.nan
+
+            aln_info = (seq_B.metadata["id"], score, msa, (A_end-A_start)/len(seq_A), ((A_start, A_end), (B_start, B_end)))
             D_seq_aln[seq_A.metadata["id"]].append(aln_info)
-            
+
     # Create pd.DataFrame from alignment
     query_data = list()
     for query_id, alns in D_seq_aln.items():
         # Get best hit or complete pairwise alignment
         if best_hit == True: alns = [sorted(alns, key=lambda x:x[1], reverse=True)[0]]
         if best_hit == False: alns = alns
-            
+
         target_data = list()
-        for (target_id, target_score, target_aln) in alns:
-            # Aligned query sequence
-            aln_query_seq = target_aln.aligned_query_sequence
-            # Aligned target sequence
-            aln_target_seq = target_aln.aligned_target_sequence
-            aln_length = len(aln_query_seq)
-            # Percent identity calculation
-            percent_identity = (1-(hamming(seq_type(aln_query_seq), seq_type(aln_target_seq))))
+        for (target_id, target_score, target_msa, aln_ratio, ((A_start, A_end), (B_start, B_end))) in alns:
+            try:
+                # Aligned query sequence
+                aln_query_seq = target_msa[0]
+                # Aligned target sequence
+                aln_target_seq = target_msa[1]
+
+                aln_length = len(aln_query_seq)
+                # Percent identity calculation
+                percent_identity = (1-(hamming(aln_query_seq, aln_target_seq)))
+            except TypeError:
+                # Edge cases
+                aln_query_seq = aln_target_seq = aln_length = percent_identity = np.nan
+
             # Organize data
             target_data.append(pd.Series(dict([ ("target_id", target_id),
                                                 ("percent_identity", percent_identity),
                                                 ("optimal_score", target_score),
                                                 ("aln_length", aln_length),
-                                                ("query_begin",target_aln.query_begin),
-                                                ("query_end", target_aln.query_end),
-                                                ("target_begin", target_aln.target_begin),
-                                                ("target_end", target_aln.target_end_optimal)])))
+                                                ("aln_ratio", aln_ratio),
+                                                ("query_begin",A_start),
+                                                ("query_end", A_end),
+                                                ("target_begin", B_start),
+                                                ("target_end", B_end)])))
         # Create pd.DataFrame from alignment
         DF_query = pd.DataFrame(target_data)
         DF_query.index = pd.MultiIndex.from_tuples([*zip(DF_query.shape[0]*[query_id], DF_query["target_id"])], names=["query_id","target_id"])
         query_data.append(DF_query)
-                  
-    return pd.concat(query_data, axis=0).loc[:,["percent_identity","optimal_score","aln_length","query_begin","query_end","target_begin","target_end"]]
+    DF_orthologs = pd.concat(query_data, axis=0)
+
+    # Filter
+    if min_ratio: DF_orthologs = DF_orthologs.loc[DF_orthologs["aln_ratio"] >= min_ratio,:]
+    if min_identity: DF_orthologs = DF_orthologs.loc[DF_orthologs["percent_identity"] >= min_identity,:]
+
+    # Sort
+    DF_orthologs = DF_orthologs.loc[:,["percent_identity","optimal_score","aln_length", "aln_ratio", "query_begin","query_end","target_begin","target_end"]]
+    if sort is not None: DF_orthologs = DF_orthologs.sort_values(sort,ascending=False)
+
+    # Drop missing values
+    if dropna == True: return DF_orthologs.dropna(how="any", axis=0)
+    if dropna == False: return DF_orthologs
