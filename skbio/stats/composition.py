@@ -1075,13 +1075,13 @@ def _log_compare(mat, cats,
     cs = np.unique(cats)
 
     def func(x):
-        return significance_test(*[x[cats == k] for k in cs])
+        return significance_test(*[x[cats == k] for k in cs])[1]
 
     for i in range(c-1):
         ratio = (log_mat[:, i].T - log_mat[:, i+1:].T).T
-        m, p = np.apply_along_axis(func,
-                                   axis=0,
-                                   arr=ratio)
+        p = np.apply_along_axis(func,
+                                axis=0,
+                                arr=ratio)
         log_ratio[i, i+1:] = np.squeeze(np.array(p.T))
     return log_ratio
 
