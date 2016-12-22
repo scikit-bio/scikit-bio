@@ -14,6 +14,7 @@
 ### Performance enhancements
 
 ### Bug fixes
+* `skbio.stats.composition.ancom` is compatible with scipy v0.18. ([#1472](https://github.com/biocore/scikit-bio/issues/1472)).
 
 ### Deprecated functionality [stable]
 
