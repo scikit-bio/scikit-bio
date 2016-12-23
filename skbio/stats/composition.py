@@ -104,7 +104,7 @@ import pandas as pd
 import scipy.stats
 import skbio.util
 from skbio.util._decorator import experimental
-
+import numpy.testing as npt
 
 @experimental(as_of="0.4.0")
 def closure(mat):
@@ -973,8 +973,8 @@ def ancom(table, grouping,
 
     # Multiple comparisons
     if multiple_comparisons_correction == 'holm-bonferroni':
-        logratio_mat = np.apply_along_axis(_holm_bonferroni,
-                                           1, logratio_mat)
+        logratio_mat = np.vstack([_holm_bonferroni(logratio_mat[i, :])
+                                   for i in range(logratio_mat.shape[0])])
     np.fill_diagonal(logratio_mat, 1)
     W = (logratio_mat < alpha).sum(axis=1)
     c_start = W.max() / n_feat
