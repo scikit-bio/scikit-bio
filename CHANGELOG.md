@@ -14,7 +14,7 @@
 ### Performance enhancements
 
 ### Bug fixes
-* All instances of `np.apply_along_axis` are replaced with list comprehensions in `skbio.stats.composition.ancom`.  This is to ensure compatibility with scipy v0.18 and numpy v1.12.0 given that the return types of `numpy.apply_along_axis` have changed ([#1472](https://github.com/biocore/scikit-bio/issues/1472)).
+* All instances of `np.apply_along_axis` are replaced with list comprehensions in `skbio.stats.composition`.  This is to ensure compatibility with scipy v0.18 and numpy v1.12.0 given that the return types of `numpy.apply_along_axis` have changed ([#1472](https://github.com/biocore/scikit-bio/issues/1472)).
 
 ### Deprecated functionality [stable]
 
