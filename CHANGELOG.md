@@ -14,7 +14,7 @@
 ### Performance enhancements
 
 ### Bug fixes
-* In `skbio.stats.composition`, all instances of `np.apply_along_axis` were replaced with list comprehensions in due to an incompatibility observed in scipy v0.18 and numpy v1.12.0 where the return types of `numpy.apply_along_axis` differ relative to older versions of those packages. See ([#1472](https://github.com/biocore/scikit-bio/issues/1472)).
+* In `skbio.stats.composition`, all instances of `np.apply_along_axis` were replaced with list comprehensions for backwards compatibility with `namedtuple`s returned by scipy statistical tests in scipy >=0.18 as well as the `namedtuple`s from `np.apply_along_axis` in numpy >=1.12.0. See ([#1472](https://github.com/biocore/scikit-bio/issues/1472)).
 
 ### Deprecated functionality [stable]
 
