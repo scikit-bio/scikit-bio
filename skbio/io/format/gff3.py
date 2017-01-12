@@ -124,7 +124,7 @@ seq_1	.	exon	10	30	.	+	.	Parent=gen1
 seq_1	.	exon	50	90	.	+	.	Parent=gen1
 <BLANKLINE>
 
-If the GFF3 file does not have the sequence ID, it will return empty object:
+If the GFF3 file does not have the sequence ID, it will return an empty object:
 
 >>> gff = io.StringIO(gff_str)
 >>> im = read(gff, format='gff3', into=IntervalMetadata,
@@ -133,7 +133,7 @@ If the GFF3 file does not have the sequence ID, it will return empty object:
 0 interval features
 -------------------
 
-We can also read the GFF3 file into generator:
+We can also read the GFF3 file into a generator:
 
 >>> gff = io.StringIO(gff_str)
 >>> gen = read(gff, format='gff3')
@@ -438,8 +438,13 @@ def _serialize_interval_metadata(
     Parameters
     ----------
     interval_metadata : IntervalMetadata
+    seq_id : str
+        Seq id for the current annotation. It will be used as the 1st column
+        in the GFF3.
+    fh : file handler
+        the file object to output
     skip_subregion : bool
-        whether to skip outputting each sub region as a line in GFF3.
+        Whether to skip outputting each sub region as a line in GFF3.
     '''
     # write file header
     fh.write('##gff-version 3\n')
@@ -479,7 +484,8 @@ def _serialize_interval_metadata(
             attr.append('%s=%s' % (k.translate(escape), v.translate(escape)))
         columns.append(';'.join(attr))
 
-        print('\t'.join(columns), file=fh)
+        fh.write('\t'.join(columns))
+        fh.write('\n')
 
         # if there are multiple regions for this feature,
         # output each region as a standalone line in GFF3.
@@ -497,12 +503,13 @@ def _serialize_interval_metadata(
                         'You need provide ID info for '
                         'the parent interval feature: %r' % interval)
                 columns[8] = 'Parent=%s' % parent
-                print('\t'.join(columns), file=fh)
+                fh.write('\t'.join(columns))
+                fh.write('\n')
 
 
 def _serialize_seq(seq, fh, skip_subregion=True):
     '''Serialize a sequence to GFF3.'''
     _serialize_interval_metadata(
         seq.interval_metadata, seq.metadata['id'], fh, skip_subregion)
-    print('##FASTA', file=fh)
+    fh.write('##FASTA\n')
     write(seq, into=fh, format='fasta')

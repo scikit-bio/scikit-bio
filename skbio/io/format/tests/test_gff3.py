@@ -213,7 +213,7 @@ class WriterTests(GFF3IOTests):
         self.assertEqual([exp], obs)
 
     def test_interval_metadata_to_gff3_sub_region(self):
-        seq_id = 'NC_7'
+        seq_id = 'NC 7'
         with open(self.multi_fp) as f:
             exp = [i.strip() for i in f if i.startswith(seq_id)]
 
