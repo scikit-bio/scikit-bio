@@ -9,9 +9,6 @@
 import functools
 
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa
 from IPython.core.pylabtools import print_figure
 from IPython.core.display import Image, SVG
 
@@ -251,6 +248,8 @@ class OrdinationResults(SkbioObject):
 
         # derived from
         # http://matplotlib.org/examples/mplot3d/scatter3d_demo.html
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D  # noqa
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
@@ -315,6 +314,7 @@ class OrdinationResults(SkbioObject):
         each category (str) to color (used for legend creation).
 
         """
+        import matplotlib.pyplot as plt
         if ((df is None and column is not None) or (df is not None and
                                                     column is None)):
             raise ValueError("Both df and column must be provided, or both "
@@ -355,6 +355,7 @@ class OrdinationResults(SkbioObject):
     def _plot_categorical_legend(self, ax, color_dict):
         """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
+        import matplotlib as mpl
         proxies = []
         labels = []
         for category in color_dict:
@@ -396,6 +397,7 @@ class OrdinationResults(SkbioObject):
         return SVG(self._repr_svg_())
 
     def _figure_data(self, format):
+        import matplotlib.pyplot as plt
         fig = self.plot()
         data = print_figure(fig, format)
         # We MUST close the figure, otherwise IPython's display machinery
