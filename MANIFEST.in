@@ -1,3 +1,4 @@
+include .appveyor.yml
 include .coveragerc
 include CHANGELOG.md
 include CONTRIBUTING.md

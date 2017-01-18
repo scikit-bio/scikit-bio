@@ -1,0 +1,27 @@
+build: false
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5"
+      MINICONDA: "C:\\Miniconda35-x64"
+
+platform:
+  - x64
+
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %MINICONDA%"
+
+install:
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - "conda create --yes -n env_name python=%PYTHON_VERSION% --file ci/conda_requirements.txt"
+  - conda install --yes -n env_name cython
+  - activate env_name
+  - pip install -r ci/pip_requirements.txt
+  - pip install . --no-deps
+
+test_script:
+  - "python setup.py test"
