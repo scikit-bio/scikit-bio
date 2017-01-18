@@ -118,6 +118,7 @@ setup(name='scikit-bio',
           'scipy >= 0.15.1',
           'nose >= 1.3.7'
       ],
+      test_suite = 'nose.collector',
       classifiers=classifiers,
       package_data={
           'skbio.diversity.alpha.tests': ['data/qiime-191-tt/*'],
