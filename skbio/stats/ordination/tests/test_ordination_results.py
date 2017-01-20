@@ -14,7 +14,7 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from IPython.core.display import Image, SVG
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D # pylint: disable=unused-import
 
 from skbio import OrdinationResults
 
