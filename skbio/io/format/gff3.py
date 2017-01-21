@@ -215,6 +215,7 @@ Specifications/blob/master/gff3.md
 
 import re
 from io import StringIO
+from collections import Iterable
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
@@ -280,6 +281,8 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
     obj : Iterable of (seq_id, IntervalMetadata)
     fh : file handler
     '''
+    # write file header
+    fh.write('##gff-version 3\n')
     for seq_id, obj_i in obj:
         _serialize_interval_metadata(obj_i, seq_id, fh, skip_subregion)
 
@@ -292,6 +295,8 @@ def _gff3_to_sequence(fh, seq_num=1):
 
 @gff3.writer(Sequence)
 def _sequence_to_gff3(obj, fh, skip_subregion=True):
+    # write file header
+    fh.write('##gff-version 3\n')
     _serialize_seq(obj, fh, skip_subregion)
 
 
@@ -303,6 +308,8 @@ def _gff3_to_dna(fh, seq_num=1):
 
 @gff3.writer(DNA)
 def _dna_to_gff3(obj, fh, skip_subregion=True):
+    # write file header
+    fh.write('##gff-version 3\n')
     _serialize_seq(obj, fh, skip_subregion)
 
 
@@ -339,6 +346,8 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
     seq_id : str
         ID for column 1 in the GFF3 file.
     '''
+    # write file header
+    fh.write('##gff-version 3\n')
     _serialize_interval_metadata(obj, seq_id, fh, skip_subregion=True)
 
 
@@ -380,7 +389,13 @@ def _yield_record(fh):
                     yield 'data', current, lines
                 lines = [line]
                 current = seq_id
-    yield 'data', current, lines
+    if current is False:
+        # if the input file object is empty, it should return
+        # an empty generator
+        return
+        yield
+    else:
+        yield 'data', current, lines
 
 
 def _parse_record(lines, length):
@@ -446,9 +461,6 @@ def _serialize_interval_metadata(
     skip_subregion : bool
         Whether to skip outputting each sub region as a line in GFF3.
     '''
-    # write file header
-    fh.write('##gff-version 3\n')
-
     column_keys = ['source', 'type', 'score', 'strand', 'phase']
     voca_change = _vocabulary_change('gff3', False)
     voca_skip = _vocabulary_skip('gff3')
@@ -476,12 +488,19 @@ def _serialize_interval_metadata(
         # use sort to make the output order deterministic
         for k in sorted(md):
             if k in voca_skip:
-                # skip the metadata don't go to attribute column
+                # skip the metadata that doesn't go to attribute column
                 continue
+            v = md[k]
             if k in voca_change:
                 k = voca_change[k]
-            v = md[k]
-            attr.append('%s=%s' % (k.translate(escape), v.translate(escape)))
+            if isinstance(v, Iterable) and not isinstance(v, str):
+                # if there are multiple values for this attribute,
+                # convert them to str and concat them with ","
+                v = ','.join(str(i).translate(escape) for i in v)
+            else:
+                v = v.translate(escape)
+            attr.append('%s=%s' % (k.translate(escape), v))
+
         columns.append(';'.join(attr))
 
         fh.write('\t'.join(columns))

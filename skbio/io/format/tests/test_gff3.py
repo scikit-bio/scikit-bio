@@ -117,6 +117,8 @@ class SnifferTests(TestCase):
     def test_positive(self):
         for fp in self.positive_fps:
             self.assertEqual(_gff3_sniffer(fp), (True, {}))
+
+    def test_negative(self):
         for fp in self.negative_fps:
             self.assertEqual(_gff3_sniffer(fp), (False, {}))
 
@@ -174,6 +176,12 @@ class ReaderTests(GFF3IOTests):
         obss = _gff3_to_generator(self.multi_fp)
         for obs, exp in zip(obss, exps):
             self.assertEqual(obs, exp)
+
+    def test_gff3_to_generator_empty(self):
+        empty_fps = map(get_data_path, ['empty', 'whitespace_only'])
+        for empty_fp in empty_fps:
+            obs = list(_gff3_to_generator(empty_fp))
+            self.assertEqual(obs, [])
 
     def test_gff3_to_sequence(self):
         obs = _gff3_to_sequence(self.seq_fp)
